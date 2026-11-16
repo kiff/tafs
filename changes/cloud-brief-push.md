@@ -1,0 +1,1 @@
+- **tafs cloud: Your brief's alerts:** at 08:00 and 18:00 the phones of the people who may answer hear "Your 08:00 brief is ready." in their own language, with nothing of its content (off until `TAFS_BRIEF_PUSH=on`); every alert says whether it's the brief's or urgent (`brief_kind`), so Android can use two channels ([missions.md](../docs/missions.md#your-brief)).

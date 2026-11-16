@@ -39,6 +39,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -235,6 +236,9 @@ fun TafDetailView(
     // What goes with it, in tafs cloud's words: read before the question opens, so its text never changes under a tap.
     var removalGoes by rememberSaveable { mutableStateOf<String?>(null) }
     val removeScope = rememberCoroutineScope()
+    // Remove for good reads tafs cloud's words before its confirmation opens: a tap meanwhile takes nothing more, and the button
+    // reads as working until the confirmation is up (the owner tapped it twice on Android 97).
+    var removeOpening by remember { mutableStateOf(false) }
     val cards = taf.shownCards
     // A wide screen in landscape (as iOS on an iPad): beside the chat or the activity, a second column with the call waiting for
     // the owner and the Cards, when the chat keeps at least a phone's width beside it.
@@ -294,7 +298,13 @@ fun TafDetailView(
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
             // name freed) is its last row.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ onRemoving(taf.id); removeScope.launch { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } }) else null, onActivity = { activitySelection = it; section = Section.Activity })
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({
+              if (!removeOpening) {
+                removeOpening = true
+                onRemoving(taf.id)
+                removeScope.launch { try { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } finally { removeOpening = false } }
+              }
+            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity })
           }
           Section.Chat -> Unit
         }
@@ -397,6 +407,9 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   ActivityRecord(state.entries(taf.id), state)
 }
 
+/** The line a view-only session gets where Revoke would be. */
+internal const val REVOKE_NEEDS_APPROVER = "taf.revoke_needs_approver"
+
 @Composable
 private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean, onRevoke: () -> Unit) {
   val cards = taf.shownCards
@@ -425,7 +438,13 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
-    OutlineButton(Words.Taf.revoke, onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    if (taf.cloudId != null && LocalViewOnly.current) {
+      // A view-only session (KIFF's approval_mode "view") isn't offered Revoke, on every device alike: the line every app
+      // shares says where it's done instead.
+      Text(Words.Taf.revokeNeedsApprover, style = scaled(13, color = Theme.soft), modifier = Modifier.fillMaxWidth().testTag(REVOKE_NEEDS_APPROVER))
+    } else {
+      OutlineButton(Words.Taf.revoke, onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    }
   }
 }
 

@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -46,6 +48,7 @@ import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.design.LocalBiometry
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.launch
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.OutlineButton
@@ -60,6 +63,7 @@ import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.QuestionAnswers
 import bot.tafs.app.model.QuestionSelection
+import bot.tafs.app.model.setupShape
 
 /**
  * Coach: where tafs are made, connected and changed (docs/coach.md). Its conversation is the taf's chat screen on Coach's own
@@ -98,17 +102,34 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       }
       // A phone that can't approve yet can't start Coach: it says why, as before.
       state.coachCloudId == null && LocalApprovalReadiness.current != bot.tafs.app.model.ApprovalReadiness.Ready -> CoachIntro(state)
-      else -> {
-        // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
-        // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
-        if (state.coachCloudId == null) StartNote(state, chats)
-        else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
-          Column {
-            CoachToolsRow(state) { toolsOpen = true }
-            CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+      else -> androidx.compose.foundation.layout.BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+        // On a wide screen, what Coach has made so far stands beside the conversation (as iPad's), once Coach is started here
+        // and planque has answered: the cards to answer stay in the conversation.
+        val width = maxWidth
+        val shaping = state.coachCloudId != null && state.planqueReady && width >= WIDE_COACH
+        Row(Modifier.fillMaxSize()) {
+          Column(Modifier.weight(1f).fillMaxHeight()) {
+            // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
+            // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
+            if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
+            else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
+              Column {
+                CoachToolsRow(state) { toolsOpen = true }
+                // Beside the conversation, the plan is in the panel.
+                if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+              }
+            }
+            // Started, with nothing said yet: the owner's board 7, when it isn't about improving a taf and there's at most one.
+            if (state.coachCloudId != null && state.chats[COACH_CHAT].isNullOrEmpty() && coachFirst(state)) {
+              bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
+            }
+            TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
+          }
+          if (shaping) {
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+            SetupShapePanel(state.setupShape, Modifier.width((width * 0.4f).coerceIn(SHAPE_MIN, SHAPE_MAX)).fillMaxHeight())
           }
         }
-        TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
       }
     }
   }
@@ -118,6 +139,13 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
     if (state.coachToolsAsked) chats.notNowTools()
   }
 }
+
+/** From this width Coach's screen shows what Coach has made so far beside the conversation, as the brief's two columns do. */
+internal val WIDE_COACH = 600.dp
+
+/** The "Taking shape" panel's width beside the conversation: two fifths of the screen, from 240 dp up to iPad's 420. */
+private val SHAPE_MIN = 240.dp
+private val SHAPE_MAX = 420.dp
 
 /** Whether the keyboard is open, where a screen test says so; else read from the keyboard's own inset. */
 val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { null }
@@ -162,7 +190,12 @@ private fun Note(text: String) {
 
 /** Above a conversation Coach isn't started for yet: what it is, that the first message asks for one fingerprint, and why a Start didn't go. */
 @Composable
-private fun StartNote(state: AppState, chats: CoachChatActions) {
+private fun StartNote(state: AppState, chats: CoachChatActions, wide: Boolean) {
+  // Coach not started here: the owner's board 9 on a wide screen, board 7 on a phone when it's a first taf (as iOS).
+  when {
+    wide -> bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp)) { bot.tafs.app.design.CoachLoadingArt(it) }
+    coachFirst(state) -> bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
+  }
   val start = state.coachStart
   if (start != null) {
     StartScreen(state, start, chats)
@@ -236,6 +269,8 @@ private fun CoachIntro(state: AppState) {
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+    // What Coach is, before it has started: the owner's board 7.
+    bot.tafs.app.design.Illustrated(height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
     Text(CoachWords.INTRO, style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
@@ -275,7 +310,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StepMark(status: String) {
+internal fun StepMark(status: String) {
   Text(
     CoachWords.stepMark(status),
     style = scaled(14, FontWeight.SemiBold, when (status) {
@@ -307,6 +342,8 @@ class CoachActions(
   val openVersions: (String) -> Unit = {},
   /** Reads KIFF's words for a grant's profile, by grant id. */
   val loadProfileWords: suspend (String) -> Unit = {},
+  /** Reads KIFF's draft for an approval card again, by draft id: its Try again. */
+  val loadDraft: suspend (String) -> Unit = {},
   /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
   val loadKnob: suspend (String) -> Unit = {},
   val confirmKnob: suspend (String) -> Boolean = { false },
@@ -422,7 +459,12 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           when {
             signsCard -> {
               Eyebrow(Words.Card.itsCard)
-              if (draft != null) DraftCardsView(draft) else Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+              when {
+                draft != null -> DraftCardsView(draft)
+                // KIFF didn't give the draft: why, and Try again; Approve still waits, since the fingerprint signs its lines.
+                state.draftErrors[c.draft] != null -> DraftNotRead(state.draftErrors.getValue(c.draft)) { actions.loadDraft(c.draft) }
+                else -> Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+              }
             }
             c.signs?.words?.isNotBlank() == true -> {
               Text(c.signs!!.words!!, style = scaled(13, FontWeight.Medium, Theme.dim))
@@ -434,6 +476,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // Card comes next ("Its Card: you approve it next"), so the owner knows a second approval follows.
           c.signs?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.dim)) }
         }
+        // A sign-in that asks for more than the job, said above the buttons, in tafs cloud's words (docs/chat.md).
+        c.wider?.let { WiderLine(it) }
         if (!grant.digestMatches) {
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
         } else {
@@ -642,6 +686,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
         Eyebrow(Words.Coach.SignIn.eyebrow, Theme.amberText)
         Text(grant?.takeIf { again }?.statusWords ?: signInAt, style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
+        c.wider?.let { WiderLine(it) }
         PrimaryButton(
           when {
             waiting -> state.connectStep ?: Words.Connect.openingSignIn
@@ -873,3 +918,24 @@ fun DriveRecapCard(recap: bot.tafs.app.drive.DriveRecap) {
     }
   }
 }
+
+/** KIFF's draft for an approval card couldn't be read: why, in KIFF's words, and Try again. */
+@Composable
+private fun DraftNotRead(why: String, retry: suspend () -> Unit) {
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  Text(why, style = scaled(13, color = Theme.no))
+  Text(
+    Words.Common.tryAgain,
+    style = scaled(13, FontWeight.SemiBold, Theme.amberText),
+    modifier = Modifier.heightIn(min = 44.dp).tapping { scope.launch { retry() } }.padding(vertical = 10.dp).testTag("card.draft.retry"),
+  )
+}
+
+/** A sign-in wider than the job, in tafs cloud's words (`wider.words`): above the card's buttons, so no card stands unsaid. */
+@Composable
+private fun WiderLine(words: String) {
+  Text(words, style = scaled(14, FontWeight.Medium, Theme.amberText), modifier = Modifier.testTag("card.wider"))
+}
+
+/** Board 7's moment (as iOS's `SetupChatView.starts`): Coach isn't improving a taf, and there's at most one taf yet. */
+internal fun coachFirst(state: AppState): Boolean = state.coachImproving == null && state.tafs.size <= 1

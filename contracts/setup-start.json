@@ -111,6 +111,42 @@
                 "read_only": true
               },
               {
+                "name": "taf_labels",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_labels",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "mission_create",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "mission_create",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "mission",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "mission",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "business_context",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "business_context",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
                 "name": "version_try",
                 "url": "https://tafs.test/v1/mcp",
                 "tool": "version_try",
@@ -160,6 +196,10 @@
             "Draft a change to a taf",
             "Say what a taf will likely use",
             "Read a public web page",
+            "Label tafs",
+            "Gather tafs into a mission",
+            "Change a mission's tafs",
+            "Keep what tafs know about your business",
             "Try a version of a taf, sending nothing",
             "Install a version of a taf",
             "See the app on your device while it drives",
@@ -414,6 +454,80 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-labels",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_labels"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 100,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-business",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "business_context"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-missions",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "mission"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-mission-create",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "mission_create"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ],
             "contract_digest": "cd_123"
@@ -497,6 +611,30 @@
               "lines": [
                 "KIFF's line for coach-web-reads"
               ]
+            },
+            {
+              "id": "coach-labels",
+              "lines": [
+                "KIFF's line for coach-labels"
+              ]
+            },
+            {
+              "id": "coach-business",
+              "lines": [
+                "KIFF's line for coach-business"
+              ]
+            },
+            {
+              "id": "coach-missions",
+              "lines": [
+                "KIFF's line for coach-missions"
+              ]
+            },
+            {
+              "id": "coach-mission-create",
+              "lines": [
+                "KIFF's line for coach-mission-create"
+              ]
             }
           ]
         }
@@ -569,6 +707,26 @@
                 "name": "Read a public page",
                 "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
                 "why": "It reads only what anyone can open on the web."
+              },
+              {
+                "name": "Label tafs",
+                "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
+                "why": "It changes only how your list is filtered."
+              },
+              {
+                "name": "Gather tafs into a mission",
+                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Each one waits for your approval.",
+                "why": "It changes nothing a taf may do."
+              },
+              {
+                "name": "Change a mission's tafs",
+                "does": "Add a taf to a mission or take one out, or end a mission. Each taf keeps its own job, apps and Card. Up to 50 a day.",
+                "why": "It changes nothing a taf may do."
+              },
+              {
+                "name": "Keep your business description",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Each one waits for your approval.",
+                "why": "It's words only, and you see it in Account."
               },
               {
                 "name": "Try a version",

@@ -66,7 +66,11 @@ struct RecipeGallerySheet: View {
 
     /// "Say it in your own words": Coach, with nothing in its box.
     private var ownWords: some View {
-        OwnWordsRow(title: gallery.words.ownWords, line: gallery.words.ownWordsLine) { choose(.ownWords) }
+        HStack(spacing: 12) {
+            // Board 8, a new taf (docs/ios-app.md › Illustrations): small, beside the row.
+            Illustration.newTaf
+            OwnWordsRow(title: gallery.words.ownWords, line: gallery.words.ownWordsLine) { choose(.ownWords) }
+        }
     }
 }
 

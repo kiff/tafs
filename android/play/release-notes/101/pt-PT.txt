@@ -1,0 +1,2 @@
+- Inicie sessão com o seu outro telefone: mostre o código deste telefone, leia-o no telefone que já usa em Conta, Dispositivos, Adicionar um dispositivo, e está feito.
+- Dispositivos abre em tamanho completo, Concluído volta a Conta, e um código lido que não é um dispositivo agora di-lo e fica visível.

@@ -1,0 +1,1 @@
+- Num telefone que não pode aprovar, o separador do Card já não oferece Revogar. Diz: “Para revogar este Card, use um dispositivo que possa aprovar.”

@@ -288,6 +288,17 @@ class AnswerKiffTest {
     assertTrue(m.state.value.record.none { it.signature != null })
   }
 
+  @Test fun aClosedPromptSendsNothingAndSaysTheRequestIsKept() = runTest {
+    reads()
+    val m = model()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    assertTrue(transport.requests.none { it.method == "POST" })
+    assertEquals(1, m.state.value.held.size)
+    // The call still waits, so it's the line that says so, not "Cancelled. Nothing changed." and not a finger to try again.
+    assertEquals(bot.tafs.app.model.Words.Approval.cancelledNothingApprovedRequestKept, m.state.value.lastError)
+  }
+
   @Test fun aPhoneWithNoScreenLockAnswersNothing() = runTest {
     reads()
     val m = model()
@@ -469,6 +480,57 @@ class AnswerKiffTest {
     assertEquals("Sign in with KIFF again to approve from this phone.", m.state.value.lastError)
     assertTrue(auth.asked.isEmpty())
     assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+  }
+
+  @Test fun aViewOnlySessionSaysToSignInAgainOrUseTheOtherPhoneAndAsksNoMore() = runTest {
+    reads()
+    // KIFF keeps a session that signed in with no approval key view-only while the person has another approving device.
+    transport.answer("POST /v1/me/device/approval-key", 403, """{"error":"view_only","message":"this device can't approve: approve on your phone, or pair this device from it"}""")
+    val m = model(approvalKey = false)
+    assertTrue(m.state.value.approvalKeyLost)
+    assertTrue(m.state.value.approvalViewOnly)
+    assertEquals("Sign in again on this phone to approve, or approve from your other phone.", bot.tafs.app.model.Words.Approval.viewOnly)
+    val asked = transport.requestsTo("POST /v1/me/device/approval-key").size
+    // No retry loop: refreshing asks KIFF nothing more.
+    m.refresh()
+    m.registerApprovalKey()
+    assertEquals(asked, transport.requestsTo("POST /v1/me/device/approval-key").size)
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+    // Refusing still works.
+    answeredOk(route = "reject")
+    assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
+  }
+
+  @Test fun kiffSayingTheSessionIsViewOnlyShowsItFromTheStartAndRefusingStillWorks() = runTest {
+    // KIFF says how the session approves in /v1/me: "view" approves nothing, whatever the phone holds.
+    reads(meBody = """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["holds.answer"],"approval_mode":"view"}""")
+    val m = model()
+    assertTrue(m.state.value.approvalViewOnly)
+    assertTrue(m.state.value.approvalKeyLost)
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requests.none { it.url.endsWith("approve-once") })
+    answeredOk(route = "reject")
+    assertTrue(m.answer(m.state.value.held.single(), Answer.Refuse))
+  }
+
+  @Test fun anyOtherApprovalModeIsntViewOnly() = runTest {
+    for (mode in listOf("key", "passkey", "device_key")) {
+      transport.reset()
+      reads(meBody = """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["holds.answer"],"approval_mode":"$mode"}""")
+      val m = model()
+      assertFalse(mode, m.state.value.approvalViewOnly)
+      assertFalse(mode, m.state.value.approvalKeyLost)
+    }
+  }
+
+  @Test fun anyOtherRefusalOfTheKeyIsntViewOnly() = runTest {
+    reads()
+    transport.answer("POST /v1/me/device/approval-key", 404, """{"error":"not_found"}""")
+    val m = model(approvalKey = false)
+    assertFalse(m.state.value.approvalViewOnly)
+    assertFalse(m.state.value.approvalKeyLost)
   }
 
   @Test fun anApprovalAsksForItsOwnFingerprintAndNothingElse() = runTest {

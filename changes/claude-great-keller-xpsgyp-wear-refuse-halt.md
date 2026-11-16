@@ -1,0 +1,1 @@
+- **Wear OS: Refuse and Halt from the wrist (not released yet).** On the Wear OS watch, a held call can be refused and a taf, or every taf, halted, through the phone, which signs with its signing key: never the approval key, and only while the watch has a screen lock and is unlocked. Approving stays on the phone (docs/watch-wear.md).

@@ -86,6 +86,10 @@ export function fcmMessage(n: Notification, now: Date): { data: Record<string, s
     set("expires_at", str(p.expires_at));
     // A step handed to the owner ("Your step"): Android tags its alert by it, so it never replaces another of the taf's.
     set("handoff", str(p.handoff));
+    // Your brief: which channel (Briefs or Urgent), the decision an urgent one opens, and the brief's time.
+    set("brief_kind", str(p.brief_kind));
+    set("decision", str(p.decision));
+    set("at", str(p.at));
     data.level = levelOf(aps);
   }
   const android: Record<string, unknown> = {

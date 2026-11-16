@@ -1,0 +1,1 @@
+- Konto und alle anderen Fenster bleiben nach schnellem Wischen ruhig, und „Abmelden“ ist ganz zu sehen.

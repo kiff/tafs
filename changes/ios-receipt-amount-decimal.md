@@ -1,0 +1,1 @@
+- **iPhone and iPad: a receipt no longer says its amount doesn't match when only the zeros differ.** The receipt sheet compared "150.00" and "150" as text; it now compares them as numbers in the same unit, as Windows does (docs/ios-app.md).

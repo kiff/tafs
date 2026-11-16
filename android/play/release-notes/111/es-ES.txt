@@ -1,0 +1,6 @@
+- Una Card avisa cuando el inicio de sesión de una app pide más de lo que necesita el trabajo.
+- Coach: nada se mueve en el chat mientras responde.
+- El Registro nunca muestra el error en bruto de una app.
+- Al cerrar la petición de huella se lee «Cancelado. No cambió nada.»
+- Un borrador de Card que no se pudo leer dice por qué, con Reintentar.
+- Cuenta › Zona horaria ofrece la del teléfono solo si es distinta.

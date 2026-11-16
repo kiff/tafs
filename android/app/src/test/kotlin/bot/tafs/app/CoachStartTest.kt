@@ -22,6 +22,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -68,7 +69,7 @@ class CoachStartTest {
         "card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]},{"id":7}]}}"""
   private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
 
-  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""") {
+  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""", keyless: Pair<Int, String>? = 409 to """{"error":"no connector key stands for this account","code":"needs_key"}""") {
     // Before the start, no Coach; once started, its tools still to give, read by the start and by the tools panel; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
@@ -77,6 +78,9 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", keys.first, keys.second)
+    // Asked first with no key: nothing enrolled yet, so planque needs one; then the minted key goes in.
+    // No keyless answer: the network dropped it.
+    if (keyless == null) transport.drop("POST /v1/accounts/t_01/enrolment") else transport.answer("POST /v1/accounts/t_01/enrolment", keyless.first, keyless.second)
     transport.answer("POST /v1/accounts/t_01/enrolment", enrol.first, enrol.second)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_setup","status":"confirmed","claim_secret":"cs_1"}""")
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
@@ -122,7 +126,9 @@ class CoachStartTest {
     assertTrue(m.state.value.planqueReady)
     assertNull(m.state.value.coachStartError)
     // planque keeps the connector key; the phone keeps nothing of it.
-    val enrol = body("POST /v1/accounts/t_01/enrolment")
+    // Asked first with no key, then the minted one: the phone keeps nothing of it.
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    val enrol = body("POST /v1/accounts/t_01/enrolment", 1)
     assertEquals("kk_connector", enrol.getValue("connector_key").jsonPrimitive.content)
     assertEquals(java.util.Base64.getEncoder().encodeToString(signer.publicKeyDER), enrol.getValue("device_key").jsonPrimitive.content)
     assertEquals("connector", body("POST /v1/keys").getValue("roles").jsonArray.single().jsonPrimitive.content)
@@ -135,7 +141,7 @@ class CoachStartTest {
     assertEquals("cs_1", setup.getValue("claim_secret").jsonPrimitive.content)
     // Each setup call is signed, under the one confirmation.
     for (key in listOf("POST /v1/keys", "POST /v1/me/agent-drafts")) assertNotNull(key, transport.requestsTo(key).first().headers["KIFF-Device-Signature"])
-    assertNotNull(transport.requestsTo("POST /v1/accounts/t_01/enrolment").single().headers["Planque-Device-Signature"])
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/enrolment").count { it.headers["Planque-Device-Signature"] != null })
   }
 
   @Test fun coachsToolsAndCardGoToKiffExactlyAsTafsCloudGivesThemOnce() = runTest {
@@ -243,8 +249,21 @@ class CoachStartTest {
     assertFalse(m.startCoach())
     assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
-    // A closed prompt says what any approval says: try again.
+    // A finger not recognized says what any approval says: try again.
     assertEquals(bot.tafs.app.model.Words.Approval.notRecognized, m.state.value.coachStartError)
+    assertFalse(m.state.value.startingCoach)
+  }
+
+  @Test fun aClosedPromptStartsNothingAndSaysCancelled() = runTest {
+    reads()
+    startAnswers()
+    val m = model()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.startCoach())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
+    // Nothing is waiting on it, so: "Cancelled. Nothing changed."
+    assertEquals("Cancelled. Nothing changed.", m.state.value.coachStartError)
     assertFalse(m.state.value.startingCoach)
   }
 
@@ -305,7 +324,7 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
-    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12","kept":true}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
     val m = model()
     m.loadCoach()
@@ -324,7 +343,7 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
-    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12","kept":true}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
     val m = model()
     m.loadCoach()
@@ -361,6 +380,89 @@ class CoachStartTest {
     assertEquals(CoachWords.CONNECTING_FAILED, m.state.value.coachStartError)
     assertEquals(bot.tafs.app.app.Mode.kiff, m.state.value.mode)
     assertEquals("at_1", secrets.load(AppModel.TOKEN))
+  }
+
+  /**
+   * The account's enrolled connector key still stands (another device enrolled it): asked first with no key, planque answers
+   * `kept`, and no key is minted, since a phone can't revoke one and a new one would only be left live in KIFF.
+   */
+  @Test fun aKeptEnrolmentMintsNoConnectorKey() = runTest {
+    reads()
+    startAnswers(keyless = 200 to """{"kept":true}""")
+    val m = model()
+    assertTrue(m.startCoach())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+    assertNotNull(enrolment.headers["Planque-Device-Signature"])
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    assertTrue(m.state.value.planqueReady)
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+  }
+
+  /**
+   * A 2xx to the keyless ask without `kept: true` mints nothing and stops, saying so; the next Start asks again. Only `kept: true`
+   * is set up, and only `409 needs_key` mints.
+   */
+  @Test fun aKeylessTwoHundredWithoutKeptMintsNothingAndStops() = runTest {
+    for (answer in listOf(201 to """{"tenant":"t_01","device":"ab12"}""", 200 to """{"kept":false}""")) {
+      transport.reset()
+      auth.fingerprints.clear()
+      reads()
+      startAnswers(keyless = answer)
+      val m = model()
+      assertFalse("$answer", m.startCoach())
+      assertTrue("$answer", transport.requestsTo("POST /v1/keys").isEmpty())
+      assertEquals("$answer", 1, transport.requestsTo("POST /v1/accounts/t_01/enrolment").size)
+      assertFalse("$answer", m.state.value.planqueReady)
+      assertEquals("$answer", "Connecting your apps didn't work. Tap Start to try again.", m.state.value.coachStartError)
+    }
+  }
+
+  /** No key stands (`needs_key`), and only then: one key is minted and handed over. */
+  @Test fun withNoStandingKeyOneIsMintedAndHandedOver() = runTest {
+    for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""")) {
+      transport.reset()
+      auth.fingerprints.clear()
+      reads()
+      startAnswers(keyless = refusal)
+      val m = model()
+      assertTrue(m.startCoach())
+      assertEquals(1, transport.requestsTo("POST /v1/keys").size)
+      val keys = transport.requestsTo("POST /v1/accounts/t_01/enrolment").map {
+        KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject["connector_key"]?.jsonPrimitive?.content
+      }
+      assertEquals(listOf(null, "kk_connector"), keys)
+      assertTrue(m.state.value.planqueReady)
+      assertEquals(listOf("Start Coach"), auth.fingerprints)
+    }
+  }
+
+  /**
+   * Any other answer to the keyless ask mints nothing: planque not reached, a 5xx, a replayed signature, a 400 (a body planque
+   * couldn't read, which an enrolment with a key would fail the same way). A key minted then,
+   * its enrolment failing too, would be left live in KIFF, held by no device. Start says why, and the next Start asks again.
+   */
+  @Test fun aKeylessAskPlanqueDidntAnswerMintsNoKey() = runTest {
+    val answers: List<Pair<Int, String>?> = listOf(
+      null,
+      503 to """{"error":"planque is unavailable"}""",
+      409 to """{"error":"this signature was already used","code":"signature_replayed"}""",
+      400 to """{"error":"the body can't be read"}""",
+    )
+    for (keyless in answers) {
+      transport.reset()
+      reads()
+      startAnswers(keyless = keyless)
+      val m = model()
+      assertFalse("$keyless", m.startCoach())
+      assertTrue("$keyless", transport.requestsTo("POST /v1/keys").isEmpty())
+      val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+      assertFalse("$keyless", String(enrolment.body!!).contains("connector_key"))
+      assertFalse(m.state.value.planqueReady)
+      assertNotNull("$keyless", m.state.value.coachStartError)
+      // A coded 409 is planque's why, never "another device", which only a planque that enrolled one phone said (no code).
+      assertNotEquals("$keyless", "Another device connects this account's apps for now. Connect them from that one.", m.state.value.coachStartError)
+    }
   }
 
   // MARK: Hand-overs
@@ -779,6 +881,91 @@ class CoachStartTest {
     assertTrue(m.state.value.grants.any { it.id == "g1" })
   }
 
+  // A live test on Android 104: the card said "Leyendo lo que pide…" for over a minute after the grant was made, until the chat
+  // was opened again. The phone read the grants three times, nine seconds in all, and Coach's run was done, so nothing read
+  // them again. They're read while the card waits on its grant: a minute in, planque lists it and the card has it.
+  @Test fun anApprovalWhoseGrantIsListedAMinuteLaterIsStillRead() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    advanceTimeBy(60_000)
+    runCurrent()
+    assertTrue(m.state.value.grants.none { it.id == "g1" })
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    // Past the first minute, read 10 s apart.
+    advanceTimeBy(10_000 + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+    // Listed: the reads stop.
+    val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(10 * AppModel.SET_UP_READ_MS)
+    runCurrent()
+    assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
+  }
+
+  // A grant planque never lists: read for ten minutes at most, never for as long as the chat stays open.
+  @Test fun aCardsGrantIsReadForTenMinutesAtMost() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    // 3 s apart for the first minute, then 10 s apart: ten minutes in all, 74 reads where 3 s throughout took 200.
+    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READ_DELAYS.sum())
+    assertEquals(74, AppModel.CARD_GRANT_READ_DELAYS.size)
+    assertEquals(60_000L, AppModel.CARD_GRANT_READ_DELAYS.takeWhile { it == 3_000L }.sum())
+    val before = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(AppModel.CARD_GRANT_READ_DELAYS.sum() + 1)
+    runCurrent()
+    val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    assertEquals(before + 74, read)
+    advanceTimeBy(60_000)
+    runCurrent()
+    assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
+  }
+
+  // tafs#1218: a card for a sign-in planque couldn't narrow carries `wider: {words}`, drawn above its buttons. Read leniently.
+  @Test fun aWiderSignInIsReadFromTheCardLeniently() {
+    fun card(wider: String) = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"c","grant":"g1"$wider}""")
+    val words = "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+    assertEquals(words, card(""","wider":{"words":"$words"}""").wider)
+    assertNull("no mark", card("").wider)
+    assertNull("blank words", card(""","wider":{"words":" "}""").wider)
+    assertNull("another shape is no mark, never a failed card", card(""","wider":true""").wider)
+    assertNull(card(""","wider":{"words":3}""").wider)
+  }
+
+  // Which grants a card waits on: an unanswered approval or sign-in card's, while planque doesn't list it.
+  @Test fun theGrantsCardsWaitOn() {
+    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1","title":"Connect Stripe"}""")
+    val signIn = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"sign_in","id":"again","grant":"g2","title":"Sign in"}""")
+    val notice = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"notice","id":"n","grant":"g4","title":"Note"}""")
+    val shown = { c: SetupComponent, answer: bot.tafs.app.kiff.CardAnswer? -> bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", c, answer) }
+    val cards = listOf(shown(connect, null), shown(signIn, null), shown(connect.copy(id = "done", grant = "g3"), bot.tafs.app.kiff.CardAnswer(words = "Approved")), shown(notice, null))
+    assertEquals(setOf("g1", "g2"), AppModel.grantsCardsWaitOn(cards, emptyList()))
+    assertEquals(setOf("g2"), AppModel.grantsCardsWaitOn(cards, listOf(bot.tafs.app.kiff.Grant(id = "g1"))))
+  }
+
+  // Which drafts a card waits on: an unanswered approval card's, while KIFF hasn't given it to this phone.
+  @Test fun theDraftsCardsWaitOn() {
+    val card = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"card","grant":"g1","draft":"dr_1","title":"Its Card"}""")
+    val signIn = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"sign_in","id":"again","grant":"g2","draft":"dr_9","title":"Sign in"}""")
+    val shown = { c: SetupComponent, answer: bot.tafs.app.kiff.CardAnswer? -> bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", c, answer) }
+    val cards = listOf(
+      shown(card, null),
+      shown(card.copy(id = "other", draft = "dr_2"), null),
+      shown(card.copy(id = "done", draft = "dr_3"), bot.tafs.app.kiff.CardAnswer(words = "Approved")),
+      shown(card.copy(id = "none", draft = null), null),
+      shown(signIn, null),
+    )
+    assertEquals(setOf("dr_1", "dr_2"), AppModel.draftsCardsWaitOn(cards, emptySet()))
+    assertEquals(setOf("dr_2"), AppModel.draftsCardsWaitOn(cards, setOf("dr_1")))
+  }
+
   // Review of Android 96: a grant was marked followed on a read planque refused, so no later thread read followed it.
   @Test fun aGrantFirstReadWhilePlanqueRefusedIsStillReadAgainLater() = runTest {
     reads()
@@ -795,6 +982,60 @@ class CoachStartTest {
     advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
+  }
+
+  // A live test: the owner came back to tafs with no link after Stripe's sign-in had reached planque, and Open again opened the
+  // same link, which planque takes once, so the page said it was used. Open again now ends that wait quietly and runs the card's
+  // approval again: planque, holding the sign-in, answers signed_in with its confirm code, and the card is signed in, no page.
+  @Test fun openAgainRunsTheApprovalAgainAndTakesTheSignedInPath() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"signed_in","confirm":"c0de"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("connected"))
+    val left = kotlinx.coroutines.flow.MutableStateFlow(false)
+    var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    val opened = mutableListOf<String>()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String { opened += url; waiting = kotlinx.coroutines.CompletableDeferred(); return waiting.await() }
+      override val left = left
+      override fun reopen() { reopened++ }
+      override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.startSignInAgain(KiffClient.json.decodeFromString(signInCard))
+    runCurrent()
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    left.value = true
+    runCurrent()
+    m.reopenSignIn()
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    // The same link was never opened again; the approval ran once more, and planque's signed-in answer was confirmed.
+    assertEquals(0, reopened)
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").size)
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
+    // Coach heard one answer, the second approval's: never "failed" for the page given up.
+    assertEquals(1, transport.requestsTo("POST /v1/tafs/setup_1/components/s1/answer").size)
+    assertEquals("signed in", answered("s1"))
+    assertNull(m.state.value.connecting)
+  }
+
+  // With no approval waiting on the page (none this model started), Open again opens the same page, as before.
+  @Test fun openAgainWithNoApprovalToRunOpensTheSamePage() = runTest {
+    reads()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String = kotlinx.coroutines.awaitCancellation()
+      override fun reopen() { reopened++ }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.reopenSignIn()
+    assertEquals(1, reopened)
   }
 
   // The owner on Android 97: back in tafs with no link from Google's page, the card offers the page again rather than drop it.

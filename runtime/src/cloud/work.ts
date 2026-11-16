@@ -16,7 +16,11 @@ import { isYourStep, type YourStepView, yourStepsOf } from "./yourstep.js";
 export type WorkStatus = "halted" | "needs_you" | "retrying" | "working" | "waiting_on_app" | "paused" | "idle";
 
 /** What else says where a taf stands: halted, its schedule off, no schedule at all, its next run. */
-export interface TafNow { paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null; fired?: Fired[] }
+export interface TafNow {
+  paused?: boolean; halted?: boolean; unscheduled?: boolean; next?: string | null; fired?: Fired[];
+  /** The app its check reads, by its connection's own name (connections.ts checkAppOf): its lines name it, else "the app". */
+  checkApp?: string;
+}
 
 /** What the home list shows of a taf's work. */
 export interface WorkSummary {
@@ -263,7 +267,7 @@ export function requestOf(r: Run, zone: string, now: Date, sent: Sent[] = [], ag
 /** `dead`: the lines of its hand-offs the receiving taf didn't finish (delivery.ts), each one the managers' to send again. */
 export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now: Date, lang: Lang = "en", health?: Health, dead: string[] = []): WorkSummary {
   const w = wordsIn(lang);
-  const { paused = false, halted = false, unscheduled = false, next = null, fired = [] } = typeof how === "boolean" ? { paused: how } : how;
+  const { paused = false, halted = false, unscheduled = false, next = null, fired = [], checkApp } = typeof how === "boolean" ? { paused: how } as TafNow : how;
   // Halted stops everything, its holds included: that comes first.
   if (halted) return { status: "halted", line: w.work_halted, needs_you: 0 };
   const recent = runs.filter((r) => now.getTime() - Date.parse(r.updated) < NEEDS_YOU_DAYS * 86_400_000);
@@ -288,8 +292,8 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   // What went wrong last comes before the next run, which would read as all's well: its latest firing's check
   // that couldn't read first (a Run now's too), then its health, then its last run stopped at a cap or failed.
   const newest = fired[0];
-  if (newest?.outcome === "failed_check") return { status: "idle", line: w.work_check_failed(whenIn(newest.due, zone, now, lang)), needs_you: 0, attention: true };
-  if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang), needs_you: 0, attention: true };
+  if (newest?.outcome === "failed_check") return { status: "idle", line: w.work_check_failed(whenIn(newest.due, zone, now, lang), checkApp), needs_you: 0, attention: true };
+  if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang, zone, now, checkApp), needs_you: 0, attention: true };
   const ended = runs.find((r) => r.status === "COMPLETED" || r.status === "ERROR");
   if (ended && !unscheduled && (ended.status === "ERROR" || (ended.stop && ended.stop !== "answered"))) {
     return { status: "idle", line: requestOf(ended, zone, now, [], undefined, [], lang).line, needs_you: 0, attention: true };

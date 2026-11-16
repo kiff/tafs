@@ -130,7 +130,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   // at the bottom.
   var following by remember { mutableStateOf(true) }
   val listState = rememberLazyListState()
-  val items = state.chatItems(tafId)
+  // In the order already on screen: nothing moves while a turn streams or the thread is read again (Chat.steady).
+  val shown = remember(tafId) { Chat.Shown() }
+  val read = state.chatItems(tafId)
+  val items = remember(read) { shown.order(read) }
   val thinking = state.thinking(tafId)
   // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
   val showKnocks = state.mode == Mode.kiff && state.doorsOffered.isNotEmpty() && !isTrialChat(tafId) && tafId != COACH_CHAT && taf?.cloudId != null

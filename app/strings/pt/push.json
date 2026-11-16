@@ -1,7 +1,10 @@
 {
+  "push.channel.briefs": "Resumos",
+  "push.channel.briefs_description": "O seu resumo às horas definidas, sem som.",
   "push.channel.holds_description": "Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.",
   "push.channel.other": "Outros alertas",
   "push.channel.other_description": "Pedidos de tarefas e as respetivas respostas, sem som.",
+  "push.channel.urgent_description": "O que não pode esperar pelo seu próximo resumo, com som.",
   "push.open_needs_you": "Abra Precisa de si para responder.",
   "push.open_taf": "Abra o taf para ver.",
   "push.open_usage": "Abra Plano e utilização para ver."

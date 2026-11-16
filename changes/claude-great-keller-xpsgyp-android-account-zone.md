@@ -1,0 +1,1 @@
+- **Android: Account's time zone as on the iPad.** "Use this phone's time zone" shows only when the account is in another zone, and the section says what the zone is for (Holds' deadlines, Activity, the Record and what your tafs write) (docs/android-app.md).

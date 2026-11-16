@@ -1,0 +1,6 @@
+- Een Card zegt het als de aanmelding van een app meer vraagt dan de taak nodig heeft.
+- Coach: in de chat verschuift niets meer terwijl hij antwoordt.
+- Het Logboek toont nooit de ruwe foutmelding van een app.
+- De vingerafdrukvraag sluiten toont "Geannuleerd. Er is niets veranderd."
+- Een Card-concept dat niet gelezen kon worden, zegt waarom, met Opnieuw proberen.
+- Account › Tijdzone biedt die van de telefoon alleen aan als die anders is.

@@ -63,6 +63,31 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertTrue(source.contains("yourConnections(app: \"\\(app.displayName)\")"), "the app's own screen by its name")
     }
 
+    /// While one of its connections is being removed, the row says so where "Connected" would be, in place of
+    /// tafs cloud's line too, which still says connected (as Android 105). The model marks the grant from Face
+    /// ID until planque answered and Connect apps was read again.
+    func testARowBeingRemovedSaysSo() throws {
+        let sheets = try app(#"{"entry":"sheets","title":"Google Sheets","how":"oauth","state":"connected","whose":"Yours","line":"Sign in · Connected"}"#)
+        let said = ConnectRow(sheets, removing: true)
+        XCTAssertTrue(said.removing)
+        XCTAssertEqual(said.status, Words.Connect.disconnecting)
+        XCTAssertEqual(said.second, [Words.Connect.How.signIn, "Yours", Words.Connect.disconnecting].joined(separator: " · "))
+        XCTAssertEqual(Words.Connect.disconnecting, "Removing access…")
+        XCTAssertEqual(ConnectRow(sheets).second, "Sign in · Connected", "otherwise tafs cloud's line")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let model = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(model.range(of: "func disconnect(grantID: String) async -> Bool {"))
+        let body = String(model[start.upperBound...].prefix(2000))
+        let marked = try XCTUnwrap(body.range(of: "removingGrants.insert(grantID)"))
+        let call = try XCTUnwrap(body.range(of: "try await planque.disconnect(grantID: grantID)"))
+        let reread = try XCTUnwrap(body.range(of: "if connectApps != nil { await loadConnectApps() }"))
+        XCTAssertTrue(marked.upperBound < call.lowerBound && call.upperBound < reread.lowerBound, "marked after Face ID, until the list is read again")
+        XCTAssertTrue(body.contains("defer { planque.signer = nil; removingGrants.remove(grantID) }"))
+        let view = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("removing: model.connections(of: app).contains { model.removingGrants.contains($0.id) })"))
+    }
+
     /// Connected: how it connects, whose, Connected, and who uses it. To connect: how it connects
     /// alone. With no `used_by` yet, this phone's own read names the tafs.
     func testWhatEachRowSays() throws {
@@ -105,8 +130,8 @@ final class ConnectRowTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertTrue(source.contains("NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }"))
-        XCTAssertTrue(source.contains("if app.connected {\n            NavigationLink { AppConnectionsView(app: app) }"),
-                      "a connected app always opens, never a tap that does nothing")
+        XCTAssertTrue(source.contains("if AppModel.opensConnections(app, in: model.grants) {\n            NavigationLink { AppConnectionsView(app: app) }"),
+                      "a connected app always opens, never a tap that does nothing, and so does one this device holds a connection to")
         XCTAssertTrue(source.contains("if !model.readsConnections {\n                Text(Words.Connect.startConnectedToolsFirst("),
                       "a device that reads no connections says so, not an empty list")
         XCTAssertTrue(source.contains("private var table: Bool { sizeClass == .regular }"))
@@ -171,6 +196,30 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertEqual(source.components(separatedBy: "ConnectColumns {").count, 3, "the header and the rows, the same layout")
         XCTAssertTrue(source.contains(".lineLimit(1).truncationMode(.tail)\n                    .accessibilityIdentifier(\"connect.title.\" + app.entry)"),
                       "a name on one line, never broken inside a word")
+    }
+
+    /// A connection goes only to a taf the person named: the one the list was opened from, else their
+    /// pick, asked even when one taf is all there is. Never a guess.
+    func testConnectAsksWhichTafEvenWithOne() {
+        let one = Taf(name: "Unanswered emails", job: "Emails", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        let two = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 1, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one]), .ask, "one taf is still asked, never taken")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one, two]), .ask)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: two.id, connectable: [one, two]), .taf(two.id), "opened from a taf: that one")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: []), .noTaf)
+    }
+
+    /// With tafs cloud's `needed_by`, the list only narrows: one taf that needs the app is still asked, as two
+    /// are; none is Ask Coach, and a taf opened from that doesn't need it is Ask Coach too, never a start.
+    func testWithNeededByEvenOneTafIsAsked() {
+        let one = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        let two = Taf(name: "Disputes", job: "Disputes", tools: [], colorIndex: 1, card: Card(rules: [], issuedBy: "You"))
+        let other = Taf(name: "Unanswered emails", job: "Emails", tools: [], colorIndex: 2, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one], needed: true), .ask, "named, never taken")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one, two], needed: true), .ask)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [], needed: true), .askCoach)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: two.id, connectable: [one, two], needed: true), .taf(two.id))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: other.id, connectable: [one], needed: true), .askCoach, "Stripe under a Gmail taf")
     }
 
     /// "Make one first" sits over Discover, where connecting needs a taf, and never over Yours: on an

@@ -1,0 +1,1 @@
+- **Android: an approval or sign-in card says when an app's sign-in asks for more than the job.** tafs cloud's words (`wider.words`) are drawn above the card's buttons, so a read-only job's card never stands unsaid over a consent screen that asks for more (docs/android-app.md).

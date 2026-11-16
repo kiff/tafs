@@ -1,0 +1,161 @@
+{
+  "about": "GET /v1/home for someone who manages the tafs: the same taf, paused. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "tafs": [
+      {
+        "id": "taf-aaaa0000000000000000",
+        "name": "Rae",
+        "job": "refunds",
+        "kiff_agent": "rae",
+        "status": "paused",
+        "next_run": null,
+        "next_run_words": null,
+        "last_run": null,
+        "results": [
+          "door_reply"
+        ],
+        "time_zone": "UTC",
+        "time_zone_words": "Times in UTC",
+        "schedule_time_zone": "UTC",
+        "job_summary": "Ask Coach to describe this taf's job",
+        "last_change": "2026-10-15T09:00:00Z",
+        "color": 0,
+        "state": "paused",
+        "waiting": 0,
+        "card": {
+          "ids": [
+            "card_rae"
+          ],
+          "active": true,
+          "expires": "2026-12-31T00:00:00Z",
+          "tools": [
+            "Create refund"
+          ],
+          "rules": [
+            {
+              "action": "stripe_refund",
+              "label": "Create refund",
+              "outside": "hold",
+              "per_action": {
+                "minor": 10000,
+                "unit": "EUR",
+                "scale": 2
+              },
+              "per_window": {
+                "minor": 100000,
+                "unit": "EUR",
+                "scale": 2
+              },
+              "count_per_window": 20,
+              "window": "calendar_day",
+              "window_words": {
+                "each": "a day",
+                "now": "today"
+              }
+            }
+          ],
+          "used": {
+            "stripe_refund": {
+              "minor": 20000,
+              "unit": "EUR",
+              "scale": 2
+            }
+          },
+          "usage_unknown": [],
+          "cards": [
+            {
+              "id": "card_rae",
+              "title": "Create refund",
+              "environment": "",
+              "live": true,
+              "active": true,
+              "expires": "2026-12-31T00:00:00Z",
+              "rules": [
+                {
+                  "action": "stripe_refund",
+                  "label": "Create refund",
+                  "outside": "hold",
+                  "per_action": {
+                    "minor": 10000,
+                    "unit": "EUR",
+                    "scale": 2
+                  },
+                  "per_window": {
+                    "minor": 100000,
+                    "unit": "EUR",
+                    "scale": 2
+                  },
+                  "count_per_window": 20,
+                  "window": "calendar_day",
+                  "window_words": {
+                    "each": "a day",
+                    "now": "today"
+                  }
+                }
+              ],
+              "total": {
+                "limit": {
+                  "minor": 100000,
+                  "unit": "EUR",
+                  "scale": 2
+                },
+                "used": {
+                  "minor": 20000,
+                  "unit": "EUR",
+                  "scale": 2
+                },
+                "window": "calendar_day",
+                "window_words": {
+                  "each": "a day",
+                  "now": "today"
+                }
+              },
+              "calls": {
+                "limit": 20,
+                "used": null,
+                "window": "calendar_day",
+                "window_words": {
+                  "each": "a day",
+                  "now": "today"
+                }
+              }
+            }
+          ]
+        },
+        "work": {
+          "status": "paused",
+          "line": "Paused",
+          "needs_you": 0
+        },
+        "health": {
+          "level": "failing",
+          "lines": [
+            "Its last 2 checks found work too big for one run, so nothing ran. Have Coach narrow what it reads, so each piece fits one run."
+          ],
+          "fixes": [
+            {
+              "line": 0,
+              "kind": "coach",
+              "words": "Narrow it with Coach",
+              "say": "Its last check found work too big for one run. Narrow what it reads, so each piece fits one run."
+            }
+          ]
+        }
+      }
+    ],
+    "headline": {
+      "words": "0 tafs working."
+    },
+    "setting_up": [],
+    "others": [],
+    "removing": [],
+    "limits": {
+      "text": 2000,
+      "trial_idle_days": 7
+    },
+    "needs_you": {
+      "count": 0,
+      "words": "Nothing needs you."
+    }
+  }
+}

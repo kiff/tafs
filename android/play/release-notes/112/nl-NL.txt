@@ -1,0 +1,1 @@
+- Account en de andere vensters blijven stil na snel vegen, en "Uitloggen" is helemaal te zien.

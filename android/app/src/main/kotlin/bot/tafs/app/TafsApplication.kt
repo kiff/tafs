@@ -23,8 +23,15 @@ import bot.tafs.app.signing.KeystoreKeys
  * session. The signer stays across a rotation; the prompt shows on whichever activity is on screen.
  */
 class TafsApplication : Application() {
+  // The language picked in Account › Language, on Android 11 and 12, where the app keeps it (AppLocale); 13+ does it itself.
+  override fun attachBaseContext(base: android.content.Context) {
+    super.attachBaseContext(bot.tafs.app.design.AppLocale.wrap(base))
+  }
+
   override fun onCreate() {
     super.onCreate()
+    // A language picked on Android 12 goes on after the phone moves to 13, as its per-app language.
+    bot.tafs.app.design.AppLocale.carryOver(this)
     // The words, in the language Android resolved for tafs, before anything is shown (docs/languages.md).
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords(this))
     // The lines that name this device say tablet on a large screen, as Android's own sw600dp does.
@@ -80,6 +87,33 @@ class TafsApplication : Application() {
 
   fun changeArrived(change: bot.tafs.app.push.Alert.Changed) {
     changeListener?.invoke(change)
+  }
+
+  /**
+   * The app's one model for the process (docs/watch-wear.md): the screen draws it and the watch's relay reads it, so the
+   * session, its hooks on [kiff] and [cloud], and what was saved are never two models' at once. Owned here, not by an
+   * activity's ViewModelStore, so closing the screen doesn't end it while the relay still answers.
+   */
+  val model: bot.tafs.app.app.AppModel by lazy {
+    bot.tafs.app.app.AppModel(
+      bot.tafs.app.app.SampleStore(java.io.File(filesDir, "sample.json")), signer, kiff, cloud, secrets, deviceName = deviceName,
+      push = push, planque = planque, vendorSignIn = vendorSignIn, purchases = purchases, playBilling = playBilling,
+      openedFiles = java.io.File(cacheDir, "attachments"),
+    )
+  }
+
+  private val restoring = bot.tafs.app.app.RestoreOnce(
+    restore = { onScreen -> model.restore(onScreen) },
+    finishOnScreen = { model.finishRestoreOnScreen() },
+  )
+
+  /**
+   * [model], with where the owner left off restored once for the process, whoever asks first: the screen ([onScreen]) or the
+   * watch. The watch's restore asks the person nothing; the screen's first ask after it finishes what needs them.
+   */
+  suspend fun restoredModel(onScreen: Boolean): bot.tafs.app.app.AppModel {
+    restoring.run(onScreen)
+    return model
   }
 
   /** What KIFF's device list calls this phone, so the owner can tell it from their other devices. */

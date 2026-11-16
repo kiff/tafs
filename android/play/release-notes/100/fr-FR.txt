@@ -1,0 +1,1 @@
+- Ajouter un appareil : dans Compte, Appareils, scannez le code de votre ordinateur, vérifiez qu'il affiche les mêmes 6 caractères et approuvez avec votre empreinte.

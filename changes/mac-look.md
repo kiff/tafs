@@ -1,0 +1,1 @@
+- **Mac: the iPad's look in two places.** The window shows no title above the screens, and the calendar's date reads "Nov 15, 2026" as on the iPad, not "11/15/2026". Nothing changes on iPhone or iPad (docs/mac-app.md).

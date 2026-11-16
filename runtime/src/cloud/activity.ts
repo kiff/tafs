@@ -5,6 +5,7 @@ import { timeIn } from "./work.js";
 import { connectionRefusalWords } from "./refusal.js";
 import { cardUnitExceptions, cardUnitNotice, collapsedCurrencyDecision, type CardUnitException } from "./card-unit.js";
 import { type Lang, wordsIn } from "./words/index.js";
+import { vendorKind } from "./health.js";
 import type { Held } from "./home.js";
 
 export const ACTIVITY_FILTERS = [
@@ -72,6 +73,67 @@ function saidWhy(message: string | null | undefined): string | undefined {
   return said && said !== "The tool returned an error." ? said : undefined;
 }
 
+/** The longest app reason quoted: a short sentence. Anything longer is an app's error body, never shown. */
+export const QUOTED_MAX = 160;
+
+/**
+ * The app's reason as it may be quoted: one plain short sentence. Never a body that looks like JSON or code, one longer than
+ * QUOTED_MAX, or one holding an email address. An app's error body can carry the connected account's address, a file's or a
+ * message's name, or a request id, and Activity is shown to everyone who can see the taf (agents#539 keeps the same out).
+ */
+export function quotable(said: string | undefined): string | undefined {
+  if (!said || said.length > QUOTED_MAX) return;
+  if (/[{}[\]<>]/.test(said)) return;
+  if (/[^\s@]+@[^\s@]+\.[^\s@]+/.test(said)) return;
+  return said;
+}
+
+/** An app's canonical error code in its answer ("status": "FAILED_PRECONDITION"), as kiff/agents' VendorAnswer reads it. */
+const CANONICAL = new Set(["INVALID_ARGUMENT", "FAILED_PRECONDITION", "OUT_OF_RANGE", "UNAUTHENTICATED", "PERMISSION_DENIED", "NOT_FOUND",
+  "ABORTED", "ALREADY_EXISTS", "RESOURCE_EXHAUSTED", "CANCELLED", "DATA_LOSS", "UNKNOWN", "INTERNAL", "UNIMPLEMENTED", "UNAVAILABLE",
+  "DEADLINE_EXCEEDED"]);
+
+/**
+ * How the app answered a call it refused, from its words: its HTTP status and, when it gives a canonical one, its code
+ * ("400 FAILED_PRECONDITION"). Without a status, nothing. Read only for the line's words: the body itself is never shown.
+ */
+export function vendorAnswer(message: string | null | undefined): string | undefined {
+  const status = answeredStatus(message) ?? (/"code"\s*:\s*([1-5]\d\d)\b/.exec(message ?? "")?.[1] as string | undefined);
+  if (!status) return;
+  const code = [...(message ?? "").matchAll(/"status"\s*:\s*"([A-Z][A-Z_]{2,39})"/g)].map((m) => m[1]!).find((c) => CANONICAL.has(c));
+  return code ? `${status} ${code}` : String(status);
+}
+
+/**
+ * A call the app refused, as its Activity row says it: a short plain reason quoted for someone who manages the taf; else
+ * what the app's status and code ask, in words; else its status; else that it gave no reason.
+ */
+function appRefused(message: string | null | undefined, manages: boolean, lang: Lang): string {
+  const w = wordsIn(lang);
+  const said = saidWhy(message);
+  const quoted = manages ? quotable(said) : undefined;
+  if (quoted) return w.act_app_refused(quoted);
+  const vendor = vendorAnswer(message);
+  const kind = vendorKind(vendor);
+  if (kind === "access") return w.act_app_refused_access;
+  if (kind === "account") return w.act_app_refused_account;
+  if (kind === "busy") return w.act_app_refused_busy;
+  if (vendor) return w.act_app_refused_status(Number(vendor.split(" ")[0]));
+  return w.act_app_refused_none;
+}
+
+/**
+ * KIFF's call as a row carries it to the apps: as KIFF sent it, except the app's own message, kept only when the row may
+ * quote it. No app reads it from there; it never carries what the row's line doesn't show.
+ */
+function shownCall(c: ActivityCall, manages: boolean): ActivityCall {
+  const o = c.tool_outcome;
+  if (!o || o.message == null) return c;
+  const keep = manages ? quotable(saidWhy(o.message)) : undefined;
+  const { message: _dropped, ...rest } = o;
+  return { ...c, tool_outcome: keep ? { ...rest, message: keep } : rest };
+}
+
 /**
  * The next step for a call that wasn't done, by what KIFF recorded: the vendor's status in its words, or the
  * connection's code. A call that was done, held, refused by its Card, or whose answer was lost has none.
@@ -104,7 +166,7 @@ export function nextStep(c: ActivityCall, taf?: string, lang: Lang = "en"): Next
  * nothing it answered reads as the owner's request (qa-kiff on #574, as kiff/agents#358 does for the record).
  */
 function askCoach(taf: string | undefined, what: string, said: string | undefined, lang: Lang = "en"): string {
-  return wordsIn(lang).next_ask_message(taf, what, said?.replace(/"/g, "'"));
+  return wordsIn(lang).next_ask_message(taf, what, quotable(said)?.replace(/"/g, "'"));
 }
 
 /** The step a vendor's HTTP status calls for, when it calls for one. */
@@ -184,16 +246,19 @@ function worded(s: string | null | undefined): string | undefined {
   return flat && !/^[a-z0-9_.-]+$/.test(flat) ? flat : undefined;
 }
 
-export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en"): ActivityEntry {
+/**
+ * A call as an Activity or Record row. `manages`: the reader manages the taf, so a short plain reason the app gave is quoted;
+ * anyone else, people it's shared with included, gets the reason in tafs cloud's words.
+ */
+export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en", manages = false): ActivityEntry {
   const kind = kindOf(c);
   const w = wordsIn(lang);
   const connection = connectionRefusalWords(c.tool_outcome, lang);
-  // The app's own words for why, as KIFF recorded them, quoted as the app's: never read for whether
-  // anything was done, which the outcome says (kiff/tafs#476, gap 10).
-  const said = saidWhy(c.tool_outcome?.message);
+  // The app's own words for why, as KIFF recorded them, quoted as the app's only when they're a short plain sentence and the
+  // reader manages the taf: never read for whether anything was done, which the outcome says (kiff/tafs#476, gap 10).
   const details = { done: w.act_done, approved: w.act_approved, held: w.act_held,
     refused: w.act_refused(worded(c.reason)), not_done: connection
-      ? worded(c.detail) ?? connection : c.tool_outcome?.status === "refused_by_tool" ? (said ? w.act_app_refused(said) : w.act_app_refused_none) : w.act_not_reached,
+      ? worded(c.detail) ?? connection : c.tool_outcome?.status === "refused_by_tool" ? appRefused(c.tool_outcome?.message, manages, lang) : w.act_not_reached,
     sending: w.act_sending, unknown: w.act_unknown };
   const raw = hash(c.proposal_id).slice(0, 32);
   const id = `${raw.slice(0, 8)}-${raw.slice(8, 12)}-5${raw.slice(13, 16)}-8${raw.slice(17, 20)}-${raw.slice(20)}`;
@@ -202,11 +267,11 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: st
   const next = kind === "not_done" ? nextStep(c, taf, lang) : undefined;
   const amount = amountWords(c.amount, lang);
   return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now, lang), day, day_title: dayTitle,
-    ...(amount ? { amount_text: amount } : {}), call: c, ...(next ? { next } : {}) };
+    ...(amount ? { amount_text: amount } : {}), call: shownCall(c, manages), ...(next ? { next } : {}) };
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
-export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string; lang?: Lang }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string; lang?: Lang; manages?: boolean }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
   const lang = input.lang ?? "en";
   const filter = input.query.get("filter") ?? "all";
   if (!ACTIVITY_FILTERS.some((f) => f.id === filter)) throw new ActivityError(400, "filter is all, done, held or refused");
@@ -242,7 +307,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     for (const call of source.calls) {
       offset++;
       if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)
-        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName, lang));
+        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName, lang, input.manages === true));
       if (entries.length === take) break;
     }
     more = offset < source.shown && !(from && source.calls.some((c) => Date.parse(c.created_at) < Date.parse(from)) && entries.length < take);

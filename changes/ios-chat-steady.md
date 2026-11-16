@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: Coach's chat keeps its order while Coach answers**: a card or your message never jumps when tafs cloud's copy or Coach's words arrive; and the list's first chip says "All" in the same words as the other apps ([docs/ios-app.md](docs/ios-app.md)).

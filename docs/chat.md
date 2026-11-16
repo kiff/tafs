@@ -144,6 +144,8 @@ outcome, and a failed step is left out once something worked (`WorkLog.rows`).
 **Why a step failed.** A failed step carries `failed: true` and, when there is one, `why`:
 the first line of what the tool answered, in the owner's words, with a service's "answered
 403:" prefix, ids, codes and hashes left out, at most 160 characters (`whyOf`, `steps.ts`).
+The name of the thing a left-out id was stays, in words: Stripe's "No such payment_intent:
+'pi_…'" reads "No such payment intent", never "No such: 'it'".
 The live `step` event has it, and the thread's step has the same line: tafs cloud keeps a
 run's reasons while the run streams (by run and call, for as long as the run is kept), since
 kiff/agents keeps a result only until its run ends and its usage record says only that the
@@ -158,7 +160,7 @@ reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and sh
 "not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
 again, it stays in the list. A connection call the connection server refused for how Coach
 wrote it (its order, "read the catalog before…", or its shape, "reusing … takes agent, agent_name and
-tools: [] alone", a missing grant id) ends `not_made` too, never "Coach couldn't connect …" in red:
+tools: [] alone", a missing grant id), or a tool Coach named that the catalog doesn't hold by that name ("has no tool named …", "lists no tool named …"), ends `not_made` too, never "Coach couldn't connect …" in red:
 nothing was made, and Coach asks again. A reread of the thread says the same (the kept reason is marked
 `not_made`).
 
@@ -321,7 +323,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `declined` from the phone, and
   otherwise what tafs cloud decided ([coach.md](coach.md#approving-tafs-cloud-decides)): `approved`
   only after a signature it checked, `already approved: <vendor> is connected and its Card is
-  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`;
+  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`.
+  From the person, `POST …/components/{id}/answer` on an approval card takes only `declined` or
+  `failed: <why>`; `approved` and `already approved: …` are refused (400), so a session alone, a
+  view-only device's too, never makes the card read "Approved", and the old form's `[approval <id>]
+  approved` goes as a message;
   sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
@@ -367,6 +373,15 @@ sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the conn
 `signs` in `can` (on the read and on the ask): only then is a held sign-in's first tools offered with the Card
 under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the
 Card's limits as being signed now: they go under `words`.
+
+**A sign-in wider than the job is said on the card.** When planque couldn't narrow an app's sign-in to what the
+taf uses (`request.connector.usual_access` on its grant: the app's sign-in offers no narrower scope, such as Google Sheets with no
+read-only one), each waiting approval or sign-in card for it carries `wider: {words}`: "The sign-in for Google
+Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own
+tools.", in the reader's language. The apps draw it above the card's buttons, so no card stands unsaid under
+Coach's "read-only" or "change nothing". It's read with the same grants as `signs`, so only with the phone's proof.
+Coach hears it once per connection, as a line it reads with the owner's next message, telling it to say so
+plainly and never to call that sign-in read-only (`markWider`).
 
 **Whether Approve is a tap is on the card too:** `signs.takes`, `"tap"` or `"fingerprint"`, from the key `decide`
 then asks with (`takesOf`). Connecting an app (`connect`) is a tap inside an open approval window. The key or added
@@ -441,8 +456,13 @@ same app went through later in the run, the message says so in three lines, all 
 the person's language: `words`, the failed step's own ("Coach couldn't connect Shippo yet"); `why`, the
 server's reason, scrubbed as any step's reason is (`whyOf`) and with any host name or phone number left out too (`shownWhy`: the server can quote a description a third party wrote), as a line ("Why: managed sign-in isn't set up
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
-Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
-a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description or grant (or the same app by a known name)
+Shippo with its key instead, or to use another app."). A read Coach makes as itself while it sets up (`planque read` of a
+`setup_reads` tool) that KIFF refuses for want of a Card (`no_mandate_issued`, `mandate_not_covered`) isn't the
+connection failing: planque issues that Card when the owner approves, and a slow sign-in can leave it unissued while the
+connection works. Its lines say so and never ask for a sign-in: "Coach's reads of Stripe couldn't be set up", "Stripe
+is connected: only the reads Coach makes while it sets up weren't allowed.", "Next: ask Coach to go on without reading
+Stripe first." (`step_reads_*`). It's taken before a retry folds the step away, so
+a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description, catalog entry or reused grant (or the same app by a known name), or tools set on the same grant (even while they wait for the owner's approval),
 that went through does, and so does any later connection call whose answer shows it `signed_in`, `listed` or
 `connected`, so "couldn't connect" never stands under "signed in" (`Steps.connectedBy`); one showing it failed
 clears nothing (`resolved`, `takeRefused` and `Steps.connectionRefusal` in

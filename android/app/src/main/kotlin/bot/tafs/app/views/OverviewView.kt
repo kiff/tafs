@@ -64,6 +64,8 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
       }
     }
+    // The owner's board 10, under the Overview's title (a tablet's: the phone has no Overview).
+    bot.tafs.app.design.Illustrated(height = 200.dp) { bot.tafs.app.design.OverviewArt(it) }
     if (state.held.isNotEmpty()) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Eyebrow(Words.NeedsYou.title, color = Theme.amber)

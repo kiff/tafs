@@ -1,0 +1,1 @@
+- **Android: Account › Language has its own picker.** Change language lists "This phone's language" and the 8 languages, each named in itself, with the current one marked; a tap applies it at once, on Android 13+ as the phone's per-app language and on Android 11 and 12 kept by the app, without signing out or leaving Account ([docs/android-app.md](docs/android-app.md)).

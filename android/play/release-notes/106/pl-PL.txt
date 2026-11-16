@@ -1,0 +1,2 @@
+- Uruchomienie Coacha na innym telefonie tego samego konta nie zostawia już nieużywanego klucza na Twoim koncie KIFF.
+- Gdy połączenie aplikacji się nie uda, aplikacja mówi dlaczego, a Start próbuje ponownie. Nie twierdzi już, że łączy je inne urządzenie, gdy tak nie jest.

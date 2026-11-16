@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.fillMaxSize
 import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.secret
@@ -52,6 +54,31 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Connect apps' own words; every app's name and state comes from tafs cloud. */
+/** Whom a Connect is for. */
+sealed interface ConnectFor {
+  /** The taf the list was opened from. */
+  data class Taf(val id: String) : ConnectFor
+  /** The person picks, in "Which taf is this for?". */
+  data object Ask : ConnectFor
+  /** No taf can have it: Connect is off, and "Make one first" says why. */
+  data object NoTaf : ConnectFor
+}
+
+/**
+ * A connection goes only to a taf the person named: the one Connect apps was opened from, else their pick, asked even when
+ * one taf is all there is (as iOS does), `needed_by` only narrowing the list. Never a guess: a guessed taf takes an app its Card
+ * never asked for. None at all is Ask Coach.
+ */
+fun connectFor(openedFrom: String?, connectable: List<String>): ConnectFor =
+  if (openedFrom != null) ConnectFor.Taf(openedFrom) else if (connectable.isEmpty()) ConnectFor.NoTaf else ConnectFor.Ask
+
+/**
+ * The tafs "Which taf?" lists for [app]: those tafs cloud says need it (`needed_by`, by tafs cloud id), among the ones the person
+ * manages here; every one of them from a tafs cloud before `needed_by`. tafs cloud decides; this only matches its ids.
+ */
+fun tafsFor(app: ConnectApps.App, connectable: List<bot.tafs.app.model.Taf>): List<bot.tafs.app.model.Taf> =
+  app.neededBy?.map { it.taf }?.toSet()?.let { needed -> connectable.filter { it.cloudId in needed } } ?: connectable
+
 object ConnectAppsWords {
   val TITLE get() = Words.Connect.Apps.title
 
@@ -111,6 +138,14 @@ object ConnectAppsWords {
  */
 fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
   state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
+
+/**
+ * Whether an app's row opens its connections: when tafs cloud marks it connected, and also when the phone holds a connection
+ * to it tafs cloud doesn't count as one, such as a sign-in kept but never approved (`listed`, a declined card's). That gives
+ * no taf any access, so `connected` keeps its meaning and the app stays where tafs cloud puts it; but it's the owner's to end,
+ * and only the connections' sheet has Disconnect.
+ */
+fun opensConnections(state: AppState, app: ConnectApps.App): Boolean = app.connected || connectionsOf(state, app).isNotEmpty()
 
 /** An app's connections by taf: one section per taf, its name as the heading, with its connections in the order planque lists them. */
 data class TafConnections(val taf: String, val grants: List<bot.tafs.app.kiff.Grant>)
@@ -176,7 +211,16 @@ fun ConnectAppsSheet(
   var confirmingRemove by androidx.compose.runtime.remember { mutableStateOf<Pair<bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.GrantAction>?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
-    { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
+    { app ->
+      // Signing in again keeps its grant's taf; a new connection goes to the taf the person picks, among those tafs cloud says
+      // need the app, asked even with one.
+      if (app.needsReconnect) start(app, null)
+      else when (val to = connectFor(openedFrom = null, connectable = tafsFor(app, tafs).map { it.id })) {
+        is ConnectFor.Taf -> start(app, to.id)
+        ConnectFor.Ask -> picking = app
+        ConnectFor.NoTaf -> onAskCoach()
+      }
+    }
   }
   // Read again as the search changes, once typing pauses.
   LaunchedEffect(query) {
@@ -241,10 +285,13 @@ fun ConnectAppsSheet(
             Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
             grants.forEach { g ->
               // planque describes it: its title, who uses it and its health; the row opens its detail, where its actions are.
-              if (g.actions != null) { DescribedConnectionRow(g, app.displayName, state) { detail = g }; return@forEach }
+              // One tafs cloud says was made under a taf that doesn't use the app: said, and always the app's own row, so it can be ended.
+              val misplaced = app.misplaced.firstOrNull { it.grant == g.id }
+              if (g.rowFromPlanque && misplaced == null) { DescribedConnectionRow(g, app.displayName, state) { detail = g }; return@forEach }
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
                   Text(ConnectAppsWords.rowTitle(app.displayName, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  misplaced?.let { Text(Words.Connect.misplaced(taf = it.name, app = app.displayName), style = scaled(13, color = Theme.amberText)) }
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
                   ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
@@ -262,10 +309,12 @@ fun ConnectAppsSheet(
                   state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
                 }
                 // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
+                // While one removal is on its way, its button says so and no other starts (as on iPhone and iPad).
                 if (onDisconnect != null) Text(
-                  bot.tafs.app.model.ConnectionWords.endButton(g),
-                  style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
+                  if (state.disconnecting == g.id) Words.Connect.disconnecting else bot.tafs.app.model.ConnectionWords.endButton(g),
+                  style = scaled(15, FontWeight.SemiBold, if (state.disconnecting == null) Theme.no else Theme.dim),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms()
+                    .tapping(enabled = state.disconnecting == null) { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -398,7 +447,7 @@ fun ConnectAppsSheet(
         text = {
           Column {
             Text(bot.tafs.app.model.ConnectWords.oneTaf(app.displayName), style = scaled(14, color = Theme.soft))
-            tafs.forEach { taf ->
+            tafsFor(app, tafs).forEach { taf ->
               Text(
                 taf.name,
                 style = scaled(16, FontWeight.SemiBold, Theme.amber),
@@ -413,7 +462,8 @@ fun ConnectAppsSheet(
         },
       )
     }
-    Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
+    // At full height from the first frame: the list it's waiting for never makes it open small and then grow (the owner on Android 97).
+    Column(Modifier.fillMaxSize().navigationBarsPadding().testTag(CONNECT_APPS_SHEET)) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
@@ -425,14 +475,19 @@ fun ConnectAppsSheet(
         OutlinedTextField(query, driveTyped({ query = it }), Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
+        // Not read yet: said where the list goes.
+        if (apps == null && state.connectAppsError == null) Text(Words.Common.loading, style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 8.dp))
         // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
         val (yours, discover) = apps?.apps.orEmpty().partition { it.yours }
         val row: @Composable (ConnectApps.App) -> Unit = { app ->
           // A connected row always opens: with none of its connections on the phone, they're read again first (Android 85 and iPad
           // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
-          AppRow(app, connect, onChooseActions, onManage = { a: ConnectApps.App ->
+          // An app no taf needs (tafs cloud's `needed_by` empty) offers Ask Coach, which sets one up, in place of Connect.
+          val connectHere = connect?.takeIf { app.needsReconnect || tafsFor(app, tafs).isNotEmpty() }
+          AppRow(app, connectHere, onChooseActions, opens = opensConnections(state, app), onManage = { a: ConnectApps.App ->
             if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
-          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && tafs.isEmpty() })
+          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && connectHere == null },
+            removing = state.disconnecting?.let { id -> connectionsOf(state, app).any { it.id == id } } == true)
         }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
@@ -475,15 +530,20 @@ private fun AppRow(
   app: ConnectApps.App,
   onConnect: ((ConnectApps.App) -> Unit)?,
   onChooseActions: (ConnectApps.App) -> Unit = {},
+  /** Whether the row opens its connections ([opensConnections]): connected, or holding a connection on the phone. */
+  opens: Boolean = app.connected,
   onManage: ((ConnectApps.App) -> Unit)? = null,
   usedBy: List<String> = emptyList(),
   /** With no taf to connect it for, the way to make one: Coach. */
   onAskCoach: (() -> Unit)? = null,
+  /** One of its connections is being removed: "Removing access…" in place of "Connected" until it's done. */
+  removing: Boolean = false,
 ) {
   // A connected app's whole row opens its connections, not only its "Connected" label (an audit: "I tapped the whole Gmail
-  // row and nothing happened").
-  val opens = if (app.connected && onManage != null) Modifier.tapping(onClickLabel = Words.Connect.Apps.manage) { onManage(app) } else Modifier
-  Panel(opens) {
+  // row and nothing happened"); so does one whose connection the phone holds though it isn't connected, a declined sign-in's,
+  // which only that sheet can end (the owner's phone, 16 Nov).
+  val opensRow = if (opens && onManage != null) Modifier.tapping(onClickLabel = Words.Connect.Apps.manage) { onManage(app) } else Modifier
+  Panel(opensRow) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
       val logo = bot.tafs.app.design.rememberLogo(app.logo)
@@ -506,6 +566,12 @@ private fun AppRow(
         if (!app.needsSetup) Text(ConnectAppsWords.secondLine(app, usedBy), style = scaled(12, color = Theme.dim), maxLines = 2)
       }
       when {
+        // A removal on its way: said, never "Connected", until planque answered and the list was read again.
+        removing -> Text(
+          Words.Connect.disconnecting,
+          style = scaled(14, FontWeight.SemiBold, Theme.dim),
+          modifier = Modifier.heightIn(min = 44.dp).padding(top = 12.dp).semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+        )
         // Connected: its connections, each with Disconnect, a tap away.
         app.connected -> Text(
           ConnectAppsWords.CONNECTED,
@@ -558,6 +624,8 @@ fun ConnectApprovalSheet(
   /** The secure sheet's words for a key grant, from tafs cloud (docs/secure-connection.md); and Disconnect from its receipt. */
   loadSecure: suspend (String) -> Unit = {},
   onDisconnect: (String) -> Unit = {},
+  /** Back on the sheet with no link from the vendor's page: the same page again, as Coach's card offers. */
+  onReopen: () -> Unit = {},
 ) {
   // Kept only while the sheet is open, never saved: it goes to planque once.
   var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
@@ -651,6 +719,12 @@ fun ConnectApprovalSheet(
               enabled = !busy && (!profiled || words != null) && (!needsKey || key.isNotBlank()),
             )
           }
+          // The vendor's page was left before it sent tafs back: open it again, or Not now below ends the wait.
+          if (busy && state.vendorPageLeft) Text(
+            reopenWords(grant.vendor),
+            style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+            modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onReopen).padding(top = 6.dp),
+          )
         }
         Text(
           bot.tafs.app.model.ConnectWords.CANCEL,
@@ -692,3 +766,6 @@ internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, sta
 
 /** A connections sheet emptied by a removal closes, unless the read failed: then it says why. */
 internal fun closesWhenEmptied(connectionsError: String?): Boolean = connectionsError == null
+
+/** The Connect apps sheet's content, for tests: it fills the sheet's height from the first frame. */
+internal const val CONNECT_APPS_SHEET = "connect-apps-sheet"

@@ -1,0 +1,1 @@
+- **Mac: Touch ID that's out of reach reads as such.** On the Mac build, Touch ID that can't be used (the lid closed on another display, the keyboard away) says it can't be used right now, instead of sending the person to a per-app switch a Mac doesn't have. Nothing changes on iPhone or iPad (docs/mac-app.md).

@@ -1,0 +1,6 @@
+De eerste tafs-app voor Wear OS, als metgezel van de tafs-app op je telefoon.
+- "Wacht op jou" en "Je tafs" om je pols, gelezen van je telefoon.
+- Weiger een vastgehouden aanroep of zet een taf stil vanaf het horloge. Goedkeuren blijft op je telefoon.
+- Als er niets op je wacht, zegt een groen vinkje het.
+- Een tegel met hoeveel er op je wachten, alleen zichtbaar als het horloge ontgrendeld is.
+- Praat met Coach: Coach krijgt je woorden als tekst, nooit je stem.

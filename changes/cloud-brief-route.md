@@ -1,0 +1,1 @@
+- **tafs cloud: Your brief's route** (part 2 of the brief): `GET /v1/brief?label=` lists the calls KIFF holds and the steps tafs handed their owner as decisions, the urgent first, at the account's 08:00 and 18:00, in the person's 8 languages; `POST /v1/brief/decisions/{id}/later` puts one off to the next brief, and a removed taf leaves it ([api.md](../docs/api.md)).

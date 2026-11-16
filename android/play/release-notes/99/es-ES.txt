@@ -1,0 +1,2 @@
+- Quitar definitivamente toma un toque; un segundo no hace nada.
+- Conectar apps se abre a tamaño completo y dice que está cargando.

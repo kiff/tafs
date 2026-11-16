@@ -1,0 +1,1 @@
+- **iPhone and iPad: the pulsing border while Coach drives the app follows Reduce Motion.** With Reduce Motion on, it stays still, as every other moving part of the app already did (docs/ios-app.md).

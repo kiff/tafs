@@ -1,0 +1,6 @@
+- Uma Card indica quando o início de sessão de uma app pede mais do que a tarefa precisa.
+- Coach: nada se move na conversa enquanto responde.
+- O Registo nunca mostra o erro em bruto de uma app.
+- Fechar o pedido da impressão digital mostra «Cancelado. Nada mudou.»
+- Um rascunho de Card que não foi possível ler diz porquê, com Tentar novamente.
+- Conta › Fuso horário só propõe o do telefone se for diferente.

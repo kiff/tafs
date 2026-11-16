@@ -42,6 +42,8 @@ struct SetupChatView: View {
     /// The thread's ids when the owner sent it: the pin goes only to a message that wasn't
     /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
     @State private var sentBefore: Set<String> = []
+    /// What the thread has drawn, in its order (`SteadyOrder`): nothing moves while Coach answers.
+    @State private var drawn: [SteadyOrder.Entry] = []
     @State private var viewport: CGFloat = 600
     /// The pinned message's turn, as laid out: the room under it is the screen less this (the 845 test).
     @State private var turn = PinnedTurn()
@@ -66,7 +68,8 @@ struct SetupChatView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                if !model.setupStarted {
+                // `-screen coach-chat` draws the sample conversation, over the sample, which has no Coach to start.
+                if !model.setupStarted && !Screenshots.coachChat {
                     intro
                     if model.setupHanded && !model.approvalBlocked {
                         // Words first (docs/ios-app.md): what was handed over waits in the
@@ -157,6 +160,8 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 12) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    // Board 9, an iPad's or a Mac's first start (docs/ios-app.md › Illustrations).
+                    if sizeClass == .regular { Illustration.coachStarting.frame(maxWidth: .infinity).padding(.bottom, 8) }
                     Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
                     Text(words.lead).scaledFont(16).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
@@ -195,6 +200,8 @@ struct SetupChatView: View {
     private var introBefore: some View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
+            // Board 9, an iPad's or a Mac's first start (docs/ios-app.md › Illustrations): Coach before its first message.
+            if sizeClass == .regular { Illustration.coachStarting.frame(maxWidth: .infinity) }
             Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
             Text(Words.Coach.nameToolTafShouldWork(biometry: "\(Biometry.name)"))
                 .scaledFont(16).foregroundColor(Theme.soft)
@@ -231,8 +238,23 @@ struct SetupChatView: View {
         .padding(20)
     }
 
+    /// The thread as shown, in the order already drawn: a card never moves under the person's eyes when
+    /// tafs cloud's copy of their message lands, or Coach's words come at the end of its turn.
+    private var shown: [SetupThread.Item] {
+        SteadyOrder.order(textBeforeCards(model.setupThread.items), drawn: drawn, id: \.id, at: \.at, ownerText: Self.ownerText)
+    }
+
+    static func ownerText(_ item: SetupThread.Item) -> String? {
+        if case .message(let m) = item, m.from == .owner { return m.text }
+        return nil
+    }
+
+    private func rememberDrawn() {
+        drawn = shown.map { SteadyOrder.Entry(id: $0.id, ownerText: Self.ownerText($0)) }
+    }
+
     private var thread: some View {
-        let items = textBeforeCards(model.setupThread.items)
+        let items = shown
         let thinking = model.setupThinking
         let waiting = model.setupWaiting
         return ScrollViewReader { proxy in
@@ -400,9 +422,10 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                rememberDrawn()
                 // The thread as it is now: the captured `items` can be the body's before the
                 // change, without the message just sent (the 845 test, as in TafChatView).
-                let items = textBeforeCards(model.setupThread.items)
+                let items = shown
                 if let p = pinned, p.hasPrefix("m|"), !ids.contains(p) {
                     if let words = pinnedWords,
                        let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
@@ -476,7 +499,10 @@ struct SetupChatView: View {
                 }
                 follow(proxy)
             }
-            .onAppear { land(proxy, waiting: waiting) }
+            .onAppear { land(proxy, waiting: waiting); rememberDrawn() }
+            // Another conversation is drawn in its own order, from nothing.
+            .onChange(of: model.setupChat) { _ in drawn = [] }
+            .onChange(of: model.setupFresh) { _ in drawn = [] }
         }
     }
 
@@ -559,6 +585,8 @@ struct SetupChatView: View {
                 Text(Words.Coach.improveLine(name: "\(taf.name)"))
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
+                // Board 7, Coach with no taf or one yet (docs/ios-app.md › Illustrations): room for more.
+                if model.tafs.count <= 1 { Illustration.coachFirst }
                 Text(Words.Coach.askAnything)
                     .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -1206,7 +1234,18 @@ struct StepMark: View {
             }
         }
         .frame(width: 18, height: 18)
-        .accessibilityLabel(status)
+        .accessibilityLabel(Self.words(status))
+    }
+
+    /// What VoiceOver reads for the mark: the words, never tafs cloud's raw status ("done").
+    static func words(_ status: String) -> String {
+        switch status {
+        case "done": Words.Coach.Plan.stepDone
+        case "failed": Words.Coach.Plan.stepFailed
+        case "active": Words.Coach.Plan.stepActive
+        case "skipped": Words.Coach.Plan.stepSkipped
+        default: Words.Coach.Plan.stepPending
+        }
     }
 }
 
@@ -1300,6 +1339,8 @@ struct SetupComponentView: View {
                 }
                 Text(c.note ?? Words.Coach.signInNote)
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                // A sign-in that asks for more than the job, said above the button, in tafs cloud's words.
+                if let wider = c.widerWords { WiderLine(words: wider) }
                 Button(state == .working ? model.connectStep ?? Words.Connect.openingSignIn : state.isFailure ? Words.Common.tryAgain : signedOut != nil ? Words.Connect.signInAgain : c.yes ?? c.service.map { Words.Coach.SignIn.open(service: $0) } ?? Words.Coach.SignIn.openSignIn) {
                     Task { await model.signInAgain(c) }
                 }
@@ -1493,6 +1534,14 @@ struct SetupApproval: View {
         }
     }
 
+    /// The line under Approve: KIFF's approval-window words where tafs cloud marks the card a tap and
+    /// this phone holds a window (`held`), hidden while an approval runs, as Android hides them; else
+    /// that approving asks for Face ID or Touch ID.
+    static func approveLine(_ component: SetupComponent, held: String?, approving: Bool) -> String? {
+        if let words = component.windowWords(held) { return approving ? nil : words }
+        return Words.Coach.approvingAsks(biometry: "\(Biometry.name)")
+    }
+
     /// Whether this card's connection is approved by giving its key: planque says it takes one
     /// (`request.kind` "api_key"), and it isn't connected yet. The card then opens the key sheet
     /// and holds no field itself. Once connected, the card is approved as any other.
@@ -1638,6 +1687,20 @@ struct SetupApproval: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.raised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else if let id = component.draft, draft == nil, !replaced, !answered {
+                // The Card isn't read yet, so Approve waits. Said, never a blank: KIFF's reason with
+                // Try again when it wouldn't give it, as on Android. It's read again while the card waits.
+                if let why = model.setupDraftErrors[id] {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(Words.Coach.cardDraftNotRead(why: why))
+                            .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                        Button(Words.Common.tryAgain) { Task { await model.readCardDraft(id) } }
+                            .scaledFont(13, weight: .semibold, relativeTo: .footnote)
+                            .accessibilityIdentifier("approval.draft-try-again")
+                    }
+                } else {
+                    Text(Words.Coach.readingKiffWords).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                }
             } else if grant != nil, let words = Self.cardNextWords(component) {
                 // An app's first sign-in has no draft yet (a Card is drafted over the tools it brings):
                 // tafs cloud's words still say a Card comes next, so the owner knows a second approval
@@ -1646,6 +1709,8 @@ struct SetupApproval: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("approval.card-next")
             }
+            // A sign-in that asks for more than the job, said above the buttons, in tafs cloud's words.
+            if !replaced, let wider = component.widerWords { WiderLine(words: wider) }
             if replaced {
                 // Opened to read again: its words only. The newer request below is the one to act on.
                 Text(Words.Coach.newerRequestConnectionBelow)
@@ -1691,7 +1756,11 @@ struct SetupApproval: View {
                 }
                 .disabled(busy || (answered && !state.isFailure))
                 CardNote(id: component.id)
-                Text(Words.Coach.approvingAsks(biometry: "\(Biometry.name)")).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                // Face ID named only where Approve still asks for it: on a card tafs cloud marks a tap, while
+                // this phone holds an approval window, KIFF's words for the next tap instead (as Android).
+                if let line = Self.approveLine(component, held: model.windowWords, approving: model.connecting != nil) {
+                    Text(line).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                }
             }
         }
     }
@@ -1817,6 +1886,18 @@ struct WhileYouWereAway: View {
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A sign-in wider than the job, in tafs cloud's words (`wider.words`): above a card's buttons, so no card stands
+/// unsaid under a line that calls the sign-in harmless (as Android's `WiderLine`).
+struct WiderLine: View {
+    let words: String
+    var body: some View {
+        Text(words)
+            .scaledFont(14, weight: .medium).foregroundColor(Theme.amberText)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("card.wider")
     }
 }
 

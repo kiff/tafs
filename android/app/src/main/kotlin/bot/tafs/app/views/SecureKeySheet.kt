@@ -82,6 +82,8 @@ fun SecureKeyContent(
   }
 
   if (receipt != null && receipt.grant == grant.id) {
+    // The key given: the owner's board 5, above the receipt's own words (as iOS's ConnectApprovalSheet.receipt).
+    bot.tafs.app.design.Illustrated(height = 140.dp) { bot.tafs.app.design.AppConnectedArt(it) }
     Text(SecureSheetWords.receipt(sheet, receipt.last4), style = scaled(16, FontWeight.SemiBold, Theme.ink))
     sheet.receipt?.disconnect?.takeIf { it.isNotBlank() }?.let { words ->
       var confirming by remember(grant.id) { mutableStateOf(false) }

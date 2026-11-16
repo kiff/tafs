@@ -9,7 +9,11 @@ import java.time.Instant
  * from KIFF with the phone's own session when it is opened.
  *
  *   kind        "alert" shows a notification; "answered" takes one away (a held call someone answered); "background" with
- *               change says what changed on the account, for the app to read again
+ *               change says what changed on the account, for the app to read again; "brief" or "urgent" (Missions design v2.1)
+ *               shows the brief's alert, or an urgent one, which opens Your brief unless `open` names where (an earlier
+ *               draft's shape; tafs cloud sends these as "alert" with brief_kind)
+ *   brief_kind  on an alert, "brief" (Your brief is ready) or "urgent" (one that came at once, a held call's): the brief is read
+ *               again with the app open; with decision, the one it's about ("hold:<id>")
  *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
@@ -17,9 +21,45 @@ import java.time.Instant
  *   level       "interrupt" (a hold, a halt: sounds, comes through) or "quiet" (no sound)
  *   expires_at  a held call isn't worth showing once it has expired
  */
+/**
+ * The phone's notification channels (docs/android-app.md, Alerts). A held call stays on Needs you's, even when tafs cloud marks it
+ * urgent (`brief_kind`), so the settings an owner gave that channel hold: Android never carries one channel's settings to another.
+ */
+enum class AlertChannel {
+  /** A held call, or any alert that sounds: interrupting. */
+  NEEDS_YOU,
+
+  /** What can't wait for the next brief (`brief_kind: urgent`) and isn't a held call: interrupting, with Needs you's sound. */
+  URGENT,
+
+  /** Your brief is ready (`brief_kind: brief`): quiet. */
+  BRIEFS,
+
+  /** Everything quiet besides: no sound. */
+  OTHER,
+}
+
 sealed interface Alert {
   /** A notification to show. */
-  data class Show(val title: String, val body: String, val open: String, val tag: String, val loud: Boolean, val expiresAt: Instant?) : Alert
+  data class Show(
+    val title: String,
+    val body: String,
+    val open: String,
+    val tag: String,
+    val loud: Boolean,
+    val expiresAt: Instant?,
+    /** The brief's alert, or an urgent one: with the app open, the brief is read again. */
+    val brief: Boolean = false,
+    /** Which of the phone's channels it goes on, so the person can set each kind apart in the phone's settings. */
+    val channel: AlertChannel = if (loud) AlertChannel.NEEDS_YOU else AlertChannel.OTHER,
+  ) : Alert {
+    /**
+     * What this alert says on a locked phone, or a locked watch it bridges to: only that a taf needs you (`alert.needs_you`, iOS's
+     * hidden-preview placeholder), never tafs cloud's title or body, which can name an amount, a merchant or a person. The same for
+     * every alert, quiet ones too: a usage line can name an amount.
+     */
+    fun locked(): Show = copy(title = Words.Alert.needsYou, body = "")
+  }
 
   /** A notification to take away: its call was answered. */
   data class Clear(val tag: String) : Alert
@@ -34,8 +74,14 @@ sealed interface Alert {
 object AlertPayload {
   const val NEEDS_YOU = "needs-you"
   const val USAGE = "usage"
+
+  /** Your brief, in Needs you's place (Missions design v2.1): where a brief's alert, or an urgent one, opens. */
+  const val BRIEF = "brief"
   private const val TAF = "taf"
-  private val OPEN = setOf(NEEDS_YOU, USAGE)
+  private val OPEN = setOf(NEEDS_YOU, USAGE, BRIEF)
+
+  /** An alert's `brief_kind` (Missions design v2.1, §7.5): Your brief is ready, or one that came at once. */
+  private val BRIEF_KINDS = setOf("brief", "urgent")
 
   /** The changes tafs cloud tells the phones of; one of a newer kind is ignored, and the next return to the app reads it. */
   val CHANGES = setOf("taf", "halted", "resumed", "knock")
@@ -52,8 +98,29 @@ object AlertPayload {
   fun tafOf(open: String?): String? =
     open?.let { o -> listOf("$TAF:", "$KNOCK:").firstOrNull { o.startsWith(it) }?.let { o.removePrefix(it) } }?.takeIf { it.isNotEmpty() }
 
+  /**
+   * Where the Wear OS watch's Open on phone goes (docs/watch-wear.md): `tafs://open/needs-you` opens Needs you. Anything else,
+   * or a link that isn't the watch's, opens nothing.
+   */
+  fun openedFromWatch(link: String?): String? = when (link) {
+    "tafs://open/$NEEDS_YOU" -> NEEDS_YOU
+    else -> null
+  }
+
   /** Whether a destination opens its taf on Activity: a door's knock does, as the knocks are answered there. */
   fun opensActivity(open: String?): Boolean = open?.startsWith("$KNOCK:") == true
+
+  /**
+   * The channel an alert goes on: a held call's stays Needs you's (its sound as its `level` says); else Your brief's alert goes on
+   * Briefs and an urgent one on Urgent; anything else by its sound, as before.
+   */
+  private fun channelOf(data: Map<String, String>, briefKind: String?, loud: Boolean): AlertChannel = when {
+    data["hold_id"]?.isNotBlank() == true -> if (loud) AlertChannel.NEEDS_YOU else AlertChannel.OTHER
+    briefKind == "brief" -> AlertChannel.BRIEFS
+    briefKind == "urgent" -> AlertChannel.URGENT
+    loud -> AlertChannel.NEEDS_YOU
+    else -> AlertChannel.OTHER
+  }
 
   /** What a message asks of the phone; null for one it doesn't understand, so a message of a newer kind never breaks the phone. */
   fun parse(data: Map<String, String>, now: Instant = Instant.now()): Alert? {
@@ -77,8 +144,23 @@ object AlertPayload {
           tafId != null && open != NEEDS_YOU -> Words.Push.openTaf
           else -> Words.Push.openNeedsYou
         }
+        // Your brief's own alert, or an urgent one: the brief is read again with the app open. One brief's alert replaces the last.
+        val briefKind = data["brief_kind"]?.takeIf { it in BRIEF_KINDS }
         // A door's alerts with nothing else to name them are one per taf: the latest replaces the one before.
-        Alert.Show(title, body, open, tag.ifEmpty { tafOf(open)?.let(::taf) ?: "alert" }, loud = data["level"] != "quiet", expiresAt = expires)
+        val tagged = tag.ifEmpty { if (briefKind == "brief") BRIEF else tafOf(open)?.let(::taf) ?: "alert" }
+        val loud = data["level"] != "quiet"
+        Alert.Show(title, body, open, tagged, loud = loud, expiresAt = expires, brief = briefKind != null, channel = channelOf(data, briefKind, loud))
+      }
+      // The brief's alert, or an urgent one (Missions design v2.1): the brief, whose urgent card leads it, unless it names where it
+      // opens. Urgency is tafs cloud's: its `level` says whether it sounds, as any alert's does.
+      "brief", "urgent" -> {
+        val open = data["open"]?.takeIf { it in OPEN } ?: BRIEF
+        val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        if (expires != null && !expires.isAfter(now)) return null
+        val title = data["title"]?.takeIf { it.isNotBlank() } ?: Words.Alert.needsYou
+        val body = data["body"]?.takeIf { it.isNotBlank() } ?: Words.Push.openNeedsYou
+        val loud = data["level"] != "quiet"
+        Alert.Show(title, body, open, tag.ifEmpty { data["kind"].orEmpty() }, loud = loud, expiresAt = expires, brief = true, channel = channelOf(data, data["kind"], loud))
       }
       else -> null
     }

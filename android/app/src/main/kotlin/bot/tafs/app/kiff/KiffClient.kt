@@ -86,7 +86,15 @@ data class Account(
   @SerialName("time_zone") val timeZone: String? = null,
   /** What this person may do on the account ("cards.manage", …); null from a KIFF that doesn't say. */
   val capabilities: List<String>? = null,
+  /**
+   * How this device's session approves, in KIFF's word: "view" (nothing it signs approves), "key" (its approval key),
+   * "passkey", or "device_key" (a session from before approval modes). Null from a KIFF that doesn't say.
+   */
+  @SerialName("approval_mode") val approvalMode: String? = null,
 ) {
+  /** KIFF keeps this session view-only: nothing this phone signs approves. */
+  val viewOnly: Boolean get() = approvalMode == "view"
+
   /** The account as the owner knows it: its name, else its slug. */
   val name: String get() = displayName?.takeIf { it.isNotEmpty() } ?: slug
 
@@ -331,6 +339,25 @@ class KiffClient(
   @Serializable
   private data class Relinked(val status: String = "", val fingerprint: String? = null)
 
+  /**
+   * The new device's side of pairing (KIFF's pairing contract): with no session, it claims the session the other phone approved,
+   * proving with [proof] (the device key's signature over [PairOffer.claimMessage], base64 DER) that it holds the key. Until the
+   * approval KIFF answers as the device sign-in does: pending, slow down, or expired.
+   */
+  suspend fun claimPairing(nonce: String, pub: String, proof: String): DeviceToken {
+    try {
+      return call("POST", "/v1/pair/claim", mapOf("nonce" to nonce, "pub" to pub, "proof" to proof), authorized = false)
+    } catch (e: KiffError.Server) {
+      if (e.status != 400) throw e
+      throw when (e.message) {
+        "authorization_pending" -> KiffError.AuthorizationPending
+        "slow_down" -> KiffError.SlowDown
+        "expired_token" -> KiffError.Expired
+        else -> e
+      }
+    }
+  }
+
   private suspend inline fun <reified T> pollToken(deviceCode: String): T {
     try {
       return call("POST", "/v1/auth/device/token", mapOf("device_code" to deviceCode), authorized = false)
@@ -345,8 +372,9 @@ class KiffClient(
     }
   }
 
-  suspend fun signOut() {
-    send("POST", "/v1/auth/device/logout", mapOf<String, String>())
+  /** Ends a session at KIFF: this client's, or [bearer]'s, a token the app didn't keep (a sign-in the person stopped). */
+  suspend fun signOut(bearer: String? = null) {
+    send("POST", "/v1/auth/device/logout", mapOf<String, String>(), bearer = bearer)
   }
 
   suspend fun me(): Account = call("GET", "/v1/me")
@@ -654,10 +682,36 @@ class KiffClient(
     send("POST", "/v1/me/mandates/${escaped(cardId)}/revoke", mapOf<String, String>())
   }
 
-  /** Signs a device out of the account: it no longer approves, and its sessions are over. */
+  /**
+   * Signs a device out of the account: it no longer approves, and its sessions are over. Removing a device that holds an
+   * approval key takes an approval (KIFF's pairing contract), and the phone can't tell which do, so it's always
+   * signed: by the approval key behind its fingerprint, never inside an approval window. Set [setupSigner] first.
+   */
   suspend fun removeDevice(id: String) {
-    send("DELETE", "/v1/me/devices/" + escaped(id))
+    sendJson("DELETE", DEVICES + escaped(id), null, inWindow = false)
   }
+
+  /** The account's passkeys, a computer's own among them (it has no id: it goes with its device). */
+  suspend fun passkeys(): List<Passkey> = json.decodeFromString(PasskeyList.serializer(), String(send("GET", PASSKEYS, null))).passkeys
+
+  /**
+   * Registers a passkey made on this phone, with proof of possession ([PasskeyRegistration.registerBody]). Only the approval
+   * key behind its fingerprint registers one, never inside an approval window: otherwise a stolen session could add its own.
+   */
+  suspend fun registerPasskey(body: JsonObject): Passkey =
+    json.decodeFromString(PasskeyBody.serializer(), String(sendJson("POST", PASSKEYS, body, inWindow = false))).passkey
+
+  /** Removes one of the account's passkeys: signed by the approval key behind its fingerprint, as a device's removal is. */
+  suspend fun removePasskey(id: String) {
+    sendJson("DELETE", "$PASSKEYS/" + escaped(id), null, inWindow = false)
+  }
+
+  /**
+   * Pairs the computer whose QR the person scanned (KIFF's pairing contract): its fields as the QR gave them, signed by the
+   * approval key behind the fingerprint, and never inside an approval window, which never covers a pairing.
+   */
+  suspend fun pair(qr: PairQr): Pairing =
+    json.decodeFromString(PairingBody.serializer(), String(sendJson("POST", PAIRINGS, qr.body(), inWindow = false))).pairing
 
   /**
    * Deletes the account in KIFF (kiff/tafs#185): its keys stop at once, and KIFF erases its data after its grace window.
@@ -773,7 +827,8 @@ class KiffClient(
     body: Map<String, String>? = null,
     authorized: Boolean = true,
     signedBy: ((ByteArray) -> String)? = null,
-  ): ByteArray = sendJson(method, path, body?.let { JsonObject(it.mapValues { (_, v) -> JsonPrimitive(v) }) }, authorized, signedBy)
+    bearer: String? = null,
+  ): ByteArray = sendJson(method, path, body?.let { JsonObject(it.mapValues { (_, v) -> JsonPrimitive(v) }) }, authorized, signedBy, bearer = bearer)
 
   /** Sends one request with a JSON body, which may nest. [gateway] sends it to KIFF's MCP gateway rather than the API. */
   internal suspend fun sendJson(
@@ -784,6 +839,8 @@ class KiffClient(
     signedBy: ((ByteArray) -> String)? = null,
     gateway: Boolean = false,
     inWindow: Boolean = true,
+    // Another session's token than this client's (a stopped sign-in's, ended at KIFF).
+    bearer: String? = null,
   ): ByteArray {
     val url = (if (gateway) gatewayUrl else baseUrl) + path
     val uri = try { URI.create(url) } catch (_: IllegalArgumentException) { throw KiffError.Server(0, Words.Error.badPath) }
@@ -818,8 +875,8 @@ class KiffClient(
       headers["KIFF-Device-Signature"] = if (held != null) "t=$signedAt,v2=$value,w=$held" else "t=$signedAt,v1=$value"
     }
     if (authorized) {
-      val bearer = token ?: throw KiffError.Unauthorized
-      headers["Authorization"] = "Bearer $bearer"
+      val sent = bearer ?: token ?: throw KiffError.Unauthorized
+      headers["Authorization"] = "Bearer $sent"
     }
 
     val response = transport.send(HttpRequest(method, url, headers, payload))
@@ -874,7 +931,16 @@ class KiffClient(
      * taf, the alert target that tells tafs cloud when a call is held, the connector key planque
      * keeps, the account's time zone, deleting the account (kiff/tafs#185), and raising the spend limit.
      */
-    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT)
+    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT, PAIRINGS)
+
+    /** The account's passkeys: registering one, or removing one by id after it, is signed by the approval key. */
+    const val PASSKEYS = "/v1/me/passkeys"
+
+    /** A device of the account, by id after it: removing one is signed by the approval key (KIFF's pairing contract). */
+    const val DEVICES = "/v1/me/devices/"
+
+    /** Pairing a computer (KIFF's pairing contract): signed by the approval key, never inside an approval window. */
+    const val PAIRINGS = "/v1/me/pairings"
 
     /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */
     const val DID_THIS_HAPPEN = "/v1/me/did-this-happen"
@@ -889,6 +955,9 @@ class KiffClient(
      */
     fun signsSetup(path: String): Boolean {
       if (path in SIGNED_SETUP_PATHS) return true
+      if (isDevice(path)) return true
+      // Registering one of the account's passkeys, or removing one.
+      if (path == PASSKEYS || isPasskey(path)) return true
       // Opening an approval window, and closing it (kiff/tafs#494).
       if (path == WINDOW || (path.startsWith("$WINDOW/") && path.endsWith("/close"))) return true
       if (path.startsWith("$DID_THIS_HAPPEN/")) return true
@@ -914,6 +983,9 @@ class KiffClient(
      * resuming a halt. Taking authority away (ending a trial, unsharing) is the current key.
      */
     fun grantsAuthority(method: String, path: String): Boolean {
+      // Removing a device: one that holds an approval key or a passkey goes only with an approval (§6).
+      // A passkey of the account: removing one takes an approval, as a device's does.
+      if (method == "DELETE") return isDevice(path) || isPasskey(path)
       if (method != "POST") return false
       // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
       if (path == WINDOW) return true
@@ -921,12 +993,22 @@ class KiffClient(
       // "Not sure" decides nothing: the device key takes it.
       if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1 && !path.endsWith("/check")) return true
       if (path == "/v1/me/agent-drafts") return true
+      // Pairing a computer gives it approval authority: only the approval key grants it.
+      if (path == PAIRINGS) return true
+      // A passkey approves for the person: only the approval key registers one (a stolen session would add its own).
+      if (path == PASSKEYS) return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
     }
+
+    /** `/v1/me/passkeys/{id}`: one passkey, never the list. */
+    private fun isPasskey(path: String): Boolean = path.startsWith("$PASSKEYS/") && path.length > PASSKEYS.length + 1 && '/' !in path.substring(PASSKEYS.length + 1)
+
+    /** `/v1/me/devices/{id}`: one device, never the list. */
+    private fun isDevice(path: String): Boolean = path.startsWith(DEVICES) && path.length > DEVICES.length && '/' !in path.substring(DEVICES.length)
 
     /** KIFF's approval window (kiff/tafs#494): read, opened with the approval key, closed with the device key. */
     const val WINDOW = "/v1/me/window"

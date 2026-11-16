@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Account's Language: the app's language named in itself, and the phone's own setting to change it. Android 13+ offers tafs in
+ * Account's Language: the app's language named in itself (its own picker is AppLocaleTest's). Android 13+ offers tafs in
  * its per-app language setting only when the manifest declares the generated `locales_config`.
  */
 class AppLanguageNameTest {

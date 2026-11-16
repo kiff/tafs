@@ -90,6 +90,9 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Working on it | Wird bearbeitet | En cours | Trabajando en ello | In corso | Em curso | Bezig | W toku |
 | Done | Erledigt | Terminé | Hecho | Fatto | Concluído | Klaar | Gotowe |
 | Your step (a step a taf handed its owner) | Dein Schritt | Votre étape | Tu paso | Il tuo passaggio | O seu passo | Jouw stap | Twój krok |
+| Your brief (the tab with the brief) | Dein Briefing | Votre briefing | Tu resumen | Il tuo riepilogo | O seu resumo | Jouw briefing | Twój przegląd |
+| brief (the summary tafs cloud writes twice a day: decisions, what was done) | Briefing | briefing | resumen | riepilogo | resumo | briefing | przegląd |
+| mission's log (a mission's read-only history, not KIFF's Record) | Missionsverlauf | historique de la mission | historial de la misión | cronologia della missione | histórico da missão | missiegeschiedenis | historia misji |
 | Skip it | Überspringen | Passer | Omitir | Salta | Saltar | Overslaan | Pomiń |
 | Failed | Fehlgeschlagen | Échec | Falló | Non riuscito | Falhou | Mislukt | Nie powiodło się |
 | Stopped | Gestoppt | Arrêté | Detenido | Fermato | Parado | Gestopt | Zatrzymane |
@@ -117,6 +120,8 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Activity | Aktivität | Activité | Actividad | Attività | Atividade | Activiteit | Aktywność |
 | Settings | Einstellungen | Réglages | Ajustes | Impostazioni | Definições | Instellingen | Ustawienia |
 | Home | Start | Accueil | Inicio | Home | Início | Start | Start |
+| security key (a USB key that approves) | Sicherheitsschlüssel | clé de sécurité | llave de seguridad | chiave di sicurezza | chave de segurança | beveiligingssleutel | klucz bezpieczeństwa |
+| PIN (a security key's) | PIN | code PIN | PIN | PIN | PIN | pincode | PIN |
 
 Halted and Stopped are different words in every language: a halt blocks a taf in every system it works
 through, while a stopped request is one run that ended. A word not in this table is translated in the voice above, the same way every time it appears. A new

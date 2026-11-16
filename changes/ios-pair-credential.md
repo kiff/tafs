@@ -1,0 +1,1 @@
+- **iPhone and iPad:** Add a computer now pairs a Windows computer that approves with Windows Hello: the phone reads the computer's own passkey from its code, and the check code covers it ([ios-app.md](../docs/ios-app.md#pairing-a-computer)).

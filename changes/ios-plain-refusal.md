@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: an app's raw answer is never quoted in the Record or in "Last failed"**: a JSON, long or multi-line body, or one naming an email address, shows only who refused it ([docs/ios-app.md](docs/ios-app.md)).

@@ -1,0 +1,2 @@
+- Zaloguj się drugim telefonem: pokaż kod tego telefonu, zeskanuj go telefonem, którego już używasz, w sekcji Konto, Urządzenia, Dodaj urządzenie, i gotowe.
+- Urządzenia otwierają się na pełną wysokość, Gotowe wraca do Konta, a zeskanowany kod, który nie jest urządzeniem, teraz to mówi i zostaje.

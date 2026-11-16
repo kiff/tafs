@@ -1,0 +1,1 @@
+- Telefon, który nie może zatwierdzać, mówi to od razu po wczytaniu konta: „Zaloguj się ponownie na tym telefonie, aby zatwierdzać, lub zatwierdź na drugim telefonie.”

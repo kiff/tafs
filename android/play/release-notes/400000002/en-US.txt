@@ -1,0 +1,6 @@
+The first tafs app for Wear OS, a companion to the tafs phone app.
+- Needs you and Your tafs on your wrist, read from your phone.
+- Refuse a held call, or halt a taf, from the watch. Approving stays on your phone.
+- When nothing needs you, a green check says so.
+- A tile with how many need you, shown only while the watch is unlocked.
+- Talk to Coach: it gets your words as text, never your voice.

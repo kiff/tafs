@@ -197,6 +197,6 @@ private struct DriveBorder: View {
         RoundedRectangle(cornerRadius: 40, style: .continuous)
             .strokeBorder(Theme.amber.opacity(pulse ? 0.95 : 0.45), lineWidth: pulse ? 6 : 3)
             .ignoresSafeArea()
-            .onAppear { withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true } }
+            .onAppear { withMotion(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true } }
     }
 }

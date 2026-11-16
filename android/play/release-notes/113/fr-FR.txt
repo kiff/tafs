@@ -1,0 +1,4 @@
+- Sur tablette, « Se connecter avec KIFF » et « Se connecter avec votre téléphone » côte à côte, puis « Connexion établie. »
+- Un téléphone se connecte avec KIFF. « Ajouter un appareil » affiche d'abord le code.
+- La montre Wear OS retrouve le téléphone.
+- Compte reste immobile après un balayage rapide, et « Se déconnecter » s'affiche en entier.

@@ -110,7 +110,18 @@ A taf on a schedule checks its work first (kiff/agents' `check`, `Taf.check`): e
 reads the taf's work list through one of its apps' read tools, without the model, and a
 run starts only when the read lists something new, those items handed to it as data. A
 firing that found nothing is `quiet`: it's healthy, and never shown as skipped or failed.
-One that couldn't read the app is `failed_check`, and counts toward the taf's health.
+One that couldn't read the app is `failed_check`, and counts toward the taf's health. Its lines say when (the account's
+zone) and name the app the check reads by its connection's name in planque, when the taf has exactly one app connected
+(else "the app"; planque's list is read only when a check failed): "The 09:00 check couldn't read Gmail", "The scheduled
+check couldn't read Gmail 2 times in a row, since Tue 09:00". Two in a row also put the taf in the owner's brief as an
+urgent decision ([missions.md](missions.md#your-brief)) until a check reads again. When the app itself refused the read,
+kiff/agents keeps how it answered (`Fired.vendor`: its HTTP status and canonical code, never its words), and the taf's
+health says what that asks of the owner instead of "Check the app's connection.": 401, 403, `UNAUTHENTICATED` or
+`PERMISSION_DENIED` is "Gmail refused the read: connect it again with an account that can read it."; `FAILED_PRECONDITION`
+(such as a Google account with no mailbox) is "Gmail said the connected account isn't set up for this read: connect it
+again with the account you use for it."; 429, 5xx, `RESOURCE_EXHAUSTED`, `UNAVAILABLE`, `DEADLINE_EXCEEDED` or `INTERNAL`
+is "Gmail couldn't answer just then. It tries again at its next time." Only the newest failure's answer counts; any other
+answer says what it said before (`health.ts` `vendorKind`).
 
 ## Where results go
 
@@ -176,7 +187,9 @@ wasn't checked is settled, once:
   - **The task tells the receiver to look again.** The hand-off says how things stood when the
     sending taf wrote it. Before it changes anything, the receiving taf reads what the hand-off
     names as it is now. If that has changed, or KIFF refuses the change because another taf has
-    it, it changes nothing and says why.
+    it, it changes nothing and says why. What it didn't read itself, it tells as the sending
+    taf's word, never as what it found: a receiver that left an item alone, unread, once told the
+    owner that "its dispute records already show as lost", a look-up its record doesn't have.
   - **A taf with nothing to hand over says so.** It writes "Nothing to hand over" as the
     section's first line, then why. The delivery is `none`: "Nothing to hand to Invoices: none of
     the deals was won." No run starts, nobody is told, and Coach isn't offered. A result with no

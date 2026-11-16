@@ -1,0 +1,1 @@
+- **iPhone and iPad: Connect apps offers an app only for the tafs that need it.** Once tafs cloud says which tafs need an app, "Which taf?" lists only those, and asks even when one does; none sends you to Coach to set one up. A connection made under a taf that doesn't use it says so, with Remove access beside it.

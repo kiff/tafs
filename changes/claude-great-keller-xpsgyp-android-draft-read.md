@@ -1,0 +1,1 @@
+- **Android: an approval card no longer waits for good on "Reading KIFF's words…".** When KIFF's draft of the Card can't be read, the card says why with Try again, and the draft is read again while the card waits; Approve still waits until it's read (docs/android-app.md, What a card's fingerprint signs).
