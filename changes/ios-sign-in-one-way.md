@@ -1,0 +1,1 @@
+- **iPad and Mac: the sign-in runs one way at a time**: Continue stops the phone half's pairing, and Show the code starts it again, as on every computer, so only the sign-in you chose can land ([docs/ios-app.md](docs/ios-app.md)).

@@ -185,12 +185,25 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesMismatch([stripe, shop], [refund(500, [day(5000)]), refund(9999, [], "refuse", "refund_order_s9")], rules)).toMatchObject({ kind: "figure", tool: "refund order", agreed: 1000, drafted: 9999 });
   });
 
-  it("figures the rules don't name are listed for the log, never refused", () => {
+  // Eval 43927756622 (Setup, run 1): after a refused draft, Coach signed an hour's €50 held on the refunds, beside the agreed
+  // €5 a refund and €50 a day refused. Any window counts, not only each call's and the day's.
+  it("figures the rules don't name, in any window, are each named, with the tool as the connection titles it", () => {
     const count = { quantity: "count", window: "calendar_day", limit: 100 };
     const cards = [refund(500, [day(5000), count, day(9, { per: "customer" })])];
     expect(rulesMismatch([stripe], cards, rule())).toBeUndefined();
-    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual(["refund_charge_k3 count calendar_day 100"]);
-    // A rule with no figures names none to compare: nothing is listed.
+    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual([{ tool: "refund charge", quantity: "count", window: "calendar_day", limit: 100 }]);
+    // The Eval's draft: the agreed figures, plus an hour's total on the held Card.
+    const split = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: "ask" as const }, DAY] }];
+    const hour = [refund(500, [{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }], "owner"), refund(undefined, [day(5000)])];
+    expect(rulesMismatch([stripe], hour, split)).toBeUndefined();
+    expect(rulesUnnamedFigures([stripe], hour, split)).toEqual([{ tool: "refund charge", quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]);
+    for (const window of ["rolling_24h", "rolling_7d", "lifetime", "ROLLING_1H"]) {
+      expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), { quantity: "sum(amount)", window, limit: 1 }])], rule())).toHaveLength(1);
+    }
+    // As agreed, a total for each item (another check's), and a count of 0 (each call asks): none named.
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000)])], rule())).toEqual([]);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), day(9, { per: "customer" }), { quantity: "count", window: "calendar_day", limit: 0 }])], rule())).toEqual([]);
+    // A rule with no figures names none to compare: nothing is named.
     expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
   });
 

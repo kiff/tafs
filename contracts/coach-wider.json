@@ -1,0 +1,90 @@
+{
+  "about": "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "messages": [
+      {
+        "id": "run2.in",
+        "at": "2026-10-16T12:00:00.000Z",
+        "from": "owner",
+        "kind": "message",
+        "text": "Set up refunds",
+        "session": "sess1"
+      }
+    ],
+    "components": [
+      {
+        "at": "2026-10-16T12:00:00.000Z",
+        "session": "sess1",
+        "run": "run2",
+        "seq": 2,
+        "component": {
+          "type": "approval",
+          "id": "a1",
+          "grant": "g_1",
+          "waits": "owner",
+          "wider": {
+            "words": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+          },
+          "signs": {
+            "card": false,
+            "words": "Its Card: you approve it next",
+            "takes": "tap"
+          }
+        },
+        "key": "sess1#a1"
+      }
+    ],
+    "items": [
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.in",
+          "at": "2026-10-16T12:00:00.000Z",
+          "from": "owner",
+          "kind": "message",
+          "text": "Set up refunds",
+          "session": "sess1"
+        }
+      },
+      {
+        "type": "card",
+        "card": {
+          "at": "2026-10-16T12:00:00.000Z",
+          "session": "sess1",
+          "run": "run2",
+          "seq": 2,
+          "component": {
+            "type": "approval",
+            "id": "a1",
+            "grant": "g_1",
+            "waits": "owner",
+            "wider": {
+              "words": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+            },
+            "signs": {
+              "card": false,
+              "words": "Its Card: you approve it next",
+              "takes": "tap"
+            }
+          },
+          "key": "sess1#a1"
+        }
+      }
+    ],
+    "working": null,
+    "steering": null,
+    "usage": {
+      "turns": 0,
+      "tokens_in": 0,
+      "cache_read_tokens": 0,
+      "cost_micro_usd": 0
+    },
+    "coach_lines": [
+      {
+        "at": "2026-10-16T12:00:00.000Z",
+        "taf": "Coach",
+        "said": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+      }
+    ]
+  }
+}

@@ -402,12 +402,16 @@ things (`runtime/src/cloud/approval.ts`):
   the default for a figure that says none. Each Card covering the tool then has the `on_exceed` of
   the agreed figures it carries (the tool's when it carries none), so two figures with different
   answers on one Card are refused: one Card has one `on_exceed` (`rules_on_exceed`, naming the
-  split). The same notice shown again with another figure's `over` is other rules. Two things are logged, never
-  refused: a figure a Card adds on a tool whose rule has figures, for a quantity and window the
-  rule doesn't name ("approval rules: a figure the rules don't name: …"; refused behind a flag
-  after an Eval), and an agreed figure whose number, in the Card's units or in hundredths, the
-  notice's words don't write ("approval rules: a figure the notice's words don't say: …"), since
-  formats vary by language.
+  split). The same notice shown again with another figure's `over` is other rules. **A limit the
+  owner never agreed is refused** (`rules_unagreed_figure`): on a tool whose rule has figures, any
+  figure a Card adds for a quantity and window the rule doesn't name, in any window (each call's, a
+  day's, `rolling_1h`, `rolling_24h`, `rolling_7d`, `lifetime`). Coach hears that one figure, and to
+  draft again without it, changing nothing else. The person reads the rules-figures note (Eval
+  43927756622: after a refused draft, Coach signed an hour's €50 held beside the agreed €5 a refund
+  and €50 a day refused). A total for each item (`per`) is the earlier checks', and a count of 0
+  (each call asks) only asks, so neither is refused here. Logged, never refused: an agreed figure whose
+  number, in the Card's units or in hundredths, the notice's words don't write ("approval rules: a
+  figure the notice's words don't say: …"), since formats vary by language.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
@@ -652,6 +656,16 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than
 trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents
+sends a note at least once, so tafs cloud acts on each at most once: before it tells Coach, keeps
+the chat's line or notifies the phones, it claims the run's state as read back (an ended run by its
+status, a paused one by its resume count and the calls it waits on, `noteClaim`). The same note again, or two at once, is
+answered `taken: true` and does nothing more, once it was told; while another handling still holds it,
+the same note is answered 409 `being_told` and does nothing, so kiff/agents keeps it owed and sends it
+again at its next wait (a 2xx would settle it). A pause on another call is told again. The claim is a
+two-minute lease while the note is told (`NOTE_LEASE_MS`, shorter than kiff/agents' first retry),
+then a mark kept as long as the task. A telling that fails releases the lease, and one killed midway
+(a timeout, a deploy) leaves only the lease, so either is told when the note comes again. A result card's hand-over and a
+door's reply claim their own keys the same way. kiff/agents
 announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud's public
 `/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
 `taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
@@ -912,7 +926,11 @@ Coach must never call read-only first.
 
 The result is posted as one line: the app, `connected`, the read's tool and a count, with no ids or account
 names. Then kiff.dev's apps list marks the app as working, and a tafs PR adds it to `CONNECTS_TODAY`, with a
-test that its jobs are listed. A proof covers the account it ran on: an app whose accounts live in another
+test that its jobs are listed. That list is moving to one source: planque's catalog marks each entry a check
+connected with `proved: {at, link}`, and with `TAFS_PROVED_FROM_CATALOG=on` tafs cloud reads the apps that
+connect today from it (`connectsOf`), for the recipes, the gallery and the app each job draws, so a proof is
+one data change. A catalog that can't be read, or that marks nothing proved yet, keeps `CONNECTS_TODAY`, so no
+read empties the gallery. The flag stays off until kiff.dev reads the same mark. A proof covers the account it ran on: an app whose accounts live in another
 region (a separate API address) is proved for that region only.
 
 They show only while the account has no live taf, and while its "Show suggestions" setting is

@@ -1,10 +1,10 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { readMissions } from "../src/cloud/missions.js";
@@ -790,6 +790,109 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
     expect(lines[0]).toMatchObject({ taf: "Refunds", said: "Waits for your answer." });
     expect([...w.coach.held.keys()].some((k) => k.startsWith(`${T}#coach-task#`))).toBe(true);
+  });
+});
+
+describe("a run's note acts at most once (kiff/agents sends it at least once)", () => {
+  const PAUSE = (call: string) => ({ status: "PAUSED", requirements: [{ call_id: call, tool: "stripe_refund", input: {}, operation: "op", expires: "2026-10-16T13:00:00Z" }] });
+
+  it("two identical end notes at the same moment tell Coach, the chat and the phones once", async () => {
+    const w = world();
+    const coachRun = await w.agents.api.startRun(T, SETUP, "Have Refunds refund order 42", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === coachRun.id)!.status = "RUNNING";
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 42." });
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    const note = { run: task.json.run, agent: RAE, status: "COMPLETED", ref };
+    const [a, b] = await Promise.all([w.send("POST", "/v1/runs/ended", note), w.send("POST", "/v1/runs/ended", note)]);
+    // One tells it; the other finds it being told and isn't taken (409), so kiff/agents sends it again later, then taken.
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    expect(w.agents.runs.find((r) => r.id === coachRun.id)!.steering!.filter((x) => x.text.includes(task.json.run))).toHaveLength(1);
+    expect(w.pushed).toHaveLength(1);
+  });
+
+  it("a repeated end note, later, acts once", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    await w.send("POST", "/v1/runs/ended", note);
+    await w.send("POST", "/v1/runs/ended", note);
+    expect(w.pushed).toHaveLength(1);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("a repeated PAUSED note adds its line once; a second pause on another call is told again", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    const run = w.agents.runs.find((r) => r.id === task.json.run)!;
+    Object.assign(run, PAUSE("c1"));
+    const note = { run: task.json.run, agent: RAE, status: "PAUSED", ref };
+    await Promise.all([w.send("POST", "/v1/runs/ended", note), w.send("POST", "/v1/runs/ended", note)]);
+    await w.send("POST", "/v1/runs/ended", note);
+    const lines = async () => (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines as unknown[];
+    expect(await lines()).toHaveLength(1);
+    // The owner answered; the run went on and paused again on another call: that pause is its own note.
+    Object.assign(run, PAUSE("c2"));
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect(await lines()).toHaveLength(2);
+  });
+
+  it("a note that fails before it said anything is acted on when it comes again", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    const append = w.coach.append;
+    w.coach.append = async () => { throw new Error("the store is down"); };
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    expect((await w.send("POST", "/v1/runs/ended", note)).status).toBeGreaterThanOrEqual(500);
+    w.coach.append = append;
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("a handling killed after its claim leaves a lease only: once it runs out, the same note is told, once", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    const run = w.agents.runs.find((r) => r.id === task.json.run)!;
+    Object.assign(run, { status: "ERROR", error: "Stripe said no." });
+    const claim = noteClaim(T, ref, run);
+    const now = new Date("2026-10-16T12:00:00Z").getTime();
+    const lines = async () => ((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines ?? []) as unknown[];
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    // A handling at work holds its lease: a duplicate meanwhile does nothing, and isn't taken (409), so kiff/agents keeps
+    // the note owed and sends it again at its next wait, in case that handling dies.
+    w.coach.held.set(claim, { value: true, until: now + NOTE_LEASE_MS });
+    const during = await w.send("POST", "/v1/runs/ended", note);
+    expect(during.status).toBe(409);
+    expect(during.body).toMatchObject({ taken: false, being_told: true });
+    expect(await lines()).toHaveLength(0);
+    // That handling died (no throw, no mark): its lease runs out, and the next delivery tells it.
+    w.coach.held.set(claim, { value: true, until: now - 1 });
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect(await lines()).toHaveLength(1);
+    // Told: the mark is kept as long as the task, so a late duplicate is taken (200) and never tells it again.
+    expect(w.coach.held.get(claim)).toMatchObject({ value: "told", until: now + TASK_KEPT_MS });
+    // (The ended run's task is forgotten too, so it's answered as a spent ref: a 2xx all the same, which settles it.)
+    expect((await w.send("POST", "/v1/runs/ended", note)).status).toBe(200);
+    expect(await lines()).toHaveLength(1);
+  });
+
+  it("claims a run's state as read back: an ended run by its status, a paused one by what it waits on", () => {
+    const run = { id: "run_1", status: "PAUSED" as const, requirements: [
+      { call_id: "c2", tool: "t", input: {}, operation: "o", expires: "" }, { call_id: "c1", tool: "t", input: {}, operation: "o", expires: "" },
+      { call_id: "c0", tool: "t", input: {}, operation: "o", expires: "", answered: "2026-10-16T12:00:00Z" }] };
+    expect(noteClaim("t_acme", "ref1", run)).toBe("t_acme#run-note#ref1#run_1#PAUSED#r0#c1,c2");
+    // A run resumed after a crash may pause with no open call: each resume is its own note, the same one again isn't.
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 1 })).toBe("t_acme#run-note#ref1#run_1#PAUSED#r1");
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 2 })).not.toBe(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 1 }));
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "COMPLETED", requirements: run.requirements })).toBe("t_acme#run-note#ref1#run_1#COMPLETED");
   });
 });
 
