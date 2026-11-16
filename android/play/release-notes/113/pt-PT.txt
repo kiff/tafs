@@ -1,0 +1,4 @@
+- Num tablet, «Iniciar sessão com o KIFF» e «Iniciar sessão com o seu telefone» lado a lado, e depois «Ligação feita.»
+- Um telefone inicia sessão com o KIFF. «Adicionar um dispositivo» mostra primeiro o código.
+- O relógio Wear OS volta a encontrar o telefone.
+- Conta fica parada após um deslize rápido, e «Terminar sessão» vê-se por inteiro.

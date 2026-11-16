@@ -1,0 +1,4 @@
+- On a tablet, "Sign in with KIFF" and "Sign in with your phone" side by side, then "You're connected."
+- A phone signs in with KIFF. Add a device shows the check code first.
+- The Wear OS watch finds the phone again.
+- Account stays still after a fast swipe, and Sign out shows in full.

@@ -1,0 +1,4 @@
+- Na tablecie „Zaloguj się przez KIFF” i „Zaloguj się telefonem” obok siebie, potem „Połączono.”
+- Telefon loguje się przez KIFF. „Dodaj urządzenie” najpierw pokazuje kod.
+- Zegarek z Wear OS znów znajduje telefon.
+- Konto nie skacze już po szybkim przesunięciu, a „Wyloguj” widać w całości.

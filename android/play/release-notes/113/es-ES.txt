@@ -1,0 +1,4 @@
+- En tableta, «Iniciar sesión con KIFF» e «Iniciar sesión con tu teléfono» uno junto al otro, y luego «Todo conectado.»
+- Un teléfono inicia sesión con KIFF. «Añadir un dispositivo» muestra primero el código.
+- El reloj Wear OS vuelve a encontrar el teléfono.
+- Cuenta ya no se mueve tras un deslizamiento rápido, y «Cerrar sesión» se ve entero.
