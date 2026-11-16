@@ -1,5 +1,5 @@
 - Tu resumen: dos veces al día, las decisiones que te esperan y lo que se hizo, en lugar de Te necesita cuando tu cuenta tenga uno.
-- Etiquetas en tu lista de tafs y el registro de una misión.
+- Etiquetas en tu lista de tafs y el historial de una misión.
 - Los resúmenes y las alertas urgentes tienen sus propios canales.
 - Las Condiciones y la Privacidad se abren en el idioma de la app.
 - Con el teléfono bloqueado, una alerta solo dice «Un taf te necesita».

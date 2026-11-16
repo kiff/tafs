@@ -1,5 +1,5 @@
 - Dein Briefing: zweimal täglich die Entscheidungen für dich und was erledigt wurde, statt Braucht dich, sobald dein Konto eins hat.
-- Labels in deiner tafs-Liste und das Protokoll einer Mission.
+- Labels in deiner tafs-Liste und den Verlauf einer Mission.
 - Briefings und dringende Meldungen haben eigene Kanäle.
 - Nutzungsbedingungen und Datenschutz in der Sprache der App.
 - Auf einem gesperrten Handy zeigt eine Benachrichtigung nur „Ein taf braucht dich“.
