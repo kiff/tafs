@@ -121,3 +121,21 @@ Tracked on KIFF's side, privately.
   the QR, shows the check code, and signs the pairing with the approval key
   ([android-app.md](android-app.md#pairing-a-computer)). Until KIFF sends
   `words`, the app words those four codes itself. iPhone and iPad follow.
+
+## 10. Why an app refused a call, without the app's own answer — open
+
+KIFF's activity gives a call the app refused a `tool_outcome.message` that
+carries the app's answer through ("Gmail refused it (it answered 400): {…}").
+That body can be JSON, long, or hold the connected account's address, a file's
+name or a request id, and the apps show the Record to everyone who can see the
+taf. A taf's scheduled check already keeps only the status and a canonical code,
+never the app's message.
+
+- **The need:** on a refused call, a typed reason beside `message`: the app's
+  status and a canonical code (`FAILED_PRECONDITION`, `PERMISSION_DENIED`…), with
+  `words` in the person's language, as KIFF's other refusals carry. `message`
+  stays for Details, or goes.
+- **tafs's part — built on Android.** The Record quotes `message` only when it's
+  a short, plain, one-line reason, and otherwise keeps its own line that names
+  the app ([android-app.md](android-app.md#the-record)). With a typed reason,
+  both apps show KIFF's words and never `message`. iPhone and iPad follow.

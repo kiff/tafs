@@ -82,6 +82,15 @@ class ConnectionSheetTest {
     assertNull(ConnectionWords.lastFailure(grant("g5", "chase-1", tools = """[{"tool":"get_contact"}]"""), record))
   }
 
+  /** "Last failed" is built from the Record's line, so the app's raw answer never reaches it either: JSON leaves the plain line. */
+  @Test fun itsLastFailedLineNeverQuotesTheAppsRawAnswer() {
+    val calls = KiffClient.json.decodeFromString<ActivityCalls>("""{"calls":[
+      ${call("p1", "chase-1", "list_inboxes_k3f9", "2026-11-06T10:00:00Z", "refused_by_tool", "Gmail refused it (it answered 400): { error: { code: 400, status: FAILED_PRECONDITION } }")}]}""").calls
+    val line = ConnectionWords.lastFailure(grant("g1", "chase-1"), KiffMapping.record(calls, setOf("chase-1")))!!
+    assertTrue(line, line.startsWith("Last failed: List inboxes · "))
+    assertFalse(line, line.contains("{") || line.contains("FAILED_PRECONDITION"))
+  }
+
   /** A sign-in that never came back (an approved grant, not signed in) is listed, and cancelled rather than disconnected. */
   @Test fun aSignInThatNeverCameBackIsListedAsWaitingAndCanBeCancelled() {
     val waiting = KiffClient.json.decodeFromString<Grant>("""{"id":"g7","status":"approved","vendor":"Google Calendar","request":{"server":"https://mcp.example.com","agent":"cal-1","tools":[]}}""")

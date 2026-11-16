@@ -435,6 +435,14 @@ searches across their tafs, opens one case, and exports receipts
   the share sheet (`shareReceipts`): tafs cloud's answer byte for byte as JSON, so KIFF's receipts
   are exactly as issued, never re-encoded, and its CSV. They live only in the app's cache and are
   replaced at each export. `missing` shows as a line ("2 calls have no receipt yet.").
+- **What the app answered:** a call the app refused, or one that couldn't be sent, says so in the
+  app's own line, which names the app ("Gmail refused it, and it still counts toward today's
+  limits"). KIFF's `tool_outcome.message` carries the app's answer through, so it's quoted after
+  that line only when it's a short, plain, one-line reason (`KiffMapping.quotable`: 160 characters
+  at most, no JSON, no address). An app's raw answer can hold the connected account's address, a
+  file's name or a request id, and the Record, and the "Last failed" line Connect apps and a taf's
+  page build from it, are seen by everyone who can see the taf. KIFF sending a typed reason instead
+  is [needs-from-kiff.md §10](needs-from-kiff.md).
 
 ## Words and languages
 
