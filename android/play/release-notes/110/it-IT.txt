@@ -1,4 +1,4 @@
-- Il tuo riepilogo: due volte al giorno, le decisioni che ti aspettano e ciò che è stato fatto, al posto di Ti aspetta.
+- Il tuo riepilogo: due volte al giorno, le decisioni che ti aspettano e ciò che è stato fatto, al posto di Ti aspetta quando il tuo account ne ha uno.
 - Etichette nella lista dei tuoi tafs e il registro di una missione.
 - Riepiloghi e avvisi urgenti hanno i loro canali.
 - Condizioni e Privacy si aprono nella lingua dell'app.
