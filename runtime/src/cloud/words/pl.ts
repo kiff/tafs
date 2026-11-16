@@ -296,6 +296,7 @@ export const pl: Words = {
   brief_hold_question: (taf) => `${taf} czeka na Twoje zatwierdzenie`,
   brief_hold_meanwhile: "Nic się nie dzieje, dopóki nie odpowiesz.",
   brief_step_meanwhile: "Jego uruchomienie czeka na ten krok.",
+  brief_by: (t) => `do ${t.day ? `${t.day} ` : ""}${t.hm}`,
   brief_connection_question: (vendor) => `${vendor}: zaloguj się ponownie`,
   brief_sign_in_again: "Zaloguj się ponownie",
   brief_connection_meanwhile: (taf, vendor) => `${taf} nie może do tego czasu połączyć się z ${vendor}.`,

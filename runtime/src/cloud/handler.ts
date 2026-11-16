@@ -7458,8 +7458,11 @@ async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
       ...(balance ? { credits: balanceView(balance, lang).balance.words } : {}),
       more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)) },
   });
-  // The tab's own name, in the glossary's words ("Your brief"), with the headings.
-  return { ...b, words: { title: w.brief_title, ...b.words } };
+  // The tab's own name, in the glossary's words ("Your brief"), with the headings; and each deadline in words ("by Fri
+  // 12:00", in the account's zone and the person's language), beside the time itself, so the apps never draw the time raw.
+  const zone = me.timeZone ?? "UTC";
+  const decisionsOut = b.decisions.map((d) => (d.deadline && !Number.isNaN(Date.parse(d.deadline)) ? { ...d, deadline_words: w.brief_by(whenIn(d.deadline, zone, now, lang)) } : d));
+  return { ...b, decisions: decisionsOut, words: { title: w.brief_title, ...b.words } };
 }
 
 /**

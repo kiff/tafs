@@ -296,6 +296,7 @@ export const nl: Words = {
   brief_hold_question: (taf) => `${taf} wacht op je goedkeuring`,
   brief_hold_meanwhile: "Er gebeurt niets tot je antwoordt.",
   brief_step_meanwhile: "Zijn run wacht op deze stap.",
+  brief_by: (t) => `vóór ${t.day ? `${t.day} ` : ""}${t.hm}`,
   brief_connection_question: (vendor) => `${vendor}: log opnieuw in`,
   brief_sign_in_again: "Opnieuw inloggen",
   brief_connection_meanwhile: (taf, vendor) => `${taf} kan ${vendor} tot dan niet bereiken.`,
