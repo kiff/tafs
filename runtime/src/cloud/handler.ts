@@ -8970,7 +8970,10 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       // schedule's run of failures (windows count from its start): one that drops work at every firing
       // would otherwise alert every time.
       const again = dropped ? `#unfinished#${Math.floor((Date.parse(f.last ?? f.since) - Date.parse(f.since)) / DROPPED_AGAIN_MS) || 0}` : "";
-      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      // A lone failure said after FAILING_ALONE_MS is said once more when the next firing fails too: the owner told
+      // "it couldn't, once" hears that it's now failing in a row, and then nothing more for that run of failures.
+      const inARow = !dropped && !once && f.firings >= 2 ? "#in-a-row" : "";
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}${inARow}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
       told.push({ tenant, schedule: s.id });
     }
@@ -9236,6 +9239,8 @@ function failingWords(s: Schedule, failing: NonNullable<Schedule["failing"]>, la
   const w = wordsIn(lang);
   if (s.kind === "once") return s.follow_up ? w.failing_follow_up : w.failing_once;
   if (failing.outcome === "failed_unfinished") return failing.firings > 1 ? w.failing_unfinished_many(failing.firings) : w.failing_unfinished_one;
+  // A check that couldn't read the app started no run: it says so, never that a run couldn't start.
+  if (failing.outcome === "failed_check") return failing.firings > 1 ? w.failing_check_many(failing.firings) : w.failing_check_one;
   return failing.firings > 1 ? w.failing_many(failing.firings) : w.failing_one;
 }
 

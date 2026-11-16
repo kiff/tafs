@@ -446,6 +446,8 @@ export const nl: Words = {
   push_ended_cut_short: "Gestopt voordat het klaar was. Open de Coach-modus om te zien waarom.",
   failing_one: "De geplande run kon niet starten. Het probeert het op het volgende tijdstip opnieuw. Open het om te zien waarom.",
   failing_many: (n) => `De laatste ${n} geplande runs konden niet starten. Het probeert het op elk gepland tijdstip opnieuw. Open het om te zien waarom.`,
+  failing_check_one: "De geplande controle kon de app niet lezen. Het probeert het op het volgende tijdstip opnieuw. Open het om te zien waarom.",
+  failing_check_many: (n) => `De geplande controle kon de app ${n} keer achter elkaar niet lezen. Het probeert het op elk gepland tijdstip opnieuw. Open het om te zien waarom.`,
   failing_unfinished_one: "De geplande run is halverwege gestopt. Waar het mee bezig was, wordt niet opnieuw geprobeerd. Open het om te zien wat het heeft gedaan.",
   failing_unfinished_many: (n) => `De laatste ${n} geplande runs zijn niet afgemaakt. Waar de laatste mee bezig was, wordt niet opnieuw geprobeerd. Open het om te zien wat het heeft gedaan.`,
   failing_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd en wordt niet opnieuw geprobeerd. Open het om te zien waarom.",

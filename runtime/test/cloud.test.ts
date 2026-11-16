@@ -3779,6 +3779,30 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.one);
   });
 
+  // "Unanswered emails": its first check failed at its creation, was said alone 6 hours later, and its second, in a row,
+  // two days later, was never said.
+  it("says a check that couldn't read in its own words: two in a row once, and a lone one said after six hours once more when the next fails too", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 2, outcome: "failed_check" });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe("Its scheduled check couldn't read the app 2 times in a row. It tries again at each scheduled time. Open it to see why.");
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    {
+      const old = new Date(AT.getTime() - 34 * 3600_000).toISOString();
+      const { w: w2, deps: d2 } = await setUp({ since: old, firings: 1, outcome: "failed_check" });
+      expect(await sweepFailingSchedules(d2)).toHaveLength(1);
+      expect(bodyOf(w2.pushed[0]!.n)).toBe("Its scheduled check couldn't read the app. It tries again at its next time. Open it to see why.");
+      expect(await sweepFailingSchedules(d2)).toEqual([]);
+      // The next firing fails too: said once more, as two in a row, and then nothing for this run of failures.
+      w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 2, outcome: "failed_check" } });
+      expect(await sweepFailingSchedules(d2)).toHaveLength(1);
+      expect(bodyOf(w2.pushed[1]!.n)).toMatch(/^Its scheduled check couldn't read the app 2 times in a row\./);
+      w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 3, outcome: "failed_check" } });
+      expect(await sweepFailingSchedules(d2)).toEqual([]);
+      expect(w2.pushed).toHaveLength(2);
+    }
+  });
+
   it("says a run that stopped partway at once, in its own words: what it was working on won't be tried again", async () => {
     const { w, deps } = await setUp({ since: SINCE, firings: 1, run: "run_1", outcome: "failed_unfinished" });
     expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
@@ -3803,13 +3827,13 @@ describe("a schedule whose runs keep failing to start", () => {
       expect(await sweepFailingSchedules(d3)).toEqual([]);
       expect(w3.pushed).toHaveLength(2);
     }
-    // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so.
-    for (const outcome of ["failed_unworked", "failed_check"]) {
+    // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so in its own words.
+    for (const [outcome, words] of [["failed_unworked", FAILING_WORDS.many(2)], ["failed_check", wordsIn("en").failing_check_many(2)]] as const) {
       const { w: w2, deps: d2 } = await setUp({ since: SINCE, firings: 1, outcome });
       expect(await sweepFailingSchedules(d2)).toEqual([]);
       w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 2, outcome } });
       expect(await sweepFailingSchedules(d2)).toHaveLength(1);
-      expect(bodyOf(w2.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+      expect(bodyOf(w2.pushed[0]!.n)).toBe(words);
     }
   });
 

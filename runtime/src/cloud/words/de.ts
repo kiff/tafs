@@ -446,6 +446,8 @@ export const de: Words = {
   push_ended_cut_short: "Gestoppt, bevor er fertig war. Öffne den Coach-Modus, um zu sehen, warum.",
   failing_one: "Sein geplanter Lauf konnte nicht starten. Er versucht es zum nächsten Termin erneut. Öffne ihn, um zu sehen, warum.",
   failing_many: (n) => `Seine letzten ${n} geplanten Läufe konnten nicht starten. Er versucht es zu jedem geplanten Termin erneut. Öffne ihn, um zu sehen, warum.`,
+  failing_check_one: "Seine geplante Prüfung konnte die App nicht lesen. Er versucht es zum nächsten Termin erneut. Öffne ihn, um zu sehen, warum.",
+  failing_check_many: (n) => `Seine geplante Prüfung konnte die App ${n}-mal hintereinander nicht lesen. Er versucht es zu jedem geplanten Termin erneut. Öffne ihn, um zu sehen, warum.`,
   failing_unfinished_one: "Sein geplanter Lauf hat mittendrin aufgehört. Woran er gearbeitet hat, wird nicht erneut versucht. Öffne ihn, um zu sehen, was er getan hat.",
   failing_unfinished_many: (n) => `Seine letzten ${n} geplanten Läufe wurden nicht fertig. Woran der letzte gearbeitet hat, wird nicht erneut versucht. Öffne ihn, um zu sehen, was er getan hat.`,
   failing_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht und wird nicht wiederholt. Öffne ihn, um zu sehen, warum.",

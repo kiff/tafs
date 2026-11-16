@@ -474,6 +474,8 @@ export const en = {
   push_ended_cut_short: "It stopped before it finished. Open Coach mode to see why.",
   failing_one: "Its scheduled run couldn't start. It tries again at its next time. Open it to see why.",
   failing_many: (n: number) => `Its last ${n} scheduled runs couldn't start. It tries again at each scheduled time. Open it to see why.`,
+  failing_check_one: "Its scheduled check couldn't read the app. It tries again at its next time. Open it to see why.",
+  failing_check_many: (n: number) => `Its scheduled check couldn't read the app ${n} times in a row. It tries again at each scheduled time. Open it to see why.`,
   failing_unfinished_one: "Its scheduled run stopped part-way. What it was working on won't be tried again. Open it to see what it did.",
   failing_unfinished_many: (n: number) => `Its last ${n} scheduled runs didn't finish. What the latest was working on won't be tried again. Open it to see what it did.`,
   failing_follow_up: "A follow-up it set for itself didn't run, and won't try again. Open it to see why.",

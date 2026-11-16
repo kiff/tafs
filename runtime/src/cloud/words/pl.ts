@@ -446,6 +446,8 @@ export const pl: Words = {
   push_ended_cut_short: "Zatrzymane przed ukończeniem. Otwórz tryb Coach, aby zobaczyć dlaczego.",
   failing_one: "Zaplanowane uruchomienie nie mogło wystartować. Spróbuje ponownie o następnej porze. Otwórz je, aby zobaczyć dlaczego.",
   failing_many: (n) => `Ostatnie zaplanowane uruchomienia (${n}) nie mogły wystartować. Spróbuje ponownie o każdej zaplanowanej porze. Otwórz je, aby zobaczyć dlaczego.`,
+  failing_check_one: "Zaplanowane sprawdzenie nie mogło odczytać aplikacji. Spróbuje ponownie o następnej porze. Otwórz je, aby zobaczyć dlaczego.",
+  failing_check_many: (n) => `Zaplanowane sprawdzenie nie mogło odczytać aplikacji ${n} razy z rzędu. Spróbuje ponownie o każdej zaplanowanej porze. Otwórz je, aby zobaczyć dlaczego.`,
   failing_unfinished_one: "Zaplanowane uruchomienie zatrzymało się w połowie. To, nad czym pracowało, nie zostanie ponowione. Otwórz je, aby zobaczyć, co zrobiło.",
   failing_unfinished_many: (n) => `Ostatnie zaplanowane uruchomienia (${n}) nie zostały ukończone. To, nad czym pracowało ostatnie, nie zostanie ponowione. Otwórz je, aby zobaczyć, co zrobiło.`,
   failing_follow_up: "Przypomnienie, które sobie ustawił, nie zostało wykonane i nie będzie ponawiane. Otwórz je, aby zobaczyć dlaczego.",

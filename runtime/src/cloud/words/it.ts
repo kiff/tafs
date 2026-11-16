@@ -446,6 +446,8 @@ export const it: Words = {
   push_ended_cut_short: "Fermato prima di finire. Apri la modalità Coach per vedere perché.",
   failing_one: "La sua esecuzione pianificata non è potuta partire. Riprova al prossimo orario. Aprilo per vedere perché.",
   failing_many: (n) => `Le sue ultime ${n} esecuzioni pianificate non sono potute partire. Riprova a ogni orario pianificato. Aprilo per vedere perché.`,
+  failing_check_one: "Il suo controllo previsto non è riuscito a leggere l'app. Riprova al prossimo orario. Aprilo per vedere perché.",
+  failing_check_many: (n) => `Il suo controllo previsto non è riuscito a leggere l'app ${n} volte di seguito. Riprova a ogni orario pianificato. Aprilo per vedere perché.`,
   failing_unfinished_one: "La sua esecuzione pianificata si è fermata a metà. Ciò su cui stava lavorando non verrà ritentato. Aprilo per vedere cosa ha fatto.",
   failing_unfinished_many: (n) => `Le sue ultime ${n} esecuzioni pianificate non sono terminate. Ciò su cui stava lavorando l'ultima non verrà ritentato. Aprilo per vedere cosa ha fatto.`,
   failing_follow_up: "Un promemoria che si era impostato non è stato eseguito e non verrà riprovato. Aprilo per vedere perché.",

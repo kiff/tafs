@@ -446,6 +446,8 @@ export const fr: Words = {
   push_ended_cut_short: "Arrêté avant d'avoir fini. Ouvrez le mode Coach pour savoir pourquoi.",
   failing_one: "Son exécution planifiée n'a pas pu démarrer. Il réessaiera à la prochaine heure prévue. Ouvrez-le pour savoir pourquoi.",
   failing_many: (n) => `Ses ${n} dernières exécutions planifiées n'ont pas pu démarrer. Il réessaie à chaque heure prévue. Ouvrez-le pour savoir pourquoi.`,
+  failing_check_one: "Sa vérification prévue n'a pas pu lire l'app. Il réessaiera à la prochaine heure prévue. Ouvrez-le pour savoir pourquoi.",
+  failing_check_many: (n) => `Sa vérification prévue n'a pas pu lire l'app ${n} fois de suite. Il réessaie à chaque heure prévue. Ouvrez-le pour savoir pourquoi.`,
   failing_unfinished_one: "Son exécution planifiée s'est arrêtée en cours de route. Le travail en cours ne sera pas repris. Ouvrez-le pour voir ce qu'il a fait.",
   failing_unfinished_many: (n) => `Ses ${n} dernières exécutions planifiées ne se sont pas terminées. Le travail en cours de la dernière ne sera pas repris. Ouvrez-le pour voir ce qu'il a fait.`,
   failing_follow_up: "Une relance qu'il s'était fixée n'a pas eu lieu et ne sera pas réessayée. Ouvrez-le pour savoir pourquoi.",
