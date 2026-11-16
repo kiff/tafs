@@ -141,6 +141,21 @@ and the same fields in the connection server's header.
 - **Without a draft** (an app that signs in at the vendor, whose tools are known only after
   the sign-in), the two steps stay as they are.
 
+**A computer that approves with its own passkey** (Windows Hello, a session in `passkey` approval
+mode) holds no approval key. It signs the same `kiff.requests.v1` message with one passkey
+assertion, under one Windows Hello, and sends it on each request to KIFF with the other request's
+hash, as a `v3` does:
+`KIFF-Passkey-Assertion: t={signed_at},a={assertion},with=sha256:{hex}`.
+- **The assertion** is the same base64url JSON as for one request (`credential_id`,
+  `client_data_json`, `authenticator_data`, `signature`). Its WebAuthn challenge is base64url of
+  the SHA-256 of the `kiff.requests.v1` message above, not of one request's message.
+- **KIFF's API and its gateway** each rebuild their own request message, hash it, form the list
+  with `with`, and check the assertion with the computer's own credential, as for one request
+  (user verification, kiff.dev's relying party, a passkey that never leaves the computer).
+  `with` is 64 lowercase hex and never the request's own hash, and each request's use is its own.
+- **Windows' first start** signs Coach's tools batch to the gateway and its Card's draft to KIFF
+  this way. The rules above (the time, once only, never a window's tap) hold as for a `v3`.
+
 **Built in tafs cloud** (`approval.ts`, `decide` and `settle`): with `TAFS_KEY_AND_CARDS=on`, a grant that takes
 a key, asked with its Card's draft by a phone that says it can sign the step (`can: ["key_and_cards"]` in the
 approval request's body; an app from before leaves it out and gets the two steps, the flag on or off), gets `{step: "key_and_cards", scheme: "kiff.requests.v1", message: "", key:
@@ -160,6 +175,8 @@ signed without being shown. One test in each app pins it.
 server declares in KIFF at the request (`declared: true` on the grant) and which can't be used until
 the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
 then the Card, as before.
+
+**A Card over two apps (14 Nov).** One signature carries one connection's approve. So while a Card's draft also covers another app of the same taf that isn't connected yet, the Card isn't signed. A card that would carry this app's tools with the Card (`tools_and_cards` or `key_and_cards`) becomes this app's own `connect`, so whichever card the person taps first moves forward, and the last app carries the Card. A Card alone (`cards`) for a connected app is refused, naming the app that waits ("Approve Stripe first; this Card comes with the last app"). A report is "approved" only when every app the Card covers is connected, never while another app's tools still wait. Signing every app's approve in one signature, with N+1 hashes, is the follow-up, and it needs the phones.
 
 **A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
 signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in

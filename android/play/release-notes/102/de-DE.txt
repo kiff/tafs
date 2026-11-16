@@ -1,0 +1,1 @@
+- Geräte: Auf einem Telefon, das nicht genehmigen kann, sagt das Abmelden eines anderen Geräts: „Um ein anderes Gerät abzumelden, nutze ein Gerät, das genehmigen kann.“

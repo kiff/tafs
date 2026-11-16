@@ -1,0 +1,1 @@
+- **iPad: an alert that opens Needs you opens it.** Opened from an alert or a link to Needs you, Record or Account, the iPad shows that screen beside the sidebar, no longer the tafs list over it (docs/ios-app.md).

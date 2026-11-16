@@ -3,6 +3,7 @@ package bot.tafs.app
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
@@ -211,9 +212,17 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText("Stripe").assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.CONNECTED).assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
+    rule.waitForIdle()
+    // One taf is still asked, never taken: nothing starts before the pick.
+    assertEquals(emptyList<String>(), started)
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.WHICH_TAF).assertIsDisplayed()
+    rule.onNodeWithText("Refunds").performClick()
+    rule.waitForIdle()
+    assertEquals("the picked taf", listOf("notion@1>refunds-1"), started)
+    // Sign in again keeps its grant's taf, with no question.
     rule.onNodeWithText(ConnectAppsWords.SIGN_IN_AGAIN).performClick()
     rule.waitForIdle()
-    assertEquals("one taf: it's for that one", listOf("notion@1>refunds-1", "google>refunds-1"), started)
+    assertEquals(listOf("notion@1>refunds-1", "google>null"), started)
   }
 
   @Test fun theAccountsOwnAppsComeFirstUnderYoursThenDiscover() {
@@ -297,5 +306,20 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(bot.tafs.app.model.ConnectWords.CHOOSE_ACTIONS).performClick()
     rule.waitForIdle()
     assertEquals(listOf("now g7"), chose)
+  }
+
+  // The owner on Android 97: the first time it opened, Connect apps was a small sheet with only its title and search, which grew
+  // once the list came. It opens at full height, saying it's loading, before the list is read.
+  @Test fun beforeTheListIsReadTheSheetOpensAtFullHeightAndSaysItsLoading() {
+    rule.setShown {
+      TafsTheme {
+        ConnectAppsSheet(AppState(mode = Mode.kiff, ready = true, connectApps = null), load = {}, onConnect = null, onAskCoach = {}, onClose = {})
+      }
+    }
+    rule.waitForIdle()
+    rule.onNodeWithText(Words.Common.loading).assertIsDisplayed()
+    val sheet = rule.onNodeWithTag(bot.tafs.app.views.CONNECT_APPS_SHEET).fetchSemanticsNode().boundsInWindow
+    val screen = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.heightPixels
+    assertTrue("the sheet is ${sheet.height} of $screen px tall", sheet.height > screen * 0.7f)
   }
 }

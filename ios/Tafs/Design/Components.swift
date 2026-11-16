@@ -84,6 +84,7 @@ struct PrimaryLook: ButtonStyle {
     private struct StyledLabel: View {
         let configuration: Configuration
         @Environment(\.isEnabled) private var isEnabled
+        @State private var hovered = false
 
         var body: some View {
             // Not available yet, it stays readable on any ground: a neutral fill with the
@@ -97,13 +98,14 @@ struct PrimaryLook: ButtonStyle {
                 .foregroundColor(ink)
                 .background(fill)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .onHover { hovered = Hover.shows($0) }
         }
 
         private var ink: Color { isEnabled ? Theme.amberInk : Theme.soft }
 
         @ViewBuilder private var fill: some View {
             if isEnabled {
-                Theme.brand.opacity(configuration.isPressed ? 0.8 : 1)
+                Theme.brand.opacity(Hover.primaryOpacity(pressed: configuration.isPressed, hovered: hovered))
             } else {
                 Theme.dim.opacity(0.22)
             }
@@ -132,17 +134,35 @@ struct OutlineLook: ButtonStyle {
         let configuration: Configuration
         let color: Color
         @Environment(\.isEnabled) private var isEnabled
+        @State private var hovered = false
 
         var body: some View {
             configuration.label
                 .scaledFont(15, weight: .medium)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .foregroundColor(color)
-                .background(Theme.ink.opacity(configuration.isPressed ? 0.08 : 0))
+                .background(Theme.ink.opacity(Hover.outlineOpacity(pressed: configuration.isPressed, hovered: hovered && isEnabled)))
+                .onHover { hovered = Hover.shows($0) }
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.4), lineWidth: 1))
                 .opacity(isEnabled ? 1 : 0.4)
         }
     }
+}
+
+/// The pointer over a button, on the Mac (docs/mac-app.md, "The pointer"): the button lightens a
+/// little, as a pressed one darkens. The iPad keeps its own pointer effects, so nothing shows there.
+enum Hover {
+    /// Whether the pointer being over a button shows: on the Mac build only.
+    static func shows(_ inside: Bool, mac: Bool = ThisDevice.isMac) -> Bool { inside && mac }
+
+    /// The main button's fill: full, a little lighter under the pointer, lighter still pressed.
+    static func primaryOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.8 : hovered ? 0.9 : 1 }
+
+    /// The outlined button's wash of ink: none, a light one under the pointer, more pressed.
+    static func outlineOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.08 : hovered ? 0.04 : 0 }
+
+    /// A plain button (a row, a link): as it is, a little faded under the pointer, more pressed.
+    static func plainOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.6 : hovered ? 0.8 : 1 }
 }
 
 struct Panel<Content: View>: View {
@@ -406,21 +426,24 @@ struct ApprovalKeyLostLine: View {
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 }
             } else {
-                Text(KIFFClient.approvalKeyLost)
+                Text(model.approvalKeyLostWords)
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                Button {
-                    starting = true
-                    Task {
-                        if let url = await model.startRelink() { openURL(url) }
-                        starting = false
+                // A view-only session can't be re-linked: Sign in again alone, as on Android.
+                if !model.approvalViewOnly {
+                    Button {
+                        starting = true
+                        Task {
+                            if let url = await model.startRelink() { openURL(url) }
+                            starting = false
+                        }
+                    } label: {
+                        Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
                     }
-                } label: {
-                    Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
+                    .buttonStyle(PrimaryButtonStyle())
+                    .confirming()
+                    .disabled(starting)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .confirming()
-                .disabled(starting)
                 Button {
                     confirming = .signInAgain
                 } label: {

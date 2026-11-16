@@ -234,6 +234,10 @@ data class ConnectApps(
   @Serializable
   data class UsedBy(val taf: String = "", val name: String = "")
 
+  /** A connection made under a taf that doesn't use the app: its grant, and that taf by tafs cloud's id and name. */
+  @Serializable
+  data class Misplaced(val grant: String = "", val taf: String = "", val name: String = "")
+
   @Serializable
   data class App(
     val entry: String,
@@ -261,6 +265,13 @@ data class ConnectApps(
     val whose: String? = null,
     /** The tafs that use it, as tafs cloud reads them; null from a tafs cloud that sends none, and this phone reads them itself. */
     @SerialName("used_by") val usedBy: List<UsedBy>? = null,
+    /**
+     * The tafs that need it, as tafs cloud decides (their recipe, or their Card): "Which taf?" lists only these, and with none the
+     * row offers Ask Coach. Null from a tafs cloud before it, and then every taf the person manages is asked.
+     */
+    @SerialName("needed_by") val neededBy: List<UsedBy>? = null,
+    /** Its live connections held by a taf that doesn't need it (only with this phone's signed read): each can be withdrawn. */
+    val misplaced: List<Misplaced> = emptyList(),
   ) {
     /** The account's own: connected, signed in, or to sign in again. Listed under Yours; the rest under Discover. */
     val yours: Boolean get() = connected || needsReconnect || signedIn

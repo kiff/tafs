@@ -1,0 +1,1 @@
+- Coach declares each tool argument in the shape planque takes: a plain type, an array with its items' schema, or an object naming only the fields the taf writes, so a sheet's row update (its columns as an object) connects on the first try (`name-the-tools@16`). It needs planque's object arguments.

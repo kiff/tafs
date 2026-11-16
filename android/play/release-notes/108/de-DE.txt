@@ -1,0 +1,3 @@
+- „Apps verbinden“ fragt, für welchen Taf die Verbindung ist, auch wenn du nur einen hast.
+- Eine App verbinden bleibt nicht mehr bei „Wird genehmigt…“ hängen: „Anmeldung erneut öffnen“ öffnet die Seite wieder, und „Nicht jetzt“ beendet das Warten.
+- Eine unbeantwortete Verbindungsanfrage lässt sich in ihrer Zeile abbrechen.

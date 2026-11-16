@@ -1,0 +1,1 @@
+- **iPhone and iPad: VoiceOver reads a plan step's mark in words.** Coach's plan and the "Taking shape" panel read "Done", "Failed", "In progress", "To do" or "Skipped" in the app's language, where they read tafs cloud's raw status ("done"); five new shared lines in 8 languages (`coach.plan.step_*`, docs/coach.md).

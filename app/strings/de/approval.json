@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Richte eine Displaysperre auf diesem Telefon ein, um zu genehmigen",
   "approval.settings_face_id_passcode_touch": "Einstellungen → Face ID & Code (Touch ID & Code auf einem Gerät mit Touch ID)",
   "approval.settings_path.face_id": "Einstellungen → Face ID & Code",
+  "approval.settings_path.mac_touch_id": "Systemeinstellungen → Touch ID & Passwort",
   "approval.settings_path.touch_id": "Einstellungen → Touch ID & Code",
   "approval.state.none_enrolled": "Auf diesem Telefon ist kein Fingerabdruck eingerichtet. Füge in seinen Einstellungen einen hinzu und komm dann zurück.",
   "approval.state.ready": "Genehmigungen sind auf diesem Telefon eingerichtet.",
@@ -61,6 +62,8 @@
   "approval.touch_id": "Touch ID",
   "approval.turned_off_tafs_open_settings": "{either} ist für tafs ausgeschaltet. Öffne die Einstellungen und schalte {either_2} für tafs ein.",
   "approval.turned_off_tafs_turn_tafs": "{either} ist für tafs ausgeschaltet. Schalte es in den Einstellungen von tafs ein, um zu genehmigen.",
+  "approval.view_only": "Melde dich auf diesem Telefon erneut an, um zu genehmigen, oder genehmige auf deinem anderen Telefon.",
+  "approval.view_only_mac": "Dieser Mac kann nur ansehen. Um hier zu genehmigen, füge ihn auf deinem Telefon hinzu: Konto › Geräte › Gerät hinzufügen.",
   "approval.why": "Jede Genehmigung, die du in tafs gibst, ob für eine Card, eine Verbindung oder eine Zahlung über einem Limit, wird auf diesem Telefon mit einem Schlüssel signiert, den nur dein Fingerabdruck entsperrt. Deine PIN oder dein Muster kann nicht genehmigen.",
   "approval.without_allows": "Ohne Genehmigungen kannst du dich weiterhin anmelden, prüfen, ablehnen und anhalten.",
   "approval.your_passcode": "deinen Code"

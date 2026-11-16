@@ -63,5 +63,14 @@
     "{vendor}": "a placeholder in the service's line, filled in or replaced by a link",
     "{terms}": "a placeholder in the service's line, filled in or replaced by a link",
     "{privacy}": "a placeholder in the service's line, filled in or replaced by a link"
+  },
+  "Services/ThisDevice.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are"
+  },
+  "App/SampleScreens.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are (the reference set's sample Devices)"
+  },
+  "KIFF/PasskeyRegistration.swift": {
+    "kiff.passkey.register.v1\\n\\(tenant)\\n\\(subject)\\n\\(issuedAt)": "the message a passkey's registration challenge is the hash of (KIFF's pairing contract), never shown"
   }
 }

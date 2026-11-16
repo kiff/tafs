@@ -1,0 +1,2 @@
+- Se connecter avec votre autre téléphone : affichez le code de ce téléphone, scannez-le depuis celui que vous utilisez déjà dans Compte, Appareils, Ajouter un appareil, et c'est fait.
+- Appareils s'ouvre en grand, Terminé revient à Compte, et un code scanné qui n'est pas un appareil le dit maintenant et reste affiché.

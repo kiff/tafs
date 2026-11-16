@@ -1,0 +1,245 @@
+name: Mac
+
+# The Mac app (macOS 13 and later, docs/mac-app.md): the iPhone and iPad app
+# built with Mac Catalyst. This builds it and runs the unit tests on a Mac.
+#
+# A macOS runner is scarce, so it runs only when it has to:
+# - a pull request that changes what is specific to the Mac: the project, this
+#   workflow, or a file that names the Mac build (macCatalyst, ThisDevice.isMac);
+# - every night on main, which catches an iPhone or iPad change that stops the
+#   Mac build compiling;
+# - by hand.
+# A draft pull request runs it too: a Mac build can't be checked on a machine
+# without Xcode, so this is where a change to it is tried.
+
+on:
+  pull_request:
+    paths: ["ios/**", "app/strings/**", ".github/workflows/mac.yml"]
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: mac-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      mac: ${{ steps.diff.outputs.mac }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "mac=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # The files that name the Mac build, as they are in this change.
+          named=$(git grep -lE 'macCatalyst|ThisDevice\.isMac' -- ios || true)
+          changed=$(git diff --name-only "$BASE" "$HEAD")
+          mac=false
+          if echo "$changed" | grep -Eq '^(ios/project\.yml|\.github/workflows/mac\.yml)$'; then mac=true; fi
+          if [ -n "$named" ] && echo "$changed" | grep -Fxq -f <(echo "$named"); then mac=true; fi
+          echo "mac=$mac" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.mac == 'true'
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      # The Mac's entitlements are their own files (docs/mac-app.md): each holds every key
+      # the iPhone and iPad's has, push by its Mac name, and the App Sandbox.
+      - name: Check the Mac's entitlements
+        run: |
+          cd ios
+          check() {
+            plutil -lint "$2"
+            python3 - "$1" "$2" <<'PY'
+          import plistlib, sys
+          ios, mac = (plistlib.load(open(p, "rb")) for p in sys.argv[1:])
+          name = {"aps-environment": "com.apple.developer.aps-environment"}
+          missing = [name.get(k, k) for k in ios if name.get(k, k) not in mac]
+          off = [k for k in ("com.apple.security.app-sandbox", "com.apple.security.network.client") if mac.get(k) is not True]
+          for k in missing: print(f"::error file=ios/{sys.argv[2]}::{k} is in {sys.argv[1]} but not here")
+          for k in off: print(f"::error file=ios/{sys.argv[2]}::{k} must be true")
+          sys.exit(1 if missing or off else 0)
+          PY
+          }
+          # The Mac App Store refuses a Mac upload without a category (Mac TestFlight's first run).
+          [ -n "$(plutil -extract LSApplicationCategoryType raw -o - Tafs/Info.plist 2>/dev/null)" ] \
+            || { echo "::error file=ios/project.yml::the app's Info.plist has no LSApplicationCategoryType"; exit 1; }
+          check Tafs/Tafs.entitlements Tafs/TafsMac.entitlements
+          check Notify/TafsNotify.entitlements Notify/TafsNotifyMac.entitlements
+          grep -q 'CODE_SIGN_ENTITLEMENTS\[sdk=macosx\*\]"* = Tafs/TafsMac.entitlements' Tafs.xcodeproj/project.pbxproj
+          grep -q 'CODE_SIGN_ENTITLEMENTS\[sdk=macosx\*\]"* = Notify/TafsNotifyMac.entitlements' Tafs.xcodeproj/project.pbxproj
+
+      # Unsigned: the Mac's signing is set up at release. The linker still
+      # signs the binary ad hoc, which is what lets the tests run it.
+      - name: Build for the Mac
+        run: |
+          cd ios
+          xcodebuild -version
+          xcodebuild build-for-testing \
+            -project Tafs.xcodeproj -scheme TafsMac \
+            -destination "platform=macOS,variant=Mac Catalyst" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+
+      - name: Unit tests on the Mac
+        run: |
+          cd ios
+          xcodebuild test-without-building \
+            -project Tafs.xcodeproj -scheme TafsMac \
+            -destination "platform=macOS,variant=Mac Catalyst" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+
+      # They show the Mac app, they don't test it. The iPad's reference set
+      # (ios.yml, docs/screenshots/ipad/), light and dark, with the same launch
+      # arguments, so each Mac screen can be laid beside its iPad one: the app's
+      # window alone, by its window id. Then the whole screen once, for the menu
+      # bar, and the Overview in French and Portuguese.
+      #
+      # The window alone, because a runner has no Apple Account: the App Store
+      # asks for one in a window of its own, over the app's, as it would on a
+      # Mac signed out of the App Store. A person's Mac is signed in.
+      - name: Run the Mac app and take screenshots
+        run: |
+          cd ios
+          app="$PWD/build/Build/Products/Debug-maccatalyst/Tafs.app"
+          mkdir -p "$RUNNER_TEMP/mac-shots"
+          # The app's main window's id, from the window server; with -all, each
+          # window on screen, for the log.
+          cat > "$RUNNER_TEMP/windows.swift" <<'SWIFT'
+          import CoreGraphics
+          import Foundation
+          let all = CommandLine.arguments.contains("-all")
+          let pid = CommandLine.arguments.dropFirst().compactMap { Int($0) }.first
+          let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+          var best: (id: Int, area: Double)?
+          for w in list {
+            let owner = w[kCGWindowOwnerName as String] as? String ?? ""
+            let id = w[kCGWindowNumber as String] as? Int ?? 0
+            let layer = w[kCGWindowLayer as String] as? Int ?? 0
+            let b = w[kCGWindowBounds as String] as? [String: Double] ?? [:]
+            let area = (b["Width"] ?? 0) * (b["Height"] ?? 0)
+            if all { print("\(owner) id=\(id) layer=\(layer) \(Int(b["Width"] ?? 0))x\(Int(b["Height"] ?? 0)) \(w[kCGWindowName as String] as? String ?? "")") }
+            let ownerPID = w[kCGWindowOwnerPID as String] as? Int ?? 0
+            if ownerPID == pid || owner.lowercased() == "tafs", layer == 0, area > (best?.area ?? 0) { best = (id, area) }
+          }
+          if !all, let best { print(best.id) }
+          SWIFT
+          swiftc -O -o "$RUNNER_TEMP/windows" "$RUNNER_TEMP/windows.swift"
+          # A shot is taken once two frames a second apart are within 0.5% of
+          # each other's size; after 30 s, as it is, with a warning.
+          shoot() {
+            name=$1; whole=$2; shift 2
+            frame="$RUNNER_TEMP/frame.png"
+            open -n "$app" --args -screenshots YES -signedIn YES "$@"
+            sleep 4
+            prev=0
+            ready=""
+            for _ in $(seq 30); do
+              id=$("$RUNNER_TEMP/windows" "$(pgrep -nx Tafs || echo 0)")
+              if [ "$whole" = whole ] || [ -z "$id" ]; then screencapture -x "$frame"; else screencapture -x -o -l "$id" "$frame"; fi
+              size=$(wc -c < "$frame")
+              if [ -n "$id" ] && [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
+                ready=1; break
+              fi
+              prev=$size
+              sleep 1
+            done
+            if [ -z "$id" ]; then
+              echo "::error::$name: no window of the app's on screen; the windows there:"
+              "$RUNNER_TEMP/windows" -all
+              exit 1
+            fi
+            [ -n "$ready" ] || echo "::warning::$name: the window hadn't drawn and settled after 30 s"
+            [ "$whole" = whole ] && "$RUNNER_TEMP/windows" -all
+            mv "$frame" "$RUNNER_TEMP/mac-shots/$name.png"
+            pkill -x Tafs || true
+            while pgrep -x Tafs >/dev/null; do sleep 0.5; done
+          }
+          en=(-AppleLanguages "(en)" -AppleLocale en_US)
+          # The runner's own appearance, light then dark: a Mac app follows the system's.
+          appearance() {
+            osascript -e "tell application \"System Events\" to tell appearance preferences to set dark mode to $1" \
+              || { echo "::error::couldn't set the runner's appearance"; exit 1; }
+          }
+          for look in Light Dark; do
+            suffix=""; [ "$look" = Dark ] && suffix="-dark"
+            if [ "$look" = Dark ]; then appearance true; else appearance false; fi
+            ref() { local screen=$1; shift; shoot "$screen$suffix" window "$@" "${en[@]}"; }
+            ref overview -tab tafs
+            ref needs-you -tab needs-you
+            ref record -tab record
+            ref calendar -tab tafs -screen calendar
+            ref calendar-week -tab tafs -screen calendar-week
+            ref account -tab account
+            ref alerts -tab account -screen alerts
+            ref taf -tab tafs -screen taf
+            ref taf-card -tab tafs -screen card
+            ref taf-chat -tab tafs -screen chat
+            ref taf-setup -tab tafs -screen setup
+            ref usage -tab tafs -screen usage
+            ref connect-apps -tab tafs -screen connect-apps
+            ref connect-app -tab tafs -screen connect-app
+            ref devices -tab account -screen devices
+            ref new-taf -tab tafs -screen new-taf
+            ref coach -tab tafs -screen coach
+            ref coach-chat -tab tafs -screen coach-chat
+          done
+          appearance false
+          shoot menu-bar whole -tab tafs "${en[@]}"
+          # The menu bar's menus, item by item, as the app builds them: their order and
+          # names are checked here, since a screenshot shows the bar closed.
+          open -n "$app" --args -screenshots YES -signedIn YES -tab tafs "${en[@]}"
+          sleep 6
+          osascript > "$RUNNER_TEMP/mac-shots/menus.txt" <<'OSA' || echo "::warning::couldn't read the menu bar"
+          tell application "System Events" to tell (first process whose unix id is (do shell script "pgrep -nx Tafs") as integer)
+            set out to ""
+            repeat with m in menu bar items of menu bar 1
+              set out to out & "[" & (name of m) & "]" & linefeed
+              try
+                repeat with i in menu items of menu 1 of m
+                  set n to name of i
+                  if n is missing value then set n to "—"
+                  set out to out & "  " & n & linefeed
+                end repeat
+              end try
+            end repeat
+            return out
+          end tell
+          OSA
+          cat "$RUNNER_TEMP/mac-shots/menus.txt" || true
+          pkill -x Tafs || true
+          while pgrep -x Tafs >/dev/null; do sleep 0.5; done
+          for lang in fr pt; do
+            region=$(echo "$lang" | tr a-z A-Z)
+            shoot "$lang-overview" window -tab tafs -AppleLanguages "($lang)" -AppleLocale "${lang}_${region}"
+          done
+          ls -la "$RUNNER_TEMP/mac-shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-screenshots
+          path: ${{ runner.temp }}/mac-shots

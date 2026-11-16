@@ -250,7 +250,12 @@ class MainActivity : FragmentActivity() {
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
   override fun onStart() {
     super.onStart()
-    app.vendorSignIn.attach(this)
+    app.vendorSignIn.attach(this) { tab -> vendorTab.launch(tab) }
+  }
+
+  /** The vendor's tab, opened for a result: it answers once the tab is gone, which marks the sign-in left (Open again, Cancel). */
+  private val vendorTab = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
+    app.vendorSignIn.closed(lifecycleScope)
   }
 
   override fun onPause() {
@@ -327,9 +332,11 @@ fun RootView(model: AppModel) {
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         LocalSignInAgain provides { confirmingSignInAgain = true },
+        bot.tafs.app.views.LocalViewOnly provides state.approvalViewOnly,
         // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
         LocalApproveAgain provides (
-          if (state.mode == Mode.kiff && !state.relinkUnavailable) {
+          // A view-only session can't be re-linked either: KIFF refuses it, so the line offers Sign in again alone.
+          if (state.mode == Mode.kiff && !state.relinkUnavailable && !state.approvalViewOnly) {
             ApproveAgain(state.relink, state.relinkProblem, model::startRelink, model::cancelRelink, model::nudgeSignIn)
           } else {
             null
@@ -594,7 +601,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
-        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
+        reopenSignIn = { model.reopenSignIn() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
@@ -823,7 +830,20 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
-      DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
+      DevicesSheet(
+        state, refresh = { model.refreshDevices(); model.refreshPasskeys() }, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
+        // Adding a device gives it approval authority: offered only on a KIFF account. The scan and what follows run in the model.
+        addDevice = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
+          { model.addDevice { bot.tafs.app.app.scanPairingQr(activity) } }
+        },
+        confirmPair = model::confirmPairing,
+        cancelPair = model::cancelPairing,
+        // A passkey on this phone, made by Android's Credential Manager and registered by the approval key: KIFF accounts only.
+        addPasskey = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
+          { scope.launch { model.addPasskey(android.os.Build.MODEL) { json -> bot.tafs.app.app.makePasskey(activity, json) } } }
+        },
+        removePasskey = model::removePasskey,
+      )
     }
     if (showingConnectApps) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
@@ -863,6 +883,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
+        onReopen = model::reopenSignIn,
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).

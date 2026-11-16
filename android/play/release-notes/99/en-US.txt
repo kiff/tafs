@@ -1,0 +1,2 @@
+- Remove for good takes one tap; a second one does nothing.
+- Connect apps opens at full size, saying it's loading.

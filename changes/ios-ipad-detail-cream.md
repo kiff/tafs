@@ -1,0 +1,1 @@
+- **iPad:** the detail pane is cream edge to edge (no white strips beside Overview, no grey behind Connect apps), and Overview shows what else Needs you counts, such as a Coach chat waiting with no taf yet, as a line that opens Needs you ([ios-app.md](../docs/ios-app.md)).

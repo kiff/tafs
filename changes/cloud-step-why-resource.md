@@ -1,0 +1,1 @@
+- **tafs cloud:** a failed step's why keeps the name of the thing its left-out id was: Stripe's "No such payment_intent: 'pi_…'" reads "No such payment intent" in the step list, where it read "No such: 'it'" ([chat.md](../docs/chat.md)).

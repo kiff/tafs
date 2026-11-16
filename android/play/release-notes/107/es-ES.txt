@@ -1,0 +1,1 @@
+- Nuevo en Dispositivos: “Añadir una llave de acceso en este teléfono”. Con una llave de acceso en este teléfono, un ordenador puede aprobar a través de él: muestra un código QR y tú lo escaneas con este teléfono. Añadirla pide tu huella, y solo pueden hacerlo los propietarios y administradores de la cuenta.

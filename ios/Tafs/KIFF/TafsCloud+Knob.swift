@@ -398,6 +398,13 @@ extension TafsCloud {
             /// The tafs that use it, by tafs cloud's names; nil when it sends none (the phone's own
             /// planque read stands in).
             var usedBy: [String]?
+            /// The tafs that need it, by tafs cloud's id and name (`needed_by`): those whose recipe names it, or
+            /// whose Card in force has a rule on one of its connections. "Which taf?" lists only these, and
+            /// none means Ask Coach. nil from a tafs cloud before it: every taf you manage, as before.
+            var neededBy: [UsedBy]?
+            /// Its live connections made under a taf that doesn't need it (`misplaced`): said on the
+            /// connection, so it can be removed. Sent only with this phone's signed grants read.
+            var misplaced: [Misplaced] = []
             var id: String { entry }
             /// What a row reads as: tafs cloud's `name`, else its `title`.
             var displayName: String { name ?? title }
@@ -410,7 +417,7 @@ extension TafsCloud {
             /// Connected, signed in, or to sign in again: the person's own, listed first, under Yours.
             var yours: Bool { connected || needsReconnect || state == "signed_in" }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, name, subtitle, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words" }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, name, subtitle, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words", neededBy = "needed_by", misplaced }
             private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -436,6 +443,23 @@ extension TafsCloud {
                 // [{taf, name}], each by tafs cloud's name; anything else reads as none sent.
                 usedBy = ((try? c.decodeIfPresent([Named].self, forKey: .usedBy)) ?? nil)?
                     .compactMap { $0.name?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                // A list it can't read is none sent: every taf you manage, as before, never a guess from half a list.
+                neededBy = ((try? c.decodeIfPresent([UsedBy].self, forKey: .neededBy)) ?? nil)?.filter { !$0.taf.isEmpty }
+                misplaced = ((try? c.decodeIfPresent([Misplaced].self, forKey: .misplaced)) ?? nil) ?? []
+            }
+        }
+        /// A live connection of an app made under a taf that doesn't need it: the grant, and that taf.
+        struct Misplaced: Decodable, Equatable {
+            let grant: String
+            var taf = ""
+            var name = ""
+            enum CodingKeys: String, CodingKey { case grant, taf, name }
+            init(grant: String, taf: String = "", name: String = "") { self.grant = grant; self.taf = taf; self.name = name }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                grant = try c.decode(String.self, forKey: .grant)
+                taf = try c.decodeIfPresent(String.self, forKey: .taf) ?? ""
+                name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
             }
         }
         /// A live taf whose Card in force still uses a removed taf's connection, by tafs cloud's name.
@@ -513,8 +537,9 @@ extension TafsCloud {
 
     /// Starts connecting `entry` from the list for one taf (its tafs cloud id): planque makes
     /// the grant for that taf's KIFF agent, with its profile.
-    func startConnect(_ entry: String, taf: String) async throws -> ConnectStart {
-        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: ["taf": taf])
+    func startConnect(_ entry: String, taf: String, proof: String? = nil) async throws -> ConnectStart {
+        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: ["taf": taf],
+                       headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
 
     /// One page of Connect apps, filtered by `q` when given; the next page with the

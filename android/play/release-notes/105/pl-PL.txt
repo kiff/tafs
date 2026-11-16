@@ -1,0 +1,3 @@
+- Karta zatwierdzenia nie zatrzymuje się już na „Odczytywanie, o co prosi…”, gdy prośba przychodzi z opóźnieniem.
+- „Otwórz ponownie logowanie” prosi teraz ponownie o zatwierdzenie, jednym odciskiem palca, zamiast otwierać już użyty link.
+- Podczas usuwania dostępu aplikacji ekran Połącz aplikacje pokazuje „Usuwanie dostępu…”.

@@ -1,0 +1,17 @@
+{"categories":[{"id":"money","title":"Money","color":{"light":"#107758","dark":"#4CC38A"}},
+               {"id":"customers","title":"Customers","color":{"light":"#B0127A","dark":"#F07AC6"}},
+               {"id":"operations","title":"Operations","color":{"light":"#1F5FBF","dark":"#7AA7F0"}}],
+ "recipes":[
+  {"id":"refunds-within-a-limit","title":"Refunds within a limit","category":"money","headline":"No refund waits overnight.","line":"Answers refund requests and refunds what's within your limit.","say":"Handle refund requests.",
+   "card":{"allows":["Refunds up to €150 each"],"holds":["A refund over €150"],"never":["A payout"]},"apps":[{"name":"Gmail"},{"name":"Stripe"}],"connected":true,"running":true},
+  {"id":"chase-overdue-invoices","title":"Chase overdue invoices","category":"money","headline":"Get paid without chasing.","line":"Reminds customers about invoices past due, politely.","say":"Chase my overdue invoices.",
+   "apps":[{"name":"Qonto"},{"name":"Gmail"}],"connected":false,"running":false},
+  {"id":"pay-supplier-bills","title":"Pay supplier bills","category":"money","headline":"Bills paid on time, checked first.","line":"Matches each bill to its order before it's paid.","say":"Pay my supplier bills.",
+   "apps":[{"name":"Qonto"}],"connected":false,"running":false},
+  {"id":"answer-questions-about-orders","title":"Answer questions about orders","category":"customers","headline":"Stop answering \"where is my order?\"","line":"Replies with the order's status and tracking.","say":"Answer order questions.",
+   "apps":[{"name":"Gmail"},{"name":"Google Sheets"}],"connected":false,"running":false},
+  {"id":"weekly-team-update","title":"Weekly team update","category":"operations","headline":"Monday's update, written for you.","line":"Sums up the week from your sheets and posts it.","say":"Post a weekly team update.",
+   "apps":[{"name":"Google Sheets"},{"name":"Slack"}],"connected":false,"running":false}],
+ "strip":{"shown":true,"title":"More jobs to hand off","ids":["chase-overdue-invoices","answer-questions-about-orders"]},
+ "words":{"title":"New taf","all":"All jobs","own_words":"Say it in your own words","own_words_line":"Tell Coach the job, and it builds the taf with you.","explore":"Explore jobs","see_all":"See all jobs"},
+ "labels":{"allows":"Does on its own","holds":"Asks you first","never":"Never does","hand":"Hand it to Coach"}}

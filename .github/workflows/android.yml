@@ -9,10 +9,10 @@ name: Android
 on:
   push:
     branches: [main]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   # The signed release bundle for Play, on demand (the release job).
   workflow_dispatch:
 
@@ -44,6 +44,11 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Gradle's cache is saved by this job alone, on main (the action's default is
+        # read-only elsewhere), after its own clean-up of stale entries: one current
+        # copy, where three jobs each saved theirs on every run (10 GB, 14 Nov).
+        with:
+          cache-cleanup: on-success
       - run: chmod +x gradlew
       # The Android SDK is on the runner; its licences are accepted so Gradle can fetch
       # the platform the app compiles against.
@@ -86,6 +91,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Read-only: the test job saves the cache, on main; this one restores it.
+        with:
+          cache-read-only: true
       - run: chmod +x gradlew
       - name: Accept the SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
@@ -140,7 +148,9 @@ jobs:
     if: >-
       !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
       (github.event_name == 'workflow_dispatch' || needs.version.outputs.raised == 'true')
-    # The owner approves each release here; the release role trusts only this environment.
+    # An internal release goes out on a merge to main that raises versionCode (or a manual run), with no reviewer to wait on:
+    # CI, the reviews and the internal track are the guardrails. Promotion beyond internal (Play review) is the owner's, in Play.
+    # The release role trusts only this environment.
     environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -156,6 +166,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Read-only: the test job saves the cache, on main; this one restores it.
+        with:
+          cache-read-only: true
       - run: chmod +x gradlew
       - name: Accept the SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true

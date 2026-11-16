@@ -1,0 +1,13 @@
+{
+  "about": "GET /v1/tafs/{id}/chats for Coach: its chats, newest first, each by what the owner asked. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "chats": [
+      {
+        "session": "sess1",
+        "started": "2026-10-16T12:00:00.000Z",
+        "updated": "2026-10-16T12:01:01.000Z",
+        "title": "Set up refunds for my shop"
+      }
+    ]
+  }
+}

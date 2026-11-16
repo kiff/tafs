@@ -1,0 +1,2 @@
+- «¿Para qué taf es?» muestra solo los tafs que usan la app. Una app que ninguno de tus tafs usa ofrece Preguntar a Coach.
+- Una conexión hecha para un taf que no usa la app lo dice, y se puede terminar desde su fila.

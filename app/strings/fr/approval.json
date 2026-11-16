@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Définissez un verrouillage d'écran sur ce téléphone pour approuver",
   "approval.settings_face_id_passcode_touch": "Réglages → Face ID et code (Touch ID et code sur un appareil avec Touch ID)",
   "approval.settings_path.face_id": "Réglages → Face ID et code",
+  "approval.settings_path.mac_touch_id": "Réglages Système → Touch ID et mot de passe",
   "approval.settings_path.touch_id": "Réglages → Touch ID et code",
   "approval.state.none_enrolled": "Aucune empreinte n'est configurée sur ce téléphone. Ajoutez-en une dans ses paramètres, puis revenez.",
   "approval.state.ready": "Les approbations sont configurées sur ce téléphone.",
@@ -61,6 +62,8 @@
   "approval.touch_id": "Touch ID",
   "approval.turned_off_tafs_open_settings": "{either} est désactivé pour tafs. Ouvrez Réglages et activez {either_2} pour tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} est désactivé pour tafs. Activez-le dans les réglages de tafs pour approuver.",
+  "approval.view_only": "Reconnectez-vous sur ce téléphone pour approuver, ou approuvez depuis votre autre téléphone.",
+  "approval.view_only_mac": "Ce Mac peut seulement consulter. Pour approuver ici, ajoutez-le depuis votre téléphone : Compte › Appareils › Ajouter un appareil.",
   "approval.why": "Chaque approbation que vous donnez dans tafs, une Card, une connexion ou un paiement au-delà d'une limite, est signée sur ce téléphone avec une clé que seule votre empreinte déverrouille. Votre code PIN ou votre schéma ne peut pas approuver.",
   "approval.without_allows": "Sans approbations, vous pouvez toujours vous connecter, consulter, refuser et bloquer.",
   "approval.your_passcode": "votre code"

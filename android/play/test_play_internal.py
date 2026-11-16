@@ -57,6 +57,15 @@ class PlayInternal(unittest.TestCase):
             p.upload(self.bundle.name)
         self.assertEqual(self.calls, [])
 
+    def test_the_check_fails_a_version_with_no_notes(self):
+        # The pull request that raises versionCode fails `test` without its notes, before the merge, never only at release.
+        p.version_code = lambda: 99999
+        with self.assertRaises(SystemExit) as raised:
+            p.main(["--check"])
+        self.assertIn("no release notes for versionCode 99999", str(raised.exception))
+        p.version_code = lambda: 85
+        p.main(["--check"])
+
     def test_no_token_sends_nothing(self):
         os.environ["PLAY_ACCESS_TOKEN"] = ""
         with self.assertRaises(SystemExit):

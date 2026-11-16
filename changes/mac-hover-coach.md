@@ -1,0 +1,1 @@
+- **Mac: the sidebar's Coach button answers the pointer,** as the other buttons do. Nothing changes on iPhone or iPad (docs/mac-app.md).

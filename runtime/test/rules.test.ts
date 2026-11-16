@@ -1,0 +1,246 @@
+import { describe, expect, it } from "vitest";
+import type { ApprovalGrant } from "../src/cloud/approval.js";
+import { LIMITS_MAX, RULES_MAX, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
+
+/** A conversation's events, as kiff/agents records them, in order. */
+const notice = (id: string, rules: unknown, run = "r1") => ({ kind: "component", run, body: { type: "notice", id, tone: "info", text: "The rules", rules } });
+const confirm = (id: string, agrees?: string, run = "r1") => ({ kind: "component", run, body: { type: "confirm", id, text: "Agree?", options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }], ...(agrees ? { agrees } : {}) } });
+const answered = (id: string, answer: unknown, extra: Record<string, unknown> = {}, run = "r1") => ({ kind: "answered", run, body: { id, type: "confirm", answer, words: String(answer), ...extra } });
+
+const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "send_reply", over: "ask" }];
+
+describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
+  it("the person's agree to a confirm naming the notice agrees to its rules", () => {
+    expect(rulesAgreement([notice("n1", RULES), confirm("c1", "n1"), answered("c1", "agree")]))
+      .toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
+  });
+
+  it("no rules notice: none, whatever else the conversation shows", () => {
+    expect(rulesAgreement([])).toEqual({ state: "none" });
+    expect(rulesAgreement([{ kind: "component", run: "r1", body: { type: "notice", id: "n1", text: "hi" } }, confirm("c1"), answered("c1", "agree")])).toEqual({ state: "none" });
+  });
+
+  it("only the person's own tap of agree counts (kiff-qa's negatives)", () => {
+    const base = [notice("n1", RULES), confirm("c1", "n1")];
+    // Change something; tafs cloud's own answer; words written while it waited; stopped waiting unanswered.
+    for (const a of [answered("c1", "change"), answered("c1", "agree", { answered_by: "tafs cloud" }), answered("c1", "agree", { wrote: "ok fine" }), answered("c1", "agree", { unanswered: true })]) {
+      expect(rulesAgreement([...base, a])).toEqual({ state: "unagreed", notice: "n1" });
+    }
+    // A confirm without agrees, or one in another run by the same id, agrees to nothing.
+    expect(rulesAgreement([notice("n1", RULES), confirm("c1"), answered("c1", "agree")])).toEqual({ state: "unagreed", notice: "n1" });
+    expect(rulesAgreement([...base, answered("c1", "agree", {}, "r2")])).toEqual({ state: "unagreed", notice: "n1" });
+  });
+
+  it("agrees naming an unknown id, or another conversation's notice, is no agreement", () => {
+    expect(rulesAgreement([notice("n1", RULES), confirm("c1", "n9"), answered("c1", "agree")])).toEqual({ state: "unagreed", notice: "n1" });
+    // The notice it names was never shown here (another conversation): nothing was agreed, and none was shown.
+    expect(rulesAgreement([confirm("c1", "n-elsewhere"), answered("c1", "agree")])).toEqual({ state: "none" });
+  });
+
+  it("a rules notice newer than the agreement blocks it until agreed (kiff-qa's gap 2)", () => {
+    const agreed = [notice("n1", RULES), confirm("c1", "n1"), answered("c1", "agree")];
+    const changed = [{ tool: "refund_charge", over: "ask" }];
+    expect(rulesAgreement([...agreed, notice("n2", changed)])).toEqual({ state: "unagreed", notice: "n2" });
+    // The same notice shown again with other rules: also unagreed; with the same rules, still agreed.
+    expect(rulesAgreement([...agreed, notice("n1", changed)])).toEqual({ state: "unagreed", notice: "n1" });
+    expect(rulesAgreement([...agreed, notice("n1", RULES)])).toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
+    // Agreed in turn: the newest agreement counts.
+    expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules" });
+  });
+
+  it("a notice whose rules can't be read whole carries none", () => {
+    const tooMany = Array.from({ length: RULES_MAX + 1 }, (_, i) => ({ tool: `t${i}`, over: "refuse" }));
+    for (const bad of [tooMany, [{ tool: "x", over: "maybe" }], [{ tool: "", over: "ask" }], "refund", []]) {
+      expect(rulesAgreement([notice("n1", bad), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "none" });
+    }
+  });
+});
+
+const tool = (t: string, suffix: string, over: Record<string, unknown> = {}) => ({ tool: t, name: `${t}_${suffix}`, title: t.replace(/_/g, " "), ...over });
+const grantOf = (id: string, tools: unknown[]): ApprovalGrant => ({ id, status: "pending", digest: "d", request: { agent: "refunds-x", tools: tools as never } });
+const card = (action: string | string[], on_exceed?: string) => ({ id: "c", subject: "refunds-x", ...(on_exceed ? { on_exceed } : {}), grants: [action].flat().map((a) => ({ action: a })), aggregates: [] });
+
+describe("a draft's Cards against the agreed rules", () => {
+  const stripe = grantOf("g1", [tool("refund_charge", "k3"), tool("list_charges", "k3", { read_only: true })]);
+
+  it("ask is on_exceed owner, refuse is refuse, by planque's name before the suffix", () => {
+    const rules = [{ tool: "refund_charge", over: "refuse" as const }];
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "refuse", onExceed: "owner" });
+    // A Card that says nothing holds for the owner, as KIFF does.
+    expect(rulesMismatch([stripe], [card("refund_charge_k3")], rules)?.kind).toBe("on_exceed");
+    const ask = [{ tool: "refund_charge", over: "ask" as const }];
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], ask)).toBeUndefined();
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], ask)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "ask", onExceed: "refuse" });
+    // A rule keyed by KIFF's name is read too.
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "refund_charge_k3", over: "ask" }])).toBeUndefined();
+  });
+
+  it("every Card covering the tool must match, not one of them", () => {
+    const rules = [{ tool: "refund_charge", over: "refuse" as const }];
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse"), card("refund_charge_k3", "owner")], rules)?.kind).toBe("on_exceed");
+  });
+
+  it("a write with no rule isn't signed; a read with none is; a rule for a tool no grant has is ignored", () => {
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "list_charges", over: "refuse" }])).toEqual({ kind: "missing", tool: "refund charge" });
+    expect(rulesMismatch([stripe], [card("list_charges_k3", "refuse")], [{ tool: "refund_charge", over: "refuse" }])).toBeUndefined();
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "delete_everything", over: "ask" }, { tool: "refund_charge", over: "refuse" }])?.kind).toBe("on_exceed");
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "delete_everything", over: "ask" }])).toEqual({ kind: "missing", tool: "refund charge" });
+  });
+
+  it("two apps: the app whose Card doesn't match is the one named", () => {
+    const gmail = grantOf("g2", [tool("send_reply", "q7")]);
+    const rules = [{ tool: "refund_charge", over: "refuse" as const }, { tool: "send_reply", over: "ask" as const }];
+    expect(rulesMismatch([stripe, gmail], [card("refund_charge_k3", "refuse"), card("send_reply_q7", "owner")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe, gmail], [card("refund_charge_k3", "refuse"), card("send_reply_q7", "refuse")], rules)).toEqual({ kind: "on_exceed", tool: "send reply", over: "ask", onExceed: "refuse" });
+    // One Card over both tools can't satisfy two different rules.
+    expect(rulesMismatch([stripe, gmail], [card(["refund_charge_k3", "send_reply_q7"], "refuse")], rules)?.tool).toBe("send reply");
+  });
+
+  it("a tool no Card in the draft covers is the coverage checks', not this one's", () => {
+    expect(rulesMismatch([stripe], [card("something_else", "owner")], [])).toBeUndefined();
+  });
+});
+
+describe("the figures the owner agreed (each call's, the day's total)", () => {
+  const stripe = grantOf("g1", [tool("refund_charge", "k3"), tool("list_charges", "k3", { read_only: true })]);
+  const EACH = { quantity: "sum(amount)", window: "call" as const, limit: 500 };
+  const DAY = { quantity: "sum(amount)", window: "calendar_day" as const, limit: 5000 };
+  const rule = (limits = [EACH, DAY]) => [{ tool: "refund_charge", over: "refuse" as const, limits }];
+  /** A refund Card with a per-call cap and aggregates. */
+  const refund = (max: number | undefined, aggregates: unknown[], on_exceed = "refuse", action = "refund_charge_k3") => ({ id: "c", subject: "refunds-x", on_exceed,
+    grants: [{ action, ...(max === undefined ? {} : { per_action_max: [{ quantity: "sum(amount)", max }] }) }], aggregates });
+  const day = (limit: number, extra: Record<string, unknown> = {}) => ({ quantity: "sum(amount)", window: "calendar_day", limit, ...extra });
+
+  it("read with the rules: agreed, and the same notice shown with another figure is other rules", () => {
+    const withFigures = rule();
+    expect(rulesAgreement([notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules: withFigures, text: "The rules" });
+    const agreed = [notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")];
+    expect(rulesAgreement([...agreed, notice("n1", rule([EACH, { ...DAY, limit: 50000 }]))])).toEqual({ state: "unagreed", notice: "n1" });
+    // The same figures in another order are the same rules.
+    expect(rulesAgreement([...agreed, notice("n1", rule([DAY, EACH]))]).state).toBe("agreed");
+  });
+
+  // kiff-qa's 3 to 6: a rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
+  it("figures that can't be read whole leave the notice with no rules", () => {
+    const bad: unknown[] = [
+      [], // given but empty: never "figures agreed"
+      Array.from({ length: LIMITS_MAX + 1 }, (_, i) => ({ quantity: `sum(a${i})`, window: "call", limit: 1 })),
+      [EACH, { ...EACH, limit: 600 }], // the same quantity and window twice
+      [{ ...EACH, limit: -1 }], [{ ...EACH, limit: 1.5 }], [{ ...EACH, limit: 2 ** 53 }], [{ ...EACH, limit: "500" }], [{ quantity: "sum(amount)", window: "call" }],
+      [{ ...EACH, window: "lifetime" }], [{ ...EACH, quantity: "sum( amount )" }], [{ ...EACH, quantity: "SUM(amount)" }], [{ ...EACH, quantity: "amount" }], [{ ...EACH, quantity: "sum()" }], [{ ...EACH, quantity: `sum(${"a".repeat(65)})` }],
+      "500",
+    ];
+    for (const limits of bad) {
+      expect(rulesAgreement([notice("n1", [{ tool: "refund_charge", over: "refuse", limits }]), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "none" });
+    }
+    // An argument as kiff/agents' schema takes it (letters, digits, _ and .) is read.
+    expect(rulesAgreement([notice("n1", rule([{ ...EACH, quantity: "sum(amount.total_Cents)" }])), confirm("c1", "n1"), answered("c1", "agree")]).state).toBe("agreed");
+    // 0 is a figure (never), and 2^53−1 the largest one read exactly.
+    for (const limit of [0, Number.MAX_SAFE_INTEGER]) {
+      expect(rulesAgreement([notice("n1", rule([{ ...EACH, limit }])), confirm("c1", "n1"), answered("c1", "agree")]).state).toBe("agreed");
+    }
+  });
+
+  it("each agreed figure is on the Card exactly: missing, looser or stricter is refused", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rule())).toBeUndefined();
+    // The Card at 50000 a call against an agreed 500.
+    expect(rulesMismatch([stripe], [refund(50000, [day(5000)])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "call", agreed: 500, drafted: 50000 });
+    // A stricter day's total: the owner didn't agree to it either.
+    expect(rulesMismatch([stripe], [refund(500, [day(2000)])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000, drafted: 2000 });
+    // No day's total at all, or no per-call cap.
+    expect(rulesMismatch([stripe], [refund(500, [])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000 });
+    expect(rulesMismatch([stripe], [refund(undefined, [day(5000)])], rule())?.kind).toBe("figure");
+    // 0 agreed is 0 drafted, not a missing figure.
+    expect(rulesMismatch([stripe], [refund(0, [day(5000)])], rule([{ ...EACH, limit: 0 }, DAY]))).toBeUndefined();
+  });
+
+  // kiff-qa's 1: a total for each customer at the agreed figure isn't the day's total.
+  it("an aggregate with per set doesn't stand for the day's total", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000, { per: "customer" })])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000 });
+  });
+
+  // kiff-qa's 2: one matching Card doesn't excuse a looser one beside it.
+  it("two Cards over the tool, one matching and one looser, is refused", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)]), refund(500, [day(9000)])], rule())?.kind).toBe("figure");
+    // The figure on one Card and the day's total on another is the agreed rules, kept as two Cards.
+    expect(rulesMismatch([stripe], [refund(500, []), refund(undefined, [day(5000)])], rule())).toBeUndefined();
+  });
+
+  // kiff-qa's 6: the quantity matches as written.
+  it("a quantity spelled another way on the Card isn't the agreed figure", () => {
+    const spaced = { id: "c", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum( amount )", max: 500 }] }], aggregates: [day(5000)] };
+    expect(rulesMismatch([stripe], [spaced], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "call", agreed: 500 });
+  });
+
+  it("a rule with no figures is checked as before; on_exceed is checked first", () => {
+    expect(rulesMismatch([stripe], [refund(50000, [])], [{ tool: "refund_charge", over: "refuse" }])).toBeUndefined();
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)], "owner")], rule())?.kind).toBe("on_exceed");
+  });
+
+  it("another connection's tool of the same taf is held to its figures too", () => {
+    const shop = grantOf("g2", [tool("refund_order", "s9")]);
+    const rules = [...rule(), { tool: "refund_order", over: "refuse" as const, limits: [{ ...EACH, limit: 1000 }] }];
+    expect(rulesMismatch([stripe, shop], [refund(500, [day(5000)]), refund(1000, [], "refuse", "refund_order_s9")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe, shop], [refund(500, [day(5000)]), refund(9999, [], "refuse", "refund_order_s9")], rules)).toMatchObject({ kind: "figure", tool: "refund order", agreed: 1000, drafted: 9999 });
+  });
+
+  it("figures the rules don't name are listed for the log, never refused", () => {
+    const count = { quantity: "count", window: "calendar_day", limit: 100 };
+    const cards = [refund(500, [day(5000), count, day(9, { per: "customer" })])];
+    expect(rulesMismatch([stripe], cards, rule())).toBeUndefined();
+    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual(["refund_charge_k3 count calendar_day 100"]);
+    // A rule with no figures names none to compare: nothing is listed.
+    expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
+  });
+
+  it("figures the notice's words don't say are listed for the log, in the Card's units or major units", () => {
+    expect(rulesUnsaid(rule(), "Refunds up to €5 each, and €50 a day, are refused past that.")).toEqual([]);
+    expect(rulesUnsaid(rule(), "Remboursements jusqu'à 5,00 € chacun et 50 € par jour.")).toEqual([]);
+    expect(rulesUnsaid(rule([{ ...DAY, limit: 100000 }]), "Bis 1.000,00 € am Tag.")).toEqual([]);
+    expect(rulesUnsaid(rule([{ quantity: "count", window: "calendar_day", limit: 1000 }]), "At most 1,000 a day.")).toEqual([]);
+    expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
+  });
+});
+
+// Eval 16's refunds: "ask past €5 a refund, refuse past €50 a day" is one tool with two answers, so the answer goes on
+// the figure (agentgabo and kiff-admin, #1614 18:16): the rule's `over` is the default for a figure that says none.
+describe("what happens past each figure (over on a limit)", () => {
+  const stripe = grantOf("g1", [tool("refund_charge", "k3")]);
+  const EACH = { quantity: "sum(amount)", window: "call" as const, limit: 500, over: "ask" as const };
+  const DAY = { quantity: "sum(amount)", window: "calendar_day" as const, limit: 5000 };
+  const rules = [{ tool: "refund_charge", over: "refuse" as const, limits: [EACH, DAY] }];
+  const each = (onExceed: string) => ({ id: "each", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] });
+  const day = (onExceed: string) => ({ id: "day", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "refund_charge_k3" }], aggregates: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] });
+
+  it("reads a figure's over with the rules, and the same rules with another over are other rules", () => {
+    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules, text: "The rules" });
+    const flipped = [{ ...rules[0]!, limits: [{ ...EACH, over: "refuse" as const }, DAY] }];
+    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree"), notice("n1", flipped)])).toEqual({ state: "unagreed", notice: "n1" });
+    for (const over of ["maybe", "", 1, null]) {
+      expect(rulesAgreement([notice("n1", [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over }] }]), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "none" });
+    }
+  });
+
+  it("each Card answers as its figures say: the held call figure on its own Card, the refused day's total on another", () => {
+    expect(rulesMismatch([stripe], [each("owner"), day("refuse")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe], [each("refuse"), day("refuse")], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "ask", onExceed: "refuse" });
+    expect(rulesMismatch([stripe], [each("owner"), day("owner")], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "refuse", onExceed: "owner" });
+  });
+
+  it("two figures with different answers on one Card are refused: one Card has one on_exceed", () => {
+    const both = { ...each("owner"), aggregates: day("refuse").aggregates };
+    expect(rulesMismatch([stripe], [both], rules)).toEqual({ kind: "mixed", tool: "refund charge" });
+    expect(rulesMismatch([stripe], [{ ...both, on_exceed: "refuse" }], rules)).toEqual({ kind: "mixed", tool: "refund charge" });
+    // The same answer on both figures may share a Card.
+    const sameAnswer = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: "refuse" as const }, DAY] }];
+    expect(rulesMismatch([stripe], [{ ...both, on_exceed: "refuse" }], sameAnswer)).toBeUndefined();
+  });
+
+  it("a figure that says no over takes the tool's, and a Card with no agreed figure answers as the tool does", () => {
+    const plain = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: undefined }, DAY] }];
+    expect(rulesMismatch([stripe], [each("refuse"), day("refuse")], plain)).toBeUndefined();
+    const other = { id: "o", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3" }], aggregates: [{ quantity: "sum(fee)", window: "calendar_day", limit: 9 }] };
+    expect(rulesMismatch([stripe], [each("owner"), day("refuse"), other], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "refuse", onExceed: "owner" });
+  });
+});
