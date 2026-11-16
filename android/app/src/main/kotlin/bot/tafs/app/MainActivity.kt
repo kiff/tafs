@@ -424,7 +424,7 @@ fun RootView(model: AppModel) {
 internal fun accountShown(state: bot.tafs.app.app.AppState): String = "${state.mode}/${state.kiffAccount?.tenantId.orEmpty()}"
 
 @Composable
-private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
+internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val state by model.state.collectAsState()
   val scope = rememberCoroutineScope()
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
