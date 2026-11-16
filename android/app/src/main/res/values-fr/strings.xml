@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Vous utilisez déjà tafs sur votre téléphone ? Ajoutez %2$s avec lui.</string>
     <string name="pair_keychain_refused">Ce Mac n\'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$s), il n\'a donc pas été ajouté. Affichez un nouveau code et réessayez.</string>
     <string name="pair_new_code">Afficher un nouveau code</string>
+    <string name="pair_passkey_why_body">Elle reste sur %3$s, protégée par %2$s. Avec elle, %3$s approuve les actions de vos tafs, et rien n\'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.</string>
+    <string name="pair_passkey_why_go">Créer la clé d\'accès</string>
+    <string name="pair_passkey_why_title">Créer une clé d\'accès pour %2$s</string>
     <string name="pair_steps">Sur votre téléphone, ouvrez tafs, puis %1$s, %2$s, %3$s. Scannez ce code.</string>
     <string name="pair_title">Ajouter %2$s avec votre téléphone</string>
     <string name="pair_view_only_add">Ajouter %2$s</string>

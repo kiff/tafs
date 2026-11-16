@@ -1,0 +1,1 @@
+- **Strings: the card before Windows Hello makes a passkey** (`pair.passkey_why_title`, `_body`, `_go`), in all 8 languages.
