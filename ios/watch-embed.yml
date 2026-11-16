@@ -1,0 +1,20 @@
+# The watch app inside the iPhone app (docs/watch-app.md, "Store"), for the TestFlight build
+# only: project.yml includes this file when TAFS_EMBED_WATCH is set, as the testflight job
+# sets it. Without it, the phone's scheme never builds the watch app, so the phone's other
+# jobs don't pay for it.
+targets:
+  Tafs:
+    dependencies:
+      # Xcode's "Embed Watch Content": the app's Watch folder. iPhone only, never the Mac.
+      - target: TafsWatch
+        platformFilter: iOS
+        embed: true
+        codeSign: true
+        copy:
+          destination: productsDirectory
+          subpath: $(CONTENTS_FOLDER_PATH)/Watch
+  TafsWatch:
+    settings:
+      base:
+        # Archived inside the iPhone app, not as an app of its own.
+        SKIP_INSTALL: YES

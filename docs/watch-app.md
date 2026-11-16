@@ -82,3 +82,11 @@ The iPhone's notifications show on the watch by themselves. On a held call's not
 
 TestFlight first, inside the iPhone app. Its App Store screenshots and listing are store
 listing changes, made separately.
+
+- **Only the TestFlight build embeds it.** `ios/watch-embed.yml` adds the watch app to the
+  iPhone app's Watch folder, and `project.yml` includes it only when `TAFS_EMBED_WATCH` is
+  set, as the `testflight` job sets it. The `watch` job checks the generated project both ways.
+- **Its App ID and profile** (`bot.tafs.app.watchkitapp`, "tafs watch App Store CI") are made
+  by `ios/scripts/asc-profiles.rb` through the App Store Connect API, like the extensions'.
+- **Its icon** is the phone's, one 1024-point image, and its privacy manifest declares no
+  tracking and no data collected on the watch: what it shows is read by the phone.
