@@ -208,10 +208,16 @@ fun SettingsSheet(
             Action(Words.Settings.changeLanguage, Theme.amberText) { languagePicker = true }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle) {
+            val deviceZone = java.time.ZoneId.systemDefault().id
             Value(Words.Settings.timeZoneTitle, state.kiffAccount?.timeZone ?: "UTC")
             Action(Words.Settings.chooseTimeZone, Theme.amberText) { zonePicker = true }
-            Action(Words.Settings.useDeviceZone(bot.tafs.app.model.ThisDevice.word, java.time.ZoneId.systemDefault().id), Theme.amberText, onUseDeviceZone)
+            // Offered only where it would change something, as on the iPad: the account's zone isn't already this phone's.
+            if (offersDeviceZone(state.kiffAccount?.timeZone, deviceZone)) {
+              Action(Words.Settings.useDeviceZone(bot.tafs.app.model.ThisDevice.word, deviceZone), Theme.amberText, onUseDeviceZone)
+            }
             state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            // What the zone is for, under it, as the iPad's footer says it.
+            Text(Words.Settings.TimeZone.usesThis, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
           Section(Words.Settings.legal) {
@@ -383,3 +389,9 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
 
 /** The build, as Account shows it: "1.0 (26)", the version and then the build number. */
 internal fun versionWords(build: Long, version: String?): String = "${version ?: "–"} ($build)"
+
+/**
+ * Whether Account offers "Use this phone's time zone": only when the account's zone (UTC when KIFF names none, as the row shows
+ * it) isn't the phone's already, so the button never sends a change that changes nothing.
+ */
+internal fun offersDeviceZone(accountZone: String?, deviceZone: String): Boolean = (accountZone ?: "UTC") != deviceZone
