@@ -143,14 +143,17 @@ class PairingTest {
   }
 
   // The name is only what the other device says it is; the check code on its screen is what binds the yes, so it comes first.
-  @Test fun theApproveSheetShowsTheCheckCodeFirstThenWhatItGivesThenThisOneOnly() {
+  @Test fun theApproveSheetShowsTheCheckCodeFirstThenTheOwnersLineAndTheNameAsAClaim() {
     val qr = PairQr.read(qrText())!!
     val lines = bot.tafs.app.views.pairLines(qr)
-    assertEquals(3, lines.size)
+    assertEquals(5, lines.size)
     assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), lines[0])
     assertTrue(lines[0], lines[0].contains(qr.checkCode!!))
-    assertEquals(bot.tafs.app.views.pairGives(qr), lines[1])
-    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairOnlyNow, lines[2])
+    assertEquals("Add this device to your account. Only this device; nothing else changes.", lines[1])
+    // The name is what the device says it is, beside the code that proves which one it is.
+    assertEquals("It calls itself ${qr.name}.", lines[2])
+    assertEquals(bot.tafs.app.views.pairGives(qr), lines[3])
+    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairOnlyNow, lines[4])
   }
 
   // A phone always signs in with KIFF itself, so only a tablet offers being added from the person's phone (the owner, 16 Nov).

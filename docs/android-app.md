@@ -1269,7 +1269,8 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    key is in software (`key_store: "software"`), the device key alone. The alert asks
    "Pair {name}?", and its first line is the code to compare, "Does your computer show {code}?": the name
    is only what the other device says it is, so the code is what binds the yes to the device in front of
-   the person (`pairLines`). Then it says what yes gives ("{name} will be able to approve your tafs' actions
+   the person (`pairLines`). Then, as on iOS, "Add this device to your account. Only this device; nothing else changes."
+   and "It calls itself {name}.", the name as the device's own claim. Then it says what yes gives ("{name} will be able to approve your tafs' actions
    with Windows Hello" for `hello` or a Windows computer's own passkey, Touch ID for `enclave`, a
    passkey for any other `passkey`), for a computer whose QR
    says `key_store: "software"`, which never approves, "{name} will show your tafs and send approvals

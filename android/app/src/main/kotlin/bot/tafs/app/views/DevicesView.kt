@@ -185,7 +185,7 @@ fun DevicesSheet(
       title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
       text = {
         // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
-        // yes to the device in front of the person (qa-kiff, 16 Nov). Then what saying yes gives it, then that it's this one only.
+        // yes to the device in front of the person (qa-kiff, 16 Nov). Then the owner's line, the name as its claim, what yes gives.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           pairLines(qr).forEachIndexed { i, line ->
             if (i == 0) Text(line, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK)) else Text(line)
@@ -200,9 +200,15 @@ fun DevicesSheet(
   }
 }
 
-/** The approve-pairing sheet's lines, in order: the check code to compare, what saying yes gives, and that it's only this one. */
+/**
+ * The approve-pairing sheet's lines, in order, as on iOS: the check code to compare; that it adds only this device and nothing
+ * else changes; the name as the device's own claim ("It calls itself …"), never as proof; what saying yes gives; and that it's
+ * only this one.
+ */
 internal fun pairLines(qr: PairQr): List<String> = listOf(
   if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()),
+  Words.Settings.Devices.pairAddOnly,
+  Words.Settings.Devices.pairClaims(name = qr.name),
   pairGives(qr),
   if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow,
 )
