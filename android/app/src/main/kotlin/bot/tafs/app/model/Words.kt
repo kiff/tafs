@@ -2249,6 +2249,7 @@ object Words {
     val deletesEveryTafRunsChats: String get() = Res.s(R.string.sign_in_deletes_every_taf_runs_chats)
     val didntWork: String get() = Res.s(R.string.sign_in_didnt_work)
     fun everyActionTafTakesGoes(device: String): String = Res.s(R.string.sign_in_every_action_taf_takes_goes, device, Words.demonstrative(device))
+    val everyActionTafTakesGoesView: String get() = Res.s(R.string.sign_in_every_action_taf_takes_goes_view)
     val howWorks: String get() = Res.s(R.string.sign_in_how_works)
     fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
     fun lead(device: String): String = Res.s(R.string.sign_in_lead, device, Words.demonstrative(device))
