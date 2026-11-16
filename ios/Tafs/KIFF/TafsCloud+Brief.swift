@@ -339,7 +339,11 @@ extension TafsCloud {
 
     /// "Later": the decision moves to the next brief (design v2.1 §7.5).
     func briefLater(_ decision: String) async throws {
-        let id = decision.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? decision
+        // A decision's id is "hold:<id>" or "step:<handoff>": ":" is kept, as a path segment allows it and tafs
+        // cloud matches the id as written; only what a path segment can't hold is escaped, "/" included.
+        var segment = CharacterSet.urlPathAllowed
+        segment.remove("/")
+        let id = decision.addingPercentEncoding(withAllowedCharacters: segment) ?? decision
         _ = try await sendData("POST", "/v1/brief/decisions/\(id)/later", body: [String: String](), headers: [:])
     }
 

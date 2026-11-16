@@ -126,6 +126,16 @@ final class BriefTests: XCTestCase {
         XCTAssertNotNil(decision.later, "the decision offers Later")
         XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path.hasPrefix("/v1/brief") == true }.map { $0.url?.path },
                        ["/v1/brief/decisions/d1/later"], "Later's route, once")
+    }
+
+    /// tafs cloud's decision ids ("hold:ce_1") reach its Later route as written: the ":" isn't escaped.
+    func testLatersRouteKeepsTheDecisionIdAsWritten() async throws {
+        let session = stubbedSession()
+        StubProtocol.responses["POST /v1/brief/decisions/hold:ce_1/later"] = (200, #"{"id":"hold:ce_1","until":"2026-11-16T17:00:00Z"}"#)
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "dev_token", session: session)
+        try await cloud.briefLater("hold:ce_1")
+        let sent = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" })
+        XCTAssertEqual(sent.url?.absoluteString, "https://cloud.test/v1/brief/decisions/hold:ce_1/later")
         XCTAssertTrue(model.briefDecisions.isEmpty)
     }
 
