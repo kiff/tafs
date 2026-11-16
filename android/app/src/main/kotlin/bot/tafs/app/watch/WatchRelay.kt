@@ -63,15 +63,14 @@ class WatchRelay(
     val before = model.state.value
     if (before.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.coachNeedsConsent)
     if (before.coachCloudId == null) return WatchReply.Failed(Words.Watch.openOnPhone)
-    val since = java.time.Instant.ofEpochMilli(now())
     val cards = before.coachComponents.size
     if (!model.deliverChat(text, bot.tafs.app.app.COACH_CHAT)) {
       return WatchReply.Failed(model.state.value.chatErrors[bot.tafs.app.app.COACH_CHAT] ?: Words.Watch.openOnPhone)
     }
     val answered = kotlinx.coroutines.withTimeoutOrNull(coachWaitMs) {
-      model.state.first { coachDone(it) && coachAnswer(it, since) != null }
+      model.state.first { coachDone(it) && coachAnswer(it, text) != null }
     } ?: return WatchReply.Coach(Words.Watch.moreOnPhone, long = true)
-    val words = coachAnswer(answered, since)!!
+    val words = coachAnswer(answered, text)!!
     val card = answered.coachComponents.size > cards
     return if (card || words.length > COACH_SHORT) WatchReply.Coach(words.take(COACH_SHORT).trimEnd() + "…", long = true)
     else WatchReply.Coach(words, long = false)
@@ -127,11 +126,19 @@ class WatchRelay(
     /** Coach has stopped working on the owner's message, as the phone's own chat says (`AppState.thinking`). */
     fun coachDone(state: AppState): Boolean = !state.thinking(bot.tafs.app.app.COACH_CHAT)
 
-    /** Coach's newest answer since [since], as the phone shows it; null while there's none. */
-    fun coachAnswer(state: AppState, since: java.time.Instant): String? =
-      state.chats[bot.tafs.app.app.COACH_CHAT].orEmpty().lastOrNull {
-        it.from == bot.tafs.app.model.ChatMessage.From.taf && it.kind == bot.tafs.app.model.ChatMessage.Kind.message && !it.at.isBefore(since) && it.text.isNotBlank()
+    /**
+     * Coach's answer to [asked], as the phone shows it: its newest message after the owner's own message with those words, by the
+     * chat's order, never by comparing tafs cloud's clock with the phone's (a phone running ahead would see every answer as old).
+     * Null while there's none.
+     */
+    fun coachAnswer(state: AppState, asked: String): String? {
+      val chat = state.chats[bot.tafs.app.app.COACH_CHAT].orEmpty()
+      val mine = chat.indexOfLast { it.from == bot.tafs.app.model.ChatMessage.From.owner && it.text.trim() == asked.trim() }
+      if (mine < 0) return null
+      return chat.drop(mine + 1).lastOrNull {
+        it.from == bot.tafs.app.model.ChatMessage.From.taf && it.kind == bot.tafs.app.model.ChatMessage.Kind.message && it.text.isNotBlank()
       }?.text?.trim()
+    }
 
     /**
      * Whether the wrist may refuse [call]: one KIFF holds that this phone can answer from here. A call tafs cloud holds alone

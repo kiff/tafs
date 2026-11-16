@@ -135,7 +135,7 @@ class WatchModelTest {
 
   @Test fun theWordsHeardAreShownAndSentOnlyOnSend() = runTest {
     val phone = Phone { if (it is WatchRequest.Coach) Asked.Answered(WatchReply.Coach("Done. Refunds pause until Monday.", long = false)) else reads(it) }
-    val model = WatchModel(phone, now = { t })
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
     model.heard("  Pause refunds until Monday ")
     assertEquals(WatchModel.Talk.Heard("Pause refunds until Monday"), model.talk.value)
     assertTrue("nothing sent before Send", phone.asked.none { it is WatchRequest.Coach })
@@ -148,13 +148,30 @@ class WatchModelTest {
 
   @Test fun cancelledOrSilentNothingIsSent() = runTest {
     val phone = Phone(::reads)
-    val model = WatchModel(phone, now = { t })
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
     model.heard("   ")
     assertEquals(null, model.talk.value)
     model.sendToCoach()
     model.heard("Pause refunds")
     model.closeTalk()
     model.sendToCoach()
+    assertTrue(phone.asked.none { it is WatchRequest.Coach })
+  }
+
+  /** Coach acts on what it's told: as Refuse and Halt, nothing goes to it from a watch with no lock, or a locked one. */
+  @Test fun aWatchWithNoLockOrLockedSendsNothingToCoach() = runTest {
+    val locked = Phone { if (it is WatchRequest.Coach) Asked.Answered(WatchReply.Coach("Done.", long = false)) else reads(it) }
+    val model = WatchModel(locked, now = { t }, unlocked = { false })
+    model.heard("Pause refunds until Monday")
+    model.sendToCoach()
+    assertEquals(WatchModel.Talk.NeedsLock, model.talk.value)
+    assertTrue("nothing sent", locked.asked.none { it is WatchRequest.Coach })
+    // The default is closed: a model told nothing about the lock sends nothing either.
+    val phone = Phone(::reads)
+    val unknown = WatchModel(phone, now = { t })
+    unknown.heard("Pause refunds")
+    unknown.sendToCoach()
+    assertEquals(WatchModel.Talk.NeedsLock, unknown.talk.value)
     assertTrue(phone.asked.none { it is WatchRequest.Coach })
   }
 
@@ -167,7 +184,7 @@ class WatchModelTest {
       Asked.NotUnderstood to WatchModel.Talk.NotSent(null),
     )
     for ((answer, talk) in cases) {
-      val model = WatchModel(Phone { if (it is WatchRequest.Coach) answer else reads(it) }, now = { t })
+      val model = WatchModel(Phone { if (it is WatchRequest.Coach) answer else reads(it) }, now = { t }, unlocked = { true })
       model.heard("Pause refunds")
       model.sendToCoach()
       assertEquals(answer.toString(), talk, model.talk.value)

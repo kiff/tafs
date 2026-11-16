@@ -76,7 +76,6 @@ class WatchCoachTest {
   }
 
   @Test fun coachsAnswerIsItsNewestSinceTheMessage() {
-    val since = Instant.ofEpochMilli(now)
     fun msg(at: Long, from: ChatMessage.From, text: String, kind: ChatMessage.Kind = ChatMessage.Kind.message) =
       ChatMessage(at = Instant.ofEpochMilli(at), from = from, text = text, session = "s1", kind = kind)
     val chat = listOf(
@@ -85,8 +84,13 @@ class WatchCoachTest {
       msg(now + 1_000, ChatMessage.From.taf, "Working on it", ChatMessage.Kind.kickoff),
       msg(now + 2_000, ChatMessage.From.taf, "Done. Refunds pause until Monday."),
     )
-    assertEquals("Done. Refunds pause until Monday.", WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to chat)), since))
-    assertNull(WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to chat.take(3))), since))
+    val asked = "Pause refunds until Monday"
+    assertEquals("Done. Refunds pause until Monday.", WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to chat)), asked))
+    assertNull(WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to chat.take(3))), asked))
+    // By the chat's order, not the clocks: tafs cloud's times behind the phone's still find the answer.
+    val behind = chat.map { it.copy(at = it.at.minusSeconds(3_600)) }
+    assertEquals("Done. Refunds pause until Monday.", WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to behind)), asked))
+    assertNull("no message of the owner's with those words: no answer", WatchRelay.coachAnswer(AppState(chats = mapOf(COACH_CHAT to chat)), "Something else"))
     // Still at work: not done, so the watch isn't given half an answer.
     assertTrue(!WatchRelay.coachDone(AppState(chatSending = setOf(COACH_CHAT))))
     assertTrue(WatchRelay.coachDone(AppState()))

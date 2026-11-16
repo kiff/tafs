@@ -192,6 +192,10 @@ private fun TalkCard(talk: WatchModel.Talk, act: Actions) {
           if (talk.long) Button(onClick = { act.openOnPhone("") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
           Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.done) }
         }
+        WatchModel.Talk.NeedsLock -> {
+          Text(Words.Watch.needsLock)
+          Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) }
+        }
         is WatchModel.Talk.NotSent -> {
           talk.words?.let { Text(it) }
           Button(onClick = { act.openOnPhone("") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }

@@ -139,6 +139,9 @@ class WatchModel(
 
     /** Not sent, in the phone's words (no AI consent yet, Coach not started on the phone…): Open on phone. */
     data class NotSent(val words: String?) : Talk
+
+    /** Not sent: this watch has no screen lock, or is locked (`watch.needs_lock`, as for Refuse and Halt). */
+    data object NeedsLock : Talk
   }
 
   private val _talk = MutableStateFlow<Talk?>(null)
@@ -152,6 +155,12 @@ class WatchModel(
   /** Sends what was heard to Coach, through the phone, as text. */
   suspend fun sendToCoach() {
     val heard = _talk.value as? Talk.Heard ?: return
+    // Coach acts on what it's told (it can pause and change tafs), so, as Refuse and Halt: only from a watch with a screen
+    // lock set and unlocked, never from a watch anyone could pick up. Nothing goes to the phone otherwise.
+    if (!unlocked()) {
+      _talk.value = Talk.NeedsLock
+      return
+    }
     _talk.value = Talk.Sending
     _talk.value = when (val asked = phone.ask(WatchRequest.Coach(now(), heard.text))) {
       is Asked.Answered -> when (val reply = asked.reply) {
