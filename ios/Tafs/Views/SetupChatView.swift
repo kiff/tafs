@@ -160,6 +160,8 @@ struct SetupChatView: View {
         VStack(alignment: .leading, spacing: 12) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    // Board 9, an iPad's or a Mac's first start (docs/ios-app.md › Illustrations).
+                    if sizeClass == .regular { Illustration.coachStarting.frame(maxWidth: .infinity).padding(.bottom, 8) }
                     Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
                     Text(words.lead).scaledFont(16).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
@@ -198,6 +200,8 @@ struct SetupChatView: View {
     private var introBefore: some View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
+            // Board 9, an iPad's or a Mac's first start (docs/ios-app.md › Illustrations): Coach before its first message.
+            if sizeClass == .regular { Illustration.coachStarting.frame(maxWidth: .infinity) }
             Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
             Text(Words.Coach.nameToolTafShouldWork(biometry: "\(Biometry.name)"))
                 .scaledFont(16).foregroundColor(Theme.soft)
@@ -581,6 +585,8 @@ struct SetupChatView: View {
                 Text(Words.Coach.improveLine(name: "\(taf.name)"))
                     .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else {
+                // Board 7, Coach with no taf or one yet (docs/ios-app.md › Illustrations): room for more.
+                if model.tafs.count <= 1 { Illustration.coachFirst }
                 Text(Words.Coach.askAnything)
                     .scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)

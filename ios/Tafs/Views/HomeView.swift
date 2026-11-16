@@ -114,6 +114,8 @@ struct HomeView: View {
                     if let recipes = model.recipes, recipes.homeListsRecipes {
                         HomeRecipes(recipes: recipes, logo: { model.cloud.logoURL($0) }, ownWords: ownWords) { openRecipe = $0 }
                     } else {
+                        // Board 2, no tafs yet (docs/ios-app.md › Illustrations), above the empty line.
+                        Illustration.noTafs.frame(maxWidth: .infinity)
                         Panel {
                             if let words = model.recipes?.homeWords {
                                 // tafs cloud's empty line, whoever reads it: no words of the app's.
