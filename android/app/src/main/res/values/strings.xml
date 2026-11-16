@@ -630,6 +630,7 @@
     <string name="coach_away">While you were away</string>
     <string name="coach_back_width">Back to its width</string>
     <string name="coach_card_answer_not_sent">Your answer wasn\'t sent. %1$s</string>
+    <string name="coach_card_draft_not_read">KIFF\'s draft of this Card couldn\'t be read. %1$s</string>
     <string name="coach_card_of">%2$s Card</string>
     <string name="coach_chats_archive">Archive</string>
     <string name="coach_chats_archive_body">It leaves this list on all your devices. You\'ll find it under Archived, where you can open it or put it back.</string>

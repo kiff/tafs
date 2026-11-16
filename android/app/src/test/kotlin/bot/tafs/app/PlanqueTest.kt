@@ -806,6 +806,21 @@ class PlanqueTest {
     assertTrue("planque is not asked to approve a connection that is connected", transport.requestsTo(approve).isEmpty())
   }
 
+  // The owner's phone, 16 Nov: a draft read KIFF didn't answer left the card on "Reading KIFF's words…" with Approve waiting,
+  // because the failure was dropped. Now it says why, and Try again reads it.
+  @Test fun aDraftKiffDidntGiveSaysWhyAndTryAgainReadsIt() = runTest {
+    reads()
+    transport.answer("GET /v1/me/agent-drafts/dr_1", 500, """{"error":"internal"}""")
+    transport.answer("GET /v1/me/agent-drafts/dr_1", 200, draft)
+    val m = model()
+    m.loadDraft("dr_1")
+    assertNull(m.state.value.setupDrafts["dr_1"])
+    assertTrue(m.state.value.draftErrors.getValue("dr_1").startsWith("KIFF's draft of this Card couldn't be read."))
+    m.loadDraft("dr_1")
+    assertEquals("v3", m.state.value.setupDrafts.getValue("dr_1").version)
+    assertNull("a read that worked clears why", m.state.value.draftErrors["dr_1"])
+  }
+
   @Test fun aDraftThatChangedSinceItWasShownIsNotConfirmed() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")

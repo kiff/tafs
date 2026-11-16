@@ -47,6 +47,7 @@
   "coach.away": "Mientras no estabas",
   "coach.back_width": "Volver a su ancho",
   "coach.card_answer_not_sent": "Tu respuesta no se envió. {why}",
+  "coach.card_draft_not_read": "No se pudo leer el borrador de KIFF de esta Card. {why}",
   "coach.card_of": "La Card de {owner}",
   "coach.chats.archive": "Archivar",
   "coach.chats.archive_body": "Sale de esta lista en todos tus dispositivos. La encontrarás en Archivadas, donde puedes abrirla o restaurarla.",

@@ -1161,6 +1161,8 @@ enum Words {
         static var backWidth: String { Words.line("coach.back_width") }
         /// Your answer wasn't sent. {why}
         static func cardAnswerNotSent(why: String) -> String { Words.line("coach.card_answer_not_sent", why) }
+        /// KIFF's draft of this Card couldn't be read. {why}
+        static func cardDraftNotRead(why: String) -> String { Words.line("coach.card_draft_not_read", why) }
         /// {owner|possessive} Card
         static func cardOf(owner: String) -> String { Words.line("coach.card_of", owner, Words.possessive(owner)) }
         enum Chats {

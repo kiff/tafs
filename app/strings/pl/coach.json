@@ -47,6 +47,7 @@
   "coach.away": "Gdy Cię nie było",
   "coach.back_width": "Przywróć szerokość",
   "coach.card_answer_not_sent": "Twoja odpowiedź nie została wysłana. {why}",
+  "coach.card_draft_not_read": "Nie udało się odczytać szkicu KIFF dla tej Card. {why}",
   "coach.card_of": "Card {owner}",
   "coach.chats.archive": "Archiwizuj",
   "coach.chats.archive_body": "Zniknie z tej listy na wszystkich Twoich urządzeniach. Znajdziesz ją w Zarchiwizowanych, gdzie możesz ją otworzyć lub przywrócić.",

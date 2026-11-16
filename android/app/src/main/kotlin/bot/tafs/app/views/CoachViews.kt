@@ -48,6 +48,7 @@ import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.design.LocalBiometry
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.testTag
 import kotlinx.coroutines.launch
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.OutlineButton
@@ -330,6 +331,8 @@ class CoachActions(
   val openVersions: (String) -> Unit = {},
   /** Reads KIFF's words for a grant's profile, by grant id. */
   val loadProfileWords: suspend (String) -> Unit = {},
+  /** Reads KIFF's draft for an approval card again, by draft id: its Try again. */
+  val loadDraft: suspend (String) -> Unit = {},
   /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
   val loadKnob: suspend (String) -> Unit = {},
   val confirmKnob: suspend (String) -> Boolean = { false },
@@ -445,7 +448,12 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           when {
             signsCard -> {
               Eyebrow(Words.Card.itsCard)
-              if (draft != null) DraftCardsView(draft) else Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+              when {
+                draft != null -> DraftCardsView(draft)
+                // KIFF didn't give the draft: why, and Try again; Approve still waits, since the fingerprint signs its lines.
+                state.draftErrors[c.draft] != null -> DraftNotRead(state.draftErrors.getValue(c.draft)) { actions.loadDraft(c.draft) }
+                else -> Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+              }
             }
             c.signs?.words?.isNotBlank() == true -> {
               Text(c.signs!!.words!!, style = scaled(13, FontWeight.Medium, Theme.dim))
@@ -895,4 +903,16 @@ fun DriveRecapCard(recap: bot.tafs.app.drive.DriveRecap) {
       Text("• " + step.line + (what?.let { " · $it" } ?: ""), style = scaled(13, color = Theme.ink))
     }
   }
+}
+
+/** KIFF's draft for an approval card couldn't be read: why, in KIFF's words, and Try again. */
+@Composable
+private fun DraftNotRead(why: String, retry: suspend () -> Unit) {
+  val scope = androidx.compose.runtime.rememberCoroutineScope()
+  Text(why, style = scaled(13, color = Theme.no))
+  Text(
+    Words.Common.tryAgain,
+    style = scaled(13, FontWeight.SemiBold, Theme.amberText),
+    modifier = Modifier.heightIn(min = 44.dp).tapping { scope.launch { retry() } }.padding(vertical = 10.dp).testTag("card.draft.retry"),
+  )
 }
