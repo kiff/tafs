@@ -227,12 +227,13 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("lists only the jobs whose every connection has an app that connects today", () => {
     const ids = recipesFor(undefined).recipes.map((r) => r.id);
     expect(ids).not.toContain("chase-overdue-invoices");
-    expect(ids).not.toContain("follow-up-new-leads");
     for (const id of ids) expect(connectsToday(RECIPES.find((r) => r.id === id)!), id).toBe(true);
     expect(ids).toEqual(expect.arrayContaining(["ship-when-green", "refunds-within-a-limit", "save-a-customer-who-cancels", "acknowledge-every-ticket"]));
-    // Once an app is proved, its jobs come back with no other change.
-    const withTypeform = new Set([...CONNECTS_TODAY, "typeform"]);
-    expect(recipesFor(undefined, "en", true, withTypeform).recipes.map((r) => r.id)).toContain("follow-up-new-leads");
+    // Once an app is proved, its jobs come back with no other change: Typeform was proved by a sign-in on a phone
+    // (16 Nov), so new leads is listed; a job whose app isn't proved yet still isn't.
+    expect(ids).toContain("follow-up-new-leads");
+    const without = new Set([...CONNECTS_TODAY].filter((v) => v !== "typeform"));
+    expect(recipesFor(undefined, "en", true, without).recipes.map((r) => r.id)).not.toContain("follow-up-new-leads");
   });
 
   // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.
