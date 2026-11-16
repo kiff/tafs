@@ -1325,7 +1325,7 @@
         <item quantity="one">%2$s · %1$s Stopp</item>
         <item quantity="other">%2$s · %1$s Stopps</item>
     </plurals>
-    <string name="mission_log">Protokoll</string>
+    <string name="mission_log">Verlauf</string>
     <string name="mission_read_only">Nur lesen · neueste zuerst</string>
     <string name="mission_removed">entfernt</string>
     <string name="needs_you_a_taf">Ein taf</string>
