@@ -1,0 +1,1 @@
+- **A view-only Mac says how to add it from a phone,** in place of the phone's "sign in again on this phone". Nothing changes on iPhone or iPad (docs/mac-app.md).

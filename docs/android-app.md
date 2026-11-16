@@ -92,6 +92,24 @@ person's language.
   Connect apps shows an app's logo in place of its initial when tafs cloud sends one
   (`GalleryTest`, `GalleryScreenTest`).
 
+## Labels
+
+Missions v2.1 §3 (a draft until tafs cloud serves labels): Coach-managed chips on the flat tafs list. The app only filters by
+them; tafs cloud lists them, counts them and words the filtered headline.
+
+- **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
+  headline: {words}}]`, each taf's `labels: [id]` (0 to 3; missing reads as none), and `labels_words: {all}` (`HomeLabel`,
+  `HomeLabelsWords`). `waiting` counts the label's tafs that wait; `color` is one of Explore's category tokens.
+- **The filter row** (`LabelRow`), under the headline: All with the listed tafs' count, then each label with its count and an
+  amber dot when one of its tafs waits. Two labels show, then "+N" for the rest, which opens the row out; a chosen label further
+  on stays in sight (`shownLabels`). No labels, no row.
+- **It opens on All every time** the list opens (`HomeView` remembers the choice only while it's on screen). A label that went
+  with a refresh falls back to All (`chosenLabel`).
+- **Filtered:** the list shows that label's tafs (`onLabel`), and the headline is tafs cloud's line for it ("2 tafs working ·
+  Money"), else the label's name (`labelHeadline`). The tafs still being set up and the other agents aren't shown.
+- **On each row:** its labels by name, at most three, under its line (`LabelTags`).
+- **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
+
 ## Building and testing
 
 ```bash
@@ -216,7 +234,7 @@ leaves the app's own count of the tafs at work.
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
-Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
+Android shows each alert on the lock screen as it comes, with no count of its own there. Locked, the phone, and any watch it bridges alerts to, show only **A taf needs you** (`alert.needs_you`): every alert is private, with that as its public version (`Alert.Show.locked`), so an amount, a merchant or a person's name waits for the unlock, as iOS's hidden previews do (`LockedAlertTest`). An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
 **A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
@@ -750,7 +768,7 @@ sound; an answer, silent), each marked **Example** so no one looks for that taf,
 and the line under them. **What alerts you** is read only, at the levels `push/Alerts.kt` uses: a
 taf needs you and every taf halted, with sound, always; a taf answered someone, silent, for the
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
-wasn't sent, silent.
+wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A taf needs you** until it's unlocked; the examples here are what it shows unlocked.
 
 **Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no

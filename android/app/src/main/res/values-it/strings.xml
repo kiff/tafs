@@ -95,6 +95,32 @@
     <string name="approval_prompt_approve_on_kiff">Approva su KIFF</string>
     <string name="approval_ready_approve">Questo %1$s è pronto ad approvare con %2$s.</string>
     <string name="approval_request_kept">" La richiesta resta."</string>
+    <string name="approval_security_key_enter_pin">Inserisci il PIN della tua chiave di sicurezza. tafs lo chiede ogni volta e non lo salva mai.</string>
+    <string name="approval_security_key_failed">La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
+    <string name="approval_security_key_locked">Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer.</string>
+    <string name="approval_security_key_no_key">Collega la tua chiave di sicurezza, poi riprova.</string>
+    <string name="approval_security_key_no_pin_set">Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave.</string>
+    <string name="approval_security_key_not_allowed">La chiave di sicurezza non l\'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
+    <string name="approval_security_key_not_fido2">Questa chiave di sicurezza non può verificare un PIN, quindi non può approvare. Collega quella che va con questo computer.</string>
+    <string name="approval_security_key_not_this_key">Questa non è la chiave di sicurezza che va con questo computer. Collega quella e riprova, oppure approva sul telefono.</string>
+    <string name="approval_security_key_pin">PIN</string>
+    <string name="approval_security_key_pin_paused">Sono tre PIN errati di fila. Scollega la chiave, ricollegala, poi riprova.</string>
+    <string name="approval_security_key_pin_too_long">Questo PIN è troppo lungo per una chiave di sicurezza.</string>
+    <string name="approval_security_key_pin_too_short">Il PIN di una chiave di sicurezza ha almeno 4 caratteri.</string>
+    <string name="approval_security_key_several_keys">È collegata più di una chiave di sicurezza. Scollega le altre, tieni quella che va con questo computer, poi riprova.</string>
+    <string name="approval_security_key_timed_out">La chiave di sicurezza non è stata toccata in tempo, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
+    <string name="approval_security_key_title">Approva con la tua chiave di sicurezza</string>
+    <string name="approval_security_key_touch">Tocca la tua chiave di sicurezza.</string>
+    <plurals name="approval_security_key_tries_left">
+        <item quantity="one">Resta %1$s tentativo prima che la chiave si blocchi.</item>
+        <item quantity="other">Restano %1$s tentativi prima che la chiave si blocchi.</item>
+    </plurals>
+    <string name="approval_security_key_unplugged">La chiave di sicurezza è stata scollegata, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.</string>
+    <plurals name="approval_security_key_wrong_pin">
+        <item quantity="one">PIN errato. Resta %1$s tentativo prima che la chiave si blocchi.</item>
+        <item quantity="other">PIN errato. Restano %1$s tentativi prima che la chiave si blocchi.</item>
+    </plurals>
+    <string name="approval_security_key_wrong_pin_no_count">PIN errato. Riprova.</string>
     <string name="approval_set_a_screen_lock">Imposta un blocco schermo su questo telefono per approvare</string>
     <string name="approval_settings_face_id_passcode_touch">Impostazioni → Face ID e codice (Touch ID e codice su un dispositivo con Touch ID)</string>
     <string name="approval_settings_path_face_id">Impostazioni → Face ID e codice</string>
@@ -1194,6 +1220,7 @@
     <string name="home_explore_jobs">Esplora i lavori</string>
     <string name="home_footer">Accesso effettuato con KIFF.</string>
     <string name="home_halted_open_halt">Bloccato. Apri Blocca</string>
+    <string name="home_labels_all">Tutti</string>
     <string name="home_loading">Caricamento dei tuoi tafs…</string>
     <string name="home_new_taf">Nuovo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Non viene più eseguito. tafs elimina ciò che resta a ogni aggiornamento.</string>
@@ -2357,6 +2384,23 @@
     <string name="voice_title">Dettatura</string>
     <string name="voice_voice_becomes_text_device_not">La tua voce diventa testo su questo dispositivo. Non viene inviata finché non la invii tu.</string>
     <string name="voice_what_you_said_stays_message">Ciò che hai detto resta nella casella del messaggio, non inviato.</string>
+    <string name="watch_already_answered">Ha già una risposta, o è terminata.</string>
+    <string name="watch_approve_on_phone">Approva sul telefono</string>
+    <string name="watch_as_of">Aggiornato alle %1$s</string>
+    <string name="watch_asking_phone">Chiedo al telefono…</string>
+    <string name="watch_coach_needs_consent">Prima di parlare con Coach, consenti l\'uso dell\'IA in tafs sul telefono.</string>
+    <string name="watch_glance_description">Quanti ti aspettano, mai cosa né chi.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s chiamata trattenuta ti aspetta</item>
+        <item quantity="other">%1$s chiamate trattenute ti aspettano</item>
+    </plurals>
+    <string name="watch_more_on_phone">Il resto è sul telefono.</string>
+    <string name="watch_needs_lock">Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.</string>
+    <string name="watch_open_on_phone">Apri sul telefono</string>
+    <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
+    <string name="watch_refused">Rifiutata. Non è stato inviato nulla.</string>
+    <string name="watch_sign_in_on_phone">Prima accedi a tafs sul telefono.</string>
+    <string name="watch_voice_text_only">Coach riceve le tue parole come testo, mai la tua voce.</string>
     <string name="work_answer_within">Rispondi entro</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s giorno</item>
