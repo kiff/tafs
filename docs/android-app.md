@@ -92,6 +92,24 @@ person's language.
   Connect apps shows an app's logo in place of its initial when tafs cloud sends one
   (`GalleryTest`, `GalleryScreenTest`).
 
+## Labels
+
+Missions v2.1 §3 (a draft until tafs cloud serves labels): Coach-managed chips on the flat tafs list. The app only filters by
+them; tafs cloud lists them, counts them and words the filtered headline.
+
+- **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
+  headline: {words}}]`, each taf's `labels: [id]` (0 to 3; missing reads as none), and `labels_words: {all}` (`HomeLabel`,
+  `HomeLabelsWords`). `waiting` counts the label's tafs that wait; `color` is one of Explore's category tokens.
+- **The filter row** (`LabelRow`), under the headline: All with the listed tafs' count, then each label with its count and an
+  amber dot when one of its tafs waits. Two labels show, then "+N" for the rest, which opens the row out; a chosen label further
+  on stays in sight (`shownLabels`). No labels, no row.
+- **It opens on All every time** the list opens (`HomeView` remembers the choice only while it's on screen). A label that went
+  with a refresh falls back to All (`chosenLabel`).
+- **Filtered:** the list shows that label's tafs (`onLabel`), and the headline is tafs cloud's line for it ("2 tafs working ·
+  Money"), else the label's name (`labelHeadline`). The tafs still being set up and the other agents aren't shown.
+- **On each row:** its labels by name, at most three, under its line (`LabelTags`).
+- **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
+
 ## Building and testing
 
 ```bash
@@ -119,7 +137,8 @@ it has alerts off and says so in Settings.
 **Versions** (`android/app/build.gradle.kts`): `versionCode` goes up by one with every build,
 and `versionName` is what the store shows: `1.x` for a release with new features, `1.x.y` for
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
-at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
+at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since. The Wear OS watch shares the package
+and counts in its own band, from 400,000,001 (docs/watch-wear.md, Versions).
 
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
 or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
@@ -376,9 +395,11 @@ on Android phone" (`settings.devices.this_device_name`), with its `kind` (`andro
 Devices shows KIFF's `display_name`, drawn from the kind in the app's language, and that name only without one.
 
 The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open tafs's own pages, `kiff.dev/tafs/terms` and
-`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). They're in English only until
-kiff.dev serves them in other languages, so outside English the Settings and Plan & usage links say so ("Terms (auf
-Englisch)", `settings.legal_in_english`), as kiff.dev does; before, the links opened KIFF's pages (`/terms#tafs`).
+`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). kiff.dev serves them in every
+language the app ships, so each link opens the page in the lines' language (`kiff.dev/de/tafs/terms`, `Legal.SERVED`), with
+no "(in English)". A language kiff.dev doesn't serve them in opens English, the unprefixed page, and the Settings and Plan &
+usage links say so ("Terms (in English)", `settings.legal_in_english`), as kiff.dev does. The English text is the one that
+binds, and each translation says so at its top. Before, the links opened KIFF's pages (`/terms#tafs`), then English only.
 
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.
