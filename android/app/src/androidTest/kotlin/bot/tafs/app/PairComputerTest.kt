@@ -5,6 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -76,8 +79,9 @@ class PairComputerTest {
     shown = base.copy(pairAsking = PairQr.read(qr))
     open()
     val code = PairQr.read(qr)!!.checkCode!!
-    // The title names no device: its name is only its claim, shown after the code.
-    rule.onNodeWithText("Add a device").assertIsDisplayed()
+    // The title names no device: its name is only its claim, shown after the code. The Devices sheet behind has its own
+    // "Add a device" button, so the title is looked for inside the dialog.
+    rule.onNode(hasText("Add a device") and hasAnyAncestor(isDialog())).assertIsDisplayed()
     rule.onAllNodesWithText("Pair tafs on this Windows PC?").assertCountEquals(0)
     rule.onNodeWithTag(PAIR_CHECK).assertIsDisplayed()
     rule.onNodeWithText("Does your computer show $code?").assertIsDisplayed()
