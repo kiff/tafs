@@ -135,10 +135,10 @@ the Needs you tab is exactly as today. The switch is the route itself: a 404, a 
 decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read with every refresh).
 
 - **Read leniently, in v2.1's names** (`Brief.parse`): `decisions` (`question`, `answers` with `recommended` and `decline`,
-  `why`, `meanwhile`, `deadline`, `urgent`, `later: {words}`, `cant_wait`, `note`, `ref: {kind, id, taf}`), `more`, `done`
+  `why`, `meanwhile`, `deadline`, `urgent`, `later: {words}`, `now_why`, `note`, `ref: {kind, id, taf}`), `more`, `done`
   (cases with `state` and `next_check`, `value`, `log`), `next_move`, `rest`, `credits: {words}`, `labels` and the headings'
   `words`. Field by field: a part the app can't read is left out, never the brief; unknown fields are ignored.
-- **Drawn as sent:** the tab is named tafs cloud's `words.tab` ("Your brief"), else Needs you. Decisions first, each with its
+- **Drawn as sent:** the tab is named tafs cloud's `words.title` ("Your brief"), else Needs you. Decisions first, each with its
   taf, Coach's recommendation and its why (no why, and the answers show as equals), what happens meanwhile, why it can't wait
   when it can't, and its answers (the recommended one filled, a decline in red, Later beside them). Then one next move (Start
   opens Coach with it in the message box; nothing is sent), then Done case by case (green once closed, amber while waiting),
@@ -151,13 +151,14 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
   **no answer chosen**, so the person approves there, with the fingerprint asked there and a fresh signature; a step
   (`step`) on its own panel; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
   the destination; the brief's code signs and sends nothing (`BriefTest`). Answered there, the card goes back to the brief.
-- **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever the app's own Needs you count is
-  more than the brief's decisions, its count shows there too, with the same link, even when tafs cloud sent no `rest`
-  (`AppState.briefNeedsYouLine`). A held call's alert opens Needs you's list over the brief.
+- **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever Needs you holds something the brief
+  doesn't show, that count shows there too, with the same link, even when tafs cloud sent no `rest`
+  (`AppState.briefNeedsYouLine`). It's matched by item, never by count: held calls by KIFF's id and steps by their hand-off
+  against the brief's `ref`, so a brief showing as many decisions as Needs you holds, but different ones, still shows the line. A held call's alert opens Needs you's list over the brief.
 - **Later** (`POST /v1/brief/decisions/{id}/later`) moves a card to the next brief only once tafs cloud took it; refused, the
   card stays and the alert says why. Never on an urgent decision, whatever was sent (`Decision.laterShown`, and the model
   refuses it too).
-- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `cant_wait`, no Later. A push whose
+- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. A push whose
   `kind` is `brief` or `urgent` opens the brief (`AlertPayload.BRIEF`) unless it names where it opens (`open`), sounds as its
   `level` says (the existing channels), and with the app open reads the brief again. A time-sensitive channel of its own is a
   follow-up.

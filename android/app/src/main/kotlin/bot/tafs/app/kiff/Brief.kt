@@ -126,7 +126,8 @@ data class Brief(
       urgent = c.bool("urgent") ?: false,
       // `{words}`, as v2.1 sends it; a plain line from an earlier draft reads the same.
       later = c.obj("later")?.text("words") ?: c.text("later"),
-      cantWait = c.text("cant_wait"),
+      // `now_why`, as the route serves it; `cant_wait` from an earlier draft reads the same.
+      cantWait = c.text("now_why") ?: c.text("cant_wait"),
       note = c.text("note"),
       ref = c.obj("ref")?.let { Ref(it.text("kind").orEmpty(), it.text("id").orEmpty(), it.text("taf").orEmpty()) } ?: Ref(),
     )

@@ -719,17 +719,23 @@ data class AppState(
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
 
-  /** The Needs you tab's name: tafs cloud's ("Your brief") once there's a brief, else Needs you. */
-  val needsYouTabTitle: String get() = brief?.words?.tab?.takeIf { it.isNotBlank() } ?: Words.NeedsYou.title
+  /** The Needs you tab's name: tafs cloud's (`words.title`, "Your brief") once there's a brief, else Needs you. */
+  val needsYouTabTitle: String get() = brief?.words?.let { w -> w.title.ifBlank { w.tab } }?.takeIf { it.isNotBlank() } ?: Words.NeedsYou.title
 
   /** The brief's decisions still to answer here. */
   val briefDecisions: List<bot.tafs.app.kiff.Brief.Decision> get() = brief?.decisions.orEmpty().filterNot { it.id in briefSetAside }
 
   /**
-   * Needs you's own count under the brief, whenever the app's list holds more than the brief's decisions: a held call the brief
-   * doesn't name is never out of reach. Null when the brief covers it all.
+   * The line under the brief for what Needs you holds beyond its decisions, matched by item (BriefRoutes.needsYouBeyondBrief): a held
+   * call the brief doesn't show is never out of reach. Null when the brief shows it all.
    */
-  val briefNeedsYouLine: String? get() = BriefRoutes.needsYouBeyondBrief(needsYouCount, briefDecisions.size)
+  val briefNeedsYouLine: String? get() = BriefRoutes.needsYouBeyondBrief(
+    count = needsYouCount,
+    held = held.map { it.kiffId ?: it.id },
+    steps = yourSteps.map { it.handoff },
+    others = cardUnitExceptions.size + unsure.size + coachWaiting.size,
+    decisions = briefDecisions,
+  )
 
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)

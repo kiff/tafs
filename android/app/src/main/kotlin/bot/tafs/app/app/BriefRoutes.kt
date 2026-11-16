@@ -40,8 +40,16 @@ object BriefRoutes {
   fun stepOf(open: String?): String? = open?.takeIf { it.startsWith(STEP) }?.removePrefix(STEP)?.takeIf { it.isNotEmpty() }
 
   /**
-   * Needs you's own count, shown under the brief whenever the app's list holds more than the brief's decisions, even when tafs cloud
-   * sent no `rest` line: a held call the brief doesn't name is never out of reach. Null when the brief covers it all.
+   * What Needs you holds that the brief doesn't show, even when tafs cloud sent no `rest` line, so nothing waiting is out of reach.
+   * It's matched by item, never by count: a brief can show as many decisions as Needs you holds and still not the same ones (a step
+   * it shows beside a held call Later moved out). [held] are KIFF's ids, [steps] the hand-offs, [others] the items a brief never
+   * carries (a card's exception, an unsure call, a Coach chat waiting). Whatever tafs cloud's [count] holds beyond the app's lists
+   * is counted too. Null when the brief shows it all.
    */
-  fun needsYouBeyondBrief(count: Int, decisions: Int): String? = if (count > decisions) Words.NeedsYou.count(count = count) else null
+  fun needsYouBeyondBrief(count: Int, held: List<String>, steps: List<String>, others: Int, decisions: List<Brief.Decision>): String? {
+    val shown = decisions.mapNotNull { d -> d.ref.id.takeIf { it.isNotEmpty() }?.let { d.ref.kind + ":" + it } }.toSet()
+    val listed = held.size + steps.size + others
+    val beyond = held.count { HOLD + it !in shown } + steps.count { STEP + it !in shown } + others + (count - listed).coerceAtLeast(0)
+    return if (beyond > 0) Words.NeedsYou.count(count = beyond) else null
+  }
 }

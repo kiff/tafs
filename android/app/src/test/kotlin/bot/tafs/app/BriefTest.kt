@@ -39,7 +39,7 @@ class BriefTest {
 
   private val liveBrief = """{"decisions":[{"id":"d1","question":"Pay 3 supplier bills due Friday, €1,240?","why":"All three match their orders.",
     "meanwhile":"these three wait.","answers":[{"words":"Pay the 3","answer":"approve","recommended":true},{"words":"Not now","answer":"refuse","decline":true}],
-    "later":{"words":"Later"},"ref":{"kind":"hold","id":"ce_1","taf":"id_a-1"}}],"words":{"tab":"Your brief","title":"Your brief"}}"""
+    "later":{"words":"Later"},"ref":{"kind":"hold","id":"ce_1","taf":"id_a-1"}}],"words":{"title":"Your brief"}}"""
 
   private val held = """{"id":"ce_1","subject":"a-1","action":"create_refund","title":"Refund a payment","entity_id":"tc-ce_1","proposal_id":"prop_ce_1",
     "accounting_version":1,"breaches":[{"outcome":"per_action_exceeded","reason":"over","quantity":"sum(amount)","limit":10000,"unit":"EUR","scale":2}],
@@ -161,15 +161,32 @@ class BriefTest {
   // MARK: Needs you stays reachable
 
   @Test fun needsYouStaysReachableWheneverItHoldsMoreThanTheBrief() = runTest {
-    assertEquals(Words.NeedsYou.count(count = 3), BriefRoutes.needsYouBeyondBrief(count = 3, decisions = 1))
-    assertNull("the brief covers it all", BriefRoutes.needsYouBeyondBrief(count = 1, decisions = 1))
-    assertNull(BriefRoutes.needsYouBeyondBrief(count = 0, decisions = 0))
+    fun d(kind: String, id: String) = Brief.Decision(id = "$kind:$id", ref = Brief.Ref(kind, id))
+    val two = listOf(d("hold", "h1"), d("step", "s1"))
+    assertNull("the brief shows it all", BriefRoutes.needsYouBeyondBrief(2, held = listOf("h1"), steps = listOf("s1"), others = 0, decisions = two))
+    assertNull(BriefRoutes.needsYouBeyondBrief(0, held = emptyList(), steps = emptyList(), others = 0, decisions = emptyList()))
+    // As many decisions as Needs you holds, but not the same ones: Later moved h2 out, the brief shows a step instead.
+    assertEquals(
+      "equal counts, different items",
+      Words.NeedsYou.count(count = 1),
+      BriefRoutes.needsYouBeyondBrief(2, held = listOf("h1", "h2"), steps = emptyList(), others = 0, decisions = listOf(d("hold", "h1"), d("step", "s9"))),
+    )
+    assertEquals(
+      "the same id as another kind is not the same item",
+      Words.NeedsYou.count(count = 1),
+      BriefRoutes.needsYouBeyondBrief(1, held = listOf("x1"), steps = emptyList(), others = 0, decisions = listOf(d("step", "x1"))),
+    )
+    assertEquals(
+      "a Coach chat waiting is never in the brief",
+      Words.NeedsYou.count(count = 1),
+      BriefRoutes.needsYouBeyondBrief(3, held = listOf("h1"), steps = listOf("s1"), others = 1, decisions = two),
+    )
 
-    // tafs cloud counts 3 in Needs you, the brief names 1 and sends no rest line: Needs you's own count shows, with its link.
+    // tafs cloud counts 3 in Needs you, the brief shows the 1 the app lists and sends no rest line: the other 2 show, with the link.
     reads(needsYou = ""","needs_you":{"count":3,"words":"3 need you."}""")
     val m = model()
     assertNull(m.state.value.brief!!.rest)
-    assertEquals("3 need you.", m.state.value.briefNeedsYouLine)
+    assertEquals(Words.NeedsYou.count(count = 2), m.state.value.briefNeedsYouLine)
     m.openNeedsYouFromBrief()
     assertEquals(BriefRoutes.NEEDS_YOU, m.state.value.briefOpen)
 
@@ -249,7 +266,7 @@ class BriefTest {
                      "why":"All three match their orders.","meanwhile":"these three wait.","deadline":"by Fri 12:00","urgent":false,
                      "later":{"words":"Later"},"ref":{"kind":"hold","id":"h1","taf":"t1"}},
                     {"id":"d2","question":"Pay Mercier €2,100 before 12:00?","answers":[{"words":"Pay €2,100","answer":"approve","recommended":true}],
-                     "why":"It matches order 0388.","meanwhile":"held.","urgent":true,"cant_wait":"This can't wait: it expires at 12:00.","ref":{"kind":"hold","id":"h2","taf":"t1"}},
+                     "why":"It matches order 0388.","meanwhile":"held.","urgent":true,"now_why":"This can't wait: it expires at 12:00.","ref":{"kind":"hold","id":"h2","taf":"t1"}},
                     {"id":"d3","question":"","answers":[]}, 7],
        "more":{"count":2,"words":"2 more decisions"},
        "done":[{"mission":"Money","cases":[{"name":"Brio Bikes, invoice 0139","words":"paid Thursday · closed","state":"closed"},{"words":"x","state":"waiting","next_check":"Friday"}],"value":"€3,400 due back","log":"m1"},{"cases":[]}],
@@ -257,7 +274,7 @@ class BriefTest {
        "rest":{"count":14,"words":"14 things wait that need nothing from you now"},
        "credits":{"words":"Today: 38 credits."},
        "labels":[{"id":"money","name":"Money","color":2,"count":5,"waiting":true},{"id":"","name":"x"}],
-       "words":{"tab":"Your brief","title":"Your brief","decisions":"Decisions · 2","next_move":"Next move","recommends":"Coach recommends"},
+       "words":{"title":"Your brief","decisions":"Decisions · 2","next_move":"Next move","recommends":"Coach recommends"},
        "unknown":{"a":1}}""",
     )
     assertEquals("an empty question, no answers, or another shape: left out", listOf("d1", "d2"), b.decisions.map { it.id })
@@ -284,6 +301,31 @@ class BriefTest {
     assertNull("a colour of another shape is none", b.labels[0].color)
     assertEquals("Next move", b.words.nextMove)
     assertEquals("2026-11-14T18:00:00+01:00", b.nextAt)
+  }
+
+  /** The body as tafs cloud's `GET /v1/brief` serves it (`docs/api.md`): `words.title` names the tab, `now_why` the urgent card's reason. */
+  @Test fun theRoutesOwnShapeReadsWithNothingLost() {
+    val b = brief(
+      """{"at":"2026-11-16T08:00:00+01:00","next_at":"2026-11-16T18:00:00+01:00",""" +
+        """"decisions":[{"id":"hold:h1","question":"Refund order 0388?","answers":[{"words":"Approve","answer":"approve","recommended":false},""" +
+        """{"words":"Refuse","answer":"refuse","recommended":false}],"meanwhile":"KIFF holds it.","deadline":"2026-11-16T12:00:00+01:00",""" +
+        """"urgent":true,"now_why":"It expires at 12:00, before the next brief.","ref":{"kind":"hold","id":"h1","taf":"t1"}},""" +
+        """{"id":"step:s1","question":"Send the signed form?","answers":[{"words":"Done","answer":"done","recommended":false}],""" +
+        """"meanwhile":"The run waits.","urgent":false,"later":{"words":"Later"},"ref":{"kind":"step","id":"s1","taf":"t1"}}],""" +
+        """"more":{"count":2,"words":"2 more decisions."},"done":[],"rest":{"count":4,"words":"4 in Needs you."},""" +
+        """"labels":[{"id":"money","name":"Money","color":"green","count":3,"waiting":1}],""" +
+        """"words":{"title":"Your brief","decisions":"Decisions · 2","done":"Done since last evening","rest":"Everything else"}}""",
+    )
+    assertEquals("Your brief", b.words.titleShown)
+    assertEquals(listOf("hold:h1", "step:s1"), b.decisions.map { it.id })
+    assertEquals("It expires at 12:00, before the next brief.", b.decisions[0].cantWait)
+    assertNull("an urgent decision offers no Later", b.decisions[0].later)
+    assertEquals("Later", b.decisions[1].later)
+    assertEquals(Brief.Ref("step", "s1", "t1"), b.decisions[1].ref)
+    assertEquals(2, b.more?.count)
+    assertEquals(4, b.rest?.count)
+    assertEquals(1, b.labels.single().waiting)
+    assertEquals("Decisions · 2", b.words.decisionsShown)
   }
 
   @Test fun everyHeadingIsTafsCloudsAndTheAppsWordsOnlyStandIn() {
