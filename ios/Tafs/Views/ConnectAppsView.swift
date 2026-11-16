@@ -950,6 +950,8 @@ struct ConnectApprovalSheet: View {
     // MARK: The receipt, on the sheet
 
     @ViewBuilder private func receipt(_ grant: PlanqueClient.Grant, _ sheet: TafsCloud.ConnectionSheet) -> some View {
+        // Board 5, an app connected (docs/ios-app.md › Illustrations): the moment the key went in.
+        Illustration.appConnected.frame(maxWidth: .infinity)
         heading(sheet)
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Image(systemName: "checkmark.circle.fill").foregroundColor(Theme.ok).accessibilityHidden(true)

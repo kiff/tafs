@@ -16,6 +16,10 @@ struct HaltScreen: View {
         let h = model.haltState(tafID)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                // Board 4, every taf halted (docs/ios-app.md › Illustrations): Halt all, once it holds.
+                if tafID == nil, h.state == .halted {
+                    Illustration.allHalted.frame(maxWidth: .infinity)
+                }
                 Panel {
                     Eyebrow(text: name, color: h.state == .running ? Theme.dim : Theme.no)
                     Text(Self.headline(h)).scaledFont(26, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)

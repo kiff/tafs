@@ -7,7 +7,9 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Mascot(size: 96)
+            // Board 1, first run (docs/ios-app.md › Illustrations): a card opening. It shrinks on a short
+            // phone rather than push the buttons off the screen.
+            Illustration.firstRun.frame(maxWidth: .infinity)
 
             VStack(alignment: .leading, spacing: 12) {
                 Text(Words.SignIn.Welcome.title)

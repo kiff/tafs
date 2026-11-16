@@ -75,6 +75,9 @@ struct BriefView: View {
             Eyebrow(text: brief.words.decisions)
             ForEach(open) { decision in DecisionCard(decision: decision, words: brief.words) }
             if let more = brief.more { Text(more.words).scaledFont(13).foregroundColor(Theme.soft) }
+        } else {
+            // Board 3, nothing to decide (docs/ios-app.md › Illustrations): a calm sun where the decisions go.
+            Illustration.briefClear.frame(maxWidth: .infinity).padding(.vertical, 8)
         }
     }
 

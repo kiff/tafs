@@ -188,10 +188,11 @@ struct ConnectedView: View {
     }
 }
 
-/// The sign-in's drawings, in shapes only: never a letter, a number or a word.
+/// The sign-in's drawings, in shapes only: never a letter, a number or a word. The house style for the
+/// app's other drawings (`Illustration`), which share its mark.
 enum SignInArt {
-    private static let mark = LinearGradient(colors: [Color(hex: 0xB35C00), Color(hex: 0xE8003A), Color(hex: 0x2A64F5)],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing)
+    /// The app's mark: the brand's sweep (`Theme.brand`), as every drawing draws it.
+    private static let mark = Theme.brand
 
     /// KIFF's sign-in: a card with the app's mark, two lines and its button, under a lock.
     static var kiff: some View {
