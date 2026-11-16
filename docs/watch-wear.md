@@ -135,3 +135,5 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 1. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
    so it waits for the owner.
+2. On a real watch, with the always-on display on, before the internal track: neither the screen nor the tile shows a held
+   call's details while the watch is locked or dimmed, and the app forgets them on `onStop` (from kiff/tafs#1161's review).
