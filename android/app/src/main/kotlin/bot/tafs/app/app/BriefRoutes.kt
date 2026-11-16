@@ -12,6 +12,7 @@ object BriefRoutes {
   const val NEEDS_YOU = "needs-you"
   private const val HOLD = "hold:"
   private const val STEP = "step:"
+  private const val TAF = "taf:"
 
   /** The change a brief's alert, or an urgent one, asks the open app to read again. */
   const val BRIEF_CHANGE = "brief"
@@ -19,8 +20,9 @@ object BriefRoutes {
   /**
    * Where [decision] is answered, whichever [answer] was tapped: a held call opens on its own card in Needs you with **no answer
    * chosen**, so the person approves on KIFF's card, with the fingerprint asked there and a fresh signature; a step opens on its own
-   * panel; anything else (a connection, a proposal, or no id) opens Needs you's list. The answer tapped is deliberately not part of
-   * the destination.
+   * panel; a taf whose scheduled check couldn't read (`check`, answered "Open the taf") opens the taf's page, by tafs cloud's id in
+   * `ref.taf`, where the owner sees why; anything else (a connection, a proposal, or no id) opens Needs you's list. The answer tapped
+   * is deliberately not part of the destination.
    */
   @Suppress("UNUSED_PARAMETER")
   fun destination(decision: Brief.Decision, answer: Brief.Answer): String {
@@ -29,9 +31,13 @@ object BriefRoutes {
     return when (decision.ref.kind) {
       "hold" -> HOLD + id
       "step" -> STEP + id
+      "check" -> decision.ref.taf.takeIf { it.isNotEmpty() }?.let { TAF + it } ?: NEEDS_YOU
       else -> NEEDS_YOU
     }
   }
+
+  /** The taf whose page a destination opens, by tafs cloud's id; null for any other. */
+  fun tafOf(open: String?): String? = open?.takeIf { it.startsWith(TAF) }?.removePrefix(TAF)?.takeIf { it.isNotEmpty() }
 
   /** The held call a destination opens, by KIFF's id; null for any other. */
   fun holdOf(open: String?): String? = open?.takeIf { it.startsWith(HOLD) }?.removePrefix(HOLD)?.takeIf { it.isNotEmpty() }

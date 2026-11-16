@@ -1,0 +1,1 @@
+- **Android: "Open the taf" from Your brief.** A taf whose scheduled check couldn't read its app twice in a row (`ref.kind: check`) opens the taf's page from the brief, where the owner sees why, instead of Needs you's list (docs/android-app.md, Your brief).

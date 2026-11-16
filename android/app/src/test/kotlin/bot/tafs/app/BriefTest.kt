@@ -131,6 +131,19 @@ class BriefTest {
     assertNull(m.state.value.briefOpen)
   }
 
+  @Test fun openTheTafOpensTheTafsPageAndSendsNothing() = runTest {
+    reads()
+    val m = model()
+    val check = m.state.value.briefDecisions.single().copy(
+      id = "check:id_a-1", ref = Brief.Ref("check", "id_a-1", "id_a-1"), answers = listOf(Brief.Answer(words = "Open the taf", answer = "open")),
+    )
+    val before = transport.requests.size
+    m.answerBrief(check, check.answers[0])
+    assertEquals("the taf's page opens, on the tafs tab", bot.tafs.app.push.AlertPayload.taf("id_a-1"), m.state.value.requestedOpen)
+    assertNull("nothing is drawn over the brief", m.state.value.briefOpen)
+    assertEquals("nothing is sent from the brief", before, transport.requests.size)
+  }
+
   @Test fun theBriefsAnswerRoutingNeverSignsAnythingAndNeverPreselectsAnAnswer() {
     val decision = brief(liveBrief).decisions.single()
     // Whichever answer is tapped, the same destination: the answer is never carried to where it's given.
@@ -144,6 +157,11 @@ class BriefTest {
     assertEquals(BriefRoutes.NEEDS_YOU, BriefRoutes.destination(decision.copy(ref = Brief.Ref("proposal", "p1")), decision.answers[0]))
     assertEquals(BriefRoutes.NEEDS_YOU, BriefRoutes.destination(decision.copy(ref = Brief.Ref("connection", "g1")), decision.answers[0]))
     assertEquals(BriefRoutes.NEEDS_YOU, BriefRoutes.destination(decision.copy(ref = Brief.Ref("hold", "")), decision.answers[0]))
+    // A taf whose scheduled check couldn't read: "Open the taf" opens its page, by tafs cloud's id; with no taf, Needs you.
+    assertEquals("refunds-1", BriefRoutes.tafOf(BriefRoutes.destination(decision.copy(ref = Brief.Ref("check", "refunds-1", "refunds-1")), decision.answers[0])))
+    assertEquals(BriefRoutes.NEEDS_YOU, BriefRoutes.destination(decision.copy(ref = Brief.Ref("check", "refunds-1", "")), decision.answers[0]))
+    assertNull(BriefRoutes.tafOf("step:ho_1"))
+    assertNull(BriefRoutes.tafOf(BriefRoutes.NEEDS_YOU))
 
     // The brief's own code signs nothing, answers nothing and picks no answer: it only opens where the answer is given.
     val forbidden = listOf("signer", "sign(", "presigned", "answerNow(", "answer(call", "Answer.ApproveOnce", "Answer.Refuse", "approvalWindow", "kiff.answer")
