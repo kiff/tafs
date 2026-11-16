@@ -28,6 +28,17 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
+Where Coach's screen is 600 dp wide or more (a tablet, beside the tafs list or with it folded
+away), Coach's conversation has "Taking shape" beside it, as on an iPad (`SetupShapePanel`, from `AppState.setupShape`): what Coach
+has made so far, read only from what the app already holds. The taf's name once it's handed over,
+else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
+(with no plan, what Coach asked of the person and where each stands); the tools its cards connect,
+each connected (with what the taf calls through it), signed in, waiting for you, or not connected
+with planque's reason; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
+line says what will show there. Nothing is fetched, signed or sent from it, and the cards to answer
+stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
+shows it (`SetupShapeTest`).
+
 A taf's page, under its compact header: the sample's Refunds; a chat opening at its newest, with a
 stranger's knock and a paired sender's message at their times; and the page folded as the chat
 scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):

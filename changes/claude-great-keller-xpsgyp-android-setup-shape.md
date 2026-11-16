@@ -1,0 +1,1 @@
+- **Android: what Coach has made so far, beside the conversation on a wide screen.** On a tablet, "Taking shape" stands beside Coach's conversation, as on an iPad: the taf's name, the plan and where each step stands, the tools it connects and the Card KIFF drafted, read only from what the app already holds (docs/android-app.md, Coach's screen).
