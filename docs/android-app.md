@@ -257,9 +257,11 @@ than the build's commits nothing.
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
   signed with the same upload key (docs/watch-wear.md, Versions). A run by hand builds the phone's bundle unless its
   `form` is `wear`.
+
 **A release proves it's signed** before anything reaches Play: CI reads `jarsigner -verify`'s own "jar verified." (it
 exits 0 on an unsigned bundle too) and prints the signer certificate's SHA-256 in the run log, for the phone's bundle and the
-watch's. The temporary keystore is removed however the step ends.
+watch's. The temporary keystore is removed however the step ends. Neither bundle is kept as a run artifact: the repository
+is public, so Play holds the only copy.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
