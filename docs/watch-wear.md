@@ -87,8 +87,21 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
 the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Versions). **The watch has its own band: it
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
-(`0.x` until it's on Play). Nothing of the watch is uploaded yet: the release job builds `:app` only, and the Wear OS form
-factor on the listing is the owner's.
+(`0.x` until it's on Play).
+
+**Releases to Play** (`android.yml`'s `wear-release` job), as the phone's, on their own:
+- **When:** by hand (Run workflow, form `wear`), or on a merge to main that raises the watch's `versionCode` (the `version`
+  job compares the phone's and the watch's each on their own), once `test` passed, which runs the watch's tests.
+- **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key from Secrets Manager, in the `android-release`
+  environment. The Data Layer joins the two apps only when Play signs both with one key, and Play's app signing re-signs
+  every upload with the listing's key. The signed bundle is kept one day.
+- **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear
+  OS internal track, `wear:internal`, and no other: one edit, the bundle, the track's release with its notes, committed.
+  The sign-in is the phone's (workload identity federation). A bundle Play reads as another `versionCode` commits nothing.
+- **Release notes:** `android/play/release-notes/<versionCode>/<locale>.txt`, in the same 8 languages, the watch's codes
+  being in their own band. `test` checks the watch's current ones (`play_internal.py --wear --check`).
+- **Before `WEAR_UPLOAD` goes on:** Play takes a watch bundle only once the listing has the Wear OS form factor (Play
+  Console › Test and release › Advanced settings › Form factors), which is a store-listing change and the owner's.
 
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
@@ -138,7 +151,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
-   so it waits for the owner.
+1. Screenshots in all 8 languages, and the Wear OS form factor on Play's listing, which is the owner's. Until then the
+   watch's release job builds and keeps its signed bundle, and `WEAR_UPLOAD` stays off.
 2. On a real watch, with the always-on display on, before the internal track: neither the screen nor the tile shows a held
    call's details while the watch is locked or dimmed, and the app forgets them on `onStop` (from kiff/tafs#1161's review).

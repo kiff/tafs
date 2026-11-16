@@ -7,6 +7,20 @@ plugins {
 
 android {
   namespace = "bot.tafs.wear"
+  // The phone's upload key, from outside this public repository (TAFS_UPLOAD_KEYSTORE and its passwords, as the phone's
+  // release takes them): the Data Layer joins a watch app and a phone app only when Play signs both with the same key, and
+  // Play's app signing re-signs each upload with the listing's one key. Without them a release build is left unsigned.
+  val uploadKeystore = System.getenv("TAFS_UPLOAD_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+  signingConfigs {
+    if (uploadKeystore != null) {
+      create("upload") {
+        storeFile = uploadKeystore
+        storePassword = System.getenv("TAFS_UPLOAD_STORE_PASSWORD")
+        keyAlias = System.getenv("TAFS_UPLOAD_KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("TAFS_UPLOAD_KEY_PASSWORD")
+      }
+    }
+  }
   compileSdk { version = release(37) { minorApiLevel = 0 } }
 
   defaultConfig {
@@ -25,6 +39,7 @@ android {
 
   buildTypes {
     release {
+      if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
@@ -58,6 +73,9 @@ dependencies {
   implementation(libs.androidx.wear.tiles)
   implementation(libs.androidx.concurrent.futures)
   implementation(libs.play.services.wearable)
+  // Play services brings Fragment 1.1, older than the speech input's registerForActivityResult needs (1.3); the release
+  // build's lint refuses it, as the phone's would without the same line.
+  implementation(libs.androidx.fragment.ktx)
   implementation(libs.androidx.wear.remote.interactions)
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.play.services)
