@@ -79,8 +79,9 @@ what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.t
 Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
 
 - **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
-  as equals: KIFF gives no why) and the steps their runs handed their owner (with KIFF's expiry as the deadline). Blocked
-  connections, Coach's proposals, case lines, the credits line and the pushes come next.
+  as equals: KIFF gives no why), the steps their runs handed their owner (with KIFF's expiry as the deadline), and their
+  connections that need signing in again (blocked, so urgent). Coach's proposals, case lines, the credits line and the
+  pushes come next.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".

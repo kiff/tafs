@@ -6982,6 +6982,29 @@ describe("GET /v1/brief and Later", () => {
     expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toContain("hold:h1");
   });
 
+  it("lists a connection that needs signing in again as urgent, once per taf and app, from planque's list", async () => {
+    const w = world();
+    const conns = [
+      { agent: "rae", vendor: "Gmail", kind: "vendor_sign_in", status: "needs_reconnect" },
+      { agent: "rae", vendor: "Gmail", kind: "provider", status: "needs_reconnect" },
+      { agent: "rae", vendor: "Stripe", kind: "key", status: "connected" },
+      // Another account's agent: never here.
+      { agent: "max", vendor: "Slack", kind: "vendor_sign_in", status: "needs_reconnect" },
+    ];
+    const base = depsOf(w);
+    const deps = { ...base, coach: memoryCoach(() => w.now), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) =>
+      url.startsWith("https://planque.test/") ? new Response(JSON.stringify({ connections: conns }), { status: 200 }) : base.fetch!(url, init)) as Deps["fetch"] };
+    const get = async (lang?: string) => JSON.parse((await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris", ...(lang ? { "accept-language": lang } : {}) } }, deps)).body);
+    expect((await get()).decisions).toEqual([{ id: `connection:${RAE}:Gmail`, question: "Gmail needs you to sign in again", answers: [{ words: "Sign in again", answer: "sign_in", recommended: false }],
+      meanwhile: "Rae can't reach Gmail until then.", urgent: true, ref: { kind: "connection", id: "Gmail", taf: RAE } }]);
+    expect((await get("fr")).decisions[0]).toMatchObject({ question: "Gmail : reconnectez-vous", answers: [{ words: "Se reconnecter" }] });
+    // planque down: the brief still answers, with no connection in it.
+    const down = { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("", { status: 503 }) : base.fetch!(url, init)) as Deps["fetch"] };
+    const r = await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, down);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body).decisions).toEqual([]);
+  });
+
   it("leaves out a taf being removed, with its calls and steps (M7)", async () => {
     const { w, ask } = setUp();
     w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, removing: true } as never);
