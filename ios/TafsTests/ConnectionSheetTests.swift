@@ -46,7 +46,7 @@ final class ConnectionSheetTests: XCTestCase {
     /// A sign-in whose card was declined leaves a `listed` grant: signed in, not approved, no taf access.
     /// tafs cloud doesn't count it as connected, and that meaning stays. Its app's row still opens its
     /// connections, where the grant says Disconnect, as on Android (tafs#1219). An app this device holds no
-    /// connection to doesn't open (kiff/kiff-cloud#1677, the owner's Google Sheets).
+    /// connection to doesn't open.
     func testADeclinedSignInsAppOpensToItsDisconnect() throws {
         let sheets = "connector:composio:googlesheets"
         let declined = try JSONDecoder().decode(TafsCloud.ConnectApps.App.self, from: Data(#"{"entry":"\#(sheets)","vendor":"Google Sheets","title":"Google Sheets","how":"oauth","state":"available"}"#.utf8))

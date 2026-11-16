@@ -1970,7 +1970,7 @@ final class SetupTests: XCTestCase {
     }
 
     /// A card waiting on KIFF's draft of its Card that KIFF won't give says KIFF's reason, with Try
-    /// again, never "Reading…" for good (the owner's stuck card, kiff/kiff-cloud#1677). It keeps the
+    /// again, never "Reading…" for good with Approve off. It keeps the
     /// thread read while it waits, so the draft is read again, and once KIFF gives it the card has its Card.
     func testACardDraftKIFFDidntGiveSaysWhyAndIsReadAgain() async throws {
         let model = await model(signer: FaceIDSigner())

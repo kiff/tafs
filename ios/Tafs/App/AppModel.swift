@@ -6747,7 +6747,7 @@ final class AppModel: ObservableObject {
     /// Whether an app's row in Connect apps opens its connections: when tafs cloud says it's connected,
     /// or whenever this device holds one of its connections, such as a sign-in whose card was declined
     /// (`listed`), so Disconnect is in reach. `connected` keeps its meaning: a `listed` grant gives no taf
-    /// access, and the app still offers Connect (kiff/kiff-cloud#1677, the PM's 12:44).
+    /// access, and the app still offers Connect.
     static func opensConnections(_ app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> Bool {
         app.connected || !connections(of: app, in: grants).isEmpty
     }
@@ -7802,8 +7802,8 @@ final class AppModel: ObservableObject {
     }
 
     /// Reads KIFF's draft of a card's Card. A read KIFF refuses keeps KIFF's reason for the card,
-    /// which says it with Try again, never a card left on "Reading…" for good (the owner's stuck
-    /// card, kiff/kiff-cloud#1677). A draft read before stays drawn.
+    /// which says it with Try again, never a card left on "Reading…" for good with Approve off.
+    /// A draft read before stays drawn.
     @discardableResult
     func readCardDraft(_ id: String) async -> Bool {
         let gen = accountGeneration
