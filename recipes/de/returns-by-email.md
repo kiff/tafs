@@ -6,10 +6,9 @@ line: Beantwortet Rücksendeanfragen mit deinen Rücksendeschritten und erstatte
 card:
   allows:
     - Antworten mit den Rücksendeschritten, bis zu 30 am Tag
-    - Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung, sobald eine Rücksendung als eingegangen markiert ist
+    - Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung
   holds:
     - Eine Erstattung über 80 EUR oder über 400 EUR an einem Tag
-    - Eine Erstattung für eine Rücksendung, die nicht als eingegangen markiert ist
   never:
     - Eine Erstattung auf eine andere Zahlungsart
     - Eine Bestellung ändern oder stornieren

@@ -12,10 +12,9 @@ connections:
 card:
   allows:
     - Replies with the return steps, up to 30 a day
-    - Refunds up to 80 EUR each and 400 EUR a day, back to the original payment, once a return is marked received
+    - Refunds up to 80 EUR each and 400 EUR a day, back to the original payment
   holds:
     - A refund over 80 EUR, or past 400 EUR in a day
-    - A refund for a return not marked received
   never:
     - A refund to another payment method
     - An order edit or cancellation

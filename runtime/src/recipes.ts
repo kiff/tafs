@@ -1241,11 +1241,10 @@ export const RECIPES = [
     "card": {
       "allows": [
         "Replies with the return steps, up to 30 a day",
-        "Refunds up to 80 EUR each and 400 EUR a day, back to the original payment, once a return is marked received"
+        "Refunds up to 80 EUR each and 400 EUR a day, back to the original payment"
       ],
       "holds": [
-        "A refund over 80 EUR, or past 400 EUR in a day",
-        "A refund for a return not marked received"
+        "A refund over 80 EUR, or past 400 EUR in a day"
       ],
       "never": [
         "A refund to another payment method",
@@ -1262,11 +1261,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Antworten mit den Rücksendeschritten, bis zu 30 am Tag",
-            "Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung, sobald eine Rücksendung als eingegangen markiert ist"
+            "Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung"
           ],
           "holds": [
-            "Eine Erstattung über 80 EUR oder über 400 EUR an einem Tag",
-            "Eine Erstattung für eine Rücksendung, die nicht als eingegangen markiert ist"
+            "Eine Erstattung über 80 EUR oder über 400 EUR an einem Tag"
           ],
           "never": [
             "Eine Erstattung auf eine andere Zahlungsart",
@@ -1283,11 +1281,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Des réponses avec les étapes de retour, jusqu'à 30 par jour",
-            "Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine, une fois un retour marqué reçu"
+            "Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine"
           ],
           "holds": [
-            "Un remboursement de plus de 80 EUR, ou au-delà de 400 EUR dans la journée",
-            "Un remboursement pour un retour non marqué reçu"
+            "Un remboursement de plus de 80 EUR, ou au-delà de 400 EUR dans la journée"
           ],
           "never": [
             "Un remboursement vers un autre moyen de paiement",
@@ -1304,11 +1301,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Respuestas con los pasos de devolución, hasta 30 al día",
-            "Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original, cuando una devolución está marcada como recibida"
+            "Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original"
           ],
           "holds": [
-            "Un reembolso de más de 80 EUR, o por encima de 400 EUR en un día",
-            "Un reembolso de una devolución no marcada como recibida"
+            "Un reembolso de más de 80 EUR, o por encima de 400 EUR en un día"
           ],
           "never": [
             "Un reembolso a otro método de pago",
@@ -1325,11 +1321,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Risposte con i passaggi di reso, fino a 30 al giorno",
-            "Rimborsi fino a 80 EUR ciascuno e 400 EUR al giorno, sul pagamento originale, quando un reso è segnato come ricevuto"
+            "Rimborsi fino a 80 EUR ciascuno e 400 EUR al giorno, sul pagamento originale"
           ],
           "holds": [
-            "Un rimborso oltre 80 EUR, o oltre 400 EUR in un giorno",
-            "Un rimborso per un reso non segnato come ricevuto"
+            "Un rimborso oltre 80 EUR, o oltre 400 EUR in un giorno"
           ],
           "never": [
             "Un rimborso su un altro metodo di pagamento",
@@ -1346,11 +1341,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Respostas com os passos de devolução, até 30 por dia",
-            "Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original, depois de uma devolução estar marcada como recebida"
+            "Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original"
           ],
           "holds": [
-            "Um reembolso acima de 80 EUR, ou acima de 400 EUR num dia",
-            "Um reembolso de uma devolução não marcada como recebida"
+            "Um reembolso acima de 80 EUR, ou acima de 400 EUR num dia"
           ],
           "never": [
             "Um reembolso para outro meio de pagamento",
@@ -1367,11 +1361,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Antwoorden met de retourstappen, tot 30 per dag",
-            "Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling, zodra een retour als ontvangen is gemarkeerd"
+            "Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling"
           ],
           "holds": [
-            "Een terugbetaling boven 80 EUR, of boven 400 EUR op één dag",
-            "Een terugbetaling voor een retour die niet als ontvangen is gemarkeerd"
+            "Een terugbetaling boven 80 EUR, of boven 400 EUR op één dag"
           ],
           "never": [
             "Een terugbetaling naar een ander betaalmiddel",
@@ -1388,11 +1381,10 @@ export const RECIPES = [
         "card": {
           "allows": [
             "Odpowiedzi z krokami zwrotu, do 30 dziennie",
-            "Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność, gdy zwrot jest oznaczony jako otrzymany"
+            "Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność"
           ],
           "holds": [
-            "Zwrot pieniędzy powyżej 80 EUR lub powyżej 400 EUR w ciągu dnia",
-            "Zwrot pieniędzy za zwrot nieoznaczony jako otrzymany"
+            "Zwrot pieniędzy powyżej 80 EUR lub powyżej 400 EUR w ciągu dnia"
           ],
           "never": [
             "Zwrot pieniędzy na inną metodę płatności",

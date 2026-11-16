@@ -6,10 +6,9 @@ line: Responde aos pedidos de devolução com os seus passos de devolução e re
 card:
   allows:
     - Respostas com os passos de devolução, até 30 por dia
-    - Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original, depois de uma devolução estar marcada como recebida
+    - Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original
   holds:
     - Um reembolso acima de 80 EUR, ou acima de 400 EUR num dia
-    - Um reembolso de uma devolução não marcada como recebida
   never:
     - Um reembolso para outro meio de pagamento
     - Alterar ou cancelar uma encomenda

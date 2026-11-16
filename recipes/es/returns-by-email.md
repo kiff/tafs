@@ -6,10 +6,9 @@ line: Responde las solicitudes de devolución con tus pasos de devolución y ree
 card:
   allows:
     - Respuestas con los pasos de devolución, hasta 30 al día
-    - Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original, cuando una devolución está marcada como recibida
+    - Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original
   holds:
     - Un reembolso de más de 80 EUR, o por encima de 400 EUR en un día
-    - Un reembolso de una devolución no marcada como recibida
   never:
     - Un reembolso a otro método de pago
     - Modificar o cancelar un pedido

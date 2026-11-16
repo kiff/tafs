@@ -6,10 +6,9 @@ line: Odpowiada na prośby o zwrot, podając twoje kroki zwrotu, i zwraca pieni�
 card:
   allows:
     - Odpowiedzi z krokami zwrotu, do 30 dziennie
-    - Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność, gdy zwrot jest oznaczony jako otrzymany
+    - Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność
   holds:
     - Zwrot pieniędzy powyżej 80 EUR lub powyżej 400 EUR w ciągu dnia
-    - Zwrot pieniędzy za zwrot nieoznaczony jako otrzymany
   never:
     - Zwrot pieniędzy na inną metodę płatności
     - Zmiana lub anulowanie zamówienia

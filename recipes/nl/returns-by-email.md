@@ -6,10 +6,9 @@ line: Beantwoordt retourverzoeken met jouw retourstappen en betaalt een retour t
 card:
   allows:
     - Antwoorden met de retourstappen, tot 30 per dag
-    - Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling, zodra een retour als ontvangen is gemarkeerd
+    - Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling
   holds:
     - Een terugbetaling boven 80 EUR, of boven 400 EUR op één dag
-    - Een terugbetaling voor een retour die niet als ontvangen is gemarkeerd
   never:
     - Een terugbetaling naar een ander betaalmiddel
     - Een bestelling wijzigen of annuleren

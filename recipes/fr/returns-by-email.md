@@ -6,10 +6,9 @@ line: Répond aux demandes de retour avec vos étapes de retour, et rembourse un
 card:
   allows:
     - Des réponses avec les étapes de retour, jusqu'à 30 par jour
-    - Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine, une fois un retour marqué reçu
+    - Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine
   holds:
     - Un remboursement de plus de 80 EUR, ou au-delà de 400 EUR dans la journée
-    - Un remboursement pour un retour non marqué reçu
   never:
     - Un remboursement vers un autre moyen de paiement
     - Une modification ou une annulation de commande
