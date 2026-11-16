@@ -61,8 +61,15 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
 
   private val actions = Actions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
 
-  private fun euros(amount: Int): String =
-    NumberFormat.getCurrencyInstance(Locale.forLanguageTag(language)).apply { currency = Currency.getInstance("EUR") }.format(amount)
+  /**
+   * A whole amount in euros, written as the watch shows it: the phone sends `Money.formatted`, which writes a whole amount with no
+   * cents in the app's language ("€184", "184 €"), and the watch draws that string as it comes.
+   */
+  private fun euros(amount: Int): String = NumberFormat.getCurrencyInstance(Locale.forLanguageTag(language)).apply {
+    currency = Currency.getInstance("EUR")
+    minimumFractionDigits = 0
+    maximumFractionDigits = 0
+  }.format(amount)
 
   private fun read(): WatchModel.Shown.Read {
     val refund = HeldLine(
