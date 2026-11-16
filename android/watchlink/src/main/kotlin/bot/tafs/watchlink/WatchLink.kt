@@ -108,6 +108,12 @@ object WatchLink {
   const val HALT = PREFIX + "halt"
   const val COACH = PREFIX + "coach"
 
+  /** What the phone app declares (its `android_wear_capabilities`), so the watch finds the phone that can answer it. */
+  const val PHONE_CAPABILITY = "tafs_phone_relay"
+
+  /** Where the watch's Open on phone goes, by the phone's destinations (`AlertPayload`'s): `tafs://open/needs-you`. */
+  const val OPEN_ON_PHONE = "tafs://open/"
+
   /** A request older than this is dropped (a watch out of reach, a message held up). */
   const val MAX_AGE_MS = 30_000L
 

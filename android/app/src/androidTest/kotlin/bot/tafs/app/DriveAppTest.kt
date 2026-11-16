@@ -3,7 +3,6 @@ package bot.tafs.app
 import android.os.SystemClock
 import android.view.MotionEvent
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.drive.DriveInfo
@@ -18,7 +17,7 @@ import org.junit.Test
 
 /**
  * A drive on the app itself (docs/drive.md), as MainActivity wires it: the app leaving the screen ends it as `left_app`, and the
- * person's touch on the app pauses it, ending nothing. The drive is begun on the activity's own model, as an approved Start
+ * person's touch on the app pauses it, ending nothing. The drive is begun on the model the activity draws (the app's one model), as an approved Start
  * would begin it; its stream has no tafs cloud here, which leaves it on.
  */
 class DriveAppTest {
@@ -32,7 +31,8 @@ class DriveAppTest {
     rule.waitForIdle()
     lateinit var m: AppModel
     instrumentation.runOnMainSync {
-      m = ViewModelProvider(rule.activity)[AppModel::class.java]
+      // The activity's model is the app's one model (TafsApplication.model), never a ViewModelStore's.
+      m = (rule.activity.application as TafsApplication).model
       m.drive.begin(DriveInfo("d_emulator", task = "Run Chargebacks"))
     }
     model = m

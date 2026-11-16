@@ -44,6 +44,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Where the Wear OS watch's Open on phone goes (docs/watch-wear.md): tafs://open/needs-you. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tafs" android:host="open" />
+            </intent-filter>
             <!-- Where a vendor's sign-in comes back to, from planque. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -59,6 +66,16 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- The Wear OS watch's requests, from the paired watch running tafs only (docs/watch-wear.md). -->
+        <service
+            android:name=".watch.WearRelayService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.REQUEST_RECEIVED" />
+                <data android:scheme="wear" android:host="*" android:pathPrefix="/tafs/watch/v1/" />
             </intent-filter>
         </service>
 

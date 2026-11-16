@@ -43,12 +43,13 @@ final class ReportAnswerUITests: TafsUITestCase {
     @MainActor
     private func report(_ app: XCUIApplication, _ answer: XCUIElement, reason: String, note: String?) {
         // A slow simulator can take the press before the menu is ready: press again, up to
-        // three times, until the menu shows.
+        // three times, until the menu shows. Shown means its item can be tapped: while the menu
+        // still animates in, the item exists with no hit point, and a tap then fails.
         let item = app.buttons["Report this answer"]
         var shown = false
         for _ in 0..<3 where !shown {
             answer.press(forDuration: 1.2)
-            shown = item.waitForExistence(timeout: 5)
+            shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
         }
         XCTAssertTrue(shown, "Report this answer in the answer's menu")
         item.tap()
@@ -68,5 +69,12 @@ final class ReportAnswerUITests: TafsUITestCase {
     private func done(_ app: XCUIApplication, _ words: String) -> Bool {
         let shown = app.staticTexts["report-done"]
         return shown.waitForExistence(timeout: 10) && shown.label == words
+    }
+
+    /// Whether `element` can be tapped within `seconds`: it exists and has a hit point.
+    @MainActor
+    private func hittable(_ element: XCUIElement, within seconds: TimeInterval) -> Bool {
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: element)
+        return XCTWaiter().wait(for: [ready], timeout: seconds) == .completed
     }
 }
