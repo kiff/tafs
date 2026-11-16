@@ -289,6 +289,7 @@ struct MissionLogView: View {
                 if !title.isEmpty {
                     Text(title).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 }
+                Text(Words.Mission.readOnly).scaledFont(13).foregroundColor(Theme.dim)
                 if model.mayUseCoach || model.mode == .sample {
                     Button { model.setupDraft = title; model.coachOpen = true } label: { Label(Words.Coach.ask, systemImage: "sparkle") }
                         .buttonStyle(OutlineButtonStyle(color: Theme.coach))
@@ -306,6 +307,7 @@ struct MissionLogView: View {
             .padding(16)
         }
         .screenBackground()
+        .navigationTitle(Words.Mission.log)
         .task { log = await model.missionLog(mission) }
         .accessibilityIdentifier("mission.log")
     }
@@ -343,6 +345,7 @@ struct LogRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
                     Text(item.byWords.isEmpty ? item.by : item.byWords).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    if item.removed { Text(Words.Mission.removed).scaledFont(11).foregroundColor(Theme.dim) }
                     if !item.kindWords.isEmpty {
                         Text(item.kindWords).scaledFont(11, weight: .medium).foregroundColor(tint)
                             .padding(.horizontal, 6).padding(.vertical, 2).background(Capsule().fill(tint.opacity(0.12)))

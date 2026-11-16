@@ -15,14 +15,27 @@ extension TafsCloud {
                 case nextMove = "next_move"
             }
             init() {}
+            /// Every heading from the shared catalog (`brief.*`): for a brief tafs cloud sent no words for.
+            static var shared: Words {
+                var w = Words()
+                w.title = BriefShared.title; w.tab = w.title; w.decisions = BriefShared.decisions; w.done = BriefShared.done
+                w.nextMove = BriefShared.nextMove; w.recommends = BriefShared.recommends; w.meanwhile = BriefShared.meanwhile
+                w.evidence = BriefShared.evidence; w.urgent = BriefShared.urgent
+                return w
+            }
             init(from decoder: Decoder) throws {
-                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { self = .shared; return }
                 func text(_ k: CodingKeys) -> String { Brief.text(c, k) ?? "" }
-                tab = text(.tab); title = text(.title); when = text(.when); decisions = text(.decisions); done = text(.done)
+                // tafs cloud's words come first; a heading it didn't send is the shared catalog's (`brief.*`,
+                // the glossary's words in the person's language), so a brief never shows a blank heading.
+                func text(_ k: CodingKeys, or shared: String) -> String { Brief.text(c, k) ?? shared }
+                title = text(.title, or: BriefShared.title); when = text(.when)
+                decisions = text(.decisions, or: BriefShared.decisions); done = text(.done, or: BriefShared.done)
                 // tafs cloud's route sends the tab's name as `title` ("Your brief", the glossary's words).
-                if tab.isEmpty { tab = title }
-                nextMove = text(.nextMove); recommends = text(.recommends); meanwhile = text(.meanwhile)
-                evidence = text(.evidence); all = text(.all); urgent = text(.urgent)
+                tab = text(.tab, or: title)
+                nextMove = text(.nextMove, or: BriefShared.nextMove); recommends = text(.recommends, or: BriefShared.recommends)
+                meanwhile = text(.meanwhile, or: BriefShared.meanwhile); evidence = text(.evidence, or: BriefShared.evidence)
+                all = text(.all); urgent = text(.urgent, or: BriefShared.urgent)
             }
         }
 
@@ -216,7 +229,8 @@ extension TafsCloud {
             rest = ((try? c.decodeIfPresent(Counted.self, forKey: .rest)) ?? nil).flatMap { $0.words.isEmpty ? nil : $0 }
             credits = ((try? c.decodeIfPresent(CreditWords.self, forKey: .credits)) ?? nil)?.words.flatMap { $0.isEmpty ? nil : $0 }
             labels = (Self.list(c, .labels) as [Label]).filter(\.usable)
-            words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? Words()
+            // No `words` sent at all: every heading is the shared catalog's, as for one left out.
+            words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? .shared
         }
 
         /// A line of text, trimmed; none when absent, blank or of another shape.
@@ -351,4 +365,17 @@ extension TafsCloud {
         let id = mission.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? mission
         return try await send("GET", "/v1/missions/\(id)/log" + (before.map { "?before=" + ($0.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? $0) } ?? ""))
     }
+}
+
+/// The brief's headings in the shared catalog (`app/strings`, `brief.*`), for those tafs cloud didn't send.
+/// At file scope, so `Words` here is the catalog, not `Brief.Words`.
+private enum BriefShared {
+    static var title: String { Words.Brief.title }
+    static var decisions: String { Words.Brief.decisions }
+    static var done: String { Words.Brief.done }
+    static var nextMove: String { Words.Brief.nextMove }
+    static var recommends: String { Words.Brief.recommends }
+    static var meanwhile: String { Words.Brief.meanwhile }
+    static var evidence: String { Words.Brief.evidence }
+    static var urgent: String { Words.Brief.urgent }
 }

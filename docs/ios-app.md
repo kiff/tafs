@@ -810,7 +810,10 @@ exactly as today. The draft draws the sample's brief only (`-brief YES` over the
 - **Read leniently, in v2.1's names:** `decisions` (`question`, `answers` with `recommended`, `why`,
   `meanwhile`, `deadline`, `urgent`, `later`, `ref`), `more`, `done` (cases with `state` and
   `next_check`, `value`, `log`), `next_move`, `rest`, `credits`, `labels` and the headings' `words`. A
-  part the app can't read is left out, never the brief.
+  part the app can't read is left out, never the brief. A heading tafs cloud didn't send (or sent
+  blank) is the shared catalog's, `brief.*` in `app/strings` ("Your brief", "Decisions", "Done since
+  the last brief", "Next move", "Coach recommends", "Meanwhile:", "Evidence", "Urgent"), so no
+  heading is ever blank; when it's sent, tafs cloud's words win.
 - **Drawn as sent:** decisions first, each with its taf, Coach's recommendation and its why, what
   happens meanwhile, why it can't wait when it can't, and its answers (the recommended one filled, a
   decline in red, Later beside them). Then one next move, then Done case by case (green once closed,
@@ -835,7 +838,8 @@ exactly as today. The draft draws the sample's brief only (`-brief YES` over the
   sample's brief for screenshots.
 - **A mission's log** (`MissionLogView`, `GET /v1/missions/{id}/log`): read only, newest first, by
   day; each entry's taf or Coach or You, its kind in colour and word, its evidence and value; a removed
-  taf's entries greyed and marked.
+  taf's entries greyed and marked "removed". Its title is "Log" and it says "Read only · newest
+  first" under the mission's name, both the shared catalog's (`mission.*`).
 
 ## Coach waiting
 

@@ -138,6 +138,39 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(sent.url?.absoluteString, "https://cloud.test/v1/brief/decisions/hold:ce_1/later")
     }
 
+    /// A heading tafs cloud didn't send is the shared catalog's (`brief.*`), never blank; one it sent wins.
+    func testAHeadingTafsCloudDidntSendIsTheSharedCatalogs() throws {
+        let bare = try brief(#"{"decisions":[]}"#)
+        XCTAssertEqual(bare.words.title, Words.Brief.title)
+        XCTAssertEqual(bare.words.tab, Words.Brief.title, "the tab is the title")
+        XCTAssertEqual(bare.words.decisions, Words.Brief.decisions)
+        XCTAssertEqual(bare.words.done, Words.Brief.done)
+        XCTAssertEqual(bare.words.nextMove, Words.Brief.nextMove)
+        XCTAssertEqual(bare.words.recommends, Words.Brief.recommends)
+        XCTAssertEqual(bare.words.meanwhile, Words.Brief.meanwhile)
+        XCTAssertEqual(bare.words.evidence, Words.Brief.evidence)
+        XCTAssertEqual(bare.words.urgent, Words.Brief.urgent)
+        XCTAssertEqual(bare.words.when, "", "no shared word for when: it's tafs cloud's or nothing")
+        XCTAssertEqual(try brief(#"{"decisions":[],"words":"Your brief"}"#).words, .shared, "words of another shape are as none")
+        let sent = try brief(#"{"decisions":[],"words":{"title":"Morning brief","decisions":"Decisions · 2","urgent":" "}}"#)
+        XCTAssertEqual(sent.words.title, "Morning brief")
+        XCTAssertEqual(sent.words.tab, "Morning brief")
+        XCTAssertEqual(sent.words.decisions, "Decisions · 2")
+        XCTAssertEqual(sent.words.urgent, Words.Brief.urgent, "a blank word counts as not sent")
+        XCTAssertEqual(sent.words.done, Words.Brief.done)
+    }
+
+    /// A mission's log names itself and how it reads in the shared words (`mission.*`), and marks a removed
+    /// taf's entries.
+    func testTheLogsOwnWordsAreTheSharedCatalogs() throws {
+        let view = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/BriefView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains(".navigationTitle(Words.Mission.log)"))
+        XCTAssertTrue(view.contains("Text(Words.Mission.readOnly)"))
+        XCTAssertTrue(view.contains("if item.removed { Text(Words.Mission.removed)"))
+        XCTAssertFalse(Words.Mission.log.isEmpty)
+    }
+
     func testTheBriefReadsV21sFieldsAsSent() throws {
         let b = try brief(#"""
         {"at":"2026-11-14T08:00:00+01:00","next_at":"2026-11-14T18:00:00+01:00",
