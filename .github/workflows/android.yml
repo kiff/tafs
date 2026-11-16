@@ -211,6 +211,8 @@ jobs:
         run: |
           set -euo pipefail
           key="$RUNNER_TEMP/upload.jks"
+          # Gone however the step ends, a failed build included.
+          trap 'rm -f "$key"' EXIT
           secret=$(aws secretsmanager get-secret-value --secret-id "$UPLOAD_KEY_SECRET_ID" --query SecretString --output text)
           python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
           for f in store_password key_password alias; do
@@ -221,8 +223,13 @@ jobs:
           unset secret
           TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :app:bundleRelease --stacktrace
           rm -f "$key"
-          # Signed with the upload key, or Play refuses it.
-          "$JAVA_HOME/bin/jarsigner" -verify app/build/outputs/bundle/release/app-release.aab >/dev/null
+          # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
+          # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.
+          aab=app/build/outputs/bundle/release/app-release.aab
+          said=$("$JAVA_HOME/bin/jarsigner" -verify "$aab")
+          grep -q '^jar verified\.' <<<"$said" || { echo "::error::the bundle isn't signed: $(grep -m1 . <<<"$said")"; exit 1; }
+          # Which key signed it, in the log: Play takes only the listing's upload key, and the certificate's hash isn't a secret.
+          echo "Signed by the certificate with $("$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tafs-android-release-${{ github.run_number }}
@@ -284,6 +291,8 @@ jobs:
         run: |
           set -euo pipefail
           key="$RUNNER_TEMP/upload.jks"
+          # Gone however the step ends, a failed build included.
+          trap 'rm -f "$key"' EXIT
           secret=$(aws secretsmanager get-secret-value --secret-id "$UPLOAD_KEY_SECRET_ID" --query SecretString --output text)
           python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
           for f in store_password key_password alias; do
@@ -294,8 +303,13 @@ jobs:
           unset secret
           TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
           rm -f "$key"
-          # Signed with the upload key, or Play refuses it.
-          "$JAVA_HOME/bin/jarsigner" -verify wear/build/outputs/bundle/release/wear-release.aab >/dev/null
+          # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
+          # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.
+          aab=wear/build/outputs/bundle/release/wear-release.aab
+          said=$("$JAVA_HOME/bin/jarsigner" -verify "$aab")
+          grep -q '^jar verified\.' <<<"$said" || { echo "::error::the bundle isn't signed: $(grep -m1 . <<<"$said")"; exit 1; }
+          # Which key signed it, in the log: Play takes only the listing's upload key, and the certificate's hash isn't a secret.
+          echo "Signed by the certificate with $("$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: tafs-wear-release-${{ github.run_number }}
