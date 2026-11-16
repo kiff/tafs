@@ -449,6 +449,9 @@ the app in sample mode.
   is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
   app first), at once when the screen locks (`protectedDataWillBecomeUnavailable`) and before a drive starts; it is
   dropped at sign-out and at a new sign-in (`ApprovalWindowTests`).
+  **A sign-in wider than the job is said on the card**: when tafs cloud marks an approval or sign-in card `wider: {words}`
+  (the app's sign-in can't be narrowed to the taf's tools), its words go above the card's buttons, in amber
+  (`WiderLine`, `SetupComponent.widerWords`), as on Android. A mark of another shape, or blank, is no mark.
   **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
   planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
   vendor" only when no app is known, never a connection's status. When the connection takes no approval now
@@ -1016,23 +1019,45 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 - **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
 - Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
 
-### Signing in from another phone
+### The sign-in screen
 
-A new iPhone or iPad gets approval authority the way a computer does (KIFF's pairing contract §5.8;
-`KIFF/PairingOffer.swift`, `PairSignInView`, `AppModel.startPairingSignIn`/`finishPairingSignIn`).
-On the sign-in screen, **Sign in with your other phone**:
+The approved redesign (`SignInView`, `PairSignInView`, `ConnectedView`, `SignInArt`). Every word is a shared
+key, and the drawings are shapes only, with no letter, number or word in them.
+
+- **On an iPad or a Mac, two halves** (`SignInView.offersPhone`): on the left, **Sign in with KIFF** with
+  **Continue**; on the right, **Sign in with your phone** with the pairing QR and "Scan with tafs"
+  (`sign_in.with_phone`, `sign_in.scan_with_tafs`). A regular width puts them side by side; a narrow window stacks
+  them.
+- **On an iPhone, only Sign in with KIFF.** Any phone can open KIFF's own sign-in, so a phone never pairs.
+- **Continue** asks KIFF for a code and shows it with Open KIFF, the link to approve in another browser, and
+  "Waiting…", as before (`AppModel.startSignIn`, `finishSignIn`).
+- **Either way ends on the celebration** (`AppModel.justConnected`, shown over the home screen by the root view):
+  the computer and the phone joined by a check, "You're connected. Let's build great things together.", and
+  **Let's go** (`sign_in.connected`, `sign_in.connected_line`, `sign_in.lets_go`). Never in sample mode or the
+  screenshots.
+
+### Signing in with your phone
+
+An iPad or a Mac gets approval authority the way a computer does (KIFF's pairing contract §5.8;
+`KIFF/PairingOffer.swift`, `PairSignInView`, `AppModel.startPairingSignIn`/`finishPairingSignIn`):
 
 - The device shows the `kiff.pair.v1` QR from the keys it already holds: `platform` `ios` or
   `ipados`, `kind` `enclave`, its approval key, and `device_kind` `iphone` or `ipad`. The Mac build
   sends `macos` and no `device_kind`, so it pairs as a computer through the same screen. The code
   lasts 4½ minutes, and an expired one is replaced by a new one.
-- Beside it: how to scan it from the other phone (its Account, Devices and add button, in the app's
-  own words) and the check code that phone will ask about.
-- **The claim:** the device key signs `kiff.pair.claim.v1` (the nonce and the key's sha256) once,
-  behind Face ID or the passcode, and that proof is sent with `POST /v1/pair/claim` at least every
-  3 s until the other phone approves. KIFF's session is then used as a sign-in's is. A device with
-  no Secure Enclave holds no key, so it can't be paired and says to sign in with KIFF instead.
-- Nothing is approved on this device: the other phone approves, behind its own Face ID.
+- Under it: how to scan it from the phone (its Account, Devices and add button, in the app's own words) and the
+  check code that phone will ask about.
+- **The claim:** the device key signs `kiff.pair.claim.v1` (the nonce and the key's sha256) **with no prompt**
+  (`signConfirmed`), as Android and Windows do, so the QR shows as soon as the screen opens and a renewed code asks
+  nothing either. The proof is sent with `POST /v1/pair/claim` at least every 3 s until the phone approves. KIFF's
+  session is then used as a sign-in's is. A device with no Secure Enclave holds no key, so it can't be paired and
+  says to sign in with KIFF instead.
+- Nothing is approved on this device: the phone approves, behind its own Face ID, after comparing the code.
+
+**The phone's approve-pairing sheet** (`PairComputerView`) puts the check code first, since it, not the name, binds
+the yes to the device in front of the person. Then "Add this device to your account. Only this device; nothing
+else changes." (`settings.devices.pair_add_only`), the name as the device's own claim ("It calls itself …",
+`settings.devices.pair_claims`), what pairing gives, and the one yes.
 
 ## Tests and CI
 

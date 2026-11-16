@@ -132,6 +132,25 @@ struct SetupComponent: Decodable, Equatable {
         var tap: Bool { takes == "tap" }
     }
 
+    /// tafs cloud's mark that the app's sign-in can't be narrowed to the job (`wider: {words}`, docs/chat.md): its
+    /// words, in the reader's language, drawn above the card's buttons, so no card stands under a line that says
+    /// the sign-in changes nothing. None from a tafs cloud that doesn't say, or one of another shape.
+    var wider: Wider? = nil
+
+    struct Wider: Decodable, Hashable {
+        var words: String?
+        enum CodingKeys: String, CodingKey { case words }
+        init(words: String?) { self.words = words }
+        /// Read leniently: a mark of another shape is no mark, never the card unread.
+        init(from decoder: Decoder) throws {
+            guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { words = nil; return }
+            words = (try? c.decodeIfPresent(String.self, forKey: .words))?.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        }
+    }
+
+    /// The wider line's words, when tafs cloud sent some.
+    var widerWords: String? { wider?.words }
+
     /// KIFF's approval-window words ("No fingerprint for the next 4 minutes") for this card: only
     /// when tafs cloud marks its Approve a tap (`signs.takes: "tap"`), never over one that takes the
     /// fingerprint or says nothing of it (as Android's `windowWordsFor`, Android 1.27.9).
@@ -140,7 +159,7 @@ struct SetupComponent: Decodable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection, signs
+        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection, signs, wider
         case tafID = "taf_id"
     }
 

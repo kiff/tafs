@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: the new sign-in**: on an iPad or a Mac, Sign in with KIFF beside Sign in with your phone, whose QR now shows at once with no Touch ID or Face ID; on an iPhone, Sign in with KIFF alone; a "You're connected" moment after either; and the phone's approve-pairing sheet shows the check code first ([docs/ios-app.md](docs/ios-app.md)).

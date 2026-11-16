@@ -1,11 +1,14 @@
 import CoreImage.CIFilterBuiltins
 import SwiftUI
 
-/// Signing in from another phone (KIFF's pairing contract §5.8): this device shows the pairing QR and its
-/// check code, the person's other phone scans and approves it with its approval key, and this device
-/// claims the session. Nothing here approves anything: the other phone does, behind its own Face ID.
+/// Signing in from the person's phone (KIFF's pairing contract §5.8), the sign-in's right half on an iPad or a
+/// Mac: this device shows the pairing QR at once, with no prompt (its claim is signed with the device key), then
+/// its check code. The phone scans and approves it with its approval key, and this device claims the session.
+/// Nothing here approves anything: the phone does, behind its own Face ID, after comparing the code.
 struct PairSignInView: View {
     @EnvironmentObject private var model: AppModel
+    /// Inside the sign-in's two halves: no scroll or background of its own.
+    var embedded = false
     /// Signed in: the sign-in closes.
     let done: () -> Void
     @State private var start: AppModel.PairingStart?
@@ -14,23 +17,35 @@ struct PairSignInView: View {
     @State private var task: Task<Void, Never>?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(Words.SignIn.pairStart)
-                    .scaledFont(28, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let start {
+        if embedded {
+            content
+        } else {
+            ScrollView { content }.screenBackground()
+        }
+    }
+
+    private var content: some View {
+        VStack(spacing: 22) {
+            if let start, let image = Self.qrImage(start.offer.qr) {
+                Image(uiImage: image).interpolation(.none).resizable().scaledToFit()
+                    .padding(16)
+                    .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.white))
+                    .shadow(color: .black.opacity(0.14), radius: 18, y: 10)
+                    .frame(maxWidth: 240)
+                    .accessibilityHidden(true)
+                    .accessibilityIdentifier("pair.qr")
+            } else if problem == nil {
+                ProgressView().tint(Theme.amber).frame(height: 240)
+            }
+            Text(Words.SignIn.withPhone)
+                .scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+            Label(Words.SignIn.scanWithTafs, systemImage: "viewfinder")
+                .scaledFont(17).foregroundColor(Theme.soft)
+            if let start {
+                VStack(alignment: .leading, spacing: 14) {
                     Text(Words.SignIn.pairHow(account: Words.Settings.title, devices: Words.Settings.Devices.title, add: Words.Settings.Devices.pair))
-                        .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-                    if let image = Self.qrImage(start.offer.qr) {
-                        Image(uiImage: image).interpolation(.none).resizable().scaledToFit()
-                            .padding(16)
-                            .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white))
-                            .frame(maxWidth: 320)
-                            .frame(maxWidth: .infinity)
-                            .accessibilityHidden(true)
-                            .accessibilityIdentifier("pair.qr")
-                    }
+                        .scaledFont(14).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
                     Panel(stroke: Theme.amber.opacity(0.4)) {
                         Eyebrow(text: Words.SignIn.yourCode)
                         Text(start.offer.checkCode)
@@ -45,17 +60,16 @@ struct PairSignInView: View {
                         ProgressView().tint(Theme.amber)
                         Text(Words.SignIn.pairWaiting).scaledFont(14).foregroundColor(Theme.soft)
                     }
-                } else if problem == nil {
-                    ProgressView().tint(Theme.amber)
                 }
-                if let problem {
-                    Text(problem).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
-                    Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
-                }
+                .frame(maxWidth: 420)
             }
-            .padding(24)
+            if let problem {
+                Text(problem).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
+            }
         }
-        .screenBackground()
+        .padding(32)
+        .frame(maxWidth: .infinity)
         .onAppear(perform: begin)
         .onDisappear { task?.cancel() }
     }

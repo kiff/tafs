@@ -4,7 +4,7 @@
   "sign_in.agree": "Ao iniciar sessão, aceita os {terms} do KIFF, que abrangem o tafs, e a sua {privacy}.",
   "sign_in.check_code": "Verifique se o KIFF mostra o mesmo código antes de aprovar.",
   "sign_in.connected": "Ligação feita.",
-  "sign_in.connected_line": "Vamos construir grandes coisas juntos.",
+  "sign_in.connected_line": "Vamos construir grandes coisas em conjunto.",
   "sign_in.could_not_finish": "Não foi possível concluir: {why}. Tente novamente.",
   "sign_in.could_not_start": "Não foi possível começar: {why}. Tente novamente.",
   "sign_in.deletes_every_taf_runs_chats": "Elimina todos os tafs, as suas execuções, chats e notas, os seus Cards e as suas ligações. Não pode ser desfeito.",
@@ -48,6 +48,6 @@
   "sign_in.welcome.revoked_rest": "nenhuma ação nova é concluída.",
   "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Iniciar sessão com o KIFF",
-  "sign_in.with_phone": "Iniciar sessão com o seu telefone",
+  "sign_in.with_phone": "Iniciar sessão com o seu telemóvel",
   "sign_in.your_code": "O seu código"
 }
