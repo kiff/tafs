@@ -21,14 +21,23 @@ IOS_SWIFT = os.path.join(REPO, "ios", "Tafs", "Design", "Words.swift")
 
 PLURAL_FORMS = ("zero", "one", "two", "few", "many", "other")
 KEY = re.compile(r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$")
-# A value: `{name}`, or `{name|possessive}` for the name's possessive in the line's language.
-PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(\|possessive)?\}")
+# A value: `{name}`; `{name|possessive}` for the name's possessive in the line's language; `{name|this}`
+# for "this name" (`{name|This}` to open a sentence with it).
+PLACEHOLDER = re.compile(r"\{([a-z][a-z0-9_]*)(?:\|(possessive|this|This))?\}")
 
 # How a language makes a name's possessive, for `{name|possessive}`: a name ending in one of these
 # letters takes the first suffix, any other the second ("Refunds'", "Rae's"; "Klaus'", "Raes").
 # Only languages with such a rule are here; any other writes `{name}` and words the line around it
 # ("la Carte de {taf}"). Both apps' generators read this one table.
 POSSESSIVE = {"en": ("s", "'", "'s"), "de": ("sßxz", "'", "s")}
+
+# How a language says "this name", for `{name|this}`: a name starting with one of these letters takes
+# the first word, any other the second ("cet appareil", "ce Mac"). Only languages whose word for "this"
+# changes with the name are here; any other writes its word in the line ("this {device}"). Both apps'
+# generators read this one table, and the desktop apps keep the same rule (docs/languages.md).
+# The table is right for the device kinds the apps name (Mac, PC, iPad, appareil, écran…): it takes every h as
+# mute and y as a vowel, so a name a person typed ("héros", "yaourt") would need an exception list first.
+THIS = {"fr": ("aeiouyhàâäéèêëîïôöùûüœæ", "cet ", "ce ")}
 SWIFT_WORDS = {"default", "case", "class", "func", "let", "var", "in", "is", "as", "do", "for", "if", "else", "return",
                "self", "true", "false", "nil", "switch", "where", "while", "import", "init", "enum", "struct", "static",
                "protocol", "extension", "operator", "repeat", "throw", "throws", "try", "catch", "guard", "defer",
@@ -112,17 +121,27 @@ def placeholders(line):
     return seen
 
 
-def possessives(key, source, lines=None):
-    """The names whose possessive a line's values carry after its own: each name any language
-    writes as `{name|possessive}`, English first, then the others, in the order they first appear.
-    Every language is given them, in this order, whether or not its own words use them."""
+def derived(key, source, lines=None):
+    """The values a line carries after its own, each `(name, form)`: every `{name|possessive}`,
+    `{name|this}` and `{name|This}` any language writes, English first, then the others, in the order
+    they first appear. Every language is given them, in this order, whether or not its own words use them."""
     seen = []
     for line in [source.get(key)] + [lines[lang].get(key) for lang in sorted(lines or {})]:
         for text in forms_of(line) if line is not None else []:
             for m in PLACEHOLDER.finditer(text):
-                if m.group(2) and m.group(1) not in seen:
-                    seen.append(m.group(1))
+                if m.group(2) and (m.group(1), m.group(2)) not in seen:
+                    seen.append((m.group(1), m.group(2)))
     return seen
+
+
+def possessives(key, source, lines=None):
+    """The names whose possessive a line carries after its own values (`derived`)."""
+    return [name for name, form in derived(key, source, lines) if form == "possessive"]
+
+
+def position(m, names, extra):
+    """A placeholder's place among a line's values: its own (`names`), then the derived (`extra`)."""
+    return len(names) + list(extra).index((m.group(1), m.group(2))) if m.group(2) else names.index(m.group(1))
 
 
 def possessive(name, lang):
@@ -132,6 +151,29 @@ def possessive(name, lang):
         return name
     ends, after, other = POSSESSIVE[lang]
     return name + (after if name[-1].lower() in ends else other)
+
+
+def this(name, lang, capital=False):
+    """"This name" by the language's rule (THIS): "ce Mac", "cet appareil"; the name as it is in a
+    language with none. `capital` opens a sentence: "Cet appareil". The apps' own functions are
+    generated from the same table."""
+    if lang not in THIS or not name:
+        return name
+    starts, before, other = THIS[lang]
+    word = before if name[0].lower() in starts else other
+    return (word[:1].upper() + word[1:] if capital else word) + name
+
+
+def derive(name, form, lang):
+    """A derived value (`derived`) as the language says it."""
+    return possessive(name, lang) if form == "possessive" else this(name, lang, capital=form == "This")
+
+
+def swift_derived(name, form):
+    """A derived value as Words.swift's accessors give it."""
+    if form == "possessive":
+        return f"Words.possessive({name})"
+    return f"Words.demonstrative({name}{', capital: true' if form == 'This' else ''})"
 
 
 def arguments(key, source):
@@ -169,18 +211,15 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
 
 def ios_text(text, key, source, owned=()):
     """A line in the catalog's form: each placeholder by its position, so a language may reorder
-    them. Every value is text, a count's number too, as the app writes it. A name's possessive
-    (`owned`, from `possessives`) comes after the line's own values. A line with no values is
+    them. Every value is text, a count's number too, as the app writes it. A name's possessive or
+    "this name" (`owned`, from `derived`) comes after the line's own values. A line with no values is
     never formatted (`Words.line` returns it as it is), so its `%` stays as it is."""
     names = arguments(key, source)
     if not names:
         return text
     text = text.replace("%", "%%")
 
-    def position(m):
-        at = len(names) + list(owned).index(m.group(1)) if m.group(2) else names.index(m.group(1))
-        return f"%{at + 1}$@"
-    return PLACEHOLDER.sub(position, text)
+    return PLACEHOLDER.sub(lambda m: f"%{position(m, names, owned) + 1}$@", text)
 
 
 def ios_form_key(key, form):
@@ -194,7 +233,7 @@ def ios_catalog(source, shipped, lines):
 
     strings = {}
     for key in sorted(source):
-        owned = possessives(key, source, lines)
+        owned = derived(key, source, lines)
         if isinstance(source[key], dict):
             # A count: one entry for each plural form any shipped language has.
             for form in PLURAL_FORMS:
@@ -256,7 +295,7 @@ def ios_swift(source, lines=None, shipped=("en",)):
                 out.append(f'{pad}static var {camel(name)}: String {{ Words.line("{key}") }}')
                 continue
             params = ", ".join(f"{camel(n)}: {'Int' if is_count(key, source, n) else 'String'}" for n in names)
-            owned = "".join(f", Words.possessive({camel(n)})" for n in possessives(key, source, lines))
+            owned = "".join(f", {swift_derived(camel(n), form)}" for n, form in derived(key, source, lines))
             if isinstance(source[key], dict):
                 rest = "".join(f", {camel(n)}" for n in names[1:]) + owned
                 out.append(f'{pad}static func {camel(name)}({params}) -> String {{ Words.count("{key}", count{rest}) }}')
@@ -322,6 +361,19 @@ def ios_swift(source, lines=None, shipped=("en",)):
         out.append(f'        case "{lang}": return name + ("{ends}".contains(last) ? "{after}" : "{other}")')
     out += ["        default: return name",
             "        }",
+            "    }",
+            "",
+            "    /// \"This name\" in the lines' language (app/strings/generate.py, THIS): \"ce Mac\", \"cet appareil\";",
+            "    /// `capital` opens a sentence. A language with no rule keeps the name: its lines write their own word.",
+            "    static func demonstrative(_ name: String, capital: Bool = false) -> String {",
+            "        guard let first = name.lowercased().first else { return name }",
+            "        let word: String",
+            "        switch locale.language.languageCode?.identifier ?? \"en\" {"]
+    for lang, (starts, before, other) in THIS.items():
+        out.append(f'        case "{lang}": word = "{starts}".contains(first) ? "{before}" : "{other}"')
+    out += ["        default: return name",
+            "        }",
+            "        return (capital ? word.prefix(1).uppercased() + word.dropFirst() : word) + name",
             "    }",
             "",
             "    /// The plural form a number takes in the app's language: one, few, many, other…",
