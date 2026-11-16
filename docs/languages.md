@@ -90,6 +90,9 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 | Working on it | Wird bearbeitet | En cours | Trabajando en ello | In corso | Em curso | Bezig | W toku |
 | Done | Erledigt | Terminé | Hecho | Fatto | Concluído | Klaar | Gotowe |
 | Your step (a step a taf handed its owner) | Dein Schritt | Votre étape | Tu paso | Il tuo passaggio | O seu passo | Jouw stap | Twój krok |
+| Your brief (the tab with the brief) | Dein Briefing | Votre briefing | Tu resumen | Il tuo riepilogo | O seu resumo | Jouw briefing | Twój przegląd |
+| brief (the summary tafs cloud writes twice a day: decisions, what was done) | Briefing | briefing | resumen | riepilogo | resumo | briefing | przegląd |
+| mission's log (a mission's read-only history, not KIFF's Record) | Missionsverlauf | historique de la mission | historial de la misión | cronologia della missione | histórico da missão | missiegeschiedenis | historia misji |
 | Skip it | Überspringen | Passer | Omitir | Salta | Saltar | Overslaan | Pomiń |
 | Failed | Fehlgeschlagen | Échec | Falló | Non riuscito | Falhou | Mislukt | Nie powiodło się |
 | Stopped | Gestoppt | Arrêté | Detenido | Fermato | Parado | Gestopt | Zatrzymane |

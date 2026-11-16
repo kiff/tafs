@@ -56,16 +56,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.Mode
-import bot.tafs.app.app.SampleStore
 import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
+import bot.tafs.app.views.BriefActions
+import bot.tafs.app.views.BriefTab
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachChatActions
 import bot.tafs.app.views.ConnectionActions
@@ -163,9 +163,8 @@ class MainActivity : FragmentActivity() {
       notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
       answer.await()
     }
-    openFromAlert = intent?.getStringExtra(AlertNotifier.EXTRA_OPEN)
+    openFromAlert = intent?.getStringExtra(AlertNotifier.EXTRA_OPEN) ?: bot.tafs.app.push.AlertPayload.openedFromWatch(intent?.dataString)
     deliverSignIn(intent)
-    val store = SampleStore(File(filesDir, "sample.json"))
     // While Coach drives, the person's input on this window is caught before any view has it (docs/drive.md), and Coach's back
     // is the activity's own: never past the first screen, which would leave the app.
     bot.tafs.app.drive.DriveInput.guard(window)
@@ -174,13 +173,20 @@ class MainActivity : FragmentActivity() {
     }.also { bot.tafs.app.drive.DriveInput.windows.add(0, it) }
     setContent {
       TafsTheme {
-        val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling, java.io.File(cacheDir, "attachments")))
+        // The process's one model, which the watch's relay reads too (docs/watch-wear.md): it outlives this activity.
+        val model: AppModel = app.model
         // Read again each time the app comes back: a fingerprint enrolled in Settings meanwhile is named at once.
         var biometry by remember { mutableStateOf(Biometry.of(this@MainActivity)) }
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
         // The store's screenshots, from a debug build opened with `--ez screenshots true`: the sample shows the Coach button.
         val shooting = remember { (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0 && intent?.getBooleanExtra("screenshots", false) == true }
-        LaunchedEffect(model, shooting) { if (shooting) model.showForScreenshots() }
+        LaunchedEffect(model, shooting) {
+          if (shooting) model.showForScreenshots()
+          // `--ez brief true` (with `--es briefLabel money`, `--ez briefUrgent true`): Your brief over the sample's own brief.
+          if (shooting && intent?.getBooleanExtra("brief", false) == true) {
+            model.showBriefForScreenshots(intent?.getStringExtra("briefLabel"), intent?.getBooleanExtra("briefUrgent", false) == true)
+          }
+        }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived
@@ -273,7 +279,7 @@ class MainActivity : FragmentActivity() {
   /** An alert was tapped while the app was up. */
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
-    openFromAlert = intent.getStringExtra(AlertNotifier.EXTRA_OPEN)
+    openFromAlert = intent.getStringExtra(AlertNotifier.EXTRA_OPEN) ?: bot.tafs.app.push.AlertPayload.openedFromWatch(intent.dataString)
     deliverSignIn(intent)
   }
 
@@ -307,7 +313,9 @@ enum class Tab(private val named: () -> String, val icon: Int) {
 fun RootView(model: AppModel) {
   val state by model.state.collectAsState()
   // Where the owner left off: signed in to KIFF, the saved sample, or the first screen.
-  LaunchedEffect(model) { model.restore() }
+  // Once for the process, whoever asks first: this screen, or the watch's relay with the app closed (TafsApplication).
+  val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as bot.tafs.app.TafsApplication
+  LaunchedEffect(model) { if (app.model === model) app.restoredModel(onScreen = true) else model.restore() }
   var signingIn by rememberSaveable { mutableStateOf(false) }
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
@@ -525,6 +533,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
   // The calendar of the tafs' scheduled work (kiff/tafs#534): from the Overview on a tablet, from the home's header on a phone.
   var calendarOpen by rememberSaveable { mutableStateOf(false) }
+  // A mission's log, open over the tafs list (Missions v2.1): its label's mission, found again by id.
+  var missionOpen by rememberSaveable { mutableStateOf<String?>(null) }
   // Another account (signed in from the sample, or switched): the Tafs tab opens on its list, nothing of the last one left open.
   val whose = accountShown(state)
   var shownAccount by rememberSaveable { mutableStateOf(whose) }
@@ -616,12 +626,28 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       ),
     )
   }
+  val briefActions = remember(model, state.mayUseCoach) {
+    BriefActions(
+      filter = model::filterBrief,
+      answer = model::answerBrief,
+      later = model::laterBrief,
+      startNextMove = model::startNextMove,
+      dismissNextMove = model::dismissNextMove,
+      openNeedsYou = model::openNeedsYouFromBrief,
+      close = model::closeBriefOpen,
+      missionLog = model::missionLog,
+      askCoach = if (state.mode == Mode.kiff && state.mayUseCoach) model::askCoachAboutMission else null,
+      refresh = { model.refresh() },
+    )
+  }
   // A tapped alert goes where it said: a held call to Needs you, a request for tasks to Usage, a door's alert to its taf.
   LaunchedEffect(state.requestedOpen, state.tafs) {
     val open = state.requestedOpen ?: return@LaunchedEffect
     val cloudId = AlertPayload.tafOf(open)
     when {
-      open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false }
+      // A held call's alert opens Needs you's own list, over the brief when there is one; the brief's alert, the brief itself.
+      open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false; if (state.brief != null) model.openNeedsYouFromBrief() }
+      open == AlertPayload.BRIEF -> { tab = Tab.NeedsYou; showingSettings = false; model.closeBriefOpen() }
       open == AlertPayload.USAGE -> usageOpen = true
       cloudId != null -> {
         // The list may not be read yet: the taf opens once it's there, and an alert for a taf no longer listed opens the list.
@@ -642,6 +668,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   // Back closes the open taf before it leaves the app.
   BackHandler(enabled = tab == Tab.Tafs && openTaf != null && !coachOpen) { openTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
+  BackHandler(enabled = tab == Tab.Tafs && missionOpen != null && openTaf == null && !coachOpen) { missionOpen = null }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
   // Whether Coach is on screen, for the badge: its own chat waiting on the person isn't counted while it's open.
@@ -676,6 +703,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (tappedAgainGoesToStart(tab, t)) {
       openTaf = null; trialTaf = null; calendarOpen = false; overviewOpen = false; coachOpen = false
     }
+    // Your brief's tab tapped again goes back to the brief from what an answer opened.
+    if (tab == Tab.NeedsYou && t == Tab.NeedsYou) model.closeBriefOpen()
     tab = t
   }
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
@@ -705,6 +734,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = false; galleryOpen = true }) else null,
               onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
               onOwnWords = if (state.mode == Mode.kiff) model::openCoachEmpty else null,
+              onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
               onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
               onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
             )
@@ -734,6 +764,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           val open: (@Composable () -> Unit)? = when {
             trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
             calendarOpen && openTaf == null && !coachOpen && !wide -> ({ calendar(true) })
+            missionOpen != null && openTaf == null && !coachOpen -> state.labels.firstNotNullOfOrNull { it.mission?.takeIf { m -> m.id == missionOpen } }?.let { m ->
+              ({ bot.tafs.app.views.MissionLogView(m, load = model::missionLog, onBack = { missionOpen = null }, askCoach = if (state.mayUseCoach) model::askCoachAboutMission else null) })
+            }
             openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
@@ -786,7 +819,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
+        // "Your brief" in Needs you's place once tafs cloud sends one (Missions design v2.1); Needs you, as today, otherwise.
+        Tab.NeedsYou -> BriefTab(state, briefActions, onAnswerHold = { call, answer -> model.answer(call, answer) }) {
+          NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
+        }
         Tab.Record -> RecordView(
           state,
           record = recordActions,
@@ -978,7 +1014,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
+        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
         colors = barColors(),
       )
     }
@@ -1006,7 +1042,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
+        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
         colors = railColors(),
       )
     }
@@ -1083,6 +1119,9 @@ private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults
 )
 
 /** Whether tapping [tapped] while on [current] goes back to its start: Tafs tapped again closes the taf on screen. */
+/** A tab's name: Needs you's place says tafs cloud's "Your brief" once there is one. */
+internal fun tabTitle(t: Tab, state: bot.tafs.app.app.AppState): String = if (t == Tab.NeedsYou) state.needsYouTabTitle else t.title
+
 internal fun tappedAgainGoesToStart(current: Tab, tapped: Tab): Boolean = current == tapped && tapped == Tab.Tafs
 
 /** The bar's two places that open: the account (Settings) and Coach. */

@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Goedkeuren op KIFF</string>
     <string name="approval_ready_approve">Deze %1$s is klaar om goed te keuren met %2$s.</string>
     <string name="approval_request_kept">" Het verzoek blijft bewaard."</string>
+    <string name="approval_security_key_add">Sleutel toevoegen</string>
+    <string name="approval_security_key_add_enter_pin">Voer de pincode van je beveiligingssleutel in om hem toe te voegen. tafs vraagt er elke keer om en bewaart hem nooit.</string>
+    <string name="approval_security_key_add_title">Je beveiligingssleutel aan deze computer toevoegen</string>
     <string name="approval_security_key_enter_pin">Voer de pincode van je beveiligingssleutel in. tafs vraagt er elke keer om en bewaart hem nooit.</string>
     <string name="approval_security_key_failed">De beveiligingssleutel kon niet ondertekenen, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_security_key_locked">Deze beveiligingssleutel is vergrendeld na te veel verkeerde pincodes, dus hij kan niet goedkeuren. Keur goed op je telefoon. Als je de sleutel herstelt, wordt hij gewist. Om weer met een sleutel goed te keuren, koppel je deze computer opnieuw.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">De beveiligingssleutel stond het niet toe, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_security_key_not_fido2">Deze beveiligingssleutel kan geen pincode controleren, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort.</string>
     <string name="approval_security_key_not_this_key">Dit is niet de beveiligingssleutel die bij deze computer hoort. Steek die erin en probeer het opnieuw, of keur goed op je telefoon.</string>
+    <string name="approval_security_key_pair_without">Koppelen zonder sleutel</string>
     <string name="approval_security_key_pin">Pincode</string>
     <string name="approval_security_key_pin_paused">Dat zijn drie verkeerde pincodes achter elkaar. Haal de sleutel eruit, steek hem er weer in en probeer het opnieuw.</string>
     <string name="approval_security_key_pin_too_long">Die pincode is te lang voor een beveiligingssleutel.</string>
@@ -224,6 +228,14 @@
     <string name="billing_test_purchase_credits">Testaankopen voegen geen credits toe aan dit account.</string>
     <string name="billing_try_free">Probeer %1$s gratis</string>
     <string name="billing_what_credits">Waar de credits voor zijn</string>
+    <string name="brief_decisions">Beslissingen</string>
+    <string name="brief_done">Klaar sinds de vorige briefing</string>
+    <string name="brief_evidence">Bewijs</string>
+    <string name="brief_meanwhile">Intussen:</string>
+    <string name="brief_next_move">Volgende stap</string>
+    <string name="brief_recommends">Coach raadt aan</string>
+    <string name="brief_title">Jouw briefing</string>
+    <string name="brief_urgent">Dringend</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Kies een datum</string>
     <string name="calendar_date_picker">Datum</string>
@@ -1220,6 +1232,7 @@
     <string name="home_explore_jobs">Taken verkennen</string>
     <string name="home_footer">Ingelogd met KIFF.</string>
     <string name="home_halted_open_halt">Stilgezet. Open Stilzetten</string>
+    <string name="home_labels_all">Alle</string>
     <string name="home_loading">Je tafs laden…</string>
     <string name="home_new_taf">Nieuw taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Het draait niet meer. tafs verwijdert wat er over is bij elke vernieuwing.</string>
@@ -1312,6 +1325,9 @@
         <item quantity="one">%2$s · %1$s stand</item>
         <item quantity="other">%2$s · %1$s standen</item>
     </plurals>
+    <string name="mission_log">Geschiedenis</string>
+    <string name="mission_read_only">Alleen lezen · nieuwste eerst</string>
+    <string name="mission_removed">verwijderd</string>
     <string name="needs_you_a_taf">Een taf</string>
     <string name="needs_you_allow_from_now_on">Voortaan toestaan</string>
     <string name="needs_you_allow_not_offered">Deze wijziging is niet wat werd aangeboden.</string>
@@ -1490,9 +1506,12 @@
     <string name="people_title">Mensen en groepen</string>
     <string name="people_uses">Gebruikt %1$s</string>
     <string name="people_uses_none">Gebruikt nog geen taf</string>
+    <string name="push_channel_briefs">Briefings</string>
+    <string name="push_channel_briefs_description">Jouw briefing op de vaste tijden, zonder geluid.</string>
     <string name="push_channel_holds_description">Een aanroep wordt vastgehouden voor je antwoord. Er wordt niets verzonden tot je het goedkeurt.</string>
     <string name="push_channel_other">Andere meldingen</string>
     <string name="push_channel_other_description">Verzoeken om taken en de antwoorden erop, zonder geluid.</string>
+    <string name="push_channel_urgent_description">Wat niet kan wachten op je volgende briefing, met geluid.</string>
     <string name="push_open_needs_you">Open Wacht op jou om te antwoorden.</string>
     <string name="push_open_taf">Open het taf om het te zien.</string>
     <string name="push_open_usage">Open Abonnement en gebruik om het te zien.</string>

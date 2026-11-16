@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Aprovar no KIFF</string>
     <string name="approval_ready_approve">Este %1$s está pronto para aprovar com %2$s.</string>
     <string name="approval_request_kept">" O pedido fica guardado."</string>
+    <string name="approval_security_key_add">Adicionar chave</string>
+    <string name="approval_security_key_add_enter_pin">Introduza o PIN da sua chave de segurança para a adicionar. O tafs pede-o sempre e nunca o guarda.</string>
+    <string name="approval_security_key_add_title">Adicionar a sua chave de segurança a este computador</string>
     <string name="approval_security_key_enter_pin">Introduza o PIN da sua chave de segurança. O tafs pede-o sempre e nunca o guarda.</string>
     <string name="approval_security_key_failed">A chave de segurança não conseguiu assinar, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
     <string name="approval_security_key_locked">Esta chave de segurança está bloqueada após demasiados PIN errados, por isso não pode aprovar. Aprove no seu telefone. Repor a chave apaga-a, por isso, para voltar a aprovar com uma chave, associe novamente este computador.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">A chave de segurança não o permitiu, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
     <string name="approval_security_key_not_fido2">Esta chave de segurança não consegue verificar um PIN, por isso não pode aprovar. Ligue a que vai com este computador.</string>
     <string name="approval_security_key_not_this_key">Esta não é a chave de segurança que vai com este computador. Ligue essa e tente novamente, ou aprove no seu telefone.</string>
+    <string name="approval_security_key_pair_without">Associar sem chave</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">São três PIN errados seguidos. Desligue a chave, volte a ligá-la e tente novamente.</string>
     <string name="approval_security_key_pin_too_long">Esse PIN é demasiado longo para uma chave de segurança.</string>
@@ -224,6 +228,14 @@
     <string name="billing_test_purchase_credits">As compras de teste não adicionam créditos a esta conta.</string>
     <string name="billing_try_free">Experimente %1$s grátis</string>
     <string name="billing_what_credits">Para que servem os créditos</string>
+    <string name="brief_decisions">Decisões</string>
+    <string name="brief_done">Concluído desde o último resumo</string>
+    <string name="brief_evidence">Provas</string>
+    <string name="brief_meanwhile">Entretanto:</string>
+    <string name="brief_next_move">Próximo passo</string>
+    <string name="brief_recommends">O Coach recomenda</string>
+    <string name="brief_title">O seu resumo</string>
+    <string name="brief_urgent">Urgente</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Escolher uma data</string>
     <string name="calendar_date_picker">Data</string>
@@ -1220,6 +1232,7 @@
     <string name="home_explore_jobs">Explorar tarefas</string>
     <string name="home_footer">Sessão iniciada com o KIFF.</string>
     <string name="home_halted_open_halt">Bloqueado. Abrir Bloquear</string>
+    <string name="home_labels_all">Todos</string>
     <string name="home_loading">A carregar os seus tafs…</string>
     <string name="home_new_taf">Novo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Já não funciona. O tafs elimina o que resta sempre que atualiza.</string>
@@ -1312,6 +1325,9 @@
         <item quantity="one">%2$s · %1$s paragem</item>
         <item quantity="other">%2$s · %1$s paragens</item>
     </plurals>
+    <string name="mission_log">Histórico</string>
+    <string name="mission_read_only">Só leitura · mais recente primeiro</string>
+    <string name="mission_removed">removido</string>
     <string name="needs_you_a_taf">Um taf</string>
     <string name="needs_you_allow_from_now_on">Permitir a partir de agora</string>
     <string name="needs_you_allow_not_offered">Esta alteração não é a que foi proposta.</string>
@@ -1490,9 +1506,12 @@
     <string name="people_title">Pessoas e grupos</string>
     <string name="people_uses">Usa %1$s</string>
     <string name="people_uses_none">Ainda não usa nenhum taf</string>
+    <string name="push_channel_briefs">Resumos</string>
+    <string name="push_channel_briefs_description">O seu resumo às horas definidas, sem som.</string>
     <string name="push_channel_holds_description">Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.</string>
     <string name="push_channel_other">Outros alertas</string>
     <string name="push_channel_other_description">Pedidos de tarefas e as respetivas respostas, sem som.</string>
+    <string name="push_channel_urgent_description">O que não pode esperar pelo seu próximo resumo, com som.</string>
     <string name="push_open_needs_you">Abra Precisa de si para responder.</string>
     <string name="push_open_taf">Abra o taf para ver.</string>
     <string name="push_open_usage">Abra Plano e utilização para ver.</string>

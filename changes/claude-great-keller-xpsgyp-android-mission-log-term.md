@@ -1,0 +1,1 @@
+- **iPhone, iPad and Android: a mission's log is named apart from the Record.** The mission row's Log button said the Record's word in five languages (Protokoll, Registro, Registo, Logboek); it now says history, from the new "mission's log" Terms row: Verlauf, Historique, Historial, Cronologia, Histórico, Geschiedenis, Historia (docs/languages.md).

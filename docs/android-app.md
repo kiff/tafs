@@ -92,6 +92,87 @@ person's language.
   Connect apps shows an app's logo in place of its initial when tafs cloud sends one
   (`GalleryTest`, `GalleryScreenTest`).
 
+## Labels
+
+Missions v2.1 §3: Coach-managed chips on the flat tafs list. The app only filters by
+them; tafs cloud lists them, counts them and words the filtered headline.
+
+- **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
+  headline: {words}}]`, each taf's `labels: [id]` (0 to 3; missing reads as none), and `labels_words: {all}` (`HomeLabel`,
+  `HomeLabelsWords`). `waiting` counts the label's tafs that wait; `color` is one of Explore's category tokens.
+- **The filter row** (`LabelRow`), under the headline: All with the listed tafs' count, then each label with its count and an
+  amber dot when one of its tafs waits. Two labels show, then "+N" for the rest, which opens the row out; a chosen label further
+  on stays in sight (`shownLabels`). No labels, no row.
+- **It opens on All every time** the list opens (`HomeView` remembers the choice only while it's on screen). A label that went
+  with a refresh falls back to All (`chosenLabel`).
+- **Filtered:** the list shows that label's tafs (`onLabel`), and the headline is tafs cloud's line for it ("2 tafs working ·
+  Money"), else the label's name (`labelHeadline`). The tafs still being set up and the other agents aren't shown.
+- **On each row:** its labels by name, at most three, under its line (`LabelTags`).
+- **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
+- **A mission's row** (§3, a draft until tafs cloud sends it): filtered to a label that is a mission's (`labels[].mission:
+  {id, name, goal}`), the list shows its goal in the person's words and **Log** (`MissionRow`).
+
+## A mission's log
+
+Missions v2.1 §6, a draft until tafs cloud's log route and its words land: **Log** opens `GET /v1/missions/{id}/log` over the
+tafs list (`MissionLogView`), read only, newest first, a page at a time (`before`), More for the next.
+
+- **Each entry**, drawn as tafs cloud words it (`MissionLogItem`): who wrote it (a taf by name; the lead and the person by
+  tafs cloud's words), its kind in tafs cloud's words (`kind_words`), coloured by kind (delivered green, handed blue, stuck
+  amber, decided ink, a note grey), its sentence, what it refers to (tafs cloud's words for each, else its kind: "run",
+  "hold") and its value ("€4,120 sorted"). The time is the phone's own ("14 Nov, 07:10").
+- **A removed taf's entries stay**, greyed and marked `mission.removed`, so the history is whole.
+- **Nothing in it acts:** it reads only. An entry with no words isn't drawn, and a page read twice shows once
+  (`MissionLogs.drawn`, `MissionLogTest`).
+- **Ask Coach** under the title, for whoever may use Coach: Coach opens with the mission's name in the message box, and
+  nothing is sent (`AppModel.askCoachAboutMission`). Your brief's Evidence opens this same view.
+
+## Your brief
+
+Missions v2.1 §7 (a draft until tafs cloud serves `GET /v1/brief`), as on iPhone and iPad: "Your brief" takes Needs you's place
+once there is one (`BriefTab`, `views/BriefView.kt`; `kiff/Brief.kt`). Until then, and for anyone tafs cloud sends none to,
+the Needs you tab is exactly as today. The switch is the route itself: a 404, a failure, another shape, or a brief with no
+decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read with every refresh).
+
+- **Read leniently, in v2.1's names** (`Brief.parse`): `decisions` (`question`, `answers` with `recommended` and `decline`,
+  `why`, `meanwhile`, `deadline_words` (drawn; `deadline`, a time, never is), `urgent`, `later: {words}`, `now_why`, `note`, `ref: {kind, id, taf}`), `more`, `done`
+  (cases with `state` and `next_check`, `value`, `log`), `next_move`, `rest`, `credits: {words}`, `labels` and the headings'
+  `words`. Field by field: a part the app can't read is left out, never the brief; unknown fields are ignored.
+- **Drawn as sent:** the tab is named tafs cloud's `words.title` ("Your brief"), else Needs you. Decisions first, each with its
+  taf, Coach's recommendation and its why (no why, and the answers show as equals), what happens meanwhile, why it can't wait
+  when it can't, and its answers (the recommended one filled, a decline in red, Later beside them). Then one next move (Start
+  opens Coach with it in the message box; nothing is sent), then Done case by case (green once closed, amber while waiting),
+  with its value and Evidence, which opens the mission's log. On a wide screen, decisions beside Done, the next move under
+  Done. Every heading is tafs cloud's; the app's own (`brief.*`) only stand in where it sent none.
+- **Label chips** (`LabelRow`, as on the tafs list, All with no count) filter the brief: `GET /v1/brief?label=`, as tafs
+  cloud filters it. A chosen chip tapped again is All.
+- **An answer is never given from the brief** (`BriefRoutes.destination`). A tap opens where the decision's own signed answer
+  is given, over the brief with a way back: a held call (`ref.kind: hold`) on its own card in Needs you (`HeldCallCard`), with
+  **no answer chosen**, so the person approves there, with the fingerprint asked there and a fresh signature; a step
+  (`step`) on its own panel; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
+  the destination; the brief's code signs and sends nothing (`BriefTest`). Answered there, the card goes back to the brief.
+- **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever Needs you holds something the brief
+  doesn't show, that count shows there too, with the same link, even when tafs cloud sent no `rest`
+  (`AppState.briefNeedsYouLine`). It's matched by item, never by count: held calls by KIFF's id and steps by their hand-off
+  against the brief's `ref`, so a brief showing as many decisions as Needs you holds, but different ones, still shows the line. A held call's alert opens Needs you's list over the brief.
+- **Later** (`POST /v1/brief/decisions/{id}/later`) moves a card to the next brief only once tafs cloud took it; refused, the
+  card stays and the alert says why. Never on an urgent decision, whatever was sent (`Decision.laterShown`, and the model
+  refuses it too).
+- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. An alert
+  with `brief_kind` (`brief`: "Your 08:00 brief is ready.", or `urgent`: one that came at once, a held call's with
+  `decision: hold:<id>`) opens where its `open` says (`brief` opens the brief, a held call's Needs you), sounds as its
+  `level` says, and with the app open reads the brief again; one brief's alert replaces the last. An earlier draft's
+  `kind: brief|urgent` reads the same. **Channels** (`AlertChannel`), each set apart in the phone's settings: a held call
+  stays on Needs you's, interrupting, even when tafs cloud marks it urgent, so the settings an owner gave it hold (Android
+  never carries a channel's settings over); an urgent alert that isn't a held call goes on **Urgent**, interrupting, with
+  Needs you's sound; Your brief's on **Briefs**, quiet; anything else quiet on Other alerts.
+- **A mission's log:** Done's Evidence opens the same `MissionLogView` the tafs list's mission row opens (A mission's log,
+  above), by the log id Done carries (`log`) under the mission's name. Ask Coach there opens Coach with the mission's name in
+  the message box; nothing is sent.
+- **The sample's brief** (`SampleBrief`, English stand-ins for tafs cloud's words) shows only for the store's screenshots: a debug
+  build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`), with its
+  mission's log as one page (`SampleBrief.log`, `AppModel.missionLog`). The sample walk keeps Needs you, and has no log.
+
 ## Building and testing
 
 ```bash
@@ -119,7 +200,8 @@ it has alerts off and says so in Settings.
 **Versions** (`android/app/build.gradle.kts`): `versionCode` goes up by one with every build,
 and `versionName` is what the store shows: `1.x` for a release with new features, `1.x.y` for
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
-at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
+at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since. The Wear OS watch shares the package
+and counts in its own band, from 400,000,001 (docs/watch-wear.md, Versions).
 
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
 or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
@@ -293,12 +375,13 @@ icons dark on the light ground and light on the dark one when the choice changes
 
 | Package | What's in it |
 |---|---|
-| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play) |
+| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
 | `signing/` | `KeystoreKeys` (the signing key and the approval key, in the Keystore), `DeviceSigner`, `BiometricAuthenticator` |
 | `push/` | Alerts through Firebase Cloud Messaging: `TafsMessagingService`, `AndroidPush`, `Alerts` |
+| `watch/` | The Wear OS watch's requests: `WearRelayService` and `WatchRelay` (docs/watch-wear.md). They read the app's one model, which `TafsApplication` owns: it lasts while the process does, so backing out of the app and opening it again comes back to what the screen held, where it used to start afresh |
 | `billing/` | `Purchases` and `PlayBillingStore`: Google Play, behind the flag |
 | `files/` | `PhotoPrep`: a photo redrawn as a JPEG, with no metadata |
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
@@ -375,9 +458,11 @@ on Android phone" (`settings.devices.this_device_name`), with its `kind` (`andro
 Devices shows KIFF's `display_name`, drawn from the kind in the app's language, and that name only without one.
 
 The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open tafs's own pages, `kiff.dev/tafs/terms` and
-`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). They're in English only until
-kiff.dev serves them in other languages, so outside English the Settings and Plan & usage links say so ("Terms (auf
-Englisch)", `settings.legal_in_english`), as kiff.dev does; before, the links opened KIFF's pages (`/terms#tafs`).
+`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). kiff.dev serves them in every
+language the app ships, so each link opens the page in the lines' language (`kiff.dev/de/tafs/terms`, `Legal.SERVED`), with
+no "(in English)". A language kiff.dev doesn't serve them in opens English, the unprefixed page, and the Settings and Plan &
+usage links say so ("Terms (in English)", `settings.legal_in_english`), as kiff.dev does. The English text is the one that
+binds, and each translation says so at its top. Before, the links opened KIFF's pages (`/terms#tafs`), then English only.
 
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.

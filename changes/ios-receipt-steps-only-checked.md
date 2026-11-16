@@ -1,0 +1,1 @@
+- **iPhone, iPad and Android: a Record line's "What happened" shows only what KIFF signed for that line.** It's drawn once the phone has checked KIFF's signature and the receipt matches the line. A receipt not signed yet, or one that doesn't check out, shows its steps only in the full receipt, under what didn't check out.

@@ -250,6 +250,10 @@ class TafsCloud(
   /** The taf's chats, newest first. */
   suspend fun chats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats").chats
 
+  /** A mission's log, newest first, a page at a time (Missions v2.1 §6): [before] is the previous page's `before`. */
+  suspend fun missionLog(id: String, before: String? = null): MissionLogPage =
+    get("/v1/missions/${escaped(id)}/log" + (before?.let { "?before=" + escaped(it) } ?: ""))
+
   /** The chats the owner archived, to find and reopen one. */
   suspend fun archivedChats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived").chats
 
@@ -409,6 +413,22 @@ class TafsCloud(
   }
 
   private inline fun <T> orNone(read: () -> T): T? = try { read() } catch (e: CloudError) { if (e.status == 404) null else throw e }
+
+  // MARK: Your brief (Missions design v2.1 §7)
+
+  /** The brief, filtered to [label] (none is All); null while tafs cloud doesn't serve it (404). Read leniently ([Brief.parse]). */
+  suspend fun brief(label: String? = null): Brief? = orNone {
+    Brief.parse(String(send("GET", "/v1/brief" + (label?.let { "?label=${escaped(it)}" } ?: ""))))
+  }
+
+  /**
+   * "Later": the decision moves to the next brief (§7.5). Throws when tafs cloud didn't take it, so the card stays. The id's `:`
+   * (`hold:<id>`, `step:<handoff>`) goes as is, as iOS sends it: a path may carry it, and the route reads the id raw.
+   */
+  suspend fun briefLater(decision: String) {
+    send("POST", "/v1/brief/decisions/${escaped(decision).replace("%3A", ":")}/later", "{}".toByteArray())
+  }
+
 
   // MARK: Halt
 
