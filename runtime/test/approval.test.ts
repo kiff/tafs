@@ -2131,7 +2131,7 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
   const comp = (r: { body: Record<string, unknown> }) =>
     (r.body.components as Array<{ component: { id?: string; wider?: { words: string } } }>).find((c) => c.component.id === "a1")?.component;
 
-  it("marks a waiting card wider from planque's usual_access, in the reader's language, and tells Coach once per connection", async () => {
+  it("marks a waiting card wider from planque's usual_access, in the reader's language, and tells Coach nothing", async () => {
     const s = services();
     // Where planque's grantView carries it: on the connector's request, not at the grant's top level.
     s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true } })];
@@ -2140,11 +2140,9 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
     expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
     expect(comp(fr)?.wider?.words).toMatch(/^La connexion à Google Sheets ne peut pas être limitée/);
-    // Coach reads it with the owner's next message, once, however many reads.
-    const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string; said: string }> | undefined;
-    const lines = (notes ?? []).filter((n) => n.text.startsWith("[connection Google Sheets (grant g_1)]"));
-    expect(lines).toHaveLength(1);
-    expect(lines[0]!.text).toMatch(/never call this sign-in read-only or say it changes nothing/);
+    // The card says it, from planque's data: Coach gets no line about the sign-in's access (connect-an-app@29).
+    const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string }> | undefined;
+    expect((notes ?? []).some((n) => n.text.startsWith("[connection"))).toBe(false);
   });
 
   it("leaves a card whose sign-in is narrowed as it was, and tells Coach nothing, a flag at the grant's top level included", async () => {

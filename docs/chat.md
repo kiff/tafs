@@ -378,10 +378,10 @@ Card's limits as being signed now: they go under `words`.
 taf uses (`request.connector.usual_access` on its grant: the app's sign-in offers no narrower scope, such as Google Sheets with no
 read-only one), each waiting approval or sign-in card for it carries `wider: {words}`: "The sign-in for Google
 Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own
-tools.", in the reader's language. The apps draw it above the card's buttons, so no card stands unsaid under
-Coach's "read-only" or "change nothing". It's read with the same grants as `signs`, so only with the phone's proof.
-Coach hears it once per connection, as a line it reads with the owner's next message, telling it to say so
-plainly and never to call that sign-in read-only (`markWider`).
+tools.", in the reader's language. Every app that can approve a card draws it above the card's buttons
+(`contracts/coach-wider.json`). It's read with the same grants as `signs`, so only with the phone's proof
+(`markWider`). It's planque's data, the same for every app: Coach is told nothing about it, and never describes a
+sign-in's access itself (`connect-an-app@29`).
 
 **Whether Approve is a tap is on the card too:** `signs.takes`, `"tap"` or `"fingerprint"`, from the key `decide`
 then asks with (`takesOf`). Connecting an app (`connect`) is a tap inside an open approval window. The key or added
