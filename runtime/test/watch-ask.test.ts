@@ -139,6 +139,21 @@ describe("a request from the watch", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toHaveLength(2);
   });
 
+  it("is never one of the phone's Coach chats: not listed, not opened, not gone on in", async () => {
+    const w = world();
+    const r = await w.call("POST", "/v1/watch/asks", ASK);
+    const ask = await w.askOf((r.body.ask as { id: string }).id);
+    const listed = await w.call("GET", `/v1/tafs/${COACH}/chats`, undefined, {});
+    expect(listed.status).toBe(200);
+    expect(JSON.stringify(listed.body)).not.toContain(ask.session!);
+    expect((await w.call("GET", `/v1/tafs/${COACH}/chats/${ask.session}`, undefined, {})).status).toBe(404);
+    // A message from the phone that names no chat opens or goes on in a phone chat, never the watch's.
+    w.agents.calls.length = 0;
+    await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "What did I just ask from the watch?" }, {});
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).not.toContainEqual(expect.stringContaining(ask.session!));
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun")).join()).not.toContain("ask-a-taf");
+  });
+
   it("reads back only the person's own requests", async () => {
     const w = world();
     const a = await w.call("POST", "/v1/watch/asks", ASK);

@@ -371,6 +371,8 @@ export interface Session {
   owner?: string;
   /** Its owner put it away: it leaves their list, and a live message starts a new chat. */
   archived?: boolean;
+  /** Held to what it was opened with (RunAt.only): a watch request's conversation, never one of the phone's chats. */
+  only?: { skills?: boolean; tools?: string[] };
 }
 
 /** Who asks for a run: a member of the account, by their KIFF subject, a door's sender, or an agent asking on its own. */

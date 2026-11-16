@@ -92,12 +92,14 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       return { session: found.id, opened: false };
     }
     if (at.live && owner) {
-      const latest = sessions.filter((x) => x.tenant === tenant && x.agent === agent && x.owner === owner && x.kind === "chat")
+      const latest = sessions.filter((x) => x.tenant === tenant && x.agent === agent && x.owner === owner && x.kind === "chat" && !x.only)
         .sort((a, b) => b.updated.localeCompare(a.updated))[0];
       if (latest && !latest.archived && now().getTime() - Date.parse(latest.updated) < 30 * 60_000) return { session: latest.id, opened: false };
     }
     const opened = openSession(tenant, agent, "chat");
     if (owner) opened.owner = owner;
+    // A session held to what it was opened with (kiff/agents' `only`): a live message never goes on in it.
+    if (at.only) opened.only = { ...at.only };
     return { session: opened.id, opened: true };
   };
   /** Files people attached (kiff/tafs#209), by id, with their owner and whether a message sent them. */

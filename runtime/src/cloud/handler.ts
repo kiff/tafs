@@ -2831,7 +2831,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))),
     doors ? agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)) : Promise.resolve([]),
   ]);
-  const chats = [...own.filter((s) => s.kind === "chat"), ...all.filter((s) => s.kind === "chat" && s.owner?.startsWith("door:"))]
+  const chats = [...own.filter(phoneChat), ...all.filter((s) => phoneChat(s) && s.owner?.startsWith("door:"))]
     .filter((s) => !s.archived).sort((a, b) => b.updated.localeCompare(a.updated));
   const picked = only ? [only] : [
     ...own.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
@@ -4156,7 +4156,7 @@ async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | 
   if (!id) return undefined;
   const picked = session ? [await ownChat(me, taf, session, deps)] :
     (await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))))
-      .filter((s) => s.kind === "chat" && !s.archived).sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, CHAT.chatsInThread);
+      .filter((s) => phoneChat(s) && !s.archived).sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, CHAT.chatsInThread);
   let found: { session: string; run: string; time: string } | undefined;
   for (const s of picked) {
     const read = await deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined);
@@ -4321,7 +4321,7 @@ export const LIVE_CHAT_MS = 30 * 60_000;
  */
 async function liveChatOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
   const owner = ownerKey(me);
-  const latest = (await deps.agents.sessions(me.tenantID, taf.id, 5, owner, true)).find((s) => s.owner === owner && s.kind === "chat");
+  const latest = (await deps.agents.sessions(me.tenantID, taf.id, 5, owner, true)).find((s) => s.owner === owner && phoneChat(s));
   if (!latest || latest.archived) return undefined;
   const now = (deps.now?.() ?? new Date()).getTime();
   return now - Date.parse(latest.updated) < LIVE_CHAT_MS ? latest.id : undefined;
@@ -5911,8 +5911,16 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no such chat");
     throw agentsFailure(err);
   }
-  if (read.session.agent !== taf.id || read.session.kind !== kind) throw new HTTPError(404, "no such chat");
+  if (read.session.agent !== taf.id || read.session.kind !== kind || read.session.only) throw new HTTPError(404, "no such chat");
   return read.session;
+}
+
+/**
+ * One of the phone's chats: a watch request's conversation is held to its `only` and is the watch's, so the
+ * phone never lists, opens or goes on in it, and Coach on the phone stays as it was (docs/watch-ask.md).
+ */
+function phoneChat(s: Session): boolean {
+  return s.kind === "chat" && !s.only;
 }
 
 /**
@@ -5924,7 +5932,7 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
 async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
-  const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
+  const listed = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   // Coach's chats set aside (setAsideCoach keeps each by its session for 30 days); a read that fails marks none.
   const setAside = taf.job === SETUP_JOB && deps.coach
