@@ -5,7 +5,7 @@
  */
 import type { Fired, Run } from "./agents.js";
 import { type Lang, wordsIn } from "./words/index.js";
-import { timeIn } from "./work.js";
+import { timeIn, whenIn } from "./work.js";
 
 export type HealthLevel = "healthy" | "at_risk" | "failing";
 
@@ -17,6 +17,8 @@ export interface HealthReason {
   n?: number;
   of?: number;
   since?: string;
+  /** A check that couldn't read: how the app answered the newest one, as kiff/agents keeps it (Fired.vendor). */
+  vendor?: string;
 }
 
 export interface Health { level: HealthLevel; reasons: HealthReason[] }
@@ -125,7 +127,10 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
     const began = streak[streak.length - 1]!.due;
     const newest = streak[0]!.outcome;
     if (newest === "failed_unfinished") reasons.push({ code: "dropped", level: "failing", since: began });
-    else if (newest === "failed_check") reasons.push(streak.length >= STREAK_FAILING ? { code: "check_failing", level: "failing", n: streak.length, since: began } : { code: "check_failing_one", level: "at_risk", since: began });
+    else if (newest === "failed_check") {
+      const vendor = streak[0]!.vendor ? { vendor: streak[0]!.vendor } : {};
+      reasons.push(streak.length >= STREAK_FAILING ? { code: "check_failing", level: "failing", n: streak.length, since: began, ...vendor } : { code: "check_failing_one", level: "at_risk", since: began, ...vendor });
+    }
     else reasons.push(streak.length >= STREAK_FAILING ? { code: "streak", level: "failing", n: streak.length, since: began } : { code: "streak_one", level: "at_risk", since: began });
   }
   if (retrying) reasons.push({ code: "retrying", level: "at_risk" });
@@ -168,8 +173,11 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   return { level: reasons.some((r) => r.level === "failing") ? "failing" : reasons.length ? "at_risk" : "healthy", reasons };
 }
 
-/** What happened, in words, with no "what to do": the line the list shows, and the alert's start. */
-export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now = new Date()): string {
+/**
+ * What happened, in words, with no "what to do": the line the list shows, and the alert's start. A check that couldn't
+ * read says when, and names the app it reads by its connection's own name (`app`, checkAppOf), else "the app".
+ */
+export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now = new Date(), app?: string): string {
   const w = wordsIn(lang);
   switch (r.code) {
     case "too_large": return w.health_too_large(r.n ?? TOO_LARGE_FAILING);
@@ -178,8 +186,8 @@ export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now
     case "dropped": return w.health_dropped;
     case "streak": return w.health_streak(r.n ?? STREAK_FAILING);
     case "streak_one": return w.health_streak_one;
-    case "check_failing": return w.health_check_failing(r.n ?? STREAK_FAILING);
-    case "check_failing_one": return w.health_check_failing_one;
+    case "check_failing": return w.health_check_failing(r.n ?? STREAK_FAILING, timeIn(r.since ?? now.toISOString(), zone, now, lang), app);
+    case "check_failing_one": return w.health_check_failing_one(whenIn(r.since ?? now.toISOString(), zone, now, lang), app);
     case "all_failed": return w.health_all_failed(r.n ?? FAILED_IN_A_ROW);
     case "capped": return w.health_capped(r.n ?? 0, r.of ?? 0);
     case "failed_some": return w.health_failed_some(r.n ?? 0, r.of ?? 0);
@@ -188,9 +196,30 @@ export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now
   }
 }
 
+/**
+ * How an app answered a check's read it refused, as the owner can act on it: it wants an account that can read (401, 403),
+ * the connected account isn't set up for the read (FAILED_PRECONDITION, such as a Google account with no mailbox), or it
+ * couldn't answer just then (429, 5xx). Anything else, or nothing kept, is undefined: the line says what it said before.
+ */
+export function vendorKind(vendor: string | undefined): "access" | "account" | "busy" | undefined {
+  if (!vendor) return undefined;
+  const [status, code] = vendor.split(" ");
+  if (code === "FAILED_PRECONDITION") return "account";
+  if (code === "UNAUTHENTICATED" || code === "PERMISSION_DENIED" || status === "401" || status === "403") return "access";
+  if (code === "RESOURCE_EXHAUSTED" || code === "UNAVAILABLE" || code === "DEADLINE_EXCEEDED" || code === "INTERNAL" || status === "429" || /^5\d\d$/.test(status ?? "")) return "busy";
+  return undefined;
+}
+
 /** What the owner can do about it, or nothing where it takes care of itself. */
-function healthDo(r: HealthReason, lang: Lang): string {
+function healthDo(r: HealthReason, lang: Lang, app?: string): string {
   const w = wordsIn(lang);
+  // A check the app refused says what the app's answer asks of the owner, when it's one of those.
+  if (r.code === "check_failing" || r.code === "check_failing_one") {
+    const kind = vendorKind(r.vendor);
+    if (kind === "access") return w.check_why_access(app);
+    if (kind === "account") return w.check_why_account(app);
+    if (kind === "busy") return w.check_why_busy(app);
+  }
   switch (r.code) {
     case "dropped": return w.health_do_that_run;
     case "streak": case "all_failed": case "failed_some": case "skipped": return w.health_do_open;
@@ -219,8 +248,8 @@ function healthFix(r: HealthReason, lang: Lang, reader: Reader): Omit<HealthFix,
 }
 
 /** The level and each reason as a whole line: what happened, then what to do; and the buttons that fix them. */
-export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date()): HealthView {
-  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now) + ".", healthDo(r, lang)].filter(Boolean).join(" "));
+export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date(), app?: string): HealthView {
+  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now, app) + ".", healthDo(r, lang, app)].filter(Boolean).join(" "));
   const fixes = h.reasons.flatMap((r, line) => {
     const fix = healthFix(r, lang, reader);
     return fix ? [{ line, ...fix }] : [];

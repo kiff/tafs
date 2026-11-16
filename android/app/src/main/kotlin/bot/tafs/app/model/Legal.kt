@@ -2,16 +2,26 @@ package bot.tafs.app.model
 
 /**
  * tafs's own legal pages on kiff.dev, `/tafs/terms` and `/tafs/privacy`: the ones Google's consent screen names, apart from
- * KIFF's. They're in English only for now (`/de/tafs/terms` isn't served), so every language opens them; a page in the lines'
- * language comes once kiff.dev serves one. docs/android-app.md, Words and languages.
+ * KIFF's. kiff.dev serves them in each of the app's languages (`/de/tafs/terms`), so a link opens the page in the lines'
+ * language, and English (the unprefixed page) for any other. docs/android-app.md, Words and languages.
  */
 object Legal {
-  private const val SITE = "https://kiff.dev/tafs"
+  private const val SITE = "https://kiff.dev"
 
-  fun terms(): String = "$SITE/terms"
+  /** The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds). */
+  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt")
 
-  fun privacy(): String = "$SITE/privacy"
+  private fun page(name: String, language: String): String =
+    if (language in SERVED) "$SITE/$language/tafs/$name" else "$SITE/tafs/$name"
 
-  /** A link's words, saying the page is in English when the app's lines aren't ("Datenschutz (auf Englisch)"), as kiff.dev does. */
-  fun label(words: String, language: String = Res.language): String = if (language == "en") words else Words.Settings.legalInEnglish(label = words)
+  fun terms(language: String = Res.language): String = page("terms", language)
+
+  fun privacy(language: String = Res.language): String = page("privacy", language)
+
+  /**
+   * A link's words: as they are in English and in a language kiff.dev serves the page in; in any other, saying the page is in
+   * English ("… (in English)"), as kiff.dev does.
+   */
+  fun label(words: String, language: String = Res.language): String =
+    if (language == "en" || language in SERVED) words else Words.Settings.legalInEnglish(label = words)
 }

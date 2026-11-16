@@ -1,0 +1,1 @@
+- **Contracts for the tafs list and Home's list:** `GET /v1/tafs` and `GET /v1/home`, each live and paused, written by tafs cloud's tests (contracts/README.md).

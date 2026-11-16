@@ -1,0 +1,104 @@
+// The Wear OS watch (docs/watch-wear.md): a companion to the phone app, on Wear OS 3 or later. It holds no
+// keys and no session; it asks the phone over the Wearable Data Layer, in watchlink's messages, and draws what comes back.
+plugins {
+  alias(libs.plugins.android.application)
+  alias(libs.plugins.compose.compiler)
+}
+
+android {
+  namespace = "bot.tafs.wear"
+  // The phone's upload key, from outside this public repository (TAFS_UPLOAD_KEYSTORE and its passwords, as the phone's
+  // release takes them): the Data Layer joins a watch app and a phone app only when Play signs both with the same key, and
+  // Play's app signing re-signs each upload with the listing's one key. Without them a release build is left unsigned.
+  val uploadKeystore = System.getenv("TAFS_UPLOAD_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+  signingConfigs {
+    if (uploadKeystore != null) {
+      create("upload") {
+        storeFile = uploadKeystore
+        storePassword = System.getenv("TAFS_UPLOAD_STORE_PASSWORD")
+        keyAlias = System.getenv("TAFS_UPLOAD_KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("TAFS_UPLOAD_KEY_PASSWORD")
+      }
+    }
+  }
+  compileSdk { version = release(37) { minorApiLevel = 0 } }
+
+  defaultConfig {
+    // The phone's package: the Data Layer only joins a watch app and a phone app with the same package and signing key.
+    applicationId = "dev.kiff.tafs"
+    // Wear OS 3 or later.
+    minSdk = 30
+    // Wear OS 6's level, the newest a watch runs.
+    targetSdk = 36
+    // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
+    // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
+    // 400,000,001 and the two never meet.
+    versionCode = 400_000_002
+    versionName = "0.2.0"
+  }
+
+  buildTypes {
+    release {
+      if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
+      isMinifyEnabled = true
+      isShrinkResources = true
+      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+    }
+  }
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+  // The store screenshots render the real screen with its resources under Robolectric (WearStoreScreenshots).
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+  }
+  buildFeatures {
+    compose = true
+    aidl = false
+    buildConfig = false
+    shaders = false
+  }
+}
+
+kotlin {
+  jvmToolchain(17)
+}
+
+dependencies {
+  implementation(project(":watchlink"))
+
+  val composeBom = platform(libs.androidx.compose.bom)
+  implementation(composeBom)
+  implementation(libs.androidx.core.ktx)
+  implementation(libs.androidx.activity.compose)
+  implementation(libs.androidx.wear.compose.material3)
+  implementation(libs.androidx.wear.compose.foundation)
+  implementation(libs.androidx.wear.tiles)
+  implementation(libs.androidx.concurrent.futures)
+  implementation(libs.play.services.wearable)
+  // Play services brings Fragment 1.1, older than the speech input's registerForActivityResult needs (1.3); the release
+  // build's lint refuses it, as the phone's would without the same line.
+  implementation(libs.androidx.fragment.ktx)
+  implementation(libs.androidx.wear.remote.interactions)
+  implementation(libs.kotlinx.coroutines.android)
+  implementation(libs.kotlinx.coroutines.play.services)
+  implementation(libs.androidx.lifecycle.runtime.compose)
+
+  testImplementation(libs.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(composeBom)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
+  testImplementation(libs.androidx.test.ext.junit)
+  testImplementation(libs.robolectric)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// The store screenshots are drawn only when asked (`-PwearScreenshots`), into android/play/wear-screenshots; the test runs
+// either way, so a screen that no longer draws fails CI.
+tasks.withType<Test>().configureEach {
+  systemProperty("roborazzi.test.record", if (project.hasProperty("wearScreenshots")) "true" else "false")
+  systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
+}

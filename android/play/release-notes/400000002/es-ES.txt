@@ -1,0 +1,6 @@
+La primera app de tafs para Wear OS, compañera de la app de tafs del teléfono.
+- «Te necesita» y «Tus tafs» en tu muñeca, leídos desde tu teléfono.
+- Rechaza una llamada retenida o bloquea un taf desde el reloj. Aprobar sigue en tu teléfono.
+- Cuando nada te necesita, una marca verde te lo dice.
+- Una tarjeta con cuántos te necesitan, visible solo con el reloj desbloqueado.
+- Habla con Coach: recibe tus palabras como texto, nunca tu voz.

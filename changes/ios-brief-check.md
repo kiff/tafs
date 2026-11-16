@@ -1,0 +1,1 @@
+- **iPhone and iPad: "Open the taf" in Your brief opens the taf whose scheduled check keeps failing**, on its own page, rather than Needs you ([docs/ios-app.md](docs/ios-app.md)).

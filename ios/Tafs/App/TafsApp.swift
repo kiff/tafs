@@ -9,19 +9,34 @@ struct TafsApp: App {
     /// The app went to the background since it was last active.
     @State private var wasAway = false
     private let lockScreen = LockScreen()
+    /// The language picked in the app (Account › Language), so the screens follow it at once.
+    @AppStorage(AppLanguage.key) private var language = ""
+
+    init() {
+        // The lines are read in the language picked in the app before anything is drawn.
+        AppLanguage.apply()
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environment(\.locale, language.isEmpty ? Words.locale : Locale(identifier: language))
                 .preferredColorScheme(ThemePreference(rawValue: theme)?.scheme)
                 // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
                 .modifier(NarrowForScreenshots())
                 .environmentObject(model)
                 .tint(Theme.amber)
+                // The Mac's window never goes narrower than the sidebar and a screen (docs/mac-app.md).
+                .onAppear { MacWindow.apply() }
+                // The screen locked: the approval window this phone holds closes at once.
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.protectedDataWillBecomeUnavailableNotification)) { _ in
+                    model.screenLocked()
+                }
                 .task {
                     // tafs cloud's "allow AI use first", from whatever route the person tried.
                     model.watchAIConsent()
                     if Screenshots.enabled {
+                        if Screenshots.reduceMotion { UIView.setAnimationsEnabled(false) }
                         if Screenshots.landscape { Screenshots.turnToLandscape() }
                         await model.startSample()
                         return
@@ -35,6 +50,7 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onHoldAlert = { [weak model] hold in await model?.refreshUntilHeld(hold) }
+                    push.onBrief = { [weak model] in await model?.loadBrief() }
                     push.onChange = { [weak model] change, taf in await model?.liveChange(change, cloudTafID: taf) }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
                     Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
@@ -46,8 +62,16 @@ struct TafsApp: App {
                     PushDelegate.registerIfAllowed()
                 }
         }
+        // The Mac's menu bar (docs/mac-app.md).
+        #if targetEnvironment(macCatalyst)
+        .commands { MacCommands(model: model) }
+        #endif
         .onChange(of: scenePhase) { phase in
             if phase == .background { wasAway = true }
+            // The approval window this phone holds closes after 30 seconds away (kiff/tafs#494); back
+            // sooner, it stays, and KIFF's words for the next tap are read again.
+            if phase == .background { model.wentToBackground() }
+            if phase == .active { model.cameToForeground() }
             // Back from the browser: a re-link waiting there asks KIFF again at once.
             if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
@@ -77,10 +101,8 @@ struct RootView: View {
     @State private var laidOut: CGSize = .zero
     @State private var layoutEpoch = 0
 
-    /// Coach mode works with the owner's KIFF account, once signed in.
-    /// Coach only for those who may use it: it was shown to a Viewer, who got no_access, or
-    /// Touch ID and then a refusal (the 805 retest).
-    private var coachAvailable: Bool { model.signedIn && model.mode == .kiff && model.mayUseCoach }
+    /// Whether Coach mode is offered (`AppModel.coachAvailable`).
+    private var coachAvailable: Bool { model.coachAvailable }
 
     private static let tabs: [Tab] = [.account, .tafs, .needsYou, .record]
 
@@ -95,7 +117,8 @@ struct RootView: View {
         switch t {
         // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
         case .tafs: TafsTab(tab: $tab)
-        case .needsYou: NavigationStack { NeedsYouView() }
+        // "Your brief" in its place once there is one (Missions draft); Needs you, as today, otherwise.
+        case .needsYou: NavigationStack { BriefView() }
         case .record: NavigationStack { RecordView() }
         case .account: SettingsView()
         }
@@ -161,9 +184,15 @@ struct RootView: View {
                 }
             }
         }
+        // Signed in just now, by KIFF or by pairing: the celebration, once, over the home screen.
+        .fullScreenCover(isPresented: Binding(get: { model.justConnected && model.mode == .kiff && !Screenshots.enabled },
+                                              set: { if !$0 { model.justConnected = false } })) {
+            ConnectedView { model.justConnected = false }
+        }
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
         // Off while Coach drives the app: a key the person presses then isn't a shortcut.
-        .background { if model.signedIn && !drive.isOn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
+        // On the Mac they're the menu bar's (MacCommands), so they aren't here as well.
+        .background { if model.signedIn && !drive.isOn && !ThisDevice.isMac { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
         // Only this app's own keyboard: the system's "Sign in to Apple Account" alert, or another
         // app beside this one on an iPad, raises its own, and iOS tells this app too. The bar
         // stayed hidden under that alert, with nothing of this app's to type in.
@@ -171,7 +200,8 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { if Self.ownKeyboard($0) { keyboardUp = false } }
         // Both sizes keep the underlying taf and tab mounted while Coach opens.
         .overlay {
-            if coachAvailable {
+            // `-screen coach` draws Coach over the sample too, for the reference set.
+            if coachAvailable || Screenshots.coach {
                 if sizeClass == .regular { CoachPanel() }
                 else { PhoneCoachPanel() }
             }

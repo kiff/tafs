@@ -1,0 +1,1 @@
+- **Apple Watch: the watch app comes with the iPhone app in TestFlight**, with Needs you, Refuse, Halt and Halt all, through the phone ([docs/watch-app.md](docs/watch-app.md)).

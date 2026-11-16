@@ -1,0 +1,3 @@
+- Une carte d'approbation ne reste plus sur « Lecture de ce qu'il demande… » quand la demande met un peu de temps à arriver.
+- « Rouvrir la connexion » redemande maintenant votre approbation, avec une empreinte, au lieu de rouvrir un lien déjà utilisé.
+- Pendant le retrait de l'accès d'une app, Connecter des apps indique « Retrait de l'accès… ».

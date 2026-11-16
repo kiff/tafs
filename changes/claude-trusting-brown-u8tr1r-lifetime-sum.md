@@ -1,0 +1,1 @@
+- A draft that caps a write's amount over the taf's whole life, across every item, isn't signed: the owner agrees a limit for each call and a day's total, never a lifetime one. Coach hears why and drafts it again without it. A total for each item (per its argument) is still signed.

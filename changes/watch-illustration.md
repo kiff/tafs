@@ -1,0 +1,1 @@
+- **Apple Watch: Needs you with nothing waiting shows a calm check**, the approved illustration, above "Nothing waiting" ([docs/watch-app.md](docs/watch-app.md)).

@@ -23,6 +23,8 @@ struct NeedsYouView: View {
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
                 if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty && model.coachWaiting.isEmpty {
+                    // Board 6, nothing waiting (docs/ios-app.md › Illustrations), above its words.
+                    Illustration.nothingWaiting.frame(maxWidth: .infinity)
                     Panel {
                         Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text(Words.NeedsYou.emptyHint)

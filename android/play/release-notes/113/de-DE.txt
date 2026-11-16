@@ -1,0 +1,4 @@
+- Auf einem Tablet „Mit KIFF anmelden“ und „Mit deinem Telefon anmelden“ nebeneinander, dann „Du bist verbunden.“
+- Ein Telefon meldet sich mit KIFF an. „Gerät hinzufügen“ zeigt zuerst den Prüfcode.
+- Die Wear-OS-Uhr findet das Telefon wieder.
+- Konto bleibt nach schnellem Wischen ruhig, und „Abmelden“ ist ganz zu sehen.

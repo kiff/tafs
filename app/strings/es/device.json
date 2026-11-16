@@ -1,4 +1,7 @@
 {
+  "device.linux": "ordenador",
+  "device.mac": "Mac",
   "device.phone": "teléfono",
-  "device.tablet": "dispositivo"
+  "device.tablet": "dispositivo",
+  "device.windows": "PC con Windows"
 }

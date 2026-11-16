@@ -55,6 +55,21 @@ class ReceiptCheckTest {
     assertEquals(ReceiptCheck.Failed("It isn't signed by KIFF."), ReceiptCheck.check(signed.toByteArray()))
   }
 
+  /**
+   * A receipt with a key written twice isn't one KIFF wrote: the chain hashed (the first copy) could differ from the one
+   * another reader shows (often the last). Refused, at its top and in its attestation, as iOS does.
+   */
+  @Test fun aReceiptThatRepeatsAKeyIsRefused() {
+    assertEquals(listOf("a", "b", "c"), RawJson.keysOf("""{"a":1,"b":{"a":2},"c":[{"a":3}]}""".toByteArray()))
+    assertTrue(RawJson.keysAreUnique(signed.toByteArray()))
+    val twice = signed.dropLast(1) + ""","causal_chain":[{"sequence":1,"kind":"decision","message":"refund €5"}]}"""
+    assertEquals(ReceiptCheck.Failed("The receipt couldn't be read."), check(twice))
+    val signer = signed.replace(""""algorithm":"secp256k1+keccak256",""", """"algorithm":"secp256k1+keccak256","wallet_address":"0x0",""")
+    assertNotEquals(signed, signer)
+    assertEquals(ReceiptCheck.Failed("The receipt couldn't be read."), check(signer))
+    assertEquals(ReceiptCheck.Verified(testSigner), check(signed))
+  }
+
   @Test fun notSignedYetIsNotAFailure() {
     val pending = signed.replace(Regex(""""attestation":\{[^}]*\}"""), """"attestation":null""")
     assertEquals(ReceiptCheck.NotSignedYet, ReceiptCheck.check(pending.toByteArray()))
@@ -79,6 +94,19 @@ class ReceiptCheckTest {
     at = java.time.Instant.parse("2026-10-21T00:41:03Z"), onValue = onValue, amountValue = amountValue, amountUnit = amountUnit,
     answer = answer?.let { bot.tafs.app.model.RecordAnswer(decision = it) },
   )
+
+  /** "What happened" is drawn only for a receipt this phone checked as KIFF's, and only when it matches the line. */
+  @Test fun whatHappenedIsDrawnOnlyForACheckedReceiptThatMatchesTheLine() {
+    val steps = bot.tafs.app.kiff.ReceiptSteps.of(signed.toByteArray())
+    val shows = bot.tafs.app.kiff.ReceiptSteps::showsWhatHappened
+    assertTrue(shows(ReceiptCheck.Verified(testSigner), entry(), steps))
+    assertEquals(false, shows(ReceiptCheck.Failed("It isn't signed by KIFF."), entry(), steps))
+    assertEquals(false, shows(ReceiptCheck.NotSignedYet, entry(), steps))
+    assertEquals(false, shows(null, entry(), steps))
+    // The chain below signs a decision on payment pi_3Q: another payment's line doesn't draw it.
+    val onPayment = bot.tafs.app.kiff.ReceiptSteps.of(chain.toByteArray())
+    assertEquals(false, shows(ReceiptCheck.Verified(testSigner), entry(onValue = "pi_OTHER"), onPayment))
+  }
 
   @Test fun theSheetShowsTheStepsKiffSignedInWords() {
     val steps = bot.tafs.app.kiff.ReceiptSteps.of(signed.toByteArray())

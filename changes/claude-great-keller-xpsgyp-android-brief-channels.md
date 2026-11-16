@@ -1,0 +1,1 @@
+- **Android: Your brief and urgent alerts get their own notification channels.** "Briefs" (Your brief is ready, quiet) and "Urgent" (what can't wait for the next brief, with sound) sit beside Needs you's and Other alerts in the phone's settings, in all 8 languages. Held calls stay on Needs you's, so the settings you gave it hold (docs/android-app.md).

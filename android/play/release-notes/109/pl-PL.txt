@@ -1,0 +1,2 @@
+- „Dla którego tafa to jest?” pokazuje tylko tafy, które używają aplikacji. Aplikacja, której nie używa żaden twój taf, proponuje Zapytaj Coacha.
+- Połączenie utworzone dla tafa, który nie używa aplikacji, mówi o tym i można je zakończyć z jego wiersza.

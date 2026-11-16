@@ -112,7 +112,7 @@
   "record.sent_waiting": "{allowed}, et envoyé : en attente de la réponse de l'app",
   "record.show": "Afficher",
   "record.shows_receipt": "Affiche le reçu",
-  "record.signed_on_device": "Signé sur cet {device}",
+  "record.signed_on_device": "Signé sur {device|this}",
   "record.started": "{taf} a démarré",
   "record.the_connection": "La connexion",
   "record.the_tool": "L'app",

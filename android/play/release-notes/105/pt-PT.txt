@@ -1,0 +1,3 @@
+- Um cartão de aprovação já não fica em “A ler o que pede…” quando o pedido demora um pouco a chegar.
+- “Abrir de novo o início de sessão” volta agora a pedir a sua aprovação, com uma impressão digital, em vez de reabrir uma ligação já usada.
+- Enquanto o acesso de uma app é removido, Ligar apps diz “A remover o acesso…”.

@@ -1,0 +1,6 @@
+- Votre briefing : deux fois par jour, les décisions qui vous attendent et ce qui a été fait, à la place de Vous attend dès que votre compte en a un.
+- Des étiquettes sur vos tafs, et l'historique d'une mission.
+- Briefings et alertes urgentes ont leurs canaux.
+- Conditions et Confidentialité dans la langue de l'app.
+- Téléphone verrouillé : une alerte n'affiche que « Un taf vous attend ».
+- Sur tablette, « En préparation » est près de Coach ; les tafs partagés, sous « Partagés avec vous ».

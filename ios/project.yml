@@ -1,4 +1,9 @@
 name: Tafs
+# The watch app embedded in the iPhone app: only for TestFlight (the testflight job sets
+# TAFS_EMBED_WATCH), see watch-embed.yml.
+include:
+  - path: watch-embed.yml
+    enable: ${TAFS_EMBED_WATCH}
 options:
   bundleIdPrefix: bot.tafs
   deploymentTarget:
@@ -16,6 +21,10 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
+    # The Mac (macOS 13 and later, docs/mac-app.md): the same app built with Mac Catalyst,
+    # in the iPad's layout. The bundle ids stay the iPhone's and iPad's, with no "maccatalyst." prefix.
+    SUPPORTS_MACCATALYST: YES
+    DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
 # A KIFF receipt is checked on the device (kiff/tafs#167): recovering its signer needs
 # secp256k1, which CryptoKit doesn't have. Pinned to an exact release; only its C library
 # is used, since P256K's recovery initializer stops the app on a bad signature.
@@ -27,9 +36,12 @@ targets:
   Tafs:
     type: application
     platform: iOS
-    sources: [Tafs, Shared]
+    # WatchShared: what the watch asks and the phone answers (docs/watch-app.md).
+    sources: [Tafs, Shared, WatchShared]
     dependencies:
+      # iPhone and iPad only: a Mac has no lock screen Live Activity to draw.
       - target: TafsWidgets
+        platformFilter: iOS
       # Fills in a hold's notification from KIFF (kiff/tafs#210).
       - target: TafsNotify
       - package: swift-secp256k1
@@ -38,6 +50,9 @@ targets:
       path: Tafs/Info.plist
       properties:
         CFBundleDisplayName: tafs
+        # The Mac's menu bar and its app menu ("About tafs", "Quit tafs") read the bundle's
+        # name, which is otherwise the target's, "Tafs". iPhone and iPad show the display name.
+        CFBundleName: tafs
         # From the build settings, so CI's build number reaches App Store Connect.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
@@ -55,8 +70,11 @@ targets:
         NSMicrophoneUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
         NSSpeechRecognitionUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
         # Attachments (kiff/tafs#209): a photo taken for a message goes only with that message.
-        NSCameraUsageDescription: tafs takes a photo to attach to your message. It goes only with that message, to your own chat.
+        NSCameraUsageDescription: tafs takes a photo to attach to your message, or reads the code your computer shows to pair it. A photo goes only with that message, to your own chat.
         ITSAppUsesNonExemptEncryption: false
+        # The Mac App Store requires a Mac app's category in its Info.plist; iOS ignores it.
+        # It should match the App Store listing's primary category (docs/mac-app.md).
+        LSApplicationCategoryType: public.app-category.business
         NSSupportsLiveActivities: true
         # A silent push says a held call was answered elsewhere, so its alert goes.
         UIBackgroundModes: [remote-notification]
@@ -80,9 +98,16 @@ targets:
         # app's items stay where they are, since this is the group it used by default.
         keychain-access-groups:
           - $(AppIdentifierPrefix)bot.tafs.app
+        # kiff.dev vouches for the app (its apple-app-site-association lists R54YWFRK4B.bot.tafs.app),
+        # so a passkey made or used here is kiff.dev's, with the origin KIFF accepts (`https://kiff.dev`).
+        com.apple.developer.associated-domains:
+          - webcredentials:kiff.dev
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
+        # The Mac build's own entitlements: push by its Mac name, and the App Sandbox
+        # (docs/mac-app.md, "Signing and the sandbox").
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Tafs/TafsMac.entitlements
         # Set by CI for a manually signed TestFlight build; empty otherwise.
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_APP)
         # iPhone and iPad (kiff/tafs#85).
@@ -114,6 +139,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.widgets
+        # Not built for the Mac (the app's dependency on it is iPhone and iPad only).
+        SUPPORTS_MACCATALYST: NO
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WIDGETS)
         # As the app: an extension supports every device its app does.
         TARGETED_DEVICE_FAMILY: "1,2"
@@ -153,6 +180,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.notify
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Notify/TafsNotifyMac.entitlements
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_NOTIFY)
         TARGETED_DEVICE_FAMILY: "1,2"
   TafsTests:
@@ -181,6 +209,51 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Tafs
+        # iPhone and iPad only: these tests press the Home button, which a Mac lacks.
+        SUPPORTS_MACCATALYST: NO
+  # tafs on Apple Watch (docs/watch-app.md): a watchOS app with a single target, a companion to
+  # the iPhone app with no sign-in of its own. It draws the phone's words, so it compiles the
+  # generated Words.swift and its catalog, as TafsNotify does. Built by the TafsWatch scheme
+  # only: the phone's scheme (Tafs) doesn't build it, so the phone's jobs don't pay for it.
+  TafsWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatch
+      - WatchShared
+      - Tafs/Design/Words.swift
+      - Tafs/Localizable.xcstrings
+    info:
+      path: TafsWatch/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # A watch app with a single target, installed with the iPhone app it belongs to.
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: bot.tafs.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTS_MACCATALYST: NO
+        PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WATCH)
+  TafsWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatchTests
+    dependencies:
+      - target: TafsWatch
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/TafsWatch.app/TafsWatch
+        BUNDLE_LOADER: $(TEST_HOST)
+        SUPPORTS_MACCATALYST: NO
 schemes:
   Tafs:
     build:
@@ -196,3 +269,21 @@ schemes:
       targets: [TafsTests, TafsUITests]
       # StoreKit's local testing (StoreKitLocalTests): the test host's App Store is this file's.
       storeKitConfiguration: Tafs.storekit
+  # The Mac build (docs/mac-app.md): the app and its unit tests, without the UI tests,
+  # which are the iPhone's and iPad's.
+  TafsMac:
+    build:
+      targets:
+        Tafs: all
+        TafsTests: [test]
+    test:
+      targets: [TafsTests]
+      storeKitConfiguration: Tafs.storekit
+  # The watch app and its tests (CI's watch job), apart from the phone's.
+  TafsWatch:
+    build:
+      targets:
+        TafsWatch: all
+        TafsWatchTests: [test]
+    test:
+      targets: [TafsWatchTests]

@@ -188,6 +188,7 @@ object KiffMapping {
     val finish = h.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
     if (finish != null) taf = taf.copy(now = finish.words, finish = finish)
     return taf.copy(
+      labels = h.labels.orEmpty().filter { it.isNotBlank() },
       cloudId = h.id,
       paused = h.status == "paused",
       nextRun = h.nextRun,
@@ -266,13 +267,30 @@ object KiffMapping {
       )
     }
 
+  /** The longest message from the app the Record quotes: a short sentence. */
+  const val QUOTABLE_MAX = 160
+
+  /**
+   * KIFF's `tool_outcome.message` when it's safe to quote as the app's reason, else null. KIFF passes the app's answer through,
+   * and an app's error body can be JSON, long, or carry the connected account's address, a file's name or a request id. The
+   * Record, and the "Last failed" line built from it, are seen by everyone who can see the taf, people it's shared with
+   * included. So only a short, one-line, plain reason is quoted ("Agent Mail refused it (it answered 403): Forbidden."), and
+   * anything else leaves the plain line, which already names the app.
+   */
+  fun quotable(message: String?): String? {
+    val said = message?.trim().orEmpty()
+    if (said.isEmpty() || said.length > QUOTABLE_MAX || said.any { it == '\n' || it == '\r' }) return null
+    if (said.any { it == '{' || it == '[' || it == '@' }) return null
+    return said
+  }
+
   /**
    * What the tool did with an allowed call: its kind and the words for it. [approved]: the owner approved
    * it, held first. A call the vendor refused still counts against the Card's totals: it says so plainly,
    * naming the vendor as connected.
    */
   fun executed(o: ToolOutcome?, approved: Boolean, vendor: String? = null, counts: Counted = Counted.nothing): Pair<RecordEntry.Kind, String> {
-    val why = o?.message?.takeIf { it.isNotEmpty() }?.let { ": $it" } ?: ""
+    val why = quotable(o?.message)?.let { ": $it" }
     val allowed = if (approved) Words.Record.approvedByYou else Words.Record.allowedByCard
     return when (o?.status) {
       "done" -> if (approved) RecordEntry.Kind.approved to Words.Record.approvedThenDone else RecordEntry.Kind.done to Words.Record.doneWithinCard
@@ -281,10 +299,10 @@ object KiffMapping {
         RecordEntry.Kind.notDone to when (counts) {
           Counted.money -> Words.Record.toolRefusedMoney(who = who)
           Counted.amount -> Words.Record.toolRefusedAmount(who = who)
-          Counted.nothing -> Words.Record.toolRefusedCounts(who = who) + why
+          Counted.nothing -> why?.let { Words.Record.toolRefusedCountsWhy(who = who, why = it) } ?: Words.Record.toolRefusedCounts(who = who)
         }
       }
-      "not_sent" -> RecordEntry.Kind.notDone to Words.Record.notSentNothingReached(allowed = allowed) + why
+      "not_sent" -> RecordEntry.Kind.notDone to (why?.let { Words.Record.notSentNothingReachedWhy(allowed = allowed, why = it) } ?: Words.Record.notSentNothingReached(allowed = allowed))
       "sending" -> RecordEntry.Kind.sending to Words.Record.sentWaiting(allowed = allowed)
       "unknown" -> RecordEntry.Kind.unknown to Words.Record.answerLost(allowed = allowed)
       // not_recorded, none, or one this app doesn't know yet.

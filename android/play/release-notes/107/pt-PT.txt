@@ -1,0 +1,1 @@
+- Novo em Dispositivos: “Adicionar uma chave de acesso neste telefone”. Com uma chave de acesso neste telefone, um computador pode aprovar através dele: mostra um código QR, que lê com este telefone. Adicioná-la pede a sua impressão digital, e só os proprietários e administradores da conta o podem fazer.

@@ -1,4 +1,5 @@
 import CryptoKit
+import LocalAuthentication
 import XCTest
 @testable import Tafs
 
@@ -8,10 +9,13 @@ final class FaceIDSigner: ApprovalSigning {
     var prompts: [String] = []
     var quiet: [String] = []
     var refuse = false
+    /// The prompt's own error, such as `LAError(.userCancel)` for a prompt the person closed.
+    var throwing: Error?
 
     var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
 
     func sign(_ message: Data, reason: String) async throws -> String {
+        if let throwing { throw throwing }
         if refuse { throw ApprovalSigner.SignerError.notAuthenticated }
         prompts.append(String(decoding: message, as: UTF8.self))
         return "signature"
@@ -125,6 +129,28 @@ final class PlanqueTests: XCTestCase {
         // A version this app doesn't know, or v2 without its language: nothing is covered, so nothing matches.
         XCTAssertNil(PlanqueClient.digestCovers(try JCS.parse(Data(Self.v2Grant(version: "3").utf8))))
         XCTAssertNil(PlanqueClient.digestCovers(try JCS.parse(Data(Self.v2Grant(lang: nil).utf8))))
+    }
+
+    /// Each grant is checked against planque's entry at its own position, never one found by id: two entries
+    /// with one id, the second a different request carrying the first's digest, would otherwise show the second
+    /// as matching, and approving it would sign what wasn't shown. A repeated id matches nothing.
+    func testARepeatedIdMatchesNothingAndEachGrantIsCheckedAtItsOwnPosition() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        let first = Self.grantJSONFor("g_01")
+        let other = Self.grantJSONFor("g_01").replacingOccurrences(of: #""agent":"refunds""#, with: #""agent":"payouts""#)
+        XCTAssertNotEqual(first, other, "another request, under the first's id and digest")
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(first),\#(other)]}"#)
+        let repeated = try await planque.grants()
+        XCTAssertEqual(repeated.map(\.digestMatches), [false, false], "a repeated id: nothing matches, nothing is signed")
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(first),\#(other.replacingOccurrences(of: #""id":"g_01""#, with: #""id":"g_02""#))]}"#)
+        let distinct = try await planque.grants()
+        XCTAssertEqual(distinct.map(\.id), ["g_01", "g_02"])
+        XCTAssertEqual(distinct.map(\.digestMatches), [true, false], "each against its own bytes: the second request isn't the first's digest")
     }
 
     /// A v2 grant matches only with the words and language it was signed over; a v1 grant beside it
@@ -348,7 +374,7 @@ final class PlanqueTests: XCTestCase {
         let model = await model(signer: signer, vendor: StubVendor())
         StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_iphone01","this_device":false},{"id":"dev_ipad01","this_device":true}]}"#)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01","kept":true}"#)
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
 
         let ready = await model.setUpPlanque()
@@ -377,13 +403,118 @@ final class PlanqueTests: XCTestCase {
         return model
     }
 
-    /// Setting up planque is its own Face ID, once: planque gets the phone's key and a
-    /// connector key minted with a signed setup call.
+    /// planque's enrolled connector key still stands (another device enrolled it): asked first with no
+    /// key, planque answers `kept`, and no connector key is minted, so none is left live in KIFF.
+    func testAKeptEnrolmentMintsNoConnectorKey() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (200, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+        let ready = await model.setUpPlanque()
+        XCTAssertTrue(ready, model.lastError ?? "")
+        XCTAssertTrue(model.planqueReady)
+        XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "nothing minted")
+        let enrolments = sent("POST", "planque.test", "/v1/accounts/t_01/enrolment")
+        XCTAssertEqual(enrolments.count, 1)
+        XCTAssertNil(body(enrolments.first)["connector_key"])
+        XCTAssertNotNil(enrolments.first?.value(forHTTPHeaderField: "Planque-Device-Signature"), "signed, as every enrolment")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A 2xx that doesn't say `kept` mints nothing, and isn't taken as set up: it stops and says so, and the next
+    /// Start asks again (as Windows and the Mac). Only `409 needs_key` mints (the rule since 17:20).
+    func testATwoHundredWithoutKeptMintsNothing() async throws {
+        for answer in [(201, #"{"tenant":"t_01","device":"ab12"}"#), (200, #"{"tenant":"t_01","device":"ab12","kept":false}"#)] {
+            let signer = FaceIDSigner()
+            let model = await model(signer: signer, vendor: StubVendor())
+            StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+            StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = answer
+            StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+            let ready = await model.setUpPlanque()
+            XCTAssertFalse(ready, answer.1)
+            XCTAssertFalse(model.planqueReady, answer.1)
+            XCTAssertEqual(model.lastError, Words.Coach.connectingFailed, answer.1)
+            XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(answer.1): nothing minted")
+            XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/enrolment").count, 1, answer.1)
+            Keychain.delete(AppModel.planqueAccount)
+        }
+    }
+
+    /// No standing key (`409 needs_key`): a key is minted once and handed over, under the one Face ID.
+    func testWithNoStandingKeyOneIsMintedAndHandedOver() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        let route = "POST /v1/accounts/t_01/enrolment"
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses[route] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond[route] = [route: (201, #"{"tenant":"t_01","device":"ab12"}"#)]
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+        let ready = await model.setUpPlanque()
+        XCTAssertTrue(ready, model.lastError ?? "")
+        XCTAssertEqual(sent("POST", "api.test", "/v1/keys").count, 1)
+        let enrolments = sent("POST", "planque.test", "/v1/accounts/t_01/enrolment")
+        XCTAssertEqual(enrolments.map { body($0)["connector_key"] as? String }, [nil, "kiff_live_connector"])
+        XCTAssertEqual(signer.prompts, ["tafs.planque.v1|t_01"], "under the one Face ID")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Only planque saying it needs a key (`needs_key`) mints one. Planque not
+    /// reached, or a 5xx, mints nothing: a second enrolment would likely fail too and leave a key live in KIFF
+    /// that no device can revoke. It says why, and the next Start asks again.
+    func testPlanqueNotReachedOrFailingMintsNoConnectorKey() async throws {
+        for failure in ["not reached", "503", "replayed", "400"] {
+            let signer = FaceIDSigner()
+            let model = await model(signer: signer, vendor: StubVendor())
+            let route = "POST /v1/accounts/t_01/enrolment"
+            StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+            if failure == "503" {
+                StubProtocol.responses[route] = (503, #"{"error":"unavailable"}"#)
+            } else if failure == "400" {
+                // planque's 400 is a body it couldn't read: our own, so a second enrolment would fail the same way.
+                StubProtocol.responses[route] = (400, #"{"error":"bad request"}"#)
+            } else if failure == "replayed" {
+                // Today's planque names each of its 409s: only a code-less one, an older planque's, is another device.
+                StubProtocol.responses[route] = (409, #"{"error":"this signature was already used","code":"signature_replayed"}"#)
+            } else {
+                StubProtocol.dropped[route] = [.notConnectedToInternet]
+            }
+            defer { StubProtocol.dropped = [:] }
+
+            let ready = await model.setUpPlanque()
+            XCTAssertFalse(ready, failure)
+            XCTAssertFalse(model.planqueReady, failure)
+            XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(failure): nothing minted")
+            XCTAssertNotNil(model.lastError, "\(failure): it says why")
+            XCTAssertNotEqual(model.lastError, Words.Coach.connectOtherDevice, "\(failure): never \"another device\"")
+            Keychain.delete(AppModel.planqueAccount)
+        }
+    }
+
+    /// An older planque's 409 with no code is another device's enrolment: it says so, and mints nothing.
+    func testACodelessConflictIsAnotherDevice() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"another phone is enrolled"}"#)
+        let ready = await model.setUpPlanque()
+        XCTAssertFalse(ready)
+        XCTAssertEqual(model.lastError, Words.Coach.connectOtherDevice)
+        XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Setting up planque is its own Face ID, once: planque gets the phone's key and, as it needs one
+    /// (`needs_key`), a connector key minted with a signed setup call.
     func testSetUpPlanqueOnce() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer, vendor: StubVendor())
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/enrolment"] = ["POST /v1/accounts/t_01/enrolment": (201, #"{"tenant":"t_01","device":"ab12"}"#)]
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
         XCTAssertFalse(model.planqueReady)
 
@@ -394,7 +525,10 @@ final class PlanqueTests: XCTestCase {
         let mint = try XCTUnwrap(sent("POST", "api.test", "/v1/keys").first)
         XCTAssertNotNil(mint.value(forHTTPHeaderField: "KIFF-Device-Signature"), "minting is a signed setup call")
         XCTAssertEqual(body(mint)["roles"] as? [String], ["connector"])
-        XCTAssertEqual(body(sent("POST", "planque.test", "/v1/accounts/t_01/enrolment").first)["connector_key"] as? String, "kiff_live_connector")
+        // Asked first with no key; with nothing kept, the minted key goes in the second.
+        let enrolments = sent("POST", "planque.test", "/v1/accounts/t_01/enrolment")
+        XCTAssertNil(body(enrolments.first)["connector_key"])
+        XCTAssertEqual(body(enrolments.last)["connector_key"] as? String, "kiff_live_connector")
         XCTAssertNil(model.kiff.setupSigner)
         XCTAssertNil(model.planque.signer, "nothing signs afterwards")
 
@@ -623,6 +757,28 @@ final class PlanqueTests: XCTestCase {
             XCTAssertFalse(words.contains("Kept"), words)
             Keychain.delete(AppModel.planqueAccount)
         }
+    }
+
+    /// Remove for good with Face ID closed, or a face not recognised, says so and changes nothing:
+    /// never a button that just comes back. A key that couldn't sign says why.
+    func testARemovalNobodyConfirmedSaysSoAndChangesNothing() async throws {
+        let (model, refunds, signer) = try await sharedModel(withChargebacks: false)
+        StubProtocol.sent = []
+        for error: Error in [LAError(.userCancel), LAError(.authenticationFailed)] {
+            signer.throwing = error
+            let said = await model.removeTaf(refunds)
+            XCTAssertEqual(said, "Not removed. Nothing changed.")
+            XCTAssertEqual(said, Words.Taf.Remove.notConfirmed)
+        }
+        signer.throwing = nil
+        signer.refuse = true
+        let refused = await model.removeTaf(refunds)
+        let failed = try XCTUnwrap(refused)
+        XCTAssertTrue(failed.hasPrefix("Remove didn't go through."), failed)
+        XCTAssertTrue(sent("DELETE", "cloud.test", "/v1/tafs/depl_1").isEmpty, "nothing is removed")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/mandates/refunds-card/revoke").isEmpty, "no Card is revoked")
+        XCTAssertNotNil(model.taf(refunds))
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// The words say only what tafs cloud did: connections it ended are said once, ones it

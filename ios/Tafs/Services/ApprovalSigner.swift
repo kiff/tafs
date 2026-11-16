@@ -15,8 +15,10 @@ protocol ApprovalSigning {
     /// As `sign`, for a step that grants authority (a Card, a connection, a trial, Resume,
     /// sharing): its prompt takes Face ID or Touch ID only, since the approval key signs under it.
     func sign(_ message: Data, reason: String, grants: Bool) async throws -> String
-    /// Signs `message` without asking again: only for the requests of a step the owner
-    /// has just confirmed with Face ID (starting a taf signs each of its setup calls).
+    /// Signs `message` with the device key, with no prompt, never the approval key. For the requests of a
+    /// step the owner has just confirmed with Face ID (starting a taf signs each of its setup calls), and for
+    /// device-key proofs that grant nothing on their own: the pairing QR's claim, which the person's phone
+    /// still approves behind its own Face ID, and planque's signed reads of the grants.
     func signConfirmed(_ message: Data) throws -> String
     /// See the extension: one answer from its notification may count the unlock.
     func allowUnlockReuse()

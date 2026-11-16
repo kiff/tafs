@@ -1,0 +1,1 @@
+- **Coach drafts only the limits the owner agreed:** `draft-the-card@23` says no other ceiling, count or total goes on a Card as a safety margin, in place of the line that allowed a count on a money tool when the owner gave one. Approve already refuses a lifetime total and a count on a money write (docs/coach.md).

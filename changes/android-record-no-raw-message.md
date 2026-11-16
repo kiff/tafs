@@ -1,0 +1,1 @@
+- **Android: the Record never shows an app's raw answer.** A call the app refused, or one that couldn't be sent, quotes the app's reason only when it's a short, plain line; JSON, long answers and ones holding an address leave the app's own line, which names the app. The same goes for "Last failed" in Connect apps and on a taf's page (docs/android-app.md, The Record).

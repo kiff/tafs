@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- What the Wear OS watch looks for to find this phone (WatchLink.PHONE_CAPABILITY, docs/watch-wear.md). Read by Google
+         Play services, never by code, so res/raw/keep.xml keeps it through the release build's shrinker. -->
+    <string-array name="android_wear_capabilities" translatable="false">
+        <item>tafs_phone_relay</item>
+    </string-array>
+</resources>

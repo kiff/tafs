@@ -43,6 +43,25 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(AppModel.connections(of: try app(stripe), in: grants).map(\.id), ["g1", "g2", "g5"])
     }
 
+    /// A sign-in whose card was declined leaves a `listed` grant: signed in, not approved, no taf access.
+    /// tafs cloud doesn't count it as connected, and that meaning stays. Its app's row still opens its
+    /// connections, where the grant says Disconnect, as on Android (tafs#1219). An app this device holds no
+    /// connection to doesn't open.
+    func testADeclinedSignInsAppOpensToItsDisconnect() throws {
+        let sheets = "connector:composio:googlesheets"
+        let declined = try JSONDecoder().decode(TafsCloud.ConnectApps.App.self, from: Data(#"{"entry":"\#(sheets)","vendor":"Google Sheets","title":"Google Sheets","how":"oauth","state":"available"}"#.utf8))
+        let listed = try g("g1", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"row-counter","tools":[]}"#, entry: sheets, status: "listed")
+        XCTAssertFalse(declined.connected, "a listed grant gives no access: the app isn't connected")
+        XCTAssertFalse(listed.connected)
+        XCTAssertEqual(AppModel.connections(of: declined, in: [listed]).map(\.id), ["g1"])
+        XCTAssertTrue(AppModel.opensConnections(declined, in: [listed]), "its row opens, so Disconnect is in reach")
+        XCTAssertEqual(ConnectionFixWords.endWord(listed), Words.Connect.disconnectButton)
+        XCTAssertFalse(AppModel.opensConnections(declined, in: []), "no connection held: a compact Connect only")
+        let ended = try g("g1", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"row-counter","tools":[]}"#, entry: sheets, status: "disconnected")
+        XCTAssertFalse(AppModel.opensConnections(declined, in: [ended]), "a disconnected grant is gone")
+        XCTAssertTrue(AppModel.opensConnections(try app(sheets), in: []), "a connected app always opens")
+    }
+
     /// An app's connections grouped by taf (the owner's Connect apps ask): a taf with one
     /// needing attention first, the rest by name, each taf's connections together in planque's
     /// order; those with no taf the app can name apart, to show last as "Other connections".
@@ -120,6 +139,23 @@ final class ConnectionSheetTests: XCTestCase {
         let theirs = try XCTUnwrap(record.filter { $0.tafID == other && $0.kind == .notDone }.first)
         XCTAssertTrue(try XCTUnwrap(AppModel.lastFailure(try grant("g9", agent: "other-9"), record: record, ownTaf: other)).contains(theirs.detail))
         XCTAssertNil(AppModel.lastFailure(try grant("g5", agent: "chase-1", tools: #"[{"tool":"get_contact"}]"#), record: record, ownTaf: chase))
+    }
+
+    /// KIFF's `tool_outcome.message` carries the app's own body: the Record line, and "Last failed" with it,
+    /// quote it only when it's a short plain sentence. JSON, a long body, several lines or an email address is
+    /// never shown, to anyone the taf is shared with included; the line then says who refused it.
+    func testAnAppsRawAnswerIsNeverQuoted() throws {
+        let gmail = #"Gmail refused it (it answered 400): { "error": { "code": 400, "message": "Precondition check failed.", "status": "FAILED_PRECONDITION" } }"#
+        for raw in [gmail, #"{"error":"invalid_grant"}"#, String(repeating: "word ", count: 40),
+                    "Line one\nline two", "Mailbox owner@example.com is not enabled for Gmail."] {
+            XCTAssertNil(KIFFMapping.quotable(raw), raw)
+            let (_, line) = KIFFMapping.executed(.init(status: "refused_by_tool", message: raw), approved: false, vendor: "Gmail")
+            XCTAssertFalse(line.contains("error") || line.contains("@") || line.contains("word word"), line)
+            XCTAssertEqual(line, Words.Record.toolRefusedCountsWhy(who: "Gmail", why: ""))
+        }
+        XCTAssertEqual(KIFFMapping.quotable(" Agent Mail refused it (it answered 403): Forbidden. "), "Agent Mail refused it (it answered 403): Forbidden.")
+        let (_, plain) = KIFFMapping.executed(.init(status: "refused_by_tool", message: "Forbidden."), approved: false, vendor: "Agent Mail")
+        XCTAssertEqual(plain, Words.Record.toolRefusedCountsWhy(who: "Agent Mail", why: ": Forbidden."), "a short plain reason still shows")
     }
 
     func testASignInThatNeverCameBackIsWaitingAndCanBeCancelled() throws {

@@ -1,0 +1,2 @@
+- Coach starten op een andere telefoon van hetzelfde account laat geen ongebruikte sleutel meer achter in je KIFF-account.
+- Als het koppelen van je apps niet lukt, zegt de app waarom, en Starten probeert het opnieuw. Ze zegt niet meer dat een ander apparaat ze koppelt als dat niet zo is.

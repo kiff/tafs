@@ -18,8 +18,9 @@ enum ApprovalReadiness: Equatable {
 
     static let title = Words.Approval.title
 
-    /// The state, from what `canEvaluatePolicy` said: no error is ready.
-    static func from(_ code: LAError.Code?, biometry: LABiometryType) -> ApprovalReadiness {
+    /// The state, from what `canEvaluatePolicy` said: no error is ready. `mac` is the Mac
+    /// build (docs/mac-app.md).
+    static func from(_ code: LAError.Code?, biometry: LABiometryType, mac: Bool = ThisDevice.isMac) -> ApprovalReadiness {
         guard let code else { return .ready }
         switch code {
         case .biometryNotEnrolled:
@@ -27,8 +28,11 @@ enum ApprovalReadiness: Equatable {
         case .passcodeNotSet:
             return .noPasscode
         case .biometryNotAvailable:
-            // The same code for a device without it and for tafs not allowed to use it.
-            return biometry == .none ? .unsupported : .offForTafs
+            // The same code for a device without it and for tafs not allowed to use it. A Mac
+            // has no switch for one app: its Touch ID is there but out of reach, with the lid
+            // closed on another display or the Touch ID keyboard not connected.
+            if biometry == .none { return .unsupported }
+            return mac ? .unavailable(lockedOut: false) : .offForTafs
         case .biometryLockout:
             return .unavailable(lockedOut: true)
         default:
@@ -90,7 +94,9 @@ enum ApprovalReadiness: Equatable {
 
     /// Where the person sets it up, in words: Open Settings opens tafs' own settings, never
     /// this page, so the path is said instead.
-    static func path(_ kind: String?) -> String {
+    static func path(_ kind: String?, mac: Bool = ThisDevice.isMac) -> String {
+        // A Mac's Touch ID is set up in System Settings, and a Mac has no Face ID.
+        if mac { return Words.Approval.SettingsPath.macTouchId }
         switch kind {
         case "Touch ID": return Words.Approval.SettingsPath.touchId
         case "Face ID": return Words.Approval.SettingsPath.faceId
@@ -116,6 +122,18 @@ enum ApprovalReadiness: Equatable {
         }
     }
 
+    /// A prompt the person closed, or a face or finger not recognised: nothing was confirmed.
+    static func unconfirmed(_ error: Error) -> Bool {
+        cancelled(error) != nil || (error as? LAError)?.code == .authenticationFailed
+    }
+
+    /// What a destructive action says when its prompt didn't confirm it, never silence: not confirmed,
+    /// in `unconfirmed`'s words (a closed prompt, a face or finger not recognised), else why.
+    static func notDone(_ error: Error, what: String, unconfirmedWords: String? = nil) -> String {
+        unconfirmed(error) ? unconfirmedWords ?? Words.Common.didntGoThroughUnconfirmed(what: "\(what)")
+                           : Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
+    }
+
     /// Why an approval didn't go through, from the prompt's error: cancelled, not recognised,
     /// or the device's state. The request is kept.
     static func notApproved(_ error: Error, kind: String?) -> String {
@@ -131,4 +149,11 @@ enum ApprovalReadiness: Equatable {
                                : now.short(kind: kind) + Words.Approval.requestKept
         }
     }
+}
+
+/// The reason Face ID or Touch ID shows. A Mac's Touch ID prompt puts it after its own "‹app› is trying
+/// to" ("tafs is trying to connect your apps"), so a Mac takes its own line (a `*_mac` key, a verb phrase
+/// that continues that sentence); an iPhone or iPad shows the reason alone, as a sentence.
+enum PromptReason {
+    static func pick(_ phone: String, mac: String, isMac: Bool = ThisDevice.isMac) -> String { isMac ? mac : phone }
 }

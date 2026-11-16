@@ -1,0 +1,1 @@
+- **tafs cloud: the credits line in Your brief:** the brief says the account's balance as Settings does ("Solo · 600 credits left this period"), and leaves the line out when the balance can't be read ([api.md](../docs/api.md)).

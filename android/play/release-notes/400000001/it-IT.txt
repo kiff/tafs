@@ -1,0 +1,5 @@
+La prima app tafs per Wear OS, compagna dell'app tafs sul telefono.
+- «Ti aspetta» e «I tuoi tafs» al polso, letti dal telefono.
+- Rifiuta una chiamata trattenuta o blocca un taf dall'orologio. Approvare resta sul telefono.
+- Un riquadro con quanti ti aspettano, mostrato solo con l'orologio sbloccato.
+- Parla con Coach: riceve le tue parole come testo, mai la tua voce.

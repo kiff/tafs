@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Fired, Run } from "../src/cloud/agents.js";
-import { healthLine, healthOf, healthView } from "../src/cloud/health.js";
-import { LANGUAGES } from "../src/cloud/words/index.js";
+import { healthLine, healthOf, healthView, vendorKind } from "../src/cloud/health.js";
+import { type Lang, LANGUAGES } from "../src/cloud/words/index.js";
 
 const NOW = new Date("2026-10-29T10:00:00Z");
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -216,18 +216,53 @@ describe("a taf's health", () => {
   });
 
   it("says each reason in words: what happened, then what the owner can do", () => {
-    const view = (runs: Run[], f: Fired[] = []) => healthView(healthOf(runs, f, NOW)).lines;
+    const view = (runs: Run[], f: Fired[] = []) => healthView(healthOf(runs, f, NOW), "en", {}, "UTC", NOW).lines;
     const eight = Array.from({ length: 8 }, (_, i) => ok(30 + i * 10));
     expect(view([], firings("failed_unworked", "failed_unworked", "run"))).toEqual(["Its last 2 scheduled runs couldn't start. Open one to see why."]);
     expect(view([], firings("failed_unworked", "run"))).toEqual(["Its last scheduled run couldn't start. It tries again at its next time."]);
-    expect(view([], firings("failed_check", "failed_check", "run"))).toEqual(["Its check couldn't read the app 2 times in a row. Check the app's connection."]);
-    expect(view([], firings("failed_check", "run"))).toEqual(["Its last check couldn't read the app. It tries again at its next time."]);
+    // A check that couldn't read says when, in the account's zone, and names the app by its connection's name when it's told.
+    expect(view([], firings("failed_check", "failed_check", "run"))).toEqual(["The scheduled check couldn't read the app 2 times in a row, since 09:30. Check the app's connection."]);
+    expect(view([], firings("failed_check", "run"))).toEqual(["The scheduled check couldn't read the app at 09:45. It tries again at its next time."]);
+    expect(healthView(healthOf([], firings("failed_check", "failed_check", "run"), NOW), "en", {}, "Europe/Paris", NOW, "Gmail").lines)
+      .toEqual(["The scheduled check couldn't read Gmail 2 times in a row, since 10:30. Check the app's connection."]);
+    expect(healthView(healthOf([], firings("failed_check", "run"), NOW), "fr", {}, "Europe/Paris", NOW, "Gmail").lines[0]).toMatch(/^La vérification prévue n'a pas pu lire Gmail à 10:45\./);
+    expect(healthView(healthOf([], firings("failed_check", "run"), NOW), "pl", {}, "Europe/Paris", NOW, "Gmail").lines[0]).toMatch(/odczytać aplikacji Gmail o 10:45\./);
+    // A version switch between two failed checks neither fails nor recovers: still 2 in a row.
+    expect(codes([], firings("failed_check", "skipped_switching", "failed_check", "run"))).toEqual(["check_failing"]);
     expect(view([], firings("failed_unfinished", "run"))).toEqual(["A scheduled run stopped part-way, and what it was working on won't be tried again. Open that run to see what it did."]);
     expect(view([bad(10), bad(15), bad(18)])).toEqual(["Its last 3 runs failed. Open one to see why."]);
     expect(view([bad(10), ok(12), bad(18), ...eight])).toEqual(["2 of its last 10 runs failed. Open one to see why."]);
     expect(view([capped(10), capped(20), ...eight])).toEqual(["2 of its last 10 runs were cut short by a limit. Open one to see which limit stopped it."]);
     expect(view([], firings("skipped_busy", "skipped_busy", "skipped_missed", "run"))).toEqual(["3 of its last 4 scheduled runs were skipped. Open one to see why."]);
     expect(view([], firings("failed_retrying", "run"))).toEqual(["Its last run didn't finish, so its work goes to the next run."]);
+  });
+
+  // A check the app refused says what its answer asks of the owner (kiff/agents' Fired.vendor), and only for those answers.
+  it("says what the app's answer to a refused check asks of the owner", () => {
+    const checks = (vendor?: string) => [{ due: ago(15), at: ago(15), outcome: "failed_check", ...(vendor ? { vendor } : {}) }, { due: ago(30), at: ago(30), outcome: "failed_check" }, fired(45, "run")] as Fired[];
+    const line = (vendor?: string, app?: string, lang: Lang = "en") => healthView(healthOf([], checks(vendor), NOW), lang, {}, "UTC", NOW, app).lines[0];
+    expect(line("400 FAILED_PRECONDITION", "Gmail")).toBe("The scheduled check couldn't read Gmail 2 times in a row, since 09:30. Gmail said the connected account isn't set up for this read: connect it again with the account you use for it.");
+    expect(line("401", "Gmail")).toMatch(/Gmail refused the read: connect it again with an account that can read it\.$/);
+    expect(line("403 PERMISSION_DENIED")).toMatch(/The app refused the read/);
+    expect(line("429")).toMatch(/The app couldn't answer just then\. It tries again at its next time\.$/);
+    expect(line("503 UNAVAILABLE")).toMatch(/couldn't answer just then/);
+    // Another answer, or none kept (a kiff/agents from before): the line says what it said before.
+    for (const v of ["404 NOT_FOUND", "400", undefined]) expect(line(v)).toMatch(/Check the app's connection\.$/);
+    // Only the newest failure's answer counts.
+    const older = [{ due: ago(15), at: ago(15), outcome: "failed_check" }, { due: ago(30), at: ago(30), outcome: "failed_check", vendor: "401" }] as Fired[];
+    expect(healthView(healthOf([], older, NOW), "en", {}, "UTC", NOW).lines[0]).toMatch(/Check the app's connection\.$/);
+    expect(vendorKind("400 FAILED_PRECONDITION")).toBe("account");
+    expect(vendorKind("500")).toBe("busy");
+    expect(vendorKind("400 INVALID_ARGUMENT")).toBeUndefined();
+    for (const lang of LANGUAGES) {
+      for (const v of ["400 FAILED_PRECONDITION", "401", "429"]) {
+        for (const app of ["Gmail", undefined]) {
+          const l = line(v, app, lang);
+          expect(l, `${lang} ${v}`).not.toMatch(/undefined|FAILED_PRECONDITION|40[01]|429/);
+          if (app) expect(l, lang).toContain("Gmail");
+        }
+      }
+    }
   });
 
   it("has every reason's words in all eight languages, with none of the runtime's own names in them", () => {

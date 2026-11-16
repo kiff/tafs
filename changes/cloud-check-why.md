@@ -1,0 +1,1 @@
+- **tafs cloud: a check the app refused says why, in the owner's words.** From how the app answered, as kiff/agents now keeps it, the taf's health says what to do: connect again with an account that can read, connect again with the account used for it (such as a Google account with no mailbox), or nothing, as it tries again (docs/reliability.md).

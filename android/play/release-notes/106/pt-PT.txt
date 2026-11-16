@@ -1,0 +1,2 @@
+- Iniciar o Coach noutro telefone da mesma conta já não deixa uma chave por usar na sua conta KIFF.
+- Quando ligar as suas apps não funciona, a app diz porquê, e Começar tenta de novo. Já não diz que outro dispositivo as liga quando não é assim.

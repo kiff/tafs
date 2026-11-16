@@ -13,6 +13,8 @@ struct CalendarView: View {
     var open: ((UUID) -> Void)? = nil
 
     private static let hourHeight: CGFloat = 44
+    /// The Mac's date picker is open (`datePicker`).
+    @State private var choosingDate = false
 
     private var today: String { CalendarMath.today(in: AccountTime.zone) }
     /// Until a choice is made here, a screenshot's `-screen calendar` or `calendar-week` (Screenshots.calendar).
@@ -96,10 +98,7 @@ struct CalendarView: View {
             // to "9 – 15 No…".
             if !compact { title.oneLineUnlessLarge() }
             Spacer(minLength: 0)
-            DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)
-                .labelsHidden()
-                .environment(\.timeZone, TimeZone(identifier: "UTC")!)
-                .accessibilityLabel(Words.Calendar.chooseDate)
+            datePicker
         }
         .tint(Theme.amberText)
         let picker = Picker(Words.Calendar.viewPicker, selection: Binding(get: { state.mode }, set: { show(CalendarState(mode: $0, selected: state.selected)) })) {
@@ -157,6 +156,44 @@ struct CalendarView: View {
         .fixedSize()
         .accessibilityAddTraits(atToday ? .isSelected : [])
         .accessibilityIdentifier("calendar.today")
+    }
+
+    /// The date picker. The Mac build draws the iPad's compact picker as numbers in a field
+    /// ("11/15/2026"), so there it's drawn as the iPad's: the date in words, which opens the
+    /// month to choose from (docs/mac-app.md).
+    @ViewBuilder private var datePicker: some View {
+        if ThisDevice.isMac {
+            Button { choosingDate = true } label: {
+                Text(Self.pickerTitle(dateBinding.wrappedValue))
+                    .foregroundColor(Theme.ink)
+                    .padding(.horizontal, 11).padding(.vertical, 6)
+                    .background(Theme.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Words.Calendar.chooseDate)
+            .popover(isPresented: $choosingDate) {
+                DatePicker(Words.Calendar.datePicker, selection: Binding(get: { dateBinding.wrappedValue },
+                                                                         set: { dateBinding.wrappedValue = $0; choosingDate = false }),
+                           displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                    .labelsHidden()
+                    .environment(\.timeZone, TimeZone(identifier: "UTC")!)
+                    .tint(Theme.amberText)
+                    .frame(width: 320)
+                    .padding()
+            }
+        } else {
+            DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)
+                .labelsHidden()
+                .environment(\.timeZone, TimeZone(identifier: "UTC")!)
+                .accessibilityLabel(Words.Calendar.chooseDate)
+        }
+    }
+
+    /// The Mac picker's label: the date as the iPad's compact picker writes it ("Nov 15, 2026"),
+    /// in UTC, where the picker's dates are held.
+    nonisolated static func pickerTitle(_ date: Date, locale: Locale = .current) -> String {
+        date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: "UTC")!))
     }
 
     /// The selected date as a date at noon UTC, drawn in UTC: the picker shows the same day it holds.

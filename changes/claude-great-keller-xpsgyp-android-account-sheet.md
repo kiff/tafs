@@ -1,0 +1,1 @@
+- **Android: a sheet no longer bounces after a fast swipe to its end.** Account, and every other sheet, stays still once a fling reaches the end of its list, and its last row (Sign out) shows in full. Pulling down at the top still closes it (docs/android-app.md).

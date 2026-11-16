@@ -11,9 +11,31 @@ final class ApprovalReadinessTests: XCTestCase {
         XCTAssertEqual(ApprovalReadiness.from(.passcodeNotSet, biometry: .touchID), .noPasscode)
         // The same code for no Face ID at all and for Face ID turned off for tafs.
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .none), .unsupported)
-        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .faceID), .offForTafs)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .faceID, mac: false), .offForTafs)
         XCTAssertEqual(ApprovalReadiness.from(.biometryLockout, biometry: .faceID), .unavailable(lockedOut: true))
         XCTAssertEqual(ApprovalReadiness.from(.invalidContext, biometry: .touchID), .unavailable(lockedOut: false))
+    }
+
+    /// A Mac has no Touch ID switch for one app, so it never sends the person to turn it on
+    /// for tafs: Touch ID out of reach (the lid closed, the keyboard away) is "can't be used
+    /// right now". The other states are the iPad's.
+    func testAMacNeverSaysTouchIDIsOffForTafs() {
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: true), .unavailable(lockedOut: false))
+        XCTAssertFalse(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: true).opensSettings)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .none, mac: true), .unsupported)
+        XCTAssertEqual(ApprovalReadiness.from(nil, biometry: .touchID, mac: true), .ready)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotEnrolled, biometry: .touchID, mac: true), .noneEnrolled)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryLockout, biometry: .touchID, mac: true), .unavailable(lockedOut: true))
+        // The iPhone and iPad keep theirs.
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: false), .offForTafs)
+    }
+
+    /// A Mac's Touch ID is set up in System Settings, whatever the device reports.
+    func testAMacSaysWhereItsTouchIDIsSetUp() {
+        XCTAssertEqual(ApprovalReadiness.path("Touch ID", mac: true), Words.Approval.SettingsPath.macTouchId)
+        XCTAssertEqual(ApprovalReadiness.path(nil, mac: true), Words.Approval.SettingsPath.macTouchId)
+        XCTAssertEqual(ApprovalReadiness.path("Touch ID", mac: false), Words.Approval.SettingsPath.touchId)
+        XCTAssertEqual(ApprovalReadiness.path("Face ID", mac: false), Words.Approval.SettingsPath.faceId)
     }
 
     func testEachStateHasItsOwnWords() {
@@ -26,9 +48,11 @@ final class ApprovalReadinessTests: XCTestCase {
             XCTAssertFalse(line.localizedCaseInsensitiveContains("not set up"), line)
         }
         // None enrolled: where to set it up, in words, as Open Settings opens tafs' own.
-        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPhone", kind: "Face ID").contains("Settings → Face ID & Passcode"))
-        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPad", kind: "Touch ID").contains("Settings → Touch ID & Passcode"))
-        XCTAssertTrue(ApprovalReadiness.path(nil).contains("Touch ID & Passcode"))
+        // On the Mac build, where these tests also run, it's the Mac's own path.
+        let mac = Words.Approval.SettingsPath.macTouchId
+        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPhone", kind: "Face ID").contains(ThisDevice.isMac ? mac : "Settings → Face ID & Passcode"))
+        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPad", kind: "Touch ID").contains(ThisDevice.isMac ? mac : "Settings → Touch ID & Passcode"))
+        XCTAssertTrue(ApprovalReadiness.path(nil, mac: false).contains("Touch ID & Passcode"))
         // Locked out: retry guidance. Unsupported: another device.
         XCTAssertTrue(ApprovalReadiness.unavailable(lockedOut: true).words(device: "iPhone", kind: "Face ID").contains("passcode"))
         XCTAssertTrue(ApprovalReadiness.unsupported.words(device: "iPad", kind: nil).contains("another"))
@@ -51,9 +75,14 @@ final class ApprovalReadinessTests: XCTestCase {
         XCTAssertNil(ApprovalReadiness.cancelled(NSError(domain: "x", code: 1)))
     }
 
-    func testTheSimulatorIsReady() {
+    func testTheSimulatorIsReady() throws {
         // The signer lets the Simulator's demo through, so its screens show the approvals.
+        // A Mac's tests run on the Mac itself, which answers for its own Touch ID.
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("Not a Simulator")
+        #else
         XCTAssertTrue(ApprovalReadiness.current().isReady)
+        #endif
     }
 
     /// Check again reads readiness once for every view: a version's notice clears and its
@@ -99,5 +128,14 @@ final class ApprovalReadinessTests: XCTestCase {
         model.readApprovalReadiness = { .unsupported }
         model.checkApprovalReadiness()
         XCTAssertFalse(model.approvalBlocked)
+    }
+
+    /// A Mac's Touch ID prompt says "tafs is trying to …" itself, so it takes the Mac's line, which continues
+    /// that sentence; an iPhone or iPad shows the reason alone, as a sentence.
+    func testAMacsTouchIDReasonContinuesTheSystemsSentence() {
+        XCTAssertEqual(PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac, isMac: true), "connect your apps")
+        XCTAssertEqual(PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac, isMac: false), "Connect your apps")
+        XCTAssertEqual(Words.Connect.Prompt.connectMac(vendor: "Stripe", agent: "Refunds"), "connect Stripe to Refunds")
+        XCTAssertEqual(Words.Settings.Devices.signOutPromptMac(device: "Ana's Mac"), "sign Ana's Mac out of your account")
     }
 }

@@ -220,12 +220,25 @@ enum KIFFMapping {
         return NSLocale.commonISOCurrencyCodes.contains(unit.uppercased())
     }
 
+    /// The app's own words for why it refused or wasn't reached, when they're a short plain sentence: KIFF's
+    /// `tool_outcome.message` carries the vendor's body, which can be JSON and name the connected account, a
+    /// file or a request. Shown to everyone who sees the taf, people it's shared with included, it's quoted only
+    /// when it's one line, at most 160 characters, not JSON, and names no email address; otherwise the line
+    /// says who refused it, without the body (the same rule as Android's, and tafs cloud's Activity).
+    static func quotable(_ message: String?) -> String? {
+        guard let text = message?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty, text.count <= 160,
+              !text.contains(where: \.isNewline) else { return nil }
+        if text.hasPrefix("{") || text.hasPrefix("[") || text.contains("{\"") || text.contains("\":") { return nil }
+        if text.range(of: #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, options: .regularExpression) != nil { return nil }
+        return text
+    }
+
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
     /// A call the vendor refused still counts against the Card's totals: it
     /// says so plainly, naming the vendor as connected.
     static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
-        let why = o?.message.flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
+        let why = quotable(o?.message).map { ": \($0)" } ?? ""
         let allowed = approved ? Words.Record.approvedByYou : Words.Record.allowedByCard
         switch o?.status {
         case "done"?:

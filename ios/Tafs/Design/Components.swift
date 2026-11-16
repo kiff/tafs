@@ -84,6 +84,7 @@ struct PrimaryLook: ButtonStyle {
     private struct StyledLabel: View {
         let configuration: Configuration
         @Environment(\.isEnabled) private var isEnabled
+        @State private var hovered = false
 
         var body: some View {
             // Not available yet, it stays readable on any ground: a neutral fill with the
@@ -97,13 +98,14 @@ struct PrimaryLook: ButtonStyle {
                 .foregroundColor(ink)
                 .background(fill)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .onHover { hovered = Hover.shows($0) }
         }
 
         private var ink: Color { isEnabled ? Theme.amberInk : Theme.soft }
 
         @ViewBuilder private var fill: some View {
             if isEnabled {
-                Theme.brand.opacity(configuration.isPressed ? 0.8 : 1)
+                Theme.brand.opacity(Hover.primaryOpacity(pressed: configuration.isPressed, hovered: hovered))
             } else {
                 Theme.dim.opacity(0.22)
             }
@@ -132,17 +134,35 @@ struct OutlineLook: ButtonStyle {
         let configuration: Configuration
         let color: Color
         @Environment(\.isEnabled) private var isEnabled
+        @State private var hovered = false
 
         var body: some View {
             configuration.label
                 .scaledFont(15, weight: .medium)
                 .frame(maxWidth: .infinity, minHeight: 48)
                 .foregroundColor(color)
-                .background(Theme.ink.opacity(configuration.isPressed ? 0.08 : 0))
+                .background(Theme.ink.opacity(Hover.outlineOpacity(pressed: configuration.isPressed, hovered: hovered && isEnabled)))
+                .onHover { hovered = Hover.shows($0) }
                 .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.4), lineWidth: 1))
                 .opacity(isEnabled ? 1 : 0.4)
         }
     }
+}
+
+/// The pointer over a button, on the Mac (docs/mac-app.md, "The pointer"): the button lightens a
+/// little, as a pressed one darkens. The iPad keeps its own pointer effects, so nothing shows there.
+enum Hover {
+    /// Whether the pointer being over a button shows: on the Mac build only.
+    static func shows(_ inside: Bool, mac: Bool = ThisDevice.isMac) -> Bool { inside && mac }
+
+    /// The main button's fill: full, a little lighter under the pointer, lighter still pressed.
+    static func primaryOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.8 : hovered ? 0.9 : 1 }
+
+    /// The outlined button's wash of ink: none, a light one under the pointer, more pressed.
+    static func outlineOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.08 : hovered ? 0.04 : 0 }
+
+    /// A plain button (a row, a link): as it is, a little faded under the pointer, more pressed.
+    static func plainOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.6 : hovered ? 0.8 : 1 }
 }
 
 struct Panel<Content: View>: View {
@@ -259,20 +279,29 @@ extension Date {
 }
 
 /// tafs's own Terms and Privacy policy on kiff.dev, `/tafs/terms` and `/tafs/privacy`: the pages
-/// Google's consent screen names, apart from KIFF's, as on Android (Android 1.27.8). They're in
-/// English only for now (`/de/tafs/terms` isn't served), so every language opens them, and a
-/// link outside English says so (`label`).
+/// Google's consent screen names, apart from KIFF's, as on Android (Android 1.27.8). Each opens in
+/// the app's language where kiff.dev serves it (`/de/tafs/terms`), and in English otherwise, at the
+/// unprefixed path, never `/en/`. A link to the English page from another language says so (`label`).
 enum Legal {
-    static let terms = URL(string: "https://kiff.dev/tafs/terms")!
-    static let privacy = URL(string: "https://kiff.dev/tafs/privacy")!
+    /// The languages kiff.dev serves tafs's Terms and Privacy in, besides English.
+    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt"]
+
+    static var terms: URL { page("terms") }
+    static var privacy: URL { page("privacy") }
+
+    /// A page in `language` where it's served, else in English.
+    static func page(_ name: String, language: String = Legal.language) -> URL {
+        let prefix = translated.contains(language) ? "/\(language)" : ""
+        return URL(string: "https://kiff.dev\(prefix)/tafs/\(name)")!
+    }
 
     /// The language the app's own screens are written in.
     static var language: String { KIFFClient.appLanguage }
 
-    /// A link's words, saying the page is in English when the app's lines aren't
-    /// ("Datenschutzerklärung (auf Englisch)", `settings.legal_in_english`), as Android does.
+    /// A link's words, saying the page is in English only when it opens in English and the app's
+    /// lines aren't ("Terms (in English)", `settings.legal_in_english`).
     static func label(_ words: String, language: String = Legal.language) -> String {
-        language == "en" ? words : Words.Settings.legalInEnglish(label: words)
+        language == "en" || translated.contains(language) ? words : Words.Settings.legalInEnglish(label: words)
     }
 
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.
@@ -406,21 +435,24 @@ struct ApprovalKeyLostLine: View {
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 }
             } else {
-                Text(KIFFClient.approvalKeyLost)
+                Text(model.approvalKeyLostWords)
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                Button {
-                    starting = true
-                    Task {
-                        if let url = await model.startRelink() { openURL(url) }
-                        starting = false
+                // A view-only session can't be re-linked: Sign in again alone, as on Android.
+                if !model.approvalViewOnly {
+                    Button {
+                        starting = true
+                        Task {
+                            if let url = await model.startRelink() { openURL(url) }
+                            starting = false
+                        }
+                    } label: {
+                        Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
                     }
-                } label: {
-                    Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
+                    .buttonStyle(PrimaryButtonStyle())
+                    .confirming()
+                    .disabled(starting)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .confirming()
-                .disabled(starting)
                 Button {
                     confirming = .signInAgain
                 } label: {

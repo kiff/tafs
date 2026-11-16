@@ -12,7 +12,38 @@ import { dayIn } from "./knob.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
 /** A taf as the Record names its calls: the KIFF agent that makes them, and the name people know it by. */
-export interface RecordTaf { id: string; name: string; kiffAgent: string }
+export interface RecordTaf {
+  id: string; name: string; kiffAgent: string;
+  /** The reader manages it, so its rows may quote an app's short plain reason (activity.ts quotable). */
+  manages?: boolean;
+}
+
+/**
+ * A removed taf, kept at its removal so the Record still shows its calls (KIFF keeps them under its archived agent):
+ * its id, its KIFF agent and its name then. Only removals from then on: none is written for one before.
+ */
+export interface RemovedTaf { id: string; kiff_agent: string; name: string; removed_at: string }
+
+/** The account's removed tafs, one list, appended to at each removal. */
+export const removedTafsKey = (tenant: string) => `${tenant}#removed-tafs`;
+
+/** How long the list is kept after the account's latest removal. */
+export const REMOVED_KEPT_MS = 400 * 86400_000;
+
+/**
+ * The removed tafs as the Record names them ("Rae (removed)", in the person's language): once each, by KIFF agent (a
+ * removal repeated after a failure appends it again), and never an agent a live taf has.
+ */
+export function removedRecordTafs(rows: unknown, live: Set<string>, lang: Lang = "en"): RecordTaf[] {
+  const w = wordsIn(lang);
+  const out = new Map<string, RecordTaf>();
+  for (const r of Array.isArray(rows) ? rows as Array<Partial<RemovedTaf>> : []) {
+    if (!r || typeof r.kiff_agent !== "string" || !r.kiff_agent || typeof r.name !== "string" || typeof r.id !== "string") continue;
+    if (live.has(r.kiff_agent)) continue;
+    out.set(r.kiff_agent, { id: r.id, name: w.record_removed(r.name), kiffAgent: r.kiff_agent });
+  }
+  return [...out.values()];
+}
 
 export interface RecordEntry extends ActivityEntry {
   taf: { id: string; name: string };
@@ -73,7 +104,7 @@ function dateOf(raw: string | null): string | undefined {
 }
 
 function entryOf(c: ActivityCall, taf: RecordTaf, zone: string, now: Date, lang: Lang): RecordEntry {
-  return { ...activityEntry(c, zone, now, taf.name, lang), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
+  return { ...activityEntry(c, zone, now, taf.name, lang, taf.manages === true), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
 }
 
 /**
