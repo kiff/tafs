@@ -1,1 +1,1 @@
-- **Strings: "Your answers are signed on your phone."** (`sign_in.every_action_taf_takes_goes_view`), for computers that only view, in all 8 languages.
+- **Strings: "Your approvals are signed on your phone."** (`sign_in.every_action_taf_takes_goes_view`), for computers that only view, in all 8 languages.

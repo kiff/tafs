@@ -4153,7 +4153,7 @@ enum Words {
         static var didntWork: String { Words.line("sign_in.didnt_work") }
         /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this {device}.
         static func everyActionTafTakesGoes(device: String) -> String { Words.line("sign_in.every_action_taf_takes_goes", device, Words.demonstrative(device)) }
-        /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on your phone.
+        /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your approvals are signed on your phone.
         static var everyActionTafTakesGoesView: String { Words.line("sign_in.every_action_taf_takes_goes_view") }
         /// How it works
         static var howWorks: String { Words.line("sign_in.how_works") }

@@ -10,7 +10,7 @@
   "sign_in.deletes_every_taf_runs_chats": "Löscht jeden taf, seine Läufe, Chats und Notizen, deine Cards und deine Verbindungen. Das lässt sich nicht rückgängig machen.",
   "sign_in.didnt_work": "Die Anmeldung hat nicht geklappt.",
   "sign_in.every_action_taf_takes_goes": "Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Antworten werden auf diesem {device} signiert.",
-  "sign_in.every_action_taf_takes_goes_view": "Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Antworten werden auf deinem Handy signiert.",
+  "sign_in.every_action_taf_takes_goes_view": "Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Genehmigungen werden auf deinem Handy signiert.",
   "sign_in.how_works": "So funktioniert es",
   "sign_in.ios_did_not_open_sign": "iOS hat die Anmeldeseite nicht geöffnet (Fehler {code}; {context}). Versuch es erneut, während tafs geöffnet ist.",
   "sign_in.lead": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses {device} in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier.",
