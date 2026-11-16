@@ -71,7 +71,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed", "rules_required"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
  * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
@@ -700,6 +700,7 @@ export function approvalWords(lang: Lang = "en") {
     driveKey: w.approval_drive_key,
     windowClosed: w.approval_window_closed,
     signMissing: w.approval_sign_missing,
+    signBoth: w.approval_sign_both,
     signInvalid: w.approval_sign_invalid,
     signViewOnly: w.approval_sign_view_only,
     signSession: w.approval_sign_session,
@@ -857,8 +858,14 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   }
   const off = rulesMismatch([grant, ...others], cards, agreement.rules);
   if (!off) {
-    // Figures the Cards add that the rules don't name, and figures the notice's words don't say: logged, never refused yet.
-    for (const f of rulesUnnamedFigures([grant, ...others], cards, agreement.rules)) console.log(`approval rules: a figure the rules don't name: ${f}`);
+    // A limit the owner never agreed, in any window, is never signed (Eval 43927756622: an hour's €50 held, beside the
+    // agreed €5 a refund held and €50 a day refused). Coach hears the one figure to drop, and to change nothing else.
+    const extra = rulesUnnamedFigures([grant, ...others], cards, agreement.rules, ctx.rulesPerToTheLetter)[0];
+    if (extra) {
+      const per = (extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window") + (extra.per ? ` for each ${extra.per}` : "");
+      return { outcome: "answered", answer: `failed: the draft gives "${extra.tool}" a limit the owner never agreed: ${extra.limit} on ${extra.quantity}, ${per}. The rules they agreed name every limit it has, and a Card carries those alone: no other ceiling, total or count, even as a safety margin. Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.`, note: W.rulesFigures(extra.tool), code: "rules_unagreed_figure" };
+    }
+    // Figures the notice's words don't say: logged, never refused (formats vary by language).
     for (const f of rulesUnsaid(agreement.rules, agreement.text)) console.log(`approval rules: a figure the notice's words don't say: ${f}`);
     return undefined;
   }
@@ -869,8 +876,9 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
     return { outcome: "answered", answer: `failed: the rules the owner agreed ask past one of "${off.tool}"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card: on_exceed "owner" on the one whose limit asks, "refuse" on the one whose limit refuses.`, note: W.rulesOnExceed(off.tool), code: "rules_on_exceed" };
   }
   if (off.kind === "figure") {
-    const each = off.window === "call" ? "each call" : "a day's total";
-    const where = off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
+    const each = off.per ? `a total for each ${off.per}, per ${off.window}` : off.window === "call" ? "each call" : "a day's total";
+    const where = off.per ? `an aggregate {quantity: "${off.quantity}", window: "${off.window}", per: "${off.per}", limit: ${off.agreed}}`
+      : off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
     const has = off.drafted === undefined ? "no Card covering it has that figure" : `a Card covering it has ${off.drafted}`;
     return { outcome: "answered", answer: `failed: the rules the owner agreed give "${off.tool}" ${off.agreed} as ${each} on ${off.quantity}, and ${has}. Draft it again with ${where}, and no other figure for it on any Card.`, note: W.rulesFigures(off.tool), code: "rules_figures" };
   }
@@ -924,6 +932,8 @@ export interface DecideContext {
   rulesAgreement?: () => Promise<RulesAgreement>;
   /** A draft with no agreed rules is refused too (TAFS_RULES_REQUIRED=on), once every Coach run sends them. */
   rulesRequired?: boolean;
+  /** A total for each item no agreed figure names is refused on a rule that names none too (TAFS_RULES_PER=on), once Coach's rules carry them. */
+  rulesPerToTheLetter?: boolean;
 }
 
 /** Where the Card a conversation approved for a connection is noted: one draft per connection, per conversation. */
@@ -1201,8 +1211,11 @@ export function reportOf(body: Record<string, unknown>): Report {
 }
 
 export interface ReportContext extends DecideContext {
-  /** The request as the phone signed it: its method, path and raw body, and its KIFF-Device-Signature. */
-  signed: { method: string; uri: string; body: string; signature: string };
+  /**
+   * The request as the device signed it: its method, path and raw body, and its KIFF-Device-Signature, or the
+   * passkey assertion a computer approves with (KIFF-Passkey-Assertion, as sent): exactly one of the two.
+   */
+  signed: { method: string; uri: string; body: string; signature: string; passkey?: string };
 }
 
 /** KIFF's code for a refused signature (`error`, as its 400s and 403s send it), or "" when it sent none it could read. */
@@ -1242,13 +1255,19 @@ export function signRefusal(status: number, code: string, W: ReturnType<typeof a
 export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const W = approvalWords(ctx.lang);
   const { signed } = ctx;
-  if (!signed.signature) throw new ApprovalError(403, W.signMissing, "signature_missing");
+  // A computer approves with its passkey (docs/computer-passkeys.md), sent as KIFF took it from the gateway: KIFF
+  // checks it in place of a device signature, takes each once, and answers it as the approval key with no window.
+  // KIFF takes one or the other, never both, so a request carrying both is refused before KIFF is asked.
+  const passkey = signed.passkey ?? "";
+  if (signed.signature && passkey) throw new ApprovalError(400, W.signBoth, "signature_twice");
+  if (!signed.signature && !passkey) throw new ApprovalError(403, W.signMissing, "signature_missing");
   let res: Response;
   try {
     res = await ctx.fetch(`${ctx.kiffBase ?? KIFF_API}/v1/me/device-signature`, {
       method: "POST",
       headers: { authorization: `Bearer ${ctx.token}`, accept: "application/json", "content-type": "application/json" },
-      body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"), signature: signed.signature }),
+      body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"),
+        ...(passkey ? { passkey } : { signature: signed.signature }) }),
     });
   } catch {
     throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");

@@ -94,6 +94,15 @@ final class ContractTests: XCTestCase {
         } catch {
             XCTFail("coach-conversation.json doesn't read as Coach's thread: \(error)")
         }
+        // A card whose sign-in planque couldn't narrow carries tafs cloud's wider line: the card is where it's said.
+        do {
+            let thread = try TafsCloud.setupThread(decoding: try answer("coach-wider.json"))
+            let wider = thread.components.compactMap(\.component.widerWords)
+            XCTAssertFalse(wider.isEmpty, "coach-wider.json: no card reads its wider line")
+            XCTAssertFalse(wider.contains { $0.isEmpty })
+        } catch {
+            XCTFail("coach-wider.json doesn't read as Coach's thread: \(error)")
+        }
         for file in ["connect-apps.json", "connect-apps-search.json", "connect-apps-next.json", "connect-apps-removed.json"] {
             XCTAssertFalse(decodes(TafsCloud.ConnectApps.self, file)?.apps.isEmpty ?? true, file)
         }

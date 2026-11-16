@@ -42,6 +42,18 @@ class ContractAppsTest {
     }
   }
 
+  /** A card whose sign-in planque couldn't narrow carries tafs cloud's wider line (contracts/coach-wider.json): the card is where it's said. */
+  @Test fun aWiderCardReadsItsLine() {
+    val thread = KiffClient.json.decodeFromString(bot.tafs.app.kiff.WireThread.serializer(), answer("coach-wider.json"))
+    val cards = thread.components.orEmpty().map { shown ->
+      val wire = KiffClient.json.decodeFromJsonElement(bot.tafs.app.kiff.WireShown.serializer(), shown)
+      KiffClient.json.decodeFromJsonElement(bot.tafs.app.kiff.SetupComponent.serializer(), wire.component)
+    }
+    val wider = cards.mapNotNull { it.wider }
+    assertFalse("coach-wider.json: no card reads its wider line", wider.isEmpty())
+    assertTrue(wider.all { it.isNotBlank() })
+  }
+
   @Test fun theAiConsentReadsAsTafsCloudAnswersIt() {
     val all = cases("ai-consent.json")
     assertTrue("at least five cases", all.size >= 5)
