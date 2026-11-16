@@ -16,20 +16,23 @@
     <string name="needs_you_refuse">Odrzuć</string>
     <string name="needs_you_title">Czeka na Ciebie</string>
     <string name="taf_state_halted">Zablokowane</string>
-    <string name="watch_already_answered">Już odpowiedziano.</string>
-    <string name="watch_answer_longer">Odpowiedź Coacha jest dłuższa. Otwórz ją na telefonie.</string>
+    <string name="watch_already_answered">Już odpowiedziano albo zakończono.</string>
     <string name="watch_approve_on_phone">Zatwierdź na telefonie</string>
+    <string name="watch_as_of">Stan na %1$s</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
-    <string name="watch_coach_consent_on_phone">Coach potrzebuje najpierw Twojej zgody na telefonie.</string>
+    <string name="watch_coach_needs_consent">Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.</string>
+    <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s oczekujące wywołanie czeka na Ciebie</item>
         <item quantity="few">%1$s oczekujące wywołania czekają na Ciebie</item>
         <item quantity="many">%1$s oczekujących wywołań czeka na Ciebie</item>
         <item quantity="other">%1$s oczekującego wywołania czeka na Ciebie</item>
     </plurals>
+    <string name="watch_more_on_phone">Reszta jest na telefonie.</string>
     <string name="watch_needs_lock">Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.</string>
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
-    <string name="watch_phone_not_reachable">Nie można połączyć się z telefonem. Trzymaj go blisko i spróbuj ponownie.</string>
+    <string name="watch_phone_not_reachable">Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.</string>
+    <string name="watch_refused">Odrzucono. Nic nie zostało wysłane.</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
     <string name="watch_voice_text_only">Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
 </resources>
