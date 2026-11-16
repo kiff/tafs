@@ -182,15 +182,15 @@ fun DevicesSheet(
     // The check code, before the fingerprint: a page showing its own QR can't get this phone to pair another key unnoticed.
     DriveAlert(
       onDismissRequest = cancelPair,
-      title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
+      // "Add a device", never its name: the name is only what it says it is, so it comes after the code (qa-kiff, as on iOS).
+      title = { Text(pairTitle(), modifier = Modifier.testTag(PAIR_TITLE)) },
       text = {
-        // What saying yes gives that computer, before the code: the code protects against a swapped QR only if the person
-        // knows why it matters.
+        // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
+        // yes to the device in front of the person (qa-kiff, 16 Nov). Then the owner's line, the name as its claim, what yes gives.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text(pairGives(qr))
-          Text(if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow)
-          val check = if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty())
-          Text(check, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
+          pairLines(qr).forEachIndexed { i, line ->
+            if (i == 0) Text(line, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK)) else Text(line)
+          }
         }
       },
       confirmButton = {
@@ -200,6 +200,22 @@ fun DevicesSheet(
     )
   }
 }
+
+/** The approve-pairing sheet's title: what's being done, with no name, so nothing the other device claims comes before the code. */
+internal fun pairTitle(): String = Words.Settings.Devices.pair
+
+/**
+ * The approve-pairing sheet's lines, in order, as on iOS: the check code to compare; that it adds only this device and nothing
+ * else changes; the name as the device's own claim ("It calls itself …"), never as proof; what saying yes gives; and that it's
+ * only this one.
+ */
+internal fun pairLines(qr: PairQr): List<String> = listOf(
+  if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()),
+  Words.Settings.Devices.pairAddOnly,
+  Words.Settings.Devices.pairClaims(name = qr.name),
+  pairGives(qr),
+  if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow,
+)
 
 /** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
 internal fun pairGives(qr: PairQr): String = when {
@@ -215,6 +231,7 @@ internal fun pairGives(qr: PairQr): String = when {
 internal const val DEVICES_SHEET = "devices-sheet"
 internal const val PAIR_BUTTON = "devices.pair"
 internal const val PAIR_CHECK = "devices.pair.check"
+internal const val PAIR_TITLE = "devices.pair.title"
 internal const val PAIR_LINE = "devices.pair.line"
 internal const val PASSKEY_BUTTON = "devices.passkey.add"
 internal const val PASSKEY_LINE = "devices.passkey.line"

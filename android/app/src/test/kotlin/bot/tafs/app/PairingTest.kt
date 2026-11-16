@@ -142,6 +142,33 @@ class PairingTest {
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
   }
 
+  // The title names no device: whatever the other device calls itself never comes before the code (qa-kiff, as on iOS).
+  @Test fun theApproveSheetsTitleNamesNoDevice() {
+    val qr = PairQr.read(qrText())!!
+    assertEquals("Add a device", bot.tafs.app.views.pairTitle())
+    assertFalse(bot.tafs.app.views.pairTitle().contains(qr.name))
+  }
+
+  // The name is only what the other device says it is; the check code on its screen is what binds the yes, so it comes first.
+  @Test fun theApproveSheetShowsTheCheckCodeFirstThenTheOwnersLineAndTheNameAsAClaim() {
+    val qr = PairQr.read(qrText())!!
+    val lines = bot.tafs.app.views.pairLines(qr)
+    assertEquals(5, lines.size)
+    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), lines[0])
+    assertTrue(lines[0], lines[0].contains(qr.checkCode!!))
+    assertEquals("Add this device to your account. Only this device; nothing else changes.", lines[1])
+    // The name is what the device says it is, beside the code that proves which one it is.
+    assertEquals("It calls itself ${qr.name}.", lines[2])
+    assertEquals(bot.tafs.app.views.pairGives(qr), lines[3])
+    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairOnlyNow, lines[4])
+  }
+
+  // A phone always signs in with KIFF itself, so only a tablet offers being added from the person's phone (the owner, 16 Nov).
+  @Test fun onlyATabletOffersBeingAddedFromThePersonsPhone() {
+    assertFalse(bot.tafs.app.views.offersPairSignIn(tablet = false))
+    assertTrue(bot.tafs.app.views.offersPairSignIn(tablet = true))
+  }
+
   @Test fun aComputerWithASoftwareKeyIsSaidToSendItsApprovalsToThisPhone() {
     val mac = PairQr.read(qrText(approvalPub = null).replace("\"platform\":\"windows\"", "\"platform\":\"macos\"").replace("\"exp\":", "\"key_store\":\"software\",\"exp\":").replace("tafs on this Windows PC", "tafs on this Mac"))!!
     assertEquals("tafs on this Mac will show your tafs and send approvals to this phone.", bot.tafs.app.views.pairGives(mac))

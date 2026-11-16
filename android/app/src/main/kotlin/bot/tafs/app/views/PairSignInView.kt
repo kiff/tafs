@@ -46,13 +46,19 @@ import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
  * says the last one expired and this is a new one; [problem] is why it stopped.
  */
 @Composable
-internal fun PairSignInContent(offer: PairOffer?, renewed: Boolean, problem: String?, onTryAgain: () -> Unit, onKiff: () -> Unit) {
+internal fun PairSignInContent(
+  offer: PairOffer?,
+  renewed: Boolean,
+  problem: String?,
+  onTryAgain: () -> Unit,
+  // Back to KIFF's way; none where KIFF's way is already beside it (a tablet's two halves).
+  onKiff: (() -> Unit)?,
+  title: String = Words.SignIn.pairPrompt(device = ThisDevice.word),
+  lead: String = Words.SignIn.pairHow(account = Words.Settings.title, devices = Words.Settings.Devices.title, add = Words.Settings.Devices.pair),
+) {
   Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-    Text(Words.SignIn.pairPrompt(device = ThisDevice.word), style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-    Text(
-      Words.SignIn.pairHow(account = Words.Settings.title, devices = Words.Settings.Devices.title, add = Words.Settings.Devices.pair),
-      style = scaled(15, color = Theme.soft),
-    )
+    Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+    Text(lead, style = scaled(15, color = Theme.soft))
     if (renewed) Text(Words.SignIn.pairNewCode, style = scaled(14, color = Theme.amberText))
     offer?.let { o ->
       // Dark modules on white, with the quiet zone, whatever the theme: scanners read it that way.
@@ -87,11 +93,13 @@ internal fun PairSignInContent(offer: PairOffer?, renewed: Boolean, problem: Str
       Text(it, style = scaled(14, color = Theme.no))
       if (offer != null) bot.tafs.app.design.OutlineButton(Words.Common.tryAgain, onTryAgain, Modifier.fillMaxWidth())
     }
-    Text(
-      Words.SignIn.withKiff,
-      style = scaled(15, FontWeight.SemiBold, Theme.amber),
-      modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onKiff).padding(vertical = 10.dp),
-    )
+    if (onKiff != null) {
+      Text(
+        Words.SignIn.withKiff,
+        style = scaled(15, FontWeight.SemiBold, Theme.amber),
+        modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onKiff).padding(vertical = 10.dp),
+      )
+    }
   }
 }
 
