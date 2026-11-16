@@ -10,7 +10,7 @@
   "chat.cap.cost": "{taf} s'est arrêté : cette tâche coûterait plus que sa limite pour une tâche. Demandez quelque chose de plus ciblé, ou une personne qui gère {taf} peut relever la limite.",
   "chat.cap.turns": "{taf} s'est arrêté : cette tâche a pris plus d'étapes que sa limite pour une tâche. Demandez quelque chose de plus ciblé.",
   "chat.chats_tafs_exported": "Vos chats dans tafs, exportés {at}.\n\n",
-  "chat.chats_were_not_exported_could": "Vos chats n'ont pas été exportés : cet {device} n'a pas pu enregistrer les fichiers.",
+  "chat.chats_were_not_exported_could": "Vos chats n'ont pas été exportés : {device|this} n'a pas pu enregistrer les fichiers.",
   "chat.delete": "Supprimer",
   "chat.edit": "Modifier",
   "chat.edit_and_send": "Modifier et envoyer",

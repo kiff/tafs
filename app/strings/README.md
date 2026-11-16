@@ -47,7 +47,15 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   (`POSSESSIVE` in `generate.py`: "Refunds'", "Rae's"; German "Klaus'", "Raes"). Only
   English and German have a rule. Any other language writes `{taf}` and words the line around
   it ("la Carte de {taf}"); a test fails if it writes `|possessive`. Both apps give a line its
-  own values first, then each possessive (`possessives(key)`), in the same order everywhere.
+  own values first, then each derived value (`derived(key)`: possessives and "this"), in the
+  same order everywhere.
+- **"This" before a name** is `{name|this}`, or `{name|This}` to open a sentence, where the
+  word for "this" changes with the name: French "ce Mac", "ce PC", "cet appareil" (`THIS` in
+  `generate.py`: "cet" before a vowel or a mute h). The app passes the name as it is, and
+  `Words.demonstrative` gives "ce"/"cet" by the line's language. Only French has a rule; any
+  other language writes its own word in the line ("this {device}", "dieses {device|possessive}"),
+  and a test fails if it writes `|this`. The Mac, Windows and Linux apps read these files too, so
+  each keeps the same rule beside its possessive one.
 
 ## The generated files
 

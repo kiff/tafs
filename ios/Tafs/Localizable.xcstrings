@@ -769,7 +769,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand un taf vous attend, cet %1$@ vous prévient même si tafs est fermé."
+            "value": "Quand un taf vous attend, %2$@ vous prévient même si tafs est fermé."
           }
         },
         "it": {
@@ -1087,7 +1087,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ n'a pas donné de jeton push à tafs. Réessayez dans un instant."
+            "value": "%2$@ n'a pas donné de jeton push à tafs. Réessayez dans un instant."
           }
         },
         "it": {
@@ -1405,7 +1405,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alertes sur cet %1$@"
+            "value": "Alertes sur %2$@"
           }
         },
         "it": {
@@ -2487,7 +2487,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajoutez d'abord Face ID ou une empreinte dans Réglages : cet %1$@ approuve avec l'un des deux."
+            "value": "Ajoutez d'abord Face ID ou une empreinte dans Réglages : %2$@ approuve avec l'un des deux."
           }
         },
         "it": {
@@ -2646,7 +2646,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approuver à nouveau avec cet %1$@"
+            "value": "Approuver à nouveau avec %2$@"
           }
         },
         "it": {
@@ -2805,7 +2805,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approuver demande %1$@, et rien n'est encore configuré sur cet %2$@. Configurez-le dans %3$@, puis revenez."
+            "value": "Approuver demande %1$@, et rien n'est encore configuré sur %4$@. Configurez-le dans %3$@, puis revenez."
           }
         },
         "it": {
@@ -3918,7 +3918,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ n'a ni Face ID ni Touch ID : il ne peut pas approuver. Approuvez sur un autre iPhone, iPad ou téléphone Android connecté à votre compte."
+            "value": "%2$@ n'a ni Face ID ni Touch ID : il ne peut pas approuver. Approuvez sur un autre iPhone, iPad ou téléphone Android connecté à votre compte."
           }
         },
         "it": {
@@ -3971,7 +3971,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ n'a pas de code, et %2$@ en nécessite un. Définissez un code dans %3$@, ajoutez %4$@, puis revenez."
+            "value": "%5$@ n'a pas de code, et %2$@ en nécessite un. Définissez un code dans %3$@, ajoutez %4$@, puis revenez."
           }
         },
         "it": {
@@ -4448,7 +4448,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est verrouillé après trop de tentatives. Verrouillez cet %2$@, déverrouillez-le avec son code, puis vérifiez à nouveau."
+            "value": "%1$@ est verrouillé après trop de tentatives. Verrouillez %3$@, déverrouillez-le avec son code, puis vérifiez à nouveau."
           }
         },
         "it": {
@@ -5031,7 +5031,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ est prêt à approuver avec %2$@."
+            "value": "%3$@ est prêt à approuver avec %2$@."
           }
         },
         "it": {
@@ -22943,7 +22943,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos chats n'ont pas été exportés : cet %1$@ n'a pas pu enregistrer les fichiers."
+            "value": "Vos chats n'ont pas été exportés : %2$@ n'a pas pu enregistrer les fichiers."
           }
         },
         "it": {
@@ -47578,7 +47578,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commencez d'abord depuis Apps connectées sur cet %1$@."
+            "value": "Commencez d'abord depuis Apps connectées sur %2$@."
           }
         },
         "it": {
@@ -54600,7 +54600,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Commencez d'abord depuis Apps connectées sur cet %1$@. L'abonnement Slack doit être arrêté avant de supprimer sa porte."
+            "value": "Commencez d'abord depuis Apps connectées sur %2$@. L'abonnement Slack doit être arrêté avant de supprimer sa porte."
           }
         },
         "it": {
@@ -59105,7 +59105,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez-vous d'abord avec KIFF sur cet %1$@."
+            "value": "Connectez-vous d'abord avec KIFF sur %2$@."
           }
         },
         "it": {
@@ -63464,7 +63464,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF ne peut pas encore le faire : reconnectez-vous depuis Réglages pour approuver depuis cet %1$@."
+            "value": "KIFF ne peut pas encore le faire : reconnectez-vous depuis Réglages pour approuver depuis %2$@."
           }
         },
         "it": {
@@ -70336,7 +70336,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une alerte vous parvient sur cet %1$@, même si tafs est fermé."
+            "value": "Une alerte vous parvient sur %2$@, même si tafs est fermé."
           }
         },
         "it": {
@@ -70707,7 +70707,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce %1$@ est ajouté."
+            "value": "%2$@ est ajouté."
           }
         },
         "it": {
@@ -70760,7 +70760,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce %1$@ ne peut pas signer les approbations lui-même. Approuvez sur votre téléphone, ou avec une clé d'identification."
+            "value": "%2$@ ne peut pas signer les approbations lui-même. Approuvez sur votre téléphone, ou avec une clé d'identification."
           }
         },
         "it": {
@@ -70919,7 +70919,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "tafs sur ce %1$@"
+            "value": "tafs sur %2$@"
           }
         },
         "it": {
@@ -70972,7 +70972,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce %1$@ n'a pas été ajouté : %2$@. Affichez un nouveau code et réessayez."
+            "value": "%3$@ n'a pas été ajouté : %2$@. Affichez un nouveau code et réessayez."
           }
         },
         "it": {
@@ -71025,7 +71025,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous utilisez déjà tafs sur votre téléphone ? Ajoutez ce %1$@ avec lui."
+            "value": "Vous utilisez déjà tafs sur votre téléphone ? Ajoutez %2$@ avec lui."
           }
         },
         "it": {
@@ -71237,7 +71237,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter ce %1$@ avec votre téléphone"
+            "value": "Ajouter %2$@ avec votre téléphone"
           }
         },
         "it": {
@@ -71290,7 +71290,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter ce %1$@"
+            "value": "Ajouter %2$@"
           }
         },
         "it": {
@@ -71343,7 +71343,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce %1$@ affiche vos tafs, Vous attend et le Registre. Il ne peut pas approuver tant que vous ne l'avez pas ajouté avec votre téléphone."
+            "value": "%2$@ affiche vos tafs, Vous attend et le Registre. Il ne peut pas approuver tant que vous ne l'avez pas ajouté avec votre téléphone."
           }
         },
         "it": {
@@ -76771,7 +76771,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reçu de KIFF · vérifié sur cet %1$@"
+            "value": "Reçu de KIFF · vérifié sur %2$@"
           }
         },
         "it": {
@@ -76877,7 +76877,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vérification du reçu de KIFF sur cet %1$@…"
+            "value": "Vérification du reçu de KIFF sur %2$@…"
           }
         },
         "it": {
@@ -85233,7 +85233,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signé sur cet %1$@"
+            "value": "Signé sur %2$@"
           }
         },
         "it": {
@@ -92781,7 +92781,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les alertes sont désactivées sur cet %1$@"
+            "value": "Les alertes sont désactivées sur %2$@"
           }
         },
         "it": {
@@ -94212,7 +94212,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnecter un appareil met fin immédiatement à sa connexion sur ce compte. Pour déconnecter cet %1$@, utilisez Se déconnecter de KIFF."
+            "value": "Déconnecter un appareil met fin immédiatement à sa connexion sur ce compte. Pour déconnecter %2$@, utilisez Se déconnecter de KIFF."
           }
         },
         "it": {
@@ -97074,7 +97074,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La langue de cet %1$@"
+            "value": "La langue de %3$@"
           }
         },
         "it": {
@@ -97975,7 +97975,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ se déconnecte d'abord de KIFF, puis vous vous reconnectez dans votre navigateur."
+            "value": "%2$@ se déconnecte d'abord de KIFF, puis vous vous reconnectez dans votre navigateur."
           }
         },
         "it": {
@@ -98240,7 +98240,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ cesse de fonctionner pour votre compte jusqu'à ce que vous vous reconnectiez. Vos tafs continuent de travailler."
+            "value": "%2$@ cesse de fonctionner pour votre compte jusqu'à ce que vous vous reconnectiez. Vos tafs continuent de travailler."
           }
         },
         "it": {
@@ -98876,7 +98876,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les échéances des appels retenus, l'Activité, le Registre et ce qu'écrivent vos tafs utiliseraient le fuseau horaire de cet %1$@. Votre compte utilise actuellement %2$@."
+            "value": "Les échéances des appels retenus, l'Activité, le Registre et ce qu'écrivent vos tafs utiliseraient le fuseau horaire de %4$@. Votre compte utilise actuellement %2$@."
           }
         },
         "it": {
@@ -99141,7 +99141,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Utiliser celui de cet %1$@ : %2$@"
+            "value": "Utiliser celui de %4$@ : %2$@"
           }
         },
         "it": {
@@ -102745,7 +102745,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaque action d'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n'atteigne une app. Vos réponses sont signées sur cet %1$@."
+            "value": "Chaque action d'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n'atteigne une app. Vos réponses sont signées sur %2$@."
           }
         },
         "it": {
@@ -102904,7 +102904,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos tafs agissent sous des Cards KIFF. Approuvez cet %1$@ dans KIFF, et les Cards que vous avez émises s'affichent ici."
+            "value": "Vos tafs agissent sous des Cards KIFF. Approuvez %2$@ dans KIFF, et les Cards que vous avez émises s'affichent ici."
           }
         },
         "it": {
@@ -103010,7 +103010,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas encore déconnecté de KIFF : %1$@. Réessayez, ou déconnectez cet %2$@ depuis Appareils sur un autre appareil."
+            "value": "Pas encore déconnecté de KIFF : %1$@. Réessayez, ou déconnectez %3$@ depuis Appareils sur un autre appareil."
           }
         },
         "it": {
@@ -103169,7 +103169,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il vous demandera si cet %1$@ affiche %2$@."
+            "value": "Il vous demandera si %3$@ affiche %2$@."
           }
         },
         "it": {
@@ -103328,7 +103328,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet %1$@ ne peut pas conserver de clé, il ne peut donc pas être associé. Connectez-vous plutôt avec KIFF."
+            "value": "%2$@ ne peut pas conserver de clé, il ne peut donc pas être associé. Connectez-vous plutôt avec KIFF."
           }
         },
         "it": {
@@ -103381,7 +103381,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associer cet %1$@ à votre autre téléphone"
+            "value": "Associer %2$@ à votre autre téléphone"
           }
         },
         "it": {
@@ -104123,7 +104123,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En attente de votre navigateur… Vérifiez qu'il affiche %1$@, et n'approuvez qu'avec cet %2$@ en main."
+            "value": "En attente de votre navigateur… Vérifiez qu'il affiche %1$@, et n'approuvez qu'avec %3$@ en main."
           }
         },
         "it": {
@@ -120994,7 +120994,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La dictée n'est pas encore disponible sur cet %1$@. Ajoutez un clavier avec la dictée activée dans Réglages › Général › Clavier › Claviers, attendez le téléchargement de sa langue, puis réessayez."
+            "value": "La dictée n'est pas encore disponible sur %2$@. Ajoutez un clavier avec la dictée activée dans Réglages › Général › Clavier › Claviers, attendez le téléchargement de sa langue, puis réessayez."
           }
         },
         "it": {
