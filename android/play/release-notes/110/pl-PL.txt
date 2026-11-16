@@ -3,4 +3,4 @@
 - Przeglądy i pilne alerty mają własne kanały powiadomień.
 - Warunki i Prywatność otwierają się w języku aplikacji.
 - Na zablokowanym telefonie alert mówi tylko „Taf czeka na Ciebie”.
-- Nowe zadania: nieudane płatności kartą, wypłaty uzgodnione z bankiem, spóźnione paczki.
+- Na tablecie „Nabiera kształtu” jest obok rozmowy z Coachem, a udostępnione tafs są w „Udostępnione Tobie”.

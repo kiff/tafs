@@ -3,4 +3,4 @@
 - Briefings en dringende meldingen hebben hun eigen kanalen.
 - Voorwaarden en Privacy openen in de taal van de app.
 - Op een vergrendelde telefoon zegt een melding alleen "Een taf wacht op jou".
-- Nieuwe taken: mislukte kaartbetalingen, uitbetalingen afgestemd met de bank, late pakketten.
+- Op een tablet staat "Krijgt vorm" naast Coach, gedeelde tafs onder "Met je gedeeld".

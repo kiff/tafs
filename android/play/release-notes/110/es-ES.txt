@@ -3,4 +3,4 @@
 - Los resúmenes y las alertas urgentes tienen sus propios canales.
 - Las Condiciones y la Privacidad se abren en el idioma de la app.
 - Con el teléfono bloqueado, una alerta solo dice «Un taf te necesita».
-- Nuevos trabajos: pagos con tarjeta fallidos, pagos cuadrados con el banco, paquetes con retraso.
+- En tableta, «Tomando forma» va junto a Coach, y los tafs compartidos, en «Compartidos contigo».
