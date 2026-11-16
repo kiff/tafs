@@ -41,7 +41,11 @@ this page says what is there now and what each step adds.
 - **One model for the process.** The relay reads the app's own `AppModel`, which `TafsApplication` now owns
   (`TafsApplication.model`) and `MainActivity` draws. It isn't an activity's ViewModel any more, so closing the screen doesn't
   end it while the watch asks, and the session's hooks on the KIFF and tafs cloud clients are never two models'. Where the
-  owner left off is restored once per process (`restoredModel`), by the screen or by the relay with the app closed.
+  owner left off is restored once per process (`restoredModel`, `RestoreOnce`), by the screen or by the relay with the app
+  closed; restoring from the relay asks for nothing (no prompt: with no activity up, the fingerprint prompt answers no at
+  once). **Visible on the phone:** what the screen holds in memory now lasts while the process does, so backing out of the
+  app and opening it again comes back to it, where it used to start afresh (`SharedModelSourceTest`, and `SharedModelTest`
+  on an emulator).
 - **`tafs://open/needs-you`** opens Needs you on the phone (`AlertPayload.openedFromWatch`); any other `tafs://open/` link
   opens nothing.
 

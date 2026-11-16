@@ -1,6 +1,5 @@
 package bot.tafs.app
 
-import kotlinx.coroutines.sync.withLock
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import bot.tafs.app.billing.NoPlayStore
@@ -96,12 +95,11 @@ class TafsApplication : Application() {
     )
   }
 
-  private val restoring = kotlinx.coroutines.sync.Mutex()
-  @Volatile private var restored = false
+  private val restoring = bot.tafs.app.app.RestoreOnce { model.restore() }
 
   /** [model], with where the owner left off restored once for the process, whoever asks first: the screen or the watch. */
   suspend fun restoredModel(): bot.tafs.app.app.AppModel {
-    restoring.withLock { if (!restored) { model.restore(); restored = true } }
+    restoring.run()
     return model
   }
 
