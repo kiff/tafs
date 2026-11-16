@@ -15,8 +15,16 @@ extension TafsCloud {
                 case nextMove = "next_move"
             }
             init() {}
+            /// Every heading from the shared catalog (`brief.*`): for a brief tafs cloud sent no words for.
+            static var shared: Words {
+                var w = Words()
+                w.title = BriefShared.title; w.tab = w.title; w.decisions = BriefShared.decisions; w.done = BriefShared.done
+                w.nextMove = BriefShared.nextMove; w.recommends = BriefShared.recommends; w.meanwhile = BriefShared.meanwhile
+                w.evidence = BriefShared.evidence; w.urgent = BriefShared.urgent
+                return w
+            }
             init(from decoder: Decoder) throws {
-                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { self = .shared; return }
                 func text(_ k: CodingKeys) -> String { Brief.text(c, k) ?? "" }
                 // tafs cloud's words come first; a heading it didn't send is the shared catalog's (`brief.*`,
                 // the glossary's words in the person's language), so a brief never shows a blank heading.
@@ -221,7 +229,8 @@ extension TafsCloud {
             rest = ((try? c.decodeIfPresent(Counted.self, forKey: .rest)) ?? nil).flatMap { $0.words.isEmpty ? nil : $0 }
             credits = ((try? c.decodeIfPresent(CreditWords.self, forKey: .credits)) ?? nil)?.words.flatMap { $0.isEmpty ? nil : $0 }
             labels = (Self.list(c, .labels) as [Label]).filter(\.usable)
-            words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? Words()
+            // No `words` sent at all: every heading is the shared catalog's, as for one left out.
+            words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? .shared
         }
 
         /// A line of text, trimmed; none when absent, blank or of another shape.
