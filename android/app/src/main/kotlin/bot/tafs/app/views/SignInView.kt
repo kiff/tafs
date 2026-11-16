@@ -70,8 +70,13 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   var copied by remember { mutableStateOf(false) }
   // Bumped by "Try again": the sign-in begins over with a new code.
   var attempt by remember { mutableIntStateOf(0) }
+  // A tablet shows both ways at once, as the owner's mockup does (16 Nov): the phone's QR from the start, and KIFF's code once
+  // the person taps Continue. A phone signs in with KIFF only. One at a time, so a sign-in is never started twice.
+  val split = offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)
   // Signing in with your other phone instead: its QR, whether the last one expired, and why it stopped.
-  var pairing by remember { mutableStateOf(false) }
+  var pairing by remember { mutableStateOf(split) }
+  // Signed in, either way: "You're connected." until the person taps Let's go.
+  var connected by remember { mutableStateOf(false) }
   var offer by remember { mutableStateOf<bot.tafs.app.kiff.PairOffer?>(null) }
   var renewed by remember { mutableStateOf(false) }
   var pairProblem by remember { mutableStateOf<String?>(null) }
@@ -85,7 +90,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
 
   LaunchedEffect(attempt, pairing) {
     // While the other phone adds this one, the KIFF sign-in waits: its code isn't asked about.
-    if (pairing) return@LaunchedEffect
+    if (pairing || connected) return@LaunchedEffect
     problem = null
     start = null
     copied = false
@@ -94,7 +99,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       val s = model.startSignIn(fresh = attempt > 0)
       start = s
       model.finishSignIn(s)
-      close()
+      connected = true
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -120,7 +125,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       offer = o
       try {
         model.finishPairSignIn(o)
-        close()
+        connected = true
         return@LaunchedEffect
       } catch (e: CancellationException) {
         throw e
@@ -148,10 +153,12 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
-        if (pairing) {
-          PairSignInContent(offer, renewed, pairProblem, onTryAgain = { renewed = false; pairAttempt += 1 }, onKiff = { pairing = false })
+        if (connected) {
+          SignedInCelebration(onGo = close)
           return@Column
         }
+        // KIFF's way: its code, Open KIFF and the wait. A phone shows only this; a tablet shows it as its left half.
+        val kiff: @Composable () -> Unit = {
         Text(Words.SignIn.withKiff, style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
         Text(
           Words.SignIn.lead(bot.tafs.app.model.ThisDevice.word),
@@ -201,10 +208,35 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           Text(it, style = scaled(14, color = Theme.no))
           OutlineButton(Words.Common.tryAgain, { attempt += 1 }, Modifier.fillMaxWidth())
         }
-        // On a tablet only: the person's phone adds it, with no browser. A phone always signs in with KIFF itself, so it isn't
-        // offered being added from another phone (the owner, 16 Nov), as on the iPhone; a tablet keeps it, as the iPad does.
-        if (offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)) {
-          OutlineButton(Words.SignIn.pairStart, { model.endSignIn(); renewed = false; pairing = true }, Modifier.fillMaxWidth().testTag(PAIR_START))
+        }
+        if (split) {
+          // A tablet: both halves side by side. The person's phone adds it from the right half, with no browser; KIFF's code is
+          // made only once they tap Continue on the left, and going back to the phone forgets that code. A phone always signs in
+          // with KIFF itself, so it isn't offered being added from another phone (the owner, 16 Nov), as on the iPhone.
+          Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              if (pairing) {
+                Text(Words.SignIn.withKiff, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+                Text(Words.SignIn.lead(bot.tafs.app.model.ThisDevice.word), style = scaled(15, color = Theme.soft))
+                PrimaryButton(Words.Common.`continue`, { pairing = false }, Modifier.testTag(KIFF_CONTINUE))
+              } else {
+                kiff()
+              }
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+              if (pairing) {
+                PairSignInContent(
+                  offer, renewed, pairProblem, onTryAgain = { renewed = false; pairAttempt += 1 }, onKiff = null,
+                  title = Words.SignIn.withPhone, lead = Words.SignIn.scanWithTafs,
+                )
+              } else {
+                Text(Words.SignIn.withPhone, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+                OutlineButton(Words.SignIn.withPhone, { model.endSignIn(); renewed = false; pairing = true }, Modifier.fillMaxWidth().testTag(PAIR_START))
+              }
+            }
+          }
+        } else {
+          kiff()
         }
 
         Text(
@@ -226,6 +258,26 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
 }
 
 internal const val PAIR_START = "sign_in.pair.start"
+internal const val KIFF_CONTINUE = "sign_in.kiff.continue"
+internal const val SIGNED_IN = "sign_in.connected"
+
+/**
+ * Signed in, either way: the owner's celebration (16 Nov), not a sheet that just closes. The mascot, which carries no words
+ * (rule 14), "You're connected.", the line under it, and Let's go, which closes the sheet onto the app.
+ */
+@Composable
+internal fun SignedInCelebration(onGo: () -> Unit) {
+  Column(
+    Modifier.fillMaxWidth().padding(vertical = 24.dp).testTag(SIGNED_IN),
+    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+  ) {
+    bot.tafs.app.design.Mascot(size = 120.dp)
+    Text(Words.SignIn.connected, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+    Text(Words.SignIn.connectedLine, style = scaled(16, color = Theme.soft))
+    PrimaryButton(Words.SignIn.letsGo, onGo, Modifier.fillMaxWidth())
+  }
+}
 
 /** Whether the sign-in offers being added from the person's phone: on a tablet only, never on a phone. */
 internal fun offersPairSignIn(tablet: Boolean): Boolean = tablet

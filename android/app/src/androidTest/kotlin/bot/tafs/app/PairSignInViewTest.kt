@@ -1,6 +1,8 @@
 package bot.tafs.app
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -8,6 +10,8 @@ import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.kiff.PairOffer
 import bot.tafs.app.views.PAIR_QR
 import bot.tafs.app.views.PairSignInContent
+import bot.tafs.app.views.SIGNED_IN
+import bot.tafs.app.views.SignedInCelebration
 import java.security.KeyPairGenerator
 import java.security.spec.ECGenParameterSpec
 import java.time.Instant
@@ -48,5 +52,31 @@ class PairSignInViewTest {
     rule.onNodeWithText("Sign in with KIFF").performClick()
     rule.waitForIdle()
     assertEquals(1, back)
+  }
+
+  // A tablet's right half (the owner's mockup, 16 Nov): its own title and line, the QR at once, and no way back to KIFF's,
+  // which is the left half beside it.
+  @Test fun aTabletsPhoneHalfHasItsTitleTheQrAndNoKiffLink() {
+    rule.setShown {
+      TafsTheme {
+        PairSignInContent(offer, renewed = false, problem = null, onTryAgain = {}, onKiff = null, title = "Sign in with your phone", lead = "Scan with tafs")
+      }
+    }
+    rule.onNodeWithText("Sign in with your phone").assertIsDisplayed()
+    rule.onNodeWithText("Scan with tafs").assertIsDisplayed()
+    rule.onNodeWithTag(PAIR_QR).assertIsDisplayed()
+    rule.onAllNodesWithText("Sign in with KIFF").assertCountEquals(0)
+  }
+
+  // Signed in, either way: the celebration, not a sheet that just closes; Let's go goes on to the app.
+  @Test fun signedInSaysYoureConnectedAndLetsGoGoesOn() {
+    var went = 0
+    rule.setShown { TafsTheme { SignedInCelebration(onGo = { went += 1 }) } }
+    rule.onNodeWithTag(SIGNED_IN).assertIsDisplayed()
+    rule.onNodeWithText("You're connected.").assertIsDisplayed()
+    rule.onNodeWithText("Let's build great things together.").assertIsDisplayed()
+    rule.onNodeWithText("Let's go").performClick()
+    rule.waitForIdle()
+    assertEquals(1, went)
   }
 }

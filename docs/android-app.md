@@ -1323,7 +1323,12 @@ A new tablet can be added from a phone that's already signed in, with no browser
 the sign-in sheet's **Sign in with your other phone** (KIFF's pairing contract for phones; the
 approving side is [Pairing a computer](#pairing-a-computer)). A phone isn't offered it: it always
 signs in with KIFF itself, so being added from another phone is only for a tablet, as on the iPad
-(`offersPairSignIn`, from `ThisDevice.tablet`).
+(`offersPairSignIn`, from `ThisDevice.tablet`). On a tablet the sheet is the owner's mockup (16 Nov), two halves side by
+side: **Sign in with KIFF** and Continue on the left, **Sign in with your phone** on the right with its QR from the start
+and "Scan with tafs". KIFF's code is made only once Continue is tapped, which stops the QR; "Sign in with your phone"
+brings the QR back and forgets that code, so one sign-in runs at a time. Signed in either way, the sheet shows
+**You're connected.**, "Let's build great things together." and **Let's go**, under the mascot (no words in the
+image), before it closes onto the app (`SignedInCelebration`).
 
 1. **The offer** (`kiff/Pairing.kt`, `PairOffer.make`): the same `kiff.pair.v1` QR as a computer, with
    `platform: "android"`, `kind: "keystore"`, `device_kind` (`android_phone` or `android_tablet`),
