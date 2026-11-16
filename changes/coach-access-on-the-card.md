@@ -1,0 +1,1 @@
+- **Coach says only what a taf will do; the card says what a sign-in allows (tafs cloud).** Coach no longer describes an app's sign-in, neither "read-only" nor "wider": that's planque's data, which every approval and sign-in card already carries for any app (`wider.words`). The skill holds no app, scope or access wording (`connect-an-app@29`, docs/coach.md).
