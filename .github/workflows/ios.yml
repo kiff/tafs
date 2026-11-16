@@ -107,7 +107,7 @@ jobs:
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           # What the watch app is built from: its own folders, the phone's words it
           # compiles, the project file. And this workflow.
-          watch='^(ios/(TafsWatch|TafsWatchTests|Shared)/|ios/project\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
+          watch='^(ios/(TafsWatch|TafsWatchTests|Shared)/|ios/(project|watch-embed)\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
           case "$EVENT" in
             workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "watch=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
             push) case "$REF" in
@@ -322,6 +322,18 @@ jobs:
             -project Tafs.xcodeproj -scheme TafsWatch \
             -destination "id=$WATCH_ID" \
             CODE_SIGNING_ALLOWED=NO
+
+      # The TestFlight build embeds the watch app (ios/watch-embed.yml), and no other build
+      # does: checked in the generated project, without building the phone app here.
+      - name: The watch app is embedded only for TestFlight
+        run: |
+          cd ios
+          embed='dstPath = "$(CONTENTS_FOLDER_PATH)/Watch"'
+          TAFS_EMBED_WATCH=YES xcodegen generate --quiet
+          grep -qF "$embed" Tafs.xcodeproj/project.pbxproj || { echo "::error::TAFS_EMBED_WATCH=YES didn't embed the watch app"; exit 1; }
+          xcodegen generate --quiet
+          if grep -qF "$embed" Tafs.xcodeproj/project.pbxproj; then echo "::error::the watch app is embedded without TAFS_EMBED_WATCH"; exit 1; fi
+          echo "Embedded for TestFlight only."
 
   # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad, since the
   # iPhone's list pushes a taf instead. A job of its own, beside test, so neither runs past
@@ -688,7 +700,10 @@ jobs:
         with:
           persist-credentials: false
 
+      # With the watch app embedded (ios/watch-embed.yml): only this build carries it.
       - name: Generate the Xcode project
+        env:
+          TAFS_EMBED_WATCH: "YES"
         run: |
           brew install xcodegen
           cd ios && xcodegen generate
@@ -759,7 +774,8 @@ jobs:
           ruby ios/scripts/asc-profiles.rb \
             bot.tafs.app+push+timesensitive+associateddomains="tafs App Store CI" \
             bot.tafs.app.widgets="tafs widgets App Store CI" \
-            bot.tafs.app.notify="tafs notify App Store CI"
+            bot.tafs.app.notify="tafs notify App Store CI" \
+            bot.tafs.app.watchkitapp="tafs watch App Store CI"
 
       - name: Archive
         run: |
@@ -774,6 +790,7 @@ jobs:
             TAFS_PROFILE_APP="tafs App Store CI" \
             TAFS_PROFILE_WIDGETS="tafs widgets App Store CI" \
             TAFS_PROFILE_NOTIFY="tafs notify App Store CI" \
+            TAFS_PROFILE_WATCH="tafs watch App Store CI" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/signing.keychain-db" \
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
@@ -794,6 +811,7 @@ jobs:
               <key>bot.tafs.app</key><string>tafs App Store CI</string>
               <key>bot.tafs.app.widgets</key><string>tafs widgets App Store CI</string>
               <key>bot.tafs.app.notify</key><string>tafs notify App Store CI</string>
+              <key>bot.tafs.app.watchkitapp</key><string>tafs watch App Store CI</string>
             </dict>
             <key>uploadSymbols</key><true/>
           </dict>

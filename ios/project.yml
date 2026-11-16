@@ -1,4 +1,9 @@
 name: Tafs
+# The watch app embedded in the iPhone app: only for TestFlight (the testflight job sets
+# TAFS_EMBED_WATCH), see watch-embed.yml.
+include:
+  - path: watch-embed.yml
+    enable: ${TAFS_EMBED_WATCH}
 options:
   bundleIdPrefix: bot.tafs
   deploymentTarget:
@@ -232,6 +237,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.watchkitapp
         TARGETED_DEVICE_FAMILY: "4"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTS_MACCATALYST: NO
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WATCH)
   TafsWatchTests:
