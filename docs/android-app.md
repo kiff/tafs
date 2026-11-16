@@ -161,9 +161,11 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. An alert
   with `brief_kind` (`brief`: "Your 08:00 brief is ready.", or `urgent`: one that came at once, a held call's with
   `decision: hold:<id>`) opens where its `open` says (`brief` opens the brief, a held call's Needs you), sounds as its
-  `level` says (the existing channels: a held call's on Needs you's, the brief's quiet one), and with the app open reads the
-  brief again; one brief's alert replaces the last. An earlier draft's `kind: brief|urgent` reads the same. Channels of
-  their own (Briefs, Urgent) are a follow-up with their words.
+  `level` says, and with the app open reads the brief again; one brief's alert replaces the last. An earlier draft's
+  `kind: brief|urgent` reads the same. **Channels** (`AlertChannel`), each set apart in the phone's settings: a held call
+  stays on Needs you's, interrupting, even when tafs cloud marks it urgent, so the settings an owner gave it hold (Android
+  never carries a channel's settings over); an urgent alert that isn't a held call goes on **Urgent**, interrupting, with
+  Needs you's sound; Your brief's on **Briefs**, quiet; anything else quiet on Other alerts.
 - **A mission's log:** Done's Evidence opens the same `MissionLogView` the tafs list's mission row opens (A mission's log,
   above), by the log id Done carries (`log`) under the mission's name. Ask Coach there opens Coach with the mission's name in
   the message box; nothing is sent.

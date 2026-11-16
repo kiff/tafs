@@ -1506,9 +1506,12 @@
     <string name="people_title">Personnes et groupes</string>
     <string name="people_uses">Utilise %1$s</string>
     <string name="people_uses_none">N\'utilise encore aucun taf</string>
+    <string name="push_channel_briefs">Briefings</string>
+    <string name="push_channel_briefs_description">Votre briefing aux heures prévues, sans son.</string>
     <string name="push_channel_holds_description">Un appel est retenu en attente de votre réponse. Rien n\'est envoyé tant que vous ne l\'approuvez pas.</string>
     <string name="push_channel_other">Autres alertes</string>
     <string name="push_channel_other_description">Les demandes de tâches et leurs réponses, sans son.</string>
+    <string name="push_channel_urgent_description">Ce qui ne peut pas attendre votre prochain briefing, avec son.</string>
     <string name="push_open_needs_you">Ouvrez Vous attend pour répondre.</string>
     <string name="push_open_taf">Ouvrez le taf pour voir.</string>
     <string name="push_open_usage">Ouvrez Forfait et utilisation pour voir.</string>

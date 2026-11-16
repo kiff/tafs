@@ -1572,9 +1572,12 @@ object Words {
   }
   object Push {
     object Channel {
+      val briefs: String get() = Res.s(R.string.push_channel_briefs)
+      val briefsDescription: String get() = Res.s(R.string.push_channel_briefs_description)
       val holdsDescription: String get() = Res.s(R.string.push_channel_holds_description)
       val other: String get() = Res.s(R.string.push_channel_other)
       val otherDescription: String get() = Res.s(R.string.push_channel_other_description)
+      val urgentDescription: String get() = Res.s(R.string.push_channel_urgent_description)
     }
     val openNeedsYou: String get() = Res.s(R.string.push_open_needs_you)
     val openTaf: String get() = Res.s(R.string.push_open_taf)
