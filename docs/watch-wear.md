@@ -62,8 +62,9 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
 ```
 
 - **The tile** (`NeedsYouTileService`): Needs you's count, as the watch app last read it, under "Needs you"; tapping it opens
-  the watch app, which reads the phone again. It shows the count only while the watch has a screen lock and is unlocked.
-  Locked (Wear OS locks a watch taken off the wrist) or with no lock, it shows tafs's name, and the count is forgotten. The
+  the watch app, which reads the phone again. It shows the count only while the watch has a screen lock and is unlocked,
+  decided at each draw the system asks for, not the instant the lock changes. Found locked (Wear OS locks a watch taken off
+  the wrist) or with no lock at a draw, it shows tafs's name, and the count is forgotten. The
   count and its time are **the only things the watch writes to disk** (`TileCount`, preferences `tafs.tile`); the phone saying
   it's signed out clears them too (`TileCountTest`).
 
