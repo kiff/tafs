@@ -47,6 +47,7 @@
   "coach.away": "Pendant votre absence",
   "coach.back_width": "Revenir à sa largeur",
   "coach.card_answer_not_sent": "Votre réponse n'a pas été envoyée. {why}",
+  "coach.card_draft_not_read": "Le brouillon de KIFF pour cette Card n'a pas pu être lu. {why}",
   "coach.card_of": "Card de {owner}",
   "coach.chats.archive": "Archiver",
   "coach.chats.archive_body": "Elle quitte cette liste sur tous vos appareils. Vous la retrouverez dans Archivées, où vous pourrez l'ouvrir ou la restaurer.",

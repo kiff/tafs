@@ -630,6 +630,7 @@
     <string name="coach_away">Terwijl je weg was</string>
     <string name="coach_back_width">Terug naar de eigen breedte</string>
     <string name="coach_card_answer_not_sent">Je antwoord is niet verzonden. %1$s</string>
+    <string name="coach_card_draft_not_read">Het concept van KIFF voor deze Card kon niet worden gelezen. %1$s</string>
     <string name="coach_card_of">Card van %1$s</string>
     <string name="coach_chats_archive">Archiveren</string>
     <string name="coach_chats_archive_body">Het verdwijnt uit deze lijst op al je apparaten. Je vindt het onder Gearchiveerd, waar je het kunt openen of terugzetten.</string>

@@ -1034,7 +1034,10 @@ draws only those words and Its Card, never the connection's text again.
 phone's planque read proof (the device's key, no prompt) and `?can=tools_and_cards,key_and_cards,signs`, so tafs
 cloud marks each waiting approval card with `signs: {card, words?}` (read leniently: any other shape is no mark).
 - `card: true`: Its Card, KIFF's own lines, stays on screen until the fingerprint, connected or not, and
-  Approve waits until KIFF's draft is read.
+  Approve waits until KIFF's draft is read. While it isn't, the draft is read again (as planque's grants are,
+  `CARD_GRANT_READ_DELAYS`: 3 s apart for a minute, then 10 s, ten minutes in all), and a read KIFF refused or
+  didn't answer says so on the card in KIFF's reason, with **Try again** (`AppModel.loadDraft`,
+  `AppState.draftErrors`, `coach.card_draft_not_read`). It used to stay on "Reading KIFF's words…".
 - `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
   under its own title as if signed now; with no `words`, not drawn.
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.

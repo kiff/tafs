@@ -937,6 +937,22 @@ class CoachStartTest {
     assertEquals(setOf("g2"), AppModel.grantsCardsWaitOn(cards, listOf(bot.tafs.app.kiff.Grant(id = "g1"))))
   }
 
+  // Which drafts a card waits on: an unanswered approval card's, while KIFF hasn't given it to this phone.
+  @Test fun theDraftsCardsWaitOn() {
+    val card = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"card","grant":"g1","draft":"dr_1","title":"Its Card"}""")
+    val signIn = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"sign_in","id":"again","grant":"g2","draft":"dr_9","title":"Sign in"}""")
+    val shown = { c: SetupComponent, answer: bot.tafs.app.kiff.CardAnswer? -> bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", c, answer) }
+    val cards = listOf(
+      shown(card, null),
+      shown(card.copy(id = "other", draft = "dr_2"), null),
+      shown(card.copy(id = "done", draft = "dr_3"), bot.tafs.app.kiff.CardAnswer(words = "Approved")),
+      shown(card.copy(id = "none", draft = null), null),
+      shown(signIn, null),
+    )
+    assertEquals(setOf("dr_1", "dr_2"), AppModel.draftsCardsWaitOn(cards, emptySet()))
+    assertEquals(setOf("dr_2"), AppModel.draftsCardsWaitOn(cards, setOf("dr_1")))
+  }
+
   // Review of Android 96: a grant was marked followed on a read planque refused, so no later thread read followed it.
   @Test fun aGrantFirstReadWhilePlanqueRefusedIsStillReadAgainLater() = runTest {
     reads()
