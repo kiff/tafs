@@ -1,0 +1,1 @@
+- New in Devices: “Add a passkey on this phone”. With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone. Adding one takes your fingerprint, and only an account's owners and admins can.

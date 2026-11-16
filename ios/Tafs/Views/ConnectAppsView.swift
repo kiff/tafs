@@ -18,6 +18,8 @@ struct ConnectAppsView: View {
     /// The app waiting for its taf to be chosen.
     @State private var choosing: TafsCloud.ConnectApps.App?
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// `-screen connect-app`: the app with the most connections, opened from the list, for the reference set.
+    @State private var openingApp = Screenshots.enabled && Screenshots.screen == "connect-app"
     /// On an iPad's full width, a table: App, How it connects, Whose, Status.
     private var table: Bool { sizeClass == .regular }
 
@@ -63,6 +65,11 @@ struct ConnectAppsView: View {
         // The app's cream, not the list's grey, as every screen in the detail pane.
         .screenBackground()
         .navigationTitle(Self.title)
+        .navigationDestination(isPresented: $openingApp) {
+            if let app = model.connectApps?.apps.max(by: { model.connections(of: $0).count < model.connections(of: $1).count }) {
+                AppConnectionsView(app: app)
+            }
+        }
         .searchable(text: $query)
         .task(id: query) {
             // As the owner types, a moment after the last key.
@@ -72,7 +79,7 @@ struct ConnectAppsView: View {
         }
         .confirmationDialog(Words.Connect.whichTaf, isPresented: Binding(get: { choosing != nil }, set: { if !$0 { choosing = nil } }),
                             titleVisibility: .visible, presenting: choosing) { app in
-            ForEach(model.connectableTafs) { t in
+            ForEach(model.connectableTafs(for: app)) { t in
                 Button(t.name) { start(app, for: t.id) }
             }
         } message: { app in
@@ -104,7 +111,8 @@ struct ConnectAppsView: View {
     /// it, and Disconnect); the rest have a compact Connect.
     @ViewBuilder
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
-        let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf))
+        let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf),
+                              removing: model.connections(of: app).contains { model.removingGrants.contains($0.id) })
         // A connected app always opens its detail, never a tap that does nothing: there, the connections this
         // device reads, or why it reads none.
         if app.connected {
@@ -127,7 +135,7 @@ struct ConnectAppsView: View {
                         Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
                     } else if let status = said.status {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(app.connected ? Theme.ok : Theme.amberText)
+                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(said.removing ? Theme.soft : app.connected ? Theme.ok : Theme.amberText)
                             if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
                         }
                     }
@@ -192,18 +200,27 @@ struct ConnectAppsView: View {
                 .accessibilityLabel(Words.Connect.Status.connected)
         } else {
             Button { connect(app) } label: {
-                Text(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
+                // No taf needs it: Coach sets one up, never a guess.
+                Text(route(app) == .askCoach ? Words.Coach.ask : app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
             }
                 .buttonStyle(OutlineButtonStyle())
                 .fixedSize(horizontal: true, vertical: false)
-                .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
+                .disabled(starting != nil || route(app) == .noTaf)
         }
     }
 
-    /// The taf first: the one this was opened from, the only one there is, or the owner's pick.
+    /// The taf first: the one this was opened from, else the person's pick (`ConnectRow.connectFor`).
     private func connect(_ app: TafsCloud.ConnectApps.App) {
-        let tafs = model.connectableTafs
-        if let taf { start(app, for: taf) } else if tafs.count == 1, let only = tafs.first { start(app, for: only.id) } else { choosing = app }
+        switch route(app) {
+        case .taf(let id): start(app, for: id)
+        case .ask: choosing = app
+        case .askCoach: model.openCoach()
+        case .noTaf: break
+        }
+    }
+
+    private func route(_ app: TafsCloud.ConnectApps.App) -> ConnectRow.ConnectFor {
+        ConnectRow.connectFor(openedFrom: taf, connectable: model.connectableTafs(for: app), needed: app.neededBy != nil)
     }
 
     private func start(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) {
@@ -267,12 +284,17 @@ struct ConnectRow: Equatable {
     let status: String?
     let usedBy: String?
     let line: String?
+    /// One of its connections is being removed, from Face ID until planque answered and the list was read
+    /// again: it says so where "Connected" would be, as Android does.
+    let removing: Bool
 
     /// `usedHere`: the tafs this phone's planque read names, until tafs cloud sends `used_by`.
-    init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = []) {
+    init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = [], removing: Bool = false) {
         how = app.takesKey ? Words.Connect.How.key : Words.Connect.How.signIn
         whose = app.whose
-        status = app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
+        self.removing = removing
+        status = removing ? Words.Connect.disconnecting
+            : app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
         let names = app.usedBy ?? usedHere
         usedBy = app.yours && !names.isEmpty ? Words.Connect.Apps.usedBy(tafs: Words.list(names)) : nil
         line = app.line
@@ -284,7 +306,8 @@ struct ConnectRow: Equatable {
 
     /// The phone's second line: an app to set up says tafs cloud's words for it; else tafs cloud's
     /// line, as sent; else how, whose, where it stands and who uses it.
-    var second: String { setup ?? line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
+    /// While a removal runs, the status goes in place of tafs cloud's line, which still says it's connected.
+    var second: String { setup ?? (removing ? nil : line) ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
 
     /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
     /// An app under Yours isn't under Discover again in another of its catalog forms: Stripe connected
@@ -314,6 +337,32 @@ struct ConnectRow: Equatable {
     /// connect, the list wasn't opened from a taf, and no taf can have them. Never over Yours.
     static func saysMakeATaf(discover: [TafsCloud.ConnectApps.App], forTaf: Bool, connectable: [Taf]) -> Bool {
         !discover.isEmpty && !forTaf && connectable.isEmpty
+    }
+
+    /// Whom a Connect is for.
+    enum ConnectFor: Equatable {
+        /// The taf the list was opened from.
+        case taf(UUID)
+        /// The person picks, in "Which taf is this for?".
+        case ask
+        /// No taf needs it: Coach sets one up.
+        case askCoach
+        /// No taf can have it: Connect is off, and "Make one first" says why.
+        case noTaf
+    }
+
+    /// A connection goes only to a taf the person named, among those that need the app when tafs cloud says
+    /// (`needed_by`, so `needed`): the taf the list was opened from, else their pick, asked even when one taf
+    /// is all there is. With `needed_by`, none, or a taf opened from that doesn't need it, is Ask Coach. Without
+    /// it (a tafs cloud before), every taf you manage. Never a guess: a guessed taf takes an app its Card never
+    /// asked for (Stripe under a Gmail taf).
+    static func connectFor(openedFrom taf: UUID?, connectable: [Taf], needed: Bool = false) -> ConnectFor {
+        guard needed else {
+            if let taf { return .taf(taf) }
+            return connectable.isEmpty ? .noTaf : .ask
+        }
+        if let taf { return connectable.contains { $0.id == taf } ? .taf(taf) : .askCoach }
+        return connectable.isEmpty ? .askCoach : .ask
     }
 }
 
@@ -553,6 +602,7 @@ struct AppConnectionsView: View {
                         Text(health.words).scaledFont(13).foregroundColor(health.ok ? Theme.dim : Theme.amberText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    misplacedNote(g)
                 }
                 .frame(minHeight: 44, alignment: .leading)
             }
@@ -562,11 +612,22 @@ struct AppConnectionsView: View {
         }
     }
 
+    /// A connection made under a taf that doesn't need the app (tafs cloud's `misplaced`): said, so it can be
+    /// removed (Remove access, here or in its detail), never kept without a word.
+    @ViewBuilder private func misplacedNote(_ g: PlanqueClient.Grant) -> some View {
+        if let wrong = app.misplaced.first(where: { $0.grant == g.id }) {
+            Text(Words.Connect.misplaced(taf: wrong.name, app: app.displayName)).scaledFont(13).foregroundColor(Theme.amberText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.misplaced." + g.id)
+        }
+    }
+
     /// A connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
     private func row(_ g: PlanqueClient.Grant) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 lines(g)
+                misplacedNote(g)
                 if model.canManageCards, g.signsInThroughProvider {
                     // A provider's connection isn't signed in again in place: said before any Face ID.
                     Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
@@ -651,7 +712,8 @@ struct AppConnectionsView: View {
         cancelling = nil
         busy = g.id
         Task {
-            if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
+            // Removing reads the list again itself.
+            _ = await model.disconnect(grantID: g.id)
             busy = nil
         }
     }
@@ -930,7 +992,6 @@ struct ConnectApprovalSheet: View {
             defer { busy = false }
             if await model.disconnect(grantID: grant.id) {
                 last4 = ""
-                await model.loadConnectApps()
                 dismiss()
             }
         }
@@ -1119,7 +1180,6 @@ struct ConnectionDetailView: View {
         busy = true
         Task {
             if await model.disconnect(grantID: grantID) {
-                await model.loadConnectApps()
                 dismiss()
             }
             busy = false

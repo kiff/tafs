@@ -51,6 +51,7 @@
   "needs_you.over_total": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Jemand, der die Cards verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab.",
   "needs_you.over_total_manager": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Zusatzspielraum lässt nur diesen Aufruf durch.",
   "needs_you.prompt.answer": "{summary} beantworten",
+  "needs_you.prompt.answer_mac": "{summary} zu beantworten",
   "needs_you.prompt.did_not_happen": "Angeben, dass es nicht passiert ist: {title}",
   "needs_you.prompt.happened": "Angeben, dass es passiert ist: {title}",
   "needs_you.refuse": "Ablehnen",
@@ -78,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Eine Benachrichtigung erreicht dich auf diesem {device}, auch wenn tafs geschlossen ist.",
   "needs_you.your_step.ended": "Dieser Schritt wurde schon beantwortet oder ist beendet.",
   "needs_you.your_step.not_answered": "Deine Antwort ist nicht durchgegangen. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Nicht beantwortet: Es wurde nicht bestätigt."
+  "needs_you.your_step.not_answered_unconfirmed": "Nicht beantwortet: Es wurde nicht bestätigt.",
+  "needs_you.your_step.set_up_hello": "Richte Windows Hello ein (eine PIN reicht), um hier zu antworten, oder antworte auf deinem Telefon."
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The product's name, the same in every language. The watch's other words come from app/strings (docs/watch-wear.md). -->
+    <string name="app_name" translatable="false">tafs</string>
+</resources>

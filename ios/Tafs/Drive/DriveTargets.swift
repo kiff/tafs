@@ -277,10 +277,22 @@ struct DrivablePlainButtonStyle: PrimitiveButtonStyle {
         DriveButton(inner: PlainInner()).makeBody(configuration: configuration)
     }
 
-    /// The plain look: the label as it is, a little faded while pressed.
+    /// The plain look: the label as it is, a little faded while pressed, and on the Mac a little
+    /// less under the pointer (`Hover`).
     struct PlainInner: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
-            configuration.label.opacity(configuration.isPressed ? 0.6 : 1)
+            Label(configuration: configuration)
+        }
+
+        private struct Label: View {
+            let configuration: Configuration
+            @State private var hovered = false
+
+            var body: some View {
+                configuration.label
+                    .opacity(Hover.plainOpacity(pressed: configuration.isPressed, hovered: hovered))
+                    .onHover { hovered = Hover.shows($0) }
+            }
         }
     }
 }

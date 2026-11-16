@@ -1,0 +1,2 @@
+- „Für welchen taf ist das?“ zeigt nur die tafs, die die App nutzen. Eine App, die keiner deiner tafs nutzt, bietet „Coach fragen“ an.
+- Eine Verbindung für einen taf, der die App nicht nutzt, sagt das und lässt sich in ihrer Zeile beenden.

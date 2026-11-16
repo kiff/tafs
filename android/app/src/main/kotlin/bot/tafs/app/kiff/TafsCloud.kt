@@ -615,8 +615,19 @@ class TafsCloud(
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String, version: Int? = null): KnobWire = get("/v1/tafs/${escaped(id)}/knob" + (version?.let { "?version=$it" } ?: ""))
 
-  /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
-  suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
+  /**
+   * Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval.
+   * With [proof], this phone's signed grants read, tafs cloud decides `needed_by` as the list did; a taf not in it is `409 not_needed`.
+   */
+  suspend fun startConnect(entry: String, taf: String, proof: String? = null): ConnectStart {
+    val payload = KiffClient.json.encodeToString(
+      kotlinx.serialization.json.JsonObject.serializer(),
+      kotlinx.serialization.json.JsonObject(mapOf("taf" to kotlinx.serialization.json.JsonPrimitive(taf))),
+    ).toByteArray()
+    return KiffClient.json.decodeFromString(
+      String(send("POST", "/v1/connect/apps/${escaped(entry)}", payload, proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())),
+    )
+  }
 
   /**
    * Connect apps: the catalog, filtered by [q] when given. With [proof], this phone's signed grants read, tafs cloud also lists each

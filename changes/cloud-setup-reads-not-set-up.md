@@ -1,0 +1,1 @@
+- **tafs cloud:** when Coach's own reads of an app weren't set up after a connection that worked, the chat says so ("Coach's reads of Stripe couldn't be set up", "Stripe is connected…", "Next: ask Coach to go on without reading Stripe first.") in the person's language, where it said Coach couldn't connect and to sign in again ([chat.md](../docs/chat.md)).

@@ -1,4 +1,5 @@
 import { checkMisfitSeen } from "./checkseen.js";
+import { rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -53,9 +54,10 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
+import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
@@ -110,9 +112,9 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
- *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
+ *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve; 409 not_needed for a taf that doesn't use the app
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
- *   POST /v1/connect/grants/{grant}/check  Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code (docs/api.md)
+ *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -3254,7 +3256,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
   if (!grants) return;
   const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
-  const flags = { keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on", toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on" };
+  const flags = readFlags();
   const lang = langOf(event);
   for (const c of waiting) {
     const card = c.component as { grant: string; draft?: unknown };
@@ -3264,7 +3266,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     if (!step) continue;
     // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
     // alone takes the key KIFF names for it, or nothing is said of the key.
-    const signsCard = step !== "connect" && !!draft;
+    const signsCard = checkedOnReadFor(grant, draft, can);
     const info = signsCard
       ? await within(draftInfo(bearer(event), draft!, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
       : undefined;
@@ -3327,7 +3329,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
     await release();
     return undefined;
   }
-  const out = await within(checkDraft({ grant: ask.grant, draft: ask.draft, shown_draft: ask.version }, checkContext(event, me, deps), grants), PRECHECK_MS).catch(() => undefined);
+  const out = await within(checkDraft({ grant: ask.grant, draft: ask.draft, shown_draft: ask.version }, withRules(checkContext(event, me, deps), me, c.session, deps), grants), PRECHECK_MS).catch(() => undefined);
   if (!out || out.outcome === "read_again") {
     // Not read in time, or not read whole: the next read checks again.
     await release();
@@ -3823,11 +3825,41 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(grant) || !/^[A-Za-z0-9_.:-]{1,128}$/.test(draft) || !shown || shown.length > 256) {
     throw new HTTPError(400, "send the grant, its Card draft and the draft's version you read");
   }
-  const out = await checkDraft({ grant, draft, shown_draft: shown }, checkContext(event, me, deps)).catch(approvalFailure);
+  // What the phone can sign, as it says on the chat's read (`can`), so the step is the one its card would take.
+  const can = (Array.isArray(body.can) ? body.can : str(body.can).split(",")).map((x) => str(x).trim()).filter(Boolean);
+  const ctx = checkContext(event, me, deps);
+  // One read of the grants, with the caller's proof (planque takes each signed read once), for the check and the step.
+  let read: Awaited<ReturnType<typeof readGrants>> | undefined;
+  const out = await (async () => {
+    read = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
+    return checkDraft({ grant, draft, shown_draft: shown }, ctx, read);
+  })().catch(approvalFailure);
+  const checkedOnRead = checkedOnReadFor(read?.find((g) => g.id === grant), draft, can);
   console.log(`approval check: ${out.outcome === "ok" ? "ok" : out.code}`);
   // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
   // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
-  return out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
+  // Whether the chat's read checks this card at all (`checked_on_read`) is said too, by the same rule (markSigns), so the
+  // caller never keeps its own copy of it. The rules the owner agreed are Approve's and the chat read's only: this route
+  // has no conversation to read them from, so it says it didn't check them (`rules_unchecked`), and an ok here is never
+  // taken for "the rules hold".
+  const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
+  return { ...answered, checked_on_read: checkedOnRead, rules_unchecked: true };
+}
+
+/**
+ * Whether the chat's read checks an approval card's Card draft before the card is drawn (markSigns, precheck): its step
+ * signs the Card, alone or with the tools or key it covers. The same rule as markSigns: stepFor, the deploy's flags and
+ * what the phone can sign. False with no grant or no draft.
+ */
+export function checkedOnReadFor(grant: ApprovalGrant | undefined, draft: string | undefined, can: string[]): boolean {
+  if (!grant || !draft) return false;
+  const step = stepFor(grant, { draft, can }, readFlags());
+  return step !== undefined && step !== "connect";
+}
+
+/** The deploy's flags for the combined steps, as markSigns and decide read them. */
+function readFlags(): { keyAndCards: boolean; toolsAndCards: boolean } {
+  return { keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on", toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on" };
 }
 
 /** What checkDraft reads with: the person's KIFF session and the phone's planque proof, as sent; nothing is kept. */
@@ -3840,6 +3872,18 @@ function checkContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps): import(".
       const [archived, tafs] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
       return removedAgent(agent, archived, new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)), askedOn);
     },
+  };
+}
+
+/**
+ * The rules the owner agreed in the card's conversation (rules.ts), read with their own access when a draft is checked,
+ * and whether a draft with none is refused too (TAFS_RULES_REQUIRED=on, once every Coach run sends them).
+ */
+function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity, session: string, deps: Deps): import("./approval.js").DecideContext {
+  return {
+    ...ctx,
+    rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
+    rulesAgreement: async () => rulesAgreement((await deps.agents.session(me.tenantID, session, ownerKey(me))).events),
   };
 }
 
@@ -3876,7 +3920,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
-  const decision = await decideApproval(ask, { ...ctx, session: card.session }).catch(approvalFailure);
+  const decision = await decideApproval(ask, withRules({ ...ctx, session: card.session }, me, card.session, deps)).catch(approvalFailure);
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
@@ -4757,8 +4801,8 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     appCalls(token, taf.kiffAgent, now, deps.fetch ?? fetch, deps.kiffBase ?? KIFF_API),
     agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true, 20)),
     deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
-      () => ({ grants: [], error: "Connected apps could not be read; try again" }))
-      : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
+      () => ({ grants: [], error: wordsIn(langOf(event)).setup_connections_unread }))
+      : Promise.resolve({ grants: [], error: wordsIn(langOf(event)).setup_connections_unproved }),
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
@@ -6437,7 +6481,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
     // The server's own reason is kept beside it, for Coach and the log (keepWhy), never shown as the step's.
-    const plain = steps.connectionWhy(callID);
+    const plain = steps.connectionWhy(callID, r.text);
     // A connection call refused for how Coach wrote it (its order or its shape) isn't a failure of the person's app: nothing
     // was made, and Coach asks again. It ends not made, never "Coach couldn't connect" in red (Android 85, 14 Nov).
     if (plain && coachGuard(r.text)) {
@@ -9451,14 +9495,16 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
   try {
     if (parts.length === 3 && method === "GET") {
       const query = new URLSearchParams(event.rawQueryString ?? "");
+      // planque's grants and the Cards, read once with the phone's proof, for both removed_tafs and needed_by.
+      const reads = shared(() => proofReads(event, me, deps));
       const [page, removed] = await Promise.all([
         listApps(fetchFn, deps.planqueBase, me.tenantID, bearer(event), query.get("q") ?? "",
           { cursor: query.get("cursor") ?? undefined, provider: query.get("provider") ?? undefined }),
-        removedTafs(event, me, deps),
+        removedTafs(event, me, deps, reads),
       ]);
       // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
-      const [logos, uses] = await Promise.all([nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date()), connectionUses(event, me, deps)]);
-      const apps = page.apps.map(({ icon, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)) }));
+      const [logos, uses, needs] = await Promise.all([nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date()), connectionUses(event, me, deps), needContext(event, me, deps, reads)]);
+      const apps = page.apps.map(({ icon, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
       return { ...page, apps, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
@@ -9468,6 +9514,16 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       const taf = await owned(me, body.taf, deps);
       await needTaf(event, me, taf, deps);
       if (!taf.kiffAgent) throw new HTTPError(409, `${taf.name} has no KIFF agent to connect apps for yet`);
+      // Only a taf that uses the app (needed.ts): never one a phone picked because it was the only one.
+      const entry = decodeURIComponent(parts[3] ?? "");
+      const [needs, listed] = await Promise.all([needContext(event, me, deps), catalogApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), entry)]);
+      const app = listed ?? { entry };
+      const w = wordsIn(langOf(event));
+      // The tafs unread: nothing is started on a guess, and the person hears to try again (not that the taf doesn't use it).
+      if (!needs) throw new HTTPError(503, w.connect_tafs_unread, { code: "tafs_unread", words: w.connect_tafs_unread });
+      if (!neededBy(app, needs.tafs, RECIPES, needs.grants, needs.cards).some((n) => n.taf === taf.id)) {
+        throw new HTTPError(409, w.connect_not_needed(taf.name), { code: "not_needed", words: w.connect_not_needed(taf.name) });
+      }
       return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent, taf.name);
     }
   } catch (err) {
@@ -9475,6 +9531,69 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/** What Connect apps' `needed_by` is decided from (needed.ts): the person's tafs, and, with the phone's signed read, planque's grants and the Cards. */
+interface NeedContext { tafs: NeedTaf[]; grants?: GrantView[]; cards?: Mandate[] }
+
+/**
+ * The tafs this person could connect an app for (live, theirs to see, not Setup), and, with the phone's signed grants
+ * read, planque's grants and their Cards. Undefined for someone who can't manage Cards, or when the tafs can't be
+ * read: then there's no `needed_by`, and no connection is started on a guess.
+ */
+async function needContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps, reads: () => Promise<ProofReads | undefined> = () => proofReads(event, me, deps)): Promise<NeedContext | undefined> {
+  if (!me.capabilities.includes("cards.manage")) return undefined;
+  const token = bearer(event);
+  let tafs: NeedTaf[];
+  try {
+    const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)]);
+    tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && t.kiffAgent && listable(access, t.kiffAgent))
+      .map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, ...(t.recipe ? { recipe: t.recipe } : {}) }));
+  } catch (err) {
+    console.warn(`connect apps: tafs unread for ${me.tenantID} (${err instanceof Error ? err.message : String(err)})`);
+    return undefined;
+  }
+  // Without them (no proof, or a proof planque refused), the recipes alone decide (needed.ts): stricter, never looser.
+  const got = await reads().catch(() => undefined);
+  return got ? { tafs, ...got } : { tafs };
+}
+
+/** planque's grants, read with the phone's proof, and the person's Cards: undefined without the proof, or when either can't be read. */
+interface ProofReads { grants: GrantView[]; cards: Mandate[] }
+async function proofReads(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<ProofReads | undefined> {
+  const proof = event.headers?.["planque-device-signature"] ?? "";
+  if (!proof || !deps.planqueBase) return undefined;
+  try {
+    const [grants, cards] = await Promise.all([setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch), readMandates(bearer(event), deps.fetch, deps.kiffBase)]);
+    return { grants, cards };
+  } catch (err) {
+    console.warn(`connect apps: grants or Cards unread for ${me.tenantID} (${err instanceof Error ? err.message : String(err)})`);
+    return undefined;
+  }
+}
+
+/** A function's result, made once and shared by every caller. */
+function shared<T>(make: () => Promise<T>): () => Promise<T> {
+  let made: Promise<T> | undefined;
+  return () => (made ??= make());
+}
+
+/** An app's `needed_by`, and, with planque's grants, `misplaced`: none at all without a context. */
+function needFields(app: NeedApp, ctx: NeedContext | undefined): { needed_by?: Array<{ taf: string; name: string }>; misplaced?: Array<{ grant: string; taf: string; name: string }> } {
+  if (!ctx) return {};
+  const needed = neededBy(app, ctx.tafs, RECIPES, ctx.grants, ctx.cards);
+  return { needed_by: needed, ...(ctx.grants ? { misplaced: misplaced(app, ctx.tafs, needed, ctx.grants) } : {}) };
+}
+
+/** The catalog's entry for a POST's app, for its vendor and title; undefined when planque doesn't list it, and the entry alone decides. */
+async function catalogApp(fetchFn: Fetch, base: string, tenant: string, token: string, entry: string): Promise<NeedApp | undefined> {
+  try {
+    const page = await listApps(fetchFn, base, tenant, token, entry.replace(/@\d+$/, "").replace(/^connector:[^:]+:/, ""));
+    const found = page.apps.find((a) => a.entry === entry);
+    return found ? { entry: found.entry, vendor: found.vendor, title: found.title } : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** A taf that uses a connection, as Connect apps names it: its id and its name. */
@@ -9592,7 +9711,7 @@ export interface RemovedGrant { grant: string; used_by: Array<{ taf: string; nam
  * says so. Without the proof, or when planque's grants or KIFF's Cards can't be read, there's no `grants`: the
  * apps offer no Clear on a removed taf that has none.
  */
-async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Array<{ agent: string; removed_at: string; grants?: RemovedGrant[] }>> {
+async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, reads: () => Promise<ProofReads | undefined> = () => proofReads(event, me, deps)): Promise<Array<{ agent: string; removed_at: string; grants?: RemovedGrant[] }>> {
   if (!me.capabilities.includes("cards.manage")) return [];
   let removed: Array<{ agent: string; removed_at: string }>;
   let records: Taf[];
@@ -9606,10 +9725,11 @@ async function removedTafs(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Prom
     console.error(`connect apps: removed tafs for ${me.tenantID}: ${(err as Error).message}`);
     return [];
   }
-  const proof = event.headers?.["planque-device-signature"] ?? "";
-  if (!removed.length || !proof || !deps.planqueBase) return removed;
+  if (!removed.length) return removed;
   try {
-    const [grants, cards] = await Promise.all([setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch), readMandates(bearer(event), deps.fetch, deps.kiffBase)]);
+    const got = await reads();
+    if (!got) return removed;
+    const { grants, cards } = got;
     const live = records.filter((t) => !t.removing && t.job !== SETUP_JOB && t.kiffAgent);
     return removed.map((r) => ({ ...r, grants: grants.filter((g) => g.request?.agent === r.agent && g.status !== "disconnected" && g.status !== "failed")
       .map((g) => ({ grant: g.id, used_by: tafsUsing(g, live, cards) })) }));

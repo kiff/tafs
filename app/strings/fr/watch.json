@@ -1,0 +1,12 @@
+{
+  "watch.already_answered": "Déjà répondu, ou terminé.",
+  "watch.approve_on_phone": "Approuvez sur votre téléphone",
+  "watch.as_of": "Mis à jour à {time}",
+  "watch.coach_needs_consent": "Avant de parler à Coach, autorisez l'utilisation de l'IA dans tafs sur votre téléphone.",
+  "watch.glance_description": "Combien vous attendent, jamais quoi ni qui.",
+  "watch.more_on_phone": "La suite est sur votre téléphone.",
+  "watch.open_on_phone": "Ouvrir sur le téléphone",
+  "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
+  "watch.refused": "Refusé. Rien n'a été envoyé.",
+  "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone."
+}

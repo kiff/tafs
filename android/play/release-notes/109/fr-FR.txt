@@ -1,0 +1,2 @@
+- « Pour quel taf est-ce ? » ne liste que les tafs qui utilisent l'app. Une app qu'aucun de vos tafs n'utilise propose Demander à Coach.
+- Une connexion faite pour un taf qui n'utilise pas l'app le dit, et peut être arrêtée depuis sa ligne.

@@ -28,15 +28,17 @@ final class SigningPromptTests: XCTestCase {
     }
 
     /// No taf named yet: "Connect Stripe" and "Give Stripe its key", never "to a taf" (as Android 1.8.1).
-    /// With a name, the sentence names it.
+    /// With a name, the sentence names it. On a Mac, the connect prompt continues macOS's own "tafs is
+    /// trying to" (`PromptReason`), so each build pins its own line.
     func testAConnectPromptWithNoTafNamesOnlyTheApp() throws {
         let model = AppModel(signer: StubSigner())
         let nameless = try grant(vendor: "stripe-mcp", agent: "refunds-x1")
-        XCTAssertEqual(model.connectPrompt(nameless), Words.Connect.Prompt.connectApp(vendor: "Stripe"))
-        XCTAssertEqual(model.connectPrompt(nameless), "Connect Stripe")
+        let mac = ThisDevice.isMac
+        XCTAssertEqual(model.connectPrompt(nameless), mac ? Words.Connect.Prompt.connectAppMac(vendor: "Stripe") : Words.Connect.Prompt.connectApp(vendor: "Stripe"))
+        XCTAssertEqual(model.connectPrompt(nameless), mac ? "connect Stripe" : "Connect Stripe")
         XCTAssertEqual(model.giveKeyPrompt(nameless), "Give Stripe its key")
         let named = try grant(vendor: "Stripe", agent: "refunds-x1", agentName: "Disputes")
-        XCTAssertEqual(model.connectPrompt(named), "Connect Stripe to Disputes")
+        XCTAssertEqual(model.connectPrompt(named), mac ? "connect Stripe to Disputes" : "Connect Stripe to Disputes")
         XCTAssertEqual(model.giveKeyPrompt(named), "Give Stripe its key for Disputes")
     }
 

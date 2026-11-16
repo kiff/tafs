@@ -123,8 +123,9 @@ at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
 
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
 or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
-before), once `test` and `ui` passed, in the `android-release` environment, which the owner
-approves each time.
+before), once `test` and `ui` passed, in the `android-release` environment. No reviewer is required: an
+internal release goes out on that merge, with CI, the reviews and the internal track as its
+guardrails. Promoting a release beyond internal (Play review) is the owner's, in Play.
 
 **To Play's internal track, with no upload by hand.** Once the repository variable
 `PLAY_UPLOAD` is `on`, the release job sends the signed bundle to Play's **internal** track
@@ -138,8 +139,8 @@ than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
   it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
-  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
-  refuses a version with none.
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
+  version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
@@ -215,7 +216,7 @@ leaves the app's own count of the tafs at work.
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
-Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
+Android shows each alert on the lock screen as it comes, with no count of its own there. Locked, the phone, and any watch it bridges alerts to, show only **A taf needs you** (`alert.needs_you`): every alert is private, with that as its public version (`Alert.Show.locked`), so an amount, a merchant or a person's name waits for the unlock, as iOS's hidden previews do (`LockedAlertTest`). An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
 **A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
@@ -749,7 +750,7 @@ sound; an answer, silent), each marked **Example** so no one looks for that taf,
 and the line under them. **What alerts you** is read only, at the levels `push/Alerts.kt` uses: a
 taf needs you and every taf halted, with sound, always; a taf answered someone, silent, for the
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
-wasn't sent, silent.
+wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A taf needs you** until it's unlocked; the examples here are what it shows unlocked.
 
 **Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
@@ -844,15 +845,27 @@ opens its connections, under each taf's name:
   Gmail."), and only then the fingerprint. Remove is never beside a row.
 - Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
   theirs.
-- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does. A row needs
+  both `health.words` and `actions` to be planque's (`Grant.rowFromPlanque`, as iPhone and iPad read it, Android
+  1.30.1): a request nobody answered, sent with no health, is the app's own row with its **Cancel**.
 - **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
   to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
   `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
   409 with no words. planque's `error` stays the reason, for the code.
 
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
-over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
-first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in
+over the list (`ConnectApprovalSheet`). **Which taf is this for?** is asked first, even with one taf
+(`connectFor`, Android 1.30.1; before, the only taf was taken without asking), in a dialog over the list wherever
+Connect was tapped, as on iPhone and iPad. `AppModel.startConnectApp` starts nothing without a taf named.
+It lists only the tafs tafs cloud's `needed_by` names for that app (`tafsFor`, matched by tafs cloud id, Android 1.31.0), still
+asked with one; an app no taf needs reads **Ask Coach** in place of Connect. A tafs cloud before `needed_by` lists every taf the
+person manages. The start sends a fresh `Planque-Device-Signature`, as the list's read does, so tafs cloud decides `needed_by`
+the same way; its `409 not_needed` shows tafs cloud's words (`ErrorWords.CLOUD_WORDED`), never "It changed". A connection tafs
+cloud lists as `misplaced` (made under a taf that doesn't use the app) is drawn as the app's own row, saying "Made for ‹taf›,
+which doesn't use ‹app›.", with its Cancel or Disconnect.
+While the vendor's page is open, planque is read again on Coach's card schedule, so a sign-in finished there ends the
+wait; back on the sheet with no link, **Open … again** opens the same page, and **Not now** ends the wait at once, so
+the next Connect isn't refused as another approval in progress (Android 1.30.1). When a sign-in
 comes back, what happened is said at once, over the list: "Notion is signed in for Refunds. Next,
 Coach chooses its actions and you approve them.", with **Choose its actions**, which opens the
 taf's Coach (or "… is connected" when it's done). A row tafs cloud sends as signed in
@@ -976,7 +989,10 @@ cancelled instead: a request not answered yet (`Grant.pendingRequest`: pending, 
 this phone since) says **Cancel the request**,
 and a sign-in that never came back says **Cancel**, each with its own question. Once access is
 removed, Connect apps is read again at once (`AppModel.disconnect`), so it no longer says
-Connected until it's reopened.
+Connected until it's reopened. While the removal is on its way, from the fingerprint until planque
+answered and the list was read again (`AppState.disconnecting`), the app's row says **Removing
+access…** in place of Connected, and so does that connection's button, as on iPhone and iPad. No
+other removal starts meanwhile (Android 1.29.4).
 
 
 **What the phone signs.** Before it shows or signs a grant, the phone recomputes its digest from
@@ -986,7 +1002,15 @@ what planque sent and refuses one that doesn't match (`PlanqueClient.digestCover
 their language) and that language are what's signed. An unknown version, or a v2 grant without its
 words or its language, never matches. Every request to planque carries the person's language
 (`Accept-Language`, as tafs cloud gets it), for the words planque writes. Nothing changes on screen
-until planque issues v2 grants; iOS checks the same.
+until planque issues v2 grants; iOS checks the same. Each grant is checked against its own entry in
+planque's answer, by its place in the list, never by looking its id up (`PlanqueClient.pairedRaws`):
+with two entries under one id, the second, shown as its own request, would have been checked against
+the first's bytes. An id that repeats, or an entry under another id, matches nothing, so nothing is
+signed (Android 1.29.4). A mismatch writes one logcat line (tag `TafsPlanque`)
+for each digest: which way it failed (a list of another length, an id repeated, not in the list as
+sent, no request, a version or v2 words the app can't cover, or the hash differs; `unpairedCause`
+tells the first three apart from Android 1.29.5), the grant's status and `digest_v`, never its id, digest
+or words (`PlanqueClient.mismatchCause`, `mismatchLine`, Android 1.29.4).
 
 ## Signing
 
@@ -1004,6 +1028,61 @@ the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPromp
 Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
 name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
 the taf, it names the app alone ("Connect Stripe").
+
+**kiff.dev's passkeys.** kiff.dev vouches for the app: `https://kiff.dev/.well-known/assetlinks.json`
+names `dev.kiff.tafs` (the applicationId, not the Kotlin namespace) with Play App Signing's
+certificate SHA-256, for `delegate_permission/common.get_login_creds` only (Google's Digital Asset
+Links API answers `linked: true`, 15 Nov). So a passkey the app makes or uses through Android's
+Credential Manager has kiff.dev as its relying party, and KIFF takes its origin
+(`android:apk-key-hash:…`). Unlike iOS's `webcredentials:kiff.dev`, Android needs nothing in the
+manifest: the Credential Manager reads the file. Only a build Play signed matches; a debug build,
+or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys.
+
+## Passkeys on this phone
+
+Account → Devices → **Passkeys** lists the account's passkeys as KIFF lists them (`GET /v1/me/passkeys`), and
+**Add a passkey on this phone** makes one (Android 1.30.0). With a passkey on this phone, a computer that approves with
+a passkey (Linux, macOS 12) approves through it: the computer shows a QR code, and the phone's passkey provider
+answers it. That part is Android's own, with nothing in the app.
+
+- **Making it** (`AppModel.addPasskey`, `makePasskey`): Android's Credential Manager (`androidx.credentials`, with
+  `credentials-play-services-auth` for Android 11 to 13) makes it from WebAuthn's creation options
+  (`PasskeyRegistration.createOptions`):
+  - rp `kiff.dev`;
+  - the person's subject as `user.id` (base64url of its UTF-8) and their email as `user.name`, both read from the
+    account's members, where KIFF marks the person `you`;
+  - ES256 only, user verification required, `residentKey: preferred`, attestation `none`.
+  - The challenge is base64url(SHA-256) of `kiff.passkey.register.v1\n<tenant>\n<subject>\n<issued_at>`, with
+    `issued_at` to the second in UTC (`PasskeyRegistration.issuedAt`), which KIFF takes within 10 minutes.
+  - Android draws its own sheet and asks for the screen lock. Putting it away sends nothing.
+  - **Owners and admins only, read first:** KIFF takes a passkey only from an account's owners and admins. The person's
+    role, from the same members list, is read before Android is asked for anything, so a member's tap leaves no passkey on
+    the phone for KIFF to refuse, and a member isn't offered Add (`PasskeyRegistration.mayAdd`, `AppState.passkeyMayAdd`).
+    KIFF still decides.
+- **Registering it** (`KiffClient.registerPasskey`): `POST /v1/me/passkeys` with `{name, issued_at, client_data_json,
+  attestation_object}`, the creation's response as it came (`PasskeyRegistration.registerBody`). KIFF reads the
+  credential from it; the phone parses nothing.
+  - **The earlier body's fields** (`credential_id`, `public_key`) are never sent too: KIFF refuses both kinds at once.
+  - **The name** is the phone's model, trimmed as KIFF trims (a no-break space and U+0085 too), 1 to 64 code points with
+    no control character inside, or "Android phone" for one KIFF would refuse. It's never cut
+    (`PasskeyRegistration.validName`).
+  - **The signature:** the approval key, behind a fingerprint that says "Add a passkey on this phone to your account",
+    never inside an approval window. A session KIFF holds no approval key for adds none, and Android isn't asked: a
+    stolen session would add its own.
+  - **KIFF's answers:** KIFF decides, and `403 admins_only` says only owners and admins can add one.
+    `409 passkey_registered` (the same passkey again, KIFF's code in `error`) reads as added. `400` with reason
+    `issued_at` says it took too long, to try again.
+  - **Made but not added:** once Android has made the passkey, putting the fingerprint away or any other refusal says
+    it's on this phone but not on the account, and where to remove it (`settings.devices.passkey_not_registered`).
+  - **A debug build is refused:** Credential Manager names the app by its signing certificate
+    (`android:apk-key-hash:…`), and KIFF takes only Play App Signing's (`400 registration_invalid`, reason `origin`).
+    So adding one is tested from a build Play installed (the internal track).
+- **Removing one** (`KiffClient.removePasskey`): `DELETE /v1/me/passkeys/{id}`, signed by the approval key behind a
+  fingerprint that names it, as a device's removal is. A computer's own passkey has no id (it goes with its device,
+  `device_id`), so it says "Goes with its computer", with no Remove.
+- **Tests:** `PasskeyRegistrationTest` reads `vectors/passkey-registration.json`, the vector the iPhone and iPad's
+  tests read too, so the apps can't drift. `PasskeyAddTest` covers the model: the fingerprint, the body, the 409, the
+  sheet put away, no approval key, KIFF's refusals, and a computer's own passkey.
 
 ## Pairing a computer
 
@@ -1145,8 +1224,12 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   goes ("Opens Gmail's sign-in", `opensWords`; a service the card names is shown as it is). "The vendor" only when no app is
   known (Android 1.27.10).
 - **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
-  times, three seconds apart, until planque lists it: tafs cloud can write the card as the grant is made (`readApprovals`,
-  Android 1.27.8). Before, it waited for another tab to read them.
+  seconds apart for the first minute and ten seconds apart after (`CARD_GRANT_READ_DELAYS`, Android 1.29.5; before, three
+  seconds throughout), until planque lists it or the card is answered: tafs cloud can write the card as the grant is made
+  (`readApprovals`, `AppModel.grantsCardsWaitOn`). Before Android 1.27.8, it waited for another tab to read them. Until
+  Android 1.29.4 it read them three times only, so a grant planque listed after nine seconds, with Coach's run done, left
+  the card on that line until the chat was opened again. It reads for ten minutes at most, 74 reads, counted on the
+  phone.
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
@@ -1230,5 +1313,5 @@ The API contracts and recent-run history bound are in [api.md](api.md).
 
 ### A vendor sign-in left in its tab
 
-The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** (the same link, which planque takes until its approve expires, 15 minutes) and **Cancel**. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 15 minutes end the wait as a closed sign-in; the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting).
+The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** and **Cancel**. Open again never opens the same link: a vendor's link is single-use once its sign-in reached planque, so the page would only say it was used. It ends the wait on that page quietly, with nothing answered to Coach or reported to tafs cloud (`VendorSignInReplaced`, `Came.Replaced`), and runs the card's approval again, one fingerprint (`AppModel.reopenSignIn`). Planque decides from there: a grant it holds signed in answers `signed_in` with its confirm code, and the phone confirms it with no page, as any held sign-in; any other gets a fresh link, opened as the first was (Android 1.29.4). Only with no approval to run again does it open the same page. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 15 minutes end the wait as a closed sign-in; the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting). **The tab gone** (closed with back or its ✕, or closed above tafs's screen by the launcher) marks the sign-in left even when no resume was seen: the tab opens for a result (`MainActivity.vendorTab`), which comes back once the tab is gone, never while it's still there behind another app, and with no link within the grace the card or Connect apps' sheet offers Open again and Cancel (`VendorWait.closed`). It's never left on "Approving…" with no way back (Android 1.30.1; before, a closed tab could leave it there).
 Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.

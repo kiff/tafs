@@ -66,7 +66,8 @@ struct SetupChatView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                if !model.setupStarted {
+                // `-screen coach-chat` draws the sample conversation, over the sample, which has no Coach to start.
+                if !model.setupStarted && !Screenshots.coachChat {
                     intro
                     if model.setupHanded && !model.approvalBlocked {
                         // Words first (docs/ios-app.md): what was handed over waits in the
@@ -1206,7 +1207,18 @@ struct StepMark: View {
             }
         }
         .frame(width: 18, height: 18)
-        .accessibilityLabel(status)
+        .accessibilityLabel(Self.words(status))
+    }
+
+    /// What VoiceOver reads for the mark: the words, never tafs cloud's raw status ("done").
+    static func words(_ status: String) -> String {
+        switch status {
+        case "done": Words.Coach.Plan.stepDone
+        case "failed": Words.Coach.Plan.stepFailed
+        case "active": Words.Coach.Plan.stepActive
+        case "skipped": Words.Coach.Plan.stepSkipped
+        default: Words.Coach.Plan.stepPending
+        }
     }
 }
 

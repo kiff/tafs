@@ -499,10 +499,11 @@ struct ReceiptView: View {
         return !KIFFMapping.isOn(value, hash: signed)
     }
 
-    /// The signed decision step names the amount, and the line's isn't it.
+    /// The signed decision step names the amount, and the line's isn't it: as numbers in the same unit, so
+    /// "150.00" and "150" are the same amount, not a mismatch.
     private var amountMismatch: Bool {
         guard let line = entry.amount, let signed = steps.compactMap(\.amount).first else { return false }
-        return line.value != signed.value || (line.unit ?? "") != (signed.unit ?? "")
+        return !line.same(as: signed)
     }
 
     /// The signed chain has the answer (its hold_settled step), and the line's isn't it:
@@ -686,4 +687,20 @@ extension ISO8601DateFormatter {
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f
     }()
+}
+
+extension KIFFClient.ActivityCall.Amount {
+    /// The same amount as `other`: the same number, whatever its trailing zeros ("150.00" and "150"), in the
+    /// same unit, whatever its case. A value that isn't a plain decimal is compared as written. As Windows.
+    func same(as other: Self) -> Bool {
+        guard (unit ?? "").uppercased() == (other.unit ?? "").uppercased() else { return false }
+        guard let a = Self.decimal(value), let b = Self.decimal(other.value) else { return value == other.value }
+        return a == b
+    }
+
+    /// A plain decimal ("150", "-3.50"), never a prefix of something else ("150abc").
+    private static func decimal(_ s: String) -> Decimal? {
+        guard s.range(of: #"^-?[0-9]+(\.[0-9]+)?$"#, options: .regularExpression) != nil else { return nil }
+        return Decimal(string: s, locale: Locale(identifier: "en_US_POSIX"))
+    }
 }

@@ -19,6 +19,12 @@ read it: in CI, in seconds, never first on a phone or in an Eval.
 | `home.json`, `home-paused.json` | `runtime/test/cloud.test.ts` (Home's list: the same taf with its refund Card, its state, work line and health, then paused) | the same; the phones once they read it |
 | `setup-coach.json` | `runtime/test/cloud.test.ts` (`GET /v1/setup` once the account has its Coach) | the desktop apps (their Coach conversation); the phones once they read it |
 | `coach-chats.json`, `coach-conversation.json` | `runtime/test/cloud.test.ts` (Coach's chats, and one chat: a reply with its work, a refused connection, the owner's words answering a questions card, an approval and a result answered, and a line Coach hasn't read) | the same |
+| `connect-apps.json`, `connect-apps-search.json`, `connect-apps-next.json` | `runtime/test/cloud.test.ts` (Connect apps: the first page with the account's own apps and a provider's next page to ask for, a search, and that next page) | the desktop apps (their Connect apps); the phones once they read it |
+| `connect-apps-removed.json` | `runtime/test/cloud.test.ts` (Connect apps with the phone's signed grants read: a removed taf's connections, one kept for a live taf's Card and one Clear ends) | the same |
+
+The iPhone and iPad read every file their own reads decode (`ios/TafsTests/ContractTests.swift`): Activity, Setup, runs and
+their reports, the tafs list, Home, `/v1/setup`, Coach's chats and conversation, and Connect apps, each as the type its
+read decodes, with the same decoder.
 
 Write a file again only through its writer: `UPDATE_CONTRACTS=1 npx vitest run` in `runtime/` (one file of `{about, answer}` per answer through `runtime/test/contract.ts`). Never
 by hand: a hand edit is a contract no code keeps.
