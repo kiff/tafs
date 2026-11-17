@@ -203,10 +203,14 @@ the app in sample mode.
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
     usage) and Connect apps, then the held calls. With Calendar an item, the Overview has no calendar
     button of its own (`calendarInSidebar`);
-  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
-    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
-    (`last_run`, `last_change`), and
-    those being set up. The rest are in the list behind the mascot;
+  - **only the tafs relevant now** (`AppModel.relevantNow`), and those being set up. The rest are
+    in the list behind the mascot:
+    - **tafs cloud decides** whenever Home sends `relevant_now` for a taf (kiff/tafs#1320), on its own
+      clock, so every app lists the same tafs. Pausing a taf or changing where its results go keeps
+      that flag until Home is read again;
+    - **with no flag** (an older tafs cloud, or an agent tafs doesn't run), the app's rule: an item in
+      Needs you (a held call, a step it handed over, a knock at its door), or a run or a change in
+      the last 24 hours (`last_run`, `last_change`). A flag that isn't true or false counts as none;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
   - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the

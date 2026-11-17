@@ -88,6 +88,9 @@ final class TafsCloud {
         var lastChange: Date? = nil
         /// Its labels by id, as Home says; not read from a taf's own record.
         var labels: [String] = []
+        /// Whether it belongs in the sidebar now, as Home says (`relevant_now`, kiff/tafs#1320); nil from a
+        /// tafs cloud that doesn't send it, when the app's own rule decides (`AppModel.relevantNow`).
+        var relevantNow: Bool? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
@@ -304,6 +307,9 @@ final class TafsCloud {
         var lastChange: JSONValue? = nil
         /// Its labels by id (docs/labels.md), only on a taf that has any; missing is none.
         var labels: LabelIDs? = nil
+        /// Whether it belongs in the sidebar now, tafs cloud's call on its own clock (`relevant_now`); read leniently:
+        /// anything but a true or false is none, and the app's rule decides.
+        var relevantNow: JSONValue? = nil
         let color: Int
         /// working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card).
         let state: String
@@ -358,6 +364,7 @@ final class TafsCloud {
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
             case lastChange = "last_change"
             case labels
+            case relevantNow = "relevant_now"
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
@@ -367,7 +374,8 @@ final class TafsCloud {
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
                               unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
                               nextRunWords: nextRunWords, lastChange: { if case .string(let s)? = lastChange { return Self.time(s) }; return nil }(),
-                              labels: labels?.ids ?? []) }
+                              labels: labels?.ids ?? [],
+                              relevantNow: { if case .bool(let b)? = relevantNow { return b }; return nil }()) }
         }
 
         /// An ISO time as tafs cloud writes it, with or without fractions of a second; anything else is none.

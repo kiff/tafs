@@ -62,6 +62,39 @@ final class HomeSidebarTests: XCTestCase {
         XCTAssertNil(try home("7").tafs.first?.cloudTaf?.lastChange, "another shape: none, and Home still reads")
     }
 
+    /// tafs cloud's `relevant_now` (kiff/tafs#1320) decides the sidebar whenever Home sends it, both ways, so every
+    /// app lists the same tafs; only a taf Home sends no flag for (an older tafs cloud) falls back to the app's rule.
+    /// Anything but a true or false is no flag, and never fails Home's read.
+    func testTafsCloudsRelevantNowDecidesTheSidebar() async throws {
+        let session = URLSession(configuration: { let c = URLSessionConfiguration.ephemeral; c.protocolClasses = [StubProtocol.self]; return c }())
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        defer { Keychain.delete(AppModel.tokenAccount) }
+        let recent = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-3600))
+        func entry(_ agent: String, _ name: String, _ id: String, flag: String?, ranRecently: Bool = false) -> String {
+            var e = HomeJSON.entry(agent: agent, name: name, id: id)
+            if ranRecently { e = e.replacingOccurrences(of: #""last_run":null"#, with: #""last_run":"\#(recent)""#) }
+            if let flag { e = e.replacingOccurrences(of: #""color":"#, with: #""relevant_now":\#(flag),"color":"#) }
+            return e
+        }
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([
+            entry("a-1", "Quiet but flagged", "depl_1", flag: "true"),
+            entry("b-2", "Ran but not flagged", "depl_2", flag: "false", ranRecently: true),
+            entry("c-3", "Older tafs cloud", "depl_3", flag: nil, ranRecently: true),
+            entry("d-4", "Odd flag", "depl_4", flag: #""yes""#),
+        ]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, session: session)
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session)
+        let model = AppModel(signer: StubSigner(), kiff: kiff, cloud: cloud)
+        await model.useSession("kiff_dev_x")
+        func taf(_ name: String) throws -> Taf { try XCTUnwrap(model.tafs.first { $0.name == name }, name) }
+        XCTAssertTrue(model.relevantNow(try taf("Quiet but flagged")), "flagged: in the sidebar with nothing on the device's rule")
+        XCTAssertFalse(model.relevantNow(try taf("Ran but not flagged")), "not flagged: out, though it ran an hour ago")
+        XCTAssertTrue(model.relevantNow(try taf("Older tafs cloud")), "no flag: the app's rule, which a run an hour ago meets")
+        XCTAssertFalse(model.relevantNow(try taf("Odd flag")), "a flag that isn't true or false is none; the rule finds nothing")
+    }
+
     /// The mascot and "tafs" opens the tafs list, which opens first; there's no Overview item beside it.
     func testTheMascotOpensTheTafsList() throws {
         let file = try source()
