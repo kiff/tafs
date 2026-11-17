@@ -1,0 +1,5 @@
+- Votre message envoyé reste en haut du chat pendant que le taf travaille et répond.
+- Un message renvoyé après une coupure de connexion n'est traité qu'une fois.
+- Coach sur un taf n'est proposé qu'aux personnes qui gèrent ce taf.
+- Retirer votre dernière clé d'accès qui peut approuver vous avertit d'abord.
+- Donner ses outils à Coach n'approuve que l'étape que vous avez vue.
