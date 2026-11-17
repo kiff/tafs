@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -261,7 +262,7 @@ fun SettingsSheet(
     val chosen = remember { bot.tafs.app.design.AppLocale.current(context) }
     DriveAlert(
       onDismissRequest = { languagePicker = false }, title = { Text(Words.Settings.languageTitle) }, containerColor = Theme.panel,
-      text = { Column(Modifier.verticalScroll(rememberScrollState())) { bot.tafs.app.design.AppLocale.choices().forEach { choice ->
+      text = { Column(Modifier.testTag("language-picker").verticalScroll(rememberScrollState())) { bot.tafs.app.design.AppLocale.choices().forEach { choice ->
         LanguageRow(choice.title, choice.tag == chosen) {
           languagePicker = false
           context.activity()?.let { bot.tafs.app.design.AppLocale.choose(it, choice.tag) }
