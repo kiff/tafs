@@ -2036,6 +2036,7 @@
     <string name="setup_app_events">App-events</string>
     <string name="setup_approve">Goedkeuren</string>
     <string name="setup_approve_note">Goedkeuren ondertekent op deze telefoon; pas daarna begint de app het taf te informeren.</string>
+    <string name="setup_approve_note_device">Goedkeuren ondertekent op deze %1$s; pas daarna begint de app het taf te informeren.</string>
     <string name="setup_at_least_one">Er blijft minstens één plek aan.</string>
     <string name="setup_change_starts">Met Coach wijzigen wanneer het start</string>
     <string name="setup_choose_actions">Acties kiezen</string>

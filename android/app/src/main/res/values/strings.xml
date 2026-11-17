@@ -2036,6 +2036,7 @@
     <string name="setup_app_events">App events</string>
     <string name="setup_approve">Approve</string>
     <string name="setup_approve_note">Approve signs on this phone; the app starts telling the taf only after that.</string>
+    <string name="setup_approve_note_device">Approve signs on this %1$s; the app starts telling the taf only after that.</string>
     <string name="setup_at_least_one">At least one place stays on.</string>
     <string name="setup_change_starts">Change when it starts with Coach</string>
     <string name="setup_choose_actions">Choose actions</string>

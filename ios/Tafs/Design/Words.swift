@@ -4047,6 +4047,8 @@ enum Words {
         static var approve: String { Words.line("setup.approve") }
         /// Approve signs on this phone; the app starts telling the taf only after that.
         static var approveNote: String { Words.line("setup.approve_note") }
+        /// Approve signs on this {device}; the app starts telling the taf only after that.
+        static func approveNoteDevice(device: String) -> String { Words.line("setup.approve_note_device", device, Words.demonstrative(device)) }
         /// At least one place stays on.
         static var atLeastOne: String { Words.line("setup.at_least_one") }
         /// Change when it starts with Coach

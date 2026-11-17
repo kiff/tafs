@@ -4,6 +4,7 @@
   "setup.app_events": "Eventos de apps",
   "setup.approve": "Aprovar",
   "setup.approve_note": "Aprovar assina neste telefone; só depois disso a app começa a avisar o taf.",
+  "setup.approve_note_device": "Aprovar assina neste {device}; só depois disso a app começa a avisar o taf.",
   "setup.at_least_one": "Pelo menos um destino fica ativo.",
   "setup.change_starts": "Alterar com o Coach quando começa",
   "setup.choose_actions": "Escolher ações",

@@ -4,6 +4,7 @@
   "setup.app_events": "App-Ereignisse",
   "setup.approve": "Genehmigen",
   "setup.approve_note": "„Genehmigen“ signiert auf diesem Telefon; erst danach beginnt die App, dem taf Bescheid zu geben.",
+  "setup.approve_note_device": "„Genehmigen“ signiert auf diesem {device}; erst danach beginnt die App, dem taf Bescheid zu geben.",
   "setup.at_least_one": "Mindestens ein Ort bleibt eingeschaltet.",
   "setup.change_starts": "Mit Coach ändern, wann er startet",
   "setup.choose_actions": "Aktionen wählen",
