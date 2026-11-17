@@ -56,6 +56,10 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   before they're sent. The phone sends them to Coach's current chat with the session it keeps,
   then reads the thread for up to 12 seconds for Coach's answer to them, so the watch always hears
   back before it gives up; past that, "The rest is on your phone".
+- **Coach's words carry the message's id** (`message`, a UUID the watch makes). The phone sends it to tafs cloud
+  as `client_message_id`, so words sent again after no answer came are acted on once. The watch keeps the id while
+  the same words are sent again, and makes a new one for other words or once Coach has answered. If a watch from
+  before sends none, or one that isn't a UUID, the phone gives the message an id of its own.
 
 ## Coach
 

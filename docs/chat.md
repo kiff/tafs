@@ -602,6 +602,28 @@ owner message is `<run>.in`, and that's the id `POST …/messages` answers for t
 sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
 and never by text or time.
 
+**The app's own id for a message (`client_message_id`, [api.md](api.md)).** It's made by the app, before the send.
+On iPhone and iPad, each message the owner composes, to a taf or to Coach, gets its own UUID, in lower case.
+- **The same id goes on every path the message takes:**
+  - the stream;
+  - the plain send that takes its place when the stream can't open or is cut;
+  - a steer to the run at work.
+- **A message that wasn't sent keeps its id when nothing answered** (`UnsentMessage.messageID`): a dropped
+  connection, a timeout, or a 5xx such as a 503. Retry then sends it under that id. If the first send reached tafs
+  cloud after all, tafs cloud answers with what it already did, never a second run.
+- **A new id:** Edit, Send again and a new message are new messages.
+- **A refusal (a 4xx) gives up the id,** so Retry is a new message (`TafsCloud.messageID(_:after:)`). Among them is
+  409 `dedup_key_conflict`, an id already used for other words. It comes with no words of its own, so the message
+  is marked not sent with `error.sent_with_other_text`, which says to send it again as a new message. The same id
+  would only be refused again. tafs cloud's own words, when it sends them, come first.
+- **No id of the app's own:**
+  - what a run never read (tafs cloud's `not_sent`), whose Retry sends it as a new message, under a new id;
+  - an improvement's first message, which goes through `/improve`;
+  - a trial's chat.
+- **On the Apple Watch,** the watch makes the id for the words it sends to Coach. The phone sends it on unchanged.
+  The same words sent again after no answer came keep it; other words, or the next message once answered, get
+  another ([watch-app.md](watch-app.md)).
+
 ## The live line
 
 While a taf works, the stream sends one line for the app to show (`event: state`, `relay` in

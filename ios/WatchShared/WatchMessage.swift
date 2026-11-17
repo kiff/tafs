@@ -32,13 +32,19 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var taf: String?
     /// Coach: the person's words, as the watch's dictation wrote them. Never audio.
     var text: String?
+    /// Coach: the message's own id (a UUID), made on the watch for the words it sends, and the same when
+    /// the person sends those words again after no answer came. The phone sends it to tafs cloud as
+    /// `client_message_id`, so a message that reached Coach once is acted on once. A phone from before
+    /// it ignores it.
+    var message: String?
 
-    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil) {
+    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil) {
         self.kind = kind
         self.made = made
         self.hold = hold
         self.taf = taf
         self.text = text
+        self.message = message
     }
 
     /// Whether it names what its kind needs: Refuse its hold, Halt its taf, Coach its words.

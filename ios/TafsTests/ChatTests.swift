@@ -131,10 +131,161 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(sent)
         let post = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/tafs/depl_1/messages" })
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: post.httpBody ?? Data()) as? [String: String])
-        XCTAssertEqual(body, ["text": "Skip order 4410"])
+        XCTAssertEqual(Set(body.keys), ["text", "client_message_id"])
+        XCTAssertEqual(body["text"], "Skip order 4410")
         XCTAssertEqual(post.value(forHTTPHeaderField: "Authorization"), "Bearer kiff_dev_x")
         XCTAssertEqual(model.chats[id]?.map(\.kind), [.kickoff, .message])
         XCTAssertTrue(model.awaitingReply(id), "the taf hasn't answered yet")
+    }
+
+    // MARK: One message, one id
+
+    /// The id a request carried (`client_message_id`), or nil.
+    private func messageID(_ request: URLRequest?) -> String? {
+        guard let data = request?.httpBody, let body = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return body["client_message_id"] as? String
+    }
+
+    private func posts(_ path: String) -> [URLRequest] {
+        StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path == path }
+    }
+
+    /// A UUID, in lower case, as tafs cloud reads it.
+    private func isMessageID(_ id: String?) -> Bool {
+        guard let id, UUID(uuidString: id) != nil else { return false }
+        return id == id.lowercased()
+    }
+
+    /// A stream that was cut before its answer, and the plain send that takes its place, carry the
+    /// message's one id, so tafs cloud acts on it once (docs/api.md, "One message, sent once"). The
+    /// next message gets another.
+    func testTheStreamAndThePlainSendThatTakesItsPlaceCarryOneId() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.dropped["POST /v1/tafs/depl_1/messages/stream"] = [.networkConnectionLost, .networkConnectionLost]
+        StubProtocol.sent = []
+        let sent = await model.sendChat("Skip order 4410", to: id)
+        XCTAssertTrue(sent)
+        let stream = try XCTUnwrap(posts("/v1/tafs/depl_1/messages/stream").first, "the stream was tried first")
+        let plain = try XCTUnwrap(posts("/v1/tafs/depl_1/messages").first, "then the plain send")
+        XCTAssertTrue(isMessageID(messageID(stream)), "a UUID: \(messageID(stream) ?? "none")")
+        XCTAssertEqual(messageID(plain), messageID(stream), "the same message, the same id")
+
+        let next = await model.sendChat("And 4411", to: id)
+        XCTAssertTrue(next)
+        let ids = posts("/v1/tafs/depl_1/messages").map(messageID)
+        XCTAssertEqual(ids.count, 2)
+        XCTAssertTrue(isMessageID(ids[1]))
+        XCTAssertNotEqual(ids[1], ids[0], "another message, another id")
+    }
+
+    /// Retry sends a message that wasn't sent under the id it was first sent under: if it reached
+    /// tafs cloud after all, it's acted on once. Edit makes it another message, with its own id.
+    func testRetryGoesUnderTheIdTheMessageWasSentUnder() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"boom"}"#)
+        StubProtocol.sent = []
+        let first = await model.sendChat("hello", to: id)
+        XCTAssertFalse(first)
+        let firstID = try XCTUnwrap(messageID(posts("/v1/tafs/depl_1/messages").last))
+        let unsent = try XCTUnwrap(model.chatState(id).unsent.first)
+        XCTAssertEqual(unsent.messageID.map { $0.uuidString.lowercased() }, firstID, "the row keeps its id")
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.retryChat(unsent, to: id)
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+        XCTAssertEqual(posts("/v1/tafs/depl_1/messages").map(messageID), [firstID], "Retry, under the same id")
+        XCTAssertTrue(posts("/v1/tafs/depl_1/messages/stream").allSatisfy { messageID($0) == firstID }, "its stream too")
+
+        // Edit: the words go back to the composer, and sending them is another message.
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (500, #"{"error":"boom"}"#)
+        await model.sendChat("and this", to: id)
+        let other = try XCTUnwrap(model.chatState(id).unsent.first)
+        let words = try XCTUnwrap(model.editUnsentChat(other, from: id))
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.sendChat(words, to: id)
+        let edited = messageID(posts("/v1/tafs/depl_1/messages").last)
+        XCTAssertTrue(isMessageID(edited))
+        XCTAssertNotEqual(edited, other.messageID.map { $0.uuidString.lowercased() }, "edited, it's a new message")
+    }
+
+    /// A message written to the run at work carries its own id; a steer that didn't reach tafs cloud
+    /// keeps it, and Retry writes it again under that id.
+    func testASteerCarriesItsIdAndRetryKeepsIt() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"working":{"session":"sesn_9","run":"r1"}}"#)
+        await model.loadChat(id)
+        StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (503, #"{"error":"unavailable"}"#)
+        StubProtocol.sent = []
+        let taken = await model.submitChat("skip 4410", to: id)
+        XCTAssertTrue(taken)
+        let steerID = messageID(posts("/v1/tafs/depl_1/steer").last)
+        XCTAssertTrue(isMessageID(steerID))
+        let unsent = try XCTUnwrap(model.chatState(id).unsent.first)
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/steer"] = (200, #"{"run":"r1","status":"RUNNING"}"#)
+        StubProtocol.sent = []
+        await model.retryChat(unsent, to: id)
+        XCTAssertEqual(posts("/v1/tafs/depl_1/steer").map(messageID), [steerID], "written again, under the same id")
+    }
+
+    /// tafs cloud's 409 `dedup_key_conflict`: an id already used for another message. It comes with no
+    /// words, so the Not sent row says the shared line, never tafs cloud's English error; and its Retry is
+    /// a new message, under a new id, as the line says, since the same id would be refused again.
+    func testAnIdAlreadyUsedForOtherWordsSaysSoAndRetryIsANewMessage() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"this client_message_id was already used for another message","code":"dedup_key_conflict"}"#)
+        StubProtocol.sent = []
+        let sent = await model.sendChat("hello", to: id)
+        XCTAssertFalse(sent)
+        let refusedID = messageID(posts("/v1/tafs/depl_1/messages").last)
+        let unsent = try XCTUnwrap(model.chatState(id).unsent.first)
+        XCTAssertEqual(unsent.why, Words.Error.sentWithOtherText)
+        XCTAssertNil(unsent.messageID, "its id is spent")
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.retryChat(unsent, to: id)
+        let retried = messageID(posts("/v1/tafs/depl_1/messages").last)
+        XCTAssertTrue(isMessageID(retried))
+        XCTAssertNotEqual(retried, refusedID, "Retry is a new message")
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+
+        // Any other refusal (a 4xx) gives up the id too; a 5xx, a timeout or no answer keeps it, since the
+        // send may have landed (docs/chat.md, "Message ids").
+        let mine = UUID()
+        for status in [400, 403, 409, 422, 429] {
+            XCTAssertNil(TafsCloud.messageID(mine, after: TafsCloud.CloudError(status: status, message: "no")), "\(status)")
+        }
+        for status in [0, 408, 500, 502, 503] {
+            XCTAssertEqual(TafsCloud.messageID(mine, after: TafsCloud.CloudError(status: status, message: "x")), mine, "\(status)")
+        }
+        XCTAssertEqual(TafsCloud.messageID(mine, after: URLError(.networkConnectionLost)), mine)
+        XCTAssertEqual(TafsCloud.messageID(mine, after: URLError(.timedOut)), mine)
+
+        // tafs cloud's own words, when it sends them, still come first.
+        let worded = TafsCloud.refusal(409, Data(#"{"error":"x","code":"dedup_key_conflict","words":"Said by tafs cloud."}"#.utf8))
+        XCTAssertEqual(worded.localizedDescription, "Said by tafs cloud.")
+    }
+
+    /// What a run never read comes back from tafs cloud's `not_sent`: Retry sends it as a new
+    /// message, under a new id, never one the app made.
+    func testWhatARunNeverReadIsSentAgainAsANewMessage() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[],"steering":{"run":"r1","status":"CANCELLED","untaken":[],"not_sent":[{"text":"skip 4410","at":"2026-10-14T09:00:00Z","why":"You stopped it before it read this."}]}}"#)
+        await model.loadChat(id)
+        let unsent = try XCTUnwrap(model.chatState(id).unsent.first)
+        XCTAssertNil(unsent.messageID)
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.retryChat(unsent, to: id)
+        XCTAssertTrue(isMessageID(messageID(posts("/v1/tafs/depl_1/messages").last)))
     }
 
     /// tafs cloud's two lines about a run are read as written: where its result went (`delivered`)

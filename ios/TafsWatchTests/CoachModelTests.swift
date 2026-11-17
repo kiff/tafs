@@ -16,15 +16,46 @@ final class CoachModelTests: XCTestCase {
         }
     }
 
+    nonisolated private static let firstID = UUID(uuidString: "6F1C2A4E-0B8D-4E57-9A3C-2D5E8F7B1C90")!
+
+    /// Ids in turn: the first, then new ones.
+    private final class IDs {
+        var made = 0
+        func next() -> UUID { made += 1; return made == 1 ? CoachModelTests.firstID : UUID() }
+    }
+
     func testTheWordsShownAreTheWordsSent() async {
         let answer = WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)
         let phone = Phone(WatchReply(.ok, coach: answer))
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        let ids = IDs()
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: ids.next)
         model.draft = "  Pause Rae \n"
         await model.send()
-        XCTAssertEqual(phone.asked, [WatchRequest(.coach, made: now, text: "Pause Rae")])
+        XCTAssertEqual(phone.asked, [WatchRequest(.coach, made: now, text: "Pause Rae", message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90")])
         XCTAssertEqual(model.state, .answered(answer))
         XCTAssertEqual(model.draft, "", "sent")
+    }
+
+    /// The same words sent again after no answer came go under the same id, so Coach acts on them once
+    /// (docs/chat.md, "One message, one id"). Other words, or the next message once answered, get another.
+    func testTheSameWordsSentAgainKeepTheirIdUntilAnswered() async {
+        let phone = Phone(nil)
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        model.draft = "Pause Rae"
+        await model.send()
+        await model.send()
+        XCTAssertEqual(phone.asked.map(\.message), [Self.firstID.uuidString.lowercased(), Self.firstID.uuidString.lowercased()],
+                       "the phone didn't answer: sent again, the same message")
+        model.draft = "Pause Rae now"
+        await model.send()
+        XCTAssertNotEqual(phone.asked.last?.message, Self.firstID.uuidString.lowercased(), "other words, another message")
+        let changed = phone.asked.last?.message
+        phone.reply = WatchReply(.ok, line: "The rest is on your phone.")
+        await model.send()
+        XCTAssertEqual(phone.asked.last?.message, changed, "the same words again: the same id")
+        model.draft = "Pause Rae now"
+        await model.send()
+        XCTAssertNotEqual(phone.asked.last?.message, changed, "answered: the next is a new message")
     }
 
     func testNothingIsSentWithoutWords() async {
