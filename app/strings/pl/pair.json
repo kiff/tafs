@@ -7,6 +7,7 @@
   "pair.failed": "Ten {device} nie został dodany: {why}. Pokaż nowy kod i spróbuj ponownie.",
   "pair.from_sign_in": "Używasz już tafs na telefonie? Dodaj ten {device} za jego pomocą.",
   "pair.keychain_refused": "Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd {code}), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie.",
+  "pair.keyring_refused": "Ten komputer nie mógł zapisać logowania, więc nie został dodany: potrzebuje działającego, odblokowanego pęku kluczy, takiego jak GNOME Keyring, KWallet lub KeePassXC. Skonfiguruj go lub odblokuj, a potem pokaż nowy kod i spróbuj ponownie.",
   "pair.new_code": "Pokaż nowy kod",
   "pair.passkey_why_body": "Zostaje na tym urządzeniu ({device}), chroniony przez {biometry}. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN.",
   "pair.passkey_why_go": "Utwórz klucz dostępu",

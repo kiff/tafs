@@ -71160,6 +71160,59 @@
         }
       }
     },
+    "pair.keyring_refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador no pudo guardar su inicio de sesión, así que no se añadió: necesita un llavero en marcha y desbloqueado, como GNOME Keyring, KWallet o KeePassXC. Configura uno o desbloquéalo, y después muestra un código nuevo y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur n'a pas pu enregistrer sa connexion, il n'a donc pas été ajouté : il lui faut un trousseau actif et déverrouillé, comme GNOME Keyring, KWallet ou KeePassXC. Configurez-en un ou déverrouillez-le, puis affichez un nouveau code et réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer non è riuscito a salvare l'accesso, quindi non è stato aggiunto: serve un portachiavi attivo e sbloccato, come GNOME Keyring, KWallet o KeePassXC. Configurane uno o sbloccalo, poi mostra un nuovo codice e riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer kon zijn login niet bewaren en is dus niet toegevoegd: er is een actieve, ontgrendelde sleutelhanger nodig, zoals GNOME Keyring, KWallet of KeePassXC. Stel er een in of ontgrendel hem, toon dan een nieuwe code en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer nie mógł zapisać logowania, więc nie został dodany: potrzebuje działającego, odblokowanego pęku kluczy, takiego jak GNOME Keyring, KWallet lub KeePassXC. Skonfiguruj go lub odblokuj, a potem pokaż nowy kod i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não conseguiu guardar o início de sessão, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez."
+          }
+        }
+      }
+    },
     "pair.new_code": {
       "extractionState": "manual",
       "localizations": {

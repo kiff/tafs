@@ -1423,6 +1423,7 @@
     <string name="pair_failed">%3$s n\'a pas été ajouté : %2$s. Affichez un nouveau code et réessayez.</string>
     <string name="pair_from_sign_in">Vous utilisez déjà tafs sur votre téléphone ? Ajoutez %2$s avec lui.</string>
     <string name="pair_keychain_refused">Ce Mac n\'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$s), il n\'a donc pas été ajouté. Affichez un nouveau code et réessayez.</string>
+    <string name="pair_keyring_refused">Cet ordinateur n\'a pas pu enregistrer sa connexion, il n\'a donc pas été ajouté : il lui faut un trousseau actif et déverrouillé, comme GNOME Keyring, KWallet ou KeePassXC. Configurez-en un ou déverrouillez-le, puis affichez un nouveau code et réessayez.</string>
     <string name="pair_new_code">Afficher un nouveau code</string>
     <string name="pair_passkey_why_body">Elle reste sur %3$s, protégée par %2$s. Avec elle, %3$s approuve les actions de vos tafs, et rien n\'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.</string>
     <string name="pair_passkey_why_go">Créer la clé d\'accès</string>

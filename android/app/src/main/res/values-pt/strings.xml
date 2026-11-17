@@ -1423,6 +1423,7 @@
     <string name="pair_failed">Este %1$s não foi adicionado: %2$s. Mostre um código novo e tente outra vez.</string>
     <string name="pair_from_sign_in">Já usa o tafs no telemóvel? Adicione este %1$s com ele.</string>
     <string name="pair_keychain_refused">Este Mac não conseguiu guardar o início de sessão no porta-chaves (erro %1$s), por isso não foi adicionado. Mostre um código novo e tente outra vez.</string>
+    <string name="pair_keyring_refused">Este computador não conseguiu guardar o início de sessão, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez.</string>
     <string name="pair_new_code">Mostrar um código novo</string>
     <string name="pair_passkey_why_body">Fica neste %1$s, protegida pelo %2$s. Com ela, este %1$s aprova as ações dos seus tafs, e nada é aprovado sem si. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.</string>
     <string name="pair_passkey_why_go">Criar a chave de acesso</string>

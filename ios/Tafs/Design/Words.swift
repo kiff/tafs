@@ -2743,6 +2743,8 @@ enum Words {
         static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device, Words.demonstrative(device)) }
         /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
         static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
+        /// This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again.
+        static var keyringRefused: String { Words.line("pair.keyring_refused") }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
         /// It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.

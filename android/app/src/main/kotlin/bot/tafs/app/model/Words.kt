@@ -1481,6 +1481,7 @@ object Words {
     fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why, Words.demonstrative(device, capital = true))
     fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device, Words.demonstrative(device))
     fun keychainRefused(code: String): String = Res.s(R.string.pair_keychain_refused, code)
+    val keyringRefused: String get() = Res.s(R.string.pair_keyring_refused)
     val newCode: String get() = Res.s(R.string.pair_new_code)
     fun passkeyWhyBody(device: String, biometry: String): String = Res.s(R.string.pair_passkey_why_body, device, biometry, Words.demonstrative(device))
     val passkeyWhyGo: String get() = Res.s(R.string.pair_passkey_why_go)

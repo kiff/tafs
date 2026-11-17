@@ -1423,6 +1423,7 @@
     <string name="pair_failed">Dieser %1$s wurde nicht hinzugefügt: %2$s. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_from_sign_in">Nutzt du tafs schon auf deinem Handy? Füge diesen %1$s damit hinzu.</string>
     <string name="pair_keychain_refused">Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$s) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.</string>
+    <string name="pair_keyring_refused">Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_new_code">Neuen Code zeigen</string>
     <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
     <string name="pair_passkey_why_go">Passkey anlegen</string>

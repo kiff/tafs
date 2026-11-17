@@ -7,6 +7,7 @@
   "pair.failed": "{device|This} n'a pas été ajouté : {why}. Affichez un nouveau code et réessayez.",
   "pair.from_sign_in": "Vous utilisez déjà tafs sur votre téléphone ? Ajoutez {device|this} avec lui.",
   "pair.keychain_refused": "Ce Mac n'a pas pu enregistrer sa connexion dans le trousseau (erreur {code}), il n'a donc pas été ajouté. Affichez un nouveau code et réessayez.",
+  "pair.keyring_refused": "Cet ordinateur n'a pas pu enregistrer sa connexion, il n'a donc pas été ajouté : il lui faut un trousseau actif et déverrouillé, comme GNOME Keyring, KWallet ou KeePassXC. Configurez-en un ou déverrouillez-le, puis affichez un nouveau code et réessayez.",
   "pair.new_code": "Afficher un nouveau code",
   "pair.passkey_why_body": "Elle reste sur {device|this}, protégée par {biometry}. Avec elle, {device|this} approuve les actions de vos tafs, et rien n'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.",
   "pair.passkey_why_go": "Créer la clé d'accès",
