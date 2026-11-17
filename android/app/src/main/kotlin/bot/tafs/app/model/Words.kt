@@ -1690,6 +1690,7 @@ object Words {
     val approvedThenDone: String get() = Res.s(R.string.record_approved_then_done)
     fun cardIssuedBy(owner: String): String = Res.s(R.string.record_card_issued_by, owner)
     val connectionRefusedBeforeSending: String get() = Res.s(R.string.record_connection_refused_before_sending)
+    fun daySpent(amount: String): String = Res.s(R.string.record_day_spent, amount)
     object Decided {
       fun approvedBy(who: String): String = Res.s(R.string.record_decided_approved_by, who)
       val approvedByYou: String get() = Res.s(R.string.record_decided_approved_by_you)

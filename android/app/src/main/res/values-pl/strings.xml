@@ -1711,6 +1711,7 @@
     <string name="record_approved_then_done">Zatwierdzone przez Ciebie, potem wykonane</string>
     <string name="record_card_issued_by">Card wydana przez: %1$s</string>
     <string name="record_connection_refused_before_sending">Połączenie odrzuciło to przed wysłaniem. Nic nie zostało wysłane.</string>
+    <string name="record_day_spent">wydatki: %1$s</string>
     <string name="record_decided_approved_by">zatwierdzone przez %1$s</string>
     <string name="record_decided_approved_by_you">zatwierdzone przez Ciebie</string>
     <string name="record_decided_card_issued">Card wydana</string>

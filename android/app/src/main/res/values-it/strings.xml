@@ -1605,6 +1605,7 @@
     <string name="record_approved_then_done">Approvata da te, poi fatto</string>
     <string name="record_card_issued_by">Card emessa da %1$s</string>
     <string name="record_connection_refused_before_sending">Il collegamento l\'ha rifiutato prima dell\'invio. Non è stato inviato nulla.</string>
+    <string name="record_day_spent">%1$s di spesa</string>
     <string name="record_decided_approved_by">approvata da %1$s</string>
     <string name="record_decided_approved_by_you">approvata da te</string>
     <string name="record_decided_card_issued">Card emessa</string>

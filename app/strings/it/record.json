@@ -11,6 +11,7 @@
   "record.approved_then_done": "Approvata da te, poi fatto",
   "record.card_issued_by": "Card emessa da {owner}",
   "record.connection_refused_before_sending": "Il collegamento l'ha rifiutato prima dell'invio. Non è stato inviato nulla.",
+  "record.day_spent": "{amount} di spesa",
   "record.decided.approved_by": "approvata da {who}",
   "record.decided.approved_by_you": "approvata da te",
   "record.decided.card_issued": "Card emessa",
