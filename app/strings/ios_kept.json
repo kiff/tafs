@@ -26,7 +26,9 @@
   },
   "Model/SetupComponent.swift": {
     "not now": "an answer sent to tafs cloud",
-    "signed in": "an answer sent to tafs cloud"
+    "signed in": "an answer sent to tafs cloud",
+    " · it didn't go through: ": "tafs cloud's English words for a failed answer, read as data, never shown",
+    "already approved": "a card's answer in the form the cards read, data, never shown"
   },
   "Services/HaltAllIntent.swift": {
     "Stop my \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings",

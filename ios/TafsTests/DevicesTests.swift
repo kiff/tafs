@@ -1,3 +1,4 @@
+import AVFoundation
 import CryptoKit
 import LocalAuthentication
 import XCTest
@@ -126,6 +127,68 @@ final class DevicesTests: XCTestCase {
         let sent = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/pairings" })
         XCTAssertEqual(sent.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=\(lines[5]),v1=signature", "v1, never a window's v2")
         XCTAssertTrue(StubProtocol.sent.contains { $0.httpMethod == "GET" && $0.url?.path == "/v1/me/devices" }, "Devices read again")
+    }
+
+    private func reads() -> Int {
+        StubProtocol.sent.filter { $0.httpMethod == "GET" && $0.url?.path == "/v1/me/devices" }.count
+    }
+
+    /// The computer finishes its half after the phone's yes, so KIFF may list it only later: Devices is
+    /// read again until it shows, then no more. As Android's (tafs#1281).
+    func testAComputerKIFFListsOnlyAfterItsOwnHalfIsReadUntilItShowsThenNoMore() async throws {
+        let model = await signedIn(signer: FaceIDSigner())
+        model.pairFollowNanoseconds = 1_000_000
+        await model.refreshDevices()
+        StubProtocol.responses["POST /v1/me/pairings"] = (201, #"{"pairing":{"id":"pair_1","code":"XFI4MD","expires":"2026-11-14T21:00:00Z"}}"#)
+        // The read right after the yes still has the old list; the next one lists the computer.
+        let listed = #"{"devices":[{"id":"dev_ipad01","name":"iPad","this_device":true},{"id":"dev_pc01","name":"tafs on this Windows PC"}]}"#
+        StubProtocol.thenRespond = ["GET /v1/me/devices": ["GET /v1/me/devices": (200, listed)]]
+        StubProtocol.sent = []
+        _ = await model.pairComputer(try pairingCode())
+        XCTAssertEqual(reads(), 1, "the read right after the yes")
+        XCTAssertFalse(model.devices.contains { $0.id == "dev_pc01" })
+        await model.pairFollow?.value
+        XCTAssertTrue(model.devices.contains { $0.id == "dev_pc01" }, "listed without reopening Devices")
+        XCTAssertEqual(reads(), 2, "listed: no more reads")
+    }
+
+    /// KIFF never lists a new device: Devices is read at most ten times more, then the phone stops.
+    func testADeviceKIFFNeverListsIsReadAtMostTenTimesMore() async throws {
+        let model = await signedIn(signer: FaceIDSigner())
+        model.pairFollowNanoseconds = 1_000_000
+        await model.refreshDevices()
+        StubProtocol.responses["POST /v1/me/pairings"] = (201, #"{"pairing":{"id":"pair_1","code":"XFI4MD","expires":"2026-11-14T21:00:00Z"}}"#)
+        StubProtocol.sent = []
+        _ = await model.pairComputer(try pairingCode())
+        await model.pairFollow?.value
+        XCTAssertEqual(AppModel.pairFollowReads, 10)
+        XCTAssertEqual(reads(), 1 + AppModel.pairFollowReads)
+    }
+
+    /// A pairing that didn't go through starts no reads.
+    func testARefusedPairingFollowsNothing() async throws {
+        let model = await signedIn(signer: FaceIDSigner())
+        model.pairFollowNanoseconds = 1_000_000
+        await model.refreshDevices()
+        StubProtocol.responses["POST /v1/me/pairings"] = (409, #"{"error":"pairing_used"}"#)
+        StubProtocol.sent = []
+        _ = await model.pairComputer(try pairingCode())
+        XCTAssertNil(model.pairFollow)
+        XCTAssertEqual(reads(), 0)
+    }
+
+    /// Add a device's camera preview follows how the screen is held, the four ways (the owner's iPad
+    /// showed a computer turned 90° in landscape). The simulator has no camera, so the turn is checked here.
+    func testTheCameraPreviewFollowsTheScreensOrientation() {
+        XCTAssertEqual(QRScannerController.previewAngle(.portrait), 90)
+        XCTAssertEqual(QRScannerController.previewAngle(.landscapeRight), 0)
+        XCTAssertEqual(QRScannerController.previewAngle(.landscapeLeft), 180)
+        XCTAssertEqual(QRScannerController.previewAngle(.portraitUpsideDown), 270)
+        XCTAssertEqual(QRScannerController.previewAngle(.unknown), 90)
+        XCTAssertEqual(QRScannerController.videoOrientation(.portrait), .portrait)
+        XCTAssertEqual(QRScannerController.videoOrientation(.landscapeRight), .landscapeRight)
+        XCTAssertEqual(QRScannerController.videoOrientation(.landscapeLeft), .landscapeLeft)
+        XCTAssertEqual(QRScannerController.videoOrientation(.portraitUpsideDown), .portraitUpsideDown)
     }
 
     /// KIFF's code differs from the one checked: the person is told, and to sign it out if it isn't theirs.

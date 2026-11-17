@@ -430,10 +430,10 @@ things (`runtime/src/cloud/approval.ts`):
   confirm, at exactly that version. Before signing, the phone rebuilds the message from what it
   holds (its own account, the card's grant or draft, and the digest or draft version the person
   was shown, never the ask's) and refuses any other, and signs nothing when nothing was shown: the phone is the last check, never a signing service (Android
-  `AppModel.expectedApprovalMessage`, iOS the same). On Android the connect step's whole approve body must also be the one the
-  phone builds from what the card showed: `{digest}` with the digest shown, plus `kiff_profile` with the digests of KIFF's words only
-  when the card showed them (`AppModel.shownConnectBody`). Another profile, other words, words left out or a field added, and
-  nothing is signed. It signs that message and nothing else, makes that
+  `AppModel.expectedApprovalMessage`, iOS the same). The connect step's whole approve body must also be the one the
+  phone builds from what the card showed: `{digest}` with the digest shown, plus `kiff_profile` with the digests of KIFF's
+  words only when the card showed them (Android and iOS: `AppModel.shownConnectBody`). Another profile, other words, words
+  left out or a field added, and nothing is signed. It signs that message and nothing else, makes that
   call as given, and reports what came of it (`POST …/approval/{ask}`: connected, listed,
   confirmed, the sign-in closed, no code, not connected, or failed with the service's reason),
   signed as a setup call to KIFF. tafs cloud asks KIFF whether this phone signed the report,
