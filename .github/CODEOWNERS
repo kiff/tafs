@@ -28,6 +28,7 @@
 /ios/Tafs/KIFF/SigningTime.swift @kiff-qa
 /ios/Tafs/Services/ApprovalSigner.swift @kiff-qa
 /ios/Tafs/Services/PasskeyMaker.swift @kiff-qa
+/ios/scripts/asc-profiles.rb @kiff-qa
 *.entitlements @kiff-qa
 /ios/scripts/asc-*.rb @kiff-qa
 
@@ -61,6 +62,7 @@
 /.github/workflows/android.yml @kiff-qa
 /.github/workflows/mac-testflight.yml @kiff-qa
 /.github/workflows/mac-installer-cert.yml @kiff-qa
+/.github/workflows/mac-developer-id.yml @kiff-qa
 /.github/workflows/runtime.yml @kiff-qa
 /.github/workflows/upgrade.yml @kiff-qa
 /.github/upgrade-rule-b.sh @kiff-qa

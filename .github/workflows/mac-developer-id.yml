@@ -1,0 +1,303 @@
+name: Mac Developer ID
+
+# The download for macOS 13 and later (docs/mac-app.md, "The download for macOS 13 and
+# later"): the Mac Catalyst app, signed with Developer ID and the hardened runtime,
+# notarized by Apple and stapled, packed as `tafs-mac-<version>.dmg` and attached to a
+# **draft** release `mac-v<version>` of this repo, the names kiff.dev/tafs/download reads.
+# A draft is seen only by people with push access, so it stays the team's until the owner
+# says the build's test passed and it's published (never by this workflow).
+#
+# By hand, from main only. It runs in the `mac-signing` environment (main only, a required
+# reviewer), whose secrets no workflow on another branch and no pull request can read:
+# DEVELOPER_ID_P12 and DEVELOPER_ID_P12_PASSWORD (the Developer ID Application
+# certificate), ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY_P8 (App Store Connect, for the
+# profiles and notarization) and APPLE_TEAM_ID. It prints names, ids, hashes and Apple's
+# answers only, never a key, a certificate, a password or a profile.
+#
+# The order, as the review asked:
+# 1. The Xcode project is generated in a job of its own, with no environment and no secret,
+#    by an XcodeGen release pinned by its SHA-256. Only what generating made or changed is handed
+#    over, never a script: the job that holds the keys installs nothing and runs only its own
+#    checkout's scripts.
+# 2. The Developer ID profiles carry webcredentials:kiff.dev, and the signed app's own
+#    entitlements are read back and must name it: without it, passkey sign-in breaks.
+# 3. The app is notarized and stapled, then checked as Gatekeeper and codesign judge it.
+# 4. The image holding the stapled app is signed, notarized, stapled and checked again.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mac-developer-id
+  cancel-in-progress: false
+
+jobs:
+  # No environment and no secret: what it installs and runs can't reach a key.
+  project:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 15
+    env:
+      XCODEGEN_VERSION: "2.44.1"
+      XCODEGEN_SHA256: "a2e905fb68446e9bb4008cdfe2e13e3f176d0cbcca828b71770f8e53fca91b73"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project with a pinned XcodeGen
+        run: |
+          curl -sSLf -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          cd ios && "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate && cd ..
+          # Only what generating made or changed (the project, Info.plists, entitlements), never a
+          # script or source: the signing job runs only its own checkout's scripts.
+          { git ls-files --others -- ios; git ls-files --modified -- ios; } | sort -u > "$RUNNER_TEMP/generated.txt"
+          if grep -E '\.(sh|rb|py|swift|js)$' "$RUNNER_TEMP/generated.txt"; then
+            echo "::error::Generating the project changed a script or source file"; exit 1
+          fi
+          wc -l < "$RUNNER_TEMP/generated.txt"
+          tar -czf "$RUNNER_TEMP/ios.tgz" -T "$RUNNER_TEMP/generated.txt"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-developer-id-project
+          path: ${{ runner.temp }}/ios.tgz
+          retention-days: 1
+
+  release:
+    needs: project
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 75
+    environment: mac-signing
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: The secrets are there
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=""
+          for name in P12 P12_PASSWORD ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
+            eval "[ -n \"\${$name}\" ]" || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing in the mac-signing environment:$missing (docs/mac-app.md, \"The download for macOS 13 and later\")"
+            exit 1
+          fi
+
+      # The project the job above generated, from this same run and commit, fetched with the runner's
+      # own gh and this job's token: nothing is installed here, and no other action runs.
+      - name: Put the generated project in place
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n mac-developer-id-project -D "$RUNNER_TEMP/project"
+          tar -xzf "$RUNNER_TEMP/project/ios.tgz"
+
+      - name: Write the App Store Connect key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          umask 077
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Import the Developer ID certificate into a keychain of this run's own
+        env:
+          P12: ${{ secrets.DEVELOPER_ID_P12 }}
+          P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+        run: |
+          umask 077
+          KC="$RUNNER_TEMP/signing.keychain-db"
+          echo "KEYCHAIN=$KC" >> "$GITHUB_ENV"
+          KC_PASS=$(openssl rand -hex 24)
+          echo "::add-mask::$KC_PASS"
+          printf '%s' "$P12" | base64 --decode > "$RUNNER_TEMP/developer-id.p12"
+          security create-keychain -p "$KC_PASS" "$KC"
+          security set-keychain-settings -lut 3600 "$KC"
+          security unlock-keychain -p "$KC_PASS" "$KC"
+          security import "$RUNNER_TEMP/developer-id.p12" -k "$KC" -P "$P12_PASSWORD" -f pkcs12 -T /usr/bin/codesign -T /usr/bin/security
+          rm -f "$RUNNER_TEMP/developer-id.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KC_PASS" "$KC" > /dev/null
+          # This run's keychain first, then the runner's, so codesign and xcodebuild find the identity.
+          # shellcheck disable=SC2046
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$KC" | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -1)
+          [ -n "$identity" ] || { echo "::error::DEVELOPER_ID_P12 holds no Developer ID Application identity"; exit 1; }
+          echo "IDENTITY=$identity" >> "$GITHUB_ENV"
+          SERIAL=$(security find-certificate -c "Developer ID Application" -p "$KC" | openssl x509 -noout -serial | cut -d= -f2)
+          echo "DIST_CERT_SERIAL=$SERIAL" >> "$GITHUB_ENV"
+          echo "signing as $identity"
+
+      - name: Make and install the Developer ID profiles
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          ruby ios/scripts/asc-profiles.rb --developer-id \
+            bot.tafs.app+push+timesensitive+associateddomains="tafs Developer ID CI" \
+            bot.tafs.app.notify="tafs notify Developer ID CI"
+
+      - name: Archive, with the hardened runtime
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cd ios
+          xcodebuild archive \
+            -project Tafs.xcodeproj -scheme Tafs -configuration Release \
+            -destination 'generic/platform=macOS,variant=Mac Catalyst' \
+            -archivePath "$RUNNER_TEMP/TafsMac.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            ENABLE_HARDENED_RUNTIME=YES \
+            TAFS_PROFILE_APP="tafs Developer ID CI" \
+            TAFS_PROFILE_NOTIFY="tafs notify Developer ID CI" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN --timestamp" \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
+
+      - name: Export the app for Developer ID
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>developer-id</string>
+            <key>destination</key><string>export</string>
+            <key>teamID</key><string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Developer ID Application</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>bot.tafs.app</key><string>tafs Developer ID CI</string>
+              <key>bot.tafs.app.notify</key><string>tafs notify Developer ID CI</string>
+            </dict>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/TafsMac.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export"
+          app=$(ls -d "$RUNNER_TEMP"/export/*.app | head -1)
+          [ -d "$app" ] || { echo "::error::The export holds no app"; exit 1; }
+          echo "APP=$app" >> "$GITHUB_ENV"
+          version=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist")
+          case "$version" in *[!0-9.]*|"") echo "::error::Unexpected version '$version'"; exit 1;; esac
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "version $version, build ${{ github.run_number }}"
+
+      # Passkey sign-in needs webcredentials:kiff.dev in the signed app itself, not only in the
+      # source file: a Developer ID profile without Associated Domains would sign it away.
+      - name: The signed app keeps kiff.dev's passkeys, its team, and the hardened runtime
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          codesign -d --entitlements - --xml "$APP" > "$RUNNER_TEMP/entitlements.plist" 2>/dev/null
+          if ! /usr/libexec/PlistBuddy -c "Print :com.apple.developer.associated-domains" "$RUNNER_TEMP/entitlements.plist" | grep -qx '[[:space:]]*webcredentials:kiff.dev'; then
+            echo "::error::The signed app's entitlements don't name webcredentials:kiff.dev: passkey sign-in would break"
+            exit 1
+          fi
+          team=$(codesign -dv "$APP" 2>&1 | sed -n 's/^TeamIdentifier=//p')
+          [ "$team" = "$APPLE_TEAM_ID" ] || { echo "::error::Signed by team $team, not ours"; exit 1; }
+          codesign -dv "$APP" 2>&1 | grep -q 'flags=.*runtime' || { echo "::error::The hardened runtime is off"; exit 1; }
+          echo "entitlements: webcredentials:kiff.dev present; team ours; hardened runtime on"
+
+      - name: Notarize the app and staple its ticket
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/tafs-app.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/tafs-app.zip" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID" --wait --timeout 30m --output-format json > "$RUNNER_TEMP/notary-app.json" || true
+          status=$(plutil -extract status raw -o - "$RUNNER_TEMP/notary-app.json" 2>/dev/null || echo unknown)
+          id=$(plutil -extract id raw -o - "$RUNNER_TEMP/notary-app.json" 2>/dev/null || echo "")
+          echo "app notarization $id: $status"
+          if [ "$status" != "Accepted" ]; then
+            [ -n "$id" ] && xcrun notarytool log "$id" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" || true
+            echo "::error::Apple didn't accept the app ($status)"
+            exit 1
+          fi
+          xcrun stapler staple "$APP"
+          xcrun stapler validate "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl -a -vv --type execute "$APP"
+
+      - name: Pack the image, sign it, notarize it and staple its ticket
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          dmg="$RUNNER_TEMP/tafs-mac-$VERSION.dmg"
+          stage="$RUNNER_TEMP/dmg"
+          mkdir -p "$stage"
+          ditto "$APP" "$stage/$(basename "$APP")"
+          ln -s /Applications "$stage/Applications"
+          hdiutil create -volname "tafs" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg"
+          codesign --sign "$IDENTITY" --keychain "$KEYCHAIN" --timestamp "$dmg"
+          xcrun notarytool submit "$dmg" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID" --wait --timeout 30m --output-format json > "$RUNNER_TEMP/notary-dmg.json" || true
+          status=$(plutil -extract status raw -o - "$RUNNER_TEMP/notary-dmg.json" 2>/dev/null || echo unknown)
+          id=$(plutil -extract id raw -o - "$RUNNER_TEMP/notary-dmg.json" 2>/dev/null || echo "")
+          echo "image notarization $id: $status"
+          if [ "$status" != "Accepted" ]; then
+            [ -n "$id" ] && xcrun notarytool log "$id" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" || true
+            echo "::error::Apple didn't accept the image ($status)"
+            exit 1
+          fi
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          # As Gatekeeper judges a downloaded image.
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
+          echo "DMG=$dmg" >> "$GITHUB_ENV"
+          shasum -a 256 "$dmg"
+
+      # A draft, seen only by people with push access. A published release of this version stops
+      # the run: MARKETING_VERSION in ios/project.yml goes up first. A draft of it is replaced.
+      - name: Attach it to a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="mac-v$VERSION"
+          sha=$(shasum -a 256 "$DMG" | cut -d' ' -f1)
+          notes="For the team: the Mac Catalyst app for macOS 13 and later, signed with Developer ID, notarized and stapled. Build ${{ github.run_number }}, from ${GITHUB_SHA:0:7}. SHA-256: $sha"
+          if gh release view "$tag" -R "$GITHUB_REPOSITORY" --json isDraft -q .isDraft > "$RUNNER_TEMP/draft.txt" 2>/dev/null; then
+            if [ "$(cat "$RUNNER_TEMP/draft.txt")" != "true" ]; then
+              echo "::error::$tag is already published. Raise MARKETING_VERSION in ios/project.yml."
+              exit 1
+            fi
+            gh release upload "$tag" "$DMG" -R "$GITHUB_REPOSITORY" --clobber
+            gh release edit "$tag" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --notes "$notes"
+            echo "draft $tag replaced"
+          else
+            gh release create "$tag" "$DMG" -R "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft \
+              --title "tafs for Mac $VERSION (macOS 13 and later)" --notes "$notes"
+            echo "draft $tag made"
+          fi
+
+      - name: Remove the keychain and the key
+        if: always()
+        run: |
+          [ -n "${KEYCHAIN:-}" ] && security delete-keychain "$KEYCHAIN" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/developer-id.p12" "$RUNNER_TEMP/tafs-app.zip"

@@ -75,6 +75,58 @@ If anything readable ever reaches a log, revoke the certificate in App Store Con
 
 **The app's category.** The Mac App Store refuses a Mac upload whose Info.plist has no `LSApplicationCategoryType` (Mac TestFlight's first run stopped there). `project.yml` sets it to `public.app-category.business` (Business); it should be the App Store listing's primary category, which the owner confirms. iOS ignores the key. The Mac workflow checks it's there.
 
+## The download for macOS 13 and later
+
+Beside the Mac App Store listing, which stays, the same app is offered as a download from
+kiff.dev/tafs/download: signed with Developer ID, notarized by Apple and stapled, so it opens with
+no warning. macOS 12 gets tafs-macos's own download.
+
+**Mac Developer ID** (`.github/workflows/mac-developer-id.yml`) makes it. It runs by hand, from main
+only, in the **`mac-signing`** environment: main only, with a required reviewer. That environment's
+secrets can't be read by a pull request or by a workflow on any other branch, and the run prints no
+key, certificate, password or profile. It does this, in order:
+
+0. **The project:** generated in a job of its own, with no environment and no secret, by an
+   XcodeGen release pinned by its SHA-256. Only what generating made or changed (the project, its
+   Info.plists and entitlements) goes to the signing job, never a script. That job installs nothing
+   and runs only its own checkout's scripts, so nothing a package brings can reach the keys.
+1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_DIRECT`), made through the
+   API with the Developer ID Application certificate (`asc-profiles.rb --developer-id`): "tafs
+   Developer ID CI" and "tafs notify Developer ID CI". They're made with the same capabilities as the
+   App Store's, Associated Domains among them, and the script stops if a profile lacks one.
+2. **The archive:** the app and its notification extension, with the hardened runtime, exported for
+   Developer ID.
+3. **The signed app is checked before anything else:**
+   - its own entitlements (`codesign -d --entitlements -`) must name `webcredentials:kiff.dev`, or
+     passkey sign-in would break and the run stops;
+   - it must be signed by our team;
+   - its hardened runtime must be on.
+4. **The app is notarized and stapled,** then checked with `codesign --verify --deep --strict` and
+   `spctl -a -vv`. Either failing stops the run.
+5. **The image:** `tafs-mac-<version>.dmg` holds the stapled app and a link to Applications. It's
+   signed, notarized, stapled and checked as Gatekeeper judges a download.
+6. **The release:** the image goes on a **draft** release `mac-v<version>`, with its SHA-256 in the
+   notes. These are the names kiff.dev/tafs/download reads, and a draft is only seen by people with
+   push access. A draft of the same version is replaced; a published one stops the run, so
+   `MARKETING_VERSION` in `ios/project.yml` goes up first. The build number is the run's number.
+
+**Publishing** is never this workflow's. Only the owner publishes it, once their test of the draft
+passed. The download page shows it within 10 minutes.
+
+**Before the first run, once:**
+- **The `mac-signing` environment's secrets:** `DEVELOPER_ID_P12` and `DEVELOPER_ID_P12_PASSWORD`,
+  this repository's own Developer ID Application certificate. It's not tafs-macos's: each repository
+  has its own, so neither repository's key is copied to the other. Also `ASC_KEY_ID`, `ASC_ISSUER_ID`,
+  `ASC_KEY_P8` and `APPLE_TEAM_ID`. The run names any that are missing.
+- **The environment's protection, as it is today:** a required reviewer and deployments from `main`
+  only. Admin bypass is on, by the owner's choice. Turning it off and moving to a reviewer account
+  only the owner uses both come before any download is published. A run's approval is the owner's
+  own, in GitHub, and never a session's.
+
+**Updates:** the App Store doesn't update this copy. An updater that reads a signed feed comes in the
+next version: it tells the person a new version is ready, checks the download against the signed
+feed and our team, and opens it for them to install.
+
 ## Signing and the sandbox
 
 The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/TafsNotifyMac.entitlements`, set for the Mac SDK only in `ios/project.yml` (`CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`). The iPhone and iPad's stay generated from `project.yml`, unchanged. The Mac's files hold every key the iPhone and iPad's do, and:
