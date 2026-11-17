@@ -1,0 +1,5 @@
+- Na tablecie jeden pasek boczny dla całej aplikacji, jak na iPadzie: Czeka na Ciebie, Rejestr, Kalendarz, Plan i wykorzystanie, Połącz aplikacje, Twoje tafs i Coach.
+- Na tablecie Coach otwiera się obok tego, co robisz, i możesz go poszerzyć.
+- Strona tafa pokazuje pod jego nazwą wersję działającą na żywo.
+- Na tablecie „Uruchamia się, gdy” i „Wyniki trafiają do” otwierają się na osobnym ekranie.
+- Rejestr pokazuje wydatki z każdego dnia.

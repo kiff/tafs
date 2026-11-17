@@ -1,0 +1,5 @@
+- On a tablet, one sidebar for the whole app, as on iPad: Needs you, Record, Calendar, Plan & usage, Connect apps, your tafs and Coach.
+- On a tablet, Coach opens beside what you're doing, and you can widen it.
+- A taf's page shows its live version under its name.
+- On a tablet, "Starts when" and "Results go to" open as their own screens.
+- The Record shows what each day's money came to.
