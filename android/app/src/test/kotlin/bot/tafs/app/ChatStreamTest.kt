@@ -305,6 +305,18 @@ class ChatStreamTest {
     assertEquals("one message, not two: $shown", 1, shown.size)
   }
 
+  @Test fun anIdAlreadyUsedForOtherWordsSaysSoNotThatSomethingChanged() = runTest {
+    // tafs cloud's 409 `dedup_key_conflict`, which carries no words of its own: the not-sent row says the message went with other
+    // words, in the app's line for it, and nothing is sent plainly in its place.
+    reads()
+    transport.answer(stream, 409, """{"error":"this client_message_id was already used for another message","code":"dedup_key_conflict"}""")
+    val m = model()
+    assertTrue(!m.deliverChat("Refund Ana", "refunds-1"))
+    assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
+    val why = m.state.value.chatUnsent["refunds-1"]!!.single().why
+    assertTrue(why, why.contains(bot.tafs.app.model.Words.Error.sentWithOtherText))
+  }
+
   @Test fun aRefusalOnTheStreamIsSaidAndNothingIsSentPlainly() = runTest {
     reads()
     transport.answer(stream, 429, """{"error":"too many messages"}""")
