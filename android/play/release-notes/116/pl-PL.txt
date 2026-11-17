@@ -1,0 +1,7 @@
+- Twój przegląd: dwa razy dziennie, co na Ciebie czeka i co zrobiły Twoje tafs.
+- Coach tworzy taf z Twoich własnych słów, jednym odciskiem palca.
+- „Zezwalaj od teraz” przy oczekującym wywołaniu.
+- Na zablokowanym telefonie alert mówi tylko „Taf czeka na Ciebie”.
+- Na tablecie: logowanie przez KIFF lub telefonem.
+- Nowe rysunki na ekranie powitalnym i na pustych ekranach.
+- Poprawki w łączeniu aplikacji, Urządzeniach i zatwierdzaniu.
