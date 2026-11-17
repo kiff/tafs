@@ -44,9 +44,6 @@ export const COACH_WORDING: readonly Wording[] = [
       "messages",
       "pages",
       "what",
-      "whatever",
-      "from",
-      "mail",
       "unread",
       "incoming"
     ],
