@@ -284,6 +284,27 @@ class ChatStreamTest {
     assertEquals(first, idOf(transport.requestsTo("POST /v1/tafs/taf_1/messages").last()))
   }
 
+  @Test fun aRetryTafsCloudAnswersAsARepeatIsOneMessageInTheThread() = runTest {
+    // The first try reached tafs cloud before the network dropped: Retry, under the same id, is answered with that send's run and
+    // message (`repeat: true`), and the thread holds the message once, never twice.
+    reads(thread = """{"messages":[{"id":"run_1.in","at":"2026-10-28T08:00:00Z","from":"owner","text":"Refund Ana","session":"s1"}]}""")
+    transport.answer(stream, 503, """{"error":"unavailable"}""")
+    transport.drop("POST /v1/tafs/taf_1/messages")
+    transport.answer(stream, 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","new_session":false,"run":"run_1","message":{"id":"run_1.in","at":"2026-10-28T08:00:00Z"},"repeat":true}""")
+    val m = model()
+    assertTrue(!m.deliverChat("Refund Ana", "refunds-1"))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertTrue(m.resendUnsent("refunds-1", unsent.message))
+    m.loadChat("refunds-1")
+    testScheduler.runCurrent()
+    val ids = transport.requestsTo("POST /v1/tafs/taf_1/messages").map(::idOf)
+    assertEquals(listOf(unsent.messageId, unsent.messageId), ids)
+    assertTrue("no message left as not sent", m.state.value.chatUnsent["refunds-1"].isNullOrEmpty())
+    val shown = m.state.value.chats["refunds-1"].orEmpty().filter { it.text == "Refund Ana" }
+    assertEquals("one message, not two: $shown", 1, shown.size)
+  }
+
   @Test fun aRefusalOnTheStreamIsSaidAndNothingIsSentPlainly() = runTest {
     reads()
     transport.answer(stream, 429, """{"error":"too many messages"}""")
