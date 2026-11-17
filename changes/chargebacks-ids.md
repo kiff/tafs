@@ -1,0 +1,1 @@
+- **Chargebacks:** the taf copies a dispute's id, and any order or ticket id, from what a tool returned instead of typing it, and tells each dispute from its own calls, so a failed attempt on one is never reported as another's.
