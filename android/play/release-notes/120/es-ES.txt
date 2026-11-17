@@ -1,0 +1,3 @@
+- Las tarjetas de aprobación de Coach muestran al instante lo que apruebas, aunque lleguen dos a la vez. Ya no esperan a que salgas de la pantalla y vuelvas.
+- TalkBack nombra cada botón, pestaña y opción, y dice cuál está seleccionada.
+- Con el texto más grande, una Card ya no corta su última línea.

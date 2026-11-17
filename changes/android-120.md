@@ -1,0 +1,1 @@
+- **Android 120 (1.39.2):** Coach's approval cards show KIFF's words straight away, even when two arrive at once (#1354); TalkBack names every control and says which is selected, and a Card keeps its last line at the largest text (#1351). Internal track first, then production when promoted ([android-app.md](docs/android-app.md)).

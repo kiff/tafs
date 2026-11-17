@@ -1,0 +1,3 @@
+- De goedkeuringskaarten van Coach tonen meteen wat je goedkeurt, ook als er twee tegelijk komen. Ze wachten niet meer tot je het scherm verlaat en terugkomt.
+- TalkBack noemt elke knop, elk tabblad en elke keuze, en zegt welke geselecteerd is.
+- Bij de grootste tekst knipt een Card zijn laatste regel niet meer af.

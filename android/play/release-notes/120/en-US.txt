@@ -1,0 +1,3 @@
+- Coach's approval cards show what you're approving straight away, even when two arrive at once. They no longer wait until you leave the screen and come back.
+- TalkBack names every button, tab and choice, and says which one is selected.
+- At the largest text size, a Card no longer cuts off its last line.
