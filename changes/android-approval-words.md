@@ -1,0 +1,1 @@
+- **Android: Coach's approval cards show KIFF's words without a tab switch.** Two cards arriving at once each said "Reading KIFF's words…" with Approve greyed until the screen was left and opened again. Each card's words are now read with Coach's thread, for its own grant ([android-app.md](docs/android-app.md)).
