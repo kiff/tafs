@@ -20,6 +20,7 @@
   "error.on_our_side": "Nothing to do on your side; we're on it.",
   "error.ours": "This phone and the server didn't understand each other. We're on it.",
   "error.request_mismatch": "This request doesn't match what it asks for. Nothing was approved.",
+  "error.sent_with_other_text": "This message was already sent with different text. Send it again as a new message.",
   "error.sign_in_code_expired": "The sign-in code expired. Start again.",
   "error.sign_in_first": "Sign in with KIFF first.",
   "error.sign_in_first_on_device": "Sign in with KIFF on this {device} first.",

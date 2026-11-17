@@ -20,6 +20,7 @@
   "error.on_our_side": "Je hoeft niets te doen; we zijn ermee bezig.",
   "error.ours": "Deze telefoon en de server begrepen elkaar niet. We zijn ermee bezig.",
   "error.request_mismatch": "Dit verzoek komt niet overeen met wat het vraagt. Er is niets goedgekeurd.",
+  "error.sent_with_other_text": "Dit bericht is al met een andere tekst verzonden. Stuur het opnieuw als nieuw bericht.",
   "error.sign_in_code_expired": "De inlogcode is verlopen. Begin opnieuw.",
   "error.sign_in_first": "Log eerst in met KIFF.",
   "error.sign_in_first_on_device": "Log eerst in met KIFF op deze {device}.",

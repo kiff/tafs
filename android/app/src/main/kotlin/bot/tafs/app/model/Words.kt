@@ -1225,6 +1225,7 @@ object Words {
     val onOurSide: String get() = Res.s(R.string.error_on_our_side)
     val ours: String get() = Res.s(R.string.error_ours)
     val requestMismatch: String get() = Res.s(R.string.error_request_mismatch)
+    val sentWithOtherText: String get() = Res.s(R.string.error_sent_with_other_text)
     val signInCodeExpired: String get() = Res.s(R.string.error_sign_in_code_expired)
     val signInFirst: String get() = Res.s(R.string.error_sign_in_first)
     fun signInFirstOnDevice(device: String): String = Res.s(R.string.error_sign_in_first_on_device, device, Words.demonstrative(device))

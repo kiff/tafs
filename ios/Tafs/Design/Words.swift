@@ -2269,6 +2269,8 @@ enum Words {
         static var ours: String { Words.line("error.ours") }
         /// This request doesn't match what it asks for. Nothing was approved.
         static var requestMismatch: String { Words.line("error.request_mismatch") }
+        /// This message was already sent with different text. Send it again as a new message.
+        static var sentWithOtherText: String { Words.line("error.sent_with_other_text") }
         /// The sign-in code expired. Start again.
         static var signInCodeExpired: String { Words.line("error.sign_in_code_expired") }
         /// Sign in with KIFF first.
