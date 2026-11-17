@@ -1,0 +1,3 @@
+- A barra do Coach é a mesma desde o primeiro ecrã: Voltar e, num tablet, o botão que a alarga.
+- A nota sob Aprovar no Setup indica agora o dispositivo em que aprova, e não sempre um telefone.
+- No separador Card de um taf, Revogar é a última linha, depois de Bloquear, Alterações ao seu funcionamento e Utilização.

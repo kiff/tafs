@@ -1,0 +1,3 @@
+- De balk van Coach is vanaf het eerste scherm hetzelfde: Terug en op een tablet de knop die hem breder maakt.
+- De notitie onder Goedkeuren in Setup noemt nu het apparaat waarop je goedkeurt, niet altijd een telefoon.
+- Op het Card-tabblad van een taf is Intrekken de laatste rij, na Stilzetten, Wijzigingen in hoe het werkt en Gebruik.
