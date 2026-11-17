@@ -10,6 +10,8 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -43,7 +45,8 @@ class LanguagePickerTest {
       rule.onAllNodes(hasText("Account")).fetchSemanticsNodes(atLeastOneRootRequired = false).isNotEmpty()
     }
     rule.onNodeWithText("Change language").performScrollTo().performClick()
-    rule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)).assertCountEquals(9)
+    // The picker's own rows: the theme's three choices behind it are radio buttons too.
+    rule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasAnyAncestor(isDialog())).assertCountEquals(9)
     listOf("This phone's language", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski").forEach {
       rule.onAllNodesWithText(it).assertCountEquals(1)
     }
