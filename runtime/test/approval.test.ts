@@ -1617,6 +1617,33 @@ describe("the app that waits is named so it differs from this one (other_app_fir
     expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval with this same draft: it carries the Card");
     expect(String(r.body.note)).not.toContain("(");
   });
+
+  // Eval 44162956815's night: five taps on two approval cards were answered 200, and the log said nothing of what tafs cloud
+  // decided. Each tap now leaves its decision's code in the log (approvalAskLine), never in the phone's answer.
+  it("logs each tap's decision with its code: other_app_first, and out_of_date for a card shown before it changed", async () => {
+    const lines: string[] = [];
+    const log = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { lines.push(a.map(String).join(" ")); });
+    try {
+      const s = services();
+      s.grants = [sheet({ status: "connected" }), mailbox()];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+      const w = await world(s, { draft: "drf_1" });
+      const first = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+      expect(first.body).toMatchObject({ outcome: "answered" });
+      expect(first.body).not.toHaveProperty("code");
+      const asks = () => lines.filter((l) => l.includes('"event":"approval_ask"')).map((l) => JSON.parse(l));
+      expect(asks().at(-1)).toEqual({ event: "approval_ask", component: "a1", kind: "approval", grant: "g_1", card_draft: true, shown_draft: "v3",
+        outcome: "answered", code: "other_app_first", step: null });
+      // A card the phone drew before its connection changed: read again, said in the log as out_of_date.
+      const s2 = services();
+      const w2 = await world(s2);
+      const stale = await w2.call("POST", ASK, { grant: "g_1", shown_digest: "old" });
+      expect(stale.body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
+      expect(asks().at(-1)).toMatchObject({ grant: "g_1", card_draft: false, outcome: "read_again", code: "out_of_date", step: null });
+    } finally {
+      log.mockRestore();
+    }
+  });
 });
 
 // Eval 20b, intros run 1: told other_app_first, Coach showed the mailbox's key approval without the draft, the owner

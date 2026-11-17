@@ -55,7 +55,7 @@ import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -4071,6 +4071,20 @@ async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; ru
 }
 
 /**
+ * One line per Approve on a card (approvalAskRoute): which card and grant, whether the card carried a Card draft, and what
+ * tafs cloud decided: the outcome with its code, or the step it asks the phone to sign. Ids and codes only, never words or
+ * keys. A tap the phone then refuses (a step that isn't its card's mark) is read from this line, not inferred. A tap that
+ * fails before a decision logs its error's code (outcome `error`).
+ */
+export function approvalAskLine(component: string, kind: "approval" | "sign_in", ask: { grant: string; draft?: string; shown_draft?: string },
+  decision: { outcome: string; code?: string; ask?: { step: string } }): string {
+  return JSON.stringify({
+    event: "approval_ask", component, kind, grant: ask.grant, card_draft: Boolean(ask.draft), shown_draft: ask.shown_draft ?? null,
+    outcome: decision.outcome, code: decision.code ?? null, step: decision.ask?.step ?? null,
+  });
+}
+
+/**
  * POST /v1/tafs/{id}/components/{component}/approval: the person tapped Approve on an
  * approval card (kiff/tafs#413). tafs cloud reads the grant and the draft and says what
  * needs signing, if anything; with nothing to sign it answers Coach itself. The phone
@@ -4090,7 +4104,14 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
-  const decision = await decideApproval(ask, withRules({ ...ctx, session: card.session }, me, card.session, deps)).catch(approvalFailure);
+  const kind = approval ? "approval" : "sign_in";
+  const coded = await decideCoded(ask, withRules({ ...ctx, session: card.session }, me, card.session, deps)).catch((err) => {
+    console.log(approvalAskLine(component, kind, ask, { outcome: "error", code: errorCode(err) }));
+    return approvalFailure(err);
+  });
+  console.log(approvalAskLine(component, kind, ask, coded));
+  // The reason code is the log's: the phone's answer stays as it was.
+  const decision = withoutCode(coded);
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
@@ -4184,6 +4205,12 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
 
 function askOrRefuse<T>(read: () => T): T {
   try { return read(); } catch (err) { return approvalFailure(err); }
+}
+
+/** An error's code for the log of a tap: its own code, else its status, else "error". */
+function errorCode(err: unknown): string {
+  const e = err as { code?: unknown; status?: unknown };
+  return typeof e?.code === "string" && e.code ? e.code : typeof e?.status === "number" ? String(e.status) : "error";
 }
 
 function approvalFailure(err: unknown): never {
