@@ -67,6 +67,8 @@ import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
 import bot.tafs.app.views.BriefActions
 import bot.tafs.app.views.BriefTab
+import bot.tafs.app.views.Beside
+import bot.tafs.app.views.TabletSidebar
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachChatActions
 import bot.tafs.app.views.ConnectionActions
@@ -746,10 +748,52 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (tab == Tab.NeedsYou && t == Tab.NeedsYou) model.closeBriefOpen()
     tab = t
   }
+  // What's open beside a tablet's sidebar, highlighted in it.
+  val beside = when {
+    tab == Tab.NeedsYou -> Beside.NeedsYou
+    tab == Tab.Record -> Beside.Record
+    coachOpen || trialTaf != null || missionOpen != null -> Beside.Other
+    openTaf != null -> Beside.Taf(openTaf!!)
+    calendarOpen -> Beside.Calendar
+    removingBeside != null -> Beside.Taf(removingBeside!!)
+    else -> Beside.Overview
+  }
+  // A taf opened from the sidebar: on the Tafs tab, with nothing else over it.
+  val openFromSidebar: (String) -> Unit = { id ->
+    tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
+  }
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
-    // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
+    // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the
+    // handle that brings it back.
     if (wide) {
-      TabRail(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
+      if (!listFolded) {
+        TabletSidebar(
+          state, beside,
+          onOverview = { tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; calendarOpen = false; missionOpen = null; removingBeside = null; overviewOpen = true },
+          onNeedsYou = { onTab(Tab.NeedsYou) },
+          onRecord = { onTab(Tab.Record) },
+          onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty()) ({
+            tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; missionOpen = null; removingBeside = null; calendarOpen = true
+          }) else null,
+          onUsage = if (state.mode == Mode.kiff) ({ usageOpen = true }) else null,
+          onConnectApps = if (state.mode == Mode.kiff) ({ showingConnectApps = true }) else null,
+          onHaltAll = { haltTaf = null; haltOpen = true },
+          onOpenTaf = openFromSidebar,
+          onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
+          onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
+          onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
+          // A new taf: every job a taf can take where tafs cloud sends the gallery, else Coach, empty. The sample has none.
+          onNewTaf = if (state.mode == Mode.kiff && state.mayUseCoach) ({
+            if (state.gallery != null) { galleryBrowsing = false; galleryOpen = true } else model.openCoachEmpty()
+          }) else null,
+          onPlayNext = if (state.mode == Mode.sample) ({ scope.launch { model.playNextDemoActions() } }) else null,
+          onCoach = openCoach,
+          onAccount = openAccount,
+          onFold = { listFolded = true },
+        )
+      } else {
+        FoldHandle(folded = true) { listFolded = false }
+      }
       Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
     }
   Column(Modifier.weight(1f).fillMaxHeight()) {
@@ -828,30 +872,18 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             else -> null
           }
           if (wide) {
-            // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
-            // picked.
-            Row(Modifier.fillMaxSize()) {
-              // The list can fold away so what's open takes the width (the owner, 5 Nov), and comes back from the handle.
-              if (!listFolded) androidx.compose.foundation.layout.Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) {
-                Box(Modifier.weight(1f)) { home() }
-                // Overview: today across the tafs, at the foot of the list (as iOS's sidebar row).
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
-                androidx.compose.material3.Text(
-                  Words.Home.Overview.title,
-                  style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                )
-              }
-              FoldHandle(folded = listFolded) { listFolded = !listFolded }
-              Box(Modifier.weight(1f).fillMaxHeight()) {
-                when {
-                  open != null -> open()
-                  calendarOpen -> calendar(false)
-                  overviewOpen -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = { calendarOpen = true }) { overviewOpen = false; openTaf = it }
-                  removingBeside != null || state.tafs.isNotEmpty() -> detail(removingBeside ?: state.tafs.first().id)
-                  else -> Unit
-                }
+            // A tablet (as the iPad's HomeSplitView): what the sidebar chose, beside it. It opens on the Overview, today across the
+            // tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs and its line (docs/android-app.md, Tablets).
+            Box(Modifier.fillMaxSize()) {
+              when {
+                open != null -> open()
+                calendarOpen -> calendar(false)
+                removingBeside != null -> detail(removingBeside!!)
+                state.tafs.isNotEmpty() -> OverviewView(
+                  state, loadReport = model::loadReport, onOpenCalendar = null,
+                  onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
+                ) { overviewOpen = false; openTaf = it }
+                else -> home()
               }
             }
           } else {
@@ -1063,38 +1095,6 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
   }
 }
 
-/** The same places as a rail, for landscape and tablets: Account, the three tabs, then Coach at the foot. */
-@Composable
-private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
-  // A thin rail (the owner, 5 Nov: landscape's was a fifth of the screen): a fixed width, one-line labels, Coach compact.
-  androidx.compose.material3.NavigationRail(
-    Modifier.width(RAIL_WIDTH).fillMaxHeight().navigationBarsPadding().statusBarsPadding(),
-    containerColor = Theme.background,
-  ) {
-    androidx.compose.material3.NavigationRailItem(
-      selected = false,
-      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
-      icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
-      label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
-      colors = railColors(),
-    )
-    Tab.entries.forEach { t ->
-      androidx.compose.material3.NavigationRailItem(
-        selected = tab == t,
-        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
-        icon = { TabIcon(t, state) },
-        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
-        colors = railColors(),
-      )
-    }
-    Spacer(Modifier.weight(1f))
-    onCoach?.let { CoachButton(it, Modifier.padding(bottom = 12.dp), compact = true) }
-  }
-}
-
-/** The rail's width: room for an icon and a one-line label, whatever the text size. */
-private val RAIL_WIDTH = 72.dp
-
 /** The line between the list and what's open, with the control that folds the list away or brings it back. */
 @Composable
 private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
@@ -1150,14 +1150,6 @@ private fun barColors() = NavigationBarItemDefaults.colors(
   indicatorColor = Theme.amber.copy(alpha = 0.14f),
 )
 
-@Composable
-private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults.colors(
-  selectedIconColor = Theme.amber,
-  selectedTextColor = Theme.amber,
-  unselectedIconColor = Theme.dim,
-  unselectedTextColor = Theme.dim,
-  indicatorColor = Theme.amber.copy(alpha = 0.14f),
-)
 
 /** Whether tapping [tapped] while on [current] goes back to its start: Tafs tapped again closes the taf on screen. */
 /** A tab's name: Needs you's place says tafs cloud's "Your brief" once there is one. */
@@ -1172,5 +1164,3 @@ val COACH: String get() = Words.Coach.title
 /** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
 private const val WIDE_DP = 720
 
-/** The list's width beside what's open: iOS's sidebar. */
-private val SIDEBAR_WIDTH = 360.dp
