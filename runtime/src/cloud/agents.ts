@@ -151,6 +151,8 @@ export interface AgentDefinition {
   defer_vendor_tools?: boolean;
   /** A run that would end on its tool results with no text gets one more turn, once, for its closing message. */
   close_in_text?: boolean;
+  /** What the agent's cards may not say (kiff/agents' show.Wording); needs show. */
+  wording?: Array<{ patterns: string[]; unless_next?: string[]; fix: string }>;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
