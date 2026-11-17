@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: a sign-in KIFF no longer accepts goes back to sign-in.** Before, the app could stay signed in on "Couldn't load your tafs" with a Try again that couldn't help ([ios-app.md](docs/ios-app.md#the-sign-in-screen)).

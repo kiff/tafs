@@ -2273,6 +2273,13 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.unauthorized {
             forgetSession()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
+        } catch let error as TafsCloud.CloudError where error.status == 401 {
+            // tafs cloud passes on KIFF's refusal of this sign-in as a 401 ("KIFF did not accept this sign-in"):
+            // the session has ended, whichever read said so first. It's forgotten and sign-in shows, never
+            // "Couldn't load your tafs" with a Try again that can't help (a session left by an older build).
+            // Only a 401: an outage or any other refusal keeps the session, as before.
+            forgetSession()
+            lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch is CancellationError {
             // A refresh the app itself dropped (a newer one, a view that went away): not an
             // error to show ("Couldn't reach KIFF: cancelled").

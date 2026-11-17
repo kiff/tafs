@@ -1059,6 +1059,12 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 The approved redesign (`SignInView`, `PairSignInView`, `ConnectedView`, `SignInArt`). Every word is a shared
 key, and the drawings are shapes only, with no letter, number or word in them.
 
+**A session KIFF no longer accepts shows sign-in, never an error.** When a refresh hears that the session has
+ended, from KIFF (401) or from tafs cloud passing on KIFF's refusal (401, "KIFF did not accept this sign-in"),
+whichever read says so first, the kept session is forgotten (`forgetSession`) and this screen shows, with
+"Signed out of KIFF". That's the case of a session left by an older build. Anything but a 401 (an outage, a 5xx)
+keeps the session and says it couldn't load, as before.
+
 - **On an iPad or a Mac, two halves** (`SignInView.offersPhone`): on the left, **Sign in with KIFF** with
   **Continue**; on the right, **Sign in with your phone** with the pairing QR and "Scan with tafs"
   (`sign_in.with_phone`, `sign_in.scan_with_tafs`). A regular width puts them side by side; a narrow window stacks
