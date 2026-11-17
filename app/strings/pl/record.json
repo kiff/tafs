@@ -11,6 +11,7 @@
   "record.approved_then_done": "Zatwierdzone przez Ciebie, potem wykonane",
   "record.card_issued_by": "Card wydana przez: {owner}",
   "record.connection_refused_before_sending": "Połączenie odrzuciło to przed wysłaniem. Nic nie zostało wysłane.",
+  "record.day_spent": "wydatki: {amount}",
   "record.decided.approved_by": "zatwierdzone przez {who}",
   "record.decided.approved_by_you": "zatwierdzone przez Ciebie",
   "record.decided.card_issued": "Card wydana",

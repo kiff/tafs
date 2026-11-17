@@ -1605,6 +1605,7 @@
     <string name="record_approved_then_done">Door jou goedgekeurd, daarna klaar</string>
     <string name="record_card_issued_by">Card uitgegeven door %1$s</string>
     <string name="record_connection_refused_before_sending">De koppeling heeft het vóór verzending geweigerd. Er is niets verzonden.</string>
+    <string name="record_day_spent">%1$s uitgegeven</string>
     <string name="record_decided_approved_by">goedgekeurd door %1$s</string>
     <string name="record_decided_approved_by_you">door jou goedgekeurd</string>
     <string name="record_decided_card_issued">Card uitgegeven</string>

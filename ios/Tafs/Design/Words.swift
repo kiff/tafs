@@ -3131,6 +3131,8 @@ enum Words {
         static func cardIssuedBy(owner: String) -> String { Words.line("record.card_issued_by", owner) }
         /// The connection refused it before sending. Nothing was sent.
         static var connectionRefusedBeforeSending: String { Words.line("record.connection_refused_before_sending") }
+        /// {amount} spent
+        static func daySpent(amount: String) -> String { Words.line("record.day_spent", amount) }
         enum Decided {
             /// approved by {who}
             static func approvedBy(who: String) -> String { Words.line("record.decided.approved_by", who) }
