@@ -720,7 +720,9 @@ answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
-  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
+  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`). Signed in, tafs
+  cloud's filters are bordered pills as on the iPad, amber for the one chosen and soft for the rest,
+  and each group's title is small and quiet (`ActivityFilterPill`).
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, its usage,
   Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
