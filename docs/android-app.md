@@ -597,7 +597,10 @@ it's dim. A delivery given up on after its tries shows **Send again** to whoever
 a place of the taf's own (an app's action, another taf) goes by its `key`, retried as the taf's
 task. It signs nothing, and the work is read again after. One still not delivered offers **Ask
 Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coach_words` in the
-message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
+message box, sent only by the owner (`askCoachAbout`). **Coach on a taf is only for whoever may use Coach and manages
+it** (`AppState.mayAskCoachAbout`), as on the iPad: this Ask Coach, a health line's fix that asks Coach, the request sheet's
+Ask Coach, Needs you's "Change the limit in Coach" (changing a limit is changing the taf's Card), and the bar's Coach on the
+taf's page (`openCoachOn`), which for anyone else opens Coach as it was, never on the taf. The request sheet's **Try the reply now**
 is the door reply's alone. A `taf` live update reads it again where the page has.
 
 **Its health** ([reliability.md](reliability.md#its-health); `HealthLines`, `TafWork.health`)

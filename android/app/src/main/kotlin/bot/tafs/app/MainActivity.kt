@@ -987,7 +987,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         detail,
         sending = detail.id in state.sendingAgain,
         onTryReply = if (canSend) ({ scope.launch { model.sendAgain(tafId, detail.id); model.openRequest(tafId, detail.id) } }) else null,
-        onAskCoach = if (state.mayUseCoach) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
+        onAskCoach = if (state.mayAskCoachAbout(tafId)) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
         onClose = model::closeRequest,
       )
     }

@@ -498,7 +498,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
     // An idle taf's work line is its first health reason: said once, under its health.
     work?.summary?.line?.takeIf { it.isNotBlank() && work.health?.repeats(it) != true }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     work?.health?.let { h ->
-      HealthLines(h, canUseCoach = state.mayUseCoach, onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
+      HealthLines(h, canUseCoach = state.mayAskCoachAbout(taf.id), onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
     }
     // Its oldest waiting case, in tafs cloud's words, amber once it's past the promise.
     work?.oldestWaiting?.words?.takeIf { it.isNotBlank() }?.let { words ->
@@ -534,7 +534,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
               )
             }
             // Still not delivered: Coach, asked in tafs cloud's words.
-            d.coachWords?.takeIf { d.openCoach && state.mayUseCoach }?.let { words ->
+            d.coachWords?.takeIf { d.openCoach && state.mayAskCoachAbout(taf.id) }?.let { words ->
               Text(
                 RequestWords.ASK_COACH,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
