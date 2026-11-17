@@ -349,3 +349,54 @@ describe("writing to a run at work (POST …/steer) with a client_message_id", (
     expect(w.agents.runs.find((r) => r.id === run.id)!.steering).toHaveLength(2);
   });
 });
+
+describe("Coach's message sent again while its run is still PENDING", () => {
+  // Coach's run carries the start's lines and the waiting ones as well as the person's words, so kiff/agents' digest
+  // never equals the words alone: a resend is told apart by tafs cloud's own record, and never refused by the digest.
+  it("is handed on as the same run, once, and Coach's line goes only with the first", async () => {
+    const w = await world();
+    const first = await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    expect(first.status).toBe(200);
+    const run = w.agents.runs.find((r) => r.id === first.body.run)!;
+    expect(run.status).toBe("PENDING");
+    expect(w.agents.byKey.get(`t_acme#${COACH}#msg:u_ana:${ID}`)!.input).toContain("Rae finished its first run.");
+    expect(await queued(w)).toEqual([]);
+
+    const again = await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ run: run.id, session: first.body.session, repeat: true });
+    expect(runsOf(w, COACH)).toHaveLength(1);
+    expect(await queued(w)).toEqual([]);
+  });
+
+  it("with tafs cloud's own record gone, it's still the same run, never 409 on Coach's lines", async () => {
+    const w = await world();
+    const first = await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    await w.coach.remove(`t_acme#msg-key#msg:u_ana:${ID}`);
+    const again = await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    expect(again.status).toBe(200);
+    expect(again.body).toMatchObject({ run: first.body.run, repeat: true });
+    expect(runsOf(w, COACH)).toHaveLength(1);
+  });
+
+  it("another message under the same id, with tafs cloud's record, is 409 and starts nothing", async () => {
+    const w = await world();
+    await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    const other = await send(w, COACH, { text: "Set up chargebacks", client_message_id: ID });
+    expect(other.status).toBe(409);
+    expect(other.body.code).toBe("dedup_key_conflict");
+    expect(runsOf(w, COACH)).toHaveLength(1);
+  });
+
+  it("the stream sent again gets the first run's stream from its start, never a second run", async () => {
+    const w = await world();
+    const first = await stream(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    expect(first.events[0]!.event).toBe("session");
+    const run = first.events[0]!.data.run as string;
+    const again = await stream(w, COACH, { text: "Set up refunds", client_message_id: ID });
+    expect(again.status).toBe(200);
+    expect(again.events[0]).toEqual({ event: "session", data: expect.objectContaining({ run, repeat: true }) });
+    expect(runsOf(w, COACH)).toHaveLength(1);
+    expect(await queued(w)).toEqual([]);
+  });
+});
