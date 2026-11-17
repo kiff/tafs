@@ -167,4 +167,25 @@ class TabletScreenshots {
     compose.waitForIdle()
     shot("activity-filters")
   }
+
+  /** Beside the iPad's `Coach-chat-needsyou-card.PNG`: Coach as a panel over the app, a third of the screen, the app dimmed. */
+  @Test fun coachPanel() {
+    show()
+    compose.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.Words.Coach.coachMode) and hasClickAction())[0].performClick()
+    compose.waitForIdle(); compose.mainClock.advanceTimeBy(1000); compose.waitForIdle()
+    shot("coach-panel")
+  }
+
+  /** Beside the iPad's `Coach-chat-needsyou-card.PNG`, signed in: Coach's bar, Back and new conversation/⋯ in capsules, in Coach's blue. */
+  @Test fun coachBarSignedIn() {
+    kiffTablet()
+    val st = bot.tafs.app.app.AppState(
+      mode = bot.tafs.app.app.Mode.kiff, ready = true, kiffAccount = bot.tafs.app.kiff.Account("t_01", "acme", capabilities = listOf("members.manage")),
+      coachChecked = true, coachCloudId = "setup_1", coachAgent = "setup-acme", coachChat = "s1",
+      chats = mapOf(bot.tafs.app.app.COACH_CHAT to listOf(bot.tafs.app.model.ChatMessage(java.time.Instant.EPOCH, bot.tafs.app.model.ChatMessage.From.owner, "Refund customers in Stripe, up to 50 euros each", "s1"))),
+    )
+    compose.setContent { TafsTheme { bot.tafs.app.views.CoachScreen(st, kiffActions(), loadCoach = {}, onBack = {}, full = false, onToggleFull = {}) } }
+    compose.waitForIdle()
+    shot("coach-bar")
+  }
 }
