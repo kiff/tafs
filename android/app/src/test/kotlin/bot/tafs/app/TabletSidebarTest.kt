@@ -94,6 +94,28 @@ class TabletSidebarTest {
     compose.onNode(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Selected, true) and hasText(Words.Record.title)).assertIsDisplayed()
   }
 
+  /** Home's label chips sit over the Overview on a tablet, as on the iPad, and filter its table without changing its order. */
+  @Test fun theOverviewsLabelChipsFilterItsTable() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    fun taf(name: String, vararg labels: String) = bot.tafs.app.model.Taf(
+      id = name, name = name, job = "", tools = emptyList(), colorIndex = 0, card = bot.tafs.app.model.Card(emptyList(), "o"), labels = labels.toList(),
+    )
+    val state = bot.tafs.app.app.AppState(
+      mode = bot.tafs.app.app.Mode.kiff, ready = true, listLoaded = true,
+      labels = listOf(bot.tafs.app.kiff.HomeLabel("l_money", "Money", count = 1), bot.tafs.app.kiff.HomeLabel("l_clients", "Clients", count = 1)),
+      tafs = listOf(taf("Bills in", "l_money"), taf("New clients", "l_clients"), taf("Unlabelled")),
+    )
+    compose.setContent { TafsTheme { bot.tafs.app.views.OverviewView(state, loadReport = {}, onOpenCalendar = null) {} } }
+    compose.waitForIdle()
+    listOf("Bills in", "New clients", "Unlabelled").forEach { compose.onNode(hasText(it)).assertIsDisplayed() }
+    compose.onNode(hasText("Money") and androidx.compose.ui.test.hasClickAction()).performClick()
+    compose.waitForIdle()
+    compose.onNode(hasText("Bills in")).assertIsDisplayed()
+    assertTrue(compose.onAllNodes(hasText("New clients")).fetchSemanticsNodes().isEmpty())
+    assertTrue(compose.onAllNodes(hasText("Unlabelled")).fetchSemanticsNodes().isEmpty())
+  }
+
   @Test fun aPhoneKeepsItsTabBarAndHasNoSidebar() {
     show("w384dp-h682dp-port-450dpi")
     assertTrue(compose.onAllNodes(hasTestTag("sidebar")).fetchSemanticsNodes().isEmpty())

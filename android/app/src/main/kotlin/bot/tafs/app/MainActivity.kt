@@ -879,7 +879,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 open != null -> open()
                 calendarOpen -> calendar(false)
                 removingBeside != null -> detail(removingBeside!!)
-                state.tafs.isNotEmpty() -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = null) { overviewOpen = false; openTaf = it }
+                state.tafs.isNotEmpty() -> OverviewView(
+                  state, loadReport = model::loadReport, onOpenCalendar = null,
+                  onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
+                ) { overviewOpen = false; openTaf = it }
                 else -> home()
               }
             }

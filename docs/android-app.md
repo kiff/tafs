@@ -119,7 +119,7 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 - **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
   headline: {words}}]`, each taf's `labels: [id]` (0 to 3; missing reads as none), and `labels_words: {all}` (`HomeLabel`,
   `HomeLabelsWords`). `waiting` counts the label's tafs that wait; `color` is one of Explore's category tokens.
-- **The filter row** (`LabelRow`), under the headline: All with the listed tafs' count, then each label with its count and an
+- **The filter row** (`LabelRow`), under the headline on a phone and over the Overview's table on a tablet: All with the listed tafs' count, then each label with its count and an
   amber dot when one of its tafs waits. Two labels show, then "+N" for the rest, which opens the row out; a chosen label further
   on stays in sight (`shownLabels`). No labels, no row.
 - **It opens on All every time** the list opens (`HomeView` remembers the choice only while it's on screen). A label that went
@@ -683,8 +683,9 @@ What the sidebar chooses opens beside it, its row highlighted (`Beside`). It ope
 Overview, today across the tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs
 and its line. The sidebar lists every taf: the iPad shows only those relevant now (a held call, a
 step, a knock, a run or a change in the last day) and keeps the rest behind the mark, a rule tafs
-cloud doesn't send yet, so Android doesn't work it out on its own. Label chips over the Overview are
-still to come on a tablet. `TabletSidebarTest` holds this at the iPad's size and a phone's.
+cloud doesn't send yet, so Android doesn't work it out on its own. Home's label chips sit over the
+Overview's table on a tablet, as on the iPad, and filter it; filtered to a mission's label, its row
+and Log are there too. `TabletSidebarTest` holds this at the iPad's size and a phone's.
 
 The tablet's screens at the iPad's size (1366 × 1024 dp), over the sample, to set beside the iPad's
 reference files, are drawn on the JVM by `TabletScreenshots` into `docs/screenshots/android/tablet/`
