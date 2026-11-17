@@ -62,6 +62,10 @@ internal sealed interface Beside {
   data object Record : Beside
   data object Calendar : Beside
   data class Taf(val id: String) : Beside
+  data object Account : Beside
+  data object Usage : Beside
+  data object ConnectApps : Beside
+  data object HaltAll : Beside
   /** Coach, a trial or a mission's Log: nothing in the sidebar is highlighted. */
   data object Other : Beside
 }
@@ -121,12 +125,12 @@ internal fun TabletSidebar(
       item { ScreenItem(R.drawable.ic_list, Words.Record.title, beside == Beside.Record, onRecord) }
       // A KIFF account's screens, as the iPad's signed-in sidebar: the sample has none of them.
       onCalendar?.let { open -> item { ScreenItem(R.drawable.ic_calendar, Words.Calendar.heading, beside == Beside.Calendar, open) } }
-      onUsage?.let { open -> item { ScreenItem(R.drawable.ic_chart, Words.Usage.title, false, open) } }
-      onConnectApps?.let { open -> item { ScreenItem(R.drawable.ic_connect, Words.Connect.Apps.title, false, open) } }
+      onUsage?.let { open -> item { ScreenItem(R.drawable.ic_chart, Words.Usage.title, beside == Beside.Usage, open) } }
+      onConnectApps?.let { open -> item { ScreenItem(R.drawable.ic_connect, Words.Connect.Apps.title, beside == Beside.ConnectApps, open) } }
       // Every taf at once, from its own screen, with where it stands when it isn't running.
       if (state.showsAccountHalt) item {
         val h = state.haltOf(null)
-        Selectable(false, onHaltAll, Words.Taf.Halt.titleAll, Modifier.padding(top = 12.dp)) {
+        Selectable(beside == Beside.HaltAll, onHaltAll, Words.Taf.Halt.titleAll, Modifier.padding(top = 12.dp)) {
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(painterResource(R.drawable.ic_hand), contentDescription = null, tint = Theme.no, modifier = Modifier.size(22.dp))
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -155,8 +159,13 @@ internal fun TabletSidebar(
           }
         }
       }
-      // Theirs and those being set up, then the ones shared with them, each in the list's order (kiff/tafs#306).
-      val (own, shared) = state.sections(state.listedTafs)
+      // Theirs and those being set up, then the ones shared with them, each in the list's order (kiff/tafs#306). Only those tafs
+      // cloud says are relevant now (`relevant_now`), as the iPad's sidebar: every taf is behind the mark, on the Overview. A tafs
+      // cloud that doesn't say yet: every taf.
+      val (allOwn, allShared) = state.sections(state.listedTafs)
+      val says = state.listedTafs.any { it.relevantNow != null }
+      val own = if (says) allOwn.filter { it.relevantNow == true } else allOwn
+      val shared = if (says) allShared.filter { it.relevantNow == true } else allShared
       if (own.isNotEmpty() || state.settingUp.isNotEmpty()) {
         item { Header(Words.Home.yourTafs) }
         own.forEach { taf -> item(key = "taf-" + taf.id) { TafItem(state, taf, beside == Beside.Taf(taf.id)) { onOpenTaf(taf.id) } } }
@@ -203,7 +212,7 @@ internal fun TabletSidebar(
       // The sample's next round, where Home had it.
       onPlayNext?.let { OutlineButton(Words.Sample.playNext, it, Modifier.fillMaxWidth(), color = Theme.soft) }
       onCoach?.let { SidebarCoachButton(it) }
-      AccountItem(state.accountLabel, onAccount)
+      AccountItem(state.accountLabel, beside == Beside.Account, onAccount)
     }
   }
 }
@@ -274,10 +283,13 @@ private fun SidebarCoachButton(onClick: () -> Unit) {
 
 /** The account, who is signed in, at the very foot: it opens Account. */
 @Composable
-private fun AccountItem(account: String?, onClick: () -> Unit) {
+private fun AccountItem(account: String?, selected: Boolean, onClick: () -> Unit) {
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onClick)
-      .semantics(mergeDescendants = true) { role = Role.Button; contentDescription = account?.let(Words.Settings::accountNamed) ?: Words.Settings.title },
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(RoundedCornerShape(14.dp)).background(if (selected) Theme.line else Color.Transparent)
+      .tapping(onClick = onClick).padding(horizontal = 4.dp)
+      .semantics(mergeDescendants = true) {
+        this.selected = selected; role = Role.Button; contentDescription = account?.let(Words.Settings::accountNamed) ?: Words.Settings.title
+      },
     horizontalArrangement = Arrangement.spacedBy(10.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {

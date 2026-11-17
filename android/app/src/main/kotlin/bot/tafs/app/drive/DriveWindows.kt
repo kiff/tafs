@@ -1,6 +1,12 @@
 package bot.tafs.app.drive
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
@@ -27,6 +33,16 @@ import androidx.compose.ui.window.DialogProperties
 // guarded while Coach drives, its dismissal checked, and Coach's back closes it. DriveWindowsTest fails the build on a raw
 // ModalBottomSheet, AlertDialog, Dialog, DatePickerDialog or DropdownMenu anywhere else.
 
+/**
+ * Set where a screen that is a sheet on a phone is drawn beside a tablet's sidebar instead, as the iPad opens Account, Plan &
+ * usage, Connect apps and Halt all (docs/android-app.md, Tablets): [DriveSheet] then draws its content in place, filling what's
+ * beside the sidebar, and Back closes it. Sheets opened from it are sheets again.
+ */
+val LocalSheetBeside = androidx.compose.runtime.staticCompositionLocalOf { false }
+
+/** Inside a screen drawn beside the sidebar ([LocalSheetBeside]): its Done goes, since the sidebar is the way to anything else. */
+val LocalDrawnBeside = androidx.compose.runtime.staticCompositionLocalOf { false }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DriveSheet(
@@ -35,6 +51,30 @@ fun DriveSheet(
   containerColor: Color,
   modifier: Modifier = Modifier,
   sheetGesturesEnabled: Boolean = true,
+  content: @Composable ColumnScope.() -> Unit,
+) {
+  if (LocalSheetBeside.current) {
+    // Beside the sidebar: part of the page, not a window of its own.
+    androidx.activity.compose.BackHandler(onBack = onDismissRequest)
+    Column(
+      modifier.fillMaxSize().background(containerColor).statusBarsPadding().padding(top = 12.dp)
+        .testTag("beside-sidebar"),
+    ) {
+      androidx.compose.runtime.CompositionLocalProvider(LocalSheetBeside provides false, LocalDrawnBeside provides true) { content() }
+    }
+    return
+  }
+  ModalSheet(onDismissRequest, sheetState, containerColor, modifier, sheetGesturesEnabled, content)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModalSheet(
+  onDismissRequest: () -> Unit,
+  sheetState: SheetState,
+  containerColor: Color,
+  modifier: Modifier,
+  sheetGesturesEnabled: Boolean,
   content: @Composable ColumnScope.() -> Unit,
 ) = ModalBottomSheet(
   onDismissRequest = driveDismissal(onDismissRequest),

@@ -466,7 +466,7 @@ fun ConnectAppsSheet(
     Column(Modifier.fillMaxSize().navigationBarsPadding().testTag(CONNECT_APPS_SHEET)) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
+        if (!bot.tafs.app.drive.LocalDrawnBeside.current) Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),

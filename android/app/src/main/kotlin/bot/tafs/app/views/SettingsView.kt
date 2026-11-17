@@ -124,7 +124,7 @@ fun SettingsSheet(
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Settings.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        TextButton(onClose) { Text(Words.Common.done, color = Theme.amberText) }
+        if (!bot.tafs.app.drive.LocalDrawnBeside.current) TextButton(onClose) { Text(Words.Common.done, color = Theme.amberText) }
       }
       Box(Modifier.weight(1f)) {
         Column(Modifier.fillMaxWidth().verticalScroll(scroll).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {

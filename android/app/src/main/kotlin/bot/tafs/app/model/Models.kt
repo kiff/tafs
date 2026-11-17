@@ -431,6 +431,8 @@ data class Taf(
   val results: List<String> = emptyList(),
   /** The clock its times are in, as tafs cloud says it: "Times in Europe/Paris". */
   val timeZoneWords: String? = null,
+  /** In a tablet's sidebar now, as tafs cloud says (`relevant_now`): a held call, a step, a knock, a run or a change in a day. */
+  val relevantNow: Boolean? = null,
   /** While its schedule still runs in another zone, what tafs cloud says about it. */
   val scheduleTimeZoneWords: String? = null,
   val avatarRim: AvatarRim? = null,

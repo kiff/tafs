@@ -751,6 +751,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   }
   // What's open beside a tablet's sidebar, highlighted in it.
   val beside = when {
+    showingSettings -> Beside.Account
+    usageOpen -> Beside.Usage
+    showingConnectApps -> Beside.ConnectApps
+    haltOpen && haltTaf == null -> Beside.HaltAll
     tab == Tab.NeedsYou -> Beside.NeedsYou
     tab == Tab.Record -> Beside.Record
     coachOpen || trialTaf != null || missionOpen != null -> Beside.Other
@@ -759,9 +763,11 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     removingBeside != null -> Beside.Taf(removingBeside!!)
     else -> Beside.Overview
   }
+  // What the sidebar opened beside it, closed when it opens something else: one screen beside it at a time, as the iPad's.
+  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false }
   // A taf opened from the sidebar: on the Tafs tab, with nothing else over it.
   val openFromSidebar: (String) -> Unit = { id ->
-    tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
+    closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
   }
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the
@@ -770,15 +776,15 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       if (!listFolded) {
         TabletSidebar(
           state, beside,
-          onOverview = { tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; calendarOpen = false; missionOpen = null; removingBeside = null; overviewOpen = true },
-          onNeedsYou = { onTab(Tab.NeedsYou) },
-          onRecord = { onTab(Tab.Record) },
+          onOverview = { closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; calendarOpen = false; missionOpen = null; removingBeside = null; overviewOpen = true },
+          onNeedsYou = { closeBeside(); onTab(Tab.NeedsYou) },
+          onRecord = { closeBeside(); onTab(Tab.Record) },
           onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty()) ({
-            tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; missionOpen = null; removingBeside = null; calendarOpen = true
+            closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; missionOpen = null; removingBeside = null; calendarOpen = true
           }) else null,
-          onUsage = if (state.mode == Mode.kiff) ({ usageOpen = true }) else null,
-          onConnectApps = if (state.mode == Mode.kiff) ({ showingConnectApps = true }) else null,
-          onHaltAll = { haltTaf = null; haltOpen = true },
+          onUsage = if (state.mode == Mode.kiff) ({ closeBeside(); usageOpen = true }) else null,
+          onConnectApps = if (state.mode == Mode.kiff) ({ closeBeside(); showingConnectApps = true }) else null,
+          onHaltAll = { closeBeside(); haltTaf = null; haltOpen = true },
           onOpenTaf = openFromSidebar,
           onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
           onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
@@ -789,7 +795,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           }) else null,
           onPlayNext = if (state.mode == Mode.sample) ({ scope.launch { model.playNextDemoActions() } }) else null,
           onCoach = openCoach,
-          onAccount = openAccount,
+          onAccount = { closeBeside(); openAccount() },
           onFold = { listFolded = true },
         )
       } else {
@@ -904,6 +910,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide)) {
     if (showingSettings) {
       SettingsSheet(
         state,
@@ -939,6 +946,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onFocused = { settingsFocus = null },
       )
     }
+    }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(
@@ -956,6 +964,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         removePasskey = model::removePasskey,
       )
     }
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide)) {
     if (showingConnectApps) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
@@ -981,6 +990,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onConnectedNow = { grant -> model.dismissConnectedNow(); showingConnectApps = false; model.improveInCoach(grant.request.agent) },
         dismissConnectedNow = model::dismissConnectedNow,
       )
+    }
     }
     // Its approval, over Connect apps' list, or a new key over a taf's own connection (gap 13): KIFF's words, the signature,
     // then the vendor's page or planque's one read with the key.
@@ -1028,7 +1038,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })
     }
-    if (haltOpen) HaltSheet(haltTaf, state, account, onClose = { haltOpen = false })
+    // Halt all beside a tablet's sidebar, as the iPad's; a taf's own Halt stays a sheet over its page.
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide && haltTaf == null)) {
+      if (haltOpen) HaltSheet(haltTaf, state, account, onClose = { haltOpen = false })
+    }
     versionsTaf?.let { taf ->
       VersionsSheet(taf, state, versionActions, onOpenTrial = { versionsTaf = null; trialTaf = taf; tab = Tab.Tafs; openTaf = taf }, onClose = { versionsTaf = null })
     }
@@ -1057,7 +1070,9 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
-    if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides wide) {
+      if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
+    }
     // A taf's runs: over Plan & usage from its Credits row, or over its page from its Usage row.
     state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
     if (!keyboardUp && !wide) {
