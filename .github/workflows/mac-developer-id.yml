@@ -15,10 +15,13 @@ name: Mac Developer ID
 # answers only, never a key, a certificate, a password or a profile.
 #
 # The order, as the review asked:
-# 1. The Developer ID profiles carry webcredentials:kiff.dev, and the signed app's own
+# 1. The Xcode project is generated in a job of its own, with no environment and no secret,
+#    by an XcodeGen release pinned by its SHA-256, and handed over as an artifact: the job that
+#    holds the keys installs and runs no tool of its own.
+# 2. The Developer ID profiles carry webcredentials:kiff.dev, and the signed app's own
 #    entitlements are read back and must name it: without it, passkey sign-in breaks.
-# 2. The app is notarized and stapled, then checked as Gatekeeper and codesign judge it.
-# 3. The image holding the stapled app is signed, notarized, stapled and checked again.
+# 3. The app is notarized and stapled, then checked as Gatekeeper and codesign judge it.
+# 4. The image holding the stapled app is signed, notarized, stapled and checked again.
 
 on:
   workflow_dispatch:
@@ -31,17 +34,43 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # No environment and no secret: what it installs and runs can't reach a key.
+  project:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-26
+    timeout-minutes: 15
+    env:
+      XCODEGEN_VERSION: "2.44.1"
+      XCODEGEN_SHA256: "a2e905fb68446e9bb4008cdfe2e13e3f176d0cbcca828b71770f8e53fca91b73"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project with a pinned XcodeGen
+        run: |
+          curl -sSLf -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          echo "$XCODEGEN_SHA256  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          cd ios && "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate
+          cd .. && tar -czf "$RUNNER_TEMP/ios.tgz" ios
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-developer-id-project
+          path: ${{ runner.temp }}/ios.tgz
+          retention-days: 1
+
   release:
+    needs: project
     if: github.ref == 'refs/heads/main'
     runs-on: macos-26
     timeout-minutes: 75
     environment: mac-signing
     permissions:
       contents: write
-    env:
-      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      actions: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -51,7 +80,10 @@ jobs:
         env:
           P12: ${{ secrets.DEVELOPER_ID_P12 }}
           P12_PASSWORD: ${{ secrets.DEVELOPER_ID_P12_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           missing=""
           for name in P12 P12_PASSWORD ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8 APPLE_TEAM_ID; do
@@ -62,10 +94,14 @@ jobs:
             exit 1
           fi
 
-      - name: Generate the Xcode project
+      # The project the job above generated, from this same run and commit, fetched with the runner's
+      # own gh and this job's token: nothing is installed here, and no other action runs.
+      - name: Put the generated project in place
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          brew install xcodegen
-          cd ios && xcodegen generate
+          gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n mac-developer-id-project -D "$RUNNER_TEMP/project"
+          tar -xzf "$RUNNER_TEMP/project/ios.tgz"
 
       - name: Write the App Store Connect key
         env:
@@ -104,12 +140,16 @@ jobs:
       - name: Make and install the Developer ID profiles
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           ruby ios/scripts/asc-profiles.rb --developer-id \
             bot.tafs.app+push+timesensitive+associateddomains="tafs Developer ID CI" \
             bot.tafs.app.notify="tafs notify Developer ID CI"
 
       - name: Archive, with the hardened runtime
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios
           xcodebuild archive \
@@ -126,6 +166,8 @@ jobs:
             CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
       - name: Export the app for Developer ID
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
           <?xml version="1.0" encoding="UTF-8"?>
@@ -160,6 +202,8 @@ jobs:
       # Passkey sign-in needs webcredentials:kiff.dev in the signed app itself, not only in the
       # source file: a Developer ID profile without Associated Domains would sign it away.
       - name: The signed app keeps kiff.dev's passkeys, its team, and the hardened runtime
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           codesign -d --entitlements - --xml "$APP" > "$RUNNER_TEMP/entitlements.plist" 2>/dev/null
           if ! /usr/libexec/PlistBuddy -c "Print :com.apple.developer.associated-domains" "$RUNNER_TEMP/entitlements.plist" | grep -qx '[[:space:]]*webcredentials:kiff.dev'; then
@@ -172,6 +216,9 @@ jobs:
           echo "entitlements: webcredentials:kiff.dev present; team ours; hardened runtime on"
 
       - name: Notarize the app and staple its ticket
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/tafs-app.zip"
           xcrun notarytool submit "$RUNNER_TEMP/tafs-app.zip" --key "$RUNNER_TEMP/AuthKey.p8" --key-id "$ASC_KEY_ID" \
@@ -190,6 +237,9 @@ jobs:
           spctl -a -vv --type execute "$APP"
 
       - name: Pack the image, sign it, notarize it and staple its ticket
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           dmg="$RUNNER_TEMP/tafs-mac-$VERSION.dmg"
           stage="$RUNNER_TEMP/dmg"

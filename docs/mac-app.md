@@ -86,6 +86,9 @@ only, in the **`mac-signing`** environment: main only, with a required reviewer.
 secrets can't be read by a pull request or by a workflow on any other branch, and the run prints no
 key, certificate, password or profile. It does this, in order:
 
+0. **The project:** generated in a job of its own, with no environment and no secret, by an
+   XcodeGen release pinned by its SHA-256. It's handed to the signing job, which installs and runs
+   no tool of its own, so nothing a package brings can reach the keys.
 1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_DIRECT`), made through the
    API with the Developer ID Application certificate (`asc-profiles.rb --developer-id`): "tafs
    Developer ID CI" and "tafs notify Developer ID CI". They're made with the same capabilities as the
@@ -106,16 +109,16 @@ key, certificate, password or profile. It does this, in order:
    push access. A draft of the same version is replaced; a published one stops the run, so
    `MARKETING_VERSION` in `ios/project.yml` goes up first. The build number is the run's number.
 
-**Publishing** is never this workflow's. Only after the owner says the build's test passed does the
-lane's owner, or the PM, publish it. The download page shows it within 10 minutes.
+**Publishing** is never this workflow's. Only the owner publishes it, once their test of the draft
+passed. The download page shows it within 10 minutes.
 
 **Before the first run, once:**
-- **The `mac-signing` environment's secrets:** `DEVELOPER_ID_P12` and `DEVELOPER_ID_P12_PASSWORD`
-  (the team's Developer ID Application certificate, the same one tafs-macos's download is signed
-  with), `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8` and `APPLE_TEAM_ID`. The run names any that
-  are missing.
-- **The certificate goes in by an admin,** on the owner's yes, as for tafs-macos
-  (`gh secret set --env mac-signing -R kiff/tafs`).
+- **The `mac-signing` environment's secrets:** `DEVELOPER_ID_P12` and `DEVELOPER_ID_P12_PASSWORD`,
+  this repository's own Developer ID Application certificate. It's not tafs-macos's: each repository
+  has its own, so neither repository's key is copied to the other. Also `ASC_KEY_ID`, `ASC_ISSUER_ID`,
+  `ASC_KEY_P8` and `APPLE_TEAM_ID`. The run names any that are missing.
+- **The environment's protection:** a required reviewer, deployments from `main` only, and admin
+  bypass off. A run's approval is the owner's own.
 
 **Updates:** the App Store doesn't update this copy. An updater that reads a signed feed comes in the
 next version: it tells the person a new version is ready, checks the download against the signed
