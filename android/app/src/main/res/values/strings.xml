@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Already use tafs on your phone? Add this %1$s with it.</string>
     <string name="pair_keychain_refused">This Mac couldn\'t save its sign-in to the Keychain (error %1$s), so it wasn\'t added. Show a new code and try again.</string>
     <string name="pair_new_code">Show a new code</string>
+    <string name="pair_passkey_why_body">It stays on this %1$s, behind %2$s. With it, this %1$s approves your tafs\' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.</string>
+    <string name="pair_passkey_why_go">Make the passkey</string>
+    <string name="pair_passkey_why_title">Make a passkey for this %1$s</string>
     <string name="pair_steps">On your phone, open tafs, then %1$s, %2$s, %3$s. Scan this code.</string>
     <string name="pair_title">Add this %1$s with your phone</string>
     <string name="pair_view_only_add">Add this %1$s</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Deletes every taf, its runs, chats and notes, your Cards and your connections. It can\'t be undone.</string>
     <string name="sign_in_didnt_work">Signing in didn\'t work.</string>
     <string name="sign_in_every_action_taf_takes_goes">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your approvals are signed on your phone.</string>
     <string name="sign_in_how_works">How it works</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
     <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>

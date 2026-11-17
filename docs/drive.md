@@ -213,7 +213,10 @@ Enforced in the app, with no prompt:
      on one without the mark.
 2. **The signer's drive rule.** While a drive is on, every confirming signature needs the
    biometric prompt. The approval window is suspended, and the device key's approval and
-   answer paths refuse a signature without the prompt.
+   answer paths refuse a signature without the prompt. So a connection approved during a
+   drive goes, behind its own prompt, as planque's `v1` with the device key, with no window:
+   once planque requires a window for `approve` and `confirm`, connecting an app waits
+   until the drive ends.
 3. **The keys need the person.** The approval key requires the fingerprint or Face ID on
    each use, and that prompt is the system's window, which no screenshot or driven touch
    reaches.

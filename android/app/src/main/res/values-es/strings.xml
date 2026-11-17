@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">¿Ya usas tafs en tu teléfono? Añade este %1$s con él.</string>
     <string name="pair_keychain_refused">Este Mac no pudo guardar su inicio de sesión en el llavero (error %1$s), así que no se añadió. Muestra un código nuevo y vuelve a intentarlo.</string>
     <string name="pair_new_code">Mostrar un código nuevo</string>
+    <string name="pair_passkey_why_body">Se queda en este %1$s, protegida por %2$s. Con ella, este %1$s aprueba las acciones de tus tafs, y nada se aprueba sin ti. A continuación, Windows te pedirá tu cara, tu huella o tu PIN.</string>
+    <string name="pair_passkey_why_go">Crear la llave de acceso</string>
+    <string name="pair_passkey_why_title">Crea una llave de acceso para este %1$s</string>
     <string name="pair_steps">En tu teléfono, abre tafs y luego %1$s, %2$s, %3$s. Escanea este código.</string>
     <string name="pair_title">Añade este %1$s con tu teléfono</string>
     <string name="pair_view_only_add">Añadir este %1$s</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina cada taf, sus ejecuciones, chats y notas, tus Cards y tus conexiones. No se puede deshacer.</string>
     <string name="sign_in_didnt_work">No se pudo iniciar sesión.</string>
     <string name="sign_in_every_action_taf_takes_goes">Cada acción de un taf pasa por KIFF, que comprueba su Card antes de que nada llegue a una app. Tus respuestas se firman en este %1$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Cada acción de un taf pasa por KIFF, que comprueba su Card antes de que nada llegue a una app. Tus aprobaciones se firman en tu teléfono.</string>
     <string name="sign_in_how_works">Cómo funciona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS no abrió la página de inicio de sesión (error %1$s; %2$s). Vuelve a intentarlo con tafs abierto.</string>
     <string name="sign_in_lead">Tus tafs actúan con Cards de KIFF. Aprueba este %1$s en KIFF y aquí aparecerán las Cards que emitiste.</string>

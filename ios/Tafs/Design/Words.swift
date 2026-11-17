@@ -2743,6 +2743,12 @@ enum Words {
         static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
+        /// It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.
+        static func passkeyWhyBody(device: String, biometry: String) -> String { Words.line("pair.passkey_why_body", device, biometry, Words.demonstrative(device)) }
+        /// Make the passkey
+        static var passkeyWhyGo: String { Words.line("pair.passkey_why_go") }
+        /// Make a passkey for this {device}
+        static func passkeyWhyTitle(device: String) -> String { Words.line("pair.passkey_why_title", device, Words.demonstrative(device)) }
         /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.
         static func steps(account: String, devices: String, pair: String) -> String { Words.line("pair.steps", account, devices, pair) }
         /// Add this {device} with your phone
@@ -4153,6 +4159,8 @@ enum Words {
         static var didntWork: String { Words.line("sign_in.didnt_work") }
         /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this {device}.
         static func everyActionTafTakesGoes(device: String) -> String { Words.line("sign_in.every_action_taf_takes_goes", device, Words.demonstrative(device)) }
+        /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your approvals are signed on your phone.
+        static var everyActionTafTakesGoesView: String { Words.line("sign_in.every_action_taf_takes_goes_view") }
         /// How it works
         static var howWorks: String { Words.line("sign_in.how_works") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.

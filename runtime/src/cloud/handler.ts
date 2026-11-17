@@ -3297,7 +3297,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   if (!waiting.length && !signIns.length) return;
   const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
   if (!grants) return;
-  await markWider(me, taf, [...waiting, ...signIns], grants, langOf(event), deps);
+  markWider([...waiting, ...signIns], grants, langOf(event));
   const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
   const flags = readFlags();
   const lang = langOf(event);
@@ -3330,12 +3330,11 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
 
 /**
  * A waiting approval or sign-in card whose connection planque couldn't narrow (`usual_access`: the app's sign-in asks for more
- * access than the taf uses, such as Google Sheets with no read-only scope) says so before the owner signs in or approves:
- * `wider: {words}` on the card, for the apps to draw over its buttons, so no card stands under Coach's "change nothing" or
- * "read-only" unsaid. Coach hears it once per connection, as a line it reads with the owner's next message, so it says it
- * plainly and never calls that sign-in read-only.
+ * access than the taf uses) says so before the owner signs in or approves: `wider: {words}` on the card, for every app to draw
+ * over its buttons (contracts/coach-wider.json). It's planque's data, the same for every app: Coach is told nothing about it,
+ * and never describes a sign-in's access itself (connect-an-app@29).
  */
-async function markWider(me: KIFFIdentity, taf: Taf, cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang, deps: Deps): Promise<void> {
+function markWider(cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang): void {
   for (const c of cards) {
     const card = c.component as { grant: string };
     const grant = grants.find((g) => g.id === card.grant);
@@ -3343,15 +3342,6 @@ async function markWider(me: KIFFIdentity, taf: Taf, cards: ThreadComponent[], g
     if (grant?.request.connector?.usual_access !== true) continue;
     const vendor = grant.vendor || vendorName(grant.request.server) || "";
     c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined) } };
-    if (!deps.coach) continue;
-    const at = deps.now?.() ?? new Date();
-    const until = new Date(at.getTime() + TASK_KEPT_MS);
-    if (!(await deps.coach.once(`${me.tenantID}#wider#${grant.id}`, until).catch(() => false))) continue;
-    const name = vendor || "This app";
-    const line = `[connection ${name} (grant ${grant.id})] The sign-in for ${name} can't be narrowed to what the taf uses: it asks for more access than the job needs. `
-      + "Say so plainly to the owner before they sign in or approve; never call this sign-in read-only or say it changes nothing. The taf still uses only its own tools.";
-    await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, taf_id: taf.id, said: wordsIn(lang).card_wider(vendor || undefined) }, until)
-      .catch((err) => console.error(`coach line, ${grant.id} wider:`, err));
   }
 }
 

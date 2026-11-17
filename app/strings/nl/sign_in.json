@@ -10,6 +10,7 @@
   "sign_in.deletes_every_taf_runs_chats": "Verwijdert elk taf, met zijn runs, chats en notities, je Cards en je koppelingen. Dit kan niet ongedaan worden gemaakt.",
   "sign_in.didnt_work": "Inloggen is niet gelukt.",
   "sign_in.every_action_taf_takes_goes": "Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze {device}.",
+  "sign_in.every_action_taf_takes_goes_view": "Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je goedkeuringen worden ondertekend op je telefoon.",
   "sign_in.how_works": "Hoe het werkt",
   "sign_in.ios_did_not_open_sign": "iOS heeft de inlogpagina niet geopend (fout {code}; {context}). Probeer het opnieuw met tafs geopend.",
   "sign_in.lead": "Je tafs handelen onder KIFF-Cards. Je kunt deze {device} goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.",

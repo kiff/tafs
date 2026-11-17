@@ -1527,6 +1527,9 @@
     <string name="pair_from_sign_in">Używasz już tafs na telefonie? Dodaj ten %1$s za jego pomocą.</string>
     <string name="pair_keychain_refused">Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd %1$s), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_new_code">Pokaż nowy kod</string>
+    <string name="pair_passkey_why_body">Zostaje na tym urządzeniu (%1$s), chroniony przez %2$s. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN.</string>
+    <string name="pair_passkey_why_go">Utwórz klucz dostępu</string>
+    <string name="pair_passkey_why_title">Utwórz klucz dostępu dla tego urządzenia (%1$s)</string>
     <string name="pair_steps">Na telefonie otwórz tafs, potem %1$s, %2$s, %3$s. Zeskanuj ten kod.</string>
     <string name="pair_title">Dodaj ten %1$s za pomocą telefonu</string>
     <string name="pair_view_only_add">Dodaj ten %1$s</string>
@@ -2204,6 +2207,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Usuwa każdego tafa, jego uruchomienia, czaty i notatki, Twoje Card i Twoje połączenia. Nie można tego cofnąć.</string>
     <string name="sign_in_didnt_work">Logowanie nie powiodło się.</string>
     <string name="sign_in_every_action_taf_takes_goes">Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje odpowiedzi są podpisywane na tym urządzeniu (%1$s).</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje zatwierdzenia są podpisywane na telefonie.</string>
     <string name="sign_in_how_works">Jak to działa</string>
     <string name="sign_in_ios_did_not_open_sign">iOS nie otworzył strony logowania (błąd %1$s; %2$s). Spróbuj ponownie przy otwartym tafs.</string>
     <string name="sign_in_lead">Twoje tafs działają w ramach Card KIFF. Zatwierdź to urządzenie (%1$s) w KIFF, a wydane przez Ciebie Card pojawią się tutaj.</string>

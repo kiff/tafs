@@ -78,13 +78,6 @@
       "tokens_in": 0,
       "cache_read_tokens": 0,
       "cost_micro_usd": 0
-    },
-    "coach_lines": [
-      {
-        "at": "2026-10-16T12:00:00.000Z",
-        "taf": "Coach",
-        "said": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
-      }
-    ]
+    }
   }
 }

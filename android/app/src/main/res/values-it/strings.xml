@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Usi già tafs sul telefono? Aggiungi questo %1$s con il telefono.</string>
     <string name="pair_keychain_refused">Questo Mac non è riuscito a salvare l\'accesso nel portachiavi (errore %1$s), quindi non è stato aggiunto. Mostra un nuovo codice e riprova.</string>
     <string name="pair_new_code">Mostra un nuovo codice</string>
+    <string name="pair_passkey_why_body">Resta su questo %1$s, protetta da %2$s. Così questo %1$s può approvare le azioni dei tuoi tafs, e nulla viene approvato senza di te. Poi Windows ti chiederà il volto, l\'impronta digitale o il PIN.</string>
+    <string name="pair_passkey_why_go">Crea la passkey</string>
+    <string name="pair_passkey_why_title">Crea una passkey per questo %1$s</string>
     <string name="pair_steps">Sul telefono, apri tafs, poi %1$s, %2$s, %3$s. Scansiona questo codice.</string>
     <string name="pair_title">Aggiungi questo %1$s con il telefono</string>
     <string name="pair_view_only_add">Aggiungi questo %1$s</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina ogni taf, le sue esecuzioni, chat e note, le tue Card e i tuoi collegamenti. Non si può annullare.</string>
     <string name="sign_in_didnt_work">L\'accesso non ha funzionato.</string>
     <string name="sign_in_every_action_taf_takes_goes">Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un\'app. Le tue risposte vengono firmate su questo %1$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un\'app. Le tue approvazioni vengono firmate sul telefono.</string>
     <string name="sign_in_how_works">Come funziona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS non ha aperto la pagina di accesso (errore %1$s; %2$s). Riprova con tafs aperta.</string>
     <string name="sign_in_lead">I tuoi tafs agiscono con le Card di KIFF. Approva questo %1$s in KIFF, e le Card che hai emesso compaiono qui.</string>
