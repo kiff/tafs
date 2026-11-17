@@ -577,8 +577,11 @@ final class AppModel: ObservableObject {
     /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
     /// call, a step it handed over, a knock at its door), or it ran or changed in the last 24 hours, as tafs cloud says. The
     /// rest are in the tafs list behind the mascot.
+    /// tafs cloud's `relevant_now` decides whenever Home sends it (kiff/tafs#1320), so every app lists the same tafs;
+    /// the rule below is only for a tafs cloud that doesn't, and for an agent tafs doesn't run.
     func relevantNow(_ taf: Taf) -> Bool {
         let cloud = cloudTaf(for: taf.id)
+        if let flag = cloud?.relevantNow { return flag }
         return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
                                 step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
                                 knock: (taf.doors ?? []).contains { $0.knocks > 0 },
@@ -3818,8 +3821,10 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         lastError = nil
         do {
-            let updated = try await cloud.setPaused(c.id, paused)
+            var updated = try await cloud.setPaused(c.id, paused)
             guard gen == accountGeneration else { return }
+            // Home's word on the sidebar stands until Home is read again: the taf's own record doesn't carry it.
+            updated.relevantNow = c.relevantNow
             cloudTafs[agent] = updated
             if let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .waiting, tafs[i].state != .revoked {
                 tafs[i].state = updated.paused ? .paused : .working
@@ -3847,8 +3852,9 @@ final class AppModel: ObservableObject {
               let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return false }
         let gen = accountGeneration
         do {
-            let updated = try await cloud.putResults(c.id, places: places)
+            var updated = try await cloud.putResults(c.id, places: places)
             guard gen == accountGeneration else { return false }
+            updated.relevantNow = c.relevantNow
             cloudTafs[agent] = updated
             await loadKnob(tafID)
             return true
