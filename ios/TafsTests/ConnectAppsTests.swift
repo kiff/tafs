@@ -261,7 +261,7 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertTrue(message.hasPrefix("Invoice reminders' Stripe tools stop working."), message)
         XCTAssertTrue(message.contains("Other tafs that use Stripe keep their access."), message)
         XCTAssertTrue(DisconnectWords.message("Stripe", taf: nil).hasPrefix("No taf uses Stripe now."))
-        // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
+        // Another taf whose Card draws on these tools stops too, and is named (tafs#546).
         XCTAssertEqual(DisconnectWords.title("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"]), "Remove access to Stripe for Refunds? Chargebacks stops too.")
         // A key is deleted from tafs once no taf uses it (a key another taf's connection shares stays for that taf):
         // nothing is revoked at the vendor, and coming back takes a key, not a sign-in.

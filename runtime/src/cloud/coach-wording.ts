@@ -1,8 +1,9 @@
 /**
  * Coach's wording rules (kiff/agents' show.Wording), as contracts/coach-wording.json keeps them: a card whose own words call a
- * connection, a sign-in or a step read-only, or say it changes nothing, is refused by kiff/agents' show with the rule's fix, so
+ * connection, a sign-in or a step read-only, say it changes nothing, or say how far a sign-in reaches (the card shows that, from the
+ * grant; Eval 44005248914: "Google's sign-in asks for full mail access"), is refused by kiff/agents' show with the rule's fix, so
  * Coach redraws it before anyone sees it (Eval 43975057022: "I'm connecting Google Sheets with read-only access to cells").
- * The Eval's plan gate reads the same rules beside its own list. All 8 languages, by legal-i18n; a pattern's first group is
+ * The Eval's plan gate reads the same rules beside its own list. All 8 languages, checked by hand; a pattern's first group is
  * the word after the phrase, and one of unless_next lets it through ("it will read only the rows…" names the job).
  * Kept equal to the contract by test/coach-wording.test.ts: change the contract, then this.
  */
@@ -13,7 +14,7 @@ export const COACH_WORDING: readonly Wording[] = [
     "patterns": [
       "read-only"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -40,14 +41,14 @@ export const COACH_WORDING: readonly Wording[] = [
       "messages",
       "pages"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
       "(?:changes?|modif(?:y|ies)|touch(?:es)?) nothing",
       "(?:won['’]?t|will not|doesn['’]?t|does not|can['’]?t|cannot|can not) (?:change|modify|touch) anything"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -56,7 +57,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "ne peut rien (?:changer|modifier)",
       "aucune modification"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -68,7 +69,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "nichts (?:ändern|verändern)",
       "keine änderungen"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -91,7 +92,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "nachrichten",
       "seiten"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -100,7 +101,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "no puede (?:cambiar|modificar) nada",
       "ningún cambio"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -124,7 +125,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "mensajes",
       "páginas"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -135,7 +136,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "non può (?:cambiare|modificare) (?:nulla|niente)",
       "nessuna modifica"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -160,7 +161,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "messaggi",
       "pagine"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -170,7 +171,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "kan niets (?:veranderen|wijzigen)",
       "geen wijzigingen"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -192,7 +193,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "berichten",
       "pagina's"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -201,7 +202,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "ni(?:czego|c) nie (?:zmienia|zmieni|modyfikuje|zmodyfikuje|dotyka|dotknie)",
       "żadnych zmian"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -222,7 +223,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "każdą",
       "każde"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -231,7 +232,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "não pode (?:mudar|alterar|modificar) nada",
       "nenhuma alteração"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -254,6 +255,29 @@ export const COACH_WORDING: readonly Wording[] = [
       "mensagens",
       "páginas"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
+  },
+  {
+    "patterns": [
+      "(?:asks?|asking|will ask) for full(?: \\pL+)? access",
+      "full(?: \\pL+){0,2} access",
+      "full access to (?:your|the|all)",
+      "(?:fragt|bittet|verlangt) (?:nach|um) (?:vollen|vollem|volle|vollständigen|vollständigem) (?:\\pL+-)*\\pL*zugriff",
+      "vollzugriff",
+      "(?:voller|vollen|vollem|vollständiger|vollständigen) (?:\\pL+-)*\\pL*zugriff auf",
+      "(?:pide|pedirá|solicita|solicitará) (?:un |el )?acceso (?:completo|total)",
+      "acceso (?:completo|total) (?:a|al|a la|a los|a las|a tu|a tus)",
+      "(?:demande|demandera) (?:un |l['’])?accès (?:complet|total)",
+      "accès (?:complet|total) (?:à|au|aux|à votre|à vos)",
+      "(?:chiede|chiederà|richiede|richiederà) (?:l['’]|un )?accesso (?:completo|totale)",
+      "accesso (?:completo|totale) (?:a|al|alla|ai|alle|alla tua|ai tuoi)",
+      "vraagt (?:om )?volledige toegang",
+      "volledige toegang tot",
+      "(?:prosi|poprosi) o pełny dostęp",
+      "pełny dostęp do",
+      "(?:pede|pedirá|solicita|solicitará) (?:o |um )?acesso (?:completo|total)",
+      "acesso (?:completo|total) (?:a|ao|à|aos|às)"
+    ],
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   }
 ];

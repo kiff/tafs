@@ -3,7 +3,7 @@
     "patterns": [
       "read-only"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -30,14 +30,14 @@
       "messages",
       "pages"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
       "(?:changes?|modif(?:y|ies)|touch(?:es)?) nothing",
       "(?:won['’]?t|will not|doesn['’]?t|does not|can['’]?t|cannot|can not) (?:change|modify|touch) anything"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -46,7 +46,7 @@
       "ne peut rien (?:changer|modifier)",
       "aucune modification"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -58,7 +58,7 @@
       "nichts (?:ändern|verändern)",
       "keine änderungen"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -81,7 +81,7 @@
       "nachrichten",
       "seiten"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -90,7 +90,7 @@
       "no puede (?:cambiar|modificar) nada",
       "ningún cambio"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -114,7 +114,7 @@
       "mensajes",
       "páginas"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -125,7 +125,7 @@
       "non può (?:cambiare|modificare) (?:nulla|niente)",
       "nessuna modifica"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -150,7 +150,7 @@
       "messaggi",
       "pagine"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -160,7 +160,7 @@
       "kan niets (?:veranderen|wijzigen)",
       "geen wijzigingen"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -182,7 +182,7 @@
       "berichten",
       "pagina's"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -191,7 +191,7 @@
       "ni(?:czego|c) nie (?:zmienia|zmieni|modyfikuje|zmodyfikuje|dotyka|dotknie)",
       "żadnych zmian"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -212,7 +212,7 @@
       "każdą",
       "każde"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -221,7 +221,7 @@
       "não pode (?:mudar|alterar|modificar) nada",
       "nenhuma alteração"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
@@ -244,6 +244,29 @@
       "mensagens",
       "páginas"
     ],
-    "fix": "Don't call a connection, a sign-in or a step read-only, or say it changes nothing: how far a sign-in reaches is for the card to show, from the grant, and the taf's Card is what limits what it does. Say what the taf's job does instead."
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
+  },
+  {
+    "patterns": [
+      "(?:asks?|asking|will ask) for full(?: \\pL+)? access",
+      "full(?: \\pL+){0,2} access",
+      "full access to (?:your|the|all)",
+      "(?:fragt|bittet|verlangt) (?:nach|um) (?:vollen|vollem|volle|vollständigen|vollständigem) (?:\\pL+-)*\\pL*zugriff",
+      "vollzugriff",
+      "(?:voller|vollen|vollem|vollständiger|vollständigen) (?:\\pL+-)*\\pL*zugriff auf",
+      "(?:pide|pedirá|solicita|solicitará) (?:un |el )?acceso (?:completo|total)",
+      "acceso (?:completo|total) (?:a|al|a la|a los|a las|a tu|a tus)",
+      "(?:demande|demandera) (?:un |l['’])?accès (?:complet|total)",
+      "accès (?:complet|total) (?:à|au|aux|à votre|à vos)",
+      "(?:chiede|chiederà|richiede|richiederà) (?:l['’]|un )?accesso (?:completo|totale)",
+      "accesso (?:completo|totale) (?:a|al|alla|ai|alle|alla tua|ai tuoi)",
+      "vraagt (?:om )?volledige toegang",
+      "volledige toegang tot",
+      "(?:prosi|poprosi) o pełny dostęp",
+      "pełny dostęp do",
+      "(?:pede|pedirá|solicita|solicitará) (?:o |um )?acesso (?:completo|total)",
+      "acesso (?:completo|total) (?:a|ao|à|aos|às)"
+    ],
+    "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   }
 ]

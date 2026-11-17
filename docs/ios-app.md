@@ -766,9 +766,14 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   or a draft without KIFF's words, it's the steps below.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
-  (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,
-  they're read once it's in and given in the same step. `given` sends nothing. `taken` says
+  (`POST /v1/me/agent-drafts`), each as it came. `given` sends nothing. `taken` says
   which name a vendor's tool holds, and `unknown` asks to try again; neither asks or sends.
+- **Only the step that was shown is signed.** Give reads `GET /v1/setup` again, and before any Face ID its
+  batch, Cards' draft and pair must be byte for byte the ones the step showed (`AppModel.toolsBodies`). On any
+  difference nothing is signed or sent: the step is drawn again from that read, with "What you're asked to
+  approve changed since it was shown" (`version.out_of_date_card`), and the next Give signs exactly it. Cards that
+  come only once the batch is in were never on the step, so they aren't given with it either: the step is drawn
+  again with them, and the next Give gives them behind its own Face ID.
 - **After Not now** (`CoachToolsRow`): one line above the conversation, tafs cloud's `row`, which
   opens the same step. It's never a panel there, so the message box keeps its room.
 - **A phone that can't approve yet** reads why in the button's place (`ApprovalGate`), and
@@ -999,6 +1004,11 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 (KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
 `AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
 
+- **The camera's preview** follows how the screen is held, the four ways: on iOS 17 and later the
+  system's rotation coordinator turns it (`AVCaptureDevice.RotationCoordinator`, a half turn included),
+  and before, the screen's orientation does, set at each layout and after each rotation
+  (`QRScannerController.previewAngle`). An iPad in landscape showed the computer turned 90° before.
+  The Mac's preview is left as it was. The QR reads the same whatever the turn.
 - **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
   anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
   most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
@@ -1016,6 +1026,11 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   behind Face ID or Touch ID naming the computer, never inside a window. KIFF's code is said beside
   the one checked; if they differ, the person is told to sign the computer out if it isn't theirs.
   A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
+- **After a yes, Devices follows it:** the computer finishes its own half after the phone's yes, so
+  until KIFF lists a device it didn't before, the list is read again every 3 seconds, ten times at most
+  (`AppModel.followPairedDevice`, as Android's tafs#1281). Devices is also read again when Add a device
+  closes and whenever the app comes back to the front, so a device added meanwhile shows without
+  closing Devices and opening it again.
 - **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
   device that holds an approval key or a passkey is an approval.
 - **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with

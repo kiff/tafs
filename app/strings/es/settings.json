@@ -67,6 +67,7 @@
   "settings.devices.passkey_note": "Con una llave de acceso en este teléfono, un ordenador puede aprobar a través de él: el ordenador muestra un código QR y tú lo escaneas con este teléfono.",
   "settings.devices.passkey_prompt": "Añadir a tu cuenta una llave de acceso en este teléfono",
   "settings.devices.passkey_remove": "Quitar",
+  "settings.devices.passkey_remove_last": "Es tu única llave de acceso que puede aprobar. Sin ella, necesitas otro dispositivo que pueda aprobar.",
   "settings.devices.passkey_remove_named": "¿Quitar {name}?",
   "settings.devices.passkey_remove_prompt": "Quitar la llave de acceso {name} de tu cuenta",
   "settings.devices.passkey_too_slow": "Ha tardado demasiado. Inténtalo de nuevo.",

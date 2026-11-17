@@ -91,7 +91,7 @@ export function disclosureLines(job: Pick<Job, "writesFor">): Record<string, str
   const who = job.writesFor?.replace(/\s+/g, " ").trim();
   if (!who) return { ...LINES_NAMING_NO_ONE };
   // A language whose line wouldn't fit in what kiff/agents takes is left out, and English heads the taf's
-  // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (qa-kiff on #587).
+  // messages in it: a name stored before new names were capped at WRITES_FOR_MAX_BYTES (#587).
   return Object.fromEntries(Object.entries(LINES_FOR).map(([lang, line]) => [lang, line(who)] as const)
     .filter(([, line]) => Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES));
 }
@@ -392,7 +392,7 @@ export function discloseOf(v: unknown): Job["disclose"] {
 
 /**
  * The most a new name the taf writes for may be: one line of 100 characters, and as many bytes as leave its
- * disclosure line room in every language within the 300 bytes kiff/agents takes (qa-kiff on #574 and #587):
+ * disclosure line room in every language within the 300 bytes kiff/agents takes (#574 and #587):
  * 261, the German line ("Von einem KI-Agenten für … geschrieben.") being the longest. A name stored before,
  * or a company's name from KIFF, up to the English line's 272, still works: a language whose line doesn't fit
  * is left out (disclosureLines).
@@ -411,7 +411,7 @@ export function writesForOf(v: unknown): string | undefined {
 
 /**
  * The line a version built before gap 18 carries: "the company" is the placeholder gap 18 removed, never
- * who the owner named, so it names no one (qa-kiff on #574).
+ * who the owner named, so it names no one (#574).
  */
 export const OLD_DISCLOSURE_LINE = "Written by an AI agent for the company.";
 

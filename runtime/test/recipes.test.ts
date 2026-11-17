@@ -303,7 +303,7 @@ Bezahle meine Rechnungen unter 100 EUR.
       .find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name)).toEqual(["gmail", "stripe"]);
   });
 
-  // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.
+  // A read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.
   it("draws, for a connection, an app that connects today ahead of one that can't, unless one is connected", () => {
     const app = (entry: string, vendor: string, state: CatalogApp["state"] = "available"): CatalogApp => ({ entry, vendor, title: vendor, how: "oauth", state });
     const refunds = (catalog: CatalogApp[]) => withApps(recipesFor(catalog).recipes, catalog, new Map()).find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name);

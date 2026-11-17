@@ -129,7 +129,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(await waiting({ type: "result", id: "r1", waits: "service" })).toBe(false);
     expect(await waiting({ type: "steps", id: "plan", steps: [{ label: "Connect", status: "active" }] })).toBe(false);
     // A card with no mark at all is from before kiff/agents marked them (kiff/agents#351): read by its type, as its
-    // lists were then, so the line still waits on an approval while that change isn't deployed (qa-kiff on #569).
+    // lists were then, so the line still waits on an approval while that change isn't deployed (#569).
     expect(await waiting({ type: "approval", id: "a1", grant: "g_1" })).toBe(true);
     expect(await waiting({ type: "notice", id: "n1", text: "Connected" })).toBe(false);
   });

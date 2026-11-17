@@ -117,7 +117,7 @@ describe("Coach reads a public page (web_read)", () => {
   });
 });
 
-// The review's three points (agentgabo and qa-kiff on #838): a hostile page can't make the read slow, the whole
+// The review's three points (on #838): a hostile page can't make the read slow, the whole
 // read has one deadline, and an address can't carry much out.
 describe("web_read stays bounded on a hostile page", () => {
   it("reads a page of unclosed tags in linear time: 4 MB of them in well under a second", async () => {

@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: giving Coach its tools signs only the step you read.** If tafs cloud's tools or Cards changed since the step was shown, nothing is signed: the step is drawn again for you to read and give ([ios-app.md](docs/ios-app.md)).

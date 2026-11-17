@@ -1960,6 +1960,7 @@
     <string name="settings_devices_passkey_note">Mit einem Passkey auf diesem Telefon kann ein Computer darüber genehmigen: Der Computer zeigt einen QR-Code, und du scannst ihn mit diesem Telefon.</string>
     <string name="settings_devices_passkey_prompt">Einen Passkey auf diesem Telefon zu deinem Konto hinzufügen</string>
     <string name="settings_devices_passkey_remove">Entfernen</string>
+    <string name="settings_devices_passkey_remove_last">Das ist dein einziger Passkey, der genehmigen kann. Ohne ihn brauchst du ein anderes Gerät, das genehmigen kann.</string>
     <string name="settings_devices_passkey_remove_named">%1$s entfernen?</string>
     <string name="settings_devices_passkey_remove_prompt">Den Passkey %1$s aus deinem Konto entfernen</string>
     <string name="settings_devices_passkey_too_slow">Das hat zu lange gedauert. Versuche es noch einmal.</string>

@@ -67,6 +67,7 @@
   "settings.devices.passkey_note": "Z kluczem dostępu na tym telefonie komputer może zatwierdzać przez niego: komputer pokazuje kod QR, a Ty skanujesz go tym telefonem.",
   "settings.devices.passkey_prompt": "Dodaj do konta klucz dostępu na tym telefonie",
   "settings.devices.passkey_remove": "Usuń",
+  "settings.devices.passkey_remove_last": "To Twój jedyny klucz dostępu, który może zatwierdzać. Bez niego potrzebujesz innego urządzenia, które może zatwierdzać.",
   "settings.devices.passkey_remove_named": "Usunąć {name}?",
   "settings.devices.passkey_remove_prompt": "Usuń klucz dostępu {name} z konta",
   "settings.devices.passkey_too_slow": "Trwało to zbyt długo. Spróbuj ponownie.",

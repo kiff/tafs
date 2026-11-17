@@ -103,7 +103,7 @@ final class ReceiptCheckTests: XCTestCase {
     }
 
     /// The line's amount and the receipt's signed amount match as numbers in the same unit: "150.00" and
-    /// "150" are one amount, never a false mismatch (win-dev's find on Windows #56, the iPad's too).
+    /// "150" are one amount, never a false mismatch (found on Windows #56, the iPad's too).
     func testAmountsMatchAsNumbersInTheSameUnit() {
         typealias Amount = KIFFClient.ActivityCall.Amount
         XCTAssertTrue(Amount(value: "150.00", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")))

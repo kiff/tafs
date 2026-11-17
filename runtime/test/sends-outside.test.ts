@@ -57,7 +57,7 @@ describe("tools that send outside the company (gap 14)", () => {
     expect(await store.get(sendsOutsideKey("t1", "rae"))).toMatchObject({ grants: { g_mail: [], g_chat: ["post"] } });
   });
 
-  // agentgabo on #606: two Approves of the same taf at once (two phones, two connections) never lose an entry.
+  // On #606: two Approves of the same taf at once (two phones, two connections) never lose an entry.
   it("keep both entries when two Approves of the same taf note at once", async () => {
     const store = memoryCoach(() => NOW);
     const noWait = async () => undefined;

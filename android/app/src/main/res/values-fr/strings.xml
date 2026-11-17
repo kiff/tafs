@@ -1960,6 +1960,7 @@
     <string name="settings_devices_passkey_note">Avec une clé d\'accès sur ce téléphone, un ordinateur peut approuver par son biais : l\'ordinateur affiche un code QR, et vous le scannez avec ce téléphone.</string>
     <string name="settings_devices_passkey_prompt">Ajouter à votre compte une clé d\'accès sur ce téléphone</string>
     <string name="settings_devices_passkey_remove">Supprimer</string>
+    <string name="settings_devices_passkey_remove_last">C\'est votre seule clé d\'accès qui peut approuver. Sans elle, il vous faut un autre appareil qui peut approuver.</string>
     <string name="settings_devices_passkey_remove_named">Supprimer %1$s ?</string>
     <string name="settings_devices_passkey_remove_prompt">Supprimer la clé d\'accès %1$s de votre compte</string>
     <string name="settings_devices_passkey_too_slow">Cela a pris trop de temps. Réessayez.</string>

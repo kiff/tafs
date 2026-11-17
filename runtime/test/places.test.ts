@@ -72,7 +72,7 @@ describe("result places at connected apps", () => {
       { subject: "rae", active: true, grants: [{ action: "post_k3", per_action_max: [{ quantity: "sum(amount)", unit: "USD" }] }, { action: "read_k4" }], aggregates: [{ quantity: "count" }] },
       { subject: "rae", active: false, grants: [{ action: "old_k5" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
       { subject: "max", active: true, grants: [{ action: "pay_k6" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
-      // A shared Card the taf holds as a second holder counts too (qa-kiff).
+      // A shared Card the taf holds as a second holder counts too.
       { subject: "other", subjects: ["other", "rae"], active: true, grants: [{ action: "stripe_refund" }], aggregates: [{ quantity: "sum(amount)", unit: "EUR" }] },
     ];
     expect([...moneyActions(cards, "rae")]).toEqual([["refund_k1", "EUR"], ["note_k2", "EUR"], ["post_k3", "USD"], ["stripe_refund", "EUR"]]);
