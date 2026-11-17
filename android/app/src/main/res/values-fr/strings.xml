@@ -1184,6 +1184,7 @@
     <string name="error_on_our_side">Rien à faire de votre côté ; nous nous en occupons.</string>
     <string name="error_ours">Ce téléphone et le serveur ne se sont pas compris. Nous nous en occupons.</string>
     <string name="error_request_mismatch">Cette demande ne correspond pas à ce qu\'elle demande. Rien n\'a été approuvé.</string>
+    <string name="error_sent_with_other_text">Ce message a déjà été envoyé avec un autre texte. Renvoyez-le comme un nouveau message.</string>
     <string name="error_sign_in_code_expired">Le code de connexion a expiré. Recommencez.</string>
     <string name="error_sign_in_first">Connectez-vous d\'abord avec KIFF.</string>
     <string name="error_sign_in_first_on_device">Connectez-vous d\'abord avec KIFF sur %2$s.</string>

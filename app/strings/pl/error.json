@@ -20,6 +20,7 @@
   "error.on_our_side": "Po Twojej stronie nie trzeba nic robić; zajmujemy się tym.",
   "error.ours": "Ten telefon i serwer się nie zrozumiały. Zajmujemy się tym.",
   "error.request_mismatch": "Ta prośba nie zgadza się z tym, o co prosi. Nic nie zostało zatwierdzone.",
+  "error.sent_with_other_text": "Ta wiadomość została już wysłana z innym tekstem. Wyślij ją ponownie jako nową wiadomość.",
   "error.sign_in_code_expired": "Kod logowania wygasł. Zacznij od nowa.",
   "error.sign_in_first": "Najpierw zaloguj się przez KIFF.",
   "error.sign_in_first_on_device": "Najpierw zaloguj się przez KIFF na tym urządzeniu ({device}).",
