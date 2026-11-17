@@ -48,6 +48,29 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules", connection: [] });
   });
 
+  it("the same notice shown again with other lines is unagreed: the owner reads another claim (kiff-qa's lines gap)", () => {
+    const withLines = (lines: unknown[]) => ({ kind: "component", run: "r1", body: { type: "notice", id: "n1", tone: "info", lang: "en", rules: RULES, lines } });
+    const card = { text: "Refunds at most $50 a call", kept: "card", tools: ["refund_charge"] };
+    const original = { text: "Refunds only to the original card", kept: "instructions" };
+    const agreed = [withLines([card, original]), confirm("c1", "n1"), answered("c1", "agree")];
+    // A line's kept changed, from the instructions to the connection.
+    expect(rulesAgreement([...agreed, withLines([card, { ...original, kept: "connection", tools: ["refund_charge"] }])])).toEqual({ state: "unagreed", notice: "n1" });
+    // A connection line's tools changed.
+    const kept = { text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge"] };
+    const agreedKept = [withLines([card, kept]), confirm("c1", "n1"), answered("c1", "agree")];
+    expect(rulesAgreement([...agreedKept, withLines([card, { ...kept, tools: ["refund_charge", "send_reply"] }])])).toEqual({ state: "unagreed", notice: "n1" });
+    // A line's words, or a kiff line's what, changed; a line added.
+    expect(rulesAgreement([...agreed, withLines([card, { ...original, text: "Refunds to any card" }])])).toEqual({ state: "unagreed", notice: "n1" });
+    const disclosure = { text: "Signs each reply as AI", kept: "kiff", what: "disclosure" };
+    expect(rulesAgreement([withLines([disclosure]), confirm("c1", "n1"), answered("c1", "agree"), withLines([{ ...disclosure, what: "held_approval" }])])).toEqual({ state: "unagreed", notice: "n1" });
+    expect(rulesAgreement([...agreed, withLines([card, original, disclosure])])).toEqual({ state: "unagreed", notice: "n1" });
+    // Shown again identical, the tools in another order: still agreed, with its connection lines.
+    const same = rulesAgreement([...agreedKept, withLines([card, { ...kept }])]);
+    expect(same).toMatchObject({ state: "agreed", notice: "n1", connection: [{ text: "Refunds only to the original card", tools: ["refund_charge"] }] });
+    const two = { text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge", "send_reply"] };
+    expect(rulesAgreement([withLines([two]), confirm("c1", "n1"), answered("c1", "agree"), withLines([{ ...two, tools: ["send_reply", "refund_charge"] }])])).toMatchObject({ state: "agreed" });
+  });
+
   it("a notice whose rules can't be read whole carries none", () => {
     const tooMany = Array.from({ length: RULES_MAX + 1 }, (_, i) => ({ tool: `t${i}`, over: "refuse" }));
     for (const bad of [tooMany, [{ tool: "x", over: "maybe" }], [{ tool: "", over: "ask" }], "refund", []]) {

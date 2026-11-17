@@ -119,7 +119,7 @@ export const pl: Words = {
   approval_count_on_amount: (tool: string) => `Ta Card liczyłaby też wywołania „${tool}”, obok limitów kwoty: liczbę, której nikt nie ustalił i która mogłaby wstrzymać wywołania dozwolone przez limity. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_rules_on_exceed: (tool: string) => `Ta Card po przekroczeniu limitu „${tool}” zdecydowałaby inaczej, niż mówią zasady, które zaakceptowałeś. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_rules_missing: (tool: string) => `Zasady, które zaakceptowałeś, nie mówią, co robi „${tool}” po przekroczeniu limitu. Nic nie zostało zatwierdzone. Coach pokaże ci zasady jeszcze raz.`,
-  approval_rules_unpinned: (tool: string) => `Zasady, które zaakceptowałeś, mówią, że połączenie pilnuje zasady dla „${tool}”, ale połączenie jej nie ustala. Nic nie zostało zatwierdzone. Coach pokaże ci zasady jeszcze raz.`,
+  approval_rules_unpinned: (tool: string) => `Zasady, które zaakceptowałeś, mówią, że połączenie pilnuje zasady dla „${tool}”, ale tak nie jest. Nic nie zostało zatwierdzone. Coach pokaże ci zasady jeszcze raz.`,
   approval_rules_figures: (tool: string) => `Ta Card ma dla „${tool}” inny limit niż zasady, które zaakceptowałeś. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_rules_unagreed: "Coach przygotował to, zanim zaakceptowałeś pokazane zasady. Nic nie zostało zatwierdzone. Najpierw zaakceptuj zasady, a Coach przygotuje to ponownie.",
   approval_rules_required: "Coach przygotował to, nie pokazując ci zasad do zaakceptowania. Nic nie zostało zatwierdzone. Coach najpierw pokaże ci zasady.",

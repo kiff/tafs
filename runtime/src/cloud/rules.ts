@@ -56,6 +56,19 @@ function connectionLinesOf(c: Record<string, unknown>): ConnectionLine[] {
   return out;
 }
 
+/**
+ * A notice's lines as one key: each line's words, where it says it's kept, its tools (as a set) and what, in order. A notice
+ * shown again with other lines says other things are kept elsewhere, so it is another notice to agree to (rulesAgreement).
+ */
+function linesKeyOf(c: Record<string, unknown>): string {
+  if (!Array.isArray(c.lines)) return "";
+  return JSON.stringify((c.lines as unknown[]).map((l) => {
+    const line = (l ?? {}) as Record<string, unknown>;
+    const tools = Array.isArray(line.tools) ? line.tools.filter((t): t is string => typeof t === "string").map(fold).sort() : [];
+    return [line.text ?? "", line.kept ?? "", tools, line.what ?? ""];
+  }));
+}
+
 /** At most this many rules on a notice, as kiff/agents' component schema takes them: past it, the notice carries none. */
 export const RULES_MAX = 64;
 /** At most this many figures on a rule, as kiff/agents' schema takes them: one for each quantity and window. */
@@ -119,13 +132,13 @@ function limitsOf(given: unknown): AgreedLimit[] | undefined {
  * event for a confirm with `agrees`, answered `agree`, with no `answered_by` (tafs cloud's own answers carry it), not
  * words written while the card waited, and not a card that stopped waiting unanswered. `agrees` must name a rules notice
  * shown in this conversation before the answer; anything else agrees to nothing. The newest agreement counts, and a
- * rules notice shown after the one it agreed (another id, or the same id with other rules) leaves it unagreed.
+ * rules notice shown after the one it agreed (another id, or the same id with other rules or other lines) leaves it unagreed.
  */
 export function rulesAgreement(events: readonly Event[]): RulesAgreement {
-  const notices = new Map<string, { rules: AgreedRule[]; at: number; text: string; connection: ConnectionLine[] }>();
+  const notices = new Map<string, { rules: AgreedRule[]; at: number; text: string; connection: ConnectionLine[]; lines: string }>();
   const confirms: Array<{ run: string; id: string; agrees?: string }> = [];
-  let agreed: { notice: string; rules: AgreedRule[]; shownAt: number; text: string; connection: ConnectionLine[] } | undefined;
-  let newest: { id: string; rules: AgreedRule[]; at: number } | undefined;
+  let agreed: { notice: string; rules: AgreedRule[]; shownAt: number; text: string; connection: ConnectionLine[]; lines: string } | undefined;
+  let newest: { id: string; rules: AgreedRule[]; at: number; lines: string } | undefined;
   events.forEach((e, at) => {
     const body = (e.body ?? {}) as Record<string, unknown>;
     if (e.kind === "component") {
@@ -133,8 +146,9 @@ export function rulesAgreement(events: readonly Event[]): RulesAgreement {
       if (!id) return;
       const rules = rulesOf(body);
       if (rules) {
-        notices.set(id, { rules, at, text: typeof body.text === "string" ? body.text : "", connection: connectionLinesOf(body) });
-        newest = { id, rules, at };
+        const lines = linesKeyOf(body);
+        notices.set(id, { rules, at, text: typeof body.text === "string" ? body.text : "", connection: connectionLinesOf(body), lines });
+        newest = { id, rules, at, lines };
       } else if (body.type === "notice") notices.delete(id);
       if (body.type === "confirm") confirms.push({ run: e.run ?? "", id, ...(typeof body.agrees === "string" && body.agrees ? { agrees: body.agrees } : {}) });
       return;
@@ -144,11 +158,11 @@ export function rulesAgreement(events: readonly Event[]): RulesAgreement {
     // The run's latest confirm by that id, as the thread places an answer.
     const card = confirms.findLast((c) => c.run === (e.run ?? "") && c.id === body.id);
     const notice = card?.agrees ? notices.get(card.agrees) : undefined;
-    if (card?.agrees && notice) agreed = { notice: card.agrees, rules: notice.rules, shownAt: notice.at, text: notice.text, connection: notice.connection };
+    if (card?.agrees && notice) agreed = { notice: card.agrees, rules: notice.rules, shownAt: notice.at, text: notice.text, connection: notice.connection, lines: notice.lines };
   });
   if (!newest) return { state: "none" };
   if (!agreed) return { state: "unagreed", notice: newest.id };
-  const shownAfter = newest.at > agreed.shownAt && !(newest.id === agreed.notice && sameRules(newest.rules, agreed.rules));
+  const shownAfter = newest.at > agreed.shownAt && !(newest.id === agreed.notice && sameRules(newest.rules, agreed.rules) && newest.lines === agreed.lines);
   return shownAfter ? { state: "unagreed", notice: newest.id } : { state: "agreed", notice: agreed.notice, rules: agreed.rules, text: agreed.text, connection: agreed.connection };
 }
 
