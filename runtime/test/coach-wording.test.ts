@@ -48,10 +48,17 @@ describe("Coach's wording rules", () => {
       }
       return false;
     }));
-    for (const bad of ["I'm connecting Google Sheets with read-only access to cells.", "Je connecterai ensuite Google Sheets en lecture seule.", "It won't change anything."]) {
+    for (const bad of [
+      "I'm connecting Google Sheets with read-only access to cells.", "Je connecterai ensuite Google Sheets en lecture seule.", "It won't change anything.",
+      // Eval 44005248914, Gmail EN: a sign-in's breadth said in Coach's own words. The card shows it, from the grant.
+      "Google's sign-in asks for full mail access, but the taf will only be able to read.",
+      "Google fragt nach vollem E-Mail-Zugriff.", "Google pide acceso completo a tu correo.", "Google demande un accès complet à votre messagerie.",
+      "Google chiede l'accesso completo alla posta.", "Google vraagt om volledige toegang tot je mail.", "Google poprosi o pełny dostęp do poczty.",
+      "O Google pede acesso total ao seu correio.",
+    ]) {
       expect(claims(bad), bad).toBe(true);
     }
-    for (const good of ["It will read only the rows added since its last run.", "If you decline, nothing changes."]) {
+    for (const good of ["It will read only the rows added since its last run.", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card."]) {
       expect(claims(good), good).toBe(false);
     }
   });
