@@ -1426,6 +1426,9 @@
     <string name="pair_passkey_why_body">It stays on this %1$s, behind %2$s. With it, this %1$s approves your tafs\' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.</string>
     <string name="pair_passkey_why_go">Make the passkey</string>
     <string name="pair_passkey_why_title">Make a passkey for this %1$s</string>
+    <string name="pair_refused_key_registered">Your phone says this %1$s is already paired with your account. Show a new code and scan it again.</string>
+    <string name="pair_refused_other">Your phone couldn\'t add this %1$s. Show a new code and scan it again.</string>
+    <string name="pair_refused_title">Your phone didn\'t add this %1$s</string>
     <string name="pair_steps">On your phone, open tafs, then %1$s, %2$s, %3$s. Scan this code.</string>
     <string name="pair_title">Add this %1$s with your phone</string>
     <string name="pair_view_only_add">Add this %1$s</string>

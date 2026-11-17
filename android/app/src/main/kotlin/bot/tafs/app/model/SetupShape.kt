@@ -135,27 +135,64 @@ data class SetupShape(
   companion object {
     private val NEEDS_OWNER = setOf("confirm", "questions", "approval", "sign_in", "drive")
 
-    /** What kiff/agents' words for a failed answer put before why. */
+    /** What tafs cloud's English words for a failed answer put before why. */
     private const val DIDNT_GO_THROUGH = " · it didn't go through: "
 
     /**
-     * A card's recorded answer in the form the cards read, from kiff/agents' words for it. One that stopped waiting with no answer,
-     * or that the owner wrote past, is none: the owner's message is in the thread.
+     * A card's recorded answer in the form the cards read. One that stopped waiting with no answer, or that the owner wrote past,
+     * is none: the owner's message is in the thread. An approval or a sign-in reads its outcome from tafs cloud's stored [CardAnswer.answer],
+     * which is in no language; its [CardAnswer.words] are in the owner's, so they're never read for an outcome but in English, the
+     * only words this build knows. **Nothing reads as approved by default:** a value or words it doesn't know read as not approved.
      */
     internal fun recorded(recorded: CardAnswer, c: SetupComponent): Answer? {
       if (recorded.state != "answered") return null
       val words = recorded.words
-      val failed = words.indexOf(DIDNT_GO_THROUGH).takeIf { it >= 0 }?.let { "failed: " + words.substring(it + DIDNT_GO_THROUGH.length) }
+      val stored = recorded.answer?.takeIf { it.isNotBlank() }
       val text = when (c.type) {
         "confirm" -> c.options?.firstOrNull { it.label == words }?.value ?: words
-        "approval" -> failed ?: if (words == "Declined") "declined" else "approved"
-        "sign_in" -> failed ?: if (words == "Signed in") "signed in" else "not now"
+        "approval" -> if (stored != null) approvalFromStored(stored, words) else approvalFromWords(words)
+        "sign_in" -> if (stored != null) signInFromStored(stored) else signInFromWords(words)
         // A drive card is approved only by its signed start; anything else said of it is a no.
         "drive" -> if (words.lowercase().startsWith("approved")) "approved" else "declined"
         else -> words
       }
       return Answer(text)
     }
+
+    /** An approval's stored answer: approved, or connected with its Card next, is done; declined; failed with why; else not approved. */
+    internal fun approvalFromStored(stored: String, words: String): String = when {
+      stored == "approved" || stored == "connected" -> "approved"
+      stored.startsWith("already approved") -> stored
+      stored == "declined" -> "declined"
+      stored.startsWith("failed: ") -> stored
+      else -> notApproved(words)
+    }
+
+    /** From a tafs cloud that sends only words: tafs cloud's exact English for approved or already approved; anything else isn't. */
+    internal fun approvalFromWords(words: String): String {
+      words.indexOf(DIDNT_GO_THROUGH).takeIf { it >= 0 }?.let { return "failed: " + words.substring(it + DIDNT_GO_THROUGH.length) }
+      return when {
+        words == "Approved" -> "approved"
+        words == "Already approved" -> "already approved"
+        words == "Declined" -> "declined"
+        else -> notApproved(words)
+      }
+    }
+
+    /** A sign-in's stored answer: signed in; failed with why; anything else is not now. */
+    internal fun signInFromStored(stored: String): String = when {
+      stored == "signed in" -> "signed in"
+      stored.startsWith("failed: ") -> stored
+      else -> "not now"
+    }
+
+    internal fun signInFromWords(words: String): String {
+      words.indexOf(DIDNT_GO_THROUGH).takeIf { it >= 0 }?.let { return "failed: " + words.substring(it + DIDNT_GO_THROUGH.length) }
+      return if (words == "Signed in") "signed in" else "not now"
+    }
+
+    /** An answer this build can't read as an outcome: not approved, said in tafs cloud's own words, as a card that didn't go through. */
+    private fun notApproved(words: String): String = "failed: " + words
 
     /**
      * The shape of [thread]: [drafts] are KIFF's drafts by id; [waiting] is the card waiting for the owner, by id; [states] each

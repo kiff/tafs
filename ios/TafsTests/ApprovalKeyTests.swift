@@ -17,7 +17,10 @@ final class TwoKeySigner: ApprovalSigning {
     var approvalKey = Data([0x30, 0x59, 0x02])
     var approvalPublicKeyDER: Data { approvalKey }
 
+    /// Refuses the current key's prompt once this many have been made: the second Face ID closed, say.
+    var currentRefusedFrom: Int?
     func sign(_ message: Data, reason: String) async throws -> String {
+        if let from = currentRefusedFrom, currentPrompted.count >= from { throw ApprovalSigner.SignerError.notAuthenticated }
         currentPrompted.append(String(decoding: message, as: UTF8.self))
         return "current"
     }

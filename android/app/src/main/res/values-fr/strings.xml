@@ -1426,6 +1426,9 @@
     <string name="pair_passkey_why_body">Elle reste sur %3$s, protégée par %2$s. Avec elle, %3$s approuve les actions de vos tafs, et rien n\'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.</string>
     <string name="pair_passkey_why_go">Créer la clé d\'accès</string>
     <string name="pair_passkey_why_title">Créer une clé d\'accès pour %2$s</string>
+    <string name="pair_refused_key_registered">Votre téléphone indique que %2$s est déjà associé à votre compte. Affichez un nouveau code et scannez-le à nouveau.</string>
+    <string name="pair_refused_other">Votre téléphone n\'a pas pu ajouter %2$s. Affichez un nouveau code et scannez-le à nouveau.</string>
+    <string name="pair_refused_title">Votre téléphone n\'a pas ajouté %2$s</string>
     <string name="pair_steps">Sur votre téléphone, ouvrez tafs, puis %1$s, %2$s, %3$s. Scannez ce code.</string>
     <string name="pair_title">Ajouter %2$s avec votre téléphone</string>
     <string name="pair_view_only_add">Ajouter %2$s</string>

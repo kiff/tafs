@@ -40,6 +40,28 @@ export function sendingOutside(profile: unknown): string[] {
   return [...out].sort();
 }
 
+/**
+ * What a grant's signed request says of its sending tools, as a profile `sendingOutside` reads: its own profile's
+ * operations, and, for an API-key connection (`api`), which carries no profile, each write planque marked with text
+ * fields (`text_fields`: planque's reading of the operation's schema, a subject, a body, a message, never the vendor's
+ * words or the asking agent's), by its name in KIFF, as a tool that sends outside. A write with none can't carry a
+ * message, so it needs no line (a status, a tag); a read never counts. A taf with a draft email on a key connection is
+ * then made only with it in `disclose` (Eval 43975057022, Replay run 2).
+ */
+export function sendingProfileOf(request: unknown): { operations: unknown[] } {
+  const r = (request && typeof request === "object" ? request : {}) as { profile?: unknown; api?: unknown; tools?: unknown };
+  const own = r.profile && typeof r.profile === "object" ? (r.profile as { operations?: unknown }).operations : undefined;
+  const operations: unknown[] = Array.isArray(own) ? [...own] : [];
+  if (r.api && typeof r.api === "object" && Array.isArray(r.tools)) {
+    for (const t of r.tools as Array<Record<string, unknown>>) {
+      const name = typeof t?.name === "string" && t.name.trim() ? t.name.trim() : typeof t?.tool === "string" ? t.tool.trim() : "";
+      const texts = Array.isArray(t?.text_fields) && t.text_fields.some((f) => typeof f === "string" && f);
+      if (name && texts && t.read_only !== true && t.setup_reads !== true) operations.push({ tool: name, effect: "sends", resource: { outside: true } });
+    }
+  }
+  return { operations };
+}
+
 /** How long a note's write holds its claim, at most: a write that died lets the next one in after this. */
 export const NOTE_CLAIM_MS = 10_000;
 

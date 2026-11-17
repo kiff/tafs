@@ -1,0 +1,1 @@
+- **Words, the computers:** a refused pairing says so on the computer, "Your phone didn't add this {device}", with a line for a computer already paired and a general one, in all 8 languages (`pair.refused_*`, for KIFF's `403 pairing_refused`; [app/strings](../app/strings/README.md)).

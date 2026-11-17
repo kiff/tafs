@@ -1530,6 +1530,9 @@
     <string name="pair_passkey_why_body">Zostaje na tym urządzeniu (%1$s), chroniony przez %2$s. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN.</string>
     <string name="pair_passkey_why_go">Utwórz klucz dostępu</string>
     <string name="pair_passkey_why_title">Utwórz klucz dostępu dla tego urządzenia (%1$s)</string>
+    <string name="pair_refused_key_registered">Telefon podaje, że to urządzenie (%1$s) jest już sparowane z Twoim kontem. Pokaż nowy kod i zeskanuj go ponownie.</string>
+    <string name="pair_refused_other">Telefon nie mógł dodać tego urządzenia (%1$s). Pokaż nowy kod i zeskanuj go ponownie.</string>
+    <string name="pair_refused_title">Telefon nie dodał tego urządzenia (%1$s)</string>
     <string name="pair_steps">Na telefonie otwórz tafs, potem %1$s, %2$s, %3$s. Zeskanuj ten kod.</string>
     <string name="pair_title">Dodaj ten %1$s za pomocą telefonu</string>
     <string name="pair_view_only_add">Dodaj ten %1$s</string>

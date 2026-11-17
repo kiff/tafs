@@ -185,6 +185,7 @@ the app in sample mode.
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
 | `-listSettlesOnReturn YES` | The list opens on its first taf, and its last taf moves to the top each time the app comes back (`ListTapUITests`) |
+| `-routeWalk YES` | A debug build only: the route walk's hook ([below](#the-app-maps-walk)) |
 
 ## The taf layout and KIFF's words
 
@@ -443,7 +444,13 @@ the app in sample mode.
   step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
   device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
   `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
-  before, with Face ID. planque's `window_required` opens a new window behind Face ID and makes the call once more;
+  before, with Face ID. **A connection approved outside Coach's step** (`AppModel.connect(grantID:)`: Connect apps, Connect
+  again, an approval card's Connect) has no ask, so its own Face ID opens the window, as on Android (tafs#1272): a
+  window held from before is closed first, planque's approve and confirm go as a tap for that call alone, KIFF's
+  refusal of the open (other than 404 or 405) stops it with nothing sent to planque, and the connection's window is
+  closed when it ends. If planque says the window ended and the new Face ID is refused, or KIFF opens no new window,
+  it stops there: the refused call is never made again, and never without a window. Without the approval key, during a drive, or with a KIFF without windows, it signs `v1` as
+  before. planque's `window_required` opens a new window behind Face ID and makes the call once more;
   KIFF's `critical_key_required` or `window_required` asks Face ID again and the approval key signs it
   (`windowReconfirm`). KIFF's words are read after each approval and on coming back; a window KIFF says isn't open
   is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
@@ -1250,3 +1257,29 @@ summaries. Coach overlays the mounted screen with a right-edge transition;
 Back restores the existing taf and tab. `WalletLayout` measures full Card
 faces before stacking them. The API contracts and recent-run history bound
 are in [api.md](api.md).
+
+## The app map's walk
+
+`RouteWalkUITests` opens every route of the app map (`app/routes.json`) in the sample on an
+iPhone, and writes what happened as the map, `app/map/ios.json`:
+`{generated_by, mode: "sample", routes: [{route, opened, title_shown, refused_because?}]}`,
+sorted by route. `opened` is what `AppModel.open(route:)` answered; `title_shown`, whether the
+route's English title (`app/strings/en`) was then on screen (a refused route shows nothing new,
+so it's false); `refused_because`, for a refused route, what it needs (`manages` or a
+capability) when the person hasn't it, else `signed-in`: a screen only someone signed in to
+KIFF opens. `{taf}` is the sample's first taf.
+
+- **How it drives the app.** It launches once, with `-screenshots YES -tab tafs -routeWalk YES`.
+  The hook (`ios/Tafs/App/RouteWalk.swift`) is a small window above the app and its sheets, at
+  the right edge halfway down (XCUITest can't tap over the status bar): the test types each path
+  into its field, a `DriveField` like every other, and the hook clears every request, builds the screens
+  again from the start (no push, no sheet, the launch's tab), then opens the path and writes
+  `path|opened` or `path|refused:why` on its label. The hook is in debug builds only (`#if
+  DEBUG`; a release build's `routeWalk()` is the view itself), and only with the argument.
+- **When it fails.** A route that opens and doesn't show its title; and a map that differs from
+  `app/map/ios.json`. The walk prints its map between `----- BEGIN app/map/ios.json -----` and
+  `----- END app/map/ios.json -----`, and attaches it to the result as `ios.json`: when the
+  change is meant, that is the new file
+  (`sed -n '/BEGIN app\/map/,/END app\/map/p' log | sed '1d;$d' > app/map/ios.json`).
+- **In CI** it runs with the iPhone's UI tests, and beside the unit tests, in the same run,
+  when what it reads changes (`ios/Tafs/App/`, the walk, `app/routes.json`, `app/map/`).

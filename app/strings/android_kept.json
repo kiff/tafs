@@ -155,6 +155,7 @@
   "model/SetupShape.kt": {
     " · it didn't go through: ": "kiff/agents' recorded answer, read as data, never shown",
     "signed in": "a card's answer in the form the cards read, data, never shown",
-    "not now": "a card's answer in the form the cards read, data, never shown"
+    "not now": "a card's answer in the form the cards read, data, never shown",
+    "already approved": "a card's answer in the form the cards read, data, never shown"
   }
 }

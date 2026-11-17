@@ -81,6 +81,16 @@ fun DevicesSheet(
   val pairLine = state.pairLine
   val pairing = state.pairBusy
   LaunchedEffect(Unit) { refresh() }
+  // Back on screen after leaving it (Google's scanner, another app, the phone locked): read again, so a device added meanwhile
+  // shows without closing Devices and opening it again.
+  var wasAway by remember { mutableStateOf(false) }
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_PAUSE) { wasAway = true }
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+    if (wasAway) {
+      wasAway = false
+      scope.launch { refresh() }
+    }
+  }
   DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),

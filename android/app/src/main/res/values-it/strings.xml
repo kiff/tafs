@@ -1426,6 +1426,9 @@
     <string name="pair_passkey_why_body">Resta su questo %1$s, protetta da %2$s. Così questo %1$s può approvare le azioni dei tuoi tafs, e nulla viene approvato senza di te. Poi Windows ti chiederà il volto, l\'impronta digitale o il PIN.</string>
     <string name="pair_passkey_why_go">Crea la passkey</string>
     <string name="pair_passkey_why_title">Crea una passkey per questo %1$s</string>
+    <string name="pair_refused_key_registered">Il telefono indica che questo %1$s è già associato al tuo account. Mostra un nuovo codice e scansionalo di nuovo.</string>
+    <string name="pair_refused_other">Il telefono non è riuscito ad aggiungere questo %1$s. Mostra un nuovo codice e scansionalo di nuovo.</string>
+    <string name="pair_refused_title">Il telefono non ha aggiunto questo %1$s</string>
     <string name="pair_steps">Sul telefono, apri tafs, poi %1$s, %2$s, %3$s. Scansiona questo codice.</string>
     <string name="pair_title">Aggiungi questo %1$s con il telefono</string>
     <string name="pair_view_only_add">Aggiungi questo %1$s</string>

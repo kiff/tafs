@@ -1,0 +1,7 @@
+- Votre briefing : deux fois par jour, ce qui vous attend et ce que vos tafs ont fait.
+- Coach crée un taf à partir de vos propres mots, avec une seule empreinte.
+- « Autoriser désormais » sur un appel retenu.
+- Téléphone verrouillé : une alerte n'affiche que « Un taf vous attend ».
+- Sur tablette, connectez-vous avec KIFF ou avec votre téléphone.
+- De nouveaux dessins à l'accueil et sur les écrans vides.
+- Corrections pour connecter des apps, les Appareils et les approbations.

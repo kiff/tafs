@@ -2,7 +2,7 @@ import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
-import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -185,6 +185,20 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const words = { profile_sha256: sha256(sends), words_sha256: "1".repeat(64) };
     expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: digest, words })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
     expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["send_email"] } });
+  });
+
+  // Eval 43975057022, Replay run 2: an API-key connection carries no profile. Its writes planque marked with text fields
+  // (a draft's body) are noted as sending; a write with none (a status) and a read aren't.
+  it("notes an API-key connection's writes with text fields as sending, as the owner signs", async () => {
+    const s = services();
+    const tools = [{ tool: "createDraft", name: "create_draft_k3", title: "Create a draft", text_fields: ["body"] },
+      { tool: "setStatus", name: "set_status_k3", title: "Set a status" },
+      { tool: "listMail", name: "list_mail_k3", title: "List mail", read_only: true }];
+    s.grants = [grant({}, { api: { url: "https://mail.example/openapi.json" }, tools })];
+    const w = await world(s);
+    const digest = sha256(grant({}, { api: { url: "https://mail.example/openapi.json" }, tools }).request);
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: digest })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["create_draft_k3"] } });
   });
 
   it("a card whose terms changed since it was shown is read again, and Coach hears nothing", async () => {
@@ -553,6 +567,27 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toMatchObject({ outcome: "sign" });
     draft([each([count(1, { per: " Charge ", window: "rolling_7d" })]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 4b. KIFF's own count, 10,000 a day, as the held Card's only total: KIFF refuses a Card with no total, and this one
+    // is never the owner's (Eval 43975057022, Setup run 3: refused here, then refused by KIFF with none, and Coach changed
+    // the agreed rule to get out). Signed. On the refused Card, beside another total, or at another figure: not signed.
+    draft([each([count(10_000)]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // Alone, with no Card bounding the refunds' amount (qa-kiff): 10,000 refunds under the cap a day would pass unasked.
+    draft([each([count(10_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(10_000)]), { ...daily([day(20_000)]), grants: [{ action: "send_reply_k3" }] }, others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    // Beside a total for each customer only: one item's, so nothing bounds the day's refunds over all customers.
+    draft([each([count(10_000)]), daily([{ ...day(20_000), per: "customer" }]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([]), daily([day(20_000), count(10_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(10_000), count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    for (const other of [count(9_999), count(10_000, { window: "rolling_24h" }), count(10_000, { per: "customer" })]) {
+      draft([each([other]), daily([day(20_000)]), others]);
+      expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    }
     // 5. A live test's "1 a day for each payment intent" on the money tool: a count per item the owner never gave, so
     // not signed, and Coach hears the item. Another item than the tool's own, even over its life: not signed either.
     draft([each([count(1, { per: "payment_intent" })]), daily([day(20_000)]), others]);
@@ -1280,6 +1315,22 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
     // A real failure still says so.
     expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone" }, "en"))
       .toBe("Approve · it didn't go through: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone");
+  });
+
+  // The owner's Reject read "Approved · signed in to Stripe" on Windows (17 Nov): an app read anything that wasn't the
+  // English "Declined" as approved. tafs cloud sends the answer settled, in no language, so every app maps the same values.
+  it("settles an approval card's answer for the apps: approved, already approved, connected, declined or failed, nothing else", () => {
+    const next = "failed: Gmail is connected; its Card is next: show the approval again for its Card alone";
+    expect(settledApprovalAnswer("approved")).toBe("approved");
+    expect(settledApprovalAnswer("declined")).toBe("declined");
+    expect(settledApprovalAnswer("already approved: Stripe is connected and its Card is confirmed")).toBe("already approved");
+    expect(settledApprovalAnswer("already approved")).toBe("already approved");
+    expect(settledApprovalAnswer(next)).toBe("connected");
+    const failed = "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone";
+    expect(settledApprovalAnswer(failed)).toBe(failed);
+    expect(settledApprovalAnswer("failed: planque answered 409")).toBe("failed: planque answered 409");
+    // Anything else is nothing: the apps read it as not approved.
+    for (const other of [undefined, null, 3, "", "Approved", "approve", "approvedish", "signed in", "Declined"]) expect(settledApprovalAnswer(other)).toBeUndefined();
   });
 
   it("says it didn't go through when the Card isn't the draft the card showed, or isn't a draft any more", async () => {

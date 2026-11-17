@@ -14,6 +14,7 @@ import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Base64
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -326,6 +327,42 @@ class PairingTest {
     assertEquals("tafs on this Windows PC", m.state.value.pairAsking?.name)
     assertNull(m.state.value.pairLine)
     assertFalse(m.state.value.pairBusy)
+  }
+
+  @Test fun aComputerKiffListsOnlyAfterItsOwnHalfIsReadUntilItShowsThenNoMore() = runTest {
+    transport.answer("POST /v1/me/pairings", 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-14T18:05:00Z"}}""")
+    val m = model(scope = backgroundScope)
+    m.refreshDevices()
+    val phone = """{"id":"dev_1","name":"tafs on Android phone","this_device":true}"""
+    val pc = """{"id":"dev_2","name":"tafs on this Windows PC"}"""
+    // The computer finishes its half after the phone's yes: KIFF lists it from the third read on.
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[$phone]}""")
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[$phone]}""")
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[$phone,$pc]}""")
+    val before = transport.requestsTo("GET /v1/me/devices").size
+    m.addDevice { qrText() }
+    runCurrent()
+    m.confirmPairing()
+    runCurrent()
+    assertEquals("the read right after the yes", before + 1, transport.requestsTo("GET /v1/me/devices").size)
+    assertEquals(listOf("dev_1"), m.state.value.devices.map { it.id })
+    advanceTimeBy(AppModel.PAIR_FOLLOW_MS * 2 + 1)
+    assertEquals(listOf("dev_1", "dev_2"), m.state.value.devices.map { it.id })
+    val reads = transport.requestsTo("GET /v1/me/devices").size
+    advanceTimeBy(AppModel.PAIR_FOLLOW_MS * AppModel.PAIR_FOLLOW_TRIES)
+    assertEquals("listed: no more reads", reads, transport.requestsTo("GET /v1/me/devices").size)
+  }
+
+  @Test fun aComputerKiffNeverListsIsReadAtMostTheFollowsTimes() = runTest {
+    transport.answer("POST /v1/me/pairings", 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-14T18:05:00Z"}}""")
+    val m = model(scope = backgroundScope)
+    m.refreshDevices()
+    val before = transport.requestsTo("GET /v1/me/devices").size
+    m.addDevice { qrText() }
+    runCurrent()
+    m.confirmPairing()
+    advanceTimeBy(AppModel.PAIR_FOLLOW_MS * (AppModel.PAIR_FOLLOW_TRIES + 5))
+    assertEquals(before + 1 + AppModel.PAIR_FOLLOW_TRIES, transport.requestsTo("GET /v1/me/devices").size)
   }
 
   @Test fun aQrThatIsntAPairingLeavesALineThatStays() = runTest {

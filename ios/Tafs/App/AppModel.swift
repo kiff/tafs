@@ -6801,18 +6801,62 @@ final class AppModel: ObservableObject {
             return nil
         }
 
+        let connectMessage = Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8)
+        let reason = connectPrompt(grant)
+        let confirmConnect: @MainActor () async throws -> Void = { _ = try await signer.sign(connectMessage, reason: reason, grants: true) }
+        // A window held from before is closed first, so this connection's own Face ID opens its own (as Android's).
+        if windowAvailable, kiff.window != nil { await closeWindow() }
         do {
-            _ = try await signer.sign(Data("tafs.connect.v1|\(tenant)|\(grant.id)|\(grant.digest)".utf8),
-                                      reason: connectPrompt(grant), grants: true)
+            try await confirmConnect()
         } catch {
             quietStop = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
             return nil
         }
         guard gen == accountGeneration else { return nil }
 
+        // That Face ID opens KIFF's approval window with the approval key (kiff/tafs#494), so planque's approve and
+        // confirm go as a tap in it (v2, with the window's id), never as a windowless v1. With no approval key, during
+        // a drive, or with a KIFF without windows (404, 405), they go as before. Any other refusal of the open
+        // stops here, with nothing sent to planque. The connection's window is closed when it ends.
+        var windowed = false
+        if windowAvailable {
+            kiff.setupSigner = { try signer.signConfirmed($0) }
+            do {
+                windowed = try await openWindow()
+            } catch {
+                lastError = Words.Connect.notConnected(why: "\(error.localizedDescription)")
+                return nil
+            }
+            guard gen == accountGeneration else { return nil }
+        }
+        defer {
+            useWindow(false, reconfirm: {})
+            if windowed { Task { [weak self] in await self?.closeWindow() } }
+        }
+        /// planque's approve or confirm, in the window, as Coach's step makes its asked call: the window is on for that
+        /// call alone, so the reads around it go as they always did. planque says the window ended before it did
+        /// anything (a long vendor sign-in, say): a new Face ID opens a new window, and only that call is made again.
+        /// An approve is never sent twice.
+        func inWindow<T>(_ call: () async throws -> T) async throws -> T {
+            useWindow(windowed, reconfirm: confirmConnect)
+            defer { useWindow(false, reconfirm: {}) }
+            do {
+                return try await call()
+            } catch PlanqueClient.PlanqueError.windowRequired where windowed {
+                kiff.window = nil
+                useWindow(false, reconfirm: {})
+                try await confirmConnect()
+                windowed = try await openWindow()
+                // KIFF no longer opens one: stop, rather than make the call again with no window.
+                guard windowed else { throw PlanqueClient.PlanqueError.windowRequired }
+                useWindow(windowed, reconfirm: confirmConnect)
+                return try await call()
+            }
+        }
+
         let connected: PlanqueClient.Grant
         do {
-            let approved = try await planque.approve(grant, words: words)
+            let approved = try await inWindow { try await planque.approve(grant, words: words) }
             guard let signInURL = approved.signInURL else {
                 // planque holds a fresh sign-in and waits for this phone to confirm it with its
                 // one-use code: confirmed here, never a second sign-in, and connected only once
@@ -6820,7 +6864,7 @@ final class AppModel: ObservableObject {
                 if approved.status == "signed_in", let code = approved.confirmCode {
                     connectStep = Words.Coach.checkingSignIn
                     defer { connectStep = nil }
-                    let confirmed = try await planque.confirm(grantID: grant.id, code: code)
+                    let confirmed = try await inWindow { try await planque.confirm(grantID: grant.id, code: code) }
                     await refreshConnections()
                     guard gen == accountGeneration else { return nil }
                     guard confirmed.connected || confirmed.listed else {
@@ -6858,7 +6902,7 @@ final class AppModel: ObservableObject {
             // never because the page closed.
             connectStep = Words.Coach.checkingSignIn
             defer { connectStep = nil }
-            connected = try await planque.confirm(grantID: grant.id, code: signedIn.code)
+            connected = try await inWindow { try await planque.confirm(grantID: grant.id, code: signedIn.code) }
         } catch VendorSignIn.SignInError.cancelled {
             lastError = Words.Connect.signInClosedNothingConnected
             await refreshConnections()

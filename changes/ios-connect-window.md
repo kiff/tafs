@@ -1,0 +1,1 @@
+- **iPhone and iPad: connecting an app outside Coach opens its own approval window**: the connection's Face ID opens it, and the approval goes inside it, as on Android ([docs/approvals.md](docs/approvals.md)).
