@@ -134,6 +134,28 @@ class TabletSidebarTest {
     compose.onNode(hasText("3 need you.")).assertIsDisplayed()
   }
 
+  /** Account opens beside the sidebar, as the iPad's, its row highlighted and with no Done; another row closes it (V40). */
+  @Test fun accountOpensBesideTheSidebarAndAnotherRowClosesIt() {
+    show("w1366dp-h1024dp-land-xhdpi")
+    compose.onNode(hasText(Words.Settings.title) and inSidebar).performClick()
+    compose.waitForIdle()
+    compose.onNode(hasTestTag("beside-sidebar")).assertIsDisplayed()
+    compose.onNode(hasTestTag("sidebar")).assertIsDisplayed()
+    compose.onNode(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Selected, true) and inSidebar and hasContentDescription(Words.Settings.title, substring = true)).assertIsDisplayed()
+    assertTrue(compose.onAllNodes(hasText(Words.Common.done)).fetchSemanticsNodes().isEmpty())
+    compose.onNode(hasText(Words.Record.title) and inSidebar).performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(hasTestTag("beside-sidebar")).fetchSemanticsNodes().isEmpty())
+  }
+
+  @Test fun aPhonesAccountIsStillASheet() {
+    show("w384dp-h682dp-port-450dpi")
+    compose.onAllNodes(hasText(Words.Settings.title) and androidx.compose.ui.test.hasClickAction())[0].performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(hasTestTag("beside-sidebar")).fetchSemanticsNodes().isEmpty())
+    compose.onAllNodes(hasText(Words.Common.done))[0].assertIsDisplayed()
+  }
+
   @Test fun aPhoneKeepsItsTabBarAndHasNoSidebar() {
     show("w384dp-h682dp-port-450dpi")
     assertTrue(compose.onAllNodes(hasTestTag("sidebar")).fetchSemanticsNodes().isEmpty())

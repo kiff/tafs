@@ -679,7 +679,10 @@ the bar's place, as the iPad's (`TabletSidebar`, from `HomeSplitView`); the phon
   sample's "Play the next sample actions"; **Coach** (ink, 44 high, with its sparkle); and
   **Account**, with the account's name.
 
-What the sidebar chooses opens beside it, its row highlighted (`Beside`). It opens on the
+What the sidebar chooses opens beside it, its row highlighted (`Beside`): Needs you, Record, the
+Calendar, a taf, and, as on the iPad, Account, Plan & usage, Connect apps and Halt all, which a phone
+opens as sheets. Those four are drawn in place by `DriveSheet` where `LocalSheetBeside` is set,
+without their Done, and Back or another row closes them; what they open in turn is a sheet again. It opens on the
 Overview, today across the tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs
 and its line. The sidebar lists every taf: the iPad shows only those relevant now (a held call, a
 step, a knock, a run or a change in the last day) and keeps the rest behind the mark, a rule tafs

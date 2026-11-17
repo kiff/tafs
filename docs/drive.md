@@ -371,7 +371,9 @@ the same either way. Coach, and the account's events, have their own words for i
 ### How each platform tells the person's input from Coach's
 
 - **Android:**
-  - **Every window of the app is guarded,** not only the activity's. The activity's `Window.Callback` is wrapped. So is each dialog's and sheet's, since every sheet, dialog, date picker and menu opens through one wrapper (`DriveSheet`, `DriveAlert`, `DriveDialog`, `DriveDatePicker`, `DriveMenu`). A test fails the build on a raw one.
+  - **Every window of the app is guarded,** not only the activity's. The activity's `Window.Callback` is wrapped. So is each dialog's and sheet's, since every sheet, dialog, date picker and menu opens through one wrapper (`DriveSheet`, `DriveAlert`, `DriveDialog`, `DriveDatePicker`, `DriveMenu`). A test fails the build on a raw one. On a tablet,
+    Account, Plan & usage, Connect apps and Halt all are drawn beside the sidebar instead (`LocalSheetBeside`): part of the
+    activity's window, not a window of their own, so its guard covers them.
   - **An event is Coach's only when the app is dispatching it right then,** matched by the `downTime` it created. Anything else is the person's: the guard pauses the drive, then hands the event on as usual. That includes a touch on a sheet's scrim, which the window's callback has before any view. A menu's popup has no `Window`, so a guard on its content catches touches inside it. A touch outside it reaches the menu's dismissal, which runs inside that touch's dispatch: one that isn't Coach's pauses the drive and dismisses the menu, even while one of Coach's steps is under way (that step stops, as above).
   - **A tap on a control** is counted when the person's up event lands on a node with a click action, by the same hit-test Coach's touches go through.
   - **The person's back** (a key, or the back gesture, through an `OnBackInvokedCallback` at overlay priority from Android 13) ends it as `owner_took_over`, and goes back. Their touch on the Coach button or on the caption's Stop ends it as `stopped`. A dismissal Coach didn't make, if one gets past the guard, pauses it.

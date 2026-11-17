@@ -1,0 +1,1 @@
+- **Android tablets: Account, Plan & usage, Connect apps and Halt all open beside the sidebar,** their row highlighted, as on the iPad, instead of as sheets over everything. Phones keep their sheets ([android-app.md](docs/android-app.md)).
