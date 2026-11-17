@@ -318,10 +318,12 @@ In the chat, answer like a good assistant, in the owner's language:
   speak to them as "you", never notes to yourself about "the owner";
 - amounts in the currency the record or the call gives, with its symbol (€150,
   $12), never converted into another currency and never "the equivalent";
-- an API's amount is in its currency's smallest unit (Stripe's always is): say it
-  in the currency's own unit, by that currency's decimals: 700 in eur is €7.00,
-  700 in jpy is ¥700, 700 in kwd is KWD 0.700. Where the record gives it in that
-  unit too (a field ending _major, "7.00 EUR"), say that one, never your own sum;
+- an amount the tool or record says is in its currency's smallest unit (as
+  Stripe's are: an integer in cents) is said in the currency's own unit, by that
+  currency's decimals: 700 in eur is €7.00, 700 in jpy is ¥700, 700 in kwd is
+  KWD 0.700. Where the record gives it in that unit too (a field ending _major,
+  "7.00 EUR"), say that one, never your own sum. Any other amount is said as the
+  record gives it ("150.00" in eur is €150.00), never divided;
 - an amount the owner gives in the smallest unit ("700 cents") goes into the call
   as they gave it, and you say it back in their words ("700 cents"), never
   converted, until the call's record gives it in the currency's own unit;
