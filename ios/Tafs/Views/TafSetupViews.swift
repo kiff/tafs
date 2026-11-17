@@ -21,7 +21,9 @@ struct StartsWhenView: View {
     @State private var busy = false
 
     static let title = Words.Setup.startsWhen
-    static let approveNote = Words.Setup.approveNote
+    /// Approve's note names the device the app is on (iPhone, iPad or Mac), as the alert lines do: on a Mac
+    /// the approval is the Mac's, never "this phone".
+    static let approveNote = Words.Setup.approveNoteDevice(device: "\(ThisDevice.kind)")
 
     var body: some View {
         let knob = model.setupKnob(tafID)
