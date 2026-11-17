@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
@@ -150,6 +151,18 @@ class TafHeadTest {
     compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Coach.conversations)).assertIsDisplayed()
     compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Common.back)).performClick()
     assertEquals(1, closed)
+  }
+
+  /** The Card tab ends with Revoke, as the iPad's (V38): below Halt and Usage, never between the Card and them. */
+  @Test fun revokeIsTheCardTabsLastRow() {
+    show()
+    compose.onNode(hasText("Card") and androidx.compose.ui.test.hasClickAction()).performClick()
+    compose.waitForIdle()
+    fun top(words: String) = compose.onNode(hasText(words) and androidx.compose.ui.test.hasClickAction(), useUnmergedTree = false)
+      .performScrollTo().fetchSemanticsNode().boundsInRoot.top
+    val halt = compose.onAllNodes(hasText(Words.Taf.Halt.title, substring = true)).fetchSemanticsNodes().first().boundsInRoot.top
+    val revoke = top(Words.Taf.revoke)
+    assertTrue("Revoke at $revoke is above Halt at $halt", revoke > halt)
   }
 
   /** Before Coach starts, its bar is already the iPad's: Back in Coach's capsule, the name centred, no conversations yet. */

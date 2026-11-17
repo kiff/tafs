@@ -737,8 +737,8 @@ answered:
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`). Signed in, tafs
   cloud's filters are bordered pills as on the iPad, amber for the one chosen and soft for the rest,
   and each group's title is small and quiet (`ActivityFilterPill`).
-- **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, its usage,
-  Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
+- **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
+  iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks

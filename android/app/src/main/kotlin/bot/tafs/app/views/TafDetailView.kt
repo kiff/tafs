@@ -304,15 +304,17 @@ fun TafDetailView(
             // The clock its limits' days and its times are in, in tafs cloud's words: above the Card, as the iPad's.
             taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp)) }
             taf.scheduleTimeZoneWords?.let { Text(it, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(horizontal = 4.dp)) }
-            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
+            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere)
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
+            // In the iPad's order: Halt, Changes to how it runs, Usage, then Revoke last.
+            if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.canHalt(taf.id) && state.manages(taf.id)) {
               val version = state.tafSetups[taf.id]?.versions
               VersionsRow({ onVersions(taf.id) }, title = version?.title ?: Words.Version.changesRow, summary = version?.summary)
             }
-            if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
+            RevokeRow(taf, managesHere, onRevoke = { confirmRevoke = true })
           }
           Section.Setup -> {
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
@@ -449,7 +451,7 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
 internal const val REVOKE_NEEDS_APPROVER = "taf.revoke_needs_approver"
 
 @Composable
-private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean, onRevoke: () -> Unit) {
+private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean) {
   val cards = taf.shownCards
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -474,7 +476,14 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
       )
     }
   }
-  // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
+}
+
+/**
+ * Revoke, the Card tab's last row, as the iPad's (under Halt, Changes to how it runs and Usage): in the sample its own; signed in,
+ * KIFF's, for whoever manages it. Pausing is in Setup.
+ */
+@Composable
+private fun RevokeRow(taf: Taf, manages: Boolean, onRevoke: () -> Unit) {
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
     if (taf.cloudId != null && LocalViewOnly.current) {
       // A view-only session (KIFF's approval_mode "view") isn't offered Revoke, on every device alike: the line every app
