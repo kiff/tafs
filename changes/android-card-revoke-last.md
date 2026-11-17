@@ -1,0 +1,1 @@
+- **Android: Revoke is the Card tab's last row,** after Halt, Changes to how it runs and Usage, in the iPad's order ([android-app.md](docs/android-app.md)).
