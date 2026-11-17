@@ -71,14 +71,15 @@ describe("Coach's wording rules", () => {
       "Connecting Gmail, read only.", "It uses a read only connection.",
       // kiff-qa: "from", "mail" and "whatever" can follow the label, so they stay caught.
       "Gmail stays read only from now on.", "It uses a read only mail connection.", "It's read only whatever you approve.",
+      // kiff-qa: "what" can follow an access claim too, so Eval 44128040350's Gmail EN run-2 line stays caught: Coach says what the taf reads instead.
+      "I'll set Accountant emails to read only what accounts@example.com sends you.", "The sign-in can read only what the taf needs.",
     ]) {
       expect(claims(bad), bad).toBe(true);
     }
     for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
       "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "El taf solo lee los correos nuevos.", "O taf só lê as linhas novas da folha.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once.",
-      // Eval 44128040350, Gmail EN run 2: "read" as the job's verb, its object after "only" (legal-i18n).
-      "I'll set Accountant emails to read only what accounts@example.com sends you.", "It will read only the Leads sheet.",
-      "The taf will read only incoming replies.", "It will read only unread replies."]) {
+      // "read" as the job's verb, with "unread" or "incoming" after "only" (legal-i18n, kiff-qa).
+      "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies."]) {
       expect(claims(good), good).toBe(false);
     }
   });
