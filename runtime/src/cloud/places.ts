@@ -205,7 +205,9 @@ export function placesInstructions(ps: VendorPlace[]): string | undefined {
     parts.push(`Your result is also handed to another taf as its work. End every result with a section headed "${HANDOFF_HEADING}", the last one, ` +
       "written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and " +
       (fills.length ? `${[...new Set(fills)].join("; ")}. ` : "what it needs next. ") +
+      `Write the heading on its own line every time, even when there is nothing to hand. ` +
       `When there is nothing for it to act on, write "${NOTHING_TO_HAND}" as the section's first line, in those words, then why in one line. ` +
+      `When there is something, never write "${NOTHING_TO_HAND}" in it: start with what it acts on. ` +
       "tafs cloud hands it over and decides how far it goes; you call nothing for it.");
   }
   return parts.join("\n\n");

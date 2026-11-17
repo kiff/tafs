@@ -58,7 +58,9 @@ describe("result places at connected apps", () => {
     // The instructions: a hand-off section the taf ends its result with, for every taf place at once.
     const text = instructions(JOBS[0]!, undefined, [actionPlace(NOTION), invoices]);
     expect(text).toContain("Where your results also go:");
-    expect(text).toContain(`End every result with a section headed "${HANDOFF_HEADING}", the last one, written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and the invoice's number and amount, the customer, what was done. When there is nothing for it to act on, write "Nothing to hand over" as the section's first line, in those words, then why in one line. tafs cloud hands it over and decides how far it goes; you call nothing for it.`);
+    expect(text).toContain(`End every result with a section headed "${HANDOFF_HEADING}", the last one, written for a taf that takes it on without having seen your work: what you did, what it acts on (by its reference), and the invoice's number and amount, the customer, what was done. Write the heading on its own line every time, even when there is nothing to hand. When there is nothing for it to act on, write "Nothing to hand over" as the section's first line, in those words, then why in one line. When there is something, never write "Nothing to hand over" in it: start with what it acts on. tafs cloud hands it over and decides how far it goes; you call nothing for it.`);
+    // Eval 44128040350: once a "Nothing to hand over" with no heading, once "Nothing to hand over" opening a hand-off that named
+    // a dispute to hand. The heading is always written, and the words are only for nothing to hand.
     // How far it goes is tafs cloud's rule, never the taf's: the instructions don't ask the taf to keep it.
     expect(text).not.toContain("never hand on");
     expect(text).not.toContain("taf_inv1");

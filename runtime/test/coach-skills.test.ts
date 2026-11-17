@@ -67,7 +67,8 @@ describe("Coach's skills, as files", () => {
 describe("Coach's core", () => {
   it("is about 2,000 tokens, with the map of its skills and the rules that hold whatever is loaded", () => {
     expect(SETUP_INSTRUCTIONS).toBe(SETUP_CORE);
-    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2500);
+    // 2,520 since Eval 44128040350: the "read only" line (17 tokens) went in with the core at 2,499.
+    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2520);
     expect(SETUP_CORE).toContain(SKILLS_MAP);
     for (const s of COACH_SKILLS) expect(SETUP_CORE.includes(`  - ${s.name}: ${s.description}`), s.name).toBe(!NAMED_ONLY.includes(s.name));
     // The watch's skill is named-only: Coach's map never names it, so no phone conversation reads it (docs/watch-ask.md).
