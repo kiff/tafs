@@ -174,17 +174,76 @@ final class CoachToolsTests: XCTestCase {
     }
 
     /// The Cards come once every tool is connected: where tafs cloud sent the batch alone, the
-    /// draft is read after it and given in the same step, behind the same one Face ID.
-    func testTheCardsAreReadAfterTheBatchWhenTheyDidntComeWithIt() async throws {
+    /// draft read after it was never on the step the person read, so it isn't signed then. The step
+    /// is drawn again with the Cards, and the next Give gives them, behind its own Face ID.
+    func testCardsReadAfterTheBatchAreShownBeforeTheyreGiven() async throws {
         let signer = FaceIDSigner()
         let model = await model(Self.read(state: "to_give", card: false), signer: signer)
         StubProtocol.thenRespond["POST /v1/connections/batch"] = ["GET /v1/setup": (200, Self.read(state: "to_give", connect: false))]
         StubProtocol.thenRespond["POST /v1/me/agent-drafts"] = ["GET /v1/setup": (200, #"{"setup":\#(Self.setupJSON),"tools":{"state":"given"}}"#)]
 
-        let given = await model.giveCoachTools()
-        XCTAssertTrue(given, model.coachToolsError ?? "")
-        XCTAssertEqual(signer.prompts.count, 1, "the person confirms once")
+        let first = await model.giveCoachTools()
+        XCTAssertFalse(first)
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1, "the batch the person read")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").isEmpty, "Cards never shown are never signed")
+        XCTAssertEqual(model.coachTools?.card?.body, Data(Self.cards.utf8), "drawn now, in KIFF's words")
+        XCTAssertEqual(model.coachToolsError, Words.Version.outOfDateCard)
+
+        let second = await model.giveCoachTools()
+        XCTAssertTrue(second, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts.count, 2, "the Cards get their own confirmation")
         XCTAssertEqual(sent("POST", "api.test", "/v1/me/agent-drafts").first?.httpBody, Data(Self.cards.utf8))
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1, "the batch isn't sent again")
+    }
+
+    /// Only the step that was shown is signed: tafs cloud's read at the tap differs from the step's
+    /// (here, one more tool), so nothing is signed or sent. The step is drawn again from that read,
+    /// and the next Give signs exactly it.
+    func testAToolsStepThatChangedSinceItWasShownSignsNothing() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(Self.read(state: "to_give"), signer: signer)
+        let more = Self.read(state: "to_give").replacingOccurrences(of: #""z":1"#, with: #""z":2"#)
+        XCTAssertNotEqual(more, Self.read(state: "to_give"))
+        StubProtocol.responses["GET /v1/setup"] = (200, more)
+        StubProtocol.sent = []
+
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID for a step the person didn't read")
+        XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty, "nothing sent")
+        XCTAssertEqual(model.coachToolsError, Words.Version.outOfDateCard)
+        let redrawn = try XCTUnwrap(model.coachTools?.connect?.body)
+        XCTAssertTrue(String(decoding: redrawn, as: UTF8.self).contains(#""z":2"#), "the step drawn again from the read")
+
+        StubProtocol.thenRespond["POST /v1/me/agent-drafts"] = ["GET /v1/setup": (200, #"{"setup":\#(Self.setupJSON),"tools":{"state":"given"}}"#)]
+        let again = await model.giveCoachTools()
+        XCTAssertTrue(again, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts.count, 1)
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").first?.httpBody, redrawn, "exactly the step read the second time")
+    }
+
+    /// The Cards' draft changed alone, with the batch as shown: still nothing is signed.
+    func testACardsDraftThatChangedSinceItWasShownSignsNothing() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(Self.read(state: "to_give"), signer: signer)
+        let other = Self.read(state: "to_give").replacingOccurrences(of: #""on_exceed":"refuse""#, with: #""on_exceed":"allow""#)
+        XCTAssertNotEqual(other, Self.read(state: "to_give"))
+        StubProtocol.responses["GET /v1/setup"] = (200, other)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertTrue(signer.prompts.isEmpty)
+        XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty)
+        XCTAssertEqual(model.coachToolsError, Words.Version.outOfDateCard)
+    }
+
+    /// The bytes compared are the bodies alone: words the step reads differently don't stop a Give.
+    func testOnlyTheSignedBytesAreCompared() throws {
+        let a = try XCTUnwrap(TafsCloud.CoachTools.read(Data(Self.read(state: "to_give").utf8)))
+        let b = try XCTUnwrap(TafsCloud.CoachTools.read(Data(Self.read(state: "to_give", step: false).utf8)))
+        XCTAssertEqual(AppModel.toolsBodies(a), AppModel.toolsBodies(b))
+        let c = try XCTUnwrap(TafsCloud.CoachTools.read(Data(Self.read(state: "to_give", card: false).utf8)))
+        XCTAssertNotEqual(AppModel.toolsBodies(a), AppModel.toolsBodies(c), "a draft left out is a difference")
     }
 
     /// Cancelled at Face ID: nothing is sent, the tools stay to give, and the screen says so.
