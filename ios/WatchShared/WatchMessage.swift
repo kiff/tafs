@@ -93,7 +93,7 @@ struct WatchReply: Codable, Equatable, Sendable {
     }
 }
 
-/// Your brief on the wrist, every word tafs cloud's: its title and when, the decisions still to answer
+/// Your brief on the wrist, every word tafs cloud's: its title and when, every decision it sends still to answer
 /// with no answers (they're answered on the phone), the line for more, Done's heading and its first cases,
 /// and the rest. Read only: a decision about a held call names it (`holdID`), so the watch can offer
 /// Refuse where its own Needs you read does.
@@ -115,9 +115,8 @@ struct WatchBrief: Codable, Equatable, Sendable {
         var holdID: String?
     }
 
-    /// The most decisions sent to the wrist; the rest are counted in `more`.
-    static let wristDecisions = 5
-    /// The most of Done's cases sent by name.
+    /// The most of Done's cases sent by name. Decisions aren't cut: tafs cloud already caps them (every urgent
+    /// one kept), and `more` is its count of the rest.
     static let wristCases = 2
 
     var title: String

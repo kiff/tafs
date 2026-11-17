@@ -172,7 +172,8 @@ struct KeptWatchReading: WatchReading {
     nonisolated static func watchBrief(_ brief: TafsCloud.Brief, tafNames: [String: String]) -> WatchBrief? {
         let usable = brief.decisions.filter(\.usable)
         guard !usable.isEmpty || !brief.done.isEmpty else { return nil }
-        let decisions = usable.prefix(WatchBrief.wristDecisions).map { d in
+        // All of them: tafs cloud caps the decisions itself and keeps every urgent one, and `more` counts the rest.
+        let decisions = usable.map { d in
             WatchBrief.Decision(id: d.id, question: d.question, taf: tafNames[d.ref.taf], deadline: d.deadline, urgent: d.urgent,
                                 cantWait: d.cantWait, refKind: d.ref.kind, refID: d.ref.id,
                                 holdID: d.ref.kind == "hold" && !d.ref.id.isEmpty ? d.ref.id : nil)
@@ -180,7 +181,7 @@ struct KeptWatchReading: WatchReading {
         let cases = brief.done.flatMap(\.cases).map { $0.name.isEmpty ? $0.words : $0.name }.filter { !$0.isEmpty }
         func words(_ s: String) -> String? { s.isEmpty ? nil : s }
         return WatchBrief(title: brief.words.title, when: words(brief.words.when), urgent: words(brief.words.urgent),
-                          decisions: Array(decisions), more: brief.more.flatMap { words($0.words) },
+                          decisions: decisions, more: brief.more.flatMap { words($0.words) },
                           done: brief.done.isEmpty ? nil : words(brief.words.done),
                           doneCases: Array(cases.prefix(WatchBrief.wristCases)), rest: brief.rest.flatMap { words($0.words) })
     }

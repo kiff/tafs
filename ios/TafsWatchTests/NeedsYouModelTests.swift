@@ -147,9 +147,28 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(model.brief, wristBrief)
         XCTAssertTrue(model.refusable(wristBrief.decisions[0]), "Needs you lists ce_1")
         XCTAssertFalse(model.refusable(wristBrief.decisions[1]), "Needs you doesn't list ce_9: Approve on your phone only")
-        XCTAssertEqual(model.beyondBrief, 1, "Needs you's 3, less the brief's 2 held calls")
+        XCTAssertEqual(model.beyondBrief, 2, "ce_1 is the brief's; Needs you's 2 others aren't held calls the brief names")
         model.leave()
         XCTAssertNil(model.brief, "kept in memory only")
+    }
+
+    /// Matched by id, never by number: Needs you holds A and B, the brief names held call C (answered meanwhile)
+    /// and a step. A and B stay counted, so neither is out of reach.
+    func testBeyondTheBriefIsMatchedByIdNeverByNumber() async {
+        let call = { (id: String) in WatchNeedsYou.Call(id: id, taf: "Rae", what: "Refund", reason: "Over €150.00 each", answerBy: "10:51") }
+        let needsYou = WatchNeedsYou(count: 2, calls: [call("A"), call("B")], at: now)
+        let brief = WatchBrief(title: "Your brief", when: nil, urgent: nil,
+                               decisions: [.init(id: "hold:C", question: "C?", taf: nil, deadline: nil, urgent: false, cantWait: nil,
+                                                 refKind: "hold", refID: "C", holdID: "C"),
+                                           .init(id: "step:s", question: "S?", taf: nil, deadline: nil, urgent: false, cantWait: nil,
+                                                 refKind: "step", refID: "s", holdID: nil)],
+                               more: nil, done: nil, doneCases: [], rest: nil)
+        let phone = Phones()
+        phone.replies = [.needsYou: WatchReply(.ok, needsYou: needsYou), .brief: WatchReply(.ok, brief: brief)]
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked(), briefOn: true)
+        await model.load()
+        XCTAssertEqual(model.beyondBrief, 2, "A and B, which the brief doesn't name")
+        XCTAssertFalse(model.refusable(brief.decisions[0]), "C isn't in Needs you's read: no Refuse")
     }
 
     func testOnWithNoBriefOrAnOlderPhoneNeedsYouStays() async {

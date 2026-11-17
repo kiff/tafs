@@ -82,11 +82,16 @@ final class NeedsYouModel: ObservableObject {
         return needsYou.calls.contains { $0.id == hold }
     }
 
-    /// What Needs you holds beyond the brief's decisions, so nothing waiting is out of reach: its count less
-    /// the decisions about a held call or a step it counts.
+    /// What Needs you holds beyond the brief's decisions, so nothing waiting is out of reach. Matched item by item,
+    /// never by number, as the phone's `needsYouBeyondBrief`: each held call the brief names no decision for, by
+    /// KIFF's id, plus what else Needs you counts (steps and the rest) less the brief's steps. A held call the brief
+    /// names but Needs you no longer lists (answered between the two reads) never hides one it does.
     var beyondBrief: Int {
         guard let brief, case .loaded(let needsYou) = state else { return 0 }
-        return max(0, needsYou.count - brief.decisions.filter { $0.refKind == "hold" || $0.refKind == "step" }.count)
+        let named = Set(brief.decisions.compactMap(\.holdID))
+        let calls = needsYou.calls.filter { !named.contains($0.id) }.count
+        let steps = brief.decisions.filter { $0.refKind == "step" }.count
+        return calls + max(0, needsYou.count - needsYou.calls.count - steps)
     }
 
     /// Refuses a held call through the phone, which signs it as from its notification. Once

@@ -83,15 +83,16 @@ With it on (`NeedsYouModel(briefOn: true)` in the tests):
   read, a phone that doesn't know the request, and no answer. The phone answers `brief` whatever the watch's
   switch, as answering a read is harmless.
 - **What's sent** (`WatchBrief`, `KeptWatchReading.watchBrief`): the title and its `when` line; the decisions
-  the phone draws, up to five, in tafs cloud's order, each with its question, its taf by the phone's name for it,
+  the phone draws, every one tafs cloud sends (it caps them itself and keeps every urgent one), in its order, each with its question, its taf by the phone's name for it,
   its deadline, why it can't wait, what it's about (`ref` kind and id), and the held call's id when it's about
   one (`holdID`). **No answers are sent:** decisions are answered on the phone. Then the line for more, Done's
   heading and its first two cases by name, and the rest line.
 - **What's drawn** (`BriefList`): the brief in Needs you's place, then Your tafs with Halt, unchanged. Each
   decision says **Approve on your phone**. **Refuse** shows only where the watch's own Needs you read lists the
   same held call, as Needs you's own row (`HeldCallRow`): the same request, confirmed, behind the passcode.
-  Under it, Needs you's count of what the brief doesn't show (its count less the brief's held calls and steps),
-  so nothing waiting is out of reach.
+  Under it, Needs you's count of what the brief doesn't show, matched item by item, never by number (as the phone's
+  `needsYouBeyondBrief`): each held call no decision names, by KIFF's id, plus the rest of Needs you's count less
+  the brief's steps. A held call the brief names but Needs you no longer lists never hides one it does.
 - **Unchanged:** no keys and nothing signed on the watch; kept in memory and forgotten when the app leaves the
   screen; no new words (the brief's are tafs cloud's, the rest the watch's own).
 

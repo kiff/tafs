@@ -88,7 +88,7 @@ final class WatchRelayTests: XCTestCase {
     }
 
     /// The brief as the wrist gets it: tafs cloud's words, each decision without its answers, a held call's id for
-    /// Refuse, the taf by name, at most five decisions and two of Done's cases; an empty brief is none.
+    /// Refuse, the taf by name, every decision tafs cloud sends and two of Done's cases; an empty brief is none.
     func testTheWristsBriefIsTafsCloudsWords() throws {
         let json = #"""
         {"words":{"title":"Your brief","when":"Morning brief · 08:00","urgent":"Urgent","done":"Done since last evening"},
@@ -118,6 +118,10 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(wrist.done, "Done since last evening")
         XCTAssertEqual(wrist.doneCases, ["Order 4501", "Order 4499"])
         XCTAssertEqual(wrist.rest, "4 tafs need nothing now")
+        // Never cut: tafs cloud keeps every urgent decision past its own cap, and `more` counts only the rest.
+        let many = (1...7).map { #"{"id":"d\#($0)","question":"Q\#($0)?","urgent":true,"answers":[{"words":"Open","answer":"open"}]}"# }
+        let urgentSeven = try JSONDecoder().decode(TafsCloud.Brief.self, from: Data(#"{"decisions":[\#(many.joined(separator: ","))]}"#.utf8))
+        XCTAssertEqual(KeptWatchReading.watchBrief(urgentSeven, tafNames: [:])?.decisions.count, 7)
         let empty = try JSONDecoder().decode(TafsCloud.Brief.self, from: Data(#"{"decisions":[],"done":[]}"#.utf8))
         XCTAssertNil(KeptWatchReading.watchBrief(empty, tafNames: [:]), "nothing in it: Needs you")
     }
