@@ -1,0 +1,3 @@
+- Le schede di approvazione di Coach mostrano subito cosa stai approvando, anche quando ne arrivano due insieme. Non aspettano più che tu esca dalla schermata e ci torni.
+- TalkBack nomina ogni pulsante, scheda e opzione, e dice quale è selezionata.
+- Con il testo più grande, una Card non taglia più la sua ultima riga.

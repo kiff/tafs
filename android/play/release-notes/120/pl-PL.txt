@@ -1,0 +1,3 @@
+- Karty zatwierdzania Coacha od razu pokazują, co zatwierdzasz, nawet gdy przyjdą dwie naraz. Nie czekają już, aż opuścisz ekran i na niego wrócisz.
+- TalkBack nazywa każdy przycisk, kartę i opcję oraz mówi, która jest wybrana.
+- Przy największym tekście Card nie ucina już ostatniego wiersza.

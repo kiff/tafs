@@ -1,0 +1,3 @@
+- Os cartões de aprovação do Coach mostram logo o que está a aprovar, mesmo quando chegam dois ao mesmo tempo. Já não esperam que saia do ecrã e volte.
+- O TalkBack diz o nome de cada botão, separador e opção, e indica qual está selecionado.
+- Com o texto no tamanho máximo, um Card já não corta a sua última linha.
