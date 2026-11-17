@@ -471,6 +471,35 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertTrue(planqueHeaders().allSatisfy { $0.contains(",w=\(win),") })
     }
 
+    /// The Face ID for the new window is refused: it stops there, with nothing sent again and no window left.
+    func testARefusedFaceIDForTheNewWindowStopsThereWithNothingSentAgain() async throws {
+        let signer = TwoKeySigner()
+        signer.currentRefusedFrom = 1
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses[approveRoute] = (403, #"{"error":"Your approval window has ended.","code":"window_required"}"#)
+        let connected = await directConnect(model)
+        XCTAssertNil(connected)
+        XCTAssertEqual(planqueHeaders().count, 1, "the approve is sent once")
+        XCTAssertEqual(sent("POST", "/v1/me/window").count, 1, "no second window")
+        XCTAssertNil(model.kiff.window)
+        XCTAssertNil(model.planque.window)
+    }
+
+    /// planque says the window ended, and KIFF won't open a new one: it stops, and the call is never made again
+    /// without a window.
+    func testWhenKIFFOpensNoNewWindowTheCallIsNotMadeAgainWithoutOne() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.thenRespond["POST /v1/me/window"] = ["POST /v1/me/window": (404, #"{"error":"not_found"}"#)]
+        StubProtocol.responses[approveRoute] = (403, #"{"error":"Your approval window has ended.","code":"window_required"}"#)
+        let connected = await directConnect(model)
+        XCTAssertNil(connected)
+        XCTAssertEqual(planqueHeaders().count, 1, "no windowless approve after it")
+        XCTAssertTrue(planqueHeaders().allSatisfy { $0.contains(",w=\(win),") })
+    }
+
     // MARK: Closed, dropped, expired
 
     private func waitFor(_ condition: @MainActor () -> Bool) async throws {

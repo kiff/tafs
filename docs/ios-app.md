@@ -448,7 +448,8 @@ the app in sample mode.
   again, an approval card's Connect) has no ask, so its own Face ID opens the window, as on Android (tafs#1272): a
   window held from before is closed first, planque's approve and confirm go as a tap for that call alone, KIFF's
   refusal of the open (other than 404 or 405) stops it with nothing sent to planque, and the connection's window is
-  closed when it ends. Without the approval key, during a drive, or with a KIFF without windows, it signs `v1` as
+  closed when it ends. If planque says the window ended and the new Face ID is refused, or KIFF opens no new window,
+  it stops there: the refused call is never made again, and never without a window. Without the approval key, during a drive, or with a KIFF without windows, it signs `v1` as
   before. planque's `window_required` opens a new window behind Face ID and makes the call once more;
   KIFF's `critical_key_required` or `window_required` asks Face ID again and the approval key signs it
   (`windowReconfirm`). KIFF's words are read after each approval and on coming back; a window KIFF says isn't open
