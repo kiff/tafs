@@ -34,6 +34,22 @@ final class DevicesTests: XCTestCase {
         return model
     }
 
+    /// A session KIFF no longer accepts, as tafs cloud passes it on (401, "KIFF did not accept this sign-in"): the
+    /// session is forgotten and sign-in shows, whichever read says so first, never "Couldn't load your tafs" with a
+    /// Try again that can't help. The owner's case: a session left by an older build. Anything but a 401 keeps it.
+    func testASessionTafsCloudSaysKIFFRefusedIsForgottenAndSignInShows() async {
+        let model = await signedIn(signer: FaceIDSigner())
+        XCTAssertTrue(model.signedIn)
+        StubProtocol.responses["GET /v1/home"] = (503, #"{"error":"unavailable"}"#)
+        await model.refresh()
+        XCTAssertTrue(model.signedIn, "an outage keeps the session")
+        StubProtocol.responses["GET /v1/home"] = (401, #"{"error":"KIFF did not accept this sign-in"}"#)
+        await model.refresh()
+        XCTAssertFalse(model.signedIn, "refused: signed out, and sign-in shows")
+        XCTAssertNil(Keychain.load(AppModel.tokenAccount), "the kept session is gone")
+        XCTAssertEqual(model.lastError, KIFFClient.KIFFError.unauthorized.localizedDescription)
+    }
+
     private func deletes() -> [String] {
         StubProtocol.sent.filter { $0.httpMethod == "DELETE" }.compactMap { $0.url?.path }
     }
