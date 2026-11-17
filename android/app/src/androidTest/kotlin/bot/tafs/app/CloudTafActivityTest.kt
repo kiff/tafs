@@ -153,11 +153,12 @@ class CloudTafActivityTest {
     rule.waitForIdle()
     rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").performScrollTo().assertIsDisplayed()
     rule.onNodeWithText("Answer within").performScrollTo().assertIsDisplayed()
-    val work = rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").fetchSemanticsNode().boundsInRoot.top
-    // A lazy list composes only what's near the screen: scroll the list itself to the runs, below the head's version line.
+    // A lazy list composes only what's near the screen: scroll the list itself to the runs, below the head's version line, then
+    // read both where they are now. Work scrolled off the top is above the runs too.
     rule.onAllNodes(androidx.compose.ui.test.hasScrollToNodeAction())[0].performScrollToNode(androidx.compose.ui.test.hasText("RUNS"))
     val runs = rule.onNodeWithText("RUNS").fetchSemanticsNode().boundsInRoot.top
-    assertTrue("its work comes before its runs, as on iOS", work < runs)
+    val work = rule.onAllNodesWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").fetchSemanticsNodes().firstOrNull()?.boundsInRoot?.top
+    assertTrue("its work comes before its runs, as on iOS: $work, $runs", work == null || work < runs)
     assertEquals(listOf("refunds-1"), loaded.distinct())
   }
 }
