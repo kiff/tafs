@@ -172,6 +172,54 @@ final class PasskeyTests: XCTestCase {
         XCTAssertFalse(computers, "a computer's own isn't removed here")
     }
 
+    /// Remove warns only when it would leave no passkey that can approve: a computer's own passkey approves too,
+    /// so it counts. The three cases the other apps test.
+    func testRemovingTheLastPasskeyThatCanApproveWarnsFirst() throws {
+        let decode = { (json: String) in try KIFFClient.decoder.decode([KIFFClient.Passkey].self, from: Data(json.utf8)) }
+        let phone = #"{"id":"pk_1","name":"Ana's iPhone"}"#
+        let computer = #"{"name":"Windows PC","device_id":"dev_pc"}"#
+        let ipad = #"{"id":"pk_2","name":"Ana's iPad"}"#
+        let withComputer = try decode("[\(phone),\(computer)]")
+        XCTAssertFalse(AppModel.removesLastPasskey(withComputer[0], among: withComputer), "phone + computer: the computer's still approves")
+        let alone = try decode("[\(phone)]")
+        XCTAssertTrue(AppModel.removesLastPasskey(alone[0], among: alone), "phone alone: warned")
+        let withIPad = try decode("[\(phone),\(ipad)]")
+        XCTAssertFalse(AppModel.removesLastPasskey(withIPad[0], among: withIPad), "phone + iPad: no warning")
+        XCTAssertEqual(Words.Settings.Devices.passkeyRemoveLast,
+                       "This is your only passkey that can approve. Without it, you need another device that can approve.")
+    }
+
+    /// A read of the passkeys that started before a Remove and ends after it is dropped: the removed passkey
+    /// never comes back, and the warning counts what's really left.
+    func testAReadFromBeforeARemovalNeverBringsTheRemovedPasskeyBack() async throws {
+        let signer = TwoKeySigner()
+        let model = await signedIn(signer, maker: StubPasskeyMaker())
+        let both = #"{"passkeys":[{"id":"pk_1","name":"Ana's iPhone"},{"id":"pk_2","name":"Ana's iPad"}]}"#
+        let left = #"{"passkeys":[{"id":"pk_2","name":"Ana's iPad"}]}"#
+        StubProtocol.responses["GET /v1/me/passkeys"] = (200, both)
+        await model.refreshPasskeys()
+        XCTAssertEqual(model.passkeys.compactMap(\.passkeyID), ["pk_1", "pk_2"])
+
+        // A read starts (Devices coming back on screen) and is held.
+        StubProtocol.holdOnce = "GET /v1/me/passkeys"
+        let stale = Task { await model.refreshPasskeys() }
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async { StubProtocol.arrived.wait(); done.resume() }
+        }
+        // The removal goes through, and its own read sees KIFF's list without it.
+        StubProtocol.responses["DELETE /v1/me/passkeys/pk_1"] = (204, "")
+        StubProtocol.responses["GET /v1/me/passkeys"] = (200, left)
+        let removed = await model.removePasskey(model.passkeys[0], reason: "Remove the passkey")
+        XCTAssertTrue(removed)
+        XCTAssertEqual(model.passkeys.compactMap(\.passkeyID), ["pk_2"])
+        // The held read answers with the list from before the removal: it's dropped.
+        StubProtocol.responses["GET /v1/me/passkeys"] = (200, both)
+        StubProtocol.release.signal()
+        await stale.value
+        XCTAssertEqual(model.passkeys.compactMap(\.passkeyID), ["pk_2"], "the removed passkey doesn't come back")
+        XCTAssertTrue(AppModel.removesLastPasskey(model.passkeys[0], among: model.passkeys), "and the iPad's is now the last")
+    }
+
     /// Cancelling Face ID to remove one says nothing changed; a key that couldn't sign says why.
     func testACancelledRemovalSaysNothingChangedAndAFailedOneSaysWhy() async {
         let signer = TwoKeySigner()

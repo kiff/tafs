@@ -78,6 +78,11 @@ struct DevicesView: View {
                 }
                 removingPasskey = nil
             }
+        } message: {
+            // The last passkey that can approve says so before it goes.
+            if let passkey = removingPasskey, AppModel.removesLastPasskey(passkey, among: model.passkeys) {
+                Text(Words.Settings.Devices.passkeyRemoveLast)
+            }
         }
     }
 
