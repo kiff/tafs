@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
@@ -60,6 +61,7 @@ import androidx.compose.ui.graphics.SolidColor
 import android.content.ClipData
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
@@ -111,6 +113,12 @@ private val Readable = 720.dp
 /** The row a run at work is drawn in: the dots, then its answer as it's written. */
 private const val WORKING = "working"
 
+/** The room under a sent message at the top, so even a short one gets there (docs/chat.md, "The sent message stays on top"). */
+private const val ROOM = "room"
+
+/** The thread's rows are this far apart: the room's size counts it. */
+private val RowGap = 8.dp
+
 /**
  * A taf's thread: what it reports and asks, and what the owner tells it. A message steers the
  * taf within its job; it can't widen its Card, and every action it takes is still checked.
@@ -129,6 +137,19 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   // Whether the thread follows what arrives: it stops when the owner reads back, and starts again
   // at the bottom.
   var following by remember { mutableStateOf(true) }
+  // The sent message stays on top (docs/chat.md), as on the iPad: sending puts it at the top of the chat with room under it,
+  // and the taf's work and answer grow below it without moving it. `pinned` is its row's key; `pinText` its words until its row
+  // is in the thread; `pinnedWords` its words after, so tafs cloud's copy taking the row's place takes the pin with it.
+  var pinned by remember(tafId) { mutableStateOf<String?>(null) }
+  var pinText by remember(tafId) { mutableStateOf<String?>(null) }
+  var pinnedWords by remember(tafId) { mutableStateOf<String?>(null) }
+  // The rows there when it was sent: the pin goes only to a new one, never an older message with the same words.
+  var sentBefore by remember(tafId) { mutableStateOf(emptySet<String>()) }
+  // The owner has scrolled since: the pin isn't put back over what they're reading.
+  var touched by remember(tafId) { mutableStateOf(false) }
+  // The room under the pinned message's turn, in pixels: the screen less the turn, so the answer grows into it and nothing moves.
+  var room by remember(tafId) { mutableIntStateOf(0) }
+  var pinning by remember(tafId) { mutableStateOf(false) }
   val listState = rememberLazyListState()
   // In the order already on screen: nothing moves while a turn streams or the thread is read again (Chat.steady).
   val shown = remember(tafId) { Chat.Shown() }
@@ -148,21 +169,34 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   LaunchedEffect(items.size, showKnocks) { if (showKnocks) actions.doors.load(tafId) }
   val atBottom by remember { derivedStateOf { !listState.canScrollForward } }
   val scope = rememberCoroutineScope()
+  // The list's rows by key, in its order, so a pinned row is found by its index even when it's off the screen.
+  val heldWords = state.chatSteering[tafId]?.held?.text
+  val ended = !thinking && state.chatEnded[tafId] != null
+  val keys = buildList {
+    if (items.isEmpty()) add("empty")
+    rows.forEach { add(it.key) }
+    if (extras == 1) add("coach-lines")
+    if (live != null || thinking) add(Chat.liveKey(items, live, WORKING))
+    if (heldWords != null) add("held")
+    if (ended) add("ended")
+  }
 
   // The thread's own scrolling to its end isn't the owner reading back: only the owner's stops it following. Counted, not a
   // flag: a new item and the answer growing can both scroll at once, and the first to end mustn't make the other the owner's.
   var autoScrolls by remember { mutableIntStateOf(0) }
   LaunchedEffect(listState) {
     snapshotFlow { listState.isScrollInProgress to listState.canScrollForward }.collect { (scrolling, more) ->
+      if (scrolling && autoScrolls == 0) touched = true
       if (scrolling && more && autoScrolls == 0) following = false
-      if (!more) following = true
+      // A pinned message stays at the top: seeing the end under it doesn't make the thread follow what arrives.
+      if (!more && pinned == null && pinText == null) following = true
     }
   }
   // It opens at its newest, the end of the thread, once the thread is there: not at the top of whatever is last.
   var opened by remember(tafId) { mutableStateOf(false) }
   // The end of the last item, not its top: a tall one shows its last lines.
   suspend fun toEnd(animated: Boolean) {
-    if (total == 0 || !(following || !opened)) return
+    if (total == 0 || !(following || !opened) || (opened && (pinned != null || pinText != null))) return
     val last = listState.layoutInfo.totalItemsCount.coerceAtLeast(total) - 1
     autoScrolls += 1
     try {
@@ -176,7 +210,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   LaunchedEffect(total, rows.lastOrNull()?.key) { toEnd(animated = true) }
   // A drive that just ended: its end comes into view in the thread, whatever was read back before (docs/drive.md).
   val lastDrive = if (tafId == COACH_CHAT) state.coachDrives.lastOrNull()?.id else null
-  LaunchedEffect(lastDrive) { if (lastDrive != null && opened) { following = true; toEnd(animated = true) } }
+  LaunchedEffect(lastDrive) { if (lastDrive != null && opened) { pinned = null; pinText = null; room = 0; following = true; toEnd(animated = true) } }
   // The answer growing in its own row, a few words at a time: kept at its end without an animation. An animation started on
   // every word was cut off by the next before it finished, and the thread jumped about while Coach wrote.
   LaunchedEffect(thinking, live?.text?.length, live?.steps?.size, live?.state) { toEnd(animated = false) }
@@ -188,17 +222,104 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
       .collect { if (opened && following) toEndNow() }
   }
 
+  // The pin: the sent message's row at the top of the list, glided to the first time, put back at once after (unless the owner
+  // has scrolled since). Run in the screen's scope, so a change to the thread doesn't cut the glide short.
+  fun pinTo(key: String, animated: Boolean) {
+    val index = keys.indexOf(key)
+    if (index < 0 || (!animated && (touched || pinning))) return
+    scope.launch {
+      autoScrolls += 1
+      if (animated) pinning = true
+      try {
+        if (animated) listState.animateScrollToItem(index) else listState.scrollToItem(index)
+      } finally {
+        autoScrolls -= 1
+        if (animated) pinning = false
+      }
+    }
+  }
+  fun unpin() {
+    pinned = null
+    pinText = null
+    pinnedWords = null
+    room = 0
+  }
+  // Sending: the message goes to the top once its row is in the thread. Until the turn is measured, its room is a whole screen.
+  fun pinOnSend(text: String) {
+    pinText = text.trim()
+    pinned = null
+    touched = false
+    following = false
+    sentBefore = keys.toSet()
+    room = listState.layoutInfo.viewportEndOffset.coerceAtLeast(0)
+  }
+  // The owner's message with these words, as the thread keeps them (with files, its words come after them), in a row [allowed].
+  fun ownerRow(words: String, allowed: (String) -> Boolean): String? = rows.lastOrNull { row ->
+    val m = ((row as? Chat.Row.Item)?.let { items[it.index] } as? ChatItem.Message)?.message
+    m != null && m.from == ChatMessage.From.owner && sentWords(m.text.trim(), words) && allowed(row.key)
+  }?.key
+  LaunchedEffect(keys) {
+    pinned?.let { key ->
+      if (key in keys) return@let
+      // tafs cloud's copy took its row's place, or the run took the words held for it: the pin goes with them, nothing moves.
+      val copy = pinnedWords?.let { words -> ownerRow(words) { true } }
+      if (copy != null) pinned = copy
+      else {
+        // The pinned message is gone and nothing took its place: the chat goes to its end rather than stay past it, blank.
+        unpin()
+        following = true
+        toEnd(animated = true)
+        return@LaunchedEffect
+      }
+    }
+    pinText?.let { text ->
+      // The message just sent, matched by its words among the rows new since: its own row, or the words held for the run at work.
+      val sent = ownerRow(text) { it !in sentBefore }
+        ?: "held".takeIf { "held" in keys && "held" !in sentBefore && heldWords?.let { sentWords(it.trim(), text) } == true }
+      if (sent != null) {
+        pinText = null
+        pinnedWords = text
+        pinned = sent
+        following = false
+        touched = false
+        pinTo(sent, animated = true)
+        return@LaunchedEffect
+      }
+    }
+    // The thread changed under it (the answer landed, a row came or went above it): it's put back at the top.
+    pinned?.let { pinTo(it, animated = false) }
+  }
+  // The screen grows as the keyboard goes down on sending: the pinned message is put back at the top once it has.
+  val repin by rememberUpdatedState({ pinned?.let { pinTo(it, animated = false) }; Unit })
+  LaunchedEffect(listState) {
+    snapshotFlow { listState.layoutInfo.viewportSize.height }.collect { repin() }
+  }
+  // The room is the screen less the turn (from the pinned message to the thread's last row): as the answer grows, the room shrinks
+  // by as much, and nothing moves. Measured while both are on screen; a turn taller than the screen leaves no room.
+  val gap = with(LocalDensity.current) { RowGap.roundToPx() }
+  LaunchedEffect(listState) {
+    snapshotFlow {
+      val key = pinned ?: return@snapshotFlow null
+      val info = listState.layoutInfo
+      val top = info.visibleItemsInfo.firstOrNull { it.key == key } ?: return@snapshotFlow null
+      val under = info.visibleItemsInfo.firstOrNull { it.key == ROOM }
+        ?: return@snapshotFlow if (top.offset <= 0) 0 else null
+      val last = info.visibleItemsInfo.firstOrNull { it.index == under.index - 1 } ?: return@snapshotFlow null
+      max(0, info.viewportEndOffset - info.afterContentPadding - (last.offset + last.size - top.offset) - gap)
+    }.collect { measured -> if (measured != null) room = measured }
+  }
+
   Column(modifier.fillMaxSize()) {
     Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
       LazyColumn(
-        Modifier.widthIn(max = Readable).fillMaxSize(),
+        Modifier.widthIn(max = Readable).fillMaxSize().testTag("chat-thread"),
         state = listState,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         if (items.isEmpty() && tafId == COACH_CHAT && !thinking) {
           // Coach's empty chat: what it's about, and ways to start (kiff/tafs#138, #107).
-          item(key = "empty") { CoachStarts(state, actions.coach.improve, fill = setDraft) { example -> following = true; actions.sendChat(example, tafId, false) { } } }
+          item(key = "empty") { CoachStarts(state, actions.coach.improve, fill = setDraft) { example -> pinOnSend(example); actions.sendChat(example, tafId, false) { unpin(); following = true } } }
         } else if (items.isEmpty()) {
           item(key = "empty") {
             Text(
@@ -234,7 +355,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                     tafId = tafId,
                     files = actions.files,
                     onEdit = { text -> setDraft(text) },
-                    onResend = { text -> following = true; actions.sendChat(text, tafId, false) { } },
+                    onResend = { text -> pinOnSend(text); actions.sendChat(text, tafId, false) { unpin(); following = true } },
                     // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
                     onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
                   )
@@ -245,7 +366,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                     NotSentLine(
                       unsent.why,
                       canRetry = !state.holdsRetry(tafId, unsent),
-                      onRetry = { following = true; actions.retryUnsent(tafId, unsent.message) },
+                      onRetry = { unpin(); following = true; actions.retryUnsent(tafId, unsent.message) },
                       onEdit = { actions.editUnsent(tafId, unsent.message)?.let(setDraft) },
                       onDelete = { actions.deleteUnsent(tafId, unsent.message) },
                       resume = if (halted) ({ actions.resumeHalt(if (unsent.halted == bot.tafs.app.model.Unsent.HALTED_TAF) tafId else null) }) else null,
@@ -281,7 +402,11 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
         state.chatSteering[tafId]?.held?.let { held -> item(key = "held") { SteeredWords(held.text, ChatWords.HELD) } }
         // How the latest run ended, when it says so here: stopped part-way (with Retry), stopped by the owner, or at a cap.
         if (!thinking) state.chatEnded[tafId]?.let { end ->
-          item(key = "ended") { EndedLine(end, taf?.name ?: Words.Chat.itFallback, onRetry = { text -> following = true; actions.sendChat(text, tafId, false) { } }) }
+          item(key = "ended") { EndedLine(end, taf?.name ?: Words.Chat.itFallback, onRetry = { text -> pinOnSend(text); actions.sendChat(text, tafId, false) { unpin(); following = true } }) }
+        }
+        // Room under a sent message at the top, so a short one reaches the top at once; it stays once the run ends, until the next.
+        if (pinned != null || pinText != null) item(key = ROOM) {
+          Box(Modifier.fillMaxWidth().height(with(LocalDensity.current) { room.toDp() }))
         }
       }
 
@@ -307,8 +432,10 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
               .background(Theme.panel)
               .border(BorderStroke(1.dp, Theme.line), CircleShape)
               .tapping {
+                // The way to the end lets the pinned message go: the thread follows what arrives again.
+                unpin()
                 following = true
-                scope.launch { listState.animateScrollToItem(max(0, total - 1)) }
+                scope.launch { toEnd(animated = true) }
               }
               .semantics { contentDescription = Words.Chat.jumpToLatest },
             contentAlignment = Alignment.Center,
@@ -344,9 +471,14 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
     ) {
       val text = draft
       setDraft("")
-      following = true
-      // As sent: if it didn't go (too long), it comes back to the box.
-      actions.sendChat(text, tafId, true) { notSent -> if (state.drafts[tafId].isNullOrEmpty()) setDraft(notSent) }
+      // It goes to the top and stays while the taf works and answers below it (docs/chat.md, "The sent message stays on top").
+      pinOnSend(text)
+      // As sent: if it didn't go (too long), it comes back to the box, and the chat follows its end again.
+      actions.sendChat(text, tafId, true) { notSent ->
+        unpin()
+        following = true
+        if (state.drafts[tafId].isNullOrEmpty()) setDraft(notSent)
+      }
     }
   }
 }
@@ -747,3 +879,6 @@ private fun AskCoachCard(text: String, ask: ((String) -> Unit)?) {
     ask?.let { bot.tafs.app.design.OutlineButton(bot.tafs.app.model.ChatWords.ASK_COACH, { it(text) }, Modifier.fillMaxWidth()) }
   }
 }
+
+/** Whether a message in the thread is the one the owner sent with [sent]: the same words, or them after its files' lines. */
+internal fun sentWords(stored: String, sent: String): Boolean = stored == sent || stored.endsWith("\n\n" + sent)

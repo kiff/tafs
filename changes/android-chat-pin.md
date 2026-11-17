@@ -1,0 +1,1 @@
+- **Android: the sent message stays on top.** Sending puts the message at the top of a taf's chat and Coach's, with room under it, and it stays there while the taf thinks, works and answers, as on the iPad. Scrolling hands the chat to you, and "Jump to the latest" goes to the end (docs/chat.md).

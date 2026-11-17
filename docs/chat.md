@@ -187,12 +187,24 @@ whatever came last. On Android a door's knocks sit at their own times among the 
 (`Chat.withKnocks`), so a reply newer than a knock comes after it, and the app's own scrolling
 to the end never counts as the owner reading back.
 
-On Android, while a run works, the dots and then its answer are one row at the thread's end, at
-least as tall as either, so the answer taking the dots' place never moves the thread back. A new
-item at the end is glided to; an answer growing word by word is kept at its end without an
-animation, since one started on every word was cut off by the next. `ChatFollowTest` holds
-this: an earlier message only ever moves up the screen while a reply streams, in a taf's chat
-and in Coach's.
+On Android (`TafChatView`), sending glides the owner's message to the top of the list, with
+room under it the height of the screen less its turn (the message, the work and the answer),
+so even a short one reaches the top and the answer grows into the room without moving it.
+The pin follows the message from the copy shown on sending to tafs cloud's (matched by its
+words among the rows that are new since the send), and to the words held for a run at work.
+It's put back at once when the thread changes under it or the screen grows as the keyboard
+goes down, unless the owner has scrolled since; and it stays once the run ends, until the
+next message. "Jump to the latest" lets it go and goes to the end. A message that couldn't
+go at all lets it go too. `ChatPinTest` holds this, in a taf's chat and in Coach's, with a
+long thread and a short one.
+
+With no message pinned (a chat just opened, or a reply that came without the owner sending),
+the thread follows its end. While a run works, the dots and then its answer are one row at
+the thread's end, at least as tall as either, so the answer taking the dots' place never
+moves the thread back. A new item at the end is glided to; an answer growing word by word is
+kept at its end without an animation, since one started on every word was cut off by the
+next. `ChatFollowTest` holds this: an earlier message only ever moves up the screen while a
+reply streams, in a taf's chat and in Coach's.
 
 ## Writing while the taf works
 
