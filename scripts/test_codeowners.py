@@ -84,6 +84,7 @@ class CodeOwners(unittest.TestCase):
                      "ios/Tafs/Tafs.entitlements", "android/app/src/main/kotlin/bot/tafs/app/signing/ApprovalSigner.kt",
                      "android/app/src/main/kotlin/bot/tafs/app/kiff/ReceiptCheck.kt", "android/app/build.gradle.kts",
                      ".github/workflows/ios.yml", ".github/workflows/android.yml", ".github/automerge.json", "scripts/automerge.py",
+                     ".github/workflows/mac-developer-id.yml", "ios/scripts/asc-profiles.rb",
                      ".github/CODEOWNERS"]:
             self.assertEqual(self.owners(path), ["@kiff-qa"], path)
 
