@@ -75,7 +75,16 @@ import androidx.compose.ui.semantics.contentDescription
  * Coach is started once per account.
  */
 @Composable
-fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> Unit, onBack: () -> Unit, chats: CoachChatActions = CoachChatActions()) {
+fun CoachScreen(
+  state: AppState,
+  actions: TafActions,
+  loadCoach: suspend () -> Unit,
+  onBack: () -> Unit,
+  chats: CoachChatActions = CoachChatActions(),
+  /** In a tablet's panel ([CoachPanel]): whether it takes the whole screen, and ⤢, which switches. Null on a phone. */
+  full: Boolean = false,
+  onToggleFull: (() -> Unit)? = null,
+) {
   LaunchedEffect(Unit) { loadCoach() }
   // Folded while the thread scrolls toward its end, shown again as soon as it scrolls back.
   var folded by remember { mutableStateOf(false) }
@@ -95,7 +104,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
     // New conversation always does something: on a plain conversation with nothing in it yet, it stays there and shows its
     // top; on an empty one about a taf, it opens a plain new one.
     val newChat = { if (CoachWords.newChatStays(state)) folded = false else chats.newChat() }
-    if (started) CoachHeader(state, chats, newChat, onBack) else BackBar(onBack)
+    if (started) CoachHeader(state, chats, newChat, onBack, full, onToggleFull) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
       // The sample, for the store's screenshots: what Coach is, as a new account first sees it. Nothing to read from tafs cloud.
@@ -166,12 +175,22 @@ val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { 
 
 /** Coach's header, one row: back, its name, and a menu with a new conversation and the earlier ones. */
 @Composable
-private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () -> Unit, onBack: () -> Unit) {
+private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () -> Unit, onBack: () -> Unit, full: Boolean = false, onToggleFull: (() -> Unit)? = null) {
   var menu by remember { mutableStateOf(false) }
   var listing by remember { mutableStateOf(false) }
   // As the iPad's bar: Back in a capsule at the start, the name centred, new conversation and ⋯ in one at the end, in Coach's blue.
   Box(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
     BarCapsule(Modifier.align(Alignment.CenterStart)) {
+      // In a tablet's panel, ⤢ first: the whole screen, and back to its width (as the iPad's).
+      onToggleFull?.let { toggle ->
+        val words = if (full) Words.Coach.backWidth else Words.Coach.fullScreen
+        Box(Modifier.size(44.dp).tapping(onClickLabel = words, onClick = toggle).semantics { contentDescription = words }, contentAlignment = Alignment.Center) {
+          androidx.compose.material3.Icon(
+            androidx.compose.ui.res.painterResource(if (full) bot.tafs.app.R.drawable.ic_collapse else bot.tafs.app.R.drawable.ic_expand),
+            contentDescription = null, tint = Theme.coach, modifier = Modifier.size(20.dp),
+          )
+        }
+      }
       Box(
         Modifier.size(44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack).semantics { contentDescription = Words.Common.back },
         contentAlignment = Alignment.Center,

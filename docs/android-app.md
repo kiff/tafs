@@ -685,7 +685,13 @@ the bar's place, as the iPad's (`TabletSidebar`, from `HomeSplitView`); the phon
 What the sidebar chooses opens beside it, its row highlighted (`Beside`): Needs you, Record, the
 Calendar, a taf, and, as on the iPad, Account, Plan & usage, Connect apps and Halt all, which a phone
 opens as sheets. Those four are drawn in place by `DriveSheet` where `LocalSheetBeside` is set,
-without their Done, and Back or another row closes them; what they open in turn is a sheet again. It opens on the
+without their Done, and Back or another row closes them; what they open in turn is a sheet again.
+
+**Coach on a tablet** is a panel, as the iPad's (`CoachPanel`): it slides in from the trailing edge
+over the whole app, which stays in view, dimmed a little, and a tap on that closes it. It opens at
+a third of the screen, or the width last chosen on this device; its leading edge drags it wider, up
+to the whole screen, and back, never narrower than a third, and past that it closes. ⤢ in Coach's
+bar takes the whole screen and back. What's beside the sidebar keeps its highlight under it. It opens on the
 Overview, today across the tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs
 and its line. Its tafs are those tafs cloud says are relevant now (`relevant_now` on `GET /v1/home`: a held call,
 a step, a knock, a run or a change in the last day), as the iPad's; every taf is on the Overview,

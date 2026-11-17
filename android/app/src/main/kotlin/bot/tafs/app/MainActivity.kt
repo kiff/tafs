@@ -749,6 +749,11 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (tab == Tab.NeedsYou && t == Tab.NeedsYou) model.closeBriefOpen()
     tab = t
   }
+  val coachChats = remember(model) { CoachChatActions(
+    newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
+    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+    giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
+  ) }
   // What's open beside a tablet's sidebar, highlighted in it.
   val beside = when {
     showingSettings -> Beside.Account
@@ -757,7 +762,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     haltOpen && haltTaf == null -> Beside.HaltAll
     tab == Tab.NeedsYou -> Beside.NeedsYou
     tab == Tab.Record -> Beside.Record
-    coachOpen || trialTaf != null || missionOpen != null -> Beside.Other
+    // Coach on a tablet is a panel over what stays open beside the sidebar, which keeps its highlight.
+    (coachOpen && !wide) || trialTaf != null || missionOpen != null -> Beside.Other
     openTaf != null -> Beside.Taf(openTaf!!)
     calendarOpen -> Beside.Calendar
     removingBeside != null -> Beside.Taf(removingBeside!!)
@@ -769,6 +775,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   val openFromSidebar: (String) -> Unit = { id ->
     closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
   }
+  Box(Modifier.fillMaxSize()) {
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the
     // handle that brings it back.
@@ -857,21 +864,17 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             missionOpen != null && openTaf == null && !coachOpen -> state.labels.firstNotNullOfOrNull { it.mission?.takeIf { m -> m.id == missionOpen } }?.let { m ->
               ({ bot.tafs.app.views.MissionLogView(m, load = model::missionLog, onBack = { missionOpen = null }, askCoach = if (state.mayUseCoach) model::askCoachAboutMission else null) })
             }
-            openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
+            // On a tablet, Coach is its own panel over the whole app (CoachPanel, below), not part of what's beside the sidebar.
+            openTaf != null || (!wide && (coachOpen || coachVisibility.currentState || !coachVisibility.isIdle)) -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
-                androidx.compose.animation.AnimatedVisibility(
+                if (!wide) androidx.compose.animation.AnimatedVisibility(
                   visibleState = coachVisibility,
                   enter = androidx.compose.animation.slideInHorizontally { it },
                   exit = androidx.compose.animation.slideOutHorizontally { it },
                 ) {
                   Box(Modifier.fillMaxSize().background(Theme.background)) {
-                    CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
-                      chats = remember(model) { CoachChatActions(
-                        newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-                        loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
-                        giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
-                      ) })
+                    CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats)
                   }
                 }
               }
@@ -1078,6 +1081,13 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (!keyboardUp && !wide) {
       HorizontalDivider(color = Theme.line)
       TabBar(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
+    }
+  }
+  }
+  // Coach on a tablet: a panel from the trailing edge over the whole app, as the iPad's (docs/android-app.md, Tablets).
+  if (wide) bot.tafs.app.views.CoachPanel(open = coachOpen, onClose = { coachOpen = false }) { full, toggleFull ->
+    Box(Modifier.fillMaxSize().imePadding()) {
+      CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats, full = full, onToggleFull = toggleFull)
     }
   }
   }
