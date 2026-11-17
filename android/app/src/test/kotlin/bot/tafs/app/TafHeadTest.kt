@@ -134,4 +134,21 @@ class TafHeadTest {
     compose.onNode(hasText("All") and androidx.compose.ui.test.hasClickAction()).assertIsSelected()
     compose.onNode(hasText("Done") and androidx.compose.ui.test.hasClickAction()).assertIsNotSelected()
   }
+
+  /** Coach's bar, as the iPad's (V18): Back, new conversation and the earlier ones, each named, and Back closes Coach. */
+  @Test fun coachsBarNamesItsButtonsAndBackCloses() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    var closed = 0
+    val state = AppState(
+      mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage")),
+      coachChecked = true, coachCloudId = "setup_1", coachAgent = "setup-acme", coachChat = "s1",
+    )
+    compose.setContent { TafsTheme { bot.tafs.app.views.CoachScreen(state, actions, loadCoach = {}, onBack = { closed++ }) } }
+    compose.waitForIdle()
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Coach.newConversation)).assertIsDisplayed()
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Coach.conversations)).assertIsDisplayed()
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Common.back)).performClick()
+    assertEquals(1, closed)
+  }
 }

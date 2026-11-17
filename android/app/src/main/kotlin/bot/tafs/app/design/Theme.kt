@@ -59,6 +59,9 @@ object Theme {
   /** Text on the brand gradient, which stays the same in dark: white, 4.5:1 or more on each of its stops. */
   val onBrand = Color.White
   val ok: Color get() = pick(0xFF198056, 0xFF4CC38A)
+
+  /** Coach's own blue, as the iPad's (`Theme.coach`): its bar's buttons. */
+  val coach: Color get() = pick(0xFF2A64F5, 0xFF7FA2FF)
   val no: Color get() = pick(0xFFDB1F25, 0xFFFF8A73)
 
   val orange = Color(0xFFFF9A2E)

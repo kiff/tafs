@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import bot.tafs.app.app.AppModel
@@ -184,6 +185,30 @@ class TabletSidebarTest {
     state = state.copy(tafs = listOf(taf("Bills in", null), taf("Quiet one", null)))
     compose.waitForIdle()
     compose.onNode(hasText("Quiet one")).assertIsDisplayed()
+  }
+
+  /** Coach on a tablet is a panel over the whole app, which stays in view; a tap on the dimmed app closes it (V41). */
+  @Test fun coachOpensAsAPanelOverTheAppAndATapBehindClosesIt() {
+    show("w1366dp-h1024dp-land-xhdpi")
+    compose.onNode(hasContentDescription(Words.Coach.coachMode) and inSidebar).performClick()
+    compose.waitForIdle()
+    compose.onNode(hasTestTag("coach-panel")).assertIsDisplayed()
+    compose.onNode(hasTestTag("sidebar")).assertIsDisplayed()
+    compose.onNode(hasText(Words.Home.Overview.title)).assertIsDisplayed()
+    // A third of the screen at first, as the iPad's.
+    val panel = compose.onNode(hasTestTag("coach-panel")).fetchSemanticsNode().size.width
+    val screen = compose.onRoot().fetchSemanticsNode().size.width
+    assertTrue("the panel is $panel of $screen", kotlin.math.abs(panel - screen / 3f) < screen * 0.02f)
+    compose.onNode(hasTestTag("coach-scrim")).performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(hasTestTag("coach-panel")).fetchSemanticsNodes().isEmpty())
+  }
+
+  @Test fun aPhonesCoachIsNoPanel() {
+    show("w384dp-h682dp-port-450dpi")
+    compose.onAllNodes(hasText(Words.Coach.title) and androidx.compose.ui.test.hasClickAction())[0].performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(hasTestTag("coach-panel")).fetchSemanticsNodes().isEmpty())
   }
 
   @Test fun aPhoneKeepsItsTabBarAndHasNoSidebar() {
