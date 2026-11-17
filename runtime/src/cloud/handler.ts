@@ -13,7 +13,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
@@ -603,7 +603,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
     if (err instanceof DoorError || err instanceof ActivityError) return json(err.status, { error: err.message });
-    if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
+    if (err instanceof KIFFError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+    if (err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
   }
@@ -1399,7 +1400,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
   if (method === "DELETE") {
     let kiff: KIFFHalt;
     try { kiff = await haltedInKIFF(token, agent, deps.fetch, deps.kiffBase); } catch (err) {
-      if (err instanceof KIFFError && err.status === 401) throw err;
+      if (err instanceof KIFFError && (err.status === 401 || err.status === 403)) throw err;
       throw new HTTPError(502, "KIFF didn't say whether it is resumed; try again");
     }
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
@@ -4187,7 +4188,8 @@ function askOrRefuse<T>(read: () => T): T {
 
 function approvalFailure(err: unknown): never {
   if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message, err.code ? { code: err.code } : undefined);
-  if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
+  // A forbidden session (403) stays signed in: only KIFF's 401 is tafs cloud's 401.
+  if (err instanceof KIFFError) throw new HTTPError(err.status === 401 || err.status === 403 ? err.status : 502, err.message, err.code ? { code: err.code } : undefined);
   throw err;
 }
 
@@ -7317,11 +7319,20 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
+  // Which tafs matter now (docs/api.md, Home): something of theirs in Needs you, or a run or change in the last 24 hours. Worked
+  // out here from what Home already read, so the iPad's sidebar and every other app show the same tafs.
+  const stepTafs = new Set(yourSteps.map((s) => s.taf.id));
+  const withRelevance = listed.map((v, i) => {
+    const t = tafs[i]!;
+    const why = relevantNow({ held: (waiting.get(t.kiffAgent) ?? 0) > 0, step: stepTafs.has(t.id), knock: lights[i]!.some((d) => d.knocks > 0),
+      lastRun: v.last_run, lastChange: (v as { last_change?: string }).last_change }, now);
+    return { ...v, relevant_now: why !== undefined, ...(why ? { relevant_because: why } : {}) };
+  });
   // Home's first line, in tafs cloud's words: the apps draw it and count nothing themselves.
   const headline = headlineOf(listed, langOf(event));
   // The filter row's labels, with no taf labelled none: the apps then draw no row, and Home is as before.
   const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
-  return { tafs: listed, headline, setting_up: settingUp, others, removing, limits,
+  return { tafs: withRelevance, headline, setting_up: settingUp, others, removing, limits,
     ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
@@ -8047,7 +8058,7 @@ async function creditsRead<T>(work: () => Promise<T>, lang: Lang = "en"): Promis
   try { return await work(); } catch (err) {
     // The error stays English for developers; the words beside it are the person's (docs/languages.md).
     if (err instanceof CreditsError) throw new HTTPError(err.status, err.message, { words: err.message === UNREADABLE ? wordsIn(lang).cr_unreadable : err.message });
-    if (err instanceof KIFFError && err.status === 401) throw err;
+    if (err instanceof KIFFError && (err.status === 401 || err.status === 403)) throw err;
     throw new HTTPError(503, UNREADABLE, { words: wordsIn(lang).cr_unreadable });
   }
 }

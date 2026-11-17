@@ -116,6 +116,14 @@ live under. A Card given later on its own (a held call's "allow from now on") st
 `last_change`, its newest version's time (a Card or a setting changes the version), else when
 it was made. Its versions are read at most once a minute per taf.
 
+**Relevant now.** Each taf says `relevant_now`, and `relevant_because` when it's `true`: the first
+that holds of `held` (a call held for an answer), `step` (a step it handed its owner), `knock`
+(someone knocked at one of its doors), `recent_run` (its last run was less than 24 hours ago) and
+`recent_change` (its `last_change` was). The 24 hours are counted on tafs cloud's clock
+(`RELEVANT_WINDOW_MS`, `home.ts`). A sidebar that lists only the tafs that matter now, as the
+iPad's owner layout does, reads this flag; no app works the rule out on the device, so every app
+lists the same tafs.
+
 A taf whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
 the chat before the taf was made) is listed in `setting_up`, by the name Coach gave it, never
 its agent's id, and with no state, so never "Ready". For the person whose chat it was, its

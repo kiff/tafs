@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Mandate, cardView, headlineOf, isLive, summary, windowWords } from "../src/cloud/home.js";
+import { type Mandate, RELEVANT_WINDOW_MS, cardView, headlineOf, isLive, relevantNow, summary, windowWords } from "../src/cloud/home.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("a taf's Card summary", () => {
@@ -205,5 +205,51 @@ describe("Home's first line", () => {
       }
       expect(headlineOf([fromChat], lang).words, lang).not.toBe(headlineOf([working], lang).words);
     }
+  });
+});
+
+// The iPad's owner sidebar lists only the tafs relevant now. The rule was the iPad's (AppModel.relevantNow); it's tafs cloud's
+// now, so every app lists the same tafs (docs/api.md, Home).
+describe("which tafs are relevant now", () => {
+  const now = new Date("2026-11-17T12:00:00Z");
+  const ago = (ms: number) => new Date(now.getTime() - ms).toISOString();
+  const H = 3600_000;
+  const none = { held: false, step: false, knock: false };
+
+  it("is 24 hours", () => {
+    expect(RELEVANT_WINDOW_MS).toBe(24 * H);
+  });
+
+  it("says why for each thing that waits in Needs you, and for a recent run or change", () => {
+    expect(relevantNow({ ...none, held: true }, now)).toBe("held");
+    expect(relevantNow({ ...none, step: true }, now)).toBe("step");
+    expect(relevantNow({ ...none, knock: true }, now)).toBe("knock");
+    expect(relevantNow({ ...none, lastRun: ago(H) }, now)).toBe("recent_run");
+    expect(relevantNow({ ...none, lastChange: ago(H) }, now)).toBe("recent_change");
+  });
+
+  it("is nothing for a taf with none of them, one that never ran, and unreadable times", () => {
+    expect(relevantNow(none, now)).toBeUndefined();
+    expect(relevantNow({ ...none, lastRun: null, lastChange: null }, now)).toBeUndefined();
+    expect(relevantNow({ ...none, lastRun: "not a time", lastChange: "" }, now)).toBeUndefined();
+  });
+
+  it("counts a run or change less than 24 hours ago, never one 24 hours ago or more", () => {
+    expect(relevantNow({ ...none, lastRun: ago(24 * H - 1) }, now)).toBe("recent_run");
+    expect(relevantNow({ ...none, lastRun: ago(24 * H) }, now)).toBeUndefined();
+    expect(relevantNow({ ...none, lastRun: ago(25 * H) }, now)).toBeUndefined();
+    expect(relevantNow({ ...none, lastChange: ago(24 * H - 1) }, now)).toBe("recent_change");
+    expect(relevantNow({ ...none, lastChange: ago(24 * H) }, now)).toBeUndefined();
+    // A time just ahead of tafs cloud's clock (a run stamped by another clock) counts, as it did on the iPad.
+    expect(relevantNow({ ...none, lastRun: new Date(now.getTime() + 60_000).toISOString() }, now)).toBe("recent_run");
+  });
+
+  it("says the first reason that holds: held, step, knock, a recent run, then a recent change", () => {
+    const all = { held: true, step: true, knock: true, lastRun: ago(H), lastChange: ago(H) };
+    expect(relevantNow(all, now)).toBe("held");
+    expect(relevantNow({ ...all, held: false }, now)).toBe("step");
+    expect(relevantNow({ ...all, held: false, step: false }, now)).toBe("knock");
+    expect(relevantNow({ ...all, held: false, step: false, knock: false }, now)).toBe("recent_run");
+    expect(relevantNow({ ...all, held: false, step: false, knock: false, lastRun: ago(30 * H) }, now)).toBe("recent_change");
   });
 });

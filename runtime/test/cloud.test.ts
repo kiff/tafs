@@ -1323,6 +1323,35 @@ describe("calmEnough", () => {
 });
 
 describe("the home list", () => {
+  // The iPad's owner sidebar shows only the tafs that matter now. tafs cloud says which, so every app shows the same ones.
+  it("says which tafs are relevant now, and why: a held call, then a recent run, then a recent change, else not", async () => {
+    const w = world();
+    const rae = () => call(w, "GET", "/v1/home", { token: "ana" }).then((r) => r.body.tafs.find((t: { id: string }) => t.id === RAE));
+    // Rae was made on 15 Oct and never ran; the clock reads 29 Oct: nothing of it now.
+    expect(await rae()).toMatchObject({ relevant_now: false });
+    expect((await rae()).relevant_because).toBeUndefined();
+    // A run 23 hours ago: relevant, for the run.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "r_recent", agent: RAE, session: "s_recent", trigger: "schedule", status: "COMPLETED", stop: "answered", cost_micro_usd: 0, turns: 1,
+      created: "2026-10-28T11:00:00Z", updated: "2026-10-28T11:01:00Z" } as never);
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_run" });
+    // A held call for its agent comes before the run.
+    w.account.held = [{ subject: "rae", kind: "hold" }];
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "held", waiting: 1 });
+    // A currency ask (card_unit) isn't a held call: the run still says why.
+    w.account.held = [{ id: "exc-1", kind: "card_unit", subject: "rae", action: "answer_case", status: "held", count: 1,
+      created_at: "2026-10-28T12:00:00Z", last_at: "2026-10-28T12:00:00Z", breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] }];
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_run" });
+    // 25 hours after that run, and nothing else: not relevant.
+    w.account.held = [];
+    w.now = new Date("2026-10-29T12:00:00Z");
+    expect(await rae()).toMatchObject({ relevant_now: false });
+    // Made an hour ago and never ran: relevant, for the change.
+    const t = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...t, created: "2026-10-29T11:00:00Z" });
+    w.agents.runs.shift();
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_change" });
+  });
+
   /** Rae's refund Card: €100 a call, €1,000 a day with €200 used, 20 calls a day. */
   const raeCard: Mandate = {
     id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
@@ -1382,6 +1411,8 @@ describe("the home list", () => {
       color: 0, state: "working", waiting: 0,
       // Its last change: no version yet, so when it was made.
       last_change: "2026-10-15T09:00:00Z",
+      // Nothing of it waits, and it neither ran nor changed in the last 24 hours: not in a "relevant now" sidebar.
+      relevant_now: false,
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
       // Its health over its recent work (health.ts): nothing against it.
@@ -6756,6 +6787,8 @@ describe("a step a taf handed its owner", () => {
       words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments" } })]);
     const listed = home.body.tafs.find((t: { id: string }) => t.id === RAE);
     expect(listed.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    // The step makes it relevant now; its run 30 minutes ago would too, but a step comes first (docs/api.md, Home).
+    expect(listed).toMatchObject({ relevant_now: true, relevant_because: "step" });
     // Without planque's list, the step still shows, with no link.
     const bare = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(bare.body.your_steps[0].link).toBeUndefined();
