@@ -151,4 +151,18 @@ class TafHeadTest {
     compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Common.back)).performClick()
     assertEquals(1, closed)
   }
+
+  /** Before Coach starts, its bar is already the iPad's: Back in Coach's capsule, the name centred, no conversations yet. */
+  @Test fun beforeCoachStartsItsBarIsCoachsWithNoConversations() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    var closed = 0
+    val state = AppState(mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage")), coachChecked = true)
+    compose.setContent { TafsTheme { bot.tafs.app.views.CoachScreen(state, actions, loadCoach = {}, onBack = { closed++ }, onToggleFull = {}) } }
+    compose.waitForIdle()
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Coach.fullScreen)).assertIsDisplayed()
+    assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasContentDescription(Words.Coach.newConversation)).fetchSemanticsNodes().isEmpty())
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Common.back)).performClick()
+    assertEquals(1, closed)
+  }
 }
