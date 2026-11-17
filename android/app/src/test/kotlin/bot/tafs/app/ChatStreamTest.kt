@@ -110,7 +110,8 @@ class ChatStreamTest {
     assertTrue(m.deliverChat("Refund Ana", "refunds-1"))
     settle()
     val request = transport.requestsTo(stream).single()
-    assertEquals("""{"text":"Refund Ana"}""", String(request.body!!))
+    // The words, and the message's one id (a repeat of it gets the same run).
+    assertEquals("""{"text":"Refund Ana","client_message_id":"${idOf(request)}"}""", String(request.body!!))
     assertEquals("text/event-stream", request.headers["Accept"])
     // Over: the live answer gives way to the thread, KIFF is read again, and nothing is said under it.
     assertNull(m.state.value.chatLive["refunds-1"])
@@ -241,6 +242,46 @@ class ChatStreamTest {
     // tafs cloud words its lines for people in the app's language.
     assertEquals("en", transport.requestsTo("POST /v1/tafs/taf_1/messages").single().headers["Accept-Language"])
     assertNull(m.state.value.chatLive["refunds-1"])
+  }
+
+  /** The message's one id, as its request carried it. */
+  private fun idOf(request: bot.tafs.app.kiff.HttpRequest): String? =
+    bot.tafs.app.kiff.KiffClient.json.parseToJsonElement(String(request.body!!)).let { (it as kotlinx.serialization.json.JsonObject)["client_message_id"] }
+      ?.let { (it as kotlinx.serialization.json.JsonPrimitive).content }
+
+  @Test fun theStreamAndThePlainSendThatTakesItsPlaceCarryTheMessagesOneId() = runTest {
+    // The stream fails after tafs cloud may have taken the message (a 503): the plain send is the same message, under the same id,
+    // so tafs cloud gives it the run it already started, never a second one.
+    reads()
+    transport.answer(stream, 503, """{"error":"unavailable"}""")
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","new_session":false}""")
+    val m = model()
+    assertTrue(m.deliverChat("Refund Ana", "refunds-1"))
+    val streamed = idOf(transport.requestsTo(stream).single())
+    val plain = idOf(transport.requestsTo("POST /v1/tafs/taf_1/messages").single())
+    assertTrue("a UUID", streamed != null && java.util.UUID.fromString(streamed).toString() == streamed)
+    assertEquals(streamed, plain)
+    // The next message the owner writes is another message, with another id.
+    assertTrue(m.deliverChat("And Ben", "refunds-1"))
+    val next = idOf(transport.requestsTo(stream).last())
+    assertTrue(next != null && next != streamed)
+  }
+
+  @Test fun aRetryOfAMessageNotSentGoesUnderItsOwnIdAgain() = runTest {
+    // The plain send drops with no answer: it may have reached tafs cloud. Retry sends it under the same id, so if it did, tafs
+    // cloud answers with that run, not a second.
+    reads()
+    transport.answer(stream, 503, """{"error":"unavailable"}""")
+    transport.drop("POST /v1/tafs/taf_1/messages")
+    transport.answer("POST /v1/tafs/taf_1/messages", 200, """{"session":"s1","new_session":false}""")
+    val m = model()
+    assertTrue(!m.deliverChat("Refund Ana", "refunds-1"))
+    val first = idOf(transport.requestsTo(stream).first())
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals(first, unsent.messageId)
+    assertTrue(m.resendUnsent("refunds-1", unsent.message))
+    assertEquals(first, idOf(transport.requestsTo(stream).last()))
+    assertEquals(first, idOf(transport.requestsTo("POST /v1/tafs/taf_1/messages").last()))
   }
 
   @Test fun aRefusalOnTheStreamIsSaidAndNothingIsSentPlainly() = runTest {

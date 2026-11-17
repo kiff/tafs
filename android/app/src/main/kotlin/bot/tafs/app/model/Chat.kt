@@ -165,6 +165,8 @@ data class Unsent(
   val notSentKey: String? = null,
   /** Refused because the account (`account`) or its taf (`taf`) is halted: tafs cloud's `halted`, so the row can offer Resume. */
   val halted: String? = null,
+  /** The message's one id (`client_message_id`): Retry sends it again under it, so one that reached tafs cloud isn't run twice. */
+  val messageId: String? = null,
 ) {
   companion object {
     /** The session an unsent message carries, so the thread shows it as one. */
