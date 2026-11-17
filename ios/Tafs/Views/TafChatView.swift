@@ -314,13 +314,14 @@ struct TafChatView: View {
             .onChange(of: state.queued) { _ in pinBubble(proxy) }
             .onChange(of: state.steering?.untaken.count) { _ in pinBubble(proxy) }
             .onChange(of: state.unsent) { unsent in
-                // Not sent: its bubble, with Retry, is the one at the top.
-                if pinNext, let last = unsent.last {
+                // Not sent: nothing is pinned, and the chat goes to its end, where the bubble with Retry
+                // is, as on Android (docs/chat.md). Pinned, Retry left the pin on a row that was gone.
+                if pinNext, !unsent.isEmpty {
                     pinNext = false
                     pinText = nil
-                    pinned = last.id.uuidString
-                    touched = false
-                    proxy.pinToTop(last.id.uuidString, animated: true) { touched }
+                    pinned = nil
+                    following = true
+                    withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                     return
                 }
                 follow(proxy)

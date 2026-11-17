@@ -75,6 +75,28 @@ final class ChatPinUITests: TafsUITestCase {
         XCTAssertTrue(summary.exists && thread.frame.intersects(summary.frame), "Worked for is on screen after coming back")
     }
 
+    /// A message that couldn't go lets the pin go, as on Android (docs/chat.md): nothing is pinned, and the
+    /// chat is at its end, where the Not sent bubble and its Retry show. Pinned, Retry left the pin on a row
+    /// that was gone.
+    @MainActor
+    func testAMessageThatCouldntGoLetsThePinGo() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat", "-sampleSendFails", "YES"]
+        launch(app)
+
+        let field = app.descendants(matching: .any)["chat-field"]
+        XCTAssertTrue(field.waitForExistence(timeout: 30), "the chat's field")
+        typeInto(field, text: "Which refunds went out this morning?")
+        app.buttons["chat-send"].tap()
+
+        let thread = app.descendants(matching: .any)["chat-thread"]
+        let retry = app.buttons["unsent.retry"]
+        XCTAssertTrue(retry.waitForExistence(timeout: 5), "the Not sent bubble, with Retry")
+        XCTAssertTrue(within(2.0) { (thread.value as? String)?.hasPrefix("pinned none") == true },
+                      "nothing is pinned: \(thread.value ?? "")")
+        XCTAssertTrue(within(2.0) { retry.isHittable && thread.frame.contains(retry.frame) }, "the chat is at its end, Retry on screen")
+    }
+
     /// Whether `condition` holds within `seconds`, checked every tenth of a second.
     @MainActor
     private func within(_ seconds: TimeInterval, _ condition: () -> Bool) -> Bool {

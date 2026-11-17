@@ -488,13 +488,14 @@ struct SetupChatView: View {
                 }
             }
             .onChange(of: model.setupUnsent) { unsent in
-                // Not sent: its bubble, with Retry, is the one at the top.
-                if pinNext, let last = unsent.last {
+                // Not sent: nothing is pinned, and the chat goes to its end, where the bubble with Retry
+                // is, as on Android (docs/chat.md). Pinned, Retry left the pin on a row that was gone.
+                if pinNext, !unsent.isEmpty {
                     pinNext = false
                     pinText = nil
-                    pinned = last.id.uuidString
-                    touched = false
-                    proxy.pinToTop(last.id, animated: true) { touched }
+                    pinned = nil
+                    following = true
+                    withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                     return
                 }
                 follow(proxy)
@@ -1058,6 +1059,7 @@ struct UnsentBubble: View {
                     Button(Self.retryWord) { Task { await retry() } }
                         .foregroundColor(Theme.ink).semibold()
                         .disabled(busy)
+                        .accessibilityIdentifier("unsent.retry")
                 }
                 .scaledFont(14, relativeTo: .footnote)
             }
