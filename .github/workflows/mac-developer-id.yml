@@ -51,6 +51,8 @@ jobs:
 
       # GitHub refuses this run's token a release at a commit that changes .github/, and only after
       # the build and both notarizations. So stop here, before the signing job waits for its approval.
+      # Main gets squash merges, so HEAD~1 is the commit before; a merge commit would be compared only
+      # with its first parent.
       - name: The commit doesn't change .github/
         run: |
           changed="$(git diff --name-only HEAD~1 HEAD -- .github)"
@@ -126,7 +128,9 @@ jobs:
       # Before any key is written: the generated project and its schemes run no script, build rule or
       # external build that ios/project.yml doesn't declare, checked by this checkout's own script.
       - name: No build step beyond what project.yml declares
-        run: python3 -I ios/scripts/build_phases.py ios
+        run: |
+          plutil -convert json -o "$RUNNER_TEMP/pbxproj.json" ios/Tafs.xcodeproj/project.pbxproj
+          python3 -I ios/scripts/build_phases.py ios "$RUNNER_TEMP/pbxproj.json"
 
       - name: Write the App Store Connect key
         env:

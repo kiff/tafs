@@ -91,9 +91,17 @@ key, certificate, password or profile. It does this, in order:
    Info.plists and entitlements) goes to the signing job, never a script. That job installs nothing
    and runs only its own checkout's scripts, so nothing a package brings can reach the keys.
    Before any key is written, the signing job checks the generated project with its own
-   `ios/scripts/build_phases.py`. The project must have no script build phase, build rule, external
-   build target or scheme pre- or post-action that `ios/project.yml` doesn't declare. Today it
-   declares none, so a script added to the project, even by a bad XcodeGen release, stops the run.
+   `ios/scripts/build_phases.py`. It reads the project as Apple's `plutil` reads it, and also scans its
+   text, so the way it's written doesn't matter. The run stops on anything in the project or its
+   schemes that makes Xcode run code while it builds and that `ios/project.yml` doesn't declare:
+   - a script build phase (allowed only by the SHA-256 of its script), a build rule, or an external
+     build or aggregate target;
+   - a build setting that replaces a tool Xcode runs (`CC`, `CPLUSPLUS`, `LD`, `LDPLUSPLUS`,
+     `LIBTOOL` or any `*_EXEC`) or loads a compiler plugin, in the project or an `.xcconfig`;
+   - a Swift package other than `swift-secp256k1` at exactly 0.24.0, or any local package;
+   - a scheme pre- or post-action.
+
+   Today `ios/project.yml` declares none of these, so even a bad XcodeGen release can't add one.
 1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_DIRECT`), made through the
    API with the Developer ID Application certificate (`asc-profiles.rb --developer-id`): "tafs
    Developer ID CI" and "tafs notify Developer ID CI". They're made with the same capabilities as the
