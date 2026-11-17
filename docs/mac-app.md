@@ -113,6 +113,8 @@ key, certificate, password or profile. It does this, in order:
    notes. These are the names kiff.dev/tafs/download reads, and a draft is only seen by people with
    push access. A draft of the same version is replaced; a published one stops the run, so
    `MARKETING_VERSION` in `ios/project.yml` goes up first. The build number is the run's number.
+   GitHub refuses the run's token a release at a commit that changes `.github/`, so the first job
+   stops on such a commit. Run it from a later main commit that doesn't change `.github/`.
 
 **Publishing** is never this workflow's. Only the owner publishes it, once their test of the draft
 passed. The download page shows it within 10 minutes.
