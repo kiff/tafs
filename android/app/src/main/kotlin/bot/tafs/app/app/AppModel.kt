@@ -4779,6 +4779,8 @@ class AppModel(
     }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - cardId) }
     val generation = accountGeneration
+    // Whether this connection opened KIFF's window, which it closes when it ends.
+    var ownWindow = false
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
     val signer = signer
@@ -4844,22 +4846,57 @@ class AppModel(
       val words = grant.request.profile?.let {
         _state.value.profileWordsFor(grant) ?: return Connected.Failed(Words.Connect.profileWordsUnread, told = "KIFF's words for this connection aren't read yet. Nothing was approved.")
       }
-      try {
-        signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), bot.tafs.app.model.ConnectionWords.connectPrompt(grant, _state.value.connectApps) { _state.value.taf(it)?.name })
-      } catch (_: SignerException) {
-        note(cardId, Words.Common.notDoneUnconfirmed)
+      // The person's yes, behind the fingerprint: an approval window at KIFF (kiff/tafs#494), so planque's approve and confirm go
+      // as taps that KIFF says are inside it (`v2`, the window's id), as Coach's step does. Where KIFF opens none (a KIFF from
+      // before windows, no approval key, a drive), the phone asks for the fingerprint itself and the device key signs as before.
+      val prompt = bot.tafs.app.model.ConnectionWords.connectPrompt(grant, _state.value.connectApps) { _state.value.taf(it)?.name }
+      // KIFF's window is opened signed: the approval key, behind the fingerprint, as KiffClient signs what grants authority.
+      kiff.setupSigner = sign
+      // A connection's own fingerprint opens its own window: one held from an earlier approval is closed first, so connecting is
+      // never a tap riding on it, and the connection's window doesn't outlive it (closed in `finally`).
+      if (kiff.window != null) closeWindow()
+      windowAsked = false
+      val windowed = try {
+        holdWindow(prompt).also { ownWindow = it } || run {
+          // No window: the phone asks for the fingerprint itself, unless the window's prompt just came up (a KIFF from before
+          // windows answers 404 only after it), so the person is asked once.
+          if (!windowAsked) signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), prompt)
+          false
+        }
+      } catch (e: SignerException) {
+        note(cardId, notSigned(e, Words.Common.notDoneUnconfirmed))
         return Connected.Stopped
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        return Connected.Failed(Words.Connect.notConnected(why = ErrorWords.of(e)), "Not connected: ${e.message}")
       }
       if (generation != accountGeneration) return Connected.Stopped
+      if (windowed) planque.window = kiff.window?.id
+      // planque says the window ended before the call was done (nothing was): a new one, behind the fingerprint, and that call
+      // once more. A sign-in at the vendor can outlast a window, so it's the confirm that most often meets this.
+      suspend fun <T> inWindow(call: suspend () -> T): T? = try {
+        call()
+      } catch (e: PlanqueError.WindowRequired) {
+        if (!windowed) throw e
+        // planque said this window ended, so it's forgotten before a new one is opened. Nothing else holds it meanwhile: one
+        // connection runs at a time (`connecting`), and Coach's step makes its calls through this same model.
+        kiff.window = null
+        if (!holdWindow(prompt)) throw e
+        if (generation != accountGeneration) null else {
+          planque.window = kiff.window?.id
+          call()
+        }
+      }
       try {
-        val approved = planque.approve(grant, words)
+        val approved = inWindow { planque.approve(grant, words) } ?: return Connected.Stopped
         val url = approved.signInUrl
         if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
           // Signed in at the provider already (the person's account there is held): no second sign-in, never a failure. This
           // phone confirms with planque's one-use code, as with the browser's, and goes on to the tools (docs/connect-apps.md).
           if (generation != accountGeneration) return Connected.Stopped
           _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
-          val connected = planque.confirm(grant.id, approved.confirm)
+          val connected = inWindow { planque.confirm(grant.id, approved.confirm) } ?: return Connected.Stopped
           refreshConnections()
           if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), told = "The sign-in was held, but the connection is ${connected.status}.")
           return Connected.Done(connected)
@@ -4881,7 +4918,7 @@ class AppModel(
         if (generation != accountGeneration) return Connected.Stopped
         // Back from the vendor: signed in only once planque says the grant is connected, never because the page closed.
         _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
-        val connected = planque.confirm(grant.id, signedIn.code)
+        val connected = inWindow { planque.confirm(grant.id, signedIn.code) } ?: return Connected.Stopped
         refreshConnections()
         // Listed is signed in too: planque holds the sign-in and listed the vendor's tools for Setup to choose from.
         if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
@@ -4893,6 +4930,11 @@ class AppModel(
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
         return Connected.Failed(Words.Connect.signInClosedNothingConnected, told = "The sign-in was closed. Nothing was connected.")
+      } catch (e: SignerException) {
+        // The fingerprint for a new window, after planque said the last one ended: not given, so nothing more was done.
+        refreshConnections()
+        note(cardId, notSigned(e, Words.Common.notDoneUnconfirmed))
+        return Connected.Stopped
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
@@ -4901,8 +4943,12 @@ class AppModel(
       }
     } finally {
       planque.signer = null
+      planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
+      // The connection's own window ends with it, so the approvals after it each ask for their own fingerprint.
+      if (ownWindow) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { closeWindow() }
+      else if (generation == accountGeneration) readWindowWords()
     }
   }
 
@@ -5282,12 +5328,17 @@ class AppModel(
    * key, with [reason]'s words) opens one for five minutes. False where it can't: no approval key in KIFF, or a KIFF without
    * windows; the step then signs as it did. Whether the window is open is KIFF's to say, at each call.
    */
+  /** Whether the last [holdWindow] asked for the fingerprint (the approval key signs the window's opening), held or not. */
+  private var windowAsked = false
+
   private suspend fun holdWindow(reason: String): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
     if (drive.on) return false
     if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
     if (kiff.window != null) return true
     approvalReason = reason
+    // The approval key's prompt comes up as the window is opened, whatever KIFF answers.
+    windowAsked = true
     val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
     return try {

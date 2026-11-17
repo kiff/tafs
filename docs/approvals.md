@@ -191,7 +191,18 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   (connecting an app; a draft KIFF says widens nothing). The approval key signs KIFF's
   `kiff.window.v1` (`POST /v1/me/window`, `{message, expires, nonce}`, five minutes at most),
   behind one fingerprint in the card's words. The app opens none on its own guess, and a KIFF
-  without the route (404) leaves the step signing as it did.
+  without the route (404) leaves the step signing as it did. **One exception, on Android:** a
+  connection approved outside Coach's step (Connect apps, a taf's Connect again, an approval
+  card's Connect: `AppModel.connect`) has no ask from tafs cloud, so the connection's own
+  fingerprint opens the window there, and planque's approve and confirm go as `v2` inside it.
+  It's the connection's alone: a window held from an earlier approval is closed first, so a
+  connection is never a tap, and the connection's window is closed when it ends. With a KIFF
+  that has no window route, the window's fingerprint stands as the connection's, so the person
+  is asked once.
+  planque then holds them to an open window (`PLANQUE_WINDOW_REQUIRED`), where before they went
+  as `v1` with the device key alone. Without a window (a KIFF without the route, no approval key,
+  a drive), the phone asks for the fingerprint itself and signs `v1`, as before. iPhone and iPad
+  follow.
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
   the window's id last. planque's calls are signed this way only for the step that took the
@@ -202,7 +213,9 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   as **No** to "Did this happen?") is signed again by the approval key, once (on iPhone and
   iPad behind a new Face ID: the approval key signs only under one). KIFF's
   `window_required` forgets the window and does the same. planque's `window_required` on an
-  approval card opens a new window, one fingerprint, and the call is made once more.
+  approval card opens a new window, one fingerprint, and the call is made once more; on
+  Android's direct connect, only the call it refused (most often the confirm, after a vendor
+  sign-in that outlasted the window), never the approve again.
 - **Words.** While a window is held, Approve on an approval card reads "Approve" and KIFF's
   words go under it ("No fingerprint for the next 4 minutes", `GET /v1/me/window`), read
   again after each approval and on coming back to the app. tafs cloud marks each waiting card
