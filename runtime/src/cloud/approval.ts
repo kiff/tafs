@@ -1,5 +1,5 @@
 import { kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement } from "./rules.js";
-import { noteSendingOutside } from "./sends-outside.js";
+import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
  * phone says the person tapped Approve; tafs cloud reads planque's grant and
@@ -1184,13 +1184,14 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
 }
 
 /**
- * The grant's tools that send outside the company, as its profile says, noted for its taf's agent as the owner is
+ * The grant's tools that send outside the company, as its profile says (or, on an API-key connection, planque's text
+ * fields: sendingProfileOf), noted for its taf's agent as the owner is
  * about to sign (gap 14): Coach's result is checked against them. Read as the phone, so only here, and each Approve
  * of the grant replaces its entry, so a later connection's sending tool counts.
  */
 async function noteSending(grant: ApprovalGrant, ctx: DecideContext): Promise<void> {
   if (typeof grant.request.agent !== "string" || !grant.request.agent) return;
-  await noteSendingOutside(ctx.store, ctx.tenant, grant.request.agent, grant.id, grant.request.profile, ctx.now);
+  await noteSendingOutside(ctx.store, ctx.tenant, grant.request.agent, grant.id, sendingProfileOf(grant.request), ctx.now);
 }
 
 /** What the phone reports came of the call it made with the signature. */

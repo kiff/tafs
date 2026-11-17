@@ -187,6 +187,20 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["send_email"] } });
   });
 
+  // Eval 43975057022, Replay run 2: an API-key connection carries no profile. Its writes planque marked with text fields
+  // (a draft's body) are noted as sending; a write with none (a status) and a read aren't.
+  it("notes an API-key connection's writes with text fields as sending, as the owner signs", async () => {
+    const s = services();
+    const tools = [{ tool: "createDraft", name: "create_draft_k3", title: "Create a draft", text_fields: ["body"] },
+      { tool: "setStatus", name: "set_status_k3", title: "Set a status" },
+      { tool: "listMail", name: "list_mail_k3", title: "List mail", read_only: true }];
+    s.grants = [grant({}, { api: { url: "https://mail.example/openapi.json" }, tools })];
+    const w = await world(s);
+    const digest = sha256(grant({}, { api: { url: "https://mail.example/openapi.json" }, tools }).request);
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: digest })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(await w.coach.get("t_acme#sends-outside#refunds-x")).toMatchObject({ grants: { g_1: ["create_draft_k3"] } });
+  });
+
   it("a card whose terms changed since it was shown is read again, and Coach hears nothing", async () => {
     const s = services();
     const w = await world(s);
