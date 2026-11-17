@@ -1,0 +1,21 @@
+name: Upgrade gate
+# The owner's rule B (upgrade.yml's rule_b_run) read from saved Eval logs: one
+# that meets it, and each way of breaking it refused.
+on:
+  pull_request:
+    paths:
+      - .github/upgrade-rule-b.sh
+      - .github/upgrade-rule-b/**
+      - .github/workflows/upgrade.yml
+      - .github/workflows/upgrade-gate.yml
+permissions:
+  contents: read
+jobs:
+  rule-b:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash .github/upgrade-rule-b/test.sh
