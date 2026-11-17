@@ -104,7 +104,8 @@ struct RecordView: View {
         .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
-    /// "€640 spent": the money moved that day, a sum for each currency; nil when none was.
+    /// "€640 spent": the money moved that day, a sum for each currency; nil when none was. In the app's
+    /// language (`record.day_spent`): where the amount goes differs by language.
     static func spent(_ entries: [RecordEntry]) -> String? {
         var sums: [String: Money] = [:]
         var order: [String] = []
@@ -120,7 +121,7 @@ struct RecordView: View {
             }
         }
         guard !order.isEmpty else { return nil }
-        return order.compactMap { sums[$0]?.formatted }.joined(separator: " + ") + " spent"
+        return Words.Record.daySpent(amount: order.compactMap { sums[$0]?.formatted }.joined(separator: " + "))
     }
 
     private struct Day {
