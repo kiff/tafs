@@ -1,0 +1,5 @@
+- Num tablet, uma só barra lateral para toda a app, como no iPad: Precisa de si, Registo, Calendário, Plano e utilização, Ligar apps, os seus tafs e o Coach.
+- Num tablet, o Coach abre ao lado do que está a fazer, e pode alargá-lo.
+- A página de um taf mostra a versão em produção por baixo do nome.
+- Num tablet, «Começa quando» e «Os resultados vão para» abrem num ecrã próprio.
+- O Registo mostra o gasto de cada dia.

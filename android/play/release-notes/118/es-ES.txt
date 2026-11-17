@@ -1,0 +1,5 @@
+- En tableta, una sola barra lateral para toda la app, como en el iPad: Te necesita, Registro, Calendario, Plan y uso, Conectar apps, tus tafs y Coach.
+- En tableta, Coach se abre al lado de lo que estás haciendo, y puedes ensancharlo.
+- La página de un taf muestra su versión activa bajo su nombre.
+- En tableta, «Empieza cuando» y «Los resultados van a» se abren en su propia pantalla.
+- El Registro muestra el gasto de cada día.

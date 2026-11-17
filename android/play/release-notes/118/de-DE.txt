@@ -1,0 +1,5 @@
+- Auf dem Tablet eine Seitenleiste für die ganze App, wie auf dem iPad: Braucht dich, Protokoll, Kalender, Tarif & Nutzung, Apps verbinden, deine tafs und Coach.
+- Auf dem Tablet öffnet sich Coach neben dem, was du gerade tust, und du kannst ihn breiter ziehen.
+- Die Seite eines tafs zeigt unter seinem Namen seine Live-Version.
+- Auf dem Tablet öffnen sich „Startet, wenn“ und „Ergebnisse gehen an“ als eigene Bildschirme.
+- Das Protokoll zeigt, was an jedem Tag ausgegeben wurde.
