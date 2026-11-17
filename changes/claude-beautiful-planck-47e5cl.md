@@ -1,0 +1,1 @@
+- **Where the apps reach tafs cloud is now in one file, `app/hosts.json`:** tafs cloud's address and the one a run streams from. The iPad's and Android's constants are checked against it (`app/test_hosts.py`, the Hosts workflow), the desktop apps can read it instead of copying it, and a change to it asks for a security review (CODEOWNERS). No address changes.
