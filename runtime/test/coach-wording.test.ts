@@ -58,10 +58,18 @@ describe("Coach's wording rules", () => {
       // A sign-in breadth claim with the app's name between "full" and "access", and the curly apostrophe Coach writes in French and Italian.
       "Google will ask you for full access to Gmail.", "The sign-in shows full Gmail access, but the taf only reads.",
       "Google chiede l’accesso completo.", "Google demandera l’accès complet à votre messagerie.",
+      // Eval 44099835231: Coach's progress line said the connection only reads, with planque's sign-in wide (Gmail EN run 1,
+      // Sheets FR run 2). The same order in each language.
+      "Connecting your Gmail, reading only.", "Je connecte Google Sheets pour Total de la semaine, en lecture des cellules seulement.",
+      "Connecting Google Sheets with read access only.", "Ich verbinde Google Sheets nur zum Lesen.",
+      "Conecto Google Sheets en modo lectura de celdas solamente.", "Collego Google Sheets in lettura delle celle soltanto.",
+      "Ik koppel Google Sheets alleen om te lezen.", "Ligo o Google Sheets em leitura das células apenas.",
+      "Je connecte Google Sheets, lecture uniquement.",
     ]) {
       expect(claims(bad), bad).toBe(true);
     }
-    for (const good of ["It will read only the rows added since its last run.", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once."]) {
+    for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
+      "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once."]) {
       expect(claims(good), good).toBe(false);
     }
   });

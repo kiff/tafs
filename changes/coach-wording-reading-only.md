@@ -1,0 +1,1 @@
+- Coach's wording rules also refuse "reading only", "read access only" and "en lecture … seulement" (and the same order in the other languages): a progress line or card that says a connection only reads is redrawn, as "read-only" already was.
