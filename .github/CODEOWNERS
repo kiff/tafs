@@ -29,6 +29,7 @@
 /ios/Tafs/Services/ApprovalSigner.swift @kiff-qa
 /ios/Tafs/Services/PasskeyMaker.swift @kiff-qa
 /ios/scripts/asc-profiles.rb @kiff-qa
+/ios/scripts/build_phases.py @kiff-qa
 *.entitlements @kiff-qa
 /ios/scripts/asc-*.rb @kiff-qa
 

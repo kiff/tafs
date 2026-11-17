@@ -111,6 +111,11 @@ jobs:
           gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n mac-developer-id-project -D "$RUNNER_TEMP/project"
           tar -xzf "$RUNNER_TEMP/project/ios.tgz"
 
+      # Before any key is written: the generated project and its schemes run no script, build rule or
+      # external build that ios/project.yml doesn't declare, checked by this checkout's own script.
+      - name: No build step beyond what project.yml declares
+        run: python3 -I ios/scripts/build_phases.py ios
+
       - name: Write the App Store Connect key
         env:
           ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
