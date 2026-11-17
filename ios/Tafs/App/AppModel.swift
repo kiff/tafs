@@ -7410,7 +7410,9 @@ final class AppModel: ObservableObject {
             DriveSession.shared.stop("stopped")
             return
         }
-        if let taf = tafOnScreen, setupContextTafID != cloudTaf(for: taf)?.id {
+        // Coach opens on the taf on screen only for someone who manages it, as every other way into Coach on a
+        // taf (`askCoachAbout`): tafs cloud takes improving a taf only from them. Anyone else gets Coach as it was.
+        if let taf = tafOnScreen, mode != .kiff || manages(taf), setupContextTafID != cloudTaf(for: taf)?.id {
             improveTaf(taf)
         }
         coachOpen = true

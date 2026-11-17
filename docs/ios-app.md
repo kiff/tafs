@@ -944,6 +944,11 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
   accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
   confirming.
+- **Coach on a taf is only for its manager.** Coach opened on a taf's page takes that taf (Improve <taf>) only for
+  someone who manages it (`AppModel.openCoach`), as every other way into Coach on a taf (`askCoachAbout`,
+  `discussCardUnit`): tafs cloud takes improving a taf only from them. Anyone else gets Coach on no taf. A run's
+  **Ask Coach** (A taf's work › a run) shows only for someone who may use Coach and manages the taf
+  (`KnobRequestDetail.offersAskCoach`), as on Windows.
 - **The pencil** (New conversation) in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat,
   on no taf (`newCoachConversation`), and so does New taf at the chat's top. It stays plain: Coach closed
   and opened again on the same taf's page doesn't go back to that taf's mode; another taf's page opens on
