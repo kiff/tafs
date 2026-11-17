@@ -7999,9 +7999,12 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || tenant == null) return
     val generation = accountGeneration
     kiff.tenant = tenant
+    val read = ++passkeysRead
     try {
       val list = kiff.passkeys()
-      if (generation == accountGeneration) _state.update { it.copy(passkeys = list, passkeysError = null) }
+      // A read that started before a removal, or before a later read, is dropped: the removed passkey never comes back, and
+      // the last-passkey warning counts what's really left.
+      if (generation == accountGeneration && read == passkeysRead) _state.update { it.copy(passkeys = list, passkeysError = null) }
       // Whether to offer Add a passkey: KIFF takes one from owners and admins only.
       val role = runCatching { kiff.people().firstOrNull { it.you == true }?.role }.getOrNull()
       if (generation == accountGeneration && role != null) _state.update { it.copy(passkeyMayAdd = PasskeyRegistration.mayAdd(role)) }
@@ -8095,6 +8098,9 @@ class AppModel(
     return true
   }
 
+  /** Each read of the passkeys, and each removal, takes the next number: only the latest read's answer is kept. */
+  private var passkeysRead = 0
+
   /**
    * Removes one of the account's passkeys, behind one fingerprint that names it, signed by the approval key as a device's
    * removal is. A computer's own passkey has no id and goes with its computer: it's never removed here. False when it didn't go.
@@ -8132,6 +8138,9 @@ class AppModel(
       kiff.setupSigner = null
       approvalReason = Words.Approval.Prompt.approveOnKiff
     }
+    // Removed: any read already under way is from before it, so it's dropped when it ends.
+    passkeysRead++
+    if (generation == accountGeneration) _state.update { s -> s.copy(passkeys = s.passkeys.filter { it.id != id }) }
     refreshPasskeys()
     return true
   }

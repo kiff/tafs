@@ -182,6 +182,12 @@ fun DevicesSheet(
     DriveAlert(
       onDismissRequest = { removingPasskey = null },
       title = { Text(Words.Settings.Devices.passkeyRemoveNamed(name = passkey.name)) },
+      // The last passkey that can approve says so before it goes.
+      text = if (Passkey.removesLast(passkey, state.passkeys)) {
+        { Text(Words.Settings.Devices.passkeyRemoveLast, modifier = Modifier.testTag(PASSKEY_REMOVE_LAST)) }
+      } else {
+        null
+      },
       confirmButton = {
         TextButton(onClick = { removingPasskey = null; scope.launch { removePasskey(passkey) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.passkeyRemove, color = Theme.no) }
       },
@@ -244,4 +250,5 @@ internal const val PAIR_CHECK = "devices.pair.check"
 internal const val PAIR_TITLE = "devices.pair.title"
 internal const val PAIR_LINE = "devices.pair.line"
 internal const val PASSKEY_BUTTON = "devices.passkey.add"
+internal const val PASSKEY_REMOVE_LAST = "devices.passkey.remove_last"
 internal const val PASSKEY_LINE = "devices.passkey.line"

@@ -1249,7 +1249,11 @@ answers it. That part is Android's own, with nothing in the app.
     So adding one is tested from a build Play installed (the internal track).
 - **Removing one** (`KiffClient.removePasskey`): `DELETE /v1/me/passkeys/{id}`, signed by the approval key behind a
   fingerprint that names it, as a device's removal is. A computer's own passkey has no id (it goes with its device,
-  `device_id`), so it says "Goes with its computer", with no Remove.
+  `device_id`), so it says "Goes with its computer", with no Remove. **Removing the last passkey that can approve
+  warns first:** "This is your only passkey that can approve. Without it, you need another device that can approve."
+  (`settings.devices.passkey_remove_last`, `Passkey.removesLast`). Every passkey KIFF lists counts, a computer's own
+  included, as on Windows and iOS. A read of the list that started before a removal is dropped when it ends, so the
+  removed passkey never comes back.
 - **Tests:** `PasskeyRegistrationTest` reads `vectors/passkey-registration.json`, the vector the iPhone and iPad's
   tests read too, so the apps can't drift. `PasskeyAddTest` covers the model: the fingerprint, the body, the 409, the
   sheet put away, no approval key, KIFF's refusals, and a computer's own passkey.
