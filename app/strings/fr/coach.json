@@ -91,6 +91,7 @@
   "coach.improve.how_is_it_going": "Comment ça se passe ?",
   "coach.improve.why_refused": "Pourquoi quelque chose a-t-il été refusé ou retenu ?",
   "coach.improve_line": "Dites ce qui doit changer, ou demandez comment ça se passe. Le mode Coach part de ce que {name} a fait et de ce que sa Card autorise.",
+  "coach.improve_no_files": "Les fichiers partent avec votre prochain message : envoyez d'abord celui-ci, puis joignez-les.",
   "coach.improve_taf": "Améliorer {taf}",
   "coach.intro": "Nommez une app pour votre taf, comme votre prestataire de paiement.",
   "coach.kiff_counts_way": "KIFF le compte ainsi",

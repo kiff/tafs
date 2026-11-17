@@ -676,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Hoe gaat het?</string>
     <string name="coach_improve_why_refused">Waarom is iets geweigerd of vastgehouden?</string>
     <string name="coach_improve_line">Zeg wat er moet veranderen, of vraag hoe het gaat. De Coach-modus begint bij wat %1$s heeft gedaan en wat zijn Card toestaat.</string>
+    <string name="coach_improve_no_files">Bestanden gaan mee met je volgende bericht: stuur eerst dit bericht en voeg ze daarna bij.</string>
     <string name="coach_improve_taf">%1$s verbeteren</string>
     <string name="coach_intro">Noem een app voor je taf, zoals je betaalprovider.</string>
     <string name="coach_kiff_counts_way">KIFF telt het zo</string>

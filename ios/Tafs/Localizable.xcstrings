@@ -33249,6 +33249,59 @@
         }
       }
     },
+    "coach.improve_no_files": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien kommen mit deiner nächsten Nachricht: Sende zuerst diese, dann häng sie an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files go with your next message: send this one first, then attach them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos van con tu próximo mensaje: envía primero este y luego adjúntalos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers partent avec votre prochain message : envoyez d'abord celui-ci, puis joignez-les."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I file vanno con il prossimo messaggio: invia prima questo, poi allegali."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestanden gaan mee met je volgende bericht: stuur eerst dit bericht en voeg ze daarna bij."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pliki trafią do następnej wiadomości: najpierw wyślij tę, a potem je załącz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os ficheiros vão com a próxima mensagem: envie primeiro esta e depois anexe-os."
+          }
+        }
+      }
+    },
     "coach.improve_taf": {
       "extractionState": "manual",
       "localizations": {

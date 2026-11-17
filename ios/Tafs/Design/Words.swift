@@ -1259,6 +1259,8 @@ enum Words {
         }
         /// Say what should change, or ask how it's going. Coach mode starts from what {name} did and what its Card allows.
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
+        /// Files go with your next message: send this one first, then attach them.
+        static var improveNoFiles: String { Words.line("coach.improve_no_files") }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
         /// Name an app for your taf, like your payment provider.

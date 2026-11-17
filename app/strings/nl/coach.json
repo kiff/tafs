@@ -91,6 +91,7 @@
   "coach.improve.how_is_it_going": "Hoe gaat het?",
   "coach.improve.why_refused": "Waarom is iets geweigerd of vastgehouden?",
   "coach.improve_line": "Zeg wat er moet veranderen, of vraag hoe het gaat. De Coach-modus begint bij wat {name} heeft gedaan en wat zijn Card toestaat.",
+  "coach.improve_no_files": "Bestanden gaan mee met je volgende bericht: stuur eerst dit bericht en voeg ze daarna bij.",
   "coach.improve_taf": "{taf} verbeteren",
   "coach.intro": "Noem een app voor je taf, zoals je betaalprovider.",
   "coach.kiff_counts_way": "KIFF telt het zo",

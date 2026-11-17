@@ -740,6 +740,7 @@
     <string name="coach_improve_how_is_it_going">Jak mu idzie?</string>
     <string name="coach_improve_why_refused">Dlaczego coś zostało odrzucone lub jest oczekujące?</string>
     <string name="coach_improve_line">Powiedz, co powinno się zmienić, albo zapytaj, jak idzie. Tryb Coach zaczyna od tego, co zrobił %1$s i na co pozwala jego Card.</string>
+    <string name="coach_improve_no_files">Pliki trafią do następnej wiadomości: najpierw wyślij tę, a potem je załącz.</string>
     <string name="coach_improve_taf">Ulepsz %1$s</string>
     <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności.</string>
     <string name="coach_kiff_counts_way">KIFF liczy to w ten sposób</string>

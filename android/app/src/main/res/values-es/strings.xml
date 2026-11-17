@@ -676,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">¿Cómo va?</string>
     <string name="coach_improve_why_refused">¿Por qué algo fue rechazado o retenido?</string>
     <string name="coach_improve_line">Di qué debería cambiar, o pregunta cómo va. El modo Coach parte de lo que hizo %1$s y de lo que permite su Card.</string>
+    <string name="coach_improve_no_files">Los archivos van con tu próximo mensaje: envía primero este y luego adjúntalos.</string>
     <string name="coach_improve_taf">Mejorar %1$s</string>
     <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos.</string>
     <string name="coach_kiff_counts_way">KIFF lo cuenta así</string>

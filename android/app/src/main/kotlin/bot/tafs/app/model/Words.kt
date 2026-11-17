@@ -684,6 +684,7 @@ object Words {
       val whyRefused: String get() = Res.s(R.string.coach_improve_why_refused)
     }
     fun improveLine(name: String): String = Res.s(R.string.coach_improve_line, name)
+    val improveNoFiles: String get() = Res.s(R.string.coach_improve_no_files)
     fun improveTaf(taf: String): String = Res.s(R.string.coach_improve_taf, taf)
     val intro: String get() = Res.s(R.string.coach_intro)
     val kiffCountsWay: String get() = Res.s(R.string.coach_kiff_counts_way)
