@@ -1484,6 +1484,9 @@ object Words {
     fun passkeyWhyBody(device: String, biometry: String): String = Res.s(R.string.pair_passkey_why_body, device, biometry, Words.demonstrative(device))
     val passkeyWhyGo: String get() = Res.s(R.string.pair_passkey_why_go)
     fun passkeyWhyTitle(device: String): String = Res.s(R.string.pair_passkey_why_title, device, Words.demonstrative(device))
+    fun refusedKeyRegistered(device: String): String = Res.s(R.string.pair_refused_key_registered, device, Words.demonstrative(device))
+    fun refusedOther(device: String): String = Res.s(R.string.pair_refused_other, device, Words.demonstrative(device))
+    fun refusedTitle(device: String): String = Res.s(R.string.pair_refused_title, device, Words.demonstrative(device))
     fun steps(account: String, devices: String, pair: String): String = Res.s(R.string.pair_steps, account, devices, pair)
     fun title(device: String): String = Res.s(R.string.pair_title, device, Words.demonstrative(device))
     object ViewOnly {
