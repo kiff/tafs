@@ -35,7 +35,14 @@ data class Passkey(
      * Whether removing [passkey] leaves no passkey that can approve. Every passkey KIFF lists approves, a computer's own included,
      * so Remove warns only when none other is left (`settings.devices.passkey_remove_last`), as on Windows and iOS.
      */
-    fun removesLast(passkey: Passkey, among: List<Passkey>): Boolean = among.none { it != passkey }
+    fun removesLast(passkey: Passkey, among: List<Passkey>): Boolean = among.none { !it.isSameAs(passkey) }
+  }
+
+  /** The same passkey, by what names it in KIFF: its id, or a computer's own by its computer, whatever its name says now. */
+  fun isSameAs(other: Passkey): Boolean = when {
+    id != null -> id == other.id
+    deviceId != null -> deviceId == other.deviceId
+    else -> this == other
   }
 }
 

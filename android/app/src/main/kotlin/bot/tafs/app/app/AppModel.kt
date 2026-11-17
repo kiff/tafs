@@ -8087,13 +8087,13 @@ class AppModel(
     return true
   }
 
+  /** Each read of the passkeys, and each removal, takes the next number: only the latest read's answer is kept. */
+  private var passkeysRead = 0
+
   /**
    * Removes one of the account's passkeys, behind one fingerprint that names it, signed by the approval key as a device's
    * removal is. A computer's own passkey has no id and goes with its computer: it's never removed here. False when it didn't go.
    */
-  /** Each read of the passkeys, and each removal, takes the next number: only the latest read's answer is kept. */
-  private var passkeysRead = 0
-
   suspend fun removePasskey(passkey: bot.tafs.app.kiff.Passkey): Boolean {
     val tenant = kiffTenant
     val id = passkey.id

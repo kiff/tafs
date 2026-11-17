@@ -182,6 +182,9 @@ class PasskeyAddTest {
     assertFalse("phone + computer: the computer's own still approves", Passkey.removesLast(phone, listOf(phone, computer)))
     assertTrue("phone alone: warned", Passkey.removesLast(phone, listOf(phone)))
     assertFalse("phone + iPad: no warning", Passkey.removesLast(phone, listOf(phone, ipad)))
+    // The same passkey renamed while the dialog was open is still the one being removed.
+    assertTrue("renamed: still the last", Passkey.removesLast(phone, listOf(phone.copy(name = "Pixel 8 Pro"))))
+    assertFalse("a computer's own, renamed, still counts", Passkey.removesLast(phone, listOf(phone, computer.copy(name = "Bureau"))))
     assertEquals(
       "This is your only passkey that can approve. Without it, you need another device that can approve.",
       Words.Settings.Devices.passkeyRemoveLast,
