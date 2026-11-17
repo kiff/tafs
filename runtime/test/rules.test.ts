@@ -205,6 +205,16 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     // As agreed, a total for each item (another check's), and a count of 0 (each call asks): none named.
     expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000)])], rule())).toEqual([]);
     expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), day(9, { per: "customer" }), { quantity: "count", window: "calendar_day", limit: 0 }])], rule())).toEqual([]);
+    // KIFF's own count (10,000 a day) as a held Card's only total is never the owner's: not named. On a refused Card,
+    // beside another total, or at another figure, it is (Eval 43975057022, Setup run 3).
+    const kiffs = { quantity: "count", window: "calendar_day", limit: 10_000 };
+    expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs], "owner"), refund(undefined, [day(5000)])], split)).toEqual([]);
+    expect(rulesMismatch([stripe], [refund(500, [kiffs], "owner"), refund(undefined, [day(5000)])], split)).toBeUndefined();
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), kiffs])], rule())).toHaveLength(1);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs, { quantity: "sum(amount)", window: "rolling_1h", limit: 1 }], "owner"), refund(undefined, [day(5000)])], split)).toHaveLength(2);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [{ ...kiffs, limit: 9_999 }], "owner"), refund(undefined, [day(5000)])], split)).toHaveLength(1);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs], "owner")], split)).toHaveLength(1);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs], "owner"), refund(undefined, [day(5000, { per: "customer" })])], split)).toHaveLength(1);
     // A rule with no figures names none to compare: nothing is named.
     expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
   });

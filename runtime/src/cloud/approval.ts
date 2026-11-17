@@ -1,4 +1,4 @@
-import { rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement } from "./rules.js";
+import { kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement } from "./rules.js";
 import { noteSendingOutside } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -88,9 +88,10 @@ const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules
  */
 /**
  * The one count a Card of reads carries: KIFF refuses a Card with no total, so the reads' Card has this, the same in
- * draft-the-card and here, never Coach's choice and never shown as the owner's limit.
+ * draft-the-card and here, never Coach's choice and never shown as the owner's limit. A held Card with no total of the
+ * owner's carries it too (rules.ts, kiffsOwnCount).
  */
-export const READS_A_DAY = 10_000;
+export const READS_A_DAY = KIFF_COUNT_A_DAY;
 
 export const KEEP_THE_REST = "Change only what this names; every other line stays exactly as agreed.";
 
@@ -247,7 +248,8 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
  * sum over any window) and also count by its calls (count, a limit above 0), on the same Card or another. A count of 0
  * (each call asks the owner, as on demand) is kept, as is a count on a read. A count per item is kept only in the
  * shape of the owner's limit for each item ("one invoice per order, ever"): lifetime or rolling_7d, per the tool's own
- * resource_argument. The tool is named as the connection titles it, with the count's limit, window and item.
+ * resource_argument. KIFF's own count, the only total of a held Card, is never the owner's and is kept (kiffsOwnCount).
+ * The tool is named as the connection titles it, with the count's limit, window and item.
  */
 export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string } | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
@@ -270,6 +272,7 @@ export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { to
       const aggregates = (Array.isArray(card.aggregates) ? card.aggregates : []) as Aggregate[];
       if (mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")))) amount = true;
       for (const a of aggregates) {
+        if (kiffsOwnCount(cards, card, a)) continue;
         if (fold(a.quantity).startsWith("sum(")) amount = true;
         const limit = typeof a.limit === "number" ? a.limit : 0;
         if (count || fold(a.quantity) !== "count" || limit <= 0) continue;
