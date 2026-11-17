@@ -454,7 +454,7 @@ private fun Choice(words: String, selected: Boolean, enabled: Boolean, onClick: 
     style = scaled(14, FontWeight.SemiBold, if (selected) Theme.background else Theme.soft),
     modifier = Modifier.heightIn(min = 40.dp).clip(CircleShape).background(if (selected) Theme.ink else Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
-      .tapping(enabled = enabled, onClick = onClick).semantics { this.selected = selected }
+      .tapping(enabled = enabled, role = androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick).semantics { this.selected = selected }
       .padding(horizontal = 14.dp, vertical = 10.dp),
   )
 }

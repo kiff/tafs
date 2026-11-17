@@ -66,6 +66,7 @@ import bot.tafs.app.model.QuestionSelection
 import bot.tafs.app.model.setupShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.contentDescription
 
 /**
@@ -631,9 +632,9 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
         q.note?.let { Text(it, style = scaled(12, color = Theme.dim)) }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
           q.options.forEach { option ->
-            Choice(option.label, selected = option.value in selection.picked[q.id].orEmpty()) { selection = selection.pick(q, option.value) }
+            Choice(option.label, selected = option.value in selection.picked[q.id].orEmpty(), many = q.multi == true) { selection = selection.pick(q, option.value) }
           }
-          Choice(Words.Coach.Questions.somethingElse, selected = q.id in selection.ownOpen) { selection = selection.toggleOwn(q) }
+          Choice(Words.Coach.Questions.somethingElse, selected = q.id in selection.ownOpen, many = true) { selection = selection.toggleOwn(q) }
         }
         q.options.firstOrNull { it.value in selection.picked[q.id].orEmpty() }?.description?.let { Text(it, style = scaled(12, color = Theme.soft)) }
         if (q.id in selection.ownOpen) OwnAnswer(selection.own[q.id].orEmpty()) { selection = selection.write(q, it) }
@@ -649,7 +650,7 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
 }
 
 @Composable
-private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun Choice(label: String, selected: Boolean, many: Boolean, onClick: () -> Unit) {
   val shape = RoundedCornerShape(50)
   Text(
     label,
@@ -659,7 +660,9 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
       .clip(shape)
       .background(if (selected) Theme.amber.copy(alpha = 0.18f) else Color.Transparent)
       .border(BorderStroke(1.dp, if (selected) Theme.amber else Theme.line), shape)
-      .tapping(onClick = onClick)
+      // TalkBack hears whether it's picked: a box where several may be, otherwise one of a few.
+      .tapping(role = if (many) androidx.compose.ui.semantics.Role.Checkbox else androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick)
+      .semantics { this.selected = selected }
       .padding(horizontal = 10.dp, vertical = 8.dp),
   )
 }

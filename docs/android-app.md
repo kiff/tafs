@@ -709,6 +709,23 @@ when asked (`./gradlew :app:testDebugUnitTest --tests '*TabletScreenshots*' -Pta
   <img src="screenshots/android/tablet/needs-you.png" width="320" alt="Needs you beside the sidebar, its row highlighted">
   <img src="screenshots/android/tablet/taf.png" width="320" alt="A taf chosen in the sidebar, highlighted there, its page beside it">
 </p>
+
+**TalkBack and the largest text.** Every control says what it is: `tapping` makes a tappable a
+button unless its caller says it's a tab or one of a few choices, and the app's two buttons
+(`PrimaryButton`, `OutlineButton`) are buttons. A taf's tabs and the calendar's modes (`Segmented`),
+Record's filters, Home's label chips and job categories, and Activity's pills are tabs, the one shown selected. The theme and
+Setup's two answers are radio buttons; Coach's answers are radio buttons, or boxes where several may be
+picked, each saying whether it's picked. Coach's panel needs no drag: its edge is a button whose tap
+switches between a third and the whole screen, as ⤢ does. A sent message's menu (Send again, Change it
+first, Copy) opens on a long press, and on TalkBack's (double-tap and hold), with no tap offered that
+would do nothing. At Android's largest font size (200 %) nothing is cut off: rows that end in "…" read
+whole to TalkBack, and a Card's face keeps its shape at the usual size but grows taller, with its stack,
+rather than lose its last line, who issued it and until when. `TabletAccessibilityTest` holds this,
+walking the tablet's screens at 200 % for any control without a role or a name.
+
+<p>
+  <img src="screenshots/android/tablet/taf-chat-largest-text.png" width="320" alt="A taf's chat at 200 % text, its Card beside it whole, down to who issued it and until when">
+</p>
 A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
 "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
 starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one

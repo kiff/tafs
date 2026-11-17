@@ -195,7 +195,7 @@ private fun Chip(title: String, selected: Boolean, dot: Color? = null, onClick: 
       .clip(CircleShape)
       .background(if (selected) Theme.ink else Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
-      .tapping(onClick = onClick)
+      .tapping(role = androidx.compose.ui.semantics.Role.Tab, onClick = onClick)
       .semantics { this.selected = selected }
       .padding(horizontal = 11.dp, vertical = 5.dp),
     horizontalArrangement = Arrangement.spacedBy(6.dp),

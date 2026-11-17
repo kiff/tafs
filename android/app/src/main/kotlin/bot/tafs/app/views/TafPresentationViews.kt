@@ -383,7 +383,7 @@ private fun ActivityFilterPill(title: String, selected: Boolean, onClick: () -> 
     style = scaled(15, FontWeight.Medium, tint),
     maxLines = 1,
     modifier = Modifier.heightIn(min = 36.dp).clip(androidx.compose.foundation.shape.CircleShape).background(tint.copy(alpha = 0.14f))
-      .tapping(onClick = onClick).semantics { this.selected = selected; role = androidx.compose.ui.semantics.Role.Tab }
+      .tapping(role = androidx.compose.ui.semantics.Role.Tab, onClick = onClick).semantics { this.selected = selected }
       .padding(horizontal = 14.dp, vertical = 8.dp),
   )
 }

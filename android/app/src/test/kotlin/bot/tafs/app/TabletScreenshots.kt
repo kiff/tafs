@@ -36,17 +36,21 @@ class TabletScreenshots {
 
   private val repo = File(System.getProperty("tafs.repo") ?: "../..")
 
-  private fun show(vararg taps: String) {
+  private fun show(vararg taps: String, textSize: Float = 1f) {
     RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
     val model = testModel(clock = { java.time.Instant.now() }).also { it.showForScreenshots() }
     compose.setContent {
+      // Android's font size, as a person sets it: only the text grows.
+      val density = androidx.compose.ui.platform.LocalDensity.current
+      CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(density.density, textSize)) {
       TafsTheme {
         CompositionLocalProvider(LocalBiometry provides bot.tafs.app.signing.Biometry.name(strongEnrolled = true, face = false, fingerprint = true)) {
           bot.tafs.app.views.ProvideApprovalReadiness(model.state.value.mode, bot.tafs.app.model.ApprovalReadiness.Ready, recheck = {}) {
             SignedInView(model, onSignIn = {})
           }
         }
+      }
       }
     }
     for (words in taps) {
@@ -60,6 +64,9 @@ class TabletScreenshots {
 
   /** Beside the iPad's `Overview.PNG`: the sidebar, and the Overview a tablet opens on. */
   @Test fun overview() { show(); shot("overview") }
+
+  /** A taf's chat at the largest text Android offers (200 %): its Card beside it grows rather than cut off its last line. */
+  @Test fun tafChatLargestText() { show("Refunds", textSize = 2f); shot("taf-chat-largest-text") }
 
   /** Beside the iPad's `Record-overview.PNG`: the Record's days, each heading with what its money came to (`record.day_spent`). */
   @Test fun recordDay() {

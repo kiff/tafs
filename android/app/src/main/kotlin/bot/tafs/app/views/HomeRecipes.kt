@@ -98,7 +98,7 @@ private fun CategoryChip(title: String, selected: Boolean, color: androidx.compo
       .background(if (selected) tint else Theme.panel)
       .border(BorderStroke(1.dp, if (selected || color != null) tint else Theme.line), CircleShape)
       // A selector's stop: the step tick (docs/android-app.md, "Haptics").
-      .tapping { bot.tafs.app.design.Haptics.step(); onClick() }
+      .tapping(role = androidx.compose.ui.semantics.Role.Tab) { bot.tafs.app.design.Haptics.step(); onClick() }
       .semantics { this.selected = selected }
       .heightIn(min = 32.dp)
       .padding(horizontal = 12.dp, vertical = 6.dp),
