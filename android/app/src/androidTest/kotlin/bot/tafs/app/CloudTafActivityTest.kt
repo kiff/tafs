@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.TafsTheme
@@ -153,7 +154,9 @@ class CloudTafActivityTest {
     rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").performScrollTo().assertIsDisplayed()
     rule.onNodeWithText("Answer within").performScrollTo().assertIsDisplayed()
     val work = rule.onNodeWithText("Its last check couldn't read the app. Ask Coach to reconnect it.").fetchSemanticsNode().boundsInRoot.top
-    val runs = rule.onNodeWithText("RUNS").performScrollTo().fetchSemanticsNode().boundsInRoot.top
+    // A lazy list composes only what's near the screen: scroll the list itself to the runs, below the head's version line.
+    rule.onAllNodes(androidx.compose.ui.test.hasScrollToNodeAction())[0].performScrollToNode(androidx.compose.ui.test.hasText("RUNS"))
+    val runs = rule.onNodeWithText("RUNS").fetchSemanticsNode().boundsInRoot.top
     assertTrue("its work comes before its runs, as on iOS", work < runs)
     assertEquals(listOf("refunds-1"), loaded.distinct())
   }
