@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Already use tafs on your phone? Add this %1$s with it.</string>
     <string name="pair_keychain_refused">This Mac couldn\'t save its sign-in to the Keychain (error %1$s), so it wasn\'t added. Show a new code and try again.</string>
     <string name="pair_new_code">Show a new code</string>
+    <string name="pair_passkey_why_body">It stays on this %1$s, behind %2$s. With it, this %1$s approves your tafs\' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.</string>
+    <string name="pair_passkey_why_go">Make the passkey</string>
+    <string name="pair_passkey_why_title">Make a passkey for this %1$s</string>
     <string name="pair_steps">On your phone, open tafs, then %1$s, %2$s, %3$s. Scan this code.</string>
     <string name="pair_title">Add this %1$s with your phone</string>
     <string name="pair_view_only_add">Add this %1$s</string>

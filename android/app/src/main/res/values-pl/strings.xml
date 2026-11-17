@@ -1527,6 +1527,9 @@
     <string name="pair_from_sign_in">Używasz już tafs na telefonie? Dodaj ten %1$s za jego pomocą.</string>
     <string name="pair_keychain_refused">Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd %1$s), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_new_code">Pokaż nowy kod</string>
+    <string name="pair_passkey_why_body">Zostaje na tym urządzeniu (%1$s), chroniony przez %2$s. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN.</string>
+    <string name="pair_passkey_why_go">Utwórz klucz dostępu</string>
+    <string name="pair_passkey_why_title">Utwórz klucz dostępu dla tego urządzenia (%1$s)</string>
     <string name="pair_steps">Na telefonie otwórz tafs, potem %1$s, %2$s, %3$s. Zeskanuj ten kod.</string>
     <string name="pair_title">Dodaj ten %1$s za pomocą telefonu</string>
     <string name="pair_view_only_add">Dodaj ten %1$s</string>
