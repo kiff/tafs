@@ -1,0 +1,1 @@
+- **Coach's rules notice:** Setup's definition carries the endings kiff/agents' show writes after each line of a rules notice, by where the line is kept (the connection, KIFF, or its instructions), in Coach's 8 languages, so Coach never types them.

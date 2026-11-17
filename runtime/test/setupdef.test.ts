@@ -18,7 +18,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(d.gateway).toBe(KIFF_GATEWAY);
     expect(d.key_ref).toBe(`kiff/${ID}`);
     expect(Object.keys(d).sort()).toEqual(
-      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking", "wording"].sort());
+      ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "kept_words", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking", "wording"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
     expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "mission_create", "mission", "business_context", "version_try", "version_install", "app_look", "app_act"]);
