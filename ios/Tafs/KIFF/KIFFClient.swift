@@ -510,6 +510,13 @@ final class KIFFClient {
         /// Only a passkey of its own can be removed: a computer's goes with the computer.
         var removable: Bool { passkeyID != nil && deviceID == nil }
 
+        /// The same passkey: by KIFF's id, or for a computer's own (no id) by its device; never by its name.
+        func isSamePasskey(as other: Passkey) -> Bool {
+            if let passkeyID { return passkeyID == other.passkeyID }
+            if let deviceID { return other.passkeyID == nil && deviceID == other.deviceID }
+            return self == other
+        }
+
         enum CodingKeys: String, CodingKey {
             case passkeyID = "id", name, synced, createdAt = "created_at", deviceID = "device_id"
         }

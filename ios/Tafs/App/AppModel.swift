@@ -1257,8 +1257,10 @@ final class AppModel: ObservableObject {
     /// Whether removing `passkey` leaves no passkey that can approve: every one KIFF lists approves, a
     /// computer's own included (KIFF drops a computer's with the computer). Then Remove warns first
     /// (`settings.devices.passkey_remove_last`). As Windows' count.
+    /// Passkeys are told apart by KIFF's id, or for a computer's own by its device, so a name changed while
+    /// the dialog is open still finds the same one.
     nonisolated static func removesLastPasskey(_ passkey: KIFFClient.Passkey, among passkeys: [KIFFClient.Passkey]) -> Bool {
-        !passkeys.contains { $0 != passkey }
+        !passkeys.contains { !$0.isSamePasskey(as: passkey) }
     }
 
     /// How adding a passkey ended. The view says each in its words.

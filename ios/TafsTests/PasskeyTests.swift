@@ -185,6 +185,12 @@ final class PasskeyTests: XCTestCase {
         XCTAssertTrue(AppModel.removesLastPasskey(alone[0], among: alone), "phone alone: warned")
         let withIPad = try decode("[\(phone),\(ipad)]")
         XCTAssertFalse(AppModel.removesLastPasskey(withIPad[0], among: withIPad), "phone + iPad: no warning")
+        // Told apart by id, not by the whole value: a name changed while the dialog is open is still the same one.
+        let renamed = try decode(#"[{"id":"pk_1","name":"Ana's new iPhone"}]"#)
+        XCTAssertTrue(AppModel.removesLastPasskey(alone[0], among: renamed), "the same passkey, renamed")
+        let computerOnly = try decode("[\(computer)]")
+        XCTAssertTrue(computerOnly[0].isSamePasskey(as: withComputer[1]), "a computer's own, by its device")
+        XCTAssertFalse(withComputer[0].isSamePasskey(as: withComputer[1]))
         XCTAssertEqual(Words.Settings.Devices.passkeyRemoveLast,
                        "This is your only passkey that can approve. Without it, you need another device that can approve.")
     }
