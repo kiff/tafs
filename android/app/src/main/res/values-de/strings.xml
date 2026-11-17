@@ -1426,6 +1426,9 @@
     <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
     <string name="pair_passkey_why_go">Passkey anlegen</string>
     <string name="pair_passkey_why_title">Einen Passkey für diesen %1$s anlegen</string>
+    <string name="pair_refused_key_registered">Dein Handy sagt, dass dieser %1$s schon mit deinem Konto gekoppelt ist. Zeig einen neuen Code und scanne ihn erneut.</string>
+    <string name="pair_refused_other">Dein Handy konnte diesen %1$s nicht hinzufügen. Zeig einen neuen Code und scanne ihn erneut.</string>
+    <string name="pair_refused_title">Dein Handy hat diesen %1$s nicht hinzugefügt</string>
     <string name="pair_steps">Öffne auf deinem Handy tafs, dann %1$s, %2$s, %3$s. Scanne diesen Code.</string>
     <string name="pair_title">Diesen %1$s mit deinem Handy hinzufügen</string>
     <string name="pair_view_only_add">Diesen %1$s hinzufügen</string>

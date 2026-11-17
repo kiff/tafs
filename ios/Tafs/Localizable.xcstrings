@@ -71319,6 +71319,165 @@
         }
       }
     },
+    "pair.refused_key_registered": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy sagt, dass dieser %1$@ schon mit deinem Konto gekoppelt ist. Zeig einen neuen Code und scanne ihn erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone says this %1$@ is already paired with your account. Show a new code and scan it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono indica que este %1$@ ya está vinculado a tu cuenta. Muestra un código nuevo y vuelve a escanearlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone indique que %2$@ est déjà associé à votre compte. Affichez un nouveau code et scannez-le à nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono indica che questo %1$@ è già associato al tuo account. Mostra un nuovo codice e scansionalo di nuovo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon zegt dat deze %1$@ al aan je account is gekoppeld. Toon een nieuwe code en scan hem opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon podaje, że to urządzenie (%1$@) jest już sparowane z Twoim kontem. Pokaż nowy kod i zeskanuj go ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel indica que este %1$@ já está associado à sua conta. Mostre um código novo e leia-o de novo."
+          }
+        }
+      }
+    },
+    "pair.refused_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy konnte diesen %1$@ nicht hinzufügen. Zeig einen neuen Code und scanne ihn erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone couldn't add this %1$@. Show a new code and scan it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono no ha podido añadir este %1$@. Muestra un código nuevo y vuelve a escanearlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone n'a pas pu ajouter %2$@. Affichez un nouveau code et scannez-le à nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono non è riuscito ad aggiungere questo %1$@. Mostra un nuovo codice e scansionalo di nuovo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon kon deze %1$@ niet toevoegen. Toon een nieuwe code en scan hem opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon nie mógł dodać tego urządzenia (%1$@). Pokaż nowy kod i zeskanuj go ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não conseguiu adicionar este %1$@. Mostre um código novo e leia-o de novo."
+          }
+        }
+      }
+    },
+    "pair.refused_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy hat diesen %1$@ nicht hinzugefügt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone didn't add this %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono no ha añadido este %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone n'a pas ajouté %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono non ha aggiunto questo %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon heeft deze %1$@ niet toegevoegd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon nie dodał tego urządzenia (%1$@)"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não adicionou este %1$@"
+          }
+        }
+      }
+    },
     "pair.steps": {
       "extractionState": "manual",
       "localizations": {

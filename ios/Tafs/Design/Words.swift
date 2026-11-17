@@ -2749,6 +2749,12 @@ enum Words {
         static var passkeyWhyGo: String { Words.line("pair.passkey_why_go") }
         /// Make a passkey for this {device}
         static func passkeyWhyTitle(device: String) -> String { Words.line("pair.passkey_why_title", device, Words.demonstrative(device)) }
+        /// Your phone says this {device} is already paired with your account. Show a new code and scan it again.
+        static func refusedKeyRegistered(device: String) -> String { Words.line("pair.refused_key_registered", device, Words.demonstrative(device)) }
+        /// Your phone couldn't add this {device}. Show a new code and scan it again.
+        static func refusedOther(device: String) -> String { Words.line("pair.refused_other", device, Words.demonstrative(device)) }
+        /// Your phone didn't add this {device}
+        static func refusedTitle(device: String) -> String { Words.line("pair.refused_title", device, Words.demonstrative(device)) }
         /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.
         static func steps(account: String, devices: String, pair: String) -> String { Words.line("pair.steps", account, devices, pair) }
         /// Add this {device} with your phone

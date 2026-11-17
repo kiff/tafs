@@ -1426,6 +1426,9 @@
     <string name="pair_passkey_why_body">Fica neste %1$s, protegida pelo %2$s. Com ela, este %1$s aprova as ações dos seus tafs, e nada é aprovado sem si. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.</string>
     <string name="pair_passkey_why_go">Criar a chave de acesso</string>
     <string name="pair_passkey_why_title">Crie uma chave de acesso para este %1$s</string>
+    <string name="pair_refused_key_registered">O telemóvel indica que este %1$s já está associado à sua conta. Mostre um código novo e leia-o de novo.</string>
+    <string name="pair_refused_other">O telemóvel não conseguiu adicionar este %1$s. Mostre um código novo e leia-o de novo.</string>
+    <string name="pair_refused_title">O telemóvel não adicionou este %1$s</string>
     <string name="pair_steps">No telemóvel, abra o tafs e depois %1$s, %2$s, %3$s. Leia este código.</string>
     <string name="pair_title">Adicione este %1$s com o seu telemóvel</string>
     <string name="pair_view_only_add">Adicionar este %1$s</string>
