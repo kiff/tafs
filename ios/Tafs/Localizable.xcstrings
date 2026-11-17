@@ -103061,6 +103061,59 @@
         }
       }
     },
+    "setup.approve_note_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Genehmigen“ signiert auf diesem %1$@; erst danach beginnt die App, dem taf Bescheid zu geben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve signs on this %1$@; the app starts telling the taf only after that."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar firma en este %1$@; la app empieza a avisar al taf solo después."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver signe sur %2$@ ; l'app ne commence à prévenir le taf qu'ensuite."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva firma su questo %1$@; l'app inizia ad avvisare il taf solo dopo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren ondertekent op deze %1$@; pas daarna begint de app het taf te informeren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Zatwierdź” podpisuje na tym urządzeniu (%1$@); aplikacja zaczyna powiadamiać tafa dopiero potem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar assina neste %1$@; só depois disso a app começa a avisar o taf."
+          }
+        }
+      }
+    },
     "setup.at_least_one": {
       "extractionState": "manual",
       "localizations": {

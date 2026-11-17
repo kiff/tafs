@@ -2036,6 +2036,7 @@
     <string name="setup_app_events">App-Ereignisse</string>
     <string name="setup_approve">Genehmigen</string>
     <string name="setup_approve_note">„Genehmigen“ signiert auf diesem Telefon; erst danach beginnt die App, dem taf Bescheid zu geben.</string>
+    <string name="setup_approve_note_device">„Genehmigen“ signiert auf diesem %1$s; erst danach beginnt die App, dem taf Bescheid zu geben.</string>
     <string name="setup_at_least_one">Mindestens ein Ort bleibt eingeschaltet.</string>
     <string name="setup_change_starts">Mit Coach ändern, wann er startet</string>
     <string name="setup_choose_actions">Aktionen wählen</string>

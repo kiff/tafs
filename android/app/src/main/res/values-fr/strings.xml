@@ -2036,6 +2036,7 @@
     <string name="setup_app_events">Événements d\'apps</string>
     <string name="setup_approve">Approuver</string>
     <string name="setup_approve_note">Approuver signe sur ce téléphone ; l\'app ne commence à prévenir le taf qu\'ensuite.</string>
+    <string name="setup_approve_note_device">Approuver signe sur %2$s ; l\'app ne commence à prévenir le taf qu\'ensuite.</string>
     <string name="setup_at_least_one">Au moins une destination reste activée.</string>
     <string name="setup_change_starts">Modifier son déclenchement avec Coach</string>
     <string name="setup_choose_actions">Choisir les actions</string>

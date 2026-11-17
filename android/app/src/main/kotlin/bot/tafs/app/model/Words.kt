@@ -2193,6 +2193,7 @@ object Words {
     val appEvents: String get() = Res.s(R.string.setup_app_events)
     val approve: String get() = Res.s(R.string.setup_approve)
     val approveNote: String get() = Res.s(R.string.setup_approve_note)
+    fun approveNoteDevice(device: String): String = Res.s(R.string.setup_approve_note_device, device, Words.demonstrative(device))
     val atLeastOne: String get() = Res.s(R.string.setup_at_least_one)
     val changeStarts: String get() = Res.s(R.string.setup_change_starts)
     val chooseActions: String get() = Res.s(R.string.setup_choose_actions)

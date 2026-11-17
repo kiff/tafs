@@ -4,6 +4,7 @@
   "setup.app_events": "Événements d'apps",
   "setup.approve": "Approuver",
   "setup.approve_note": "Approuver signe sur ce téléphone ; l'app ne commence à prévenir le taf qu'ensuite.",
+  "setup.approve_note_device": "Approuver signe sur {device|this} ; l'app ne commence à prévenir le taf qu'ensuite.",
   "setup.at_least_one": "Au moins une destination reste activée.",
   "setup.change_starts": "Modifier son déclenchement avec Coach",
   "setup.choose_actions": "Choisir les actions",

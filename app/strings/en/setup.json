@@ -4,6 +4,7 @@
   "setup.app_events": "App events",
   "setup.approve": "Approve",
   "setup.approve_note": "Approve signs on this phone; the app starts telling the taf only after that.",
+  "setup.approve_note_device": "Approve signs on this {device}; the app starts telling the taf only after that.",
   "setup.at_least_one": "At least one place stays on.",
   "setup.change_starts": "Change when it starts with Coach",
   "setup.choose_actions": "Choose actions",

@@ -2154,6 +2154,7 @@
     <string name="setup_app_events">Zdarzenia aplikacji</string>
     <string name="setup_approve">Zatwierdź</string>
     <string name="setup_approve_note">„Zatwierdź” podpisuje na tym telefonie; aplikacja zaczyna powiadamiać tafa dopiero potem.</string>
+    <string name="setup_approve_note_device">„Zatwierdź” podpisuje na tym urządzeniu (%1$s); aplikacja zaczyna powiadamiać tafa dopiero potem.</string>
     <string name="setup_at_least_one">Co najmniej jedno miejsce pozostaje włączone.</string>
     <string name="setup_change_starts">Zmień z Coachem, kiedy się uruchamia</string>
     <string name="setup_choose_actions">Wybierz akcje</string>

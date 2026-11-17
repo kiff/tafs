@@ -2036,6 +2036,7 @@
     <string name="setup_app_events">Eventos de apps</string>
     <string name="setup_approve">Aprovar</string>
     <string name="setup_approve_note">Aprovar assina neste telefone; só depois disso a app começa a avisar o taf.</string>
+    <string name="setup_approve_note_device">Aprovar assina neste %1$s; só depois disso a app começa a avisar o taf.</string>
     <string name="setup_at_least_one">Pelo menos um destino fica ativo.</string>
     <string name="setup_change_starts">Alterar com o Coach quando começa</string>
     <string name="setup_choose_actions">Escolher ações</string>
