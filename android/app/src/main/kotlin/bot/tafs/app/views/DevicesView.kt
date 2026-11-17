@@ -192,11 +192,11 @@ fun DevicesSheet(
     // The check code, before the fingerprint: a page showing its own QR can't get this phone to pair another key unnoticed.
     DriveAlert(
       onDismissRequest = cancelPair,
-      // "Add a device", never its name: the name is only what it says it is, so it comes after the code (qa-kiff, as on iOS).
+      // "Add a device", never its name: the name is only what it says it is, so it comes after the code (as on iOS).
       title = { Text(pairTitle(), modifier = Modifier.testTag(PAIR_TITLE)) },
       text = {
         // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
-        // yes to the device in front of the person (qa-kiff, 16 Nov). Then the owner's line, the name as its claim, what yes gives.
+        // yes to the device in front of the person (16 Nov). Then the owner's line, the name as its claim, what yes gives.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           pairLines(qr).forEachIndexed { i, line ->
             if (i == 0) Text(line, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK)) else Text(line)

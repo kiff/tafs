@@ -1938,7 +1938,7 @@ class PlanqueTest {
     assertEquals("Remove access to Stripe?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, null))
     val body = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Invoice reminders")
     assertTrue(body, body.startsWith("Invoice reminders' Stripe tools stop working.") && body.contains("Other tafs that use Stripe keep their access."))
-    // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
+    // Another taf whose Card draws on these tools stops too, and is named (tafs#546).
     assertEquals("Remove access to Stripe for Refunds? Chargebacks stops too.", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Refunds", listOf("Chargebacks")))
     val shared = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Refunds", listOf("Chargebacks"))
     assertTrue(shared, shared.contains("Chargebacks' Card also uses these tools, so it stops too."))

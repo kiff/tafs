@@ -193,7 +193,7 @@ have gone out on its own").
 - **Round up to {amount}** shows only when the offer has `round`, with `round.words` as its
   amount; it posts `{"round": true}` and shows the new draft the same way. The apps never compute
   a rounded figure.
-- **The app's own labels**, in `app/strings` in 8 languages (dev-android adds them, both apps
+- **The app's own labels**, in `app/strings` in 8 languages (both apps
   read them): the button, the sheet's title, the switch ("Send this one too"), "Round up to
   {amount}", and "This change isn't what was offered". Every other line is tafs cloud's or
   KIFF's.
@@ -212,11 +212,11 @@ have gone out on its own").
   off, the Card changes and the call still waits for its own answer.
 - **The phone refuses a draft that isn't what was offered:** one that differs from the Cards in
   force beyond the named mandates, whose changed limit isn't the summary's figure, that retires a
-  Card, or that adds one revising nothing, gets no sign button (both apps, and qa-kiff's
+  Card, or that adds one revising nothing, gets no sign button (both apps, and the
   negatives).
 - **Showing the button makes no request,** and the exact figure is the default; rounding is
   only on `{"round": true}`.
 - **The revision names the change and its source call** (`from_hold`).
-- **qa-kiff's negatives, on both KIFF's route and tafs cloud's:** a change that would widen past
+- **The negatives, on both KIFF's route and tafs cloud's:** a change that would widen past
   the held call is refused (by KIFF, and by tafs cloud's own check); a "never" gets no draft and
   answers `none`; a draft that retires or adds a Card is refused.

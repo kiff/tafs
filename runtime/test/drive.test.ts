@@ -335,7 +335,7 @@ describe("Coach's drive tools", () => {
   });
 });
 
-// qa-kiff's negative cases on #554.
+// Negative cases on #554.
 describe("a drive's end holds, and its record is the app's", () => {
   it("N1: an end that lands while Coach's call is being sent stays an end", async () => {
     const r = rig();
@@ -399,7 +399,7 @@ describe("a drive's end holds, and its record is the app's", () => {
   });
 });
 
-// agentgabo's points on #554.
+// Review points on #554.
 describe("a request Coach gave up on never runs, and done always ends", () => {
   it("the stream never sends a request Coach has given up on, and gives the app the time left to start the others", async () => {
     const r = rig();

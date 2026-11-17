@@ -1253,7 +1253,7 @@ describe("a connected app's event, through planque", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
-  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too (agentgabo's probe on #523)", async () => {
+  it("two late deliveries take a stale claim over once, and a slow first delivery's answer is the retry's answer too (a review's probe on #523)", async () => {
     const w = world();
     const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
     w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
@@ -1279,7 +1279,7 @@ describe("a connected app's event, through planque", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toHaveLength(1);
   });
 
-  it("two deliveries of the same event at once answer the wait once, and both say so (qa-kiff's probe)", async () => {
+  it("two deliveries of the same event at once answer the wait once, and both say so (a review's probe)", async () => {
     const w = world();
     const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
     w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
@@ -1681,7 +1681,7 @@ describe("an app's event for a taf whose runs have no consent", () => {
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(2);
   });
 
-  // qa-kiff on #855: an event that answers a run waiting on it makes that run go on, a model turn with no person.
+  // On #855: an event that answers a run waiting on it makes that run go on, a model turn with no person.
   it("never answers a run that waits on it: the event is kept, and the taf paused", async () => {
     const w = world();
     w.consent = memoryCoach(w.now);

@@ -572,7 +572,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     // the agreed rule to get out). Signed. On the refused Card, beside another total, or at another figure: not signed.
     draft([each([count(10_000)]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
-    // Alone, with no Card bounding the refunds' amount (qa-kiff): 10,000 refunds under the cap a day would pass unasked.
+    // Alone, with no Card bounding the refunds' amount: 10,000 refunds under the cap a day would pass unasked.
     draft([each([count(10_000)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([count(10_000)]), { ...daily([day(20_000)]), grants: [{ action: "send_reply_k3" }] }, others]);
@@ -722,7 +722,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toMatchObject({ outcome: "sign" });
   });
 
-  // dev-android on #1067: every coverage check ran under `if (draft.cards)`, so a draft read without its Cards skipped them
+  // On #1067: every coverage check ran under `if (draft.cards)`, so a draft read without its Cards skipped them
   // all, and only an on-demand grant insisted on them. KIFF shows a draft with no Card as `cards: null`. Fail closed.
   it("a draft read without its Cards is never signed, whatever the grant: read again, every check runs or nothing is signed", async () => {
     const s = services();
@@ -733,7 +733,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
     expect(await ask()).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
     // A draft with no Card (KIFF's null, or an empty list): answered, so Coach drafts one, never the same draft read
-    // again (dev-android on #1067). The app's answer carries no reason code.
+    // again (#1067). The app's answer carries no reason code.
     for (const cards of [null, []]) {
       s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards as unknown[] };
       const r = await ask();
@@ -986,7 +986,7 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
   });
 
   it("words each note in the approving request's language, the reason Coach hears with it, and keeps the protocol's words", async () => {
-    // agentgabo on #716: "Your approval window has ended…" read English in a Polish chat.
+    // On #716: "Your approval window has ended…" read English in a Polish chat.
     const PL = approvalWords("pl");
     const SIG = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig", "accept-language": "pl-PL,pl;q=0.9" };
     const cases: Array<[Record<string, unknown>, string]> = [
@@ -1020,7 +1020,7 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     // English is as it was: no Accept-Language, or an English one.
     // Never planque's status ("the connection is needs reconnect"): what happened, and what to do.
     expect(WORDS.notConnected("Stripe")).toBe("The sign-in at Stripe didn't finish, so nothing was connected. Try signing in again.");
-    // Already signed in: no page opened because none was needed, and the actions come next (agentgabo, 14 Nov: "came back signed in with no sign-in link").
+    // Already signed in: no page opened because none was needed, and the actions come next (14 Nov: "came back signed in with no sign-in link").
     expect(WORDS.cameBack("Gmail", "signed_in")).toBe("You're already signed in to Gmail, so no sign-in page opened, and nothing new is connected yet. Its actions come next.");
     expect(WORDS.cameBack("Gmail", "listed")).toBe(WORDS.cameBack("Gmail", "signed_in"));
     for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
@@ -1176,13 +1176,13 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     expect(refused.body).toEqual({ error: WORDS.criticalKey, code: "critical_key_required" });
     expect(w.told()).toBeUndefined();
     // The report as the apps sign it (the device key, v1): the fingerprint went on KIFF's confirm, and the
-    // draft confirmed is the proof (dev-android's point on the apps installed today).
+    // draft confirmed is the proof (the apps installed today).
     s.signedWindow = undefined;
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
     expect((await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
 
-  // A computer approves with its passkey (KIFF-Passkey-Assertion), never a device key (win-dev, 16 Nov): tafs cloud
+  // A computer approves with its passkey (KIFF-Passkey-Assertion), never a device key (16 Nov): tafs cloud
   // sent KIFF only `signature`, so every computer's report was refused. KIFF takes `passkey` in its place, one of the two.
   it("checks a computer's passkey with KIFF in place of a signature, refuses both at once, and says KIFF's refusals in tafs cloud's words", async () => {
     const PASSKEY = { "kiff-passkey-assertion": "t=2026-10-16T12:00:30Z,a=assertion" };
@@ -1545,7 +1545,7 @@ describe("each waiting approval card says what its fingerprint signs", () => {
   });
 });
 
-// qa-kiff's negative 1 on #919: a draft whose Cards also allow a tool this connection doesn't give is never signed under it,
+// Negative 1 on #919: a draft whose Cards also allow a tool this connection doesn't give is never signed under it,
 // whichever step signs the Card; a tool of the same taf's other connection is its own, so it may be on the same Card.
 describe("never signs a Card that allows more than the taf's connections give", () => {
   const TOOLS = { tools: [{ tool: "refund", name: "refund_k3f9" }] };

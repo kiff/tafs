@@ -634,7 +634,7 @@ async function settleRetry(ctx: DeliveryContext, tenant: string, taf: Taf, r: Ru
   if (!ended(r)) {
     // The retry failed or was stopped before it could deliver: said, and the managers hear once.
     d.state = "not_sent";
-    // The run's error goes through the same scrub as a step's reason before it reaches the managers' push (qa-kiff on #512).
+    // The run's error goes through the same scrub as a step's reason before it reaches the managers' push (#512).
     d.why = r.status === "ERROR" ? (whyOf(r.error) || DELIVERY_WORDS.retryFailed) : DELIVERY_WORDS.retryStopped;
     await noteManagers(ctx, tenant, taf, d);
   } else if (call?.ok) {

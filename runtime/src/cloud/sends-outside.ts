@@ -75,7 +75,7 @@ const NOTE_WAIT_MS = 50;
 /**
  * Notes a grant's sending tools for its agent, replacing what the last Approve of that grant noted and keeping every
  * other grant's. The read, merge and write hold a claim on the note (`once`), so two Approves of the same taf at
- * once can't lose one of their entries (agentgabo on #606); one that finds the claim held waits and tries again,
+ * once can't lose one of their entries (#606); one that finds the claim held waits and tries again,
  * and past its tries throws, so the Approve fails and is tapped again rather than noting nothing.
  *
  * It runs as tafs cloud answers "sign", before the owner signs: a note can only make Coach's result checked more
@@ -87,7 +87,7 @@ export async function noteSendingOutside(store: CoachStore, tenant: string, agen
   const key = sendsOutsideKey(tenant, agent);
   const claim = `${key}#claim`;
   for (let i = 0; i < NOTE_TRIES; i++) {
-    // The claim's life is counted from when it's taken, on the same clock as the release below (agentgabo on #608).
+    // The claim's life is counted from when it's taken, on the same clock as the release below (#608).
     const held = clock();
     if (await store.once(claim, new Date(held + NOTE_CLAIM_MS))) {
       try {
@@ -96,7 +96,7 @@ export async function noteSendingOutside(store: CoachStore, tenant: string, agen
         await store.put(key, { grants, at: now.toISOString() } satisfies Note, new Date(now.getTime() + SENDS_OUTSIDE_KEPT_MS));
       } finally {
         // Given back only while it's still this write's: past its 10 seconds another write may hold it now, and the
-        // store can't remove only its own, so it's left to expire (agentgabo on #607).
+        // store can't remove only its own, so it's left to expire (#607).
         // The store compares expiries in whole seconds, so a claim can be taken over up to a second early: the margin
         // keeps a write that ran long from removing a claim that may be another's by then.
         if (clock() - held < NOTE_CLAIM_MS - NOTE_RELEASE_MARGIN_MS) await store.remove(claim).catch(() => undefined);

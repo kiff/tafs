@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// The negatives for web_read (qa-kiff): what Coach's page reader must never reach or keep doing. The real fetch is
+// The negatives for web_read: what Coach's page reader must never reach or keep doing. The real fetch is
 // tested with DNS and HTTPS stood in, so a name can resolve to any address and a server can answer as slowly as it
 // likes, without a network.
 

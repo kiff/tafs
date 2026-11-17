@@ -2,7 +2,7 @@
  * Coach's wording rules (kiff/agents' show.Wording), as contracts/coach-wording.json keeps them: a card whose own words call a
  * connection, a sign-in or a step read-only, or say it changes nothing, is refused by kiff/agents' show with the rule's fix, so
  * Coach redraws it before anyone sees it (Eval 43975057022: "I'm connecting Google Sheets with read-only access to cells").
- * The Eval's plan gate reads the same rules beside its own list. All 8 languages, by legal-i18n; a pattern's first group is
+ * The Eval's plan gate reads the same rules beside its own list. All 8 languages, checked by hand; a pattern's first group is
  * the word after the phrase, and one of unless_next lets it through ("it will read only the rows…" names the job).
  * Kept equal to the contract by test/coach-wording.test.ts: change the contract, then this.
  */

@@ -121,7 +121,7 @@ export interface DriveRequest {
   /**
    * As sent on the stream: how long the app still has to start it, by its own clock. Past
    * that, Coach has given up on it and may have sent its next step: the app answers it
-   * refused ("too late") and never does it (agentgabo on #554).
+   * refused ("too late") and never does it (#554).
    */
   start_within_ms?: number;
 }
@@ -156,7 +156,7 @@ export class DriveError extends Error {
 }
 
 export const driveKeys = {
-  /** The drive record: written by startDrive and endDrive only, so an end can never be overwritten (qa-kiff on #554). */
+  /** The drive record: written by startDrive and endDrive only, so an end can never be overwritten (#554). */
   drive: (tenant: string, person: string) => `${tenant}#drive#${person}`,
   /** When the drive was last used: for the idle end. */
   last: (tenant: string, drive: string) => `${tenant}#drive-last#${drive}`,
@@ -474,7 +474,7 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
     if (!now2 || now2.id !== d.id) return { ended: { why: "replaced", at: now().toISOString() } };
     if (now2.ended) return { ended: now2.ended };
     // The person touched the app while this call waited: its request was dropped, so say so now,
-    // rather than as a phone that didn't answer (agentgabo on #749).
+    // rather than as a phone that didn't answer (#749).
     const since = await drivePaused(store, tenant, d.id);
     if (since) return pausedAnswer(since);
   }
@@ -505,7 +505,7 @@ export async function putResult(store: CoachStore, tenant: string, person: strin
   const step: Step = { at: now.toISOString(), line: sent.line ?? "", ...(r.touched ? { touched: r.touched } : {}) };
   // A step again under the same caption ("Looking for Versions", then again on the next screen) is
   // the same step gone on: one line in the record (kiff/tafs#568), which keeps every touch of it,
-  // in order ("Setup, Card"): the record says what was done, never less (qa-kiff on #569).
+  // in order ("Setup, Card"): the record says what was done, never less (#569).
   const steps = await driveSteps(store, tenant, d.id);
   const last = steps.at(-1);
   if (last && last.line === step.line) {
