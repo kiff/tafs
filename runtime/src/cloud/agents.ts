@@ -463,6 +463,16 @@ function as(owner?: string): Record<string, string> {
   return owner ? { owner } : { ...AS_SERVICE };
 }
 
+/**
+ * The id of the run a request with a dedup key starts, as kiff/agents names it (its server's
+ * RequestRunID): one per tenant, agent and key. tafs cloud reads that run to know a message sent
+ * again from one sent once, before it takes anything for it.
+ */
+export function requestRunID(tenant: string, agent: string, key: string): string {
+  const part = (s: string) => `${Buffer.byteLength(s, "utf8")}:${s}`;
+  return createHash("sha256").update(`request|${part(tenant)}|${part(agent)}|${part(key)}`, "utf8").digest("hex").slice(0, 32);
+}
+
 /** A run's start body for where it goes. */
 function runAt(at: RunAt): Record<string, unknown> {
   return {
@@ -774,10 +784,11 @@ export class Agents {
    * Steers a run that hasn't ended (kiff/agents#102): the owner's message, taken at
    * the run's next checkpoint. A run that ended, or was asked to stop, is 409.
    * With `requester`, only their own run, counted toward their flood guard (429);
-   * without, tafs cloud itself writes.
+   * without, tafs cloud itself writes. With `dedupKey`, the app's one message: sent again,
+   * kiff/agents takes it once, and another text under the same key is 409 `dedup_key_conflict`.
    */
-  steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) }, requester ? undefined : { ...AS_SERVICE });
+  steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester, dedupKey?: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}), ...(dedupKey ? { dedup_key: dedupKey } : {}) }, requester ? undefined : { ...AS_SERVICE });
   }
 
   /**

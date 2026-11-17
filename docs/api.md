@@ -159,8 +159,8 @@ See [chat.md](chat.md) for how the app uses these.
 
 | Route | Who | What |
 |---|---|---|
-| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?, new_chat_after_handover?}`: a run in the person's live chat, a chosen one, or a new one. A chosen Coach chat that already handed a taf over (a result tafs cloud answered with the taf it made) is finished: with `new_chat_after_handover: true`, sent by an app that follows the new chat, the message starts a new one instead, and the answer and the stream's `session` event say `new_session: true` with its `session` (`coach_new_chat_after_handover` is logged). Without it, the chosen chat goes on, as before. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard. Answers `{session, new_session, run, message: {id, at}}`: the thread gives the same message that `id`, so the app matches its send without guessing |
-| `POST /v1/tafs/{id}/messages/stream` | a person | The same message, its answer streamed as server-sent events ([chat.md](chat.md#the-answer-as-it-comes)) |
+| `POST /v1/tafs/{id}/messages` | a person | `{text, attachments?, session?, new_chat?, new_chat_after_handover?, client_message_id?}`: a run in the person's live chat, a chosen one, or a new one. A chosen Coach chat that already handed a taf over (a result tafs cloud answered with the taf it made) is finished: with `new_chat_after_handover: true`, sent by an app that follows the new chat, the message starts a new one instead, and the answer and the stream's `session` event say `new_session: true` with its `session` (`coach_new_chat_after_handover` is logged). Without it, the chosen chat goes on, as before. Text is 1 to 2,000 characters, or none with files. 429 past the flood guard. Answers `{session, new_session, run, message: {id, at}}`: the thread gives the same message that `id`, so the app matches its send without guessing. With `client_message_id` (below), a message sent again answers the same, with `repeat: true` |
+| `POST /v1/tafs/{id}/messages/stream` | a person | The same message, its answer streamed as server-sent events ([chat.md](chat.md#the-answer-as-it-comes)). With `client_message_id` sent again, the first run's stream from its start (its steps, as a run picked back up), after a `session` event with `repeat: true`, never a second run |
 | `POST /v1/tafs/{id}/messages/{message}/report` | a person who may read the answer | `{reason, note?, session?}`: reports an answer Coach or the taf wrote, from inside the app. `reason` is `offensive`, `harmful`, `wrong` or `other`; `note` is at most 1,000 characters. tafs cloud finds the answer in the person's thread, or in the chat (or trial) `session` names, and keeps and emails it as kiff/agents holds it, never the app's copy. Answers `{report: {id, at, new}}`; reporting the same answer again answers the first report, with `new: false`. 404 for anything but an answer of the taf's the person may read |
 | `GET /v1/tafs/{id}/runs/{run}/stream?after=N` | a person, their own run | Pick a run back up: its recorded steps after event N (with `part` where it went on after a held call), then the rest until it stops |
 | `POST /v1/tafs/{id}/steer` | a person | `{run, text, hold?}`: to the run at work, read at its next step. Without `hold`, 409 when the run took nothing (it ended, or holds as many as it takes): send it as a new message. With `hold: true`, tafs cloud holds it for that chat instead (202): `{sent: {run, session}}` when it went at once as the next message there, and `{held: {text, at}}` for what still waits in the chat until the taf is done. 409 with `code: held_full` when what waits would pass one message (10 messages, 2,000 characters): nothing is held, and `error` says so in words the app shows ([chat.md](chat.md#writing-while-the-taf-works)) |
@@ -179,6 +179,27 @@ See [chat.md](chat.md) for how the app uses these.
 | `GET /v1/tafs/{id}/attachments/{att}` | a person, their own file | A download link for a minute |
 
 Coach's chat uses the same routes, with Coach's id from `GET /v1/setup`.
+
+**One message, sent once (`client_message_id`).** An app gives each message it composes its own id, a UUID, and
+sends the same id on the stream and, if the stream fails before its answer, on the plain send it falls back to.
+Without it, a stream that failed after kiff/agents had started the run, followed by the plain send, made two runs of
+one message: a second Coach turn, or a taf calling its tools again.
+- **The key** is `msg:<person>:<id>`, so the same id from another person is another message. tafs cloud passes it to
+  kiff/agents as the run's `dedup_key` (source `app`), on the stream, on the plain send, and on a message steered into
+  an approval's run.
+- **Sent again,** the message is answered from what the first send did, before anything is taken for it:
+  - the run kiff/agents started for the key (read by the id kiff/agents derives from it): the plain send answers it
+    with `repeat: true`; the stream sends its steps from the start, as a run picked back up, after a `session` event
+    with `repeat: true`;
+  - the approval's run it went into: `held: "approval"` with `repeat: true`, even once the approval is over.
+  - A run that kiff/agents made but no invocation took yet is handed on once more by kiff/agents' own repeat.
+- **Coach's waiting lines** go with the message that took them. After a send that failed, they go back to the queue
+  only when nothing was made of it (no run for the key; a steer kiff/agents refused outright). Otherwise they stay
+  that message's for a day, and go with it when it's sent again, so a steer kiff/agents may have taken is the same
+  text, taken once.
+- **Another message under an id already used** is `409 dedup_key_conflict`: tafs cloud keeps a digest of what was
+  written (never the words) for a day, and kiff/agents checks the same.
+- **An id that isn't a UUID** is 400. Without an id, everything is as it was.
 
 ### Versions and trials
 
