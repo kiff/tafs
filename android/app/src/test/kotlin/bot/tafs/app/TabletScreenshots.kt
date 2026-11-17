@@ -64,6 +64,9 @@ class TabletScreenshots {
   /** Beside the iPad's `Needs-you.PNG`: Needs you, opened from the sidebar, beside it. */
   @Test fun needsYou() { show("Needs you"); shot("needs-you") }
 
+  /** Beside the iPad's `Account-top.PNG`: Account beside the sidebar, its row highlighted, with no Done. */
+  @Test fun accountBeside() { show("Account"); shot("account-beside") }
+
   /** Beside the iPad's `Taf-card-tab.PNG` and `Taf-chat-tab-finished.PNG`: a taf chosen in the sidebar, highlighted there. */
   @Test fun taf() { show("Refunds"); shot("taf") }
 
