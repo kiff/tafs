@@ -116,6 +116,24 @@ class TabletSidebarTest {
     assertTrue(compose.onAllNodes(hasText("Unlabelled")).fetchSemanticsNodes().isEmpty())
   }
 
+  /** Needs you counts more than the held calls (Coach's chats waiting): one line in tafs cloud's words, opening Needs you (V6). */
+  @Test fun theOverviewSaysWhatElseNeedsYouAndOpensIt() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    val taf = bot.tafs.app.model.Taf(id = "t1", name = "Morning inbox", job = "", tools = emptyList(), colorIndex = 0, card = bot.tafs.app.model.Card(emptyList(), "o"))
+    val state = bot.tafs.app.app.AppState(
+      mode = bot.tafs.app.app.Mode.kiff, ready = true, listLoaded = true, tafs = listOf(taf),
+      needsYou = bot.tafs.app.kiff.NeedsYouCount(3, "3 need you."),
+    )
+    var opened = 0
+    compose.setContent { TafsTheme { bot.tafs.app.views.OverviewView(state, loadReport = {}, onOpenCalendar = null, onNeedsYou = { opened++ }) {} } }
+    compose.waitForIdle()
+    compose.onNode(hasText(Words.NeedsYou.title.uppercase())).assertIsDisplayed()
+    compose.onNode(hasTestTag("overview.needsYou")).assertIsDisplayed().performClick()
+    org.junit.Assert.assertEquals(1, opened)
+    compose.onNode(hasText("3 need you.")).assertIsDisplayed()
+  }
+
   @Test fun aPhoneKeepsItsTabBarAndHasNoSidebar() {
     show("w384dp-h682dp-port-450dpi")
     assertTrue(compose.onAllNodes(hasTestTag("sidebar")).fetchSemanticsNodes().isEmpty())

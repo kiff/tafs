@@ -709,6 +709,11 @@ moved came to, by unit (`spentOn`).
 
 ## The taf's screen
 
+Its head, as the iPad's: its avatar and its name (20, bold) with its state; under them, for whoever
+manages it on KIFF, its live version ("Version 2 · live ›", read as the page opens, "Versions" until
+then), which opens Versions, then who it's shared with and Share. Both fold away as the page scrolls
+down. `TafHeadTest` holds the version line.
+
 Four tabs, each with one job (`TafDetailView`). It opens on Chat, except from a door's knock alert
 (tafs cloud's `knock`, `AlertPayload.opensActivity`), which opens it on Activity, where knocks are
 answered:
@@ -716,7 +721,7 @@ answered:
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
-- **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
+- **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, its usage,
   Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
@@ -1597,7 +1602,7 @@ existing signed KIFF flow; once KIFF
 has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
 (`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
 home and each dial again; a page, Setup, dial or work read begun in the old zone is dropped when
-it lands. A 503 shows tafs cloud's words, and choosing again retries it. The Card tab names the
+it lands. A 503 shows tafs cloud's words, and choosing again retries it. The Card tab names, above the Card as on the iPad, the
 clock its times are in, in tafs cloud's words (`time_zone_words`), and, while a schedule still
 runs in another zone, what to do about it (`schedule_time_zone_words`).
 Its sheets open at full height, so the back key closes them. Signing in from the

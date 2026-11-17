@@ -584,6 +584,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadMemory = model::loadMemory,
       forget = model::forget,
       loadChat = model::loadChat,
+      loadVersions = model::loadVersions,
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
@@ -882,6 +883,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 state.tafs.isNotEmpty() -> OverviewView(
                   state, loadReport = model::loadReport, onOpenCalendar = null,
                   onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
+                  onNeedsYou = { onTab(Tab.NeedsYou) },
                 ) { overviewOpen = false; openTaf = it }
                 else -> home()
               }

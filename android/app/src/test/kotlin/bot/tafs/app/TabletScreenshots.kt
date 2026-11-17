@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import androidx.compose.foundation.background
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
@@ -65,4 +66,62 @@ class TabletScreenshots {
 
   /** Beside the iPad's `Taf-card-tab.PNG` and `Taf-chat-tab-finished.PNG`: a taf chosen in the sidebar, highlighted there. */
   @Test fun taf() { show("Refunds"); shot("taf") }
+
+  private fun kiffTablet() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+  }
+
+  private val refunds = bot.tafs.app.model.Taf(
+    id = "refunds-1", name = "Refunds", job = "Refund late or damaged orders", tools = listOf("create_refund"), colorIndex = 1,
+    card = bot.tafs.app.model.Card(listOf(bot.tafs.app.model.CardRule(action = "create_refund", label = "Refund a payment", perWindow = bot.tafs.app.model.Money(200000, "EUR", 2))), "You"),
+    cloudId = "taf_1", timeZoneWords = "Times in Europe/Paris",
+    kiffCards = listOf(bot.tafs.app.model.TafCard("card_1", "Refunds", rules = listOf(bot.tafs.app.model.CardRule(action = "create_refund", label = "Refund a payment", perWindow = bot.tafs.app.model.Money(200000, "EUR", 2))))),
+  )
+
+  private fun kiffState() = bot.tafs.app.app.AppState(
+    mode = bot.tafs.app.app.Mode.kiff, ready = true, listLoaded = true, tafs = listOf(refunds),
+    kiffAccount = bot.tafs.app.kiff.Account("t_01", "acme", capabilities = listOf("cards.manage")),
+    access = mapOf("refunds-1" to bot.tafs.app.kiff.Access(use = true, oversee = true, manage = true)),
+    versions = mapOf("refunds-1" to listOf(bot.tafs.app.kiff.Version(1, created = java.time.Instant.EPOCH), bot.tafs.app.kiff.Version(2, created = java.time.Instant.EPOCH, live = true))),
+    needsYou = bot.tafs.app.kiff.NeedsYouCount(3, "3 need you."),
+  )
+
+  /** Beside the iPad's `Taf-card-tab.PNG`, signed in: the head with its live version, and "Times in …" above the Card. */
+  @Test fun tafCardSignedIn() {
+    kiffTablet()
+    val actions = bot.tafs.app.views.TafActions(
+      answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
+      sendChat = { _, _, _, _ -> }, issuer = "KIFF",
+      doors = bot.tafs.app.views.DoorActions({}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
+      coach = bot.tafs.app.views.CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}),
+      connections = bot.tafs.app.views.ConnectionActions({}, { false }),
+    )
+    compose.setContent {
+      TafsTheme {
+        CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
+          androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(bot.tafs.app.design.Theme.background)) {
+            bot.tafs.app.views.TafDetailView("refunds-1", kiffState(), actions, onBack = {}, onHalt = {}, onUsage = {}, onVersions = {}, showBack = false)
+          }
+        }
+      }
+    }
+    compose.onNode(hasText("Card") and hasClickAction()).performClick()
+    compose.waitForIdle()
+    shot("taf-card-signed-in")
+  }
+
+  /** Beside the iPad's `Overview.PNG`: with nothing held but more waiting, the one "3 need you." line with its chevron. */
+  @Test fun overviewNeedsYouSignedIn() {
+    kiffTablet()
+    compose.setContent {
+      TafsTheme {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(bot.tafs.app.design.Theme.background)) {
+          bot.tafs.app.views.OverviewView(kiffState(), loadReport = {}, onOpenCalendar = null, onNeedsYou = {}) {}
+        }
+      }
+    }
+    compose.waitForIdle()
+    shot("overview-needs-you")
+  }
 }

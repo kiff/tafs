@@ -30,6 +30,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -143,6 +145,8 @@ class TafActions(
   val loadActivity: suspend (String, String, Boolean, String) -> Unit = { _, _, _, _ -> },
   val loadRuns: suspend (String, Boolean, Boolean) -> Unit = { _, _, _ -> },
   val loadAllMemory: (String) -> Unit = {},
+  /** Its versions, read for the head's version line ("Version 2 · live ›"). */
+  val loadVersions: suspend (String) -> Unit = {},
   /** Answers a card in the taf's own chat, the loop card's Read on or Stop here (taf, type, card, answer). */
   val answerCard: (String, String, String, String) -> Unit = { _, _, _, _ -> },
   /** The screen a route asked for (AppModel.open) is on screen: the request is taken. */
@@ -249,6 +253,13 @@ fun TafDetailView(
 
     Header(taf, if (showBack) onBack else null)
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      // Its live version, opening Versions, for whoever manages it on KIFF (as the iPad's head). It folds with the page.
+      if (state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)) {
+        LaunchedEffect(taf.id) { actions.loadVersions(taf.id) }
+        androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+          VersionLine(state.versions[taf.id]?.firstOrNull { it.live }?.n) { onVersions(taf.id) }
+        }
+      }
       // Who it's shared with, and Share: the taf's manager's to see. It folds with the page.
       if (people != null && taf.cloudId != null) {
         androidx.compose.animation.AnimatedVisibility(visible = !folded) { ShareLine(taf.id, state, people, routeTaken = actions.routeTaken) }
@@ -281,10 +292,10 @@ fun TafDetailView(
           Section.Card -> {
             // Only what's on its Card: the Card, its limits and how they're counted, its usage, Halt and Revoke.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
-            // The clock its limits' days and its times are in, in tafs cloud's words.
-            taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
+            // The clock its limits' days and its times are in, in tafs cloud's words: above the Card, as the iPad's.
+            taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp)) }
             taf.scheduleTimeZoneWords?.let { Text(it, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(horizontal = 4.dp)) }
+            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
             if (state.canHalt(taf.id) && state.manages(taf.id)) {
@@ -391,9 +402,26 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
         Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = Words.Common.back, tint = Theme.amber, modifier = Modifier.size(20.dp))
       }
     }
-    TafAvatar(taf, 30.dp)
-    Text(taf.name, style = scaled(18, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+    // As the iPad's head: its avatar and its name, large, then its state.
+    TafAvatar(taf, 34.dp)
+    Text(taf.name, style = scaled(20, FontWeight.Bold, Theme.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
     StateChip(taf.state)
+  }
+}
+
+/** The head's way into its versions: the live one's number, quiet, with its mark and a caret; "Versions" before they're read. */
+@Composable
+private fun VersionLine(live: Int?, onOpen: () -> Unit) {
+  val words = live?.let { Words.Version.liveNumber("$it") } ?: Words.Version.title
+  Row(
+    Modifier.heightIn(min = 32.dp).tapping(onClickLabel = words, onClick = onOpen)
+      .semantics { contentDescription = words },
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Icon(painterResource(R.drawable.ic_history), contentDescription = null, tint = Theme.soft, modifier = Modifier.size(15.dp))
+    Text(words, style = scaled(13, FontWeight.SemiBold, Theme.soft), maxLines = 1)
+    Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Theme.dim, modifier = Modifier.size(12.dp))
   }
 }
 
