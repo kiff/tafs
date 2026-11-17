@@ -6235,7 +6235,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted, messageId = messageId)
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted, messageId = messageId.takeIf { Unsent.keepsId(e) })
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
