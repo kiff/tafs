@@ -869,6 +869,12 @@ data class AppState(
     get() = (mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))) ||
       (mode == Mode.sample && screenshots)
 
+  /**
+   * Whether Coach may be asked about [tafId] from its page (a health line's fix, a delivery still not made): whoever may use Coach
+   * and manages the taf, as on the iPad. Anyone else gets no button, rather than one tafs cloud refuses.
+   */
+  fun mayAskCoachAbout(tafId: String): Boolean = mayUseCoach && manages(tafId)
+
   /** Whether this person sees every taf's Record (oversees or manages each), which the receipts export needs; tafs cloud still decides. */
   val seesEveryTaf: Boolean
     get() = mode == Mode.kiff && tafs.any { it.cloudId != null } &&

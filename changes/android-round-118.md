@@ -1,0 +1,1 @@
+- **Android: asking Coach about a taf from its page (a health line's fix, a delivery not made) shows only for whoever may use Coach and manages the taf,** as on the iPad, never a button tafs cloud then refuses ([android-app.md](docs/android-app.md)).
