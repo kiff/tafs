@@ -1291,10 +1291,16 @@ final class TafsCloud {
     /// Writes to the run at work (kiff/tafs#64), once, with `hold`: what the run doesn't
     /// take, tafs cloud holds and sends once the taf is done, so the app never resends it.
     /// More than tafs cloud holds throws 409 `held_full`, with words to show as they are.
-    func steer(_ id: String, run: String, text: String) async throws -> Steered {
-        struct Body: Encodable { let run: String; let text: String; let hold = true }
+    /// `messageID`: the message's own id (`client_message_id`), so tafs cloud takes it once however
+    /// often it's sent (docs/api.md, "One message, sent once").
+    func steer(_ id: String, run: String, text: String, messageID: UUID? = nil) async throws -> Steered {
+        struct Body: Encodable {
+            let run: String; let text: String; let hold = true; let clientMessageID: String?
+            enum CodingKeys: String, CodingKey { case run, text, hold, clientMessageID = "client_message_id" }
+        }
         struct Response: Decodable { let status: String?; let sent: SentRun?; let held: Steering.Message? }
-        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/steer", body: Body(run: run, text: text))
+        let r: Response = try await send("POST", "/v1/tafs/\(escaped(id))/steer",
+                                         body: Body(run: run, text: text, clientMessageID: Self.messageID(messageID)))
         if let status = r.status { return .taken(status: status) }
         return .kept(sent: r.sent, held: r.held)
     }
@@ -1344,12 +1350,16 @@ final class TafsCloud {
         let newChatAfterHandover: Bool?
         /// The files attached to it, by the ids their uploads gave (kiff/tafs#209).
         let attachments: [String]?
+        /// The message's own id, the same on the stream and the plain send that takes its place.
+        let clientMessageID: String?
         enum CodingKeys: String, CodingKey {
             case text, session, attachments, newChat = "new_chat", newChatAfterHandover = "new_chat_after_handover"
+            case clientMessageID = "client_message_id"
         }
 
-        init(_ text: String, _ target: ChatTarget, files: [AttachmentRef] = []) {
+        init(_ text: String, _ target: ChatTarget, files: [AttachmentRef] = [], messageID: UUID? = nil) {
             self.text = text
+            clientMessageID = TafsCloud.messageID(messageID)
             session = target.session
             newChat = target.newChat ? true : nil
             newChatAfterHandover = target.newChatAfterHandover ? true : nil
@@ -1519,9 +1529,14 @@ final class TafsCloud {
     }
 
     /// Sends the owner's message: into the taf's current run, or a new one.
-    func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> Sent {
-        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files))
+    /// `messageID`: the message's own id, as on its stream, so a message sent again is acted on once.
+    func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = [],
+                     messageID: UUID? = nil) async throws -> Sent {
+        try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files, messageID: messageID))
     }
+
+    /// A message's id as tafs cloud reads it: a UUID, in lower case.
+    nonisolated static func messageID(_ id: UUID?) -> String? { id?.uuidString.lowercased() }
 
     /// Why a person reports an answer Coach or a taf wrote (kiff/tafs#421).
     enum ReportReason: String, CaseIterable, Encodable, Identifiable {
@@ -1663,7 +1678,8 @@ final class TafsCloud {
 
     /// Sends the owner's message with its run streamed: returns once tafs cloud took it,
     /// with the run's events to follow. A refusal throws, as `sendMessage` does.
-    func streamMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = []) async throws -> AsyncThrowingStream<StreamEvent, Error> {
+    func streamMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = [],
+                       messageID: UUID? = nil) async throws -> AsyncThrowingStream<StreamEvent, Error> {
         guard let url = URL(string: "/v1/tafs/\(escaped(id))/messages/stream", relativeTo: streamURL) else {
             throw CloudError(status: 0, message: Words.Error.badPath)
         }
@@ -1674,7 +1690,7 @@ final class TafsCloud {
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
         request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files))
+        request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files, messageID: messageID))
         guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
 

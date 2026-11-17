@@ -592,6 +592,23 @@ owner message is `<run>.in`, and that's the id `POST …/messages` answers for t
 sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
 and never by text or time.
 
+**The app's own id for a message (`client_message_id`, [api.md](api.md)).** It's made by the app, before the send.
+On iPhone and iPad, each message the owner composes, to a taf or to Coach, gets its own UUID, in lower case.
+- **The same id goes on every path the message takes:**
+  - the stream;
+  - the plain send that takes its place when the stream can't open or is cut;
+  - a steer to the run at work.
+- **A message that wasn't sent keeps its id** (`UnsentMessage.messageID`), and Retry sends it under that id. If the
+  first send reached tafs cloud after all, tafs cloud answers with what it already did, never a second run.
+- **A new id:** Edit, Send again and a new message are new messages.
+- **No id of the app's own:**
+  - what a run never read (tafs cloud's `not_sent`), whose Retry sends it as a new message, under a new id;
+  - an improvement's first message, which goes through `/improve`;
+  - a trial's chat.
+- **On the Apple Watch,** the watch makes the id for the words it sends to Coach. The phone sends it on unchanged.
+  The same words sent again after no answer came keep it; other words, or the next message once answered, get
+  another ([watch-app.md](watch-app.md)).
+
 ## The live line
 
 While a taf works, the stream sends one line for the app to show (`event: state`, `relay` in

@@ -18,8 +18,8 @@ protocol WatchReading {
     func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome
     /// Halts a taf, or with none every taf, as the app and Siri do: no Face ID.
     func halt(taf: String?) async -> HaltAll.Outcome
-    /// Sends Coach the person's words, and reads its answer for a moment.
-    func coach(text: String) async -> WatchReply
+    /// Sends Coach the person's words under the message's id, and reads its answer for a moment.
+    func coach(text: String, messageID: UUID) async -> WatchReply
     /// Your brief, as tafs cloud sends it; nil when the account has none.
     func brief() async throws -> WatchBrief?
 }
@@ -67,7 +67,9 @@ enum WatchRelay {
             case .needsApp(let said): return WatchReply(.failed, line: said)
             }
         case .coach:
-            return await reading.coach(text: request.text ?? "")
+            // The watch's id for the words, the same when they're sent again; a watch from before it
+            // sends none, and the phone gives the message one.
+            return await reading.coach(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
         case .brief:
             // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
             do {
@@ -209,13 +211,13 @@ struct KeptWatchReading: WatchReading {
     /// Coach, as the app's plain send does (`AppModel`'s setup send when the stream can't open):
     /// the words to Coach's current chat, then its thread read until Coach's answer to them is
     /// written, for `coachWait` at most. Refusals come back in the phone's words.
-    func coach(text: String) async -> WatchReply {
+    func coach(text: String, messageID: UUID) async -> WatchReply {
         let setup: TafsCloud.CloudTaf
         let sent: TafsCloud.Sent
         do {
             guard let s = try await cloud.setup() else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
             setup = s
-            sent = try await cloud.sendMessage(s.id, text: text)
+            sent = try await cloud.sendMessage(s.id, text: text, messageID: messageID)
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
             return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
         } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
