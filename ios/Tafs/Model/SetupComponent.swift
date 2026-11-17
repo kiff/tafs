@@ -338,16 +338,23 @@ struct SetupThread: Equatable {
     /// it), from kiff/agents' words for it: a confirm's option by its label, an approval's or a
     /// sign-in's outcome, a questions card's answers as words. One that stopped waiting with no
     /// answer, or that the owner wrote past, is none: the owner's message is in the thread.
+    /// An approval reads its outcome from tafs cloud's settled `answer`, in no language; its words
+    /// are in the owner's, so they're read for an outcome only in tafs cloud's exact English.
+    /// **Nothing reads as approved by default.**
     static func answer(_ recorded: TafsCloud.CardAnswer, to c: SetupComponent) -> Answer? {
         guard recorded.state == "answered" else { return nil }
         let words = recorded.words
-        let failed = words.range(of: " · it didn't go through: ").map { "failed: " + words[$0.upperBound...] }
+        let failed = words.range(of: Self.didntGoThrough).map { "failed: " + words[$0.upperBound...] }
         let text: String
         switch c.type {
         case .confirm:
             text = c.options?.first { $0.label == words }?.value ?? words
         case .approval:
-            text = failed ?? (words == "Declined" ? "declined" : "approved")
+            if let stored = recorded.answer?.trimmingCharacters(in: .whitespaces), !stored.isEmpty {
+                text = approval(stored: stored, words: words)
+            } else {
+                text = approval(words: words)
+            }
         case .signIn:
             text = failed ?? (words == "Signed in" ? "signed in" : "not now")
         case .drive:
@@ -358,6 +365,39 @@ struct SetupThread: Equatable {
         }
         return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }
+
+    /// What tafs cloud's English words for a failed answer put before why.
+    static let didntGoThrough = " · it didn't go through: "
+
+    /// An approval's settled answer (tafs#1283): approved, or connected with its Card next, is done;
+    /// already approved; declined; failed with why. Any other value isn't approved. As Android's
+    /// `approvalFromStored`.
+    static func approval(stored: String, words: String) -> String {
+        switch stored {
+        case "approved", "connected": return "approved"
+        case "declined": return "declined"
+        default:
+            if stored == "already approved" || stored.hasPrefix("already approved:") { return "already approved" }
+            if stored.hasPrefix("failed: ") { return stored }
+            return notApproved(words)
+        }
+    }
+
+    /// From a tafs cloud that sends only words: its exact English for approved, already approved and
+    /// declined, and its English failed line. Anything else, in any language, isn't approved.
+    static func approval(words: String) -> String {
+        if let r = words.range(of: didntGoThrough) { return "failed: " + words[r.upperBound...] }
+        switch words {
+        case "Approved": return "approved"
+        case "Already approved": return "already approved"
+        case "Declined": return "declined"
+        default: return notApproved(words)
+        }
+    }
+
+    /// An answer this build can't read as an outcome: not approved, said in tafs cloud's own words,
+    /// as a card that didn't go through.
+    private static func notApproved(_ words: String) -> String { "failed: " + words }
 
     /// An owner's message in their own words: an answer to a component reads as what
     /// they chose ("Refuse it", "Approve"), never as contract 1's form (kiff/tafs#58).

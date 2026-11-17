@@ -336,6 +336,13 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   stopped waiting with no answer. Each card draws its answered state from this alone, in
   kiff/agents' words (Android: `CoachWords.answered`); the app keeps no answer of its own. Words written instead also show as the owner's message,
   with `answers` naming the card, so they never vanish from the thread.
+- An approval's **outcome** comes from the stored `answer` beside `words`, which is in no language
+  (tafs#1283): `approved`, `already approved` and `connected` (a connect step that worked, its Card
+  next) read as done; `declined`; `failed: why`. `words` are in the owner's language, so they're never
+  read for an outcome, except tafs cloud's exact English while `answer` isn't sent. **Nothing reads as
+  approved by default:** any other value or words read as not approved, in tafs cloud's own words
+  (Android: `SetupShape.recorded`; iOS and the Mac: `SetupThread.answer`). Before this, a declined
+  approval read "Approved · signed in to {vendor}" for an owner whose language isn't English.
 - On Android, an answered approval keeps one line saying what it was, "Approved · Connect
   Stripe" (`CoachWords.answeredApproval`): the Card when one was signed (KIFF's draft confirmed, or its key claimed since, and holding tools:
   "Approved · Refunds' Card"), else Coach's title for the card, else planque's words for the

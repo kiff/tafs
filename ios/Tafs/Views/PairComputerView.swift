@@ -158,6 +158,10 @@ final class QRScannerController: UIViewController, AVCaptureMetadataOutputObject
     var failed: ((String) -> Void)?
     private let capture = CaptureBox()
     private var preview: AVCaptureVideoPreviewLayer?
+    /// On iOS 17 and later, the system's rotation coordinator for the preview, and its watch: it says how
+    /// far to turn the preview for how the device is held, a half turn included.
+    private var rotation: AnyObject?
+    private var rotationWatch: NSKeyValueObservation?
     /// The last code read, so the same one held in front of the camera isn't read again and again.
     private var last: String?
 
@@ -180,8 +184,10 @@ final class QRScannerController: UIViewController, AVCaptureMetadataOutputObject
 
     private func start() {
         let session = capture.session
+        let camera: AVCaptureDevice
         do {
-            guard let camera = AVCaptureDevice.default(for: .video) else { throw AVError(.deviceNotConnected) }
+            guard let found = AVCaptureDevice.default(for: .video) else { throw AVError(.deviceNotConnected) }
+            camera = found
             let input = try AVCaptureDeviceInput(device: camera)
             let output = AVCaptureMetadataOutput()
             guard session.canAddInput(input), session.canAddOutput(output) else { throw AVError(.deviceNotConnected) }
@@ -198,6 +204,17 @@ final class QRScannerController: UIViewController, AVCaptureMetadataOutputObject
         layer.frame = view.bounds
         view.layer.addSublayer(layer)
         preview = layer
+        if #available(iOS 17.0, *), !ThisDevice.isMac {
+            let coordinator = AVCaptureDevice.RotationCoordinator(device: camera, previewLayer: layer)
+            rotation = coordinator
+            turn(coordinator.videoRotationAngleForHorizonLevelPreview)
+            rotationWatch = coordinator.observe(\.videoRotationAngleForHorizonLevelPreview, options: [.new]) { @Sendable [weak self] c, _ in
+                let angle = c.videoRotationAngleForHorizonLevelPreview
+                DispatchQueue.main.async { self?.turn(angle) }
+            }
+        } else {
+            orient()
+        }
         let box = capture
         DispatchQueue.global(qos: .userInitiated).async { box.session.startRunning() }
     }
@@ -205,6 +222,54 @@ final class QRScannerController: UIViewController, AVCaptureMetadataOutputObject
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         preview?.frame = view.bounds
+        orient()
+    }
+
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        // A half turn keeps the size, so no layout follows it: set the preview again once the turn is done.
+        DispatchQueue.main.asyncAfter(deadline: .now() + coordinator.transitionDuration + 0.05) { [weak self] in self?.orient() }
+    }
+
+    /// The preview follows how the screen is held: without it, an iPad in landscape showed the computer
+    /// turned 90°. On iOS 17 and later the rotation coordinator says the turn; before, the screen's
+    /// orientation does, set at each layout and after each rotation. The QR is read the same way whatever
+    /// the preview's turn. The Mac's camera isn't turned with its screen, so its preview stays as it was.
+    private func orient() {
+        guard rotation == nil, !ThisDevice.isMac, let connection = preview?.connection else { return }
+        let orientation = view.window?.windowScene?.interfaceOrientation ?? .portrait
+        if #available(iOS 17.0, *) {
+            turn(Self.previewAngle(orientation))
+        } else if connection.isVideoOrientationSupported {
+            connection.videoOrientation = Self.videoOrientation(orientation)
+        }
+    }
+
+    /// Turns the preview by `angle` degrees, where the connection takes it.
+    private func turn(_ angle: CGFloat) {
+        guard #available(iOS 17.0, *), let connection = preview?.connection else { return }
+        if connection.isVideoRotationAngleSupported(angle), connection.videoRotationAngle != angle { connection.videoRotationAngle = angle }
+    }
+
+    /// The preview's turn, in degrees, for the screen's orientation: the camera's picture is landscape, the
+    /// way a screen held in landscape right is (0°).
+    nonisolated static func previewAngle(_ orientation: UIInterfaceOrientation) -> CGFloat {
+        switch orientation {
+        case .landscapeRight: return 0
+        case .portraitUpsideDown: return 270
+        case .landscapeLeft: return 180
+        default: return 90
+        }
+    }
+
+    /// The same before iOS 17, as the connection's video orientation.
+    nonisolated static func videoOrientation(_ orientation: UIInterfaceOrientation) -> AVCaptureVideoOrientation {
+        switch orientation {
+        case .landscapeRight: return .landscapeRight
+        case .portraitUpsideDown: return .portraitUpsideDown
+        case .landscapeLeft: return .landscapeLeft
+        default: return .portrait
+        }
     }
 
     override func viewDidDisappear(_ animated: Bool) {

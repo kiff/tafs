@@ -1408,8 +1408,40 @@ final class TafsCloud {
         /// One message for the device's key, and the call it goes into: planque's approve body,
         /// or KIFF's draft to confirm.
         struct Ask: Decodable, Equatable {
-            /// planque's approve, its body as tafs cloud built it: the phone sends it as it is.
-            struct Planque: Decodable, Equatable { let grant: String; let body: PlanqueClient.ApproveBody }
+            /// planque's approve, its body as tafs cloud built it. The phone sends it only when it's the body the
+            /// phone builds from what the card showed (`AppModel.expectedApprovalMessage`).
+            struct Planque: Decodable, Equatable {
+                let grant: String
+                let body: PlanqueClient.ApproveBody
+                /// The body named a field beyond `digest` and `kiff_profile` (or, in `kiff_profile`, beyond its two
+                /// digests). Decoding would drop it, so it's kept here, and such a body is refused, never signed.
+                var extraFields = false
+
+                init(grant: String, body: PlanqueClient.ApproveBody, extraFields: Bool = false) {
+                    self.grant = grant; self.body = body; self.extraFields = extraFields
+                }
+
+                private enum CodingKeys: String, CodingKey { case grant, body }
+                private struct AnyKey: CodingKey {
+                    let stringValue: String
+                    var intValue: Int? { nil }
+                    init?(stringValue: String) { self.stringValue = stringValue }
+                    init?(intValue: Int) { nil }
+                }
+
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    grant = try c.decode(String.self, forKey: .grant)
+                    body = try c.decode(PlanqueClient.ApproveBody.self, forKey: .body)
+                    let fields = try c.nestedContainer(keyedBy: AnyKey.self, forKey: .body)
+                    var extra = !Set(fields.allKeys.map(\.stringValue)).isSubset(of: ["digest", "kiff_profile"])
+                    if let key = AnyKey(stringValue: "kiff_profile"), fields.contains(key), (try? fields.decodeNil(forKey: key)) != true {
+                        let profile = try fields.nestedContainer(keyedBy: AnyKey.self, forKey: key)
+                        extra = extra || !Set(profile.allKeys.map(\.stringValue)).isSubset(of: ["profile_sha256", "words_sha256"])
+                    }
+                    extraFields = extra
+                }
+            }
             /// KIFF's draft to confirm, at exactly this version.
             struct KIFF: Decodable, Equatable { let draft: String; let version: String }
             let id: String
@@ -1771,6 +1803,11 @@ final class TafsCloud {
         var outcome: Outcome?
         /// When it was answered, as tafs cloud writes it; nil from a tafs cloud that doesn't say.
         var at: Date?
+        /// An approval card's answer as tafs cloud stores it, settled and in no language: `approved`,
+        /// `already approved`, `connected` (a connect step that worked, its Card next), `declined` or
+        /// `failed: <why>`, beside `words` in the owner's. What the card reads its outcome from; nil from a
+        /// tafs cloud that doesn't send it yet.
+        var answer: String?
 
         struct Outcome: Decodable, Equatable {
             var tafID: String?
@@ -1795,14 +1832,15 @@ final class TafsCloud {
             }
         }
 
-        enum CodingKeys: String, CodingKey { case state, words, by, outcome, at }
+        enum CodingKeys: String, CodingKey { case state, words, by, outcome, at, answer }
 
-        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil, at: Date? = nil) {
+        init(state: String = "answered", words: String = "", by: String? = nil, outcome: Outcome? = nil, at: Date? = nil, answer: String? = nil) {
             self.state = state
             self.words = words
             self.by = by
             self.outcome = outcome
             self.at = at
+            self.answer = answer
         }
 
         init(from decoder: Decoder) throws {
@@ -1812,6 +1850,7 @@ final class TafsCloud {
             by = try c.decodeIfPresent(String.self, forKey: .by)
             outcome = try? c.decodeIfPresent(Outcome.self, forKey: .outcome)
             at = (try? c.decodeIfPresent(String.self, forKey: .at)).flatMap { $0 }.flatMap(Self.date)
+            answer = (try? c.decodeIfPresent(String.self, forKey: .answer)).flatMap { $0 }
         }
 
         private static func date(_ raw: String) -> Date? {

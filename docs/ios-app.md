@@ -999,6 +999,11 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 (KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
 `AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
 
+- **The camera's preview** follows how the screen is held, the four ways: on iOS 17 and later the
+  system's rotation coordinator turns it (`AVCaptureDevice.RotationCoordinator`, a half turn included),
+  and before, the screen's orientation does, set at each layout and after each rotation
+  (`QRScannerController.previewAngle`). An iPad in landscape showed the computer turned 90° before.
+  The Mac's preview is left as it was. The QR reads the same whatever the turn.
 - **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
   anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
   most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
@@ -1016,6 +1021,11 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   behind Face ID or Touch ID naming the computer, never inside a window. KIFF's code is said beside
   the one checked; if they differ, the person is told to sign the computer out if it isn't theirs.
   A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
+- **After a yes, Devices follows it:** the computer finishes its own half after the phone's yes, so
+  until KIFF lists a device it didn't before, the list is read again every 3 seconds, ten times at most
+  (`AppModel.followPairedDevice`, as Android's tafs#1281). Devices is also read again when Add a device
+  closes and whenever the app comes back to the front, so a device added meanwhile shows without
+  closing Devices and opening it again.
 - **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
   device that holds an approval key or a passkey is an approval.
 - **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with

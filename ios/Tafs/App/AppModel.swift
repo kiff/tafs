@@ -1329,6 +1329,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let tenant = kiffTenant, passkey.removable, let id = passkey.passkeyID else { return false }
         let gen = accountGeneration
         kiff.tenant = tenant
+        let before = Set(devices.map(\.id))
         let signedAt = SigningTime.next()
         let prepared: KIFFClient.Prepared
         let signature: String
@@ -1366,6 +1367,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff, let tenant = kiffTenant else { return .failed(Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
         let gen = accountGeneration
         kiff.tenant = tenant
+        let before = Set(devices.map(\.id))
         let signedAt = SigningTime.next()
         let prepared: KIFFClient.Prepared
         let signature: String
@@ -1378,11 +1380,38 @@ final class AppModel: ObservableObject {
             let pairing = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
             guard gen == accountGeneration else { return .cancelled }
             await refreshDevices()
+            followPairedDevice(before: before)
             return .paired(Self.pairedWords(request, kiffCode: pairing.code))
         } catch KIFFClient.KIFFError.server(_, let message, let reason) {
             return .failed(Self.pairingRefusal(message: message, reason: reason))
         } catch {
             return .failed(Words.Common.didntGoThrough(what: "\(Words.Settings.Devices.pairNamed(device: request.name))", why: "\(error.localizedDescription)"))
+        }
+    }
+
+    /// How many times Devices is read again after a pairing until the new device is listed, one every
+    /// `pairFollowNanoseconds`: 30 seconds in all, as Android's `PAIR_FOLLOW_TRIES`.
+    nonisolated static let pairFollowReads = 10
+    /// The wait between those reads, as a task's sleep: shorter in tests.
+    var pairFollowNanoseconds: UInt64 = 3_000_000_000
+    /// The reads after a pairing; a new pairing replaces them.
+    private(set) var pairFollow: Task<Void, Never>?
+
+    /// After a pairing, Devices is read again until KIFF lists a device it didn't before (`before`): the
+    /// computer finishes its own half after the phone's yes, so the read right after it can come too soon.
+    /// At most `pairFollowReads` times, for this account only. Whether the device is there is KIFF's list's
+    /// to say; the phone only reads it again. As Android's `followPairedDevice` (tafs#1281).
+    func followPairedDevice(before: Set<String>) {
+        pairFollow?.cancel()
+        let gen = accountGeneration
+        let wait = pairFollowNanoseconds
+        pairFollow = Task { [weak self] in
+            for _ in 0..<Self.pairFollowReads {
+                guard let self, gen == self.accountGeneration, !self.devices.contains(where: { !before.contains($0.id) }) else { return }
+                try? await Task.sleep(nanoseconds: wait)
+                guard !Task.isCancelled else { return }
+                await self.refreshDevices()
+            }
         }
     }
 
@@ -8977,7 +9006,10 @@ final class AppModel: ObservableObject {
                     // The phone is the last check, not a signing service: it signs only the message this card
                     // implies, rebuilt from what it holds (its own account, the card's grant or draft, the ask's
                     // digest or version), and refuses any other.
-                    guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant, shownDigest: shown, shownDraft: shownDraft) else {
+                    // KIFF's words for the connection's profile, as the card showed them: the approve body carries their digests, or none.
+                    let shownProfile = words.map { PlanqueClient.ApproveBody.KIFFProfile(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }
+                    guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant, shownDigest: shown, shownDraft: shownDraft,
+                                                                      shownProfile: shownProfile) else {
                         cardNotes[component.id] = Self.askNotThisCards
                         return
                     }
@@ -9337,14 +9369,20 @@ final class AppModel: ObservableObject {
     /// card's grant and the digest the person was shown for the connect step; the card's draft and the
     /// version the person was shown for the Cards step. Nil for an ask that names another grant, draft,
     /// digest or version, or a step this app doesn't know, and when nothing was shown: the phone signs
-    /// nothing it can't rebuild itself from what the person read.
+    /// nothing it can't rebuild itself from what the person read. `shownProfile` is the digests of KIFF's
+    /// words for the connection's profile as the card showed them; none shown, none.
     nonisolated static func expectedApprovalMessage(_ ask: TafsCloud.ApprovalDecision.Ask, component: SetupComponent, tenant: String,
-                                                    shownDigest: String?, shownDraft: String?) -> String? {
+                                                    shownDigest: String?, shownDraft: String?,
+                                                    shownProfile: PlanqueClient.ApproveBody.KIFFProfile? = nil) -> String? {
         switch ask.step {
         case "connect":
             // The digest is what the person saw, never the ask's: terms they never read are never signed.
             guard let p = ask.planque, p.grant == component.grant, let grant = component.grant,
                   let shownDigest, p.body.digest == shownDigest else { return nil }
+            // The whole approve body is the one the phone builds from what was shown: the digest, and KIFF's
+            // profile words' digests when words were shown. tafs cloud's body is signed only when it's that, so
+            // another profile, other words, words left out or a field added are never approved as the owner's.
+            guard !p.extraFields, p.body == shownConnectBody(shownDigest, shownProfile) else { return nil }
             return "tafs.connect.v1|\(tenant)|\(grant)|\(shownDigest)"
         case "cards":
             guard let k = ask.kiff, let draft = component.draft, k.draft == draft, let shownDraft, k.version == shownDraft else { return nil }
@@ -9352,6 +9390,12 @@ final class AppModel: ObservableObject {
         default:
             return nil
         }
+    }
+
+    /// planque's approve body for what the card showed: the digest, and `kiff_profile` only when KIFF's words
+    /// were shown. As Android's `shownConnectBody`.
+    nonisolated static func shownConnectBody(_ shownDigest: String, _ shownProfile: PlanqueClient.ApproveBody.KIFFProfile?) -> PlanqueClient.ApproveBody {
+        PlanqueClient.ApproveBody(digest: shownDigest, kiffProfile: shownProfile)
     }
 
     /// What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened.

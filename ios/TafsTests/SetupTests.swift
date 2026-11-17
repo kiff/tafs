@@ -959,7 +959,7 @@ final class SetupTests: XCTestCase {
         // The connection: tafs cloud names the message, the prompt's words and planque's body.
         let pending = PlanqueTests.grantJSONFor(status: "pending")
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(pending)]}"#)
-        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-stripe/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Stripe to Refunds","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)","kiff_profile":{"profile_sha256":"ab","words_sha256":"cd"}}}}}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-stripe/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Stripe to Refunds","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)"}}}}"#)
         StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-stripe/approval/ask_1"] = (200, #"{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, #"{"status":"approved","sign_in_url":"https://access.stripe.com/a","expires_at":"2026-10-17T10:15:00Z"}"#)
         StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, PlanqueTests.grantJSONFor(status: "connected"))
@@ -975,7 +975,7 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(signer.prompts, ["tafs.connect.v1|t_01|g_01|\(PlanqueTests.digest)"], "one Face ID, over exactly the message tafs cloud named")
         let approve = body(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/approve").last)
         XCTAssertEqual(approve["digest"] as? String, PlanqueTests.digest)
-        XCTAssertEqual((approve["kiff_profile"] as? [String: Any])?["profile_sha256"] as? String, "ab", "planque's body as tafs cloud built it")
+        XCTAssertNil(approve["kiff_profile"], "the body the phone built from what it showed: no words shown, none signed")
         XCTAssertEqual(vendor.opened.count, 1)
         let reported = sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-stripe/approval/ask_1").last
         XCTAssertEqual(body(reported)["result"] as? String, "connected")
@@ -1265,6 +1265,10 @@ final class SetupTests: XCTestCase {
             #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.resume.v1|t_01|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"\#(d)"}}}}"#,
             // The body and the message agree on a digest, but not the one the person was shown.
             #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|0000","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"0000"}}}}"#,
+            // The digest shown, but a body that isn't the one the phone builds from what it showed: KIFF's
+            // words for a profile the card never showed, or a field added.
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"\#(d)","kiff_profile":{"profile_sha256":"ab","words_sha256":"cd"}}}}}"#,
+            #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(d)","reason":"Connect","planque":{"grant":"g_01","body":{"digest":"\#(d)","scopes":"all"}}}}"#,
             #"{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|d_09|v3","reason":"Give","kiff":{"draft":"d_09","version":"v3"}}}"#,
             #"{"outcome":"sign","ask":{"id":"ask_1","step":"cards","message":"tafs.cards.v1|t_01|d_01|v3","reason":"Give","kiff":{"draft":"d_01","version":"v3"}}}"#,
         ]
