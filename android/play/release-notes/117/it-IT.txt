@@ -1,0 +1,5 @@
+- Il messaggio inviato resta in cima alla chat mentre il taf lavora e risponde.
+- Un messaggio inviato di nuovo dopo una connessione caduta viene eseguito una sola volta.
+- Coach su un taf è offerto solo a chi gestisce quel taf.
+- Rimuovere la tua ultima passkey che può approvare ora ti avvisa prima.
+- Dare a Coach i suoi strumenti approva solo il passaggio che hai visto.

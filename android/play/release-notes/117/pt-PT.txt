@@ -1,0 +1,5 @@
+- A mensagem enviada fica no topo do chat enquanto o taf trabalha e responde.
+- Uma mensagem reenviada após uma ligação perdida só é executada uma vez.
+- O Coach num taf só é oferecido a quem gere esse taf.
+- Remover a sua última chave de acesso que pode aprovar avisa-o primeiro.
+- Dar ao Coach as suas ferramentas aprova apenas o passo que viu.

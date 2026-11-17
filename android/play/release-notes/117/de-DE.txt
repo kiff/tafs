@@ -1,0 +1,5 @@
+- Deine gesendete Nachricht bleibt oben im Chat, während der taf arbeitet und antwortet.
+- Eine Nachricht, die nach einem Verbindungsabbruch erneut gesendet wird, wird nur einmal ausgeführt.
+- Coach zu einem taf gibt es nur für Personen, die diesen taf verwalten.
+- Wenn du deinen letzten Passkey entfernst, der genehmigen kann, wirst du vorher gewarnt.
+- Wenn du Coach seine Tools gibst, wird nur der Schritt genehmigt, den du gesehen hast.
