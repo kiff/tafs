@@ -34,8 +34,40 @@ export interface AgreedRule { tool: string; over: "ask" | "refuse"; limits?: Agr
 /** What the conversation says of the rules: none shown, agreed (the newest agreement's), or shown and not agreed. */
 export type RulesAgreement =
   | { state: "none" }
-  | { state: "agreed"; notice: string; rules: AgreedRule[]; text: string }
+  | { state: "agreed"; notice: string; rules: AgreedRule[]; text: string; connection: ConnectionLine[] }
   | { state: "unagreed"; notice: string };
+
+/**
+ * A line of an agreed rules notice that says the connection keeps it (kiff/agents' show, `kept: connection`): its words, and
+ * the tools it says the connection holds it for, by planque's name. Approve holds it to the grant's pins (unpinnedConnection).
+ */
+export interface ConnectionLine { text: string; tools: string[] }
+
+/** The notice's connection lines: those with kept "connection" and their tools, each by planque's name. */
+function connectionLinesOf(c: Record<string, unknown>): ConnectionLine[] {
+  if (!Array.isArray(c.lines)) return [];
+  const out: ConnectionLine[] = [];
+  for (const l of c.lines as unknown[]) {
+    const line = (l ?? {}) as Record<string, unknown>;
+    if (line.kept !== "connection") continue;
+    const tools = Array.isArray(line.tools) ? line.tools.filter((t): t is string => typeof t === "string" && t.trim() !== "") : [];
+    out.push({ text: typeof line.text === "string" ? line.text : "", tools });
+  }
+  return out;
+}
+
+/**
+ * A notice's lines as one key: each line's words, where it says it's kept, its tools (as a set) and what, in order. A notice
+ * shown again with other lines says other things are kept elsewhere, so it is another notice to agree to (rulesAgreement).
+ */
+function linesKeyOf(c: Record<string, unknown>): string {
+  if (!Array.isArray(c.lines)) return "";
+  return JSON.stringify((c.lines as unknown[]).map((l) => {
+    const line = (l ?? {}) as Record<string, unknown>;
+    const tools = Array.isArray(line.tools) ? line.tools.filter((t): t is string => typeof t === "string").map(fold).sort() : [];
+    return [line.text ?? "", line.kept ?? "", tools, line.what ?? ""];
+  }));
+}
 
 /** At most this many rules on a notice, as kiff/agents' component schema takes them: past it, the notice carries none. */
 export const RULES_MAX = 64;
@@ -100,13 +132,13 @@ function limitsOf(given: unknown): AgreedLimit[] | undefined {
  * event for a confirm with `agrees`, answered `agree`, with no `answered_by` (tafs cloud's own answers carry it), not
  * words written while the card waited, and not a card that stopped waiting unanswered. `agrees` must name a rules notice
  * shown in this conversation before the answer; anything else agrees to nothing. The newest agreement counts, and a
- * rules notice shown after the one it agreed (another id, or the same id with other rules) leaves it unagreed.
+ * rules notice shown after the one it agreed (another id, or the same id with other rules or other lines) leaves it unagreed.
  */
 export function rulesAgreement(events: readonly Event[]): RulesAgreement {
-  const notices = new Map<string, { rules: AgreedRule[]; at: number; text: string }>();
+  const notices = new Map<string, { rules: AgreedRule[]; at: number; text: string; connection: ConnectionLine[]; lines: string }>();
   const confirms: Array<{ run: string; id: string; agrees?: string }> = [];
-  let agreed: { notice: string; rules: AgreedRule[]; shownAt: number; text: string } | undefined;
-  let newest: { id: string; rules: AgreedRule[]; at: number } | undefined;
+  let agreed: { notice: string; rules: AgreedRule[]; shownAt: number; text: string; connection: ConnectionLine[]; lines: string } | undefined;
+  let newest: { id: string; rules: AgreedRule[]; at: number; lines: string } | undefined;
   events.forEach((e, at) => {
     const body = (e.body ?? {}) as Record<string, unknown>;
     if (e.kind === "component") {
@@ -114,8 +146,9 @@ export function rulesAgreement(events: readonly Event[]): RulesAgreement {
       if (!id) return;
       const rules = rulesOf(body);
       if (rules) {
-        notices.set(id, { rules, at, text: typeof body.text === "string" ? body.text : "" });
-        newest = { id, rules, at };
+        const lines = linesKeyOf(body);
+        notices.set(id, { rules, at, text: typeof body.text === "string" ? body.text : "", connection: connectionLinesOf(body), lines });
+        newest = { id, rules, at, lines };
       } else if (body.type === "notice") notices.delete(id);
       if (body.type === "confirm") confirms.push({ run: e.run ?? "", id, ...(typeof body.agrees === "string" && body.agrees ? { agrees: body.agrees } : {}) });
       return;
@@ -125,12 +158,12 @@ export function rulesAgreement(events: readonly Event[]): RulesAgreement {
     // The run's latest confirm by that id, as the thread places an answer.
     const card = confirms.findLast((c) => c.run === (e.run ?? "") && c.id === body.id);
     const notice = card?.agrees ? notices.get(card.agrees) : undefined;
-    if (card?.agrees && notice) agreed = { notice: card.agrees, rules: notice.rules, shownAt: notice.at, text: notice.text };
+    if (card?.agrees && notice) agreed = { notice: card.agrees, rules: notice.rules, shownAt: notice.at, text: notice.text, connection: notice.connection, lines: notice.lines };
   });
   if (!newest) return { state: "none" };
   if (!agreed) return { state: "unagreed", notice: newest.id };
-  const shownAfter = newest.at > agreed.shownAt && !(newest.id === agreed.notice && sameRules(newest.rules, agreed.rules));
-  return shownAfter ? { state: "unagreed", notice: newest.id } : { state: "agreed", notice: agreed.notice, rules: agreed.rules, text: agreed.text };
+  const shownAfter = newest.at > agreed.shownAt && !(newest.id === agreed.notice && sameRules(newest.rules, agreed.rules) && newest.lines === agreed.lines);
+  return shownAfter ? { state: "unagreed", notice: newest.id } : { state: "agreed", notice: agreed.notice, rules: agreed.rules, text: agreed.text, connection: agreed.connection };
 }
 
 function sameRules(a: AgreedRule[], b: AgreedRule[]): boolean {
@@ -349,4 +382,27 @@ function numbersIn(text: string): Set<number> {
     add(raw.replace(/[.,]/g, ""));
   }
   return out;
+}
+
+/**
+ * The first tool an agreed connection line names that the grants don't pin: the line says the connection keeps it, so the
+ * tool, matched by planque's name before KIFF's suffix as rulesMismatch does, must carry a pinned value
+ * (`fixed_arguments`) in every grant that has it, and one must. A line naming no tool, or a tool no grant has, isn't held by any
+ * connection either. undefined when every line is pinned, or there are none (a notice from before lines).
+ */
+export function unpinnedConnection(grants: readonly ApprovalGrant[], lines: readonly ConnectionLine[]): { line: string; tool: string; title: string } | undefined {
+  for (const line of lines) {
+    if (line.tools.length === 0) return { line: line.text, tool: "", title: line.text };
+    for (const tool of line.tools) {
+      const want = fold(tool);
+      // Every grant's entry for the tool is pinned, and there is one: a pin on another app's tool of the same name holds nothing here.
+      const entries = grants.flatMap((g) => (g.request?.tools ?? []).filter((t) => {
+        const name = fold(t.tool ?? t.name);
+        return name === want || name.startsWith(want + "_");
+      }));
+      const pinned = entries.length > 0 && entries.every((t) => t.fixed_arguments !== null && typeof t.fixed_arguments === "object" && Object.keys(t.fixed_arguments).length > 0);
+      if (!pinned) return { line: line.text, tool, title: entries.find((t) => t.title)?.title ?? tool };
+    }
+  }
+  return undefined;
 }

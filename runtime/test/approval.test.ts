@@ -1,7 +1,8 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
+import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { contract } from "./contract.js";
@@ -2356,6 +2357,65 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(await tap()).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
   });
 
+  // A line the owner agreed as kept by the connection is held to the grant's pins at Approve, before anything is signed:
+  // the owner never signs a rule nothing holds (kiff/agents' show writes "(the connection keeps it)" from the line's kept).
+  describe("a line agreed as kept by the connection", () => {
+    const LINES = [{ text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge"] }];
+    async function withPins(pinRefund: boolean, extra?: ReturnType<typeof grant>) {
+      const s = services();
+      const pinned = tools.map((t) => (t.tool === "refund_charge" && pinRefund ? { ...t, fixed_arguments: { "refund.reason": "requested_by_customer" } } : t));
+      s.grants = [grant({ status: "connected" }, { tools: pinned }), ...(extra ? [extra] : [])];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards("refuse") };
+      const w = await world(s, { draft: "drf_1" });
+      return { s, w };
+    }
+    function agree(w: Awaited<ReturnType<typeof world>>, lines: unknown) {
+      w.agents.show(w.stored, { type: "notice", id: "rules-1", tone: "info", text: "Refunds only to the original card (the connection keeps it)", rules: RULES, lang: "en", lines });
+      w.agents.show(w.stored, { type: "confirm", id: "ok-rules-1", text: "Agree?", agrees: "rules-1", options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      const list = w.agents.events.get(w.stored.session)!;
+      list.push({ session: w.stored.session, run: w.stored.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "ok-rules-1", type: "confirm", answer: "agree", words: "Agree" } });
+    }
+    const tap = async (w: Awaited<ReturnType<typeof world>>) => (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+
+    it("refuses a tool the grant doesn't pin, naming it, with no signing request and no grant", async () => {
+      const { s, w } = await withPins(false);
+      agree(w, LINES);
+      const r = await tap(w);
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnpinned("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed say the connection keeps "Refunds only to the original card" for "refund_charge", but the connection doesn't pin "refund_charge".`);
+      expect(s.checks).toEqual([]);
+      expect(r.signs).toBeUndefined();
+    });
+
+    it("approves when every tool the line names is pinned", async () => {
+      const { w } = await withPins(true);
+      agree(w, LINES);
+      expect(await tap(w)).toMatchObject({ outcome: "sign" });
+    });
+
+    it("still refuses when the pin is on another app's tool of the same name", async () => {
+      const other = grant({ status: "connected", id: "g_2" }, { agent: "other-taf", tools: [{ tool: "refund_charge", name: "refund_charge_z9", title: "Refund a charge (other app)", fixed_arguments: { amount: 1 } }] });
+      const { w } = await withPins(false, other);
+      agree(w, LINES);
+      expect(await tap(w)).toMatchObject({ outcome: "answered", note: WORDS.rulesUnpinned("Refund a charge") });
+      // Within one taf's grants too: every entry for the tool is pinned, or the line isn't kept.
+      const g = (id: string, fixed?: Record<string, unknown>) => ({ id, request: { tools: [{ tool: "refund_charge", name: `refund_charge_${id}`, title: "Refund a charge", ...(fixed ? { fixed_arguments: fixed } : {}) }] } }) as unknown as ApprovalGrant;
+      expect(unpinnedConnection([g("a", { amount: 1 }), g("b")], LINES)).toEqual({ line: LINES[0]!.text, tool: "refund_charge", title: "Refund a charge" });
+      expect(unpinnedConnection([g("a", { amount: 1 }), g("b", { amount: 1 })], LINES)).toBeUndefined();
+      expect(unpinnedConnection([g("a", {})], LINES)?.tool).toBe("refund_charge");
+      expect(unpinnedConnection([], [{ text: "No tool named", tools: [] }])).toEqual({ line: "No tool named", tool: "", title: "No tool named" });
+    });
+
+    it("leaves a notice with no connection line as it was", async () => {
+      const { w } = await withPins(false);
+      agree(w, [{ text: "Skips refunds it already made", kept: "instructions" }]);
+      expect(await tap(w)).toMatchObject({ outcome: "sign" });
+      const plain = await withPins(false);
+      agree(plain.w, undefined);
+      expect(await tap(plain.w)).toMatchObject({ outcome: "sign" });
+    });
+  });
+
   // kiff-qa on #1100: the conversation that can't be read is never trusted; it's read again, nothing signed.
   it("a conversation that can't be read isn't trusted: the card reads again, and nothing is signed", async () => {
     // How many conversation reads a tap makes, the rules' own read last; then the same tap with only that read failing.
@@ -2443,7 +2503,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesFigures("X")).toContain("X");
       expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unpinned") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
   });
 
   describe("the figures the owner agreed", () => {

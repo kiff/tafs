@@ -119,6 +119,7 @@ export const it: Words = {
   approval_count_on_amount: (tool: string) => `Questa Card conterebbe anche le chiamate a «${tool}», oltre ai suoi limiti di importo: un numero che nessuno ha concordato, che potrebbe trattenere chiamate consentite dai limiti. Non è stato approvato nulla. Coach la riscrive.`,
   approval_rules_on_exceed: (tool: string) => `Questa Card deciderebbe oltre il limite di «${tool}» diversamente dalle regole che hai accettato. Non è stato approvato nulla. Coach la riscrive.`,
   approval_rules_missing: (tool: string) => `Le regole che hai accettato non dicono cosa fa «${tool}» oltre il suo limite. Non è stato approvato nulla. Coach ti mostra di nuovo le regole.`,
+  approval_rules_unpinned: (tool: string) => `Le regole che hai accettato dicono che il collegamento garantisce una regola per «${tool}», ma non è così. Non è stato approvato nulla. Coach ti mostra di nuovo le regole.`,
   approval_rules_figures: (tool: string) => `Questa Card ha per «${tool}» un limite diverso da quello delle regole che hai accettato. Non è stato approvato nulla. Coach la riscrive.`,
   approval_rules_unagreed: "Coach l'ha scritta prima che accettassi le regole che ha mostrato. Non è stato approvato nulla. Accetta prima le regole e Coach la riscrive.",
   approval_rules_required: "Coach l'ha scritta senza mostrarti le regole da accettare. Non è stato approvato nulla. Coach ti mostra prima le regole.",

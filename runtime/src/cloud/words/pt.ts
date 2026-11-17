@@ -119,6 +119,7 @@ export const pt: Words = {
   approval_count_on_amount: (tool: string) => `Este Card também contaria as chamadas a «${tool}», além dos limites de valor: um número que ninguém combinou e que podia reter chamadas que os limites permitem. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_rules_on_exceed: (tool: string) => `Este Card decidiria acima do limite de «${tool}» de forma diferente das regras que aceitou. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_rules_missing: (tool: string) => `As regras que aceitou não dizem o que «${tool}» faz acima do limite. Nada foi aprovado. O Coach mostra-lhe as regras outra vez.`,
+  approval_rules_unpinned: (tool: string) => `As regras que aceitou dizem que a ligação garante uma regra para «${tool}», mas não é o caso. Nada foi aprovado. O Coach mostra-lhe as regras outra vez.`,
   approval_rules_figures: (tool: string) => `Este Card tem para «${tool}» um limite diferente do das regras que aceitou. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_rules_unagreed: "O Coach redigiu isto antes de aceitar as regras que mostrou. Nada foi aprovado. Aceite primeiro as regras e o Coach volta a redigi-lo.",
   approval_rules_required: "O Coach redigiu isto sem lhe mostrar as regras para aceitar. Nada foi aprovado. O Coach mostra-lhe primeiro as regras.",

@@ -153,6 +153,8 @@ export interface AgentDefinition {
   close_in_text?: boolean;
   /** What the agent's cards may not say (kiff/agents' show.Wording); needs show. */
   wording?: Array<{ patterns: string[]; unless_next?: string[]; fix: string }>;
+  /** The endings show writes after each line of a rules notice, by language then where it's kept (kiff/agents' show.KeptWords); needs show. */
+  kept_words?: Record<string, Record<string, string>>;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */

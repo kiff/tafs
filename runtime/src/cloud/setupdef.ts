@@ -1,3 +1,4 @@
+import { COACH_KEPT_WORDS } from "./coach-kept-words.js";
 import { COACH_WORDING } from "./coach-wording.js";
 import { COACH_SKILLS } from "../coach-skills.js";
 import { NAMED_ONLY } from "./coach-skills.js";
@@ -223,6 +224,8 @@ export function setupDefinition(id: string): AgentDefinition {
     show: true,
     // What its cards may not say (contracts/coach-wording.json): show refuses such a card with the rule's fix.
     wording: COACH_WORDING.map((w) => ({ ...w, patterns: [...w.patterns], ...(w.unless_next ? { unless_next: [...w.unless_next] } : {}) })),
+    // The endings show writes after each line of a rules notice, by where it's kept (coach-kept-words.ts): Coach never types them.
+    kept_words: Object.fromEntries(Object.entries(COACH_KEPT_WORDS).map(([lang, words]) => [lang, { ...words }])),
     planque: PLANQUE,
     drafts: true,
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
