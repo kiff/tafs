@@ -45,6 +45,11 @@
 /android/app/build.gradle.kts @kiff-qa
 /android/play/*.py @kiff-qa
 
+# Where the apps send the session's token (app/hosts.json) and the check that holds
+# each app's constants to it
+/app/hosts.json @kiff-qa
+/app/test_hosts.py @kiff-qa
+
 # tafs cloud, the shared test vectors, and the cloud's secrets
 /runtime/src/cloud/approval.ts @kiff-qa
 /runtime/src/cloud/doors/sign.ts @kiff-qa
