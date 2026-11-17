@@ -731,7 +731,9 @@ never named, and a taf shared with no one else reads "Not shared".
 - **Setup** (`SetupTab`): how it runs, in sections.
   - **The job**, with Improve in Coach.
   - **Starts when**, one line per start in tafs cloud's words, opening its sheet
-    (`StartsWhenSheet`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
+    (`StartsWhenSheet`; beside a tablet's sidebar, its own screen in the page's place, with a round
+    Back and its title in the bar, as the iPad pushes it, and so does Results go to: `SetupFrame`,
+    `SetupPage`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
     its `size`, each choice's `setting` sent as it is), and **If it is still working when the next
     start comes: Skip it / Run after** (`busy`, sent in the knob's `setting`); its app events, each
     with its filter in words, **Approve** while it waits for the owner (the signed approval, below)
