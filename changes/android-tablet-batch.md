@@ -1,0 +1,1 @@
+- **Android tablets, matching the iPad:** a taf's head shows its live version under its name ("Version 2 · live ›"), which opens Versions, with its name larger; "Times in …" sits above the Card; and the Overview says what else needs you in one line, which opens Needs you ([android-app.md](docs/android-app.md)).

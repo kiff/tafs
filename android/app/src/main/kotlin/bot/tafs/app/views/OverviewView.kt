@@ -51,6 +51,8 @@ fun OverviewView(
   onOpenCalendar: (() -> Unit)? = {},
   /** A mission's Log, from its row over the table when it's filtered to the mission's label; null where there's none to open. */
   onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
+  /** Needs you, from the line that says how much more waits than the held calls listed; null where there's no such screen. */
+  onNeedsYou: (() -> Unit)? = null,
   onOpenTaf: (String) -> Unit,
 ) {
   // The label the table is filtered to, as Home's list is on a phone (docs/android-app.md, Labels): All each time it opens.
@@ -79,13 +81,15 @@ fun OverviewView(
     }
     // The owner's board 10, under the Overview's title (a tablet's: the phone has no Overview).
     bot.tafs.app.design.Illustrated(height = 200.dp) { bot.tafs.app.design.OverviewArt(it) }
-    if (state.held.isNotEmpty()) {
+    // Everything Needs you counts, not only the held calls (as the iPad's: a Coach chat or a step still waits).
+    val rest = onNeedsYou != null && state.needsYouCount > state.held.size
+    if (state.held.isNotEmpty() || rest) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Eyebrow(Words.NeedsYou.title, color = Theme.amber)
         state.held.forEach { call ->
           val taf = state.taf(call.tafId) ?: return@forEach
           Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.panel).tapping { onOpenTaf(taf.id) }.padding(12.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised).tapping { onOpenTaf(taf.id) }.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
           ) {
@@ -93,6 +97,18 @@ fun OverviewView(
             Text("${taf.name} · ${call.proposed.summary}", style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Text(Words.NeedsYou.answerBy(shortTime(call.expiresAt)), style = scaled(12, color = Theme.soft))
           }
+        }
+        // What else waits (Coach's chats, steps, "Did this happen?", Card units): tafs cloud's count, in its words, opening Needs
+        // you, where each is answered.
+        if (rest) Row(
+          Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised).tapping { onNeedsYou?.invoke() }
+            .testTag("overview.needsYou").padding(12.dp),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Dot(Theme.amber, 8.dp)
+          Text(state.needsYouWords, style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+          Text("›", style = scaled(16, FontWeight.SemiBold, Theme.soft))
         }
       }
     }
