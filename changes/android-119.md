@@ -1,0 +1,1 @@
+- **Android 119 (1.39.1):** Coach's bar the same from its first screen, and Approve's note naming the device (#1335); Revoke as the Card tab's last row (#1336). Internal track first, then production when promoted ([android-app.md](docs/android-app.md)).

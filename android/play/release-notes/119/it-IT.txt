@@ -1,0 +1,3 @@
+- La barra di Coach è la stessa dalla sua prima schermata: Indietro e, su tablet, il pulsante che la allarga.
+- La nota sotto Approva in Setup ora indica il dispositivo su cui approvi, non sempre un telefono.
+- Nella scheda Card di un taf, Revoca è l'ultima riga, dopo Blocca, Modifiche al suo funzionamento e Utilizzo.

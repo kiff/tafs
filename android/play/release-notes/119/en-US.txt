@@ -1,0 +1,3 @@
+- Coach's bar is the same from its first screen: Back, and on a tablet the button that widens it.
+- Setup's note under Approve now names the device you approve on, not always a phone.
+- On a taf's Card tab, Revoke is the last row, after Halt, Changes to how it runs and Usage.

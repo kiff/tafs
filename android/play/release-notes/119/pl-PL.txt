@@ -1,0 +1,3 @@
+- Pasek Coacha jest taki sam od pierwszego ekranu: Wstecz, a na tablecie przycisk, który go poszerza.
+- Uwaga pod „Zatwierdź” w Setup wskazuje teraz urządzenie, na którym zatwierdzasz, a nie zawsze telefon.
+- Na karcie Card tafa „Unieważnij” jest ostatnim wierszem, po „Zablokuj”, „Zmiany w sposobie działania” i „Wykorzystanie”.
