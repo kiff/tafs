@@ -608,13 +608,14 @@ On iPhone and iPad, each message the owner composes, to a taf or to Coach, gets 
   - the stream;
   - the plain send that takes its place when the stream can't open or is cut;
   - a steer to the run at work.
-- **A message that wasn't sent keeps its id** (`UnsentMessage.messageID`), and Retry sends it under that id. If the
-  first send reached tafs cloud after all, tafs cloud answers with what it already did, never a second run.
+- **A message that wasn't sent keeps its id when nothing answered** (`UnsentMessage.messageID`): a dropped
+  connection, a timeout, or a 5xx such as a 503. Retry then sends it under that id. If the first send reached tafs
+  cloud after all, tafs cloud answers with what it already did, never a second run.
 - **A new id:** Edit, Send again and a new message are new messages.
-- **An id tafs cloud refuses as already used for other words** (409 `dedup_key_conflict`, with no words of its
-  own): the message is marked not sent with `error.sent_with_other_text`, and it gives up that id, so its Retry is a
-  new message, as the line says. The same id would only be refused again. tafs cloud's own words, when it sends
-  them, come first.
+- **A refusal (a 4xx) gives up the id,** so Retry is a new message (`TafsCloud.messageID(_:after:)`). Among them is
+  409 `dedup_key_conflict`, an id already used for other words. It comes with no words of its own, so the message
+  is marked not sent with `error.sent_with_other_text`, which says to send it again as a new message. The same id
+  would only be refused again. tafs cloud's own words, when it sends them, come first.
 - **No id of the app's own:**
   - what a run never read (tafs cloud's `not_sent`), whose Retry sends it as a new message, under a new id;
   - an improvement's first message, which goes through `/improve`;

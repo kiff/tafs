@@ -5134,7 +5134,7 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = Self.busyWords(c.name)
                 return .notTried
             }
-            keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: messageID)
+            keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: TafsCloud.messageID(messageID, after: e))
             return .kept
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
             // Refused for want of the AI-data consent: its screen says why, and the message goes
@@ -5566,7 +5566,7 @@ final class AppModel: ObservableObject {
                 // The consent's screen says why; the words stay in the composer.
                 return false
             } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
-                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: messageID)
+                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: TafsCloud.messageID(messageID, after: e))
                 return true
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry. The app

@@ -1541,10 +1541,13 @@ final class TafsCloud {
     /// 409: this message's id (`client_message_id`) was already used for another message.
     nonisolated static let dedupKeyConflict = "dedup_key_conflict"
 
-    /// The id a message keeps for Retry after `error`: its own, so a send that reached tafs cloud is acted on
-    /// once; none after `dedup_key_conflict`, whose Retry is a new message, as its words say.
+    /// The id a message keeps for Retry after `error` (docs/chat.md, "Message ids"): its own when nothing
+    /// answered or tafs cloud couldn't take it (a dropped connection, a timeout, a 5xx), so a send that did
+    /// land is acted on once; none after a refusal (a 4xx, `dedup_key_conflict` among them), whose Retry is
+    /// a new message.
     nonisolated static func messageID(_ id: UUID, after error: Error) -> UUID? {
-        (error as? CloudError)?.code == dedupKeyConflict ? nil : id
+        guard let refused = error as? CloudError else { return id }
+        return refused.status >= 500 || refused.status == 408 || refused.status == 0 ? id : nil
     }
 
     /// A message's id as tafs cloud reads it: a UUID, in lower case.

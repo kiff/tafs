@@ -256,6 +256,18 @@ final class ChatTests: XCTestCase {
         XCTAssertNotEqual(retried, refusedID, "Retry is a new message")
         XCTAssertTrue(model.chatState(id).unsent.isEmpty)
 
+        // Any other refusal (a 4xx) gives up the id too; a 5xx, a timeout or no answer keeps it, since the
+        // send may have landed (docs/chat.md, "Message ids").
+        let mine = UUID()
+        for status in [400, 403, 409, 422, 429] {
+            XCTAssertNil(TafsCloud.messageID(mine, after: TafsCloud.CloudError(status: status, message: "no")), "\(status)")
+        }
+        for status in [0, 408, 500, 502, 503] {
+            XCTAssertEqual(TafsCloud.messageID(mine, after: TafsCloud.CloudError(status: status, message: "x")), mine, "\(status)")
+        }
+        XCTAssertEqual(TafsCloud.messageID(mine, after: URLError(.networkConnectionLost)), mine)
+        XCTAssertEqual(TafsCloud.messageID(mine, after: URLError(.timedOut)), mine)
+
         // tafs cloud's own words, when it sends them, still come first.
         let worded = TafsCloud.refusal(409, Data(#"{"error":"x","code":"dedup_key_conflict","words":"Said by tafs cloud."}"#.utf8))
         XCTAssertEqual(worded.localizedDescription, "Said by tafs cloud.")
