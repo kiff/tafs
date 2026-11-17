@@ -1308,7 +1308,7 @@ class AppModel(
   /**
    * Uses the session a sign-in answered with, unless the screen had already [stopped] that way: on a tablet, the person switched
    * from the QR to KIFF's code, or back, or left, just as the token landed. A token for a way they stopped is never kept; it's
-   * ended at KIFF with its own bearer, and the stop goes on (qa-kiff, 16 Nov; iOS's tafs#1246). Kept, the account loads to the
+   * ended at KIFF with its own bearer, and the stop goes on (16 Nov; iOS's tafs#1246). Kept, the account loads to the
    * end whatever the screen does: the sign-in screen leaves as soon as the app is signed in, and its coroutine with it, which
    * used to cancel the first refresh and leave Home on "Loading your tafs…" until a pull.
    */

@@ -184,7 +184,7 @@ describe("a section of the kiff skill", () => {
     // Eval 43411672907: a taf closed dispute T-2007 though the owner's note said to always fight that customer's disputes.
     // Before any write, the notes for that item are read again, and a note that says no wins.
     expect(NOTES_INSTRUCTIONS).toContain("Before any call that changes an item (a dispute, an order, a ticket, a payment),\nread your notes again for that item, its customer and its kind of request. When a\nnote says not to do it, the note wins: don't make the call, and say in your report\nwhich note stopped you.");
-    // A brake, never a steer (qa-kiff on #867): a note may carry what an earlier run read, so it only stops a call,
+    // A brake, never a steer (#867): a note may carry what an earlier run read, so it only stops a call,
     // it never chooses another. And no Eval case's own example is written into every taf's instructions.
     expect(NOTES_INSTRUCTIONS).not.toContain("or to do something else");
     expect(NOTES_INSTRUCTIONS).not.toMatch(/fight a customer/);

@@ -1192,7 +1192,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const cases: Array<[string, unknown]> = [
       ["[confirm which] live", { type: "confirm", id: "which", answer: "live" }],
       [`[questions limits] {"cap":{"value":"50"}}`, { type: "questions", id: "limits", answer: { cap: { value: "50" } } }],
-      // A person's message never approves an approval card: Approve does, signed (qa-kiff, 15 Nov).
+      // A person's message never approves an approval card: Approve does, signed (15 Nov).
       ["[approval connect] approved", undefined],
       ["[approval connect] approved, signed in", undefined],
       ["[approval connect] declined", { type: "approval", id: "connect", answer: "declined" }],
@@ -1236,7 +1236,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(w.agents.calls).toEqual([`startRun ${RAE} live`, `startRun ${RAE} live`]);
   });
 
-  // qa-kiff, 15 Nov: anyone holding the person's session (a view-only device's too) could make Coach's approval card read
+  // 15 Nov: anyone holding the person's session (a view-only device's too) could make Coach's approval card read
   // "Approved", recorded as the person's answer, with nothing signed. Approve, signed and checked, is the only way.
   it("takes only declined or failed from a person on an approval card, never approved, and leaves a sign-in card as it was", async () => {
     for (const answer of ["approved", "already approved: Stripe is connected", "approved, signed in"]) {
@@ -1300,7 +1300,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
   });
 
   it("words an approval card's answer in the reader's language, the reason after it as tafs cloud gave it", async () => {
-    // kiff/agents records "Approve · it didn't go through: …" in English (agentgabo on #716).
+    // kiff/agents records "Approve · it didn't go through: …" in English (#716).
     const w = world();
     const answers: Array<[string, string]> = [
       ["approved", "Zatwierdzone"],
@@ -1429,7 +1429,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(JSON.stringify(r.body)).not.toContain("[tafs coach lines]");
   });
 
-  // qa-kiff on #906: an attachment sent alone while coach lines waited ends "The owner says:" with nothing after it, and the
+  // On #906: an attachment sent alone while coach lines waited ends "The owner says:" with nothing after it, and the
   // trim took the space ownerWords looked for: the whole envelope showed. An envelope with no owner part shows nothing of it.
   it("shows an attachment sent alone while coach lines waited with no text, as the run's message and as a card's answer", async () => {
     const w = world();

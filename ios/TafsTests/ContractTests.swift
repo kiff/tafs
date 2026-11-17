@@ -55,7 +55,7 @@ final class ContractTests: XCTestCase {
     }
 
     /// A taf's Activity as tafs cloud sends it: each entry's call comes without `held`, which only KIFF's own read
-    /// sends, so it reads as not held. It was required, and the page never loaded (linux-dev's find, porting).
+    /// sends, so it reads as not held. It was required, and the page never loaded (found while porting).
     func testATafsActivityReadsAsTafsCloudSendsIt() throws {
         let page = try XCTUnwrap(decodes(TafsCloud.ActivityPage.self, "taf-activity.json"))
         XCTAssertFalse(page.entries.isEmpty)

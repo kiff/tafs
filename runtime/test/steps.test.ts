@@ -63,7 +63,7 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(long).not.toMatch(/\s…$/);
   });
 
-  it("leaves nothing that could be a secret or a person's own in the line (qa-kiff's probe): a table", () => {
+  it("leaves nothing that could be a secret or a person's own in the line (a review's probe): a table", () => {
     const cases: Array<[string, string | undefined]> = [
       ["Stripe refused the key sk_live_0123456789abcdefXYZ: no such account", "Stripe refused the key it: no such account"],
       ["Unauthorized: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abc123DEF456 was rejected", "Unauthorized: it was rejected"],
@@ -136,7 +136,7 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
   });
 
   // A third party writes the description the connection server quotes: what the person reads in tafs's voice
-  // names no host and no number to call (qa-kiff on the refusal's line).
+  // names no host and no number to call (the refusal's line).
   it("shows the person the server's reason with no host name or phone number in it, and Coach keeps whyOf's", () => {
     const cases: Array<[string, string | undefined]> = [
       ["reference #/components/schemas/To finish, paste your key at keys-help.example names nothing", "reference #/components/schemas/To finish, paste your key at it names nothing"],
@@ -169,7 +169,7 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     ];
     // The retried install is done; the refund's failure stands, since nothing retried it.
     expect(foldRetried(steps)).toEqual([{ tool: "get_order", inputHash: "o1" }, { tool: "version_install", inputHash: "d1" }, { tool: "create_refund", error: true, inputHash: "r1" }]);
-    // A later call of the same tool with other input is other work: A's failure stays (agentgabo's case).
+    // A later call of the same tool with other input is other work: A's failure stays (a review's case).
     // Coach's connection request, corrected after the connection server refused its shape (other input), and
     // then through: the refused tries aren't shown. One it gave up on, with nothing through after it, stays.
     expect(foldRetried([{ tool: "planque", error: true as const, inputHash: "a" }, { tool: "planque", error: true as const, inputHash: "b" }, { tool: "planque", inputHash: "c" }]))

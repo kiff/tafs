@@ -135,7 +135,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
   if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: W.outOfDate, code: "out_of_date" };
   // Every check below reads the Cards as KIFF shows them, so a draft is never signed without them (fail closed). A read
   // that didn't bring them is read again; a draft with no Card at all (KIFF's null, or an empty list) is answered, so
-  // Coach drafts one rather than the card asking the same draft again (dev-android on #1067).
+  // Coach drafts one rather than the card asking the same draft again (#1067).
   if (!draft.cards) return { outcome: "read_again", note: W.cardsUnread, code: "cards_unread" };
   if (!draft.cards.length) return { outcome: "answered", answer: `failed: the Card draft ${draftID} has no Card, so nothing in it covers the taf's tools and it isn't signed. Draft it again with a Card over each tool the taf's connections give it.`, note: W.noCard, code: "no_card" };
   // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
@@ -155,7 +155,7 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     } catch {
       return { outcome: "read_again", note: W.cardsUnread, code: "in_force_unread" };
     }
-    // And the other way (qa-kiff's negative 1 on #919): every action the draft's Cards allow is one of this connection's
+    // And the other way (a review's negative 1 on #919): every action the draft's Cards allow is one of this connection's
     // tools, one of the same taf's other connections', or allowed already. A Card signed under "Connect Stripe" never
     // also lets the taf act on something no connection of its gives it here.
     // A tool planque renamed for this taf (its vendor name was taken in KIFF) is covered by its registered name only

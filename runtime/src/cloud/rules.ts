@@ -209,7 +209,7 @@ export const KIFF_COUNT_A_DAY = 10_000;
 /**
  * Whether `a` is KIFF's own count on `card`, never a figure of the owner's: a count of KIFF_COUNT_A_DAY a calendar day,
  * for no item, as the only total of a Card that holds what's past it (not one that refuses), and, for each tool the Card
- * covers, another of `cards` covering it with a total on an amount over all items, never one item's (qa-kiff: alone, or
+ * covers, another of `cards` covering it with a total on an amount over all items, never one item's (alone, or
  * beside €50 for each customer, 10,000 refunds of €4.99 a day would pass unasked, a sum no one agreed). Without that other Card, the count is a count beside the amount, as before.
  */
 export function kiffsOwnCount(cards: readonly unknown[], card: unknown, a: unknown): boolean {

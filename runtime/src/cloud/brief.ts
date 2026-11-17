@@ -13,7 +13,7 @@
 /** The brief's times in the account's time zone (decision 1: 08:00 and 18:00, changeable in Account). */
 export const BRIEF_SLOTS = ["08:00", "18:00"] as const;
 
-/** At most this many decisions are listed; the rest are counted (dev-android's 4). */
+/** At most this many decisions are listed; the rest are counted. */
 export const BRIEF_DECISIONS = 5;
 
 /** A decision as the route gathers it, before the brief decides what's urgent and what can wait. */

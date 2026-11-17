@@ -90,7 +90,7 @@ describe("Coach's core", () => {
     expect(SETUP_CORE).toContain("Ask each thing once. What the owner already told you, a limit included");
   });
 
-  // No skill tells Coach what the core forbids: a mode or "no real money" stated as fact (qa-kiff, recipe 3).
+  // No skill tells Coach what the core forbids: a mode or "no real money" stated as fact (recipe 3).
   // A setup that asked where the work comes from offered the owner's inbox to connect first, and the
   // owner took it (the Eval, 5 Nov): with no app named, the taf's own chat comes first.
   // A new Invoice reminders was connected to Stripe through a provider's live-only app while Chargebacks
@@ -117,7 +117,7 @@ describe("Coach's core", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("before adding a tool to any grant, a reused one too, read its catalog {grant, q}: planque takes only tools it listed.");
     expect(connect).toContain("When the app answers it can't do what was asked (a 403, a scope it lacks), another approval won't change that: never ask it again.");
-    // A declined approval is the plainest thing never to ask again (qa-kiff on #907).
+    // A declined approval is the plainest thing never to ask again (#907).
     expect(connect).toContain("If the owner declined, never show it again: ask what they want instead.");
     // No second approval for one app: a grant that still waits is pointed to, never shown again (the owner's bar, 13 Nov).
     expect(connect).toContain("Otherwise read the grant's status: if it still waits, say the approval above still waits; never show a new one.");
@@ -171,10 +171,10 @@ describe("Coach's core", () => {
     expect(tools).toContain("or object, naming the fields the taf writes, by the job's or owner's names (ask one you don't know), never none (`type: \"object\", schema: {type: \"object\", properties: {\"Status\": {type: \"string\"}}}`).");
     // planque refuses a field that is itself an object (planque#240): a nested object's fields are their own arguments.
     expect(tools).toContain("A field is plain or an array; a nested one's fields are arguments at their paths.");
-    // agentgabo's Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
+    // A Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
     // for one connection. The tools go once, complete.
     expect(tools).toContain("Ask for a taf's tools once, complete (read_only, pins, arguments): each change is one more approval.");
-    // Which item a write names when it takes several (qa-kiff on #917): the one its read takes, so the ids agree.
+    // Which item a write names when it takes several (#917): the one its read takes, so the ids agree.
     expect(tools).toContain("When it takes several, keep the one its read takes.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("You choose the name: the taf's name in lower case, words joined by hyphens (introduction-drafts)");
@@ -242,7 +242,7 @@ describe("Coach's core", () => {
     // Four asks for one read-only report, two of them approvals, the key before the Card (owner's phone, 12 Nov):
     // a key grant's tools are declared at the request, so the Card is drafted first and the key sheet signs both.
     expect(body).toContain("For a key, the sheet is the ask, with no card before it.");
-    // planque takes tools only on a signed-in grant, and declares a key grant's from the request (agentgabo on #830).
+    // planque takes tools only on a signed-in grant, and declares a key grant's from the request (#830).
     expect(body).not.toContain("(planque tools) while it waits");
     expect(body).toContain("Describe {api} (a count: again with q, the job's words), then request the job's operations as tools, by describe's names, with full specs (name-the-tools), never none, so it's declared. If declared, agree the rules, draft the Card, show one approval with the grant and the draft: the sheet signs both. Else, key then Card.");
     expect(body).toContain("Say a mode only as the grant gives it.");
@@ -339,7 +339,7 @@ describe("Coach's core", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(setup).toContain("A taf keeps its own records: when it works from the owner's sheet or list, propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner knows, never how to track it.");
     const card = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    // The owner reads "tafs, your AI assistant"; the recipient reads "on behalf of tafs", never "your" assistant (qa-kiff on #889).
+    // The owner reads "tafs, your AI assistant"; the recipient reads "on behalf of tafs", never "your" assistant (#889).
     expect(card).toContain("who its messages come from: first \"tafs, your AI assistant\" (it speaks as itself: writes_for \"tafs\"), then the owner's name, then the company's (\"Kiff Agents OÜ\"); never the app's default. Put the answer in the result's taf as writes_for.");
     expect(card).not.toContain("or another name?");
     expect(card).toContain("Never promise an approval the Card can't give.");
@@ -350,7 +350,7 @@ describe("Coach's core", () => {
   // connections, and never said how often it checks, what it gathers, or how much it drafts.
   it("sets a recurring job up as recurring: cadence, sources and volume proposed before any connection", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
-    // A failed hand-over isn't shown again until the owner answers, or it loops (qa-kiff on #889).
+    // A failed hand-over isn't shown again until the owner answers, or it loops (#889).
     expect(setup).toContain("say what failed and ask the owner what to do; show result again only once they answer.");
     expect(setup).toContain("A recurring job: before connecting, propose its cadence, sources and volume (\"weekday mornings, at most 1 a day\"); ask only what you can't decide.");
   });
@@ -370,7 +370,7 @@ describe("Coach's core", () => {
   it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain('A limit for each item ("one invoice per order, ever") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
-    // A tool with no resource argument: KIFF would refuse a per naming an argument it doesn't declare (qa-kiff on #851).
+    // A tool with no resource argument: KIFF would refuse a per naming an argument it doesn't declare (#851).
     expect(body).toContain("With none, it goes in the taf's instructions, and the rules say KIFF can't count it.");
     expect(body).toContain("Never a lifetime total on the tool: it stops after one item.");
     expect(body).not.toContain("KIFF can't enforce it yet");
@@ -437,7 +437,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   // name-the-tools is at its second version: the first stated the owner's mode as fact (never stored; kept in the lock).
   for (const [entry, want] of [
     ["free", SETUP], ["recipe", SETUP], ["door", SETUP],
-    // An `[improve taf …]` start adds a tool and drafts its Card through the gateway's tools too (agentgabo on #525).
+    // An `[improve taf …]` start adds a tool and drafts its Card through the gateway's tools too (#525).
     ["improve", ["connect-an-app", "draft-the-card", "improve-a-taf", "name-the-tools"]],
     ["coach_lines", ["the-tafs"]], ["delivery", ["the-dial"]], ["did_this_happen", ["cards-and-holds", "did-this-happen"]],
   ] as const) {

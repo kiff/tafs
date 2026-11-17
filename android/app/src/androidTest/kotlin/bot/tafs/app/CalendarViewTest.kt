@@ -13,7 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * The calendar never says "Nothing scheduled" when it doesn't know (kiff/tafs#537, dev-android): a failed read shows its error
+ * The calendar never says "Nothing scheduled" when it doesn't know (kiff/tafs#537): a failed read shows its error
  * with Try again, and a read of another month shows it's reading.
  */
 class CalendarViewTest {

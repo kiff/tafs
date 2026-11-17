@@ -332,7 +332,7 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana" })).body).toEqual({ suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: "no" } })).status).toBe(400);
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "key_rae", body: { show: false } })).status).toBe(403);
-    // A viewer can't turn suggestions off for the whole account (qa-kiff): refused, and the setting unchanged.
+    // A viewer can't turn suggestions off for the whole account: refused, and the setting unchanged.
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "viewer", body: { show: false } })).status).toBe(403);
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "viewer" })).body.suggestions).toMatchObject({ show: true, reason: "on" });
     const off = await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: false } });
@@ -342,7 +342,7 @@ describe("tafs cloud", () => {
     expect(hidden.body).toMatchObject({ recipes: [], shown: false, suggestions: { show: false } });
     // Suggestions off: Home shows its empty line, as before recipes.
     expect(hidden.body.home).toEqual({ shown: false, words: empty, own_words: own });
-    // Nothing is listed below it, so it never says to pick one (qa-kiff on #860).
+    // Nothing is listed below it, so it never says to pick one (#860).
     expect(hidden.body.home.words).not.toMatch(/below/);
     expect((await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "fr" } })).body.home)
       .toEqual({ shown: false, words: "Pas encore de tafs. Dites à Coach quel travail un taf doit faire.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
@@ -535,7 +535,7 @@ describe("tafs cloud", () => {
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("boom", { status: 500 }) : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
     expect(down.statusCode).toBe(200);
     expect(JSON.parse(down.body).filtered).toBe(false);
-    // A catalog that connects none of the recipes (qa-kiff): no recipe, so Home doesn't lead with an empty list; it keeps its empty line.
+    // A catalog that connects none of the recipes: no recipe, so Home doesn't lead with an empty list; it keeps its empty line.
     const none = await handle({ rawPath: "/v1/recipes", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
         ? new Response(JSON.stringify({ entries: [{ entry: "connector:composio:spotify", title: "Spotify", vendor: "Spotify", how: "oauth" }] }), { status: 200 })
@@ -1659,7 +1659,7 @@ describe("Connect apps' rows", () => {
     // A personal account's connections are the person's own, in their language.
     const mine = await read(w, "ana_me", "fr-FR");
     expect(mine.body.apps.find((a) => a.title === "Stripe")).toMatchObject({ whose: "À vous", line: expect.stringMatching(/^Connexion · Connecté · Utilisée par /) });
-    // The same words as the apps' own keys (tafs#899), so the phone's row and the iPad's table read alike (qa-kiff on #900).
+    // The same words as the apps' own keys (tafs#899), so the phone's row and the iPad's table read alike (#900).
     const pl = await read(w, "ana_co", "pl-PL");
     expect(pl.body.apps.find((a) => a.title === "Stripe")!.line).toMatch(/^Logowanie · Połączono · Używa jej /);
   });
@@ -1913,7 +1913,7 @@ describe("removing a taf", () => {
   });
 
   // A computer approves with its passkey, never a device key (docs/computer-passkeys.md): it sends KIFF-Passkey-Assertion, which
-  // tafs cloud never read, so Windows could only remove unsigned (win-dev, 16 Nov). KIFF checks the passkey in place of a signature.
+  // tafs cloud never read, so Windows could only remove unsigned (16 Nov). KIFF checks the passkey in place of a signature.
   it("takes a computer's passkey on a removal in place of the phone's signature, and refuses both at once", async () => {
     const asked: Array<Record<string, unknown>> = [];
     let answer: { status: number; body: unknown } = { status: 200, body: { signed: true, key: "critical" } };
@@ -2246,7 +2246,7 @@ describe("Setup (kiff/agents#91)", () => {
         expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
       }
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
-      // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
+      // (#852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
       expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
       // What they were worded over is signed with the draft, and KIFF refuses it at submit if the tools changed since.
@@ -2481,7 +2481,7 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
     // As stored, it's the same job every time it's built again (an Upgrade, a new version).
     expect(jobOf(w.tafs.held.get(`t_acme#${NEW}`)!).disclose).toEqual(disclose);
     w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "leads-x" });
-    // A tool that isn't the taf's would be kept and do nothing: refused, in words for Coach (agentgabo on #572).
+    // A tool that isn't the taf's would be kept and do nothing: refused, in words for Coach (#572).
     const stray = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...own, name: "Leads", draft_id: "drf_s2", disclose: [{ tool: "send_mail_x1", fields: ["body"] }] } });
     expect(stray.status).toBe(400);
     expect(stray.body.error).toContain("send_mail_x1, which isn't among the taf's tools");
@@ -3095,7 +3095,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
 
-  // qa-kiff on #574: a version built before gap 18 carries "for the company", the placeholder it removed.
+  // On #574: a version built before gap 18 carries "for the company", the placeholder it removed.
   // Installing one names no one, so the Upgrade still gives the taf the company's name.
   it("reads no sender from a version's line from before gap 18 when it is installed", async () => {
     const w = twoVersions();
@@ -3497,7 +3497,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(knob.body.results.find((r: { place: string }) => r.place === "action")).toMatchObject({ grant: "grt_n1", action: "notion_add_page_k3f9", tap: "Turn to stop: each result goes to Notion · Support log" });
   });
 
-  it("refuses a money tool as a place, from the taf's Cards: at the dial from the app, and at go-live for Coach's draft (agentgabo on #516)", async () => {
+  it("refuses a money tool as a place, from the taf's Cards: at the dial from the app, and at go-live for Coach's draft (#516)", async () => {
     const w = world();
     w.agents.versions.set(`t_acme|${RAE}`, []);
     const refund = { place: "action", grant: "grt_s1", action: "Stripe_Refund_k3f9", args: { charge: "ch_1" }, name: "Stripe · Refunds" };
@@ -3530,7 +3530,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(down.body.error).toContain("Cards couldn't be read");
   });
 
-  it("takes another taf as a place only by this account's record, named as the record names it (qa-kiff on #507)", async () => {
+  it("takes another taf as a place only by this account's record, named as the record names it (#507)", async () => {
     const w = world();
     w.agents.versions.set(`t_acme|${RAE}`, []);
     const put = (results: unknown[]) => call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results } });
@@ -3550,7 +3550,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const knob = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
     expect(knob.body.setting.results).toEqual(["app", { place: "taf", taf: "taf_inv1", name: "Refunds II", fill: { what: "the invoice and the amount" } }]);
     expect(knob.body.results.find((r: { place: string }) => r.place === "taf")).toMatchObject({ taf: "taf_inv1", label: "Refunds II", words: "Each result is handed to Refunds II: the invoice and the amount" });
-    // A version made with places goes through the same check (qa-kiff's second point).
+    // A version made with places goes through the same check (a review's second point).
     const bad = await call(w, "POST", `/v1/tafs/${RAE}/versions`, { token: "ana", body: { note: "Results to Invoices", actionResults: [{ place: "taf", taf: "taf_nope", name: "Invoices" }] } });
     expect(bad.status).toBe(400);
     expect(bad.body.error).toContain("no taf of this account");
@@ -4543,7 +4543,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     return { w, run: run.id, note, answer, deps, approvalBeside };
   }
 
-  // The first run's item 7 (dev-android on #860): the hand-over card reads this answer, so a taf made with no plan says so.
+  // The first run's item 7 (#860): the hand-over card reads this answer, so a taf made with no plan says so.
   it("says on the hand-over card that a taf made with no plan starts once there's one", async () => {
     const w = world();
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
@@ -4560,7 +4560,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
       headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { components: Array<{ component: { id: string }; answer?: { outcome?: unknown } }> };
     await read("en");
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds" });
-    // kiff/agents takes a result's answer with its known fields only (qa-build on #860): the answer stays {taf_id}.
+    // kiff/agents takes a result's answer with its known fields only (#860): the answer stays {taf_id}.
     expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     // The card's answer, as the apps read it, says so, in the reader's language.
     expect((await read("en")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choose a plan to start it." } });
@@ -5039,7 +5039,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(JSON.stringify(two.answer())).toContain("writes_for is who the taf's messages come from");
   });
 
-  // agentgabo on kiff/agents#354: an improvement may add a disclosure (a tool it adds, or a taf from
+  // On kiff/agents#354: an improvement may add a disclosure (a tool it adds, or a taf from
   // before), on top of the taf's, never taking one away; a tool that isn't the taf's fails the handover.
   it("adds an improvement's disclosure to the taf's, and builds its version with both", async () => {
     const better = { type: "result", id: "better", tools: ["reply_k3f9"], taf: { agent: "rae", improves: RAE, note: "Also replies to customers",
@@ -5055,7 +5055,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(jobOf(kept).disclose).toEqual(expect.arrayContaining([{ tool: "reply_k3f9", fields: ["body"] }, { tool: "send_message_k3f9", fields: ["text"] }]));
   });
 
-  // agentgabo on #574: a taf made before writes_for gets its sender's name from an improvement, never remade.
+  // On #574: a taf made before writes_for gets its sender's name from an improvement, never remade.
   it("lets an improvement name who an existing taf writes for, in its next version's disclosure", async () => {
     const better = { type: "result", id: "named", tools: ["send_message_k3f9"], taf: { agent: "rae", improves: RAE, note: "Signs as the company", writes_for: "Kiff Agents OÜ" } };
     const { w, note, answer } = await paused(better);
@@ -5065,7 +5065,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     const made = answer() as { answer: { version: number } };
     expect(made).toMatchObject({ answer: { version: expect.any(Number) } });
-    // The version carries the new line; the live taf doesn't until the owner installs it (qa-kiff on #574).
+    // The version carries the new line; the live taf doesn't until the owner installs it (#574).
     const latest = [...w.agents.versionDefs.values()].at(-1) as { disclose?: { line: string } } | undefined;
     expect(latest?.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBeUndefined();
@@ -5075,7 +5075,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(jobOf(kept).writesFor).toBe("Kiff Agents OÜ");
   });
 
-  // qa-kiff on #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
+  // On #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
   it("refuses a writes_for that doesn't fit the disclosure line", async () => {
     for (const bad of ["株".repeat(84), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
       const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
@@ -5083,14 +5083,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
       await note();
       expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
     }
-    // 83 of a 3-byte script fits: 249 bytes, so the line fits in every language, German's within 300 (qa-kiff on #587).
+    // 83 of a 3-byte script fits: 249 bytes, so the line fits in every language, German's within 300 (#587).
     const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(83) } });
     fits.w.agents.access.set("u_ana", { cards_manage: true });
     await fits.note();
     expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
   });
 
-  // qa-kiff on #572: a merge only ever widens: Chargebacks' own fields for update_dispute stay when a taf names another.
+  // On #572: a merge only ever widens: Chargebacks' own fields for update_dispute stay when a taf names another.
   it("only ever widens a disclosure: a tool named again keeps its earlier fields", () => {
     const own = jobById("chargebacks").disclose;
     const merged = withDisclose(own, [{ tool: "update_dispute", fields: ["evidence.shipping_carrier"] }]);
@@ -5321,7 +5321,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
   });
 
-  // What the desktops' Coach conversation reads (kiff/work#2): Coach in GET /v1/setup, its chats, and one chat with a
+  // What the desktops' Coach conversation reads: Coach in GET /v1/setup, its chats, and one chat with a
   // message that has work, one refused, the owner's words answering a card, the three card kinds, and Coach's lines.
   it("keeps Coach's setup, its chats and one chat as contracts, for the desktops' Coach conversation", async () => {
     const w = world();
@@ -5399,7 +5399,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(before.others).toHaveLength(1);
     expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
     expect((await home("fr")).others[0]!.finish).toMatchObject({ words: "Terminer la configuration" });
-    // Another manager sees it by its name too, but Ana's chat isn't theirs to open (qa-kiff on #873): no finish.
+    // Another manager sees it by its name too, but Ana's chat isn't theirs to open (#873): no finish.
     const other = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
       headers: { Authorization: "Bearer owner" } }, deps)).body) as { others: Array<Record<string, unknown>> };
     expect(other.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x" });
@@ -5414,7 +5414,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(after.setting_up).toEqual([]);
   });
 
-  // agentgabo on #873: a result waits a few days; once it has expired, its run no longer names the agent. The name
+  // On #873: a result waits a few days; once it has expired, its run no longer names the agent. The name
   // Coach gave it stays (there's no chat to finish it in any more), and its id never comes back.
   it("keeps the name Coach gave a half-made taf once its chat's result has expired", async () => {
     const w = world();
@@ -5807,7 +5807,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(moved.statusCode).toBe(200);
   });
 
-  // The guards that keep a live taf from ever being discarded (qa-kiff on #905): a handed-over taf's claimed draft, and an
+  // The guards that keep a live taf from ever being discarded (#905): a handed-over taf's claimed draft, and an
   // improvement's result, are no taf being set up.
   it("never discards a taf that was handed over, nor an improvement", async () => {
     for (const shape of ["claimed", "improves"] as const) {
@@ -5894,7 +5894,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // kiff/tafs#572's P0: the lock moved to set-up-a-taf@3 with the deploy while every account's live Coach still
   // named @2 until the Upgrade, and kiff/agents refused each new chat (skill_not_named). The skills a message
-  // or a tool names are the live definition's versions; a skill it doesn't name is left out (qa-kiff's test).
+  // or a tool names are the live definition's versions; a skill it doesn't name is left out (a review's test).
   it("names Coach's skills at the versions its live definition names, never the lock's, for a new chat and a tool's add", async () => {
     const w = world();
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
@@ -5920,7 +5920,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@12");
   });
 
-  // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
+  // On #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
   // as KIFF names it, never "for the company"; a personal account's name (an email) is never used.
   it("names the account's company as who a taf writes for when no one else is named", async () => {
     const w = world();
@@ -6031,7 +6031,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await coachTool("stripe_refund_k3f9", {}, callOf, deps).catch(() => undefined);
     expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
     // kiff/agents failing the add leaves the tool's answer as it is, and the skill isn't marked loaded: the
-    // next call adds it (qa-kiff).
+    // next call adds it.
     w.agents.fail.set("addSessionSkills", new AgentsError(503, "down"));
     const b = await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch((e: Error) => ({ error: e.message }));
     expect(JSON.stringify(b)).not.toContain("Skill");
@@ -6085,7 +6085,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await call(w, "POST", "/v1/setup/check-call", { token: "ana", body: {} })).status).toBe(400);
   });
 
-  it("opens Coach only for the person KIFF marked as checking the call, while the mark holds; its fields fold to one line each (qa-kiff on #535)", async () => {
+  it("opens Coach only for the person KIFF marked as checking the call, while the mark holds; its fields fold to one line each (#535)", async () => {
     const w = world();
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
     await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
@@ -6870,7 +6870,7 @@ describe("the first run", () => {
     for (const zone of ["Mars/Olympus", "../etc", "UTC", ""]) {
       expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": zone })).body).not.toHaveProperty("time_zone");
     }
-    // Someone who can't manage the tafs never asks KIFF: no call on every read (qa-kiff on #860).
+    // Someone who can't manage the tafs never asks KIFF: no call on every read (#860).
     expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris", Authorization: "Bearer viewer" })).body).not.toHaveProperty("time_zone");
     expect(k.put).toEqual([]);
     // KIFF refuses (a member, not an owner or admin): nothing marked, so an owner's phone later still sets it.
@@ -6919,7 +6919,7 @@ describe("the first run", () => {
     expect(triggers()).toHaveLength(2);
   });
 
-  // qa-kiff on #887: kiff/agents answers a firing with no credits as an outcome, not an error. It stays owed.
+  // On #887: kiff/agents answers a firing with no credits as an outcome, not an error. It stays owed.
   it("keeps a first run owed while kiff/agents holds the firing back, and settles it once a run starts or one is going", async () => {
     const w = world();
     const k = withKIFF(w, { balanceKind: "none" });
