@@ -22,7 +22,8 @@ object SetupWords {
   val APPROVE get() = Words.Setup.approve
   val LISTENING get() = Words.Setup.listening
   val STOP get() = Words.Setup.stop
-  val APPROVE_NOTE get() = Words.Setup.approveNote
+  /** Approve signs on this device, named as the device it is ("this phone", "this tablet"), from setup.approve_note_device. */
+  val APPROVE_NOTE get() = Words.Setup.approveNoteDevice(ThisDevice.word)
   val DOORS get() = Words.Setup.doors
   val FOLLOW_UPS get() = Words.Setup.followUps
   val REMOVE get() = Words.Setup.remove

@@ -1,0 +1,5 @@
+- Op een tablet één zijbalk voor de hele app, zoals op de iPad: Wacht op jou, Logboek, Agenda, Abonnement en gebruik, Apps koppelen, je tafs en Coach.
+- Op een tablet opent Coach naast waar je mee bezig bent, en je kunt hem breder maken.
+- De pagina van een taf toont de live versie onder de naam.
+- Op een tablet openen "Start wanneer" en "Resultaten gaan naar" als een eigen scherm.
+- Het Logboek toont wat er elke dag is uitgegeven.
