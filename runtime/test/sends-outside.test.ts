@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NOTE_CLAIM_MS, NOTE_RELEASE_MARGIN_MS, noteSendingOutside, notedSendingOutside, sendingOutside, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
+import { NOTE_CLAIM_MS, NOTE_RELEASE_MARGIN_MS, noteSendingOutside, notedSendingOutside, sendingOutside, sendingProfileOf, sendsOutsideKey, undisclosedSending } from "../src/cloud/sends-outside.js";
 import { memoryCoach } from "./fakes.js";
 
 const NOW = new Date("2026-11-09T12:00:00Z");
@@ -20,6 +20,27 @@ describe("tools that send outside the company (gap 14)", () => {
     expect(sendingOutside(profile)).toEqual(["draft_reply", "drafts_create", "send_email"]);
     expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email"])).toContain("disclose doesn't name drafts_create, which reaches people outside the company, a draft once it's sent included");
     expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email", "drafts_create"])).toBeUndefined();
+  });
+
+  // Eval 43975057022, Replay run 2: a draft email on an API-key connection, which carries no profile, so nothing was
+  // noted and the taf was made without the line. planque marks a key write's text fields from its schema: such a write
+  // sends; one with none (a status) or a read doesn't, whatever the vendor's words or the asking agent say.
+  it("on an API-key connection, are its writes with text fields, as planque read the schema", () => {
+    const key = { api: { url: "https://desk.example/openapi.json" }, tools: [
+      { tool: "createDraft", name: "create_draft_k3", text_fields: ["body", "subject"] },
+      { tool: "setStatus", name: "set_status_k3" },
+      { tool: "markRow", name: "mark_row_k3", text_fields: [] },
+      { tool: "listTickets", name: "list_tickets_k3", read_only: true, text_fields: ["q"] },
+      { tool: "readNotes", name: "read_notes_k3", setup_reads: true, text_fields: ["text"] },
+      { tool: "addNote", text_fields: ["text"] },
+    ] };
+    expect(sendingOutside(sendingProfileOf(key))).toEqual(["addNote", "create_draft_k3"]);
+    expect(undisclosedSending(sendingOutside(sendingProfileOf(key)), ["create_draft_k3", "set_status_k3"], [])).toContain("disclose doesn't name create_draft_k3");
+    expect(undisclosedSending(sendingOutside(sendingProfileOf(key)), ["create_draft_k3", "set_status_k3"], ["create_draft_k3"])).toBeUndefined();
+    // Not a key connection: text_fields count for nothing, the profile alone does.
+    const managed = { profile: { operations: [op("send_email", "sends", true)] }, tools: [{ tool: "x", name: "x_k3", text_fields: ["body"] }] };
+    expect(sendingOutside(sendingProfileOf(managed))).toEqual(["send_email"]);
+    for (const none of [undefined, null, "x", {}, { api: {} }, { api: {}, tools: "x" }]) expect(sendingOutside(sendingProfileOf(none))).toEqual([]);
   });
 
   it("are noted per grant for the taf's agent, each Approve replacing its own grant's, never another's", async () => {
