@@ -101,6 +101,12 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    are its `lines` and KIFF's own preview of the Cards. `given` sends nothing; `taken`
    names the vendor's tool that holds one of Coach's names, and `unknown` asks to try
    again, both sending nothing. A replaced connection's line says what it replaces.
+   **Only the step that was shown is given.** Give reads `GET /v1/setup` again, and when its
+   batch or its Cards' draft isn't the one the step showed, nothing is signed or sent: the step
+   is drawn again from that read, with "What you're asked to approve changed since it was
+   shown.", and the next Give gives exactly that. Cards tafs cloud drafts only once the batch is
+   in were never on the step, so the batch goes, the step is drawn again with KIFF's words for
+   the Cards, and a second Give gives them.
    (Android: `AppModel.giveCoachTools`, `CoachToolsSheet`. iPhone and iPad: the same names, with the
    batch and the Cards behind one Face ID, [ios-app.md](ios-app.md#coachs-tools).)
 
