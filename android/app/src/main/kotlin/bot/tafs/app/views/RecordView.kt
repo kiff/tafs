@@ -78,8 +78,8 @@ private fun days(record: List<RecordEntry>, filter: RecordFilter, taf: String? =
 }
 
 /**
- * What a day's money moved came to, by unit, as each amount was recorded: "€120", or "€120 · $30" across units. Null when no
- * money moved that day.
+ * What a day's money moved came to, by unit, as each amount was recorded, in the app's words for it (`record.day_spent`, as the
+ * iPad's): "€120 spent", or "€120 + $30 spent" across units. Null when no money moved that day.
  */
 internal fun spentOn(entries: List<RecordEntry>): String? {
   val sums = entries.filter { RecordFilter.MoneyMoved.keeps(it) }
@@ -87,7 +87,7 @@ internal fun spentOn(entries: List<RecordEntry>): String? {
     .groupBy({ it.first }, { it.second })
     .mapValues { (_, values) -> values.fold(java.math.BigDecimal.ZERO, java.math.BigDecimal::add) }
   if (sums.isEmpty()) return null
-  return sums.entries.joinToString(" · ") { (unit, sum) -> bot.tafs.app.model.Money.of(sum.unscaledValue().toLong(), unit, sum.scale()).formatted }
+  return Words.Record.daySpent(sums.entries.joinToString(" + ") { (unit, sum) -> bot.tafs.app.model.Money.of(sum.unscaledValue().toLong(), unit, sum.scale()).formatted })
 }
 
 /**
@@ -160,7 +160,7 @@ fun RecordView(
     for (day in days) {
       item(key = "day-${day.date}") {
         // The day, and what its money moved came to.
-        val spent = spentOn(day.lines)
+        val spent = spentOn(day.lines + day.reads)
         Text(
           (dayTitle(day.date) + (spent?.let { " · $it" } ?: "")).uppercase(),
           style = scaled(11, FontWeight.Medium, Theme.dim, mono = true),
