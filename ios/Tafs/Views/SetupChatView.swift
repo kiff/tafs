@@ -725,15 +725,25 @@ struct SetupChatView: View {
 
     private var composer: some View {
         let key = AppModel.setupFiles
-        let ready = model.files(key).contains { $0.ref != nil }
+        // While Coach improves a taf, files in the tray wait for the next message: the words go alone.
+        let filesWait = model.improvementHoldsFiles
+        let ready = !filesWait && model.files(key).contains { $0.ref != nil }
         let uploading = model.filesUploading(key)
         let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.setupThinking
         // Files go with a message of their own, once Setup is done; and nothing goes while a file
         // is still going up, so a message never leaves one behind (kiff/tafs#209).
-        let held = model.holdsSend(key, thinking: thinking)
+        let held = !filesWait && model.holdsSend(key, thinking: thinking)
         return VStack(spacing: 0) {
         FileTray(key: key)
+        if filesWait {
+            Text(Words.Coach.improveNoFiles)
+                .scaledFont(13).foregroundColor(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14).padding(.top, 8)
+                .accessibilityIdentifier("coach.improve-no-files")
+        }
         VStack(alignment: .leading, spacing: 4) {
             ChatField(title: thinking ? Words.Chat.writeNext : Words.Coach.askAnything, text: $model.setupDraft, cursor: { model.dictation.cursor = $0 })
                 .focused($typing)
@@ -814,7 +824,8 @@ struct SetupChatView: View {
         typing = false
         Haptics.tap()
         let key = AppModel.setupFiles
-        let files = model.takeFiles(key)
+        // An improvement's first message goes without them: they stay in the tray for the next one.
+        let files = model.improvementHoldsFiles ? [] : model.takeFiles(key)
         Task {
             if !(await model.submitSetup(text, files: files.compactMap(\.ref))) {
                 if model.setupDraft.isEmpty { model.setupDraft = text }

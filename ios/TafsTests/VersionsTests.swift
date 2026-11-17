@@ -156,6 +156,24 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(model.mayImproveInCoach(other), "not their taf: no Change the limit in Coach")
     }
 
+    /// Files picked in a plain chat stay in the tray when Coach is then opened on a taf. An improvement's first
+    /// message carries none, so they wait for the next message, and the composer says so; a plain chat sends them.
+    func testFilesWaitForTheNextMessageWhileCoachImprovesATaf() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        let ref = TafsCloud.AttachmentRef(id: "att_1", kind: "text", mediaType: "text/plain", name: "policy.txt", size: 12)
+        model.putBackFiles([PendingFile(id: UUID(), name: "policy.txt", mediaType: "text/plain", thumbnail: nil, state: .ready(ref))], AppModel.setupFiles)
+        model.newSetupChat()
+        XCTAssertFalse(model.improvementHoldsFiles, "a plain chat sends its files")
+        model.improveTaf(id)
+        XCTAssertNotNil(model.setupImproving)
+        XCTAssertTrue(model.improvementHoldsFiles, "an improvement's first message: they wait")
+        XCTAssertNil(model.filesTarget(AppModel.setupFiles), "and no paperclip while it improves")
+        XCTAssertEqual(model.files(AppModel.setupFiles).map(\.name), ["policy.txt"], "still in the tray for the next one")
+        XCTAssertEqual(Words.Coach.improveNoFiles, "Files go with your next message: send this one first, then attach them.")
+        model.newSetupChat()
+        XCTAssertFalse(model.improvementHoldsFiles)
+    }
+
     /// A run's Ask Coach shows only for someone who may use Coach and manages the taf; the sample shows it.
     func testARunsAskCoachIsOnlyForWhoMayImproveTheTaf() {
         XCTAssertTrue(KnobRequestDetail.offersAskCoach(mode: .kiff, mayUseCoach: true, manages: true))

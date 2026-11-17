@@ -5191,6 +5191,12 @@ final class AppModel: ObservableObject {
 
     func files(_ key: String) -> [PendingFile] { chatFiles[key] ?? [] }
 
+    /// Coach improving a taf holds the files in its tray back: an improvement's first message carries none, since
+    /// tafs cloud adds the taf's context to it. The words go alone, the files wait for the next message (once
+    /// it's sent, the chat goes on as any other), and the composer says so (`coach.improve_no_files`). Files are
+    /// there only when picked before Coach was opened on the taf: its paperclip isn't offered while it improves.
+    var improvementHoldsFiles: Bool { setupImproving != nil && !files(Self.setupFiles).isEmpty }
+
     /// Adds a file to the chat's next message and uploads it: declared to tafs cloud, which
     /// checks its type and size, then its bytes straight to storage. One that can't go says
     /// why in the tray, and is left out of the message.

@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: Coach on a taf says why files wait.** Files picked before Coach was opened on a taf now wait for your next message, with a line saying so, and your words go at once; before, Send did nothing ([attachments.md](docs/attachments.md)).

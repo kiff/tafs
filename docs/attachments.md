@@ -56,6 +56,12 @@ goes up as soon as it's picked (`AppModel.attach`):
   Coach works, Send waits.
 - Files that failed stay in the tray; the message takes only the ready ones.
 - **Send again** on a sent message sends its words only.
+- **An improvement's first message carries no files:** tafs cloud adds the taf's context to it. While Coach
+  improves a taf, the paperclip isn't offered. Files picked earlier in a plain chat stay in the tray: on the
+  iPhone, iPad and Mac the words go alone, the files wait for the next message (the chat then goes on as any
+  other), and the composer says "Files go with your next message: send this one first, then attach them."
+  (`coach.improve_no_files`, `AppModel.improvementHoldsFiles`). Before, Send put the words and the files back
+  with nothing said.
 
 ## Opening a file again
 
