@@ -305,7 +305,7 @@ export const es: Words = {
   brief_sign_in_again: "Volver a iniciar sesión",
   brief_connection_meanwhile: (taf, vendor) => `${taf} no puede acceder a ${vendor} hasta entonces.`,
   brief_open_taf: "Abrir el taf",
-  card_wider: (vendor) => `${vendor ? `El inicio de sesión de ${vendor}` : "Este inicio de sesión"} no se puede limitar a esta tarea: pide más acceso del que usa el taf. El taf sigue usando solo sus propias herramientas.`,
+  card_wider: (vendor) => `${vendor ? `El inicio de sesión de ${vendor}` : "Este inicio de sesión"} no se puede limitar a esta tarea: su pantalla pedirá más acceso del que usa el taf. Aun así, el taf solo puede usar las herramientas de su Card, y tafs rechaza cualquier otra llamada. El código que lo hace es público, así que puedes comprobarlo.`,
   brief_check_meanwhile: (taf) => `${taf} no encuentra trabajo nuevo hasta que su revisión pueda leer de nuevo.`,
   mission_log_delivered: (done, held, refused) => [`${done} hecho${done === 1 ? "" : "s"}`, held ? `${held} retenida${held === 1 ? "" : "s"}` : "", refused ? `${refused} rechazado${refused === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · "),
   business_title: "Lo que los tafs saben de tu negocio",

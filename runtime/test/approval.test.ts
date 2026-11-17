@@ -2219,7 +2219,7 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
     s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true } })];
     const w = await world(s, {});
     const first = await w.call("GET", CHAT, undefined);
-    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
+    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it." });
     // Every app that can approve a card draws this line (contracts/README.md): it reads the same answer.
     contract("coach-wider", "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons.", first.body);
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });

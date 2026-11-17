@@ -305,7 +305,7 @@ export const it: Words = {
   brief_sign_in_again: "Accedi di nuovo",
   brief_connection_meanwhile: (taf, vendor) => `${taf} non può raggiungere ${vendor} fino ad allora.`,
   brief_open_taf: "Apri il taf",
-  card_wider: (vendor) => `${vendor ? `L'accesso a ${vendor}` : "Questo accesso"} non si può limitare a questo compito: chiede più accesso di quanto il taf usi. Il taf continua a usare solo i propri strumenti.`,
+  card_wider: (vendor) => `${vendor ? `L'accesso a ${vendor}` : "Questo accesso"} non si può limitare a questo compito: la sua schermata chiederà più accesso di quanto il taf usi. Il taf può comunque usare solo gli strumenti della sua Card, e tafs rifiuta ogni altra chiamata. Il codice che lo fa è pubblico, quindi puoi verificarlo.`,
   brief_check_meanwhile: (taf) => `${taf} non trova nuovo lavoro finché il controllo non riesce di nuovo a leggere.`,
   mission_log_delivered: (done, held, refused) => [`${done} fatt${done === 1 ? "o" : "i"}`, held ? `${held} trattenut${held === 1 ? "a" : "e"}` : "", refused ? `${refused} rifiutat${refused === 1 ? "o" : "i"}` : ""].filter(Boolean).join(" · "),
   business_title: "Cosa sanno i taf della tua attività",

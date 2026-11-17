@@ -305,7 +305,7 @@ export const de: Words = {
   brief_sign_in_again: "Erneut anmelden",
   brief_connection_meanwhile: (taf, vendor) => `${taf} erreicht ${vendor} bis dahin nicht.`,
   brief_open_taf: "Den taf öffnen",
-  card_wider: (vendor) => `${vendor ? `Die Anmeldung bei ${vendor}` : "Diese Anmeldung"} lässt sich nicht auf diese Aufgabe beschränken: Sie fordert mehr Zugriff, als der taf nutzt. Der taf nutzt weiterhin nur seine eigenen Werkzeuge.`,
+  card_wider: (vendor) => `${vendor ? `Die Anmeldung bei ${vendor}` : "Diese Anmeldung"} lässt sich nicht auf diese Aufgabe beschränken: ihr Bildschirm fragt nach mehr Zugriff, als der taf nutzt. Der taf kann trotzdem nur die Werkzeuge auf seiner Card nutzen, und tafs lehnt jeden anderen Aufruf ab. Der Code, der das tut, ist öffentlich, du kannst ihn also prüfen.`,
   brief_check_meanwhile: (taf) => `${taf} findet keine neue Arbeit, bis die Prüfung wieder lesen kann.`,
   mission_log_delivered: (done, held, refused) => [`${done} erledigt`, held ? `${held} zurückgehalten` : "", refused ? `${refused} abgelehnt` : ""].filter(Boolean).join(" · "),
   business_title: "Was tafs über dein Unternehmen wissen",

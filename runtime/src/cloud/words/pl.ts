@@ -305,7 +305,7 @@ export const pl: Words = {
   brief_sign_in_again: "Zaloguj się ponownie",
   brief_connection_meanwhile: (taf, vendor) => `${taf} nie może do tego czasu połączyć się z ${vendor}.`,
   brief_open_taf: "Otwórz tafa",
-  card_wider: (vendor) => `${vendor ? `Logowania do ${vendor}` : "Tego logowania"} nie da się ograniczyć do tego zadania: prosi o szerszy dostęp, niż taf używa. Taf nadal używa tylko własnych narzędzi.`,
+  card_wider: (vendor) => `${vendor ? `Logowania do ${vendor}` : "Tego logowania"} nie da się ograniczyć do tego zadania: jego ekran poprosi o szerszy dostęp, niż taf używa. Taf i tak może używać tylko narzędzi ze swojej Card, a tafs odrzuca każde inne wywołanie. Kod, który to robi, jest publiczny, więc możesz to sprawdzić.`,
   brief_check_meanwhile: (taf) => `${taf} nie znajdzie nowej pracy, dopóki sprawdzenie znów nie odczyta aplikacji.`,
   mission_log_delivered: (done, held, refused) => [`Zrobione: ${done}`, held ? `Oczekujące: ${held}` : "", refused ? `Odrzucone: ${refused}` : ""].filter(Boolean).join(" · "),
   business_title: "Co tafy wiedzą o Twojej firmie",
