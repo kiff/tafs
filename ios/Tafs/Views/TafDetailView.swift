@@ -22,6 +22,9 @@ struct TafDetailView: View {
     /// The screenshots open Setup's screens by themselves.
     @State private var openStarts = Screenshots.enabled && Screenshots.screen == "starts"
     @State private var openResults = Screenshots.enabled && Screenshots.screen == "results"
+    /// Versions and the whole memory, opened by name (`AppModel.requestedTafPage`).
+    @State private var openVersions = false
+    @State private var openMemory = false
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
     /// tafs cloud's words for what goes with the taf, read when Remove is tapped.
@@ -131,11 +134,17 @@ struct TafDetailView: View {
             .screenBackground()
             .inlineTitle()
             // Coach mode opened from here works on this taf (kiff/tafs#138).
-            .onAppear { model.tafOnScreen = tafID }
+            .onAppear { model.tafOnScreen = tafID; take(model.requestedTafPage) }
             .task(id: tafID) { await model.loadTafSetup(tafID) }
             .onDisappear { if model.tafOnScreen == tafID { model.tafOnScreen = nil } }
+            .onChange(of: model.requestedTafPage) { take($0) }
             .navigationDestination(isPresented: $openStarts) { StartsWhenView(tafID: tafID) }
             .navigationDestination(isPresented: $openResults) { ResultsGoToView(tafID: tafID) }
+            .navigationDestination(isPresented: $openVersions) { VersionsScreen(tafID: tafID) }
+            .navigationDestination(isPresented: $openMemory) {
+                ScrollView { MemoryPanel(tafID: tafID, loadAll: true).padding(16) }.navigationTitle(Words.Taf.Memory.title)
+                    .onDisappear { Task { await model.loadTafSetup(tafID) } }
+            }
             .confirmationDialog(Words.Taf.revokeTitle(taf: "\(taf.name)"), isPresented: $confirmRevoke, titleVisibility: .visible) {
                 Button(Words.Taf.revokeAndStop, role: .destructive) { Task { await model.revoke(tafID) } }
             } message: {
@@ -155,6 +164,25 @@ struct TafDetailView: View {
         } else {
             LateNote(text: Words.Taf.gone).screenBackground()
         }
+    }
+
+    /// Opens the part of this taf's page asked for by name, and clears the request. Share and the
+    /// workflow are left for its Share line and its connected tools, which open them.
+    private func take(_ request: AppModel.TafPageRequest?) {
+        guard let request, request.taf == tafID else { return }
+        switch request.page {
+        case .chat: section = 0
+        case .activity: section = Self.activitySection
+        case .card: section = 2
+        case .setup: section = 3
+        case .startsWhen: section = 3; openStarts = true
+        case .resultsGoTo: section = 3; openResults = true
+        case .versions: openVersions = true
+        case .memory: section = 3; openMemory = model.mode == .kiff
+        case .workflow: section = 3; return
+        case .share: folded = false; return
+        }
+        model.requestedTafPage = nil
     }
 
     /// The Card in front of the stack: the one tapped, else the first, the live one.
