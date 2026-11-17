@@ -41,7 +41,10 @@ final class SetupUITests: TafsUITestCase {
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "starts"]
         launch(app)
         XCTAssertTrue(app.staticTexts["Every 4 hours, 9:00–17:00"].waitForExistence(timeout: 30), "its schedule")
-        XCTAssertTrue(app.staticTexts["Approve signs on this phone; the app starts telling the taf only after that."].exists)
+        // Approve's note names the device it's on (`setup.approve_note_device`, ThisDevice.kind): the
+        // simulator's iPhone or iPad, never "this phone" on an iPad.
+        let device = UIDevice.current.model.hasPrefix("iPad") ? "iPad" : "iPhone"
+        XCTAssertTrue(app.staticTexts["Approve signs on this \(device); the app starts telling the taf only after that."].exists)
         app.buttons["Approve"].firstMatch.tap()
         let filters = app.staticTexts["event.filters"]
         XCTAssertTrue(filters.waitForExistence(timeout: 5))
