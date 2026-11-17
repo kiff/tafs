@@ -1289,7 +1289,11 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    The route grants authority (`KiffClient.grantsAuthority`), so it is never signed inside an
    approval window, which never covers a pairing.
 5. **KIFF's answer.** `201 {pairing: {id, code, expires}}`: Devices shows "{name} is paired. It
-   showed {code}.", and reads the list again. When KIFF's code isn't the one the person checked,
+   showed {code}.", and reads the list again. The computer finishes its own half after the yes, so
+   until KIFF lists a device it didn't before, the list is read again every 3 seconds, ten times at
+   most (`AppModel.followPairedDevice`). Devices is also read again whenever it comes back on screen
+   (Google's scanner, another app, the phone locked), so a device added meanwhile shows without
+   closing it. When KIFF's code isn't the one the person checked,
    it says so instead, and to sign the computer out if it isn't theirs. In the list the computer has Sign out
    like any other device. A refusal says what didn't go through, in KIFF's `words` when it sends
    them; until then, the app words its codes: `pairing_expired`, `pairing_used`,

@@ -7941,12 +7941,32 @@ class AppModel(
   fun confirmPairing() {
     val qr = _state.value.pairAsking ?: return
     _state.update { it.copy(pairAsking = null, pairBusy = true) }
+    val before = _state.value.devices.map { it.id }.toSet()
     scope.launch {
+      var paired = false
       try {
-        pairComputer(qr)?.let { p -> _state.update { it.copy(pairLine = bot.tafs.app.kiff.pairedLine(qr, p)) } }
+        pairComputer(qr)?.let { p ->
+          paired = true
+          _state.update { it.copy(pairLine = bot.tafs.app.kiff.pairedLine(qr, p)) }
+        }
       } finally {
         _state.update { it.copy(pairBusy = false) }
       }
+      if (paired) followPairedDevice(before)
+    }
+  }
+
+  /**
+   * After a pairing, Devices is read again until KIFF lists a device it didn't before: the computer finishes its own half after
+   * the phone's yes, so the read right after it can come too soon. Every [PAIR_FOLLOW_MS], at most [PAIR_FOLLOW_TRIES] times,
+   * for this account only. Whether the device is there is KIFF's list's to say; the phone only reads it again.
+   */
+  private suspend fun followPairedDevice(before: Set<String>) {
+    val generation = accountGeneration
+    repeat(PAIR_FOLLOW_TRIES) {
+      if (generation != accountGeneration || _state.value.devices.any { it.id !in before }) return
+      delay(PAIR_FOLLOW_MS)
+      refreshDevices()
     }
   }
 
@@ -8831,6 +8851,10 @@ class AppModel(
 
     /** How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with each approval in it. */
     const val WINDOW_SECONDS = 300L
+
+    /** How often, and how many times, Devices is read again after a pairing until the new device is listed: 30 seconds in all. */
+    const val PAIR_FOLLOW_MS = 3_000L
+    const val PAIR_FOLLOW_TRIES = 10
 
     /** How long the app may be in the background before the window it holds is closed (kiff/tafs#494). */
     const val WINDOW_BACKGROUND_MS = 30_000L
