@@ -1,0 +1,1 @@
+- **A taf's hand-off always has its heading:** a taf whose result goes to another taf writes the "Hand-off" heading every time, even with nothing to hand, and writes "Nothing to hand over" only when there's nothing; when something is handed, the section starts with what the other taf acts on.
