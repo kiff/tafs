@@ -7,6 +7,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -117,7 +118,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .clip(shape)
       .then(if (enabled) Modifier.brandBackground() else Modifier.background(Theme.dim.copy(alpha = 0.22f)))
       // Every button press taps, once, here: each new button gets it (docs/android-app.md, "Haptics").
-      .clickable(enabled = enabled) { Haptics.tap(); onClick() }
+      .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button) { Haptics.tap(); onClick() }
       .padding(horizontal = 14.dp, vertical = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
@@ -144,7 +145,7 @@ fun OutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .heightIn(min = 48.dp)
       .clip(shape)
       .border(BorderStroke(1.dp, color.copy(alpha = if (enabled) 0.4f else 0.16f)), shape)
-      .clickable(enabled = enabled) { Haptics.tap(); onClick() }
+      .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button) { Haptics.tap(); onClick() }
       .padding(horizontal = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
@@ -190,7 +191,8 @@ fun <T> Segmented(options: List<T>, selected: T, label: (T) -> String, onSelect:
           .heightIn(min = 32.dp)
           .clip(RoundedCornerShape(7.dp))
           .background(if (on) Theme.panel else Color.Transparent)
-          .clickable { if (!on) Haptics.tap(); onSelect(option) },
+          // TalkBack hears each as a tab, the chosen one selected ("Chat, tab, selected").
+          .selectable(selected = on, role = androidx.compose.ui.semantics.Role.Tab) { if (!on) Haptics.tap(); onSelect(option) },
         contentAlignment = Alignment.Center,
       ) {
         // One line, whatever the language: a long label ("Configuración") shrinks to fit its segment rather than wrap.

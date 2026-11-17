@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -82,11 +83,14 @@ fun spokenCard(card: TafCard, issuedBy: String, revoked: Boolean): String {
 @Composable
 fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean = false, modifier: Modifier = Modifier) {
   val white = Color.White
+  // A card's shape, as wide as it may be; taller only when larger text needs it (Android's font size), so its last line, who
+  // issued it and until when, is never cut off.
+  androidx.compose.foundation.layout.BoxWithConstraints(modifier.widthIn(max = CardWidth).fillMaxWidth()) {
+  val shape = maxWidth / CardRatio
   Box(
-    modifier
-      .widthIn(max = CardWidth)
+    Modifier
       .fillMaxWidth()
-      .aspectRatio(CardRatio)
+      .heightIn(min = shape)
       .shadow(3.dp, RoundedCornerShape(18.dp), ambientColor = Color.Black.copy(alpha = 0.12f))
       .clip(RoundedCornerShape(18.dp))
       .background(cardFill(card, color).copy(alpha = if (faded(card, revoked)) 0.4f else 1f))
@@ -96,7 +100,8 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
       }
       .clearAndSetSemantics { contentDescription = spokenCard(card, issuedBy, revoked) },
   ) {
-    Column(Modifier.fillMaxSize().padding(12.dp)) {
+    // Measured without a ceiling, so the spacers share only what the card's shape leaves over, never a taller parent's height.
+    Column(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true).heightIn(min = shape).padding(12.dp)) {
       Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(card.title, style = scaled(12, FontWeight.SemiBold, white, mono = true), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         card.environmentLabel?.let { EnvironmentPill(it) }
@@ -129,6 +134,7 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
       }
     }
   }
+  }
 }
 
 /** The environment a Card is scoped to, when it isn't production. */
@@ -159,17 +165,27 @@ fun CardStack(
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   // The furthest back on top, as in a wallet: the reverse of the order they're listed in.
   val behind = cards.filter { it.id != shown?.id }.reversed()
-  androidx.compose.foundation.layout.BoxWithConstraints(modifier.widthIn(max = CardWidth).fillMaxWidth()) {
-    val ordered = behind + listOfNotNull(shown)
-    Box(Modifier.fillMaxWidth().then(Modifier.height(maxWidth / CardRatio + 26.dp * (ordered.size - 1).coerceAtLeast(0)))) {
+  val ordered = behind + listOfNotNull(shown)
+  // Each Card 26 lower than the one behind it, the stack as tall as its Cards are: a face that larger text made taller pushes
+  // what follows down rather than over it.
+  androidx.compose.ui.layout.Layout(
+    content = {
       ordered.forEachIndexed { index, card ->
-        Box(Modifier.then(Modifier.offset(y = 26.dp * index)).tapping { onFront(card.id) }) {
+        Box(Modifier.tapping { onFront(card.id) }) {
           TafCardFace(card, issuedBy, color, revoked)
           // Each Card behind a shade darker, so Cards of the same colour read as separate.
           val shade = behindShade(ordered.size - 1 - index)
           if (shade > 0f) Box(Modifier.matchParentSize().clip(RoundedCornerShape(18.dp)).background(Color.Black.copy(alpha = shade)))
         }
       }
+    },
+    modifier = modifier.widthIn(max = CardWidth).fillMaxWidth(),
+  ) { measurables, constraints ->
+    val step = 26.dp.roundToPx()
+    val placeables = measurables.map { it.measure(constraints.copy(minHeight = 0)) }
+    val height = placeables.withIndex().maxOfOrNull { (index, p) -> p.height + step * index } ?: 0
+    layout(constraints.maxWidth, height.coerceIn(constraints.minHeight, constraints.maxHeight)) {
+      placeables.forEachIndexed { index, p -> p.place(0, step * index) }
     }
   }
 }

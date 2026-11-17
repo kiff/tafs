@@ -15,7 +15,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -637,7 +639,10 @@ private fun MessageBody(
             .alpha(if (message.session == "pending") 0.7f else 1f)
             .clip(RoundedCornerShape(18.dp))
             .brandBackground()
-            .combinedClickable(onClick = {}, onLongClick = { menu = true })
+            // Its menu on a long press, and TalkBack's long press (double-tap and hold) too. A tap does nothing, so none is offered:
+            // TalkBack would announce a button that does nothing.
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { menu = true }) }
+            .semantics { onLongClick { menu = true; true } }
             .padding(horizontal = 10.dp, vertical = 8.dp),
         )
         // A sent message's menu (kiff/tafs#285): send it again (its words only), change it first, or copy it.

@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
@@ -97,6 +98,7 @@ internal fun CoachPanel(open: Boolean, onClose: () -> Unit, content: @Composable
             .semantics {
               contentDescription = Words.Coach.coachModeWidth
               stateDescription = Words.Coach.dragMakeWiderNarrower
+              role = androidx.compose.ui.semantics.Role.Button
               // Without a drag (TalkBack, a keyboard): a tap switches between the third and the whole screen.
               onClick(Words.Coach.fullScreen) { full = !full; prefs.edit().putBoolean("full", full).apply(); true }
             },

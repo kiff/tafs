@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -202,7 +203,8 @@ fun SettingsSheet(
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               ThemePreference.entries.forEach { choice ->
                 Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)
-                  .tapping { if (Theme.preference != choice) bot.tafs.app.design.Haptics.step(); Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                  .tapping(role = androidx.compose.ui.semantics.Role.RadioButton) { if (Theme.preference != choice) bot.tafs.app.design.Haptics.step(); Theme.choose(context, choice) }
+                  .semantics { selected = Theme.preference == choice }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                   val color = if (Theme.preference == choice) Theme.background else Theme.ink
                   if (choice != ThemePreference.System) Icon(painterResource(if (choice == ThemePreference.Light) R.drawable.ic_sun else R.drawable.ic_moon), null, tint = color, modifier = Modifier.size(16.dp))
                   Text(choice.title, style = scaled(14, FontWeight.Medium, color))
@@ -260,7 +262,7 @@ fun SettingsSheet(
     val chosen = remember { bot.tafs.app.design.AppLocale.current(context) }
     DriveAlert(
       onDismissRequest = { languagePicker = false }, title = { Text(Words.Settings.languageTitle) }, containerColor = Theme.panel,
-      text = { Column(Modifier.verticalScroll(rememberScrollState())) { bot.tafs.app.design.AppLocale.choices().forEach { choice ->
+      text = { Column(Modifier.testTag("language-picker").verticalScroll(rememberScrollState())) { bot.tafs.app.design.AppLocale.choices().forEach { choice ->
         LanguageRow(choice.title, choice.tag == chosen) {
           languagePicker = false
           context.activity()?.let { bot.tafs.app.design.AppLocale.choose(it, choice.tag) }
