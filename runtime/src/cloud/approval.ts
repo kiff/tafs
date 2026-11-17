@@ -399,6 +399,19 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
 }
 
 /**
+ * The step a tap asks once another app the draft's Cards cover is still waiting: a combined step (the tools or the key with
+ * the Card) becomes this app's own step without the Card, as `decide` falls through on `waitsFor` (the Card comes with the
+ * last app's approval). Otherwise `step` as it is. The chat's read marks its card by this, so the card never says it signs
+ * the Card while its tap asks for the connection alone: the phone refuses a step that isn't its mark and reads again, and
+ * read after read the owner tapped the same card (17 Nov, five taps in 45 s).
+ */
+export function stepWithWaiting(step: SignStep, grant: ApprovalGrant, grants: ApprovalGrant[], cards: unknown[] | undefined, ask: { draft?: string }): SignStep | undefined {
+  if (step !== "tools_and_cards" && step !== "key_and_cards") return step;
+  if (!cards || !appsWaiting(grant, sameTafOf(grant, grants), cards).length) return step;
+  return stepFor(grant, { draft: ask.draft, can: [] }, {});
+}
+
+/**
  * The first tool of the grant no Card covers, once the draft is confirmed: neither the draft's Cards
  * nor the agent's Cards in force (inForce, as actionsInForce reads them) name it. KIFF refuses every
  * call no Card covers, so the taf couldn't use it, and would ask its owner for a Card it shouldn't

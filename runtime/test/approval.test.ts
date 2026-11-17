@@ -2636,3 +2636,63 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     });
   });
 });
+
+// The owner's phone, 17 Nov: two approval cards drawn in one second, a Card over both apps on the first app's card and
+// the other app still waiting. The chat's read marked the first card as signing the Card while its tap asked for the
+// connection alone; the phone refuses a step that isn't its mark and reads again, so five taps did nothing.
+describe("two approval cards in one read: each card's mark is what its tap asks (other_app_first, 17 Nov)", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const CAN = "can=key_and_cards,tools_and_cards";
+  const base = (name: string, tool: string, title: string) => ({ kind: "api_key", server: "desk.example.com",
+    api: { url: `https://desk.example.com/${name}/openapi.json`, digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } },
+    tools: [{ tool, name: `${tool}_k3`, title }] });
+  const mailbox = () => grant({ id: "g_1", vendor: "desk.example.com", title: "desk.example.com" }, base("mail", "send_mail", "Send an email"));
+  const books = () => grant({ id: "g_2", vendor: "desk.example.com", title: "desk.example.com" }, base("books", "list_invoices", "List invoices"));
+  const both = [{ id: "c1", subject: "refunds-x", grants: [{ action: "send_mail_k3" }, { action: "list_invoices_k3" }], aggregates: [] }];
+  const card = (r: { body: Record<string, unknown> }, id: string) =>
+    (r.body.components as Array<{ component: { id?: string; signs?: { card?: boolean } }; answer?: { state: string } }>).find((c) => c.component.id === id);
+  afterEach(() => { delete process.env.TAFS_KEY_AND_CARDS; });
+
+  async function twoCards() {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [mailbox(), books()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { grant: "g_1", draft: "drf_1" });
+    w.agents.ask(w.stored, { type: "approval", id: "a2", grant: "g_2" });
+    return { s, w };
+  }
+
+  it("marks the Card's card as connecting its app alone while the other app waits, as its tap asks, read after read", async () => {
+    const { w } = await twoCards();
+    for (let i = 0; i < 3; i++) {
+      const r = await w.call("GET", CHAT, undefined, {}, CAN);
+      expect(card(r, "a1")?.answer).toBeUndefined();
+      expect(card(r, "a1")?.component.signs?.card).toBe(false);
+      const tap = await w.call("POST", ASK, { grant: "g_1", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3", can: ["key_and_cards", "tools_and_cards"] });
+      expect(tap.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    }
+  });
+
+  it("still keeps the waiting app's note, and answers its draftless card on the first read, with no Approve", async () => {
+    const { w } = await twoCards();
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toMatchObject({ draft: "drf_1" });
+    expect(card(r, "a2")?.answer?.state).toBe("answered");
+    expect(card(r, "a2")?.component.signs).toBeUndefined();
+    // Its tap finds it waits no more: the books' key is never approved apart from its Card.
+    expect((await w.call("POST", `/v1/tafs/${COACH}/components/a2/approval`, { grant: "g_2", shown_digest: books().digest })).status).toBe(409);
+  });
+
+  it("marks the combined step as before once no other app waits", async () => {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [mailbox(), { ...books(), status: "connected" }];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { grant: "g_1", draft: "drf_1" });
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(card(r, "a1")?.component.signs?.card).toBe(true);
+    const tap = await w.call("POST", ASK, { grant: "g_1", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3", can: ["key_and_cards", "tools_and_cards"] });
+    expect(tap.body).toMatchObject({ outcome: "sign", ask: { step: "key_and_cards" } });
+  });
+});
