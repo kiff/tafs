@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Settings → Face ID &amp; Passcode</string>
     <string name="approval_settings_path_mac_touch_id">System Settings → Touch ID &amp; Password</string>
     <string name="approval_settings_path_touch_id">Settings → Touch ID &amp; Passcode</string>
+    <string name="approval_settings_path_windows">Settings → Accounts → Sign-in options</string>
     <string name="approval_state_none_enrolled">No fingerprint is set up on this phone. Add one in its settings, then come back.</string>
     <string name="approval_state_ready">Approvals are set up on this phone.</string>
     <string name="approval_state_temporarily_unavailable">The fingerprint sensor can\'t be used just now. Wait a moment, or unlock the phone once, then check again.</string>

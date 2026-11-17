@@ -262,6 +262,8 @@ enum Words {
             static var macTouchId: String { Words.line("approval.settings_path.mac_touch_id") }
             /// Settings → Touch ID & Passcode
             static var touchId: String { Words.line("approval.settings_path.touch_id") }
+            /// Settings → Accounts → Sign-in options
+            static var windows: String { Words.line("approval.settings_path.windows") }
         }
         enum State {
             /// No fingerprint is set up on this phone. Add one in its settings, then come back.

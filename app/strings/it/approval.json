@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Impostazioni → Face ID e codice",
   "approval.settings_path.mac_touch_id": "Impostazioni di Sistema → Touch ID e password",
   "approval.settings_path.touch_id": "Impostazioni → Touch ID e codice",
+  "approval.settings_path.windows": "Impostazioni → Account → Opzioni di accesso",
   "approval.state.none_enrolled": "Nessuna impronta è configurata su questo telefono. Aggiungine una nelle sue impostazioni, poi torna qui.",
   "approval.state.ready": "Le approvazioni sono configurate su questo telefono.",
   "approval.state.temporarily_unavailable": "Il sensore di impronte non può essere usato ora. Attendi un attimo, o sblocca il telefono una volta, poi controlla di nuovo.",

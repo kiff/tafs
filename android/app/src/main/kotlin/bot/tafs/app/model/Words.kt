@@ -145,6 +145,7 @@ object Words {
       val faceId: String get() = Res.s(R.string.approval_settings_path_face_id)
       val macTouchId: String get() = Res.s(R.string.approval_settings_path_mac_touch_id)
       val touchId: String get() = Res.s(R.string.approval_settings_path_touch_id)
+      val windows: String get() = Res.s(R.string.approval_settings_path_windows)
     }
     object State {
       val noneEnrolled: String get() = Res.s(R.string.approval_state_none_enrolled)

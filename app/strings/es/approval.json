@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Ajustes → Face ID y código",
   "approval.settings_path.mac_touch_id": "Ajustes del Sistema → Touch ID y contraseña",
   "approval.settings_path.touch_id": "Ajustes → Touch ID y código",
+  "approval.settings_path.windows": "Configuración → Cuentas → Opciones de inicio de sesión",
   "approval.state.none_enrolled": "No hay ninguna huella configurada en este teléfono. Añade una en sus ajustes y vuelve.",
   "approval.state.ready": "Las aprobaciones están configuradas en este teléfono.",
   "approval.state.temporarily_unavailable": "Ahora mismo no se puede usar el sensor de huellas. Espera un momento, o desbloquea el teléfono una vez, y vuelve a comprobarlo.",

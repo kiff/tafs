@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Impostazioni → Face ID e codice</string>
     <string name="approval_settings_path_mac_touch_id">Impostazioni di Sistema → Touch ID e password</string>
     <string name="approval_settings_path_touch_id">Impostazioni → Touch ID e codice</string>
+    <string name="approval_settings_path_windows">Impostazioni → Account → Opzioni di accesso</string>
     <string name="approval_state_none_enrolled">Nessuna impronta è configurata su questo telefono. Aggiungine una nelle sue impostazioni, poi torna qui.</string>
     <string name="approval_state_ready">Le approvazioni sono configurate su questo telefono.</string>
     <string name="approval_state_temporarily_unavailable">Il sensore di impronte non può essere usato ora. Attendi un attimo, o sblocca il telefono una volta, poi controlla di nuovo.</string>

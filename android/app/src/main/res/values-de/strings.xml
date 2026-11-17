@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Einstellungen → Face ID &amp; Code</string>
     <string name="approval_settings_path_mac_touch_id">Systemeinstellungen → Touch ID &amp; Passwort</string>
     <string name="approval_settings_path_touch_id">Einstellungen → Touch ID &amp; Code</string>
+    <string name="approval_settings_path_windows">Einstellungen → Konten → Anmeldeoptionen</string>
     <string name="approval_state_none_enrolled">Auf diesem Telefon ist kein Fingerabdruck eingerichtet. Füge in seinen Einstellungen einen hinzu und komm dann zurück.</string>
     <string name="approval_state_ready">Genehmigungen sind auf diesem Telefon eingerichtet.</string>
     <string name="approval_state_temporarily_unavailable">Der Fingerabdrucksensor kann gerade nicht verwendet werden. Warte einen Moment oder entsperre das Telefon einmal und prüfe dann erneut.</string>

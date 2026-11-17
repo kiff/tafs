@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Definições → Face ID e código</string>
     <string name="approval_settings_path_mac_touch_id">Definições do Sistema → Touch ID e palavra-passe</string>
     <string name="approval_settings_path_touch_id">Definições → Touch ID e código</string>
+    <string name="approval_settings_path_windows">Definições → Contas → Opções de início de sessão</string>
     <string name="approval_state_none_enrolled">Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.</string>
     <string name="approval_state_ready">As aprovações estão configuradas neste telefone.</string>
     <string name="approval_state_temporarily_unavailable">Não é possível usar o sensor de impressões digitais neste momento. Aguarde um pouco, ou desbloqueie o telefone uma vez, e verifique novamente.</string>
