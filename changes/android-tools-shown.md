@@ -1,0 +1,1 @@
+- **Android: giving Coach its tools signs only the step that was shown.** If tafs cloud's batch or Cards' draft changed since the step was drawn, nothing is signed and the step is drawn again; Cards drafted only after the batch take a second Give ([coach.md](docs/coach.md)).

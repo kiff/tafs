@@ -3647,6 +3647,8 @@ class AppModel(
     val tenant = kiffTenant ?: return false
     if (_state.value.mode != Mode.kiff || _state.value.coachCloudId == null) return false
     val generation = accountGeneration
+    // The step the person read: their yes is to that, never to a later read of it.
+    val shown = _state.value.coachTools
     val tools = try {
       cloud.coachTools()
     } catch (e: CancellationException) {
@@ -3656,6 +3658,12 @@ class AppModel(
       return false
     } ?: return false
     if (generation != accountGeneration) return false
+    // tafs cloud's batch or Cards changed since the step was drawn (more tools, another draft): nothing is signed. The step is
+    // drawn again from this read, and the next Give signs exactly that.
+    if (tools.toGive && (shown == null || !sameToolsToGive(shown, tools))) {
+      _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
+      return false
+    }
     _state.update { it.copy(coachTools = tools, coachToolsError = null) }
     when (tools.state) {
       "given" -> return true
@@ -3674,11 +3682,9 @@ class AppModel(
     try {
       tools.connect?.let { kiff.connectBatch(it.body) }
       if (generation != accountGeneration) return false
-      // tafs cloud drafts the Card over tools KIFF holds: one sent without it comes once the batch is in, so it's read again
-      // here and given in the same flow, and the owner taps once.
-      val card = tools.card ?: if (tools.connect != null) cloud.coachTools()?.card else null
-      if (generation != accountGeneration) return false
-      card?.let {
+      // Only Cards the step showed are given. tafs cloud drafts a Card over tools KIFF holds, so one that comes only once the
+      // batch is in was never on the step: the step is drawn again with it, in KIFF's words, and the next Give gives it.
+      tools.card?.let {
         // Its own fingerprint, in its own words: it gives Coach its Cards.
         approvalReason = Words.Coach.Prompt.giveCard
         kiff.submitDraft(it.body)
@@ -3696,8 +3702,13 @@ class AppModel(
     }
     if (generation != accountGeneration) return false
     loadCoachTools()
-    return true
+    // True once nothing's left to give; a Card drafted after the batch is still to give, on the step drawn again.
+    return _state.value.coachTools?.toGive != true
   }
+
+  /** Whether [read] asks for exactly what [shown] showed: the same batch and the same Cards' draft, or the same none. */
+  private fun sameToolsToGive(shown: bot.tafs.app.kiff.CoachTools, read: bot.tafs.app.kiff.CoachTools): Boolean =
+    shown.connect?.body == read.connect?.body && shown.card?.body == read.card?.body
 
   // MARK: Coach's approvals (planque and KIFF)
 
