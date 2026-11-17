@@ -104,7 +104,8 @@ fun CoachScreen(
     // New conversation always does something: on a plain conversation with nothing in it yet, it stays there and shows its
     // top; on an empty one about a taf, it opens a plain new one.
     val newChat = { if (CoachWords.newChatStays(state)) folded = false else chats.newChat() }
-    if (started) CoachHeader(state, chats, newChat, onBack, full, onToggleFull) else BackBar(onBack)
+    // Coach's bar from the first screen on, as the iPad's; its conversations (new, earlier) once Coach has started.
+    CoachHeader(state, chats, newChat, onBack, full, onToggleFull, conversations = started)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
       // The sample, for the store's screenshots: what Coach is, as a new account first sees it. Nothing to read from tafs cloud.
@@ -175,7 +176,16 @@ val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { 
 
 /** Coach's header, one row: back, its name, and a menu with a new conversation and the earlier ones. */
 @Composable
-private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () -> Unit, onBack: () -> Unit, full: Boolean = false, onToggleFull: (() -> Unit)? = null) {
+private fun CoachHeader(
+  state: AppState,
+  chats: CoachChatActions,
+  onNewChat: () -> Unit,
+  onBack: () -> Unit,
+  full: Boolean = false,
+  onToggleFull: (() -> Unit)? = null,
+  /** New conversation and ⋯: only once Coach has started, since before it there's nothing to start anew or look back on. */
+  conversations: Boolean = true,
+) {
   var menu by remember { mutableStateOf(false) }
   var listing by remember { mutableStateOf(false) }
   // As the iPad's bar: Back in a capsule at the start, the name centred, new conversation and ⋯ in one at the end, in Coach's blue.
@@ -199,7 +209,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
       }
     }
     Text(Words.Coach.title, style = scaled(17, FontWeight.SemiBold, Theme.ink), maxLines = 1)
-    BarCapsule(Modifier.align(Alignment.CenterEnd)) {
+    if (conversations) BarCapsule(Modifier.align(Alignment.CenterEnd)) {
       Box(
         Modifier.size(44.dp).tapping(onClickLabel = Words.Coach.newConversation, onClick = onNewChat).semantics { contentDescription = Words.Coach.newConversation },
         contentAlignment = Alignment.Center,

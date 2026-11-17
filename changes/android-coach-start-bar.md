@@ -1,0 +1,1 @@
+- **Android: Coach's bar from its first screen, and Approve's note names the device.** Before Coach starts, its bar is already the iPad's (Back in a capsule, ⤢ in a tablet's panel), not the old Back link. Setup's note under Approve says "this tablet" on a tablet and "this phone" on a phone (`setup.approve_note_device`) ([android-app.md](docs/android-app.md)).
