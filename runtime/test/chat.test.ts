@@ -1326,6 +1326,11 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(await read("pl-PL")).toEqual(answers.map(([, want]) => want));
     // English reads as kiff/agents' words always read: tafs cloud's English is the same.
     expect(await read()).toEqual(["Approved", "Declined", "Approve · it didn't go through: Nic nie zostało połączone.", "Approve · already approved"]);
+    // And each carries its answer settled, in no language, so the apps never read the words to decide (17 Nov: a French
+    // owner's Reject read "Approved" on Windows).
+    const settled = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", headers: { "Accept-Language": "fr-FR" } });
+    const cards = (settled.body.items as Array<{ type: string; card?: { run: string; answer?: { answer?: string } } }>).filter((i) => i.type === "card").map((i) => i.card!);
+    expect(runs.map((id) => cards.find((c) => c.run === id)?.answer?.answer)).toEqual(["approved", "declined", "failed: Nic nie zostało połączone.", "already approved"]);
   });
 
   it("shows each card's answer in the conversation: chosen, written instead, or none", async () => {

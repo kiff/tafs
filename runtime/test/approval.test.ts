@@ -2,7 +2,7 @@ import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
-import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -1315,6 +1315,22 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
     // A real failure still says so.
     expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone" }, "en"))
       .toBe("Approve · it didn't go through: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone");
+  });
+
+  // The owner's Reject read "Approved · signed in to Stripe" on Windows (17 Nov): an app read anything that wasn't the
+  // English "Declined" as approved. tafs cloud sends the answer settled, in no language, so every app maps the same values.
+  it("settles an approval card's answer for the apps: approved, already approved, connected, declined or failed, nothing else", () => {
+    const next = "failed: Gmail is connected; its Card is next: show the approval again for its Card alone";
+    expect(settledApprovalAnswer("approved")).toBe("approved");
+    expect(settledApprovalAnswer("declined")).toBe("declined");
+    expect(settledApprovalAnswer("already approved: Stripe is connected and its Card is confirmed")).toBe("already approved");
+    expect(settledApprovalAnswer("already approved")).toBe("already approved");
+    expect(settledApprovalAnswer(next)).toBe("connected");
+    const failed = "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone";
+    expect(settledApprovalAnswer(failed)).toBe(failed);
+    expect(settledApprovalAnswer("failed: planque answered 409")).toBe("failed: planque answered 409");
+    // Anything else is nothing: the apps read it as not approved.
+    for (const other of [undefined, null, 3, "", "Approved", "approve", "approvedish", "signed in", "Declined"]) expect(settledApprovalAnswer(other)).toBeUndefined();
   });
 
   it("says it didn't go through when the Card isn't the draft the card showed, or isn't a draft any more", async () => {
