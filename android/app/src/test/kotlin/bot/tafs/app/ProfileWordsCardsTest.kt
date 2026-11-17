@@ -18,7 +18,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 
 /**
- * KIFF's words on Coach's approval cards (KIFF's profile contract). The owner's phone, 17 Nov: two cards arrived in the same
+ * KIFF's words on Coach's approval cards (KIFF's profile contract). Two cards could arrive in the same
  * second, and each said "Reading KIFF's words…" with Approve greyed until a tab switch. The words were read only by the card
  * itself, and a card drawn again lost its read. They're now read with Coach's thread, in the model's own scope, each card's for
  * its own grant.
