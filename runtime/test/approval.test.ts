@@ -553,6 +553,24 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toMatchObject({ outcome: "sign" });
     draft([each([count(1, { per: " Charge ", window: "rolling_7d" })]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 4b. KIFF's own count, 10,000 a day, as the held Card's only total: KIFF refuses a Card with no total, and this one
+    // is never the owner's (Eval 43975057022, Setup run 3: refused here, then refused by KIFF with none, and Coach changed
+    // the agreed rule to get out). Signed. On the refused Card, beside another total, or at another figure: not signed.
+    draft([each([count(10_000)]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // Alone, with no Card bounding the refunds' amount (qa-kiff): 10,000 refunds under the cap a day would pass unasked.
+    draft([each([count(10_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(10_000)]), { ...daily([day(20_000)]), grants: [{ action: "send_reply_k3" }] }, others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([]), daily([day(20_000), count(10_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(10_000), count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    for (const other of [count(9_999), count(10_000, { window: "rolling_24h" }), count(10_000, { per: "customer" })]) {
+      draft([each([other]), daily([day(20_000)]), others]);
+      expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    }
     // 5. A live test's "1 a day for each payment intent" on the money tool: a count per item the owner never gave, so
     // not signed, and Coach hears the item. Another item than the tool's own, even over its life: not signed either.
     draft([each([count(1, { per: "payment_intent" })]), daily([day(20_000)]), others]);

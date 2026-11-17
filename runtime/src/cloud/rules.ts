@@ -197,6 +197,35 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
   return undefined;
 }
 
+/**
+ * KIFF's own count, never the owner's: KIFF refuses a Card with no total ("a mandate with no aggregate bounds nothing"),
+ * so a Card the owner gave no total carries this one, 10,000 calls a day, shown as "KIFF adds it". The reads' Card has
+ * it, and so does a held Card whose only figure is each call's: "ask past €5 a refund, refuse past €50 a day" is that
+ * Card beside a refused one with the day's €50, since KIFF's Cards are conjunctive (Eval 43975057022, Setup run 3:
+ * refused as a count beside the amount, the held Card had no total left, and Coach changed the agreed rule to get out).
+ */
+export const KIFF_COUNT_A_DAY = 10_000;
+
+/**
+ * Whether `a` is KIFF's own count on `card`, never a figure of the owner's: a count of KIFF_COUNT_A_DAY a calendar day,
+ * for no item, as the only total of a Card that holds what's past it (not one that refuses), and, for each tool the Card
+ * covers, another of `cards` covering it with a total on an amount (qa-kiff: alone, 10,000 refunds of €4.99 a day would
+ * pass unasked, a sum no one agreed). Without that other Card, the count is a count beside the amount, as before.
+ */
+export function kiffsOwnCount(cards: readonly unknown[], card: unknown, a: unknown): boolean {
+  const c = (card ?? {}) as { grants?: unknown; aggregates?: unknown; on_exceed?: unknown };
+  const x = (a ?? {}) as { quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown };
+  if (c.on_exceed === "refuse" || !Array.isArray(c.aggregates) || c.aggregates.length !== 1 || c.aggregates[0] !== a) return false;
+  if (fold(x.quantity) !== "count" || fold(x.window) !== "calendar_day" || fold(x.per) || x.limit !== KIFF_COUNT_A_DAY) return false;
+  const actions = (Array.isArray(c.grants) ? c.grants : []).map((g) => fold((g as { action?: unknown })?.action)).filter(Boolean);
+  const bounded = (action: string) => cards.some((o) => {
+    const other = (o ?? {}) as { grants?: unknown; aggregates?: unknown };
+    return o !== card && Array.isArray(other.grants) && other.grants.some((g) => fold((g as { action?: unknown })?.action) === action) &&
+      Array.isArray(other.aggregates) && other.aggregates.some((t) => fold((t as { quantity?: unknown })?.quantity).startsWith("sum("));
+  });
+  return actions.length > 0 && actions.every(bounded);
+}
+
 /** A figure on the Cards: `per` is "" on each call's and on a total over all items, else folded. */
 interface Figure { quantity: string; window: string; per: string; limit: number }
 
@@ -227,6 +256,7 @@ function figuresOn(cards: readonly unknown[], name: string): Figure[] {
       }
     }
     for (const a of (Array.isArray(card.aggregates) ? card.aggregates : []) as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+      if (kiffsOwnCount(cards, card, a)) continue;
       if (fold(a.per)) out.push({ quantity: trim(a.quantity), window: fold(a.window), per: fold(a.per), limit: num(a.limit) });
       else if (fold(a.window) === "calendar_day") out.push({ quantity: trim(a.quantity), window: "calendar_day", per: "", limit: num(a.limit) });
     }
@@ -244,7 +274,7 @@ export interface UnnamedFigure { tool: string; quantity: string; window: string;
  * refund and €50 a day, and held past it where the rules said refuse). A total for each item (`per`) is named by a figure
  * with the same quantity, window and per: on a rule that names a per total, every one is held to it; on a rule that names
  * none, only with `perToTheLetter` (TAFS_RULES_PER=on, once Coach's rules carry them; until then the shape checks before
- * this one judge them). Not named: a count of 0 (each call asks), which only asks. The tool is named as the connection
+ * this one judge them). Not named: a count of 0 (each call asks), which only asks, and KIFF's own count (kiffsOwnCount). The tool is named as the connection
  * titles it.
  */
 export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], perToTheLetter = false): UnnamedFigure[] {
@@ -283,6 +313,7 @@ function figuresInAnyWindow(cards: readonly unknown[], name: string): Figure[] {
     const grants = (Array.isArray(card.grants) ? card.grants : []) as Array<{ action?: unknown }>;
     if (!grants.some((g) => fold(g.action) === name)) continue;
     for (const a of (Array.isArray(card.aggregates) ? card.aggregates : []) as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+      if (kiffsOwnCount(cards, card, a)) continue;
       out.push({ quantity: trim(a.quantity), window: fold(a.window), per: fold(a.per), limit: num(a.limit) });
     }
   }
