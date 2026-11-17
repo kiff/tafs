@@ -3882,6 +3882,8 @@ enum Words {
             static var passkeyPrompt: String { Words.line("settings.devices.passkey_prompt") }
             /// Remove
             static var passkeyRemove: String { Words.line("settings.devices.passkey_remove") }
+            /// This is your only passkey that can approve. Without it, you need another device that can approve.
+            static var passkeyRemoveLast: String { Words.line("settings.devices.passkey_remove_last") }
             /// Remove {name}?
             static func passkeyRemoveNamed(name: String) -> String { Words.line("settings.devices.passkey_remove_named", name) }
             /// Remove the passkey {name} from your account

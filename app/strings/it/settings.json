@@ -67,6 +67,7 @@
   "settings.devices.passkey_note": "Con una passkey su questo telefono, un computer può approvare tramite esso: il computer mostra un codice QR e tu lo scansioni con questo telefono.",
   "settings.devices.passkey_prompt": "Aggiungi al tuo account una passkey su questo telefono",
   "settings.devices.passkey_remove": "Rimuovi",
+  "settings.devices.passkey_remove_last": "È la tua unica passkey che può approvare. Senza di essa, ti serve un altro dispositivo che può approvare.",
   "settings.devices.passkey_remove_named": "Rimuovere {name}?",
   "settings.devices.passkey_remove_prompt": "Rimuovi la passkey {name} dal tuo account",
   "settings.devices.passkey_too_slow": "Ci è voluto troppo tempo. Riprova.",

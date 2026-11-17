@@ -2104,6 +2104,7 @@ object Words {
       val passkeyNote: String get() = Res.s(R.string.settings_devices_passkey_note)
       val passkeyPrompt: String get() = Res.s(R.string.settings_devices_passkey_prompt)
       val passkeyRemove: String get() = Res.s(R.string.settings_devices_passkey_remove)
+      val passkeyRemoveLast: String get() = Res.s(R.string.settings_devices_passkey_remove_last)
       fun passkeyRemoveNamed(name: String): String = Res.s(R.string.settings_devices_passkey_remove_named, name)
       fun passkeyRemovePrompt(name: String): String = Res.s(R.string.settings_devices_passkey_remove_prompt, name)
       val passkeyTooSlow: String get() = Res.s(R.string.settings_devices_passkey_too_slow)

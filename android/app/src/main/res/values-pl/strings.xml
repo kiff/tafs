@@ -2078,6 +2078,7 @@
     <string name="settings_devices_passkey_note">Z kluczem dostępu na tym telefonie komputer może zatwierdzać przez niego: komputer pokazuje kod QR, a Ty skanujesz go tym telefonem.</string>
     <string name="settings_devices_passkey_prompt">Dodaj do konta klucz dostępu na tym telefonie</string>
     <string name="settings_devices_passkey_remove">Usuń</string>
+    <string name="settings_devices_passkey_remove_last">To Twój jedyny klucz dostępu, który może zatwierdzać. Bez niego potrzebujesz innego urządzenia, które może zatwierdzać.</string>
     <string name="settings_devices_passkey_remove_named">Usunąć %1$s?</string>
     <string name="settings_devices_passkey_remove_prompt">Usuń klucz dostępu %1$s z konta</string>
     <string name="settings_devices_passkey_too_slow">Trwało to zbyt długo. Spróbuj ponownie.</string>

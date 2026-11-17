@@ -67,6 +67,7 @@
   "settings.devices.passkey_note": "Avec une clé d'accès sur ce téléphone, un ordinateur peut approuver par son biais : l'ordinateur affiche un code QR, et vous le scannez avec ce téléphone.",
   "settings.devices.passkey_prompt": "Ajouter à votre compte une clé d'accès sur ce téléphone",
   "settings.devices.passkey_remove": "Supprimer",
+  "settings.devices.passkey_remove_last": "C'est votre seule clé d'accès qui peut approuver. Sans elle, il vous faut un autre appareil qui peut approuver.",
   "settings.devices.passkey_remove_named": "Supprimer {name} ?",
   "settings.devices.passkey_remove_prompt": "Supprimer la clé d'accès {name} de votre compte",
   "settings.devices.passkey_too_slow": "Cela a pris trop de temps. Réessayez.",
