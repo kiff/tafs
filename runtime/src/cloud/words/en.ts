@@ -127,6 +127,7 @@ export const en = {
   approval_count_on_amount: (tool: string) => `This Card would also count calls of "${tool}", beside its amount limits: a count nobody agreed to, which could hold calls the limits allow. Nothing was approved. Coach drafts it again.`,
   approval_rules_on_exceed: (tool: string) => `This Card would decide past the limit of "${tool}" differently from the rules you agreed. Nothing was approved. Coach drafts it again.`,
   approval_rules_missing: (tool: string) => `The rules you agreed say nothing of what "${tool}" does past its limit. Nothing was approved. Coach shows you the rules again.`,
+  approval_rules_unpinned: (tool: string) => `The rules you agreed say the connection keeps a rule for "${tool}", but the connection doesn't fix it. Nothing was approved. Coach shows you the rules again.`,
   approval_rules_figures: (tool: string) => `This Card has a limit for "${tool}" that isn't the one in the rules you agreed. Nothing was approved. Coach drafts it again.`,
   approval_rules_unagreed: "Coach drafted this before you agreed to the rules it showed. Nothing was approved. Agree to the rules first, and Coach drafts it again.",
   approval_rules_required: "Coach drafted this without showing you the rules to agree to. Nothing was approved. Coach shows you the rules first.",

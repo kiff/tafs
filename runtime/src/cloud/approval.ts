@@ -1,4 +1,4 @@
-import { kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement } from "./rules.js";
+import { kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
 import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -43,7 +43,7 @@ export interface ApprovalGrant {
   /** planque's name for the connection, the same in every app: its app and, when known, its account ("Gmail · Demo Shop"). */
   title?: string;
   request: {
-    agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }>;
+    agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean; fixed_arguments?: Record<string, unknown> | null }>;
     /**
      * A managed connector's request (kiff/planque `ConnectorRequest`): `usual_access` when planque couldn't narrow the app's
      * sign-in to what the taf uses (its ceiling has no narrower scope, such as Google Sheets with no read-only one), so the
@@ -70,7 +70,7 @@ export interface ApprovalGrant {
  * refused one and then its redraft (Eval 43690861487's Refunds). The rest (no draft, a removed taf, another app first,
  * a read that didn't come back) wait for the owner's tap, as before.
  */
-export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
+export const REDRAFT_CODES: ReadonlySet<string> = new Set(["rules_unpinned", "no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
   "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
@@ -695,6 +695,7 @@ export function approvalWords(lang: Lang = "en") {
     countOnAmount: w.approval_count_on_amount,
     rulesOnExceed: w.approval_rules_on_exceed,
     rulesMissing: w.approval_rules_missing,
+    rulesUnpinned: w.approval_rules_unpinned,
     rulesFigures: w.approval_rules_figures,
     rulesUnagreed: w.approval_rules_unagreed,
     rulesRequired: w.approval_rules_required,
@@ -858,6 +859,12 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   }
   if (agreement.state === "unagreed") {
     return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" isn't agreed yet, so the owner is looking at rules they haven't agreed to. Show its confirm with agrees "${agreement.notice}", and draft once the owner tapped agree.`, note: W.rulesUnagreed, code: "rules_unagreed" };
+  }
+  // A line the owner agreed as kept by the connection must be: each tool it names is pinned in its grant, or nothing is
+  // signed, and Coach hears which tool, before any signing request reaches the owner.
+  const unpinned = unpinnedConnection([grant, ...others], agreement.connection);
+  if (unpinned) {
+    return { outcome: "answered", answer: `failed: the rules the owner agreed say the connection keeps "${unpinned.line}"${unpinned.tool ? ` for "${unpinned.tool}"` : ""}, but ${unpinned.tool ? `the connection doesn't pin "${unpinned.tool}"` : "the line names no tool"}. Pin it in the connection's request, or show the rules again with that line kept in its instructions, then draft it again.`, note: W.rulesUnpinned(unpinned.title), code: "rules_unpinned" };
   }
   const off = rulesMismatch([grant, ...others], cards, agreement.rules);
   if (!off) {
