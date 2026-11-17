@@ -1521,7 +1521,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
       try { workCheck = checkOf(body.check, tools); } catch (err) { throw new HTTPError(400, (err as Error).message); }
       workCheck = { ...workCheck, first: workCheck.first ?? "all" };
     }
-    // Each tool it names is one of the taf's: a name that isn't would be kept and do nothing (agentgabo on #572).
+    // Each tool it names is one of the taf's: a name that isn't would be kept and do nothing (#572).
     if (disclose?.length) {
       const unknown = disclose.filter((d) => !tools.includes(d.tool)).map((d) => d.tool);
       if (unknown.length) throw new HTTPError(400, `disclose names ${unknown.join(", ")}, which isn't among the taf's tools (${tools.join(", ") || "none named"}): name each as the result's tools do`);
@@ -1881,7 +1881,7 @@ export function jobOf(taf: Pick<Taf, "name" | "job" | "summary" | "work" | "disc
 }
 
 /**
- * A taf's disclosure with more of it, only ever wider (qa-kiff on #572): per tool, the newer fields
+ * A taf's disclosure with more of it, only ever wider (#572): per tool, the newer fields
  * in their order, then the earlier ones not named again. An earlier field is never dropped: when the
  * two are over DISCLOSE_MAX.fields, the newer ones that are new are left out first.
  */
@@ -3125,7 +3125,7 @@ export function threadItems(messages: ThreadMessage[], components: ThreadCompone
  * Who a card's run waits on, as kiff/agents marks it (`waits`: "owner", "service"), or "" for a card the
  * run goes on past (kiff/tafs#568). A component with no `waits` key at all is from before kiff/agents
  * marked them (kiff/agents#351): it's read by its type, as kiff/agents' lists were then, so a thread
- * from before, and a live line before that change is deployed, read the same (qa-kiff on #569).
+ * from before, and a live line before that change is deployed, read the same (#569).
  */
 export function waitsOf(component: unknown): string {
   const c = component as { waits?: unknown; type?: unknown } | null | undefined;
@@ -3810,8 +3810,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
     await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
       fetch: deps.fetch ?? fetch, now, newID: () => "", signed, lang: langOf(event) }, "approval").catch(approvalFailure);
-    // The card first: a start for a card that isn't there starts nothing (qa-kiff on #554). Without
-    // one, the session must be one of the person's own chats with Coach (agentgabo on #554).
+    // The card first: a start for a card that isn't there starts nothing (#554). Without
+    // one, the session must be one of the person's own chats with Coach (#554).
     const component = str(body.component).trim();
     const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
     if (!setup) throw new HTTPError(404, "no Coach on this account");
@@ -4289,7 +4289,7 @@ async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, e
   const [state, held, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? { lines: [], guides: [] } : startConnections(me, event, deps),
     // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
     deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined),
-    // Beside the start's reads, never after them: a chat's first words wait on none of it (qa-kiff on #574).
+    // Beside the start's reads, never after them: a chat's first words wait on none of it (#574).
     me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined, keepLanguage(me.tenantID, lang, deps)]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
@@ -4455,7 +4455,7 @@ async function requireUnattended(deps: Deps, tenant: string, tafID: string): Pro
 /**
  * Pauses the taf for consent: its schedules are switched off, the one start tafs cloud can't gate, and tafs cloud keeps
  * why. Everything else with no person in the moment is gated where it starts; a person's own chat, steer and Run now go
- * on, on their own consent, and nothing at work is cancelled (dev-android on #855). A yes switches the schedules back on,
+ * on, on their own consent, and nothing at work is cancelled (#855). A yes switches the schedules back on,
  * unless the owner had paused the taf. Once per pause: a second refusal changes nothing.
  */
 async function pauseForConsent(deps: Deps, tenant: string, tafID: string, why: ConsentWhy): Promise<void> {
@@ -4492,7 +4492,7 @@ async function resumeFromConsent(deps: Deps, tenant: string, tafID: string): Pro
 export async function settleConsent(deps: Deps, tenant: string): Promise<{ paused: string[]; resumed: string[] }> {
   const out = { paused: [] as string[], resumed: [] as string[] };
   if (!deps.aiConsent || !deps.coach) return out;
-  // Coach (Setup) is never paused: its runs come from a person's own routes, each gated on their consent (dev-android on #855).
+  // Coach (Setup) is never paused: its runs come from a person's own routes, each gated on their consent (#855).
   for (const taf of (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB)) {
     const c = await unattendedConsent(deps.coach, tenant, taf.id);
     const paused = await consentPauseOf(deps.coach, tenant, taf.id);
@@ -5383,7 +5383,7 @@ async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promis
   const call = calls.find((c) => c.proposal === proposal);
   if (!call) throw new HTTPError(404, "no call of this account waits for that answer");
   // Only the person KIFF marked as checking it, while the mark holds: KIFF set it after its own check
-  // that they manage the taf (qa-kiff on #535). A viewer, someone else's mark or a mark run out: 409.
+  // that they manage the taf (#535). A viewer, someone else's mark or a mark run out: 409.
   const now = deps.now?.() ?? new Date();
   const until = Date.parse(call.checking?.until ?? "");
   if (call.checking?.by !== me.subject || !(until > now.getTime())) {
@@ -5393,7 +5393,7 @@ async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promis
   const agent = call.taf?.agent ?? call.agent ?? "";
   const taf = tafs.find((t) => t.kiffAgent === agent && !t.removing);
   // Every field from KIFF is folded to one bounded line, so none can open a line of its own (a marker,
-  // an owner's line) in Coach's input; the record sits under a line that says it's data (qa-kiff).
+  // an owner's line) in Coach's input; the record sits under a line that says it's data.
   const f = (v: unknown, max = 120) => (typeof v === "string" ? oneLine(v.replace(/[\u0000-\u001f\u007f]+/g, " "), max) : "");
   const name = f(call.taf?.name, 80) || taf?.name || f(agent, 80);
   const cp = call.counterparty;
@@ -7745,7 +7745,7 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
       const held = await deps.agents.tafDraft(tenant, draft).catch(() => undefined);
       if (!held || held.agent_id !== agent || held.claimed) continue;
       // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
-      // would answer "no such chat" (qa-kiff on #873).
+      // would answer "no such chat" (#873).
       const own = r.requester?.kind === "member" && r.requester.id === me.subject;
       out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session } : {}) });
     }
@@ -8423,7 +8423,7 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   // The drive is the chat's that approved it. kiff/agents names the chat on the call (SESSION_ARG),
   // inside KIFF's permit: it must be the drive's, exactly. A call that doesn't name one (a kiff/agents
   // or a connection from before) falls back: every run of this person's Coach at work now must be in
-  // that chat, or the call is refused (qa-kiff on #554).
+  // that chat, or the call is refused (#554).
   if (on && !on.ended && call.session && call.session !== on.session) {
     return refuse("This drive was approved in another chat with Coach, and only that chat drives. Nothing was sent.");
   }
@@ -8450,7 +8450,7 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
       .filter((r) => r.status === "RUNNING" && r.session === on.session && r.requester?.kind === "member" && r.requester.id === person) : [];
     for (const r of working) await deps.agents.cancelRun(call.tenant, setup!.id, r.id).catch((err) => console.error(`drive pause, ending ${r.id}:`, err));
   }
-  // Coach's done ends the drive whatever the phone answered, or if it didn't (agentgabo on #554).
+  // Coach's done ends the drive whatever the phone answered, or if it didn't (#554).
   if (name === "app_act" && args.action === "done" && on && !on.ended) {
     const still = await currentDrive(store, call.tenant, person, now());
     if (still?.id === on.id && !still.ended) {
@@ -8973,7 +8973,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     took = true;
     // Every try is said, so a result that waits is never silent (13 Nov).
     console.log(JSON.stringify({ event: "handover_try", run: r.id, card: card.id, draft: card.taf.draft ?? null }));
-    // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
+    // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, #572).
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
     // A check whose list isn't where the reads Coach made found one is answered back with the paths they have, before
     // anything is made: its first check would never read (14 Nov, every Gmail taf). Best effort: unread, it goes on.
@@ -9072,7 +9072,7 @@ export async function sweepDeliveries(deps: Deps): Promise<Array<{ run: string; 
  * do it unless told. Said only once it's off (one its owner moved during the run is on, for its new time),
  * and only while its once-key is kept, never again a month on. Nothing is said for a recurring schedule its
  * owner turned off, nor for a halted taf or account: neither tries again, as the words would promise
- * (qa-kiff on #587). An account whose schedules can't be read is logged, and read again on the next sweep.
+ * (#587). An account whose schedules can't be read is logged, and read again on the next sweep.
  */
 export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant: string; schedule: string }>> {
   const store = deps.coach;
@@ -9533,7 +9533,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
   if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
   const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
   // A disclosure the improvement names is added to the taf's before its version is built: for a tool it
-  // adds, or for a taf from before disclosures. Never one taken away (agentgabo on kiff/agents#354).
+  // adds, or for a taf from before disclosures. Never one taken away (kiff/agents#354).
   let more: Job["disclose"];
   if (want.disclose !== undefined) {
     try { more = discloseOf(want.disclose); } catch (err) { return { failed: (err as Error).message }; }
@@ -9561,7 +9561,7 @@ async function improvedVersionFor(tenant: string, coach: string, r: Run, cardID:
     }
   }
   // Who it writes for, when the improvement says (a taf from before gap 18 names no one): the next version's
-  // line alone. The live taf takes it when that version is installed (keepNotes), never before (qa-kiff on #574).
+  // line alone. The live taf takes it when that version is installed (keepNotes), never before (#574).
   let writesFor: string | undefined;
   try { writesFor = writesForOf(want.writes_for); } catch (err) { return { failed: (err as Error).message }; }
   try {
@@ -9658,7 +9658,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       const now = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
       if (now) return { taf_id: now.id };
       // The owner hasn't approved the Card yet: nothing failed, and the result waits for them.
-      // By its code, never its words: a reworded line still waits (agentgabo on #773).
+      // By its code, never its words: a reworded line still waits (#773).
       if (err.status === 409 && err.extra?.code === "draft_not_ready") throw new CardNotApproved();
       return { failed: err.message };
     }

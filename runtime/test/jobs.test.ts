@@ -140,7 +140,7 @@ describe("jobs", () => {
     expect(jobById("refunds")!.instructions.replace(/\n/g, " ")).toContain("Look up the payment before asking for a refund: read it with your payment tool (its get or list call) and read its result. That read is the look-up.");
   });
 
-  // qa-kiff on #574: a version built before gap 18 says "for the company", a placeholder, never a name.
+  // On #574: a version built before gap 18 says "for the company", a placeholder, never a name.
   it("reads who a disclosure line names, and no one from the line before gap 18", () => {
     expect(writesForIn(disclosureLine({ writesFor: "Kiff Agents OÜ" }))).toBe("Kiff Agents OÜ");
     expect(writesForIn(DISCLOSURE_LINE)).toBeUndefined();
@@ -207,10 +207,10 @@ describe("jobs", () => {
       expect(flat).toContain("but \"I refunded €3 on the €1,000 charge, which had nothing refunded before.\"");
       // A held call's sentence carries none of it: the item's balance is what the held call's own
       // rule leaves out, and this morning's "I read the charge first. It is €1,000 with nothing
-      // refunded yet." was on a held call (qa-kiff on #560).
+      // refunded yet." was on a held call (#560).
       expect(flat).toContain("and a held call's sentence carries none of it (above)");
       // Only a check with nothing to do makes what was found the answer: "Check charge …, then
-      // refund" asks for a check too, and its "Antes lo revisé: …" failed (qa-kiff on #560).
+      // refund" asks for a check too, and its "Antes lo revisé: …" failed (#560).
       expect(flat).toContain("When the owner asked only for a check, with nothing to do, what you found is the answer.");
       expect(flat).not.toContain("When the owner asked you to check something");
       expect(flat).not.toContain("What you checked on the way comes after");

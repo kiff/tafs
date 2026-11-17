@@ -5,6 +5,7 @@ import SwiftUI
 struct DevicesView: View {
     static let title = Words.Settings.Devices.title
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var removing: KIFFClient.Device?
     @State private var pairing = false
     @State private var removingPasskey: KIFFClient.Passkey?
@@ -54,7 +55,12 @@ struct DevicesView: View {
         .navigationTitle(Self.title)
         .task { await model.refreshDevices(); await model.refreshPasskeys() }
         .refreshable { await model.refreshDevices(); await model.refreshPasskeys() }
-        .sheet(isPresented: $pairing) { PairComputerView() }
+        // Back on screen after leaving it (another app, the phone locked) or after Add a device: read again, so a
+        // device added meanwhile shows without closing Devices and opening it again. As Android's (tafs#1281).
+        .onChange(of: scenePhase) { phase in
+            if phase == .active { Task { await model.refreshDevices() } }
+        }
+        .sheet(isPresented: $pairing, onDismiss: { Task { await model.refreshDevices() } }) { PairComputerView() }
         .confirmationDialog(removing.map { $0.name.map { Words.Settings.Devices.signOutNamed(device: $0) } ?? Words.Settings.Devices.signOutThis } ?? "",
                             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                             titleVisibility: .visible) {

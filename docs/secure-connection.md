@@ -234,7 +234,7 @@ shows what it asks, never "connected" twice for two asks (`noteConnected`).
   languages.
 - **One fingerprint per key setup with a Card:** the phone signs one `kiff.requests.v1`
   message, and both services accept it once.
-- **qa-kiff's negatives:** the signature reused on a third request is refused; a swapped
+- **The negatives:** the signature reused on a third request is refused; a swapped
   `with` hash is refused by both services; a `signed_at` outside 5 minutes is refused; a
   device-key (window) signature in `v3=` is refused.
 - **The key never leaves the phone except to the connection server**, and the last 4 aren't

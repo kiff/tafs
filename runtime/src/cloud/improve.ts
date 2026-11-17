@@ -152,7 +152,7 @@ export function improveContext(taf: ImprovedTaf, card: CardSummary, calls: Activ
  */
 export function ownerWords(text: string): string {
   // An envelope with no owner part (an attachment alone: "The owner says:" ends it, trimmed of its space) is all
-  // tafs cloud's, never the owner's: nothing of it is shown (qa-kiff on the coach-lines leak, 13 Nov).
+  // tafs cloud's, never the owner's: nothing of it is shown (the coach-lines leak, 13 Nov).
   if (text.startsWith("[door knock ")) {
     const m = text.match(/^\[door knock [^\]\n]*\] The owner says:[ \t]*([\s\S]*?)(?:\n\n|$)/);
     return m?.[1]?.trim() ?? "";

@@ -255,7 +255,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
 });
 
 // Eval 16's refunds: "ask past €5 a refund, refuse past €50 a day" is one tool with two answers, so the answer goes on
-// the figure (agentgabo and kiff-admin, #1614 18:16): the rule's `over` is the default for a figure that says none.
+// the figure (17 Nov): the rule's `over` is the default for a figure that says none.
 describe("what happens past each figure (over on a limit)", () => {
   const stripe = grantOf("g1", [tool("refund_charge", "k3")]);
   const EACH = { quantity: "sum(amount)", window: "call" as const, limit: 500, over: "ask" as const };

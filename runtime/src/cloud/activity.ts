@@ -163,7 +163,7 @@ export function nextStep(c: ActivityCall, taf?: string, lang: Lang = "en"): Next
 
 /**
  * Coach's first message for a failed call, for the owner to send: the app's words quoted as the app's, so
- * nothing it answered reads as the owner's request (qa-kiff on #574, as kiff/agents#358 does for the record).
+ * nothing it answered reads as the owner's request (#574, as kiff/agents#358 does for the record).
  */
 function askCoach(taf: string | undefined, what: string, said: string | undefined, lang: Lang = "en"): string {
   return wordsIn(lang).next_ask_message(taf, what, quotable(said)?.replace(/"/g, "'"));

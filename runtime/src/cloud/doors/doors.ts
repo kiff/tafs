@@ -416,8 +416,8 @@ export async function claimAnswered(ctx: DoorsContext, tenant: string, id: strin
   if (await ctx.doors.store.create(key, claim, until)) return claim;
   // A claim with no run older than one answer's time is a delivery that stopped between its claim and its
   // answer (the Lambda died): the wait is still open, so this delivery takes the claim over, rather than every
-  // retry reading "answered" for ten minutes while nothing answered (agentgabo's note on #515). The takeover
-  // is a compare-and-swap on the claim as read: of two late deliveries, one takes it (agentgabo on #523).
+  // retry reading "answered" for ten minutes while nothing answered (#515). The takeover
+  // is a compare-and-swap on the claim as read: of two late deliveries, one takes it (#523).
   const held = (await ctx.doors.store.get(key)) as AnsweredEvent | undefined;
   if (held && held.run === "" && ctx.now.getTime() - Date.parse(held.at) > STALE_CLAIM_MS && await ctx.doors.store.swap(key, held, claim, until)) return claim;
   return undefined;

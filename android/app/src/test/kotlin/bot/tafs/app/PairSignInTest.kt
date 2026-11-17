@@ -95,7 +95,7 @@ class PairSignInTest {
 
   private val token = """{"access_token":"at_p","token_type":"Bearer","expires_in":3600,"tenant":"t_01","subject":"user_1","device_id":"dev_9"}"""
 
-  // MARK: A token for a way the person stopped (qa-kiff, 16 Nov; iOS's tafs#1246)
+  // MARK: A token for a way the person stopped (16 Nov; iOS's tafs#1246)
 
   private val late = KiffClient.json.decodeFromString(bot.tafs.app.kiff.DeviceToken.serializer(), token)
 

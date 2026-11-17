@@ -57,7 +57,7 @@ const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
   free: SETUP,
   recipe: SETUP,
   door: SETUP,
-  // An improvement often adds a tool and drafts its Card, through the same gateway tools (agentgabo).
+  // An improvement often adds a tool and drafts its Card, through the same gateway tools.
   improve: ["improve-a-taf", "connect-an-app", "name-the-tools", "draft-the-card"],
   coach_lines: ["the-tafs"],
   delivery: ["the-dial"],

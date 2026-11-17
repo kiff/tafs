@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { allowOffer, type Breach, type Change, refusal } from "../src/cloud/allow.js";
 
-// qa-kiff's negatives for "Allow this from now on" (docs/allow-from-now-on.md, Tests): what tafs cloud must never
+// Negatives for "Allow this from now on" (docs/allow-from-now-on.md, Tests): what tafs cloud must never
 // offer, beside the cases test/allow.test.ts already holds. Each one names the guard it needs.
 
 const EACH: Breach = { mandate_id: "m_refunds", outcome: "per_action_exceeded", quantity: "sum(amount)", unit: "EUR", limit: 15000, draw: 32000 };
@@ -27,7 +27,7 @@ function kiffWith(answers: { hold?: object; draft?: object; replay?: object }) {
 const HOLD = { id: "exc_1", subject: "rae", kind: "hold", status: "held", title: "Refund a payment", breaches: [EACH] };
 const DRAFT = { draft: "drf_1", version: "v1", confirm_key: "critical", changes: [each()], round: { after: 35000 } };
 
-describe("Allow this from now on: what is never offered (qa-kiff's negatives)", () => {
+describe("Allow this from now on: what is never offered (a review's negatives)", () => {
   it("asks KIFF for no draft when the call's figure isn't a whole, safe number of minor units", async () => {
     // A figure tafs cloud can't trust can't be the one the Card stops at: num() fails closed before allow-draft.
     for (const draw of [320.5, "32000", 2 ** 53, Number.NaN, null]) {
