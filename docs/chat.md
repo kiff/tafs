@@ -29,6 +29,16 @@ the answer shows as it's written. When the stream can't open, it sends it plainl
 (`POST /v1/tafs/{id}/messages`) and reloads the thread while the answer is owed: every 4
 seconds, at most 30 times for each unanswered message.
 
+**One message, one id.** On Android each message the owner sends gets a `client_message_id`
+(a UUID), sent on the stream, on the plain send that takes its place and on a steer, and kept
+with a message that wasn't sent so its Retry goes under the same id. A stream that reached tafs
+cloud before it failed, or a send that dropped with no answer, is then the same message, and
+tafs cloud answers a repeat with the run it already started, never a second one. A message
+written after it, or edited, is a new one with its own id. If tafs cloud ever refuses an id as
+already used for other words (409 `dedup_key_conflict`), the message is marked not sent with the
+app's `error.sent_with_other_text` ("This message was already sent with different text…"),
+never "It changed in the meantime" (`ErrorWords`).
+
 The sent message shows at once, faded until the thread has it. The thread's copy is found by
 tafs cloud's id for it: `POST …/messages` answers `message: {id}`, and so does the stream's first
 event, and each thread message carries its `id` (Android: `SentMessages.merge`). Only a message

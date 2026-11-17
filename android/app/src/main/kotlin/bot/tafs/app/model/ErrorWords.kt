@@ -16,7 +16,9 @@ object ErrorWords {
   fun of(e: Throwable): String {
     val status = when (e) {
       is CloudError -> e.words?.let { return it }
-        ?: if (e.code in CLOUD_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
+        // A message id already used for other words (docs/api.md, "One message, sent once"): never "It changed in the meantime".
+        ?: if (e.status == 409 && e.code == "dedup_key_conflict") return Words.Error.sentWithOtherText
+        else if (e.code in CLOUD_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
       is KiffError.Server -> e.status
       // A vendor that refuses planque's client (one that allow-lists who may sign in): planque's own words, which say whose it is,
       // not "it isn't working on our side".

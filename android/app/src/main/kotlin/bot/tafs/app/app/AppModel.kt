@@ -5352,6 +5352,9 @@ class AppModel(
   /** Whether the last [holdWindow] asked for the fingerprint (the approval key signs the window's opening), held or not. */
   private var windowAsked = false
 
+  /** A message's one id (`client_message_id`, docs/api.md), made when the owner sends it. */
+  private fun newMessageId(): String = java.util.UUID.randomUUID().toString()
+
   private suspend fun holdWindow(reason: String): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
     if (drive.on) return false
@@ -6043,8 +6046,10 @@ class AppModel(
     val unsent = takeUnsent(tafId, message, remember = false) ?: return false
     unsent.notSentKey?.let { (settledNotSent() as MutableSet<String>).add(it) }
     // With its own files, never the tray's.
-    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
-    else deliverChat(message.text, tafId)
+    // Under its own id: if the first try reached tafs cloud after all, this one gets that run back, not a second.
+    val id = unsent.messageId ?: newMessageId()
+    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files, messageId = id)
+    else deliverChat(message.text, tafId, messageId = id)
     unsent.notSentKey?.let { key -> if (sent) rememberNotSent(listOf(key)) else (settledNotSent() as MutableSet<String>).remove(key) }
     if (!sent) keepUnsent(tafId, unsent)
     return sent
@@ -6091,11 +6096,11 @@ class AppModel(
    * Sends the owner's message to the taf and waits for its answer. The sample answers from its
    * own record; signed in, the thread is tafs cloud's. A message may be words, files, or both.
    */
-  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false): Boolean =
+  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false, messageId: String? = null): Boolean =
     // A send that goes through ticks success; one refused or failed, a warning (docs/android-app.md, "Haptics").
-    deliverChatNow(text, tafId, withFiles).also { sent -> if (sent) bot.tafs.app.design.Haptics.success() else if (text.isNotBlank() || withFiles) bot.tafs.app.design.Haptics.warning() }
+    deliverChatNow(text, tafId, withFiles, messageId).also { sent -> if (sent) bot.tafs.app.design.Haptics.success() else if (text.isNotBlank() || withFiles) bot.tafs.app.design.Haptics.warning() }
 
-  private suspend fun deliverChatNow(text: String, tafId: String, withFiles: Boolean): Boolean {
+  private suspend fun deliverChatNow(text: String, tafId: String, withFiles: Boolean, messageId: String? = null): Boolean {
     val words = text.trim()
     val files = withFiles && _state.value.mode == Mode.kiff && _state.value.files(tafId).any { it.ref != null }
     if (words.isEmpty() && !files) return false
@@ -6103,7 +6108,7 @@ class AppModel(
       _state.update { it.copy(chatErrors = it.chatErrors + (tafId to Words.Chat.tooLong(count = Chat.LIMIT))) }
       return false
     }
-    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles)
+    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles, messageId = messageId ?: newMessageId())
     if (tafId in _state.value.chatSending) return false
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     try {
@@ -6128,7 +6133,11 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList()): Boolean {
+  private suspend fun deliverToTafsCloud(
+    words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList(),
+    /** The message's one id, on its stream, its plain send and its steer alike, and kept for its Retry (docs/api.md). */
+    messageId: String = newMessageId(),
+  ): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
@@ -6170,7 +6179,7 @@ class AppModel(
           var steered = false
           if (run != null && refs.isEmpty()) {
             try {
-              val steer = cloud.steer(cloudId, run, words)
+              val steer = cloud.steer(cloudId, run, words, clientMessageId = messageId)
               steered = true
               // Sent once (docs/chat.md): what the run didn't take is tafs cloud's, held in this chat until the taf is done, or sent
               // at once as the next message. The thread shows which, a held one as what waits, so its pending copy goes now.
@@ -6190,8 +6199,10 @@ class AppModel(
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach)
-          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach).also { sent ->
+          // One id for the message, on the stream and on the plain send that takes it when the stream can't open: a stream that
+          // reached tafs cloud before it failed is then the same message, never run a second time.
+          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach, messageId = messageId)
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach, clientMessageId = messageId).also { sent ->
             if (current()) {
               if (coach) coachSession(sent.session, sent.newSession)
               sent.message?.let { markSent(tafId, pending, it.id) }
@@ -6224,7 +6235,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted)
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted, messageId = messageId)
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
@@ -6357,8 +6368,9 @@ class AppModel(
     session: String? = null,
     newChat: Boolean = false,
     followsNewChat: Boolean = false,
+    messageId: String? = null,
   ): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat)
+    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat, clientMessageId = messageId)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {

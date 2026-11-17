@@ -1,0 +1,1 @@
+- **Android: a message sent again after a failed stream, a dropped send or a Retry is never run twice.** Each message carries one `client_message_id`, on the stream, its plain send, a steer and its Retry ([chat.md](docs/chat.md)).
