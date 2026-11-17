@@ -3799,6 +3799,8 @@ class AppModel(
         if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
       }
     }
+    // Each card's words for its own grant, by the card's grant id, read as the thread is: not left to the card being drawn.
+    approvals.mapNotNull { it.grant }.distinct().forEach(::readProfileWords)
     for (c in approvals) {
       val id = c.draft ?: continue
       if (_state.value.setupDrafts[id]?.confirmed == true) continue
@@ -4752,6 +4754,24 @@ class AppModel(
       planque.signer = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null) }
     }
+  }
+
+  /** The profiles whose words are being read now, by grant and digest: one read each, however many cards or reads ask. */
+  private val profileWordsReading: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
+
+  /**
+   * Reads [grantId]'s words in the model's own scope, never a card's: an approval card that is drawn again (two cards arriving in
+   * the same second, Coach's thread read while its run streams) cancelled the card's own read, and nothing read them again until
+   * the card left the screen and came back, so it said "Reading KIFF's words…" with Approve greyed (the owner's phone, 17 Nov).
+   */
+  fun readProfileWords(grantId: String) {
+    val s = _state.value
+    val grant = s.grants.firstOrNull { it.id == grantId } ?: return
+    val digest = s.profileDigest(grant) ?: return
+    if (s.profileWordsFor(grant) != null) return
+    val reading = "$grantId:$digest"
+    if (!profileWordsReading.add(reading)) return
+    scope.launch { try { loadProfileWords(grantId) } finally { profileWordsReading.remove(reading) } }
   }
 
   /**

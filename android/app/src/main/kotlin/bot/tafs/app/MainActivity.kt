@@ -627,7 +627,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
-        loadProfileWords = model::loadProfileWords,
+        loadProfileWords = { model.readProfileWords(it) },
         loadDraft = model::loadDraft,
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
@@ -1000,7 +1000,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     state.listApproval?.let { grantId ->
       bot.tafs.app.views.ConnectApprovalSheet(
         state, state.grants.firstOrNull { it.id == grantId },
-        loadWords = model::loadProfileWords,
+        loadWords = { model.readProfileWords(it) },
         onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
         onClose = model::closeListApproval,
         needsKey = state.listApprovalNeedsKey,

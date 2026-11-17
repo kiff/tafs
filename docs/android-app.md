@@ -1129,6 +1129,14 @@ cloud marks each waiting approval card with `signs: {card, words?}` (read lenien
   `AppState.draftErrors`, `coach.card_draft_not_read`). It used to stay on "Reading KIFF's words…".
 - `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
   under its own title as if signed now; with no `words`, not drawn.
+
+**KIFF's words for a connection's profile** (`POST /v1/profiles/words`) are what a card shows above Approve, which waits
+for them. Each card reads its own grant's words, by the card's grant id, kept only while their `profile_sha256` is that
+grant's profile digest (`AppState.profileWordsFor`). They're read when Coach's thread is (`readApprovals`), every waiting
+card's at once, and again when a card is drawn, each time in the model's own scope (`AppModel.readProfileWords`), once
+per grant and profile. A card's own read used to be lost when the card was drawn again (two cards arriving in the same
+second, Coach's thread read while its run streams), and it said "Reading KIFF's words…" with Approve greyed until the
+card left the screen and came back (`ProfileWordsCardsTest`).
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
 
 **A sign-in wider than the job** (`wider: {words}`, docs/chat.md): when planque couldn't narrow an app's sign-in to
