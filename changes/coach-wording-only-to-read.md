@@ -1,1 +1,0 @@
-- Coach's wording rules also refuse a connection said to be "only for reading" in Spanish ("sólo para leer") and Portuguese ("apenas para leitura"); a sentence about what the taf itself reads still passes.
