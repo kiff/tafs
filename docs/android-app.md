@@ -685,6 +685,16 @@ and its line. The sidebar lists every taf: the iPad shows only those relevant no
 step, a knock, a run or a change in the last day) and keeps the rest behind the mark, a rule tafs
 cloud doesn't send yet, so Android doesn't work it out on its own. Label chips over the Overview are
 still to come on a tablet. `TabletSidebarTest` holds this at the iPad's size and a phone's.
+
+The tablet's screens at the iPad's size (1366 × 1024 dp), over the sample, to set beside the iPad's
+reference files, are drawn on the JVM by `TabletScreenshots` into `docs/screenshots/android/tablet/`
+when asked (`./gradlew :app:testDebugUnitTest --tests '*TabletScreenshots*' -PtabletScreenshots`):
+
+<p>
+  <img src="screenshots/android/tablet/overview.png" width="320" alt="A tablet: the sidebar, and the Overview it opens on">
+  <img src="screenshots/android/tablet/needs-you.png" width="320" alt="Needs you beside the sidebar, its row highlighted">
+  <img src="screenshots/android/tablet/taf.png" width="320" alt="A taf chosen in the sidebar, highlighted there, its page beside it">
+</p>
 A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
 "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
 starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one

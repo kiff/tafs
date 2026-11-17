@@ -157,8 +157,9 @@ dependencies {
 // another zone sets it itself.
 tasks.withType<Test>().configureEach {
   systemProperty("user.timezone", "UTC")
-  // The store screenshots are drawn only when asked (`-PphoneScreenshots`), into android/play/phone-screenshots; the test runs
-  // either way, so a screen that no longer draws fails CI.
-  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots")) "true" else "false")
+  // The store screenshots are drawn only when asked (`-PphoneScreenshots`), into android/play/phone-screenshots, and the tablet's
+  // against the iPad's (`-PtabletScreenshots`), into docs/screenshots/android/tablet; the tests run either way, so a screen that
+  // no longer draws fails CI.
+  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots") || project.hasProperty("tabletScreenshots")) "true" else "false")
   systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
 }
