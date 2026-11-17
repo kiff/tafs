@@ -169,6 +169,11 @@ data class WireShown(
 data class CardAnswer(
   val state: String = "answered",
   val words: String = "",
+  /**
+   * The answer as tafs cloud stores it, in no language (`approved`, `declined`, `failed: why`, `connected`), beside [words] in the
+   * owner's: what the cards read their outcome from. Null from a tafs cloud that doesn't send it yet.
+   */
+  val answer: String? = null,
   val by: String? = null,
   val outcome: ResultOutcome? = null,
   /** When it was answered, as tafs cloud writes it; null from a tafs cloud that doesn't say. */

@@ -1,0 +1,1 @@
+- **Android: an approval refused or failed never reads as approved, in any language.** Its outcome comes from tafs cloud's stored answer, not from the words in the owner's language, and nothing reads as approved by default ([chat.md](docs/chat.md)).
