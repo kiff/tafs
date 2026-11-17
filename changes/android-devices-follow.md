@@ -1,0 +1,1 @@
+- **Android: Account › Devices shows a newly paired device without being opened again.** After a pairing it's read again until KIFF lists the new device, and whenever Devices comes back on screen ([android-app.md](docs/android-app.md#pairing-a-computer)).
