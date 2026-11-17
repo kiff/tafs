@@ -313,8 +313,30 @@ class ChatStreamTest {
     val m = model()
     assertTrue(!m.deliverChat("Refund Ana", "refunds-1"))
     assertTrue(transport.requestsTo("POST /v1/tafs/taf_1/messages").isEmpty())
-    val why = m.state.value.chatUnsent["refunds-1"]!!.single().why
-    assertTrue(why, why.contains(bot.tafs.app.model.Words.Error.sentWithOtherText))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertTrue(unsent.why, unsent.why.contains(bot.tafs.app.model.Words.Error.sentWithOtherText))
+    // The id is given up: Retry is a new message, under a new id, as the line says.
+    assertNull(unsent.messageId)
+    val first = idOf(transport.requestsTo(stream).single())
+    transport.answer(stream, 200, sse("done" to "{}"))
+    m.resendUnsent("refunds-1", unsent.message)
+    val again = idOf(transport.requestsTo(stream).last())
+    assertTrue("a new id: $first then $again", again != null && again != first)
+  }
+
+  @Test fun aMessageRefusedOutrightRetriesAsANewMessageAndOneNotAnsweredKeepsItsId() = runTest {
+    // tafs cloud's contract for Retry (docs/api.md): a 4xx gives the id up, a 5xx or a 408 keeps it, as no answer does.
+    for ((status, keeps) in listOf(400 to false, 409 to false, 429 to false, 408 to true, 500 to true, 503 to true)) {
+      transport.reset()
+      reads()
+      transport.answer(stream, 503, """{"error":"unavailable"}""")
+      transport.answer("POST /v1/tafs/taf_1/messages", status, """{"error":"refused"}""")
+      val m = model()
+      assertTrue(!m.deliverChat("Refund Ana", "refunds-1"))
+      val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+      val sent = idOf(transport.requestsTo("POST /v1/tafs/taf_1/messages").single())
+      assertEquals("$status", if (keeps) sent else null, unsent.messageId)
+    }
   }
 
   @Test fun aRefusalOnTheStreamIsSaidAndNothingIsSentPlainly() = runTest {

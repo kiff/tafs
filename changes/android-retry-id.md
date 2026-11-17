@@ -1,0 +1,1 @@
+- **Android: Retry after a refusal is a new message.** A message refused outright (a 4xx, such as "already sent with different text" or too many messages) gives up its id, so Retry isn't refused again. One with no answer, a 5xx or a 408 keeps its id, so a send that landed isn't run twice ([chat.md](docs/chat.md)).
