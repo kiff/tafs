@@ -16,7 +16,14 @@ final class NeedsYouModel: ObservableObject {
         case failed(String)
     }
 
+    /// Your brief on the wrist (S2), built and switched off: off, the watch asks and draws exactly what it did
+    /// before. On, it reads the brief after Needs you and draws it in Needs you's place (docs/watch-app.md).
+    nonisolated static let briefOnWatch = false
+
     @Published private(set) var state: State = .loading
+    /// Your brief, when the switch is on and the phone has one; nil shows Needs you.
+    @Published private(set) var brief: WatchBrief?
+    private let briefOn: Bool
     /// Each Refuse sent from here, by KIFF's id for the held call.
     @Published private(set) var answers: [String: WatchAnswer] = [:]
     private let phone: PhoneAsking
@@ -24,10 +31,12 @@ final class NeedsYouModel: ObservableObject {
     /// Sending needs a passcode on this watch (`WristLock`).
     private let lock: WristLock
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
+         briefOn: Bool = NeedsYouModel.briefOnWatch) {
         self.phone = phone
         self.clock = clock
         self.lock = lock
+        self.briefOn = briefOn
     }
 
     private var asking = false
@@ -45,8 +54,10 @@ final class NeedsYouModel: ObservableObject {
         switch reply.outcome {
         case .ok:
             if let needsYou = reply.needsYou { state = .loaded(needsYou) } else { state = .failed(Words.Alert.tafsCouldNotReachKiff) }
+            if briefOn, case .loaded = state { await loadBrief() }
         case .signedOut:
             state = .signedOut
+            brief = nil
         case .failed:
             state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
         case .refused, .stale, .notYet, .answered:
@@ -54,6 +65,28 @@ final class NeedsYouModel: ObservableObject {
             // from the screen.
             state = .unreachable
         }
+    }
+
+    /// Your brief, after Needs you. Anything but the phone's brief (none, an older phone, no answer) leaves
+    /// Needs you as it is: the brief never hides what waits.
+    private func loadBrief() async {
+        let reply = await phone.ask(WatchRequest(.brief, made: clock()))
+        if reply?.outcome == .signedOut { state = .signedOut; brief = nil; answers = [:]; return }
+        brief = reply?.outcome == .ok ? reply?.brief : nil
+    }
+
+    /// Refuse is offered on a decision only where Needs you's own read lists that held call: the same
+    /// request, behind the same passcode.
+    func refusable(_ decision: WatchBrief.Decision) -> Bool {
+        guard let hold = decision.holdID, case .loaded(let needsYou) = state else { return false }
+        return needsYou.calls.contains { $0.id == hold }
+    }
+
+    /// What Needs you holds beyond the brief's decisions, so nothing waiting is out of reach: its count less
+    /// the decisions about a held call or a step it counts.
+    var beyondBrief: Int {
+        guard let brief, case .loaded(let needsYou) = state else { return 0 }
+        return max(0, needsYou.count - brief.decisions.filter { $0.refKind == "hold" || $0.refKind == "step" }.count)
     }
 
     /// Refuses a held call through the phone, which signs it as from its notification. Once
@@ -71,6 +104,7 @@ final class NeedsYouModel: ObservableObject {
     /// The app left the screen: what was read goes.
     func leave() {
         state = .loading
+        brief = nil
         answers = [:]
     }
 }

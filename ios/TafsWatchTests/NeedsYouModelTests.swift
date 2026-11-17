@@ -105,4 +105,72 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertTrue(phone.asked.isEmpty, "nothing reaches the phone")
         XCTAssertEqual(model.answers["ce_1"], .failed(Words.Watch.needsLock))
     }
+
+    // MARK: Your brief (S2), behind a switch that's off
+
+    private var wristBrief: WatchBrief {
+        WatchBrief(title: "Your brief", when: "Morning brief · 08:00", urgent: "Urgent",
+                   decisions: [.init(id: "hold:ce_1", question: "Refund order 4502, €480.00?", taf: "Rae", deadline: "by 10:51",
+                                     urgent: true, cantWait: nil, refKind: "hold", refID: "ce_1", holdID: "ce_1"),
+                               .init(id: "hold:ce_9", question: "Refund order 4400, €90.00?", taf: "Rae", deadline: nil,
+                                     urgent: false, cantWait: nil, refKind: "hold", refID: "ce_9", holdID: "ce_9")],
+                   more: nil, done: nil, doneCases: [], rest: nil)
+    }
+
+    /// A phone that answers each kind as it's asked.
+    private final class Phones: PhoneAsking {
+        var replies: [WatchRequest.Kind: WatchReply] = [:]
+        var asked: [WatchRequest.Kind] = []
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            asked.append(request.kind)
+            return replies[request.kind]
+        }
+    }
+
+    func testTheBriefIsOffAndOffChangesNothing() async {
+        XCTAssertFalse(NeedsYouModel.briefOnWatch, "built and switched off, until the owner's yes")
+        let phone = Phones()
+        phone.replies = [.needsYou: WatchReply(.ok, needsYou: page), .brief: WatchReply(.ok, brief: wristBrief)]
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
+        await model.load()
+        XCTAssertEqual(phone.asked, [.needsYou], "off: the watch asks what it always has")
+        XCTAssertNil(model.brief)
+        XCTAssertEqual(model.state, .loaded(page))
+    }
+
+    func testOnTheBriefIsReadAfterNeedsYouAndRefuseIsOfferedOnlyWhereNeedsYouListsTheCall() async {
+        let phone = Phones()
+        phone.replies = [.needsYou: WatchReply(.ok, needsYou: page), .brief: WatchReply(.ok, brief: wristBrief)]
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked(), briefOn: true)
+        await model.load()
+        XCTAssertEqual(phone.asked, [.needsYou, .brief])
+        XCTAssertEqual(model.brief, wristBrief)
+        XCTAssertTrue(model.refusable(wristBrief.decisions[0]), "Needs you lists ce_1")
+        XCTAssertFalse(model.refusable(wristBrief.decisions[1]), "Needs you doesn't list ce_9: Approve on your phone only")
+        XCTAssertEqual(model.beyondBrief, 1, "Needs you's 3, less the brief's 2 held calls")
+        model.leave()
+        XCTAssertNil(model.brief, "kept in memory only")
+    }
+
+    func testOnWithNoBriefOrAnOlderPhoneNeedsYouStays() async {
+        let phone = Phones()
+        phone.replies = [.needsYou: WatchReply(.ok, needsYou: page), .brief: WatchReply(.ok)]
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked(), briefOn: true)
+        await model.load()
+        XCTAssertNil(model.brief)
+        XCTAssertEqual(model.state, .loaded(page))
+        phone.replies[.brief] = WatchReply(.refused)
+        await model.load()
+        XCTAssertNil(model.brief, "a phone that doesn't know the read: Needs you")
+        XCTAssertEqual(model.state, .loaded(page))
+    }
+
+    func testOnSignedOutShowsNothingOfTheAccount() async {
+        let phone = Phones()
+        phone.replies = [.needsYou: WatchReply(.ok, needsYou: page), .brief: WatchReply(.signedOut)]
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked(), briefOn: true)
+        await model.load()
+        XCTAssertEqual(model.state, .signedOut)
+        XCTAssertNil(model.brief)
+    }
 }

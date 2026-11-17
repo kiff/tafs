@@ -23,6 +23,10 @@ struct NeedsYouScreen: View {
         switch model.state {
         case .loading:
             ProgressView()
+        case .loaded(let needsYou) where model.brief != nil:
+            if let brief = model.brief {
+                BriefList(brief: brief, model: model, needsYou: needsYou)
+            }
         case .loaded(let needsYou):
             List {
                 Section {
@@ -117,5 +121,57 @@ struct WatchNotice: View {
                 Button(Words.Common.tryAgain) { Task { await retry() } }
             }
         }
+    }
+}
+
+/// Your brief on the wrist, in Needs you's place (behind `NeedsYouModel.briefOnWatch`): tafs cloud's title and when,
+/// each decision with its taf, deadline and why it can't wait, answered on the phone. Refuse only where Needs
+/// you's own read lists the held call. Then Done's heading and first cases, the rest, and Needs you beyond it.
+struct BriefList: View {
+    let brief: WatchBrief
+    @ObservedObject var model: NeedsYouModel
+    let needsYou: WatchNeedsYou
+
+    var body: some View {
+        List {
+            Section {
+                Text(brief.title).font(.headline)
+                if let when = brief.when { Text(when).font(.footnote).foregroundStyle(.secondary) }
+            }
+            ForEach(brief.decisions) { decision in
+                VStack(alignment: .leading, spacing: 2) {
+                    if decision.urgent, let urgent = brief.urgent {
+                        Text(urgent).font(.footnote.weight(.semibold)).foregroundStyle(.orange)
+                    }
+                    if let taf = decision.taf { Text(taf).font(.footnote).foregroundStyle(.secondary) }
+                    Text(decision.question)
+                    if let deadline = decision.deadline { Text(deadline).font(.footnote).foregroundStyle(.secondary) }
+                    if let cantWait = decision.cantWait { Text(cantWait).font(.footnote) }
+                    if model.refusable(decision), let hold = decision.holdID,
+                       let call = needsYou.calls.first(where: { $0.id == hold }) {
+                        // The same row as Needs you's: Refuse, confirmed, behind the passcode; never Approve.
+                        HeldCallRow(call: call, answer: model.answers[hold]) {
+                            Task { await model.refuse(hold) }
+                        }
+                    } else {
+                        // Decisions are answered on the phone; the watch never approves.
+                        Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                            .font(.footnote)
+                            .padding(.top, 2)
+                    }
+                }
+            }
+            if let more = brief.more { Text(more).font(.footnote) }
+            if let done = brief.done {
+                Section(done) {
+                    ForEach(brief.doneCases, id: \.self) { Text($0).font(.footnote) }
+                }
+            }
+            if let rest = brief.rest { Text(rest).font(.footnote).foregroundStyle(.secondary) }
+            if model.beyondBrief > 0 {
+                Text(Words.NeedsYou.count(count: model.beyondBrief)).font(.footnote)
+            }
+        }
+        .refreshable { await model.load() }
     }
 }
