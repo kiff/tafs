@@ -603,7 +603,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
     if (err instanceof DoorError || err instanceof ActivityError) return json(err.status, { error: err.message });
-    if (err instanceof KIFFError || err instanceof PushError) return json(err.status, { error: err.message });
+    if (err instanceof KIFFError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+    if (err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
     return json(500, { error: "something went wrong on tafs cloud" });
   }
@@ -1399,7 +1400,7 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
   if (method === "DELETE") {
     let kiff: KIFFHalt;
     try { kiff = await haltedInKIFF(token, agent, deps.fetch, deps.kiffBase); } catch (err) {
-      if (err instanceof KIFFError && err.status === 401) throw err;
+      if (err instanceof KIFFError && (err.status === 401 || err.status === 403)) throw err;
       throw new HTTPError(502, "KIFF didn't say whether it is resumed; try again");
     }
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
@@ -4187,7 +4188,8 @@ function askOrRefuse<T>(read: () => T): T {
 
 function approvalFailure(err: unknown): never {
   if (err instanceof ApprovalError) throw new HTTPError(err.status, err.message, err.code ? { code: err.code } : undefined);
-  if (err instanceof KIFFError) throw new HTTPError(err.status === 401 ? 401 : 502, err.message);
+  // A forbidden session (403) stays signed in: only KIFF's 401 is tafs cloud's 401.
+  if (err instanceof KIFFError) throw new HTTPError(err.status === 401 || err.status === 403 ? err.status : 502, err.message, err.code ? { code: err.code } : undefined);
   throw err;
 }
 
@@ -8056,7 +8058,7 @@ async function creditsRead<T>(work: () => Promise<T>, lang: Lang = "en"): Promis
   try { return await work(); } catch (err) {
     // The error stays English for developers; the words beside it are the person's (docs/languages.md).
     if (err instanceof CreditsError) throw new HTTPError(err.status, err.message, { words: err.message === UNREADABLE ? wordsIn(lang).cr_unreadable : err.message });
-    if (err instanceof KIFFError && err.status === 401) throw err;
+    if (err instanceof KIFFError && (err.status === 401 || err.status === 403)) throw err;
     throw new HTTPError(503, UNREADABLE, { words: wordsIn(lang).cr_unreadable });
   }
 }

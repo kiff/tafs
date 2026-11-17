@@ -11,6 +11,10 @@ the two streams, and `lambda.ts` wires the stores.
 - **A person:** `Authorization: Bearer <KIFF session>`. tafs cloud asks KIFF who that is
   (`whoIs`): the account, the person, and their capabilities. A KIFF agent key is refused
   (403, "sign in as a person, not with a key"). tafs cloud keeps no accounts of its own.
+- **401 is for a session KIFF no longer accepts, and nothing else.** Only KIFF's 401 becomes tafs
+  cloud's 401, which every app answers by signing out. A 403 from KIFF (it knows the session and
+  forbids this) is answered 403 with KIFF's `code` (`forbidden` when KIFF sent none) and its message
+  as `error`: the person stays signed in (`sessionRefusal`, `kiff.ts`).
 - **Only the account's tafs:** another account's taf answers exactly like a missing one
   (404, `owned`).
 - **Managing a taf** (marked *manages* below) takes `cards.manage` and KIFF saying the

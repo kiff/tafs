@@ -1,4 +1,4 @@
-import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
+import { type Fetch, KIFF_API, KIFFError, sessionRefusal } from "./kiff.js";
 import { fromWords } from "./request.js";
 import { endSentence, type Lang, plural, wordsIn } from "./words/index.js";
 
@@ -83,7 +83,7 @@ async function read<T>(path: string, token: string, doFetch: Fetch, base: string
   } catch {
     throw new CreditsError(503, UNREADABLE);
   }
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   if (!res.ok) throw new CreditsError(503, UNREADABLE);
   return (await res.json().catch(() => {
     throw new CreditsError(503, UNREADABLE);

@@ -26,9 +26,25 @@ export interface KIFFIdentity {
 }
 
 export class KIFFError extends Error {
-  constructor(readonly status: number, message: string) {
+  /** `code`: KIFF's own error code, kept on a 403 so the app can say why (docs/api.md, Errors). */
+  constructor(readonly status: number, message: string, readonly code?: string) {
     super(message);
   }
+}
+
+/**
+ * KIFF's refusal of the person's session, as tafs cloud answers it, or undefined when KIFF didn't refuse it. Only a 401 (the
+ * session isn't valid any more) becomes tafs cloud's 401, which every app answers by signing out. A 403 (KIFF knows the
+ * session and forbids this) passes through as 403, with KIFF's code and message when it sent them: the person stays signed
+ * in. Any other answer is left to the caller.
+ */
+export async function sessionRefusal(res: Response): Promise<KIFFError | undefined> {
+  if (res.status === 401) return new KIFFError(401, "KIFF did not accept this sign-in");
+  if (res.status !== 403) return undefined;
+  const body = (await res.clone().json().catch(() => ({}))) as { error?: unknown; message?: unknown };
+  const code = typeof body.error === "string" && body.error ? body.error : "forbidden";
+  const message = typeof body.message === "string" && body.message ? body.message : "KIFF doesn't allow this for this session";
+  return new KIFFError(403, message, code);
 }
 
 export type Fetch = typeof fetch;
@@ -40,7 +56,7 @@ export const KIFF_GATEWAY_API = "https://mcp.kiff.dev";
 export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<KIFFIdentity> {
   if (!token) throw new KIFFError(401, "sign in with KIFF");
   const res = await doFetch(`${base}/v1/me`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status}`);
   const me = (await res.json()) as {
     tenant_id?: string;
@@ -87,7 +103,7 @@ export async function draftStatus(token: string, draftID: string, doFetch: Fetch
 /** A KIFF draft as tafs cloud checks it: its status (as draftStatus reads it) and its agent. */
 export async function draftInfo(token: string, draftID: string, doFetch: Fetch = fetch, base = KIFF_API, now: Date = new Date()): Promise<{ status: string; agent: string; version?: string; cards?: unknown[]; confirmKey?: "window" | "critical"; label?: string } | undefined> {
   const res = await doFetch(`${base}/v1/me/agent-drafts/${encodeURIComponent(draftID)}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   if (res.status === 404) return undefined;
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the draft`);
   const d = (await res.json()) as { status?: string; expires_at?: string; agent_id?: string; version?: string; cards?: unknown; confirm_key?: unknown; label?: unknown };
@@ -143,7 +159,7 @@ export async function ask<T>(token: string, method: string, path: string, body: 
     method, headers: { authorization: `Bearer ${token}`, accept: "application/json", ...(body === undefined ? {} : { "content-type": "application/json" }) },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   const out = (await res.json().catch(() => ({}))) as T & { error?: string };
   if (!res.ok) throw new KIFFError(res.status === 404 || res.status === 409 ? res.status : 502, out.error ?? `KIFF answered ${res.status}`);
   return out;

@@ -10,7 +10,7 @@
  */
 import { type Lang, plural, wordsIn } from "./words/index.js";
 import { amountWords } from "./activity.js";
-import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
+import { type Fetch, KIFF_API, KIFFError, sessionRefusal } from "./kiff.js";
 
 /** A number with what KIFF says it means ("EUR", 2), or a bare number (unit null). */
 export interface Money {
@@ -192,7 +192,7 @@ export const COLORS = 6;
 
 async function read<T>(path: string, token: string, doFetch: Fetch, base: string, what = "the Cards"): Promise<T> {
   const res = await doFetch(`${base}${path}`, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for ${what}`);
   return (await res.json()) as T;
 }

@@ -6,7 +6,7 @@
  * nothing.
  */
 import type { CardSummary, Money, Rule } from "./home.js";
-import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
+import { type Fetch, KIFF_API, KIFFError, sessionRefusal } from "./kiff.js";
 
 /** One call of the account's, as KIFF's activity records it, as much as Setup reads. */
 export interface ActivityCall {
@@ -29,7 +29,7 @@ export const RECENT_CALLS = 20;
 export async function recentCalls(token: string, agent: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<ActivityCall[]> {
   const url = `${base}/v1/me/activity?actor=${encodeURIComponent(agent)}&limit=${RECENT_CALLS}`;
   const res = await doFetch(url, { headers: { authorization: `Bearer ${token}`, accept: "application/json" } });
-  if (res.status === 401 || res.status === 403) throw new KIFFError(401, "KIFF did not accept this sign-in");
+  { const refused = await sessionRefusal(res); if (refused) throw refused; }
   if (!res.ok) throw new KIFFError(502, `KIFF answered ${res.status} for the activity`);
   const { calls = [] } = (await res.json()) as { calls?: ActivityCall[] };
   return calls
