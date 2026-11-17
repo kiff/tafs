@@ -1,0 +1,1 @@
+- **Android tablets: Starts when and Results go to open as their own screen,** in a taf page's place beside the sidebar, with a round Back, as on the iPad. On a phone they stay sheets ([android-app.md](docs/android-app.md)). A taf's Activity draws its filters as the iPad's pills, on phones and tablets.

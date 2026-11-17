@@ -251,6 +251,15 @@ fun TafDetailView(
     val side = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
       section != Section.Card && section != Section.Setup && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
 
+    // Starts when or Results go to, beside a tablet's sidebar: in the page's place, as the iPad pushes them; Back returns to Setup.
+    var setupPage by rememberSaveable(taf.id) { mutableStateOf<SetupPage?>(null) }
+    val knob = state.knobs[taf.id]
+    if (!showBack && knob != null) when (setupPage) {
+      SetupPage.StartsWhen -> { StartsWhenSheet(taf, knob, state, actions, pushed = true) { setupPage = null }; return@Column }
+      SetupPage.ResultsGoTo -> { ResultsSheet(taf, knob, state, actions, pushed = true) { setupPage = null }; return@Column }
+      null -> Unit
+    }
+
     Header(taf, if (showBack) onBack else null)
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       // Its live version, opening Versions, for whoever manages it on KIFF (as the iPad's head). It folds with the page.
@@ -315,7 +324,8 @@ fun TafDetailView(
                 onRemoving(taf.id)
                 removeScope.launch { try { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } finally { removeOpening = false } }
               }
-            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity })
+            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity },
+              onOpenPage = if (!showBack) ({ setupPage = it }) else null)
           }
           Section.Chat -> Unit
         }

@@ -58,6 +58,13 @@ import bot.tafs.app.model.shortTime
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import bot.tafs.app.R
 
 /**
  * A taf's Setup tab: how it runs, in sections. The job, then when it starts and where its results go (each a short summary that
@@ -75,6 +82,11 @@ fun SetupTab(
   onActivity: (String) -> Unit = {},
   /** Remove for good's confirmation is on its way: the button takes no second tap. */
   removeOpening: Boolean = false,
+  /**
+   * Beside a tablet's sidebar: Starts when and Results go to open as their own screen in the taf page's place (the caller's), as
+   * the iPad pushes them; null on a phone, where each opens its sheet.
+   */
+  onOpenPage: ((SetupPage) -> Unit)? = null,
 ) {
   val signedIn = state.mode == Mode.kiff && taf.cloudId != null
   val manages = state.manages(taf.id)
@@ -85,8 +97,8 @@ fun SetupTab(
   // Asked for by its route (AppModel.open).
   LaunchedEffect(state.requestedRoute) {
     when {
-      state.requested(AppRoute.TafSetupStartsWhen, taf.id) -> { startsOpen = true; actions.routeTaken() }
-      state.requested(AppRoute.TafSetupResultsGoTo, taf.id) -> { resultsOpen = true; actions.routeTaken() }
+      state.requested(AppRoute.TafSetupStartsWhen, taf.id) -> { onOpenPage?.invoke(SetupPage.StartsWhen) ?: run { startsOpen = true }; actions.routeTaken() }
+      state.requested(AppRoute.TafSetupResultsGoTo, taf.id) -> { onOpenPage?.invoke(SetupPage.ResultsGoTo) ?: run { resultsOpen = true }; actions.routeTaken() }
     }
   }
 
@@ -103,7 +115,7 @@ fun SetupTab(
   }
   // When it starts: one line per start, opening the sheet that changes them.
   if (signedIn) {
-    SectionRow(SetupWords.STARTS_WHEN, startsSummary(taf, knob)) { startsOpen = true }
+    SectionRow(SetupWords.STARTS_WHEN, startsSummary(taf, knob)) { onOpenPage?.invoke(SetupPage.StartsWhen) ?: run { startsOpen = true } }
   } else {
     Panel {
       Eyebrow(SetupWords.STARTS_WHEN)
@@ -112,7 +124,7 @@ fun SetupTab(
   }
   // The apps it's connected to, read from planque, for the people who manage it.
   if (signedIn) ConnectedToolsRing(taf, state, actions, if (manages) onConnectApps else null, onActivity)
-  if (signedIn) SectionRow(SetupWords.RESULTS_GO_TO, resultsSummary(knob, state)) { resultsOpen = true }
+  if (signedIn) SectionRow(SetupWords.RESULTS_GO_TO, resultsSummary(knob, state)) { onOpenPage?.invoke(SetupPage.ResultsGoTo) ?: run { resultsOpen = true } }
   if (signedIn) MemorySummaryPanel(taf, state, actions) else if (state.mode == Mode.sample) MemoryPanel(taf.id, state.memories[taf.id], state.memoryErrors[taf.id], actions)
   // In the sample, Pause is its own; signed in, it's every start, in Starts when.
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
@@ -180,7 +192,7 @@ private fun ConnectedApps(taf: Taf, state: AppState, actions: TafActions, onConn
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: TafActions, onClose: () -> Unit) {
+internal fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: TafActions, pushed: Boolean = false, onClose: () -> Unit) {
   val scope = rememberCoroutineScope()
   val improve = LocalImproveInCoach.current
   val manages = state.manages(taf.id)
@@ -190,12 +202,12 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
     if (busy) return
     scope.launch { busy = true; try { block() } finally { busy = false } }
   }
-  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  SetupFrame(SetupWords.STARTS_WHEN, pushed, onClose) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding(),
       verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-      Text(SetupWords.STARTS_WHEN, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+      if (!pushed) Text(SetupWords.STARTS_WHEN, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       PendingChange(taf, knob, state, actions, busy) { work(it) }
 
       // Its schedule: its line, its next run in the account's zone, its size, and what happens if it's still working.
@@ -310,7 +322,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: TafActions, onClose: () -> Unit) {
+internal fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: TafActions, pushed: Boolean = false, onClose: () -> Unit) {
   val scope = rememberCoroutineScope()
   val manages = state.manages(taf.id)
   var busy by rememberSaveable { mutableStateOf(false) }
@@ -320,12 +332,12 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
   }
   LaunchedEffect(taf.id) { actions.loadWork(taf.id) }
   val on = knob.results.filter { it.on }
-  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  SetupFrame(SetupWords.RESULTS_GO_TO, pushed, onClose) {
     Column(
       Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 16.dp).navigationBarsPadding(),
       verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-      Text(SetupWords.RESULTS_GO_TO, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+      if (!pushed) Text(SetupWords.RESULTS_GO_TO, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       Text(SetupWords.AT_LEAST_ONE, style = scaled(13, color = Theme.soft))
       PendingChange(taf, knob, state, actions, busy) { work(it) }
 
@@ -501,5 +513,37 @@ internal fun ActivityRecord(entries: List<RecordEntry>, state: AppState) {
       modifier = Modifier.padding(top = 6.dp),
     )
     lines.forEach { RecordRow(it, state, showTaf = false) }
+  }
+}
+
+/** A Setup section with its own screen: Starts when, Results go to. */
+enum class SetupPage { StartsWhen, ResultsGoTo }
+
+/**
+ * Where a Setup section's screen is drawn: its sheet on a phone; beside a tablet's sidebar, in the taf page's place, as the iPad
+ * pushes it, with a round Back and its title in the bar. Back (the key, or the button) closes either.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SetupFrame(title: String, pushed: Boolean, onClose: () -> Unit, content: @Composable () -> Unit) {
+  if (!pushed) {
+    DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) { content() }
+    return
+  }
+  androidx.activity.compose.BackHandler(onBack = onClose)
+  Column(Modifier.fillMaxSize().background(Theme.background).testTag("setup-page")) {
+    Box(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+      Box(
+        Modifier.align(Alignment.CenterStart).size(44.dp).clip(CircleShape).background(Theme.panel)
+          .border(BorderStroke(1.dp, Theme.line), CircleShape)
+          .tapping(onClickLabel = Words.Common.back, onClick = onClose)
+          .semantics { contentDescription = Words.Common.back },
+        contentAlignment = Alignment.Center,
+      ) {
+        Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(18.dp))
+      }
+      Text(title, style = scaled(17, FontWeight.SemiBold, Theme.ink), maxLines = 1)
+    }
+    content()
   }
 }

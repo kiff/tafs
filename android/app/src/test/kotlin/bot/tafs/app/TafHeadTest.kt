@@ -2,6 +2,8 @@ package bot.tafs.app
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
@@ -56,18 +58,23 @@ class TafHeadTest {
     loadVersions = { read += it },
   )
 
-  private fun show(mode: Mode = Mode.kiff, manage: Boolean = true, versions: List<Version> = emptyList()) {
+  private fun show(
+    mode: Mode = Mode.kiff, manage: Boolean = true, versions: List<Version> = emptyList(), tablet: Boolean = true,
+    activity: Map<String, bot.tafs.app.app.SourcePages<bot.tafs.app.kiff.TafActivityPage>> = emptyMap(),
+  ) {
     RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
     Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
     val state = AppState(
       mode = mode, ready = true, tafs = listOf(taf), kiffAccount = Account("t_01", "acme", capabilities = listOf("cards.manage")),
       access = mapOf("refunds-1" to Access(use = true, oversee = true, manage = manage)),
       versions = if (versions.isEmpty()) emptyMap() else mapOf("refunds-1" to versions),
+      knobs = mapOf("refunds-1" to bot.tafs.app.kiff.KnobWire()),
+      activityPages = activity,
     )
     compose.setContent {
       TafsTheme {
         CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
-          TafDetailView("refunds-1", state, actions, onBack = {}, onHalt = {}, onUsage = {}, onVersions = { opened += it }, showBack = false)
+          TafDetailView("refunds-1", state, actions, onBack = {}, onHalt = {}, onUsage = {}, onVersions = { opened += it }, showBack = !tablet)
         }
       }
     }
@@ -90,5 +97,41 @@ class TafHeadTest {
     show(manage = false, versions = listOf(Version(2, created = Instant.EPOCH, live = true)))
     assertTrue(compose.onAllNodes(hasText(Words.Version.liveNumber("2"))).fetchSemanticsNodes().isEmpty())
     assertTrue(read.isEmpty())
+  }
+
+  /** Beside a tablet's sidebar, Starts when opens in the page's place, as the iPad pushes it (V26), and Back returns to Setup. */
+  @Test fun besideTheSidebarStartsWhenOpensInThePagesPlace() {
+    show()
+    compose.onNode(hasText("Setup") and androidx.compose.ui.test.hasClickAction()).performClick()
+    compose.waitForIdle()
+    compose.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.SetupWords.STARTS_WHEN, substring = true) and androidx.compose.ui.test.hasClickAction())[0].performClick()
+    compose.waitForIdle()
+    compose.onNode(androidx.compose.ui.test.hasTestTag("setup-page")).assertIsDisplayed()
+    // The page's head and tabs are gone while it's open.
+    assertTrue(compose.onAllNodes(hasText("Activity")).fetchSemanticsNodes().isEmpty())
+    compose.onNode(androidx.compose.ui.test.hasContentDescription(Words.Common.back)).performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasTestTag("setup-page")).fetchSemanticsNodes().isEmpty())
+    compose.onNode(hasText("Activity")).assertIsDisplayed()
+  }
+
+  /** On a phone it stays a sheet: nothing takes the page's place. */
+  @Test fun onAPhoneStartsWhenIsASheet() {
+    show(tablet = false)
+    compose.onNode(hasText("Setup") and androidx.compose.ui.test.hasClickAction()).performClick()
+    compose.waitForIdle()
+    compose.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.SetupWords.STARTS_WHEN, substring = true) and androidx.compose.ui.test.hasClickAction())[0].performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodes(androidx.compose.ui.test.hasTestTag("setup-page")).fetchSemanticsNodes().isEmpty())
+  }
+
+  /** Activity's filters, as the iPad's tinted pills: the chosen one says so. */
+  @Test fun activitysFiltersMarkTheOneChosen() {
+    val page = bot.tafs.app.kiff.TafActivityPage(filters = listOf(bot.tafs.app.kiff.ActivityChoice("all", "All"), bot.tafs.app.kiff.ActivityChoice("done", "Done")))
+    show(activity = mapOf("refunds-1:all:" to bot.tafs.app.app.SourcePages(listOf(page))))
+    compose.onNode(hasText("Activity") and androidx.compose.ui.test.hasClickAction()).performClick()
+    compose.waitForIdle()
+    compose.onNode(hasText("All") and androidx.compose.ui.test.hasClickAction()).assertIsSelected()
+    compose.onNode(hasText("Done") and androidx.compose.ui.test.hasClickAction()).assertIsNotSelected()
   }
 }

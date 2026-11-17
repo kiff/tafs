@@ -720,7 +720,9 @@ answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
-  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
+  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`). Signed in, tafs
+  cloud's filters are bordered pills as on the iPad, amber for the one chosen and soft for the rest,
+  and each group's title is small and quiet (`ActivityFilterPill`).
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, its usage,
   Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
@@ -731,7 +733,9 @@ never named, and a taf shared with no one else reads "Not shared".
 - **Setup** (`SetupTab`): how it runs, in sections.
   - **The job**, with Improve in Coach.
   - **Starts when**, one line per start in tafs cloud's words, opening its sheet
-    (`StartsWhenSheet`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
+    (`StartsWhenSheet`; beside a tablet's sidebar, its own screen in the page's place, with a round
+    Back and its title in the bar, as the iPad pushes it, and so does Results go to: `SetupFrame`,
+    `SetupPage`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
     its `size`, each choice's `setting` sent as it is), and **If it is still working when the next
     start comes: Skip it / Run after** (`busy`, sent in the knob's `setting`); its app events, each
     with its filter in words, **Approve** while it waits for the owner (the signed approval, below)
