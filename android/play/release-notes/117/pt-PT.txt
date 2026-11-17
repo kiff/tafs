@@ -1,2 +1,0 @@
-- Peça aos seus tafs a partir do relógio Wear OS: fale e ouça o resultado. Este telemóvel passa os pedidos do relógio ao tafs, assinados com a sua própria chave, e não mostra nada.
-- Textos corrigidos em francês, italiano, português e polaco.

@@ -1,2 +1,0 @@
-- Frag deine tafs von deiner Wear-OS-Uhr aus: sprich und hör dir das Ergebnis an. Dieses Handy gibt die Fragen der Uhr an tafs weiter, mit seinem eigenen Schlüssel signiert, und zeigt selbst nichts an.
-- Korrigierte Texte auf Französisch, Italienisch, Portugiesisch und Polnisch.

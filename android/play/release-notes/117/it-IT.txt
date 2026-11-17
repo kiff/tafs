@@ -1,2 +1,0 @@
-- Chiedi ai tuoi tafs dall'orologio Wear OS: parla e ascolta il risultato. Questo telefono passa le richieste dell'orologio a tafs, firmate con la propria chiave, e non mostra nulla.
-- Testi corretti in francese, italiano, portoghese e polacco.
