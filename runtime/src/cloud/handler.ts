@@ -2727,6 +2727,12 @@ export interface CardAnswer {
   by?: string;
   /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. A taf made with no plan has `plan_needed`. */
   outcome?: ResultOutcome & { plan_needed?: { words: string } };
+  /**
+   * An approval card's answer, settled and free of any language (settledApprovalAnswer): `approved`, `already approved`,
+   * `connected` (a connect step that worked, its Card next), `declined` or `failed: <why>`. The apps draw "approved" only
+   * for the first three, and anything else, or none, as not approved.
+   */
+  answer?: string;
 }
 
 export interface ThreadMessage {
@@ -3218,6 +3224,24 @@ function inputID(run: string): string {
  * ("Approve · it didn't go through: …"). The reason after it is tafs cloud's own, already in the language of the
  * request that approved (approval.ts). Undefined for any other card or answer: its words stay as recorded.
  */
+/**
+ * An approval card's stored answer, settled for the apps so none repeats tafs cloud's rules: `approved`, `already approved`
+ * (any "already approved: …"), `connected` (a connect step that worked by design, its Card next, stored as
+ * "failed: <vendor> is connected; <CARD_NEXT>"), `declined`, or `failed: <why>` as stored. Undefined for anything else,
+ * which the apps read as not approved (the owner's Reject read "Approved" on Windows, 17 Nov).
+ */
+export function settledApprovalAnswer(answer: unknown): string | undefined {
+  if (typeof answer !== "string") return undefined;
+  if (answer === "approved" || answer === "declined") return answer;
+  if (answer === "already approved" || answer.startsWith("already approved:")) return "already approved";
+  if (answer.startsWith("failed: ")) {
+    const why = answer.slice("failed: ".length);
+    const next = why.endsWith(`; ${CARD_NEXT}`) && / is connected$/.test(why.slice(0, -`; ${CARD_NEXT}`.length));
+    return next ? "connected" : answer;
+  }
+  return undefined;
+}
+
 export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
   if (b.type !== "approval" || typeof b.answer !== "string") return undefined;
   const w = wordsIn(lang);
@@ -3361,7 +3385,8 @@ const splitKeys = {
 async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
   if (!deps.coach || !me.capabilities.includes("cards.manage")) return;
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at });
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+    ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   for (const c of components) {
     const card = c.component as { type?: unknown; grant?: unknown; draft?: unknown; id?: unknown } | undefined;
     if (c.answer || card?.type !== "approval" || typeof card.grant !== "string" || (typeof card.draft === "string" && card.draft)) continue;
@@ -3423,7 +3448,8 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
   if (!component) return undefined;
   const now = nowOf(deps);
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at });
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+    ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   const claim = precheckKeys.claim(me.tenantID, ask.draft, ask.version);
   const toldKey = precheckKeys.told(me.tenantID, ask.draft, ask.version);
   const kept = new Date(now.getTime() + PRECHECK_KEPT_MS);
@@ -3464,6 +3490,8 @@ function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrot
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
   if (typeof b.wrote === "string" && b.wrote.trim()) return { state: "wrote", words: ownerWords(b.wrote.trim()), at };
   const out: CardAnswer = { state: "answered", words: approvalAnswerWords(b, lang) ?? (typeof b.words === "string" ? b.words : ""), at };
+  const settled = b.type === "approval" ? settledApprovalAnswer(b.answer) : undefined;
+  if (settled) out.answer = settled;
   if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
   const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
   if (b.type === "result" && o && typeof o === "object") {
