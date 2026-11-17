@@ -7428,7 +7428,9 @@ final class AppModel: ObservableObject {
             DriveSession.shared.stop("stopped")
             return
         }
-        if let taf = tafOnScreen, setupContextTafID != cloudTaf(for: taf)?.id {
+        // Coach opens on the taf on screen only for someone who manages it, as every other way into Coach on a
+        // taf (`askCoachAbout`): tafs cloud takes improving a taf only from them. Anyone else gets Coach as it was.
+        if let taf = tafOnScreen, mode != .kiff || manages(taf), setupContextTafID != cloudTaf(for: taf)?.id {
             improveTaf(taf)
         }
         coachOpen = true
@@ -7466,6 +7468,12 @@ final class AppModel: ObservableObject {
         newSetupChat()
         setupImproving = cloudTaf(for: tafID)
         setupContextTafID = setupImproving?.id
+    }
+
+    /// Whether Coach may be opened to improve this taf here (Needs you's Change the limit in Coach): someone who
+    /// may use Coach and manages the taf, since changing a limit is changing its Card; the sample shows it.
+    func mayImproveInCoach(_ tafID: UUID) -> Bool {
+        mayUseCoach && (mode != .kiff || manages(tafID))
     }
 
     /// Coach on a taf, with words in the box for the owner to send (kiff/tafs#476, gaps 10 and

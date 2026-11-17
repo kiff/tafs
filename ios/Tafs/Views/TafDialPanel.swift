@@ -172,6 +172,11 @@ struct KnobRequestDetail: View {
     @EnvironmentObject private var model: AppModel
     let tafID: UUID
     let run: String
+
+    /// A run's Ask Coach: signed in, for someone who may use Coach and manages the taf; the sample shows it.
+    static func offersAskCoach(mode: AppModel.Mode, mayUseCoach: Bool, manages: Bool) -> Bool {
+        mode != .kiff || (mayUseCoach && manages)
+    }
     @State private var detail: TafsCloud.RequestDetail?
     @State private var error: String?
     @State private var sending = false
@@ -203,7 +208,10 @@ struct KnobRequestDetail: View {
                         }.disabled(sending)
                     }
                 }
-                Button(Words.Coach.ask) { model.openCoach() }
+                // A run's Ask Coach, only for someone who may use Coach and manages this taf (as the taf chat's card).
+                if Self.offersAskCoach(mode: model.mode, mayUseCoach: model.mayUseCoach, manages: model.manages(tafID)) {
+                    Button(Words.Coach.ask) { model.openCoach() }
+                }
             } else if error == nil { ProgressView() }
             if let error {
                 Text(error).foregroundColor(Theme.no)
