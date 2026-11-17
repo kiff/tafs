@@ -909,6 +909,8 @@ describe("knocks and keys", () => {
     const home = await send(w, "GET", "/v1/home", { token: "ana" });
     expect(home.status).toBe(200);
     expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS).doors).toEqual([{ app: "email", label: "Email", open: true, resting: false, knocks: 1 }]);
+    // A knock waits, so the taf is relevant now (docs/api.md, Home), for the knock.
+    expect(home.body.tafs.find((t: { id: string }) => t.id === REFUNDS)).toMatchObject({ relevant_now: true, relevant_because: "knock" });
     // Knocks name their door, and the list says the limits the apps check.
     expect((await send(w, "GET", `/v1/tafs/${REFUNDS}/doors`, { token: "ana" })).body.knocks[0]).toMatchObject({ app: "email", label: "Email" });
     expect(home.body.limits).toEqual({ text: 2000, trial_idle_days: 7 });

@@ -140,7 +140,8 @@
               "say": "Its last check found work too big for one run. Narrow what it reads, so each piece fits one run."
             }
           ]
-        }
+        },
+        "relevant_now": false
       }
     ],
     "headline": {

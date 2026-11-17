@@ -567,6 +567,31 @@ export function headlineOf(tafs: HeadlineTaf[], lang: Lang = "en"): { words: str
   return { words: w.home_working(working, plural(lang, working)) };
 }
 
+/** How long a run or a change keeps a taf "relevant now" (docs/api.md, Home): 24 hours. */
+export const RELEVANT_WINDOW_MS = 24 * 3600_000;
+
+/** Why a taf is relevant now, the first that holds, in this order. */
+export type RelevantBecause = "held" | "step" | "knock" | "recent_run" | "recent_change";
+
+/**
+ * Whether a taf belongs in a sidebar that shows only what matters now (the iPad's owner layout, docs/api.md, Home), and why:
+ * something of it waits in Needs you (a held call, a step it handed over, a knock at one of its doors), or it ran or changed in
+ * the last 24 hours. Computed here so every app shows the same tafs; none works it out on the device. A run or a change is
+ * counted by its time against tafs cloud's clock: less than 24 hours ago (a time ahead of the clock counts too, as on the iPad).
+ */
+export function relevantNow(t: { held: boolean; step: boolean; knock: boolean; lastRun?: string | null; lastChange?: string | null }, now: Date): RelevantBecause | undefined {
+  if (t.held) return "held";
+  if (t.step) return "step";
+  if (t.knock) return "knock";
+  const recent = (at: string | null | undefined) => {
+    const ms = at ? Date.parse(at) : NaN;
+    return !Number.isNaN(ms) && now.getTime() - ms < RELEVANT_WINDOW_MS;
+  };
+  if (recent(t.lastRun)) return "recent_run";
+  if (recent(t.lastChange)) return "recent_change";
+  return undefined;
+}
+
 /** The first colour no other taf has, so a new taf never takes another's. */
 export function freeColor(taken: number[]): number {
   for (let c = 0; c < COLORS; c++) if (!taken.includes(c)) return c;
