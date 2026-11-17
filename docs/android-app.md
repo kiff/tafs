@@ -28,7 +28,7 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
-Where Coach's screen is 600 dp wide or more (a tablet, beside the tafs list or with it folded
+Where Coach's screen is 600 dp wide or more (a tablet, beside the sidebar or with it folded
 away), Coach's conversation has "Taking shape" beside it, as on an iPad (`SetupShapePanel`, from `AppState.setupShape`): what Coach
 has made so far, read only from what the app already holds. The taf's name once it's handed over,
 else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
@@ -415,7 +415,7 @@ icons dark on the light ground and light on the dark one when the choice changes
 
 | Package | What's in it |
 |---|---|
-| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
+| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach; on a tablet, `TabletSidebar` with what it chose beside it), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
@@ -662,9 +662,29 @@ its count. Coach is a filled button (ink, with the ground's colour as its label)
 someone KIFF lets use Coach, so the bar has four places otherwise. The one exception is the store's
 screenshots: a debug build opened with `adb shell am start -n dev.kiff.tafs/bot.tafs.app.MainActivity --ez screenshots true`
 shows Coach in the sample, and it opens on what Coach is, as a new account first sees it (`AppState.screenshots`). A real
-sample session never offers it. In landscape and on tablets
-the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
-`MainActivity`). Home's header keeps the account's name; Settings and Coach are no longer there.
+sample session never offers it. Home's header keeps the account's name; Settings and Coach are no
+longer there.
+
+**Tablets** (and a large phone on its side, from `WIDE_DP`) have one sidebar for the whole app in
+the bar's place, as the iPad's (`TabletSidebar`, from `HomeSplitView`); the phone keeps its bar:
+- **At the top,** the fold button, which hides the sidebar so what's open takes the width (a handle
+  brings it back), then the app's mark, the mascot and "tafs", which opens the **Overview**.
+- **The app's screens:** Needs you with its count, Record, and on a KIFF account Calendar, Plan &
+  usage and Connect apps. Then **Halt all**, with where it stands when it isn't running.
+- **NEEDS YOU:** each held call, opening its taf. **YOUR TAFS:** each taf with its line under its
+  name, in the colour Home's row gives it (`tafLineTone`), then those being set up; **SHARED WITH
+  YOU** and other agents apart. Then Explore jobs, where tafs cloud sends its words.
+- **At the foot,** always in sight: Start a new taf (a KIFF account, for whoever may use Coach), KIFF
+  out of reach, the plan's line, a lost approval key and a newer build, as Home says them; the
+  sample's "Play the next sample actions"; **Coach** (ink, 44 high, with its sparkle); and
+  **Account**, with the account's name.
+
+What the sidebar chooses opens beside it, its row highlighted (`Beside`). It opens on the
+Overview, today across the tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs
+and its line. The sidebar lists every taf: the iPad shows only those relevant now (a held call, a
+step, a knock, a run or a change in the last day) and keeps the rest behind the mark, a rule tafs
+cloud doesn't send yet, so Android doesn't work it out on its own. Label chips over the Overview are
+still to come on a tablet. `TabletSidebarTest` holds this at the iPad's size and a phone's.
 A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
 "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
 starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one
@@ -911,7 +931,7 @@ fingerprint (Android 1.27.2; before, one signed a message nothing sent or checke
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
-  gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
+  gets it. Also on the bottom bar (Account and each tab) and every row of a tablet's sidebar, Coach's button, a segment changed in a segmented control
   (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0). Home's calendar
   icon and everything tapped in the calendar (days, weeks, the chevrons, Choose a date, a taf's slot) tap too, through
   `Modifier.tapping`, the shared tappable for anything that isn't a button (Android 1.27.6). Since Android 1.27.7 every
@@ -1373,8 +1393,8 @@ pace, expiry, a refused proof, a phone with no approval key) and `PairSignInView
 ## The calendar
 
 As iOS's (`docs/ios-app.md`, "The calendar"): the tafs' scheduled work still to
-come (kiff/tafs#534), opened from the calendar icon at the top right of the
-Overview on a tablet and from the home's header on a phone.
+come (kiff/tafs#534), opened from the sidebar's Calendar on a tablet (the Overview then
+draws no calendar button of its own, as the iPad's) and from the home's header on a phone.
 `views/CalendarView.kt` draws Day, Week and Month, Week first; `model/Calendar.kt`
 (`CalendarMath`, `CalendarLayout`, `CalendarState`) counts dates, groups and picks
 the layout exactly as iOS's does, and the titles are the same words. Every

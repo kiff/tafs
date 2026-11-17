@@ -42,7 +42,13 @@ import bot.tafs.app.model.shortTime
  * line per taf with what it does now, its Card as its page says it, and its last result. Each line opens the taf.
  */
 @Composable
-fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCalendar: () -> Unit = {}, onOpenTaf: (String) -> Unit) {
+fun OverviewView(
+  state: AppState,
+  loadReport: suspend (String) -> Unit,
+  /** The calendar's button by the title; null where the Calendar is the sidebar's own item, as the iPad's whole-app sidebar. */
+  onOpenCalendar: (() -> Unit)? = {},
+  onOpenTaf: (String) -> Unit,
+) {
   LaunchedEffect(state.tafs.map { it.id }) {
     state.tafs.filter { it.cloudId != null && state.reports[it.id] == null }.forEach { loadReport(it.id) }
   }
@@ -56,7 +62,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         Text(Words.Home.Overview.subtitle, style = scaled(14, color = Theme.dim))
       }
       // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
-      androidx.compose.foundation.layout.Box(
+      if (onOpenCalendar != null) androidx.compose.foundation.layout.Box(
         Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).tapping(onClick = onOpenCalendar)
           .semantics { contentDescription = Words.Calendar.heading }.testTag("overview.calendar"),
         contentAlignment = Alignment.Center,
