@@ -64,6 +64,9 @@ import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.QuestionAnswers
 import bot.tafs.app.model.QuestionSelection
 import bot.tafs.app.model.setupShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 
 /**
  * Coach: where tafs are made, connected and changed (docs/coach.md). Its conversation is the taf's chat screen on Coach's own
@@ -147,6 +150,17 @@ internal val WIDE_COACH = 600.dp
 private val SHAPE_MIN = 240.dp
 private val SHAPE_MAX = 420.dp
 
+/** A group of the bar's buttons in one capsule, as the iPad's toolbar draws them. */
+@Composable
+private fun BarCapsule(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+  Row(
+    modifier.clip(androidx.compose.foundation.shape.CircleShape).background(Theme.panel)
+      .border(androidx.compose.foundation.BorderStroke(1.dp, Theme.line), androidx.compose.foundation.shape.CircleShape)
+      .padding(horizontal = 4.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) { content() }
+}
+
 /** Whether the keyboard is open, where a screen test says so; else read from the keyboard's own inset. */
 val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { null }
 
@@ -155,28 +169,35 @@ val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { 
 private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () -> Unit, onBack: () -> Unit) {
   var menu by remember { mutableStateOf(false) }
   var listing by remember { mutableStateOf(false) }
-  Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-    Text(
-      "‹",
-      style = scaled(26, color = Theme.amber),
-      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
-    )
-    Text(Words.Coach.title, style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
-    androidx.compose.material3.IconButton(onClick = onNewChat) {
-      androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_new_conversation),
-        contentDescription = Words.Coach.newConversation, tint = Theme.amberText)
+  // As the iPad's bar: Back in a capsule at the start, the name centred, new conversation and ⋯ in one at the end, in Coach's blue.
+  Box(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 6.dp), contentAlignment = Alignment.Center) {
+    BarCapsule(Modifier.align(Alignment.CenterStart)) {
+      Box(
+        Modifier.size(44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack).semantics { contentDescription = Words.Common.back },
+        contentAlignment = Alignment.Center,
+      ) {
+        androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.coach, modifier = Modifier.size(20.dp))
+      }
     }
-    Box {
-      Text(
-        "⋯",
-        style = scaled(22, FontWeight.Bold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
-      )
-      DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-        androidx.compose.material3.DropdownMenuItem(
-          text = { Text(Words.Coach.Chats.previous, style = scaled(15, color = Theme.ink)) },
-          onClick = { menu = false; listing = true },
-        )
+    Text(Words.Coach.title, style = scaled(17, FontWeight.SemiBold, Theme.ink), maxLines = 1)
+    BarCapsule(Modifier.align(Alignment.CenterEnd)) {
+      Box(
+        Modifier.size(44.dp).tapping(onClickLabel = Words.Coach.newConversation, onClick = onNewChat).semantics { contentDescription = Words.Coach.newConversation },
+        contentAlignment = Alignment.Center,
+      ) {
+        androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(bot.tafs.app.R.drawable.ic_new_conversation), contentDescription = null, tint = Theme.coach, modifier = Modifier.size(20.dp))
+      }
+      Box {
+        Box(
+          Modifier.size(44.dp).tapping(onClickLabel = Words.Coach.conversations) { menu = true }.semantics { contentDescription = Words.Coach.conversations },
+          contentAlignment = Alignment.Center,
+        ) { Text("⋯", style = scaled(20, FontWeight.Bold, Theme.coach)) }
+        DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
+          androidx.compose.material3.DropdownMenuItem(
+            text = { Text(Words.Coach.Chats.previous, style = scaled(15, color = Theme.ink)) },
+            onClick = { menu = false; listing = true },
+          )
+        }
       }
     }
   }

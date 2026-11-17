@@ -16,6 +16,9 @@ tablet without one installs tafs, and its mic says it can't dictate there.
 Drawn by `CoachScreenTest` from synthetic data, at phone size: the compact header with the plan
 in tafs cloud's one line, the plan opened, the conversations menu, and the live line thinking,
 working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-as-it-comes)).
+Coach's bar is the iPad's (`CoachHeader`): Back in a capsule at the start, "Coach" centred, and new
+conversation and ⋯ (the earlier conversations) in one capsule at the end, in Coach's own blue
+(`Theme.coach`, the iPad's).
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
