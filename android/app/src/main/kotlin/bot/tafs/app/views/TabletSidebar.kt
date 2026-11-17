@@ -159,8 +159,13 @@ internal fun TabletSidebar(
           }
         }
       }
-      // Theirs and those being set up, then the ones shared with them, each in the list's order (kiff/tafs#306).
-      val (own, shared) = state.sections(state.listedTafs)
+      // Theirs and those being set up, then the ones shared with them, each in the list's order (kiff/tafs#306). Only those tafs
+      // cloud says are relevant now (`relevant_now`), as the iPad's sidebar: every taf is behind the mark, on the Overview. A tafs
+      // cloud that doesn't say yet: every taf.
+      val (allOwn, allShared) = state.sections(state.listedTafs)
+      val says = state.listedTafs.any { it.relevantNow != null }
+      val own = if (says) allOwn.filter { it.relevantNow == true } else allOwn
+      val shared = if (says) allShared.filter { it.relevantNow == true } else allShared
       if (own.isNotEmpty() || state.settingUp.isNotEmpty()) {
         item { Header(Words.Home.yourTafs) }
         own.forEach { taf -> item(key = "taf-" + taf.id) { TafItem(state, taf, beside == Beside.Taf(taf.id)) { onOpenTaf(taf.id) } } }

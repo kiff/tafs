@@ -1,6 +1,8 @@
 package bot.tafs.app
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -154,6 +156,34 @@ class TabletSidebarTest {
     compose.waitForIdle()
     assertTrue(compose.onAllNodes(hasTestTag("beside-sidebar")).fetchSemanticsNodes().isEmpty())
     compose.onAllNodes(hasText(Words.Common.done))[0].assertIsDisplayed()
+  }
+
+  /** tafs cloud's `relevant_now`: the sidebar lists only the tafs it marks, as the iPad's; with no word from it, every taf. */
+  @Test fun theSidebarListsTheTafsTafsCloudSaysAreRelevantNow() {
+    RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")
+    Res.install(bot.tafs.app.design.AndroidWords(ApplicationProvider.getApplicationContext()))
+    fun taf(name: String, relevant: Boolean?) = bot.tafs.app.model.Taf(
+      id = name, name = name, job = "", tools = emptyList(), colorIndex = 0, card = bot.tafs.app.model.Card(emptyList(), "o"), relevantNow = relevant,
+    )
+    var state by androidx.compose.runtime.mutableStateOf(
+      bot.tafs.app.app.AppState(mode = bot.tafs.app.app.Mode.kiff, ready = true, listLoaded = true, tafs = listOf(taf("Bills in", true), taf("Quiet one", false))),
+    )
+    compose.setContent {
+      TafsTheme {
+        bot.tafs.app.views.TabletSidebar(
+          state, bot.tafs.app.views.Beside.Overview, onOverview = {}, onNeedsYou = {}, onRecord = {}, onCalendar = null, onUsage = null,
+          onConnectApps = null, onHaltAll = {}, onOpenTaf = {}, onFinishSetup = null, onDiscardSetup = null, onExplore = null, onNewTaf = null,
+          onPlayNext = null, onCoach = null, onAccount = {}, onFold = {},
+        )
+      }
+    }
+    compose.waitForIdle()
+    compose.onNode(hasText("Bills in")).assertIsDisplayed()
+    assertTrue(compose.onAllNodes(hasText("Quiet one")).fetchSemanticsNodes().isEmpty())
+    // A tafs cloud from before the flag: every taf.
+    state = state.copy(tafs = listOf(taf("Bills in", null), taf("Quiet one", null)))
+    compose.waitForIdle()
+    compose.onNode(hasText("Quiet one")).assertIsDisplayed()
   }
 
   @Test fun aPhoneKeepsItsTabBarAndHasNoSidebar() {
