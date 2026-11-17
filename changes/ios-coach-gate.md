@@ -1,1 +1,1 @@
-- **iPhone, iPad and Mac: Coach opens on a taf only for someone who manages it, and a run's Ask Coach shows only for them.** Anyone else gets Coach on no taf, instead of a conversation tafs cloud then refuses ([ios-app.md](docs/ios-app.md)).
+- **iPhone, iPad and Mac: Coach opens on a taf only for someone who manages it, and a run's Ask Coach and Needs you's Change the limit in Coach show only for them.** Anyone else gets Coach on no taf, instead of a conversation tafs cloud then refuses ([ios-app.md](docs/ios-app.md)).

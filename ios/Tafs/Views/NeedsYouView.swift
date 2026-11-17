@@ -162,7 +162,7 @@ struct HeldCallCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         } else if model.canAnswer(call) {
             if refuseOnly {
-                if !call.approvableOnce, model.mayUseCoach {
+                if !call.approvableOnce, model.mayImproveInCoach(call.tafID) {
                     Button {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true
@@ -209,7 +209,7 @@ struct HeldCallCard: View {
                         .disabled(sending)
                     }
                 }
-                if model.mayUseCoach {
+                if model.mayImproveInCoach(call.tafID) {
                     Button {
                         model.improveTaf(call.tafID)
                         model.coachOpen = true

@@ -137,9 +137,10 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-other", name: "Other", id: "depl_9")]))
         await model.refresh()
         let other = try XCTUnwrap(model.tafs.first { $0.name == "Other" }?.id)
-        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"setup":{"use":true,"oversee":false,"manage":false,"groups":[]}}}"#)
         await model.refreshPeople()
         XCTAssertTrue(model.manages(id))
+        XCTAssertTrue(model.mayUseCoach, "KIFF lets this person use Coach")
         XCTAssertFalse(model.manages(other), "KIFF gives no manage on it")
         model.newSetupChat()
         model.tafOnScreen = other
@@ -150,6 +151,9 @@ final class VersionsTests: XCTestCase {
         model.tafOnScreen = id
         model.openCoach()
         XCTAssertEqual(model.setupImproving?.id, "depl_1", "their own taf: Coach mode on it")
+        // Needs you's Change the limit in Coach: the same gate, since a limit is the taf's Card.
+        XCTAssertTrue(model.mayImproveInCoach(id))
+        XCTAssertFalse(model.mayImproveInCoach(other), "not their taf: no Change the limit in Coach")
     }
 
     /// A run's Ask Coach shows only for someone who may use Coach and manages the taf; the sample shows it.

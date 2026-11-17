@@ -7452,6 +7452,12 @@ final class AppModel: ObservableObject {
         setupContextTafID = setupImproving?.id
     }
 
+    /// Whether Coach may be opened to improve this taf here (Needs you's Change the limit in Coach): someone who
+    /// may use Coach and manages the taf, since changing a limit is changing its Card; the sample shows it.
+    func mayImproveInCoach(_ tafID: UUID) -> Bool {
+        mayUseCoach && (mode != .kiff || manages(tafID))
+    }
+
     /// Coach on a taf, with words in the box for the owner to send (kiff/tafs#476, gaps 10 and
     /// 15): a not-done call's Ask Coach, or a taf's ask_coach card. Nothing is sent. Only for
     /// someone who may use Coach and manages the taf.
