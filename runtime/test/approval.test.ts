@@ -563,6 +563,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([count(10_000)]), { ...daily([day(20_000)]), grants: [{ action: "send_reply_k3" }] }, others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    // Beside a total for each customer only: one item's, so nothing bounds the day's refunds over all customers.
+    draft([each([count(10_000)]), daily([{ ...day(20_000), per: "customer" }]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([]), daily([day(20_000), count(10_000)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([count(10_000), count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);

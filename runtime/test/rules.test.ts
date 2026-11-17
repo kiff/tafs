@@ -214,6 +214,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs, { quantity: "sum(amount)", window: "rolling_1h", limit: 1 }], "owner"), refund(undefined, [day(5000)])], split)).toHaveLength(2);
     expect(rulesUnnamedFigures([stripe], [refund(500, [{ ...kiffs, limit: 9_999 }], "owner"), refund(undefined, [day(5000)])], split)).toHaveLength(1);
     expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs], "owner")], split)).toHaveLength(1);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [kiffs], "owner"), refund(undefined, [day(5000, { per: "customer" })])], split)).toHaveLength(1);
     // A rule with no figures names none to compare: nothing is named.
     expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
   });
