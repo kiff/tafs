@@ -23,14 +23,16 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   past a day's total, it waits until they raise the limit, or is refused:
   never "can't be approved". Never promise an approval the Card can't give. Name each read tool
   the taf gets, by what it does ("List rows"), never "each read tool".
-  Show them as a notice (tone info, a title) with rules: per tool, its over (or each figure's) and only
-  the owner's figures, as on the Card; lang: the owner's language; and lines, one per rule, its words
-  alone and where it's kept: card (tools it limits), connection (tools it's pinned on), kiff (what:
-  disclosure, reads_total or held_approval) or instructions (all else: what it skips, tells the owner,
-  how it words things, a column the request doesn't fix). Never write where it's kept, nor a text:
-  show adds each ending. Copy every instructions line into the taf's instructions. Then a confirm with
-  agrees: its id, and two options only, Agree (value agree) and Change something; never another rule
-  as an option: ask it as its own question first, and put the answer in the rules. A
+  Show them as a notice (tone info, a title, one short line per rule, and where it's
+  kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
+  instructions"), with rules: per tool, its over (or each figure's) and only
+  the owner's figures, as on the Card; then a confirm with agrees: its id, and two options
+  only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
+  first, and put the answer in the rules.
+  A rule that keeps a write to one column ends "(that column is in its instructions)", unless the
+  request fixes that column: never the column alone. A rule no Card or connection holds (what it skips,
+  tells the owner or how it words things) ends "(in its instructions)". A pin or fixed value is "every
+  call" only if the connection fixes it on every tool; else name the tools it holds for. A
   limit the owner already gave, in their first message or later, is that
   limit: put it in the rules as they said it, never another in its place.
   Ask about each limit they didn't give. Then set the tools (planque tools). When planque says declared: true, draft the Card
@@ -51,7 +53,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, a kiff line (what: reads_total), never the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
