@@ -42,7 +42,13 @@ export const COACH_WORDING: readonly Wording[] = [
       "lines",
       "emails",
       "messages",
-      "pages"
+      "pages",
+      "what",
+      "whatever",
+      "from",
+      "mail",
+      "unread",
+      "incoming"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
