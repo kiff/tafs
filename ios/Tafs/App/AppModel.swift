@@ -1234,18 +1234,33 @@ final class AppModel: ObservableObject {
         mode == .kiff && sessionHasApprovalKey && !approvalViewOnly && ["owner", "admin"].contains(me?.role ?? "")
     }
 
+    /// Each read of the passkeys takes the next number, and so does a removal: only the newest read's list is
+    /// kept, so a read that started before a Remove never brings the removed passkey back.
+    private var passkeysRead = 0
+
     func refreshPasskeys() async {
         guard mode == .kiff else { return }
         let gen = accountGeneration
+        passkeysRead += 1
+        let read = passkeysRead
         do {
             let list = try await kiff.passkeys()
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, read == passkeysRead else { return }
             passkeys = list
             passkeysError = nil
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, read == passkeysRead else { return }
             passkeysError = Words.Settings.Devices.passkeysNotLoaded(why: "\(error.localizedDescription)")
         }
+    }
+
+    /// Whether removing `passkey` leaves no passkey that can approve: every one KIFF lists approves, a
+    /// computer's own included (KIFF drops a computer's with the computer). Then Remove warns first
+    /// (`settings.devices.passkey_remove_last`). As Windows' count.
+    /// Passkeys are told apart by KIFF's id, or for a computer's own by its device, so a name changed while
+    /// the dialog is open still finds the same one.
+    nonisolated static func removesLastPasskey(_ passkey: KIFFClient.Passkey, among passkeys: [KIFFClient.Passkey]) -> Bool {
+        !passkeys.contains { !$0.isSamePasskey(as: passkey) }
     }
 
     /// How adding a passkey ended. The view says each in its words.
@@ -1349,6 +1364,9 @@ final class AppModel: ObservableObject {
             passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
             return false
         }
+        // A read already on its way may have started before the removal: it's dropped, and the list read again.
+        passkeysRead += 1
+        passkeys.removeAll { $0.passkeyID == id }
         await refreshPasskeys()
         return true
     }

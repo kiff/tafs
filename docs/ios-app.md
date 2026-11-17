@@ -1033,6 +1033,12 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   closing Devices and opening it again.
 - **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
   device that holds an approval key or a passkey is an approval.
+- **The account's passkeys** are listed under Devices, with Remove for the person's own (the approval key signs
+  `DELETE /v1/me/passkeys/{id}`); a computer's own goes with its computer. **Removing the last passkey that can
+  approve warns first:** "This is your only passkey that can approve. Without it, you need another device that can
+  approve." (`settings.devices.passkey_remove_last`). Every passkey KIFF lists counts, a computer's own included, told apart by id (a computer's by its device),
+  since they all approve (`AppModel.removesLastPasskey`, as on Windows). A read of the list that started before a
+  Remove is dropped when it ends, so the removed passkey never comes back on screen.
 - **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with
   `device_kind` sent on as it came; whether a kind matches its platform is KIFF's check
   (`invalid_pairing`), as on Android. Its alert says what it gets whatever its biometric
