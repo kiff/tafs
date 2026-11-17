@@ -399,17 +399,6 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
 }
 
 /**
- * The first tool of the grant no Card covers, once the draft is confirmed: neither the draft's Cards
- * nor the agent's Cards in force (inForce, as actionsInForce reads them) name it. KIFF refuses every
- * call no Card covers, so the taf couldn't use it, and would ask its owner for a Card it shouldn't
- * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's, and a
- * tool listed with no KIFF name is left out.
- */
-/**
- * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
- * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
- */
-/**
  * The step a tap asks once another app the draft's Cards cover is still waiting: a combined step (the tools or the key with
  * the Card) becomes this app's own step without the Card, as `decide` falls through on `waitsFor` (the Card comes with the
  * last app's approval). Otherwise `step` as it is. The chat's read marks its card by this, so the card never says it signs
@@ -422,6 +411,17 @@ export function stepWithWaiting(step: SignStep, grant: ApprovalGrant, grants: Ap
   return stepFor(grant, { draft: ask.draft, can: [] }, {});
 }
 
+/**
+ * The first tool of the grant no Card covers, once the draft is confirmed: neither the draft's Cards
+ * nor the agent's Cards in force (inForce, as actionsInForce reads them) name it. KIFF refuses every
+ * call no Card covers, so the taf couldn't use it, and would ask its owner for a Card it shouldn't
+ * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's, and a
+ * tool listed with no KIFF name is left out.
+ */
+/**
+ * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
+ * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
+ */
 /** An app of the same taf whose tools still wait for their own approval: its grant, and its name for people and Coach. */
 export interface WaitingApp { grant: string; name: string }
 
