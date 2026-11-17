@@ -1,0 +1,1 @@
+- **Android 116 (1.37.0):** connecting an app outside Coach is signed inside KIFF's approval window (#1272), Devices shows a newly paired device at once (#1281), and an approval refused or failed never reads as approved, with the connect step signing only the body the card showed (#1285). Internal track first, then production when promoted ([android-app.md](docs/android-app.md)).
