@@ -55,7 +55,7 @@ import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -3312,7 +3312,13 @@ const SIGNS_READ_MS = 1500;
  * the connections can't be read in time, the cards are left as they were.
  */
 async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+  await markSteps(event, me, taf, components, deps);
+  // After the marks: a precheck on this read may have kept a waiting app's note (other_app_first), and that app's card,
+  // shown without the draft, is answered on this same read rather than the next (two cards drawn in one second).
   await refuseSplitApprovals(event, me, taf, components, deps).catch((err) => console.error(`split approval: ${(err as Error).message}`));
+}
+
+async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
   const proof = event.headers?.["planque-device-signature"] ?? "";
   if (!proof || !deps.planqueBase) return;
   const naming = (type: string) => components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === type &&
@@ -3330,14 +3336,19 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     const card = c.component as { grant: string; draft?: unknown };
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
-    const step = grant && stepFor(grant, { draft, can }, flags);
-    if (!step) continue;
+    const asked = grant && stepFor(grant, { draft, can }, flags);
+    if (!asked) continue;
     // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
     // alone takes the key KIFF names for it, or nothing is said of the key.
     const signsCard = checkedOnReadFor(grant, draft, can);
     const info = signsCard
       ? await within(draftInfo(bearer(event), draft!, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
       : undefined;
+    // Another app the Cards cover still waiting: the tap asks for this app's step alone (decide's waitsFor), so it's marked
+    // so. The precheck below still runs on the draft: it keeps the waiting app's note (other_app_first), so that app's
+    // approval shown without the draft is answered (splitApproval).
+    const step = stepWithWaiting(asked, grant, grants, info?.cards ?? undefined, { draft });
+    if (!step) continue;
     const confirmKey = step === "cards" && draft ? (info ? info.confirmKey ?? null : undefined) : null;
     // Its Cards checked before the card is drawn: a draft Approve would refuse is never shown with Approve. On the
     // combined steps too (Eval 13's Refunds: the owner approved the tools with the Card, and the Card was then refused).
@@ -3368,6 +3379,12 @@ function markWider(cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang
     const vendor = grant.vendor || vendorName(grant.request.server) || "";
     c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined) } };
   }
+}
+
+/** An answered card is drawn with no Approve: the step marked on it before it was answered goes. */
+function unmark(c: ThreadComponent): void {
+  const { signs: _signs, ...rest } = c.component as Record<string, unknown>;
+  c.component = rest as ThreadComponent["component"];
 }
 
 const splitKeys = {
@@ -3402,7 +3419,7 @@ async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf
     const kept = new Date(now.getTime() + WAITING_DRAFT_KEPT_MS);
     if (!(await deps.coach.once(claim, kept).catch(() => false))) {
       const told = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
-      if (told && typeof told.answer === "string" && typeof told.at === "string") c.answer = shown(told);
+      if (told && typeof told.answer === "string" && typeof told.at === "string") { c.answer = shown(told); unmark(c); }
       continue;
     }
     const release = () => deps.coach!.remove(claim).catch(() => undefined);
@@ -3418,6 +3435,7 @@ async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf
     const told: PrecheckTold = { answer, at: now.toISOString() };
     await deps.coach.put(toldKey, told, kept).catch(() => undefined);
     c.answer = shown(told);
+    unmark(c);
   }
 }
 

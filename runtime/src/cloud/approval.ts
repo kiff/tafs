@@ -409,6 +409,19 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
  * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
  */
+/**
+ * The step a tap asks once another app the draft's Cards cover is still waiting: a combined step (the tools or the key with
+ * the Card) becomes this app's own step without the Card, as `decide` falls through on `waitsFor` (the Card comes with the
+ * last app's approval). Otherwise `step` as it is. The chat's read marks its card by this, so the card never says it signs
+ * the Card while its tap asks for the connection alone: the phone refuses a step that isn't its mark and reads again, and
+ * read after read the owner tapped the same card (17 Nov, five taps in 45 s).
+ */
+export function stepWithWaiting(step: SignStep, grant: ApprovalGrant, grants: ApprovalGrant[], cards: unknown[] | undefined, ask: { draft?: string }): SignStep | undefined {
+  if (step !== "tools_and_cards" && step !== "key_and_cards") return step;
+  if (!cards || !appsWaiting(grant, sameTafOf(grant, grants), cards).length) return step;
+  return stepFor(grant, { draft: ask.draft, can: [] }, {});
+}
+
 /** An app of the same taf whose tools still wait for their own approval: its grant, and its name for people and Coach. */
 export interface WaitingApp { grant: string; name: string }
 
