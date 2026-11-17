@@ -198,6 +198,46 @@ next message. "Jump to the latest" lets it go and goes to the end. A message tha
 go at all lets it go too. `ChatPinTest` holds this, in a taf's chat and in Coach's, with a
 long thread and a short one.
 
+On iPhone and iPad (`TafChatView`, and `SetupChatView` for Coach), step by step, for an app
+that does the same:
+
+1. **Sending** empties the box and puts the keyboard down. The app keeps the thread's row ids
+   as they were (`sentBefore`) and the sent words, trimmed (`pinText`). An earlier pin goes at
+   once: the keyboard going down puts a pin back, and it went back to the earlier message.
+2. **The first row to show takes the pin**, glided to the top in a quarter of a second. It can
+   be the owner's message in the thread: its words match (`SetupThread.matchesSent`), and it's
+   not in `sentBefore`, so a reply that came first or an older copy of the same words never
+   takes it. It can also be the words held for a run at work (`steer|i`), or the ones queued
+   behind it (`queued`). It can also be the message's Not sent bubble, with Retry. In Coach's chat,
+   an answered card also takes the pin, since its answer starts Coach's next answer (the 870 test).
+3. **The room** under the thread is the screen's height less the turn: the pinned row's top to
+   the thread's last row, measured as laid out (`PinnedTurn`). It's a whole screen until the
+   turn is measured. As the work and the answer grow, the room shrinks by as much, so nothing
+   moves. It stays once the run ends, until the next message.
+4. **The pin moves with the message, without moving the view.** When the pinned row leaves the
+   thread, the pin goes, unanimated, to the newest owner message with the same words
+   (`pinnedWords`). That happens when tafs cloud's copy takes the place of the one shown, under
+   another id. If no row has those words, the pin goes, and the chat goes to its end rather
+   than stay past it, blank.
+5. **It's put back at the top, unanimated,** when the thread changes under it, or the screen's
+   height changes as the keyboard goes down. It isn't put back once the owner has dragged the
+   thread since it was pinned (`touched`).
+6. **Scrolling waits for the room.** The room is laid out only once the pin is set, so a scroll
+   in that same pass stopped at the old end, in the blank under it (the iPad, 21 Oct).
+   `pinToTop` scrolls on the next pass, then again at 0.1, 0.35 and 0.7 s, unless the owner has
+   scrolled meanwhile.
+7. **Letting it go.** "Jump to the latest" lets the pin go and goes to the end. It shows while
+   the end is off screen and the thread doesn't follow, with a dot when something new came.
+   Seeing the end under a pinned message doesn't make the thread follow.
+8. **Coming back from another app changes nothing.** Taking the room away left a shorter
+   thread scrolled past its end, blank (the 845 test).
+
+`ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat.
+
+The two apps differ in two places. A message that couldn't go keeps the pin on iOS, on its Not
+sent bubble, and Retry leaves the pin on a row that's gone. Android lets the pin go and goes to
+the end. iOS is to follow Android here. Also, only iOS pins Coach's answered card.
+
 With no message pinned (a chat just opened, or a reply that came without the owner sending),
 the thread follows its end. While a run works, the dots and then its answer are one row at
 the thread's end, at least as tall as either, so the answer taking the dots' place never
@@ -291,6 +331,17 @@ iOS drops its own queue the same way, with the same words.
 
 - **Stop** cancels the run at work (`POST /v1/tafs/{id}/stop`). One already ended stays
   as it ended.
+- **In the apps,** while a run is at work, the round button is Stop when the box is empty.
+  With words in it, the button is Send, which writes to the run. Stop names the run's session:
+  the live stream's, or else the run tafs cloud says is at work. iOS also falls back to the
+  thread's last session. When tafs cloud has taken the stop, the chat is ready again at once:
+  the live answer and "…" go, the stream closes, the run reads as stopped, and the thread is
+  read again. The run itself ends at its next step, and does nothing after it. A taf's chat
+  shows no line for a stop. Coach's says "Stopped". The pin stays: the thread read again under
+  it puts it back at the top. A stop tafs cloud refused says so under the thread, and nothing
+  else changes. The words differ for now: iOS says "It didn't stop: why" (`work.did_not_stop`),
+  and Android says "Not stopped. why" (`chat.not_stopped`). iOS `stopChat` and `stopSetup`,
+  Android `stopChat`.
 - A run that stopped at a **cap** says so, never "…": "stopped: this task would cost more
   than its limit for one task…" (`cost_cap`), or "…took more steps than its limit…"
   (`turn_cap`) (`capWords`). A reply cut off at its length limit (`max_token`) says "stopped: its reply ran out of
