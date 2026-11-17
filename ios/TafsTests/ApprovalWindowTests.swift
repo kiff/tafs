@@ -388,6 +388,89 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertEqual(signer.prompts, [connectMessage])
     }
 
+    // MARK: The direct connect: Connect apps, Connect again, an approval card's Connect
+
+    private func directConnect(_ model: AppModel) async -> PlanqueClient.Grant? {
+        await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
+    }
+
+    /// As Android's (tafs#1272): the connection's own Face ID opens KIFF's window with the approval key, and planque's
+    /// approve goes as a tap in it, never as a windowless v1. The window is closed once the connection is done.
+    func testTheDirectConnectApprovesInItsOwnWindow() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        let connected = await directConnect(model)
+        XCTAssertNotNil(connected, model.lastError ?? "")
+        XCTAssertEqual(signer.currentPrompted, [connectMessage], "one Face ID, naming the grant")
+        let opening = try XCTUnwrap(sent("POST", "/v1/me/window").first)
+        XCTAssertTrue(opening.value(forHTTPHeaderField: "KIFF-Device-Signature")?.contains(",v1=approval") ?? false, "opened by the approval key")
+        let header = try XCTUnwrap(planqueHeaders().first)
+        XCTAssertTrue(header.contains(",v2=current,w=\(win),d="), header)
+        XCTAssertNil(model.planque.window, "the window is on for planque's call alone")
+        XCTAssertFalse(model.kiff.signsInWindow)
+        try await waitFor { !self.closes().isEmpty }
+        XCTAssertEqual(closes().count, 1, "the connection's window is closed when it's done")
+    }
+
+    /// A window held from Coach's step is closed first, and the connection opens its own behind its own Face ID.
+    func testAWindowHeldFromBeforeIsClosedFirst() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses[askRoute] = (200, ask(key: "window"))
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses["GET /v1/me/window"] = (200, windowOpened)
+        try await approveCard(model)
+        XCTAssertNotNil(model.kiff.window)
+        StubProtocol.sent = []
+        _ = await directConnect(model)
+        let windowPosts = StubProtocol.sent.filter { $0.httpMethod == "POST" && ($0.url?.path.hasPrefix("/v1/me/window") ?? false) }.compactMap { $0.url?.path }
+        XCTAssertEqual(windowPosts.first, "/v1/me/window/\(win)/close", "the held window is closed first")
+        XCTAssertTrue(windowPosts.contains("/v1/me/window"), "then the connection opens its own")
+        XCTAssertEqual(signer.currentPrompted.count, 2, "the connection's own Face ID, not a tap in the old window")
+    }
+
+    /// KIFF refusing the window (an unsigned or device-key open, `approval_key_required`) stops the connection:
+    /// nothing reaches planque, so a refused open never becomes a windowless v1 approve.
+    func testARefusedWindowOpenSendsNothingToPlanque() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (403, #"{"error":"approval_key_required","code":"approval_key_required"}"#)
+        let connected = await directConnect(model)
+        XCTAssertNil(connected)
+        XCTAssertNotNil(model.lastError)
+        XCTAssertTrue(planqueHeaders().isEmpty, "no approve, in a window or not")
+        XCTAssertTrue(sent("POST", "/v1/accounts/t_01/grants/g_01/confirm", host: "planque.test").isEmpty)
+    }
+
+    /// A KIFF without windows (404): the connection goes as it did, with Face ID and a v1 approve.
+    func testWithAKIFFWithoutWindowsTheDirectConnectGoesAsBefore() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (404, #"{"error":"not_found"}"#)
+        let connected = await directConnect(model)
+        XCTAssertNotNil(connected, model.lastError ?? "")
+        let header = try XCTUnwrap(planqueHeaders().first)
+        XCTAssertTrue(header.contains(",v1=") && !header.contains(",w="), header)
+        XCTAssertTrue(closes().isEmpty)
+    }
+
+    /// planque says the window ended before it did anything: one more Face ID opens a new window, and only that call
+    /// is made again, in it.
+    func testPlanqueSayingTheWindowEndedOnADirectConnectOpensANewOneAndTriesOnceMore() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses[approveRoute] = (403, #"{"error":"Your approval window has ended.","code":"window_required"}"#)
+        StubProtocol.thenRespond[approveRoute] = [approveRoute: (200, #"{"status":"connected"}"#)]
+        let connected = await directConnect(model)
+        XCTAssertNotNil(connected, model.lastError ?? "")
+        XCTAssertEqual(sent("POST", "/v1/me/window").count, 2)
+        XCTAssertEqual(signer.currentPrompted.count, 2)
+        XCTAssertEqual(planqueHeaders().count, 2)
+        XCTAssertTrue(planqueHeaders().allSatisfy { $0.contains(",w=\(win),") })
+    }
+
     // MARK: Closed, dropped, expired
 
     private func waitFor(_ condition: @MainActor () -> Bool) async throws {

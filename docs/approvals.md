@@ -191,9 +191,10 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   (connecting an app; a draft KIFF says widens nothing). The approval key signs KIFF's
   `kiff.window.v1` (`POST /v1/me/window`, `{message, expires, nonce}`, five minutes at most),
   behind one fingerprint in the card's words. The app opens none on its own guess, and a KIFF
-  without the route (404) leaves the step signing as it did. **One exception, on Android:** a
-  connection approved outside Coach's step (Connect apps, a taf's Connect again, an approval
-  card's Connect: `AppModel.connect`) has no ask from tafs cloud, so the connection's own
+  without the route (404) leaves the step signing as it did. **One exception, on Android, iPhone
+  and iPad:** a connection approved outside Coach's step (Connect apps, a taf's Connect again, an
+  approval card's Connect: `AppModel.connect` on Android, `AppModel.connect(grantID:)` on iOS) has
+  no ask from tafs cloud, so the connection's own
   fingerprint opens the window there, and planque's approve and confirm go as `v2` inside it.
   It's the connection's alone: a window held from an earlier approval is closed first, so a
   connection is never a tap, and the connection's window is closed when it ends. With a KIFF
@@ -201,8 +202,10 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   is asked once.
   planque then holds them to an open window (`PLANQUE_WINDOW_REQUIRED`), where before they went
   as `v1` with the device key alone. Without a window (a KIFF without the route, no approval key,
-  a drive), the phone asks for the fingerprint itself and signs `v1`, as before. iPhone and iPad
-  follow.
+  a drive), the phone asks for the fingerprint itself and signs `v1`, as before. On iPhone and
+  iPad the connection's Face ID comes first, over `tafs.connect.v1`, and opens the window; any
+  refusal of the open other than a KIFF without windows stops the connection with nothing sent to
+  planque.
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
   the window's id last. planque's calls are signed this way only for the step that took the
