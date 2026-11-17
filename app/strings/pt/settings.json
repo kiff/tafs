@@ -67,6 +67,7 @@
   "settings.devices.passkey_note": "Com uma chave de acesso neste telefone, um computador pode aprovar através dele: o computador mostra um código QR, que lê com este telefone.",
   "settings.devices.passkey_prompt": "Adicionar à sua conta uma chave de acesso neste telefone",
   "settings.devices.passkey_remove": "Remover",
+  "settings.devices.passkey_remove_last": "É a sua única chave de acesso que pode aprovar. Sem ela, precisa de outro dispositivo que possa aprovar.",
   "settings.devices.passkey_remove_named": "Remover {name}?",
   "settings.devices.passkey_remove_prompt": "Remover a chave de acesso {name} da sua conta",
   "settings.devices.passkey_too_slow": "Demorou demasiado. Tente novamente.",
