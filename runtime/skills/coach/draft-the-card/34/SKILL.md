@@ -30,7 +30,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
   first, and put the answer in the rules.
   A rule that keeps a write to one column ends "(that column is in its instructions)", unless the
-  request fixes that column: never the column alone. A
+  request fixes that column: never the column alone. A rule no Card or connection holds (what it skips,
+  tells the owner or how it words things) ends "(in its instructions)". A pin or fixed value is "every
+  call" only if the connection fixes it on every tool; else name the tools it holds for. A
   limit the owner already gave, in their first message or later, is that
   limit: put it in the rules as they said it, never another in its place.
   Ask about each limit they didn't give. Then set the tools (planque tools). When planque says declared: true, draft the Card
