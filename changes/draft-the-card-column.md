@@ -1,0 +1,2 @@
+- **Rules: a write kept to one column says where that's kept** (`draft-the-card@32`). When the connection doesn't fix the column, the rules line ends "(that column is in its instructions)", so the notice never promises what nothing holds (Eval 44005248914, Replay run 2).
+- **Coach's wording rules:** a rule now also refuses Coach saying how far a sign-in reaches ("asks for full mail access"), in all 8 languages, since the approval card shows that from the grant; and every rule's fix tells Coach only to describe what the taf's job will do (`contracts/coach-wording.json`).
