@@ -163,7 +163,7 @@ See [chat.md](chat.md) for how the app uses these.
 | `POST /v1/tafs/{id}/messages/stream` | a person | The same message, its answer streamed as server-sent events ([chat.md](chat.md#the-answer-as-it-comes)). With `client_message_id` sent again, the first run's stream from its start (its steps, as a run picked back up), after a `session` event with `repeat: true`, never a second run |
 | `POST /v1/tafs/{id}/messages/{message}/report` | a person who may read the answer | `{reason, note?, session?}`: reports an answer Coach or the taf wrote, from inside the app. `reason` is `offensive`, `harmful`, `wrong` or `other`; `note` is at most 1,000 characters. tafs cloud finds the answer in the person's thread, or in the chat (or trial) `session` names, and keeps and emails it as kiff/agents holds it, never the app's copy. Answers `{report: {id, at, new}}`; reporting the same answer again answers the first report, with `new: false`. 404 for anything but an answer of the taf's the person may read |
 | `GET /v1/tafs/{id}/runs/{run}/stream?after=N` | a person, their own run | Pick a run back up: its recorded steps after event N (with `part` where it went on after a held call), then the rest until it stops |
-| `POST /v1/tafs/{id}/steer` | a person | `{run, text, hold?}`: to the run at work, read at its next step. Without `hold`, 409 when the run took nothing (it ended, or holds as many as it takes): send it as a new message. With `hold: true`, tafs cloud holds it for that chat instead (202): `{sent: {run, session}}` when it went at once as the next message there, and `{held: {text, at}}` for what still waits in the chat until the taf is done. 409 with `code: held_full` when what waits would pass one message (10 messages, 2,000 characters): nothing is held, and `error` says so in words the app shows ([chat.md](chat.md#writing-while-the-taf-works)) |
+| `POST /v1/tafs/{id}/steer` | a person | `{run, text, hold?, client_message_id?}`: to the run at work, read at its next step. Without `hold`, 409 when the run took nothing (it ended, or holds as many as it takes): send it as a new message. With `hold: true`, tafs cloud holds it for that chat instead (202): `{sent: {run, session}}` when it went at once as the next message there, and `{held: {text, at}}` for what still waits in the chat until the taf is done. 409 with `code: held_full` when what waits would pass one message (10 messages, 2,000 characters): nothing is held, and `error` says so in words the app shows ([chat.md](chat.md#writing-while-the-taf-works)) |
 | `POST /v1/tafs/{id}/stop` | `cards.manage` | `{session}`: cancel the session's latest run |
 | `POST /v1/tafs/{id}/holds/{exception}/continue` | `holds.answer` | The run paused on that held call goes on now, once KIFF has answered it. `waiting` when KIFF still holds a call of the run |
 | `POST /v1/tafs/{id}/holds/{exception}/allow` | `cards.manage` | `{}` or `{round: true}`: **Allow this from now on** tapped on a held call ([allow-from-now-on.md](allow-from-now-on.md)). With the person's session, tafs cloud reads the hold from KIFF, asks KIFF's `allow-draft` for the draft with the narrowest Card change, checks that change against the hold's breaches on its own, and asks the replay what it would have done over the last 30 days. Answers `{offer: {changes: [{mandate_id, kind, before, after, unit, window, parameter, value, rounded, words_before, words_after}], round?: {after, words}, would?: {calls, words}, draft, confirm_key, send_held: true}}`, with the words in the request's `Accept-Language` (`would` absent when the replay can't be read), or `{none: never \| unit \| no_change \| not_yours \| refused, words}`: `refused` is tafs cloud's own check refusing KIFF's change (it reads as `no_change` does, and the log names the rule), and the draft lapses. Only a draft: the phone reads it from KIFF and confirms it itself. 400 for a `round` that isn't a boolean, 404 for a held call KIFF doesn't know, 409 for one that no longer waits |
@@ -185,20 +185,26 @@ sends the same id on the stream and, if the stream fails before its answer, on t
 Without it, a stream that failed after kiff/agents had started the run, followed by the plain send, made two runs of
 one message: a second Coach turn, or a taf calling its tools again.
 - **The key** is `msg:<person>:<id>`, so the same id from another person is another message. tafs cloud passes it to
-  kiff/agents as the run's `dedup_key` (source `app`), on the stream, on the plain send, and on a message steered into
-  an approval's run.
-- **Sent again,** the message is answered from what the first send did, before anything is taken for it:
-  - the run kiff/agents started for the key (read by the id kiff/agents derives from it): the plain send answers it
-    with `repeat: true`; the stream sends its steps from the start, as a run picked back up, after a `session` event
-    with `repeat: true`;
-  - the approval's run it went into: `held: "approval"` with `repeat: true`, even once the approval is over.
+  kiff/agents as the `dedup_key` (source `app`): on the stream, on the plain send, on a message steered into an
+  approval's run, and on `POST …/steer` (writing to a run at work).
+- **Before anything is taken for a message** (a Coach line, a flood slot), tafs cloud asks kiff/agents what the key
+  already named (`GET /agents/{id}/runs/by-key`, as the person). Nothing (404): the message is new. A lookup that
+  fails otherwise is **503**, and nothing is taken: a key is never read as unused when it couldn't be checked.
+- **Sent again,** the message is answered from what the first send did:
+  - the run the key started: the plain send answers it with `repeat: true`; the stream sends its steps from the
+    start, as a run picked back up, after a `session` event with `repeat: true`;
+  - the approval's run it went into: `held: "approval"` with `repeat: true`, even once the approval is over;
+  - on `POST …/steer`, the run it was written to: `{run, status, repeat: true}`. An id that started a run instead is
+    another message's: 409 `dedup_key_conflict`.
   - A run that kiff/agents made but no invocation took yet is handed on once more by kiff/agents' own repeat.
 - **Coach's waiting lines** go with the message that took them. After a send that failed, they go back to the queue
   only when nothing was made of it (no run for the key; a steer kiff/agents refused outright). Otherwise they stay
   that message's for a day, and go with it when it's sent again, so a steer kiff/agents may have taken is the same
   text, taken once.
-- **Another message under an id already used** is `409 dedup_key_conflict`: tafs cloud keeps a digest of what was
-  written (never the words) for a day, and kiff/agents checks the same.
+- **Another message under an id already used** is `409 dedup_key_conflict`. tafs cloud keeps a digest of what was
+  written (never the words) for a day. Without it, kiff/agents' digest of the message under the key (`input_sha256`)
+  tells them apart for a taf; a Coach message carries the start's and the waiting lines too, so there a message
+  under a known key is taken as sent again. kiff/agents checks a second start or steer itself as well.
 - **An id that isn't a UUID** is 400. Without an id, everything is as it was.
 
 ### Versions and trials

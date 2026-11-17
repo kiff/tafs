@@ -420,6 +420,15 @@ export interface RunAt {
   source?: string;
 }
 
+/** What a dedup key named in kiff/agents (runByKey). */
+export interface KeyedRun {
+  id: string;
+  status: RunStatus;
+  session_id: string;
+  input_sha256: string;
+  steered: boolean;
+}
+
 /** A file as a message records it (kiff/tafs#209): never its bytes. */
 export interface AttachmentRef {
   id: string;
@@ -461,16 +470,6 @@ const AS_SERVICE = { as: "service" } as const;
 /** The query that names the person, or says the service acts. */
 function as(owner?: string): Record<string, string> {
   return owner ? { owner } : { ...AS_SERVICE };
-}
-
-/**
- * The id of the run a request with a dedup key starts, as kiff/agents names it (its server's
- * RequestRunID): one per tenant, agent and key. tafs cloud reads that run to know a message sent
- * again from one sent once, before it takes anything for it.
- */
-export function requestRunID(tenant: string, agent: string, key: string): string {
-  const part = (s: string) => `${Buffer.byteLength(s, "utf8")}:${s}`;
-  return createHash("sha256").update(`request|${part(tenant)}|${part(agent)}|${part(key)}`, "utf8").digest("hex").slice(0, 32);
 }
 
 /** A run's start body for where it goes. */
@@ -773,6 +772,21 @@ export class Agents {
   async aiSpent(tenant: string, period: string): Promise<number> {
     const p = await this.call<{ spent_micro_usd?: number }>("GET", tenant, ["usage", "ai"], undefined, { period });
     return p.spent_micro_usd ?? 0;
+  }
+
+  /**
+   * What a dedup key already named (GET /agents/{id}/runs/by-key): the run it started, or the run a message
+   * under it was steered into (`steered`), with the hex SHA-256 of the message under it (`input_sha256`: the
+   * run's input, or the steered text). Undefined when the key named nothing for this reader (404); any other
+   * failure throws, and is never taken as a key unused.
+   */
+  async runByKey(tenant: string, agent: string, key: string, requester: string): Promise<KeyedRun | undefined> {
+    try {
+      return await this.call<KeyedRun>("GET", tenant, ["agents", agent, "runs", "by-key"], undefined, { dedup_key: key, requester });
+    } catch (err) {
+      if (err instanceof AgentsError && err.status === 404) return undefined;
+      throw err;
+    }
   }
 
   /** A run, read as the service: tafs cloud checks whose it is before showing what it said. */

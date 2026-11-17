@@ -1,4 +1,5 @@
-import { AgentsError, requestRunID, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { createHash } from "node:crypto";
+import { AgentsError, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
@@ -24,10 +25,10 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const notified = new Map<string, Notify>();
   /** The runs requests with a key started, by tenant, agent and key. */
   const requests = new Map<string, Run>();
-  /** The same runs by the id kiff/agents derives from the key (RequestRunID), with the input each started with. */
-  const byRequestID = new Map<string, { run: Run; input: string; requester?: string }>();
-  /** Each steer's text by run and key, as kiff/agents dedupes a steer sent again. */
-  const steeredKeys = new Map<string, string>();
+  /** The runs keyed starts (stream or background) started, by tenant, agent and key, with the input each started with. */
+  const byKey = new Map<string, { run: Run; input: string; requester?: string }>();
+  /** Each keyed steer, by tenant, agent and key: its run and text, as kiff/agents dedupes a steer sent again. */
+  const steeredKeys = new Map<string, { run: string; text: string }>();
   /** A streamed run that kiff/agents makes, then whose stream breaks before its first event, when set. */
   const breakFirst: { err?: Error } = {};
   /** A steer kiff/agents takes, then whose answer is lost on the way back, when set. */
@@ -390,7 +391,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       // A run grant names its person, as kiff/agents resolves it with KIFF: here "krg_<subject>".
       if (at.grant) at = { ...at, requester: { kind: "member", id: at.grant.replace(/^krg_/, "") } };
       // A request with a key, sent before: the run it started, as kiff/agents answers it.
-      const keyed = at.dedupKey ? requests.get(`${tenant}#${agent}#${at.dedupKey}`) ?? byRequestID.get(requestRunID(tenant, agent, at.dedupKey))?.run : undefined;
+      const keyed = at.dedupKey ? requests.get(`${tenant}#${agent}#${at.dedupKey}`) ?? byKey.get(`${tenant}#${agent}#${at.dedupKey}`)?.run : undefined;
       if (keyed) return keyed;
       const attached = take(tenant, agent, at);
       const { session, opened } = place(tenant, agent, at);
@@ -398,7 +399,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (at.requester) run.requester = { ...at.requester };
       if (at.source) run.source = at.source;
       if (at.dedupKey) requests.set(`${tenant}#${agent}#${at.dedupKey}`, run);
-      if (at.dedupKey) byRequestID.set(requestRunID(tenant, agent, at.dedupKey), { run, input, requester: at.requester ? `${at.requester.kind}:${at.requester.id}` : undefined });
+      if (at.dedupKey) byKey.set(`${tenant}#${agent}#${at.dedupKey}`, { run, input, requester: at.requester ? `${at.requester.kind}:${at.requester.id}` : undefined });
       if (notify) notified.set(run.id, notify);
       // The run as stored, so a test that changes it changes kiff/agents' copy.
       return Object.assign(run, { new_session: opened });
@@ -412,7 +413,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       failing("streamRun");
       if (!agents.has(k(tenant, agent))) throw gone();
       // Streamed and sent before with the same key: the first run's stream, never a second run; another input is 409.
-      const first = at.dedupKey ? byRequestID.get(requestRunID(tenant, agent, at.dedupKey)) : undefined;
+      const first = at.dedupKey ? byKey.get(`${tenant}#${agent}#${at.dedupKey}`) : undefined;
       if (first) {
         if (first.input !== input) throw new AgentsError(409, "this dedup_key already started a run with another message or requester", undefined, "dedup_key_conflict");
         yield { event: "run", data: { ...first.run } };
@@ -425,7 +426,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const r = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) r.requester = { ...at.requester };
       if (at.source && at.dedupKey) r.source = at.source;
-      if (at.dedupKey) byRequestID.set(requestRunID(tenant, agent, at.dedupKey), { run: r, input });
+      if (at.dedupKey) byKey.set(`${tenant}#${agent}#${at.dedupKey}`, { run: r, input, requester: at.requester ? `${at.requester.kind}:${at.requester.id}` : undefined });
       if (notify) notified.set(r.id, notify);
       if (breakFirst.err) { const err = breakFirst.err; breakFirst.err = undefined; throw err; }
       yield { event: "run", data: { ...r, new_session: opened } };
@@ -557,9 +558,25 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     },
     async getRun(tenant, agent, id) {
       failing("getRun");
-      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id) ?? (byRequestID.get(id)?.run as (Run & { tenant: string }) | undefined);
-      if (!r || r.tenant !== tenant || r.agent !== agent) throw gone();
+      const r = runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === id);
+      if (!r) throw gone();
       return r;
+    },
+    /** GET …/runs/by-key, as kiff/agents answers it: the run a key started, or the run a steer under it went into. */
+    async runByKey(tenant, agent, key, requester) {
+      calls.push(`runByKey ${agent} ${key}`);
+      failing("runByKey");
+      const digest = (t: string) => createHash("sha256").update(t, "utf8").digest("hex");
+      const started = byKey.get(`${tenant}#${agent}#${key}`);
+      if (started && (!started.requester || started.requester === requester)) {
+        return { id: started.run.id, status: started.run.status, session_id: started.run.session, input_sha256: digest(started.input), steered: false };
+      }
+      const steer = steeredKeys.get(`${tenant}#${agent}#${key}`);
+      const r = steer ? runs.find((x) => x.tenant === tenant && x.agent === agent && x.id === steer.run) : undefined;
+      if (steer && r && (!r.requester || `${r.requester.kind}:${r.requester.id}` === requester)) {
+        return { id: r.id, status: r.status, session_id: r.session, input_sha256: digest(steer.text), steered: true };
+      }
+      return undefined;
     },
     async steerRun(tenant, agent, id, text, requester, dedupKey) {
       calls.push(`steerRun ${agent} ${id}`);
@@ -569,13 +586,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r || (requester && r.requester && (r.requester.kind !== requester.kind || r.requester.id !== requester.id))) throw gone();
       // A steer sent again with its key is taken once; another text under the same key is 409.
       if (dedupKey) {
-        const said = steeredKeys.get(`${tenant}#${id}#${dedupKey}`);
+        const said = steeredKeys.get(`${tenant}#${agent}#${dedupKey}`)?.text;
         if (said !== undefined && said !== text) throw new AgentsError(409, "this dedup_key already steered the run with another message", undefined, "dedup_key_conflict");
         if (said !== undefined) return r;
       }
       if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run has ended, or was asked to stop");
       r.steering = [...(r.steering ?? []), { text, at: now().toISOString() }];
-      if (dedupKey) steeredKeys.set(`${tenant}#${id}#${dedupKey}`, text);
+      if (dedupKey) steeredKeys.set(`${tenant}#${agent}#${dedupKey}`, { run: id, text });
       if (steerLost.err) { const err = steerLost.err; steerLost.err = undefined; throw err; }
       return r;
     },
@@ -697,7 +714,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, breakFirst, steerLost, byRequestID, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, breakFirst, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

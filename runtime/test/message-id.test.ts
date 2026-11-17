@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AgentsError, readEvents, requestRunID } from "../src/cloud/agents.js";
+import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handle, handleStream, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -82,7 +82,7 @@ describe("an app's message sent again with its client_message_id", () => {
     expect(runsOf(w, COACH)).toHaveLength(1);
     const made = runsOf(w, COACH)[0]!;
     // The run has the line as its input: it isn't put back for the next message.
-    expect(w.agents.byRequestID.get(requestRunID("t_acme", COACH, `msg:u_ana:${ID}`))!.input).toContain("Rae finished its first run.");
+    expect(w.agents.byKey.get(`t_acme#${COACH}#msg:u_ana:${ID}`)!.input).toContain("Rae finished its first run.");
     expect(await queued(w)).toEqual([]);
 
     const again = await send(w, COACH, { text: "Set up refunds", client_message_id: ID });
@@ -174,6 +174,36 @@ describe("an app's message sent again with its client_message_id", () => {
     expect(runsOf(w, COACH)).toHaveLength(1);
   });
 
+  it("a steer that failed before kiff/agents took it keeps Coach's line with the message, and the resend carries it", async () => {
+    const w = await world();
+    const paused = await w.agents.api.startRun("t_acme", COACH, "Connect Stripe", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === paused.id)!.status = "PAUSED";
+    await w.coach.put(`t_acme#${COACH}#u_ana#approval-waiting`, { session: paused.session, run: paused.id, component: "ap1" }, new Date(NOW.getTime() + 600_000));
+    // A 5xx may or may not have been taken: the line stays with this message, not the queue.
+    w.agents.fail.set("steerRun", new AgentsError(503, "down"));
+    expect((await send(w, COACH, { text: "Use the test account", client_message_id: ID })).status).toBeGreaterThanOrEqual(500);
+    expect(await queued(w)).toEqual([]);
+    const again = await send(w, COACH, { text: "Use the test account", client_message_id: ID });
+    expect(again.body).toMatchObject({ run: paused.id, held: "approval" });
+    const steering = w.agents.runs.find((r) => r.id === paused.id)!.steering!;
+    expect(steering).toHaveLength(1);
+    expect(steering[0]!.text).toContain("Rae finished its first run.");
+  });
+
+  it("a steer kiff/agents no longer finds by its key (past the runs it reads) is still answered from tafs cloud's record", async () => {
+    const w = await world();
+    const paused = await w.agents.api.startRun("t_acme", COACH, "Connect Stripe", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === paused.id)!.status = "PAUSED";
+    const wait = `t_acme#${COACH}#u_ana#approval-waiting`;
+    await w.coach.put(wait, { session: paused.session, run: paused.id, component: "ap1" }, new Date(NOW.getTime() + 600_000));
+    await send(w, COACH, { text: "Use the test account", client_message_id: ID });
+    w.agents.steeredKeys.clear();
+    await w.coach.remove(wait);
+    const again = await send(w, COACH, { text: "Use the test account", client_message_id: ID });
+    expect(again.body).toMatchObject({ run: paused.id, held: "approval", repeat: true });
+    expect(runsOf(w, COACH)).toHaveLength(1);
+  });
+
   it("another message under an id already used is 409 dedup_key_conflict, on the plain send and the stream", async () => {
     const w = await world();
     await send(w, RAE, { text: "Refund order 42", client_message_id: ID });
@@ -200,7 +230,8 @@ describe("an app's message sent again with its client_message_id", () => {
     await send(w, RAE, { text: "Refund order 42" });
     await stream(w, RAE, { text: "Refund order 42" });
     expect(runsOf(w, RAE)).toHaveLength(2);
-    expect(w.agents.byRequestID.size).toBe(0);
+    expect(w.agents.byKey.size).toBe(0);
+    expect(w.agents.calls.some((c) => c.startsWith("runByKey"))).toBe(false);
   });
 
   it("the same id from another person is another message", async () => {
@@ -214,10 +245,107 @@ describe("an app's message sent again with its client_message_id", () => {
   });
 });
 
-describe("kiff/agents' id for a keyed request", () => {
-  it("is the one its server derives (RequestRunID), byte for byte", () => {
-    // Vectors from kiff/agents' server.RequestRunID.
-    expect(requestRunID("tenant_1", "taf_9", "msg:user_2:0b6f1d3e-8f42-4c1a-9a57-3d2e8b1c7f00")).toBe("0fc7805bc37ca673590ebc8838c6a5a0");
-    expect(requestRunID("tënant", "taf", "msg:ü:x")).toBe("272476a2d2476e1198f16718d92afd12");
+describe("kiff/agents' lookup of a key", () => {
+  it("a lookup that fails is 503 on every route, and nothing is taken: no run, no steer, Coach's line still queued", async () => {
+    const w = await world();
+    const paused = await w.agents.api.startRun("t_acme", COACH, "Connect Stripe", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === paused.id)!.status = "RUNNING";
+    w.agents.calls.length = 0;
+    for (const go of [
+      () => send(w, COACH, { text: "Set up refunds", client_message_id: ID }),
+      () => stream(w, COACH, { text: "Set up refunds", client_message_id: ID }),
+      async () => {
+        const r = await handle(event(`/v1/tafs/${COACH}/steer`, { run: paused.id, text: "Set up refunds", client_message_id: ID }), deps(w));
+        return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
+      },
+    ]) {
+      w.agents.fail.set("runByKey", new AgentsError(500, "kiff/agents' store didn't answer"));
+      expect((await go()).status).toBe(503);
+    }
+    w.agents.fail.set("runByKey", new TypeError("fetch failed"));
+    expect((await send(w, COACH, { text: "Set up refunds", client_message_id: ID })).status).toBe(503);
+    expect(runsOf(w, COACH)).toHaveLength(1);
+    expect(w.agents.runs.find((r) => r.id === paused.id)!.steering ?? []).toHaveLength(0);
+    expect(w.agents.calls.filter((c) => /^(startRun|streamRun|steerRun)/.test(c))).toEqual([]);
+    expect(await queued(w)).toHaveLength(1);
+    // The key was never taken as used: the next send acts.
+    expect((await send(w, COACH, { text: "Set up refunds", client_message_id: ID })).status).toBe(200);
+    expect(runsOf(w, COACH)).toHaveLength(2);
+  });
+
+  it("with tafs cloud's own record gone, kiff/agents' digest tells the same message from another", async () => {
+    const w = await world();
+    const first = await send(w, RAE, { text: "Refund order 42", client_message_id: ID });
+    await w.coach.remove(`t_acme#msg-key#msg:u_ana:${ID}`);
+    const other = await send(w, RAE, { text: "Refund order 43", client_message_id: ID });
+    expect(other.status).toBe(409);
+    expect(other.body.code).toBe("dedup_key_conflict");
+    const same = await send(w, RAE, { text: "Refund order 42", client_message_id: ID });
+    expect(same.body).toMatchObject({ run: first.body.run, repeat: true });
+    expect(runsOf(w, RAE)).toHaveLength(1);
+  });
+});
+
+describe("writing to a run at work (POST …/steer) with a client_message_id", () => {
+  async function atWork(w: World) {
+    const r = await w.agents.api.startRun("t_acme", RAE, "Work the refund queue", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((x) => x.id === r.id)!.status = "RUNNING";
+    w.agents.calls.length = 0;
+    return r;
+  }
+  const steer = async (w: World, body: unknown) => {
+    const r = await handle(event(`/v1/tafs/${RAE}/steer`, body), deps(w));
+    return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown> };
+  };
+
+  it("written again, the run takes it once", async () => {
+    const w = await world();
+    const run = await atWork(w);
+    const first = await steer(w, { run: run.id, text: "only the €20 one", client_message_id: ID });
+    expect(first).toMatchObject({ status: 200, body: { run: run.id } });
+    const again = await steer(w, { run: run.id, text: "only the €20 one", client_message_id: ID });
+    expect(again).toMatchObject({ status: 200, body: { run: run.id, repeat: true } });
+    expect(w.agents.runs.find((r) => r.id === run.id)!.steering).toHaveLength(1);
+    expect(w.agents.calls.filter((c) => c.startsWith("steerRun"))).toHaveLength(1);
+  });
+
+  it("a write kiff/agents took whose answer was lost is taken once when written again", async () => {
+    const w = await world();
+    const run = await atWork(w);
+    w.agents.steerLost.err = new Error("connection reset after the steer was taken");
+    expect((await steer(w, { run: run.id, text: "only the €20 one", client_message_id: ID })).status).toBeGreaterThanOrEqual(500);
+    const again = await steer(w, { run: run.id, text: "only the €20 one", client_message_id: ID });
+    expect(again).toMatchObject({ status: 200, body: { run: run.id, repeat: true } });
+    expect(w.agents.runs.find((r) => r.id === run.id)!.steering).toHaveLength(1);
+  });
+
+  it("another text under the same id is 409 dedup_key_conflict, and an id that started a run is too", async () => {
+    const w = await world();
+    const run = await atWork(w);
+    await steer(w, { run: run.id, text: "only the €20 one", client_message_id: ID });
+    const other = await steer(w, { run: run.id, text: "all of them", client_message_id: ID });
+    expect(other.status).toBe(409);
+    expect(other.body.code).toBe("dedup_key_conflict");
+    // kiff/agents' own check, with tafs cloud's record gone.
+    await w.coach.remove(`t_acme#msg-key#msg:u_ana:${ID}`);
+    const unrecorded = await steer(w, { run: run.id, text: "all of them", client_message_id: ID });
+    expect(unrecorded.status).toBe(409);
+    expect(unrecorded.body.code).toBe("dedup_key_conflict");
+    expect(w.agents.runs.find((r) => r.id === run.id)!.steering).toHaveLength(1);
+    // An id a message started a run with isn't a write's.
+    const ID2 = "1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f";
+    await send(w, RAE, { text: "Refund order 42", client_message_id: ID2 });
+    const crossed = await steer(w, { run: run.id, text: "Refund order 42", client_message_id: ID2 });
+    expect(crossed.status).toBe(409);
+    expect(crossed.body.code).toBe("dedup_key_conflict");
+  });
+
+  it("refuses an id that isn't a UUID with 400, and without one writes as before", async () => {
+    const w = await world();
+    const run = await atWork(w);
+    expect((await steer(w, { run: run.id, text: "only the €20 one", client_message_id: "nope" })).status).toBe(400);
+    await steer(w, { run: run.id, text: "only the €20 one" });
+    await steer(w, { run: run.id, text: "only the €20 one" });
+    expect(w.agents.runs.find((r) => r.id === run.id)!.steering).toHaveLength(2);
   });
 });
