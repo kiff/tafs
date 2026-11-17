@@ -384,7 +384,8 @@ private fun installTaf(call: HeldCall, state: AppState): String? {
 @Composable
 private fun Answers(call: HeldCall, state: AppState, refuseOnly: Boolean, sending: Boolean, send: (Answer) -> Unit, install: (() -> Unit)?) {
   val biometry = LocalBiometry.current
-  val improveInCoach = LocalImproveInCoach.current
+  // Changing a limit is changing the taf's Card: offered only to whoever may use Coach and manages the taf, as on the iPad.
+  val improveInCoach = LocalImproveInCoach.current?.takeIf { state.mayAskCoachAbout(call.tafId) }
   Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
     if (!state.mayAnswerHolds) {
       // A viewer uses the taf but doesn't answer for the account.

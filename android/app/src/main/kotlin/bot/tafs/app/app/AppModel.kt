@@ -2037,11 +2037,13 @@ class AppModel(
   }
 
   /**
-   * Opens Coach from the bar. On a taf's page it's that taf's conversation: the one already open about it, else a new one.
+   * Opens Coach from the bar. On a taf's page, for whoever may ask Coach about it, it's that taf's conversation: the one already
+   * open about it, else a new one.
    * Elsewhere, the conversation open as it was.
    */
   fun openCoachOn(tafId: String?) {
-    if (tafId != null && _state.value.coachContext != tafId) improveTaf(tafId)
+    // Coach on the taf only for whoever may ask about it (it manages it): anyone else gets Coach as it is, never Improve <taf>.
+    if (tafId != null && _state.value.mayAskCoachAbout(tafId) && _state.value.coachContext != tafId) improveTaf(tafId)
   }
 
   /** Improves a taf from wherever its hold is ("Change the limit in Coach mode"): Coach opens on a new conversation about it. */
