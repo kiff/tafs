@@ -5103,7 +5103,9 @@ class AppModel(
           if (together != null && asked.step != "key_and_cards") return false
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
-          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
+          // KIFF's words for the connection's profile, as the card showed them: the approve body carries their digests, or none.
+          val shownProfile = c.grant?.let { g -> _state.value.grants.firstOrNull { it.id == g } }?.let { _state.value.profileWordsFor(it) }?.approval()
+          if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft, shownProfile)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
           // What the card drew is what the fingerprint signs: tafs cloud's mark was its prediction when the thread was read, and the
           // grant can change before the tap. A step that disagrees with it is never signed: the card is read again.
           if (!stepMatchesMark(c.signs?.card, asked.step)) {
@@ -8695,13 +8697,22 @@ class AppModel(
      * step. Null for an ask that names another grant, draft, digest or version, or a step this app doesn't know, and when
      * nothing was shown: the phone signs nothing it can't rebuild itself from what the person read.
      */
-    fun expectedApprovalMessage(asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String, shownDigest: String?, shownDraft: String?): String? {
+    fun expectedApprovalMessage(
+      asked: bot.tafs.app.kiff.ApprovalAsk, c: SetupComponent, tenant: String, shownDigest: String?, shownDraft: String?,
+      /** The digests of KIFF's words for the connection's profile as the card showed them (`ProfileWords.approval`); none shown, none. */
+      shownProfile: kotlinx.serialization.json.JsonObject? = null,
+    ): String? {
       return when (asked.step) {
         "connect" -> {
           val p = asked.planque ?: return null
           val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null
           // The digest is what the person saw, never the ask's: terms they never read are never signed.
-          if (p.grant != c.grant || shownDigest == null || digest != shownDigest) null else "tafs.connect.v1|$tenant|${c.grant}|$digest"
+          if (p.grant != c.grant || shownDigest == null || digest != shownDigest) return null
+          // The whole approve body is the one the phone builds from what was shown: the digest, and KIFF's profile words' digests
+          // when words were shown. tafs cloud's body is signed only when it's that, so another profile, other words, words left
+          // out or a field added are never approved as the owner's.
+          if (p.body != shownConnectBody(shownDigest, shownProfile)) return null
+          "tafs.connect.v1|$tenant|${c.grant}|$digest"
         }
         "cards" -> {
           val k = asked.kiff ?: return null
@@ -8725,6 +8736,15 @@ class AppModel(
         else -> null
       }
     }
+
+    /** planque's approve body for what the card showed: the digest, and `kiff_profile` only when KIFF's words were shown. */
+    fun shownConnectBody(shownDigest: String, shownProfile: kotlinx.serialization.json.JsonObject?): kotlinx.serialization.json.JsonObject =
+      kotlinx.serialization.json.JsonObject(
+        buildMap {
+          put("digest", kotlinx.serialization.json.JsonPrimitive(shownDigest))
+          shownProfile?.let { put("kiff_profile", it) }
+        },
+      )
 
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L

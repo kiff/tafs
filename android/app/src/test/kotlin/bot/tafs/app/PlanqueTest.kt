@@ -19,6 +19,7 @@ import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Base64
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -914,11 +915,24 @@ class PlanqueTest {
 
   private fun bodyOf(request: bot.tafs.app.kiff.HttpRequest) = KiffClient.json.parseToJsonElement(String(request.body!!)).jsonObject
 
-  @Test fun approveAsksTafsCloudSignsOnlyWhatItNamesAndReportsBackSigned() = runTest {
+  @Test fun aKiffProfileTheCardNeverShowedIsNeverSigned() = runTest {
     reads()
+    // The grant has no profile, so the card showed no KIFF words: a body that carries their digests isn't what was shown.
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
     val profile = ""","kiff_profile":{"profile_sha256":"${"ab".repeat(32)}","words_sha256":"${"cd".repeat(32)}"}"""
     transport.answer(askRoute, 200, signConnect(profile))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertEquals(bot.tafs.app.model.CoachWords.ASK_NOT_THIS_CARDS, m.state.value.coachNotes["a1"])
+  }
+
+  @Test fun approveAsksTafsCloudSignsOnlyWhatItNamesAndReportsBackSigned() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect(""))
     transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
     transport.answer(confirm, 200, grant("g1", "connected"))
     transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
@@ -931,11 +945,11 @@ class PlanqueTest {
     assertEquals("g1", bodyOf(ask).getValue("grant").jsonPrimitive.content)
     assertEquals(digest, bodyOf(ask).getValue("shown_digest").jsonPrimitive.content)
     assertTrue(ask.headers.getValue("Planque-Device-Signature").startsWith("t="))
-    // One prompt, in tafs cloud's words; planque gets the body tafs cloud built, as it is, kiff_profile included.
+    // One prompt, in tafs cloud's words; planque gets the body tafs cloud built, which is the one the card showed.
     assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
     val sent = bodyOf(transport.requestsTo(approve).single())
     assertEquals(digest, sent.getValue("digest").jsonPrimitive.content)
-    assertEquals("ab".repeat(32), sent.getValue("kiff_profile").jsonObject.getValue("profile_sha256").jsonPrimitive.content)
+    assertNull("no KIFF words were shown", sent["kiff_profile"])
     assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
     // The report: what came of it, signed as a setup call by this phone's key over exactly this request. Never an answer.
     val report = transport.requestsTo(reportRoute).single()
@@ -1161,6 +1175,22 @@ class PlanqueTest {
     assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent().copy(draft = "dr_1"), "t_01", null, null))
     assertNull(AppModel.expectedApprovalMessage(cards, approvalComponent(), "t_01", null, "v3"))
     assertNull(AppModel.expectedApprovalMessage(connect.copy(step = "resume"), approvalComponent(), "t_01", "d1", null))
+  }
+
+  @Test fun theConnectStepsBodyMustBeTheOneTheCardShowedWithKiffsProfileWords() {
+    fun ask(body: String) = bot.tafs.app.kiff.ApprovalAsk("ask_1", "connect", "x", "r", planque = bot.tafs.app.kiff.PlanqueAsk("g1", KiffClient.json.parseToJsonElement(body)))
+    val shown = KiffClient.json.parseToJsonElement("""{"profile_sha256":"p1","words_sha256":"w1"}""").jsonObject
+    fun expected(body: String, profile: JsonObject? = shown) = AppModel.expectedApprovalMessage(ask(body), approvalComponent(), "t_01", "d1", null, profile)
+    // The body the card implies: the digest shown, and the digests of KIFF's words as shown.
+    assertEquals("tafs.connect.v1|t_01|g1|d1", expected("""{"digest":"d1","kiff_profile":{"profile_sha256":"p1","words_sha256":"w1"}}"""))
+    // Another profile, other words, the words left out, a field added: nothing is signed.
+    assertNull(expected("""{"digest":"d1","kiff_profile":{"profile_sha256":"p2","words_sha256":"w1"}}"""))
+    assertNull(expected("""{"digest":"d1","kiff_profile":{"profile_sha256":"p1","words_sha256":"w2"}}"""))
+    assertNull(expected("""{"digest":"d1"}"""))
+    assertNull(expected("""{"digest":"d1","kiff_profile":{"profile_sha256":"p1","words_sha256":"w1"},"tools":["send"]}"""))
+    // No words shown: the body carries none, and one that carries some isn't signed.
+    assertEquals("tafs.connect.v1|t_01|g1|d1", expected("""{"digest":"d1"}""", profile = null))
+    assertNull(expected("""{"digest":"d1","kiff_profile":{"profile_sha256":"p1","words_sha256":"w1"}}""", profile = null))
   }
 
   @Test fun tafsCloudUnreachableLeavesTheCardWithAWordAndNothingSigned() = runTest {
