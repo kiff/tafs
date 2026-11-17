@@ -65,11 +65,13 @@ describe("Coach's wording rules", () => {
       "Conecto Google Sheets en modo lectura de celdas solamente.", "Collego Google Sheets in lettura delle celle soltanto.",
       "Ik koppel Google Sheets alleen om te lezen.", "Ligo o Google Sheets em leitura das células apenas.",
       "Je connecte Google Sheets, lecture uniquement.",
+      // Said of the connection, adverbially (legal-i18n, after Eval 44099835231): es "sólo para leer", pt "apenas para leitura".
+      "Conecto Gmail, sólo para leer.", "Conecto Google Sheets solo para lectura.", "A ligar o Gmail, apenas para leitura.", "Ligo o Google Sheets só para ler.",
     ]) {
       expect(claims(bad), bad).toBe(true);
     }
     for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
-      "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once."]) {
+      "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "El taf solo lee los correos nuevos.", "O taf só lê as linhas novas da folha.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once."]) {
       expect(claims(good), good).toBe(false);
     }
   });

@@ -107,6 +107,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "no puede (?:cambiar|modificar) nada",
       "ningún cambio",
       "lectura (?:solamente|únicamente)",
+      "(?:solo|sólo|solamente|únicamente) para (?:leer|lectura)",
       "en (?:modo )?lectura(?: \\pL+){0,3} (?:solamente|únicamente)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
@@ -243,6 +244,7 @@ export const COACH_WORDING: readonly Wording[] = [
       "não pode (?:mudar|alterar|modificar) nada",
       "nenhuma alteração",
       "leitura (?:apenas|somente)",
+      "(?:apenas|só|somente) para (?:leitura|ler)",
       "em (?:modo de )?leitura(?: \\pL+){0,3} (?:apenas|somente)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
