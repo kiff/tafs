@@ -124,4 +124,44 @@ class TabletScreenshots {
     compose.waitForIdle()
     shot("overview-needs-you")
   }
+
+  private fun kiffActions() = bot.tafs.app.views.TafActions(
+    answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
+    sendChat = { _, _, _, _ -> }, issuer = "KIFF",
+    doors = bot.tafs.app.views.DoorActions({}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
+    coach = bot.tafs.app.views.CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}),
+    connections = bot.tafs.app.views.ConnectionActions({}, { false }),
+  )
+
+  private fun page(state: bot.tafs.app.app.AppState) = compose.setContent {
+    TafsTheme {
+      CompositionLocalProvider(LocalBiometry provides "your fingerprint") {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(bot.tafs.app.design.Theme.background)) {
+          bot.tafs.app.views.TafDetailView("refunds-1", state, kiffActions(), onBack = {}, onHalt = {}, onUsage = {}, onVersions = {}, showBack = false)
+        }
+      }
+    }
+  }
+
+  /** Beside the iPad's `Taf-setup-tab-inside-starts-when.PNG`: Starts when in the page's place, with a round Back and its title. */
+  @Test fun startsWhenPushed() {
+    kiffTablet()
+    page(kiffState().copy(knobs = mapOf("refunds-1" to bot.tafs.app.kiff.KnobWire(wakes = listOf(bot.tafs.app.kiff.KnobWire.Item(id = "s1", kind = "schedule", label = "Every day at 09:00", words = "Every day at 09:00"))))))
+    compose.onNode(hasText("Setup") and hasClickAction()).performClick()
+    compose.waitForIdle()
+    compose.onAllNodes(androidx.compose.ui.test.hasContentDescription(bot.tafs.app.model.SetupWords.STARTS_WHEN, substring = true) and hasClickAction())[0].performClick()
+    compose.waitForIdle()
+    shot("starts-when")
+  }
+
+  /** Beside the iPad's `Taf-activity-tab.PNG`: Activity's filters as tinted pills, amber for the one chosen. */
+  @Test fun activityFilters() {
+    kiffTablet()
+    val choices = listOf("all" to "All", "done" to "Done", "held" to "Held", "refused" to "Refused").map { (id, title) -> bot.tafs.app.kiff.ActivityChoice(id, title) }
+    val pageOne = bot.tafs.app.kiff.TafActivityPage(filters = choices)
+    page(kiffState().copy(activityPages = mapOf("refunds-1:all:" to bot.tafs.app.app.SourcePages(listOf(pageOne)))))
+    compose.onNode(hasText("Activity") and hasClickAction()).performClick()
+    compose.waitForIdle()
+    shot("activity-filters")
+  }
 }
