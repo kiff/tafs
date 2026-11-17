@@ -29,6 +29,14 @@ data class Passkey(
 ) {
   /** Only an account passkey with an id can be removed from here: a computer's own goes with its device. */
   val removable: Boolean get() = id != null && deviceId == null
+
+  companion object {
+    /**
+     * Whether removing [passkey] leaves no passkey that can approve. Every passkey KIFF lists approves, a computer's own included,
+     * so Remove warns only when none other is left (`settings.devices.passkey_remove_last`), as on Windows and iOS.
+     */
+    fun removesLast(passkey: Passkey, among: List<Passkey>): Boolean = among.none { it != passkey }
+  }
 }
 
 @Serializable

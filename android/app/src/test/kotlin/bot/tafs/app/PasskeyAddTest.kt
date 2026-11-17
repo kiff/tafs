@@ -7,6 +7,8 @@ import bot.tafs.app.kiff.Passkey
 import bot.tafs.app.kiff.PasskeyRegistration
 import bot.tafs.app.model.Words
 import java.time.Instant
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -171,5 +173,39 @@ class PasskeyAddTest {
     assertTrue(m.removePasskey(Passkey(id = "pk_1", name = "Pixel 8")))
     assertEquals(listOf(Words.Settings.Devices.passkeyRemovePrompt(name = "Pixel 8")), auth.fingerprints)
     assertEquals(1, transport.requestsTo("DELETE /v1/me/passkeys/pk_1").size)
+  }
+
+  @Test fun removingTheLastPasskeyThatCanApproveWarnsFirst() {
+    val phone = Passkey(id = "pk_1", name = "Pixel 8")
+    val computer = Passkey(name = "Office PC", deviceId = "dev_9")
+    val ipad = Passkey(id = "pk_2", name = "iPad")
+    assertFalse("phone + computer: the computer's own still approves", Passkey.removesLast(phone, listOf(phone, computer)))
+    assertTrue("phone alone: warned", Passkey.removesLast(phone, listOf(phone)))
+    assertFalse("phone + iPad: no warning", Passkey.removesLast(phone, listOf(phone, ipad)))
+    assertEquals(
+      "This is your only passkey that can approve. Without it, you need another device that can approve.",
+      Words.Settings.Devices.passkeyRemoveLast,
+    )
+  }
+
+  @Test fun aReadFromBeforeARemovalNeverBringsTheRemovedPasskeyBack() = runTest {
+    val both = """{"passkeys":[{"id":"pk_1","name":"Pixel 8"},{"id":"pk_2","name":"iPad"}]}"""
+    val m = model()
+    // Whatever the model read on its own first, the list now has both.
+    transport.answer("GET /v1/me/passkeys", 200, both)
+    repeat(3) { if (m.state.value.passkeys.size != 2) m.refreshPasskeys() }
+    assertEquals(listOf("pk_1", "pk_2"), m.state.value.passkeys.map { it.id })
+    // A read starts and is slow; it will answer with the list from before the removal.
+    val slow = transport.holdNext("GET /v1/me/passkeys")
+    val reading = launch { m.refreshPasskeys() }
+    runCurrent()
+    transport.answer("DELETE /v1/me/passkeys/pk_1", 204, "")
+    transport.answer("GET /v1/me/passkeys", 200, """{"passkeys":[{"id":"pk_2","name":"iPad"}]}""")
+    assertTrue(m.removePasskey(Passkey(id = "pk_1", name = "Pixel 8")))
+    assertEquals(listOf("pk_2"), m.state.value.passkeys.map { it.id })
+    // The slow read ends now, with both: it started before the removal, so it's dropped.
+    slow.complete(Unit)
+    reading.join()
+    assertEquals(listOf("pk_2"), m.state.value.passkeys.map { it.id })
   }
 }
