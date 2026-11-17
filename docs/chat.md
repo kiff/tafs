@@ -221,8 +221,9 @@ that does the same:
    be the owner's message in the thread: its words match (`SetupThread.matchesSent`), and it's
    not in `sentBefore`, so a reply that came first or an older copy of the same words never
    takes it. It can also be the words held for a run at work (`steer|i`), or the ones queued
-   behind it (`queued`). It can also be the message's Not sent bubble, with Retry. In Coach's chat,
-   an answered card also takes the pin, since its answer starts Coach's next answer (the 870 test).
+   behind it (`queued`). In Coach's chat, an answered card also takes the pin, since its answer
+   starts Coach's next answer (the 870 test). A message that couldn't go takes no pin: the chat
+   goes to its end, where its Not sent bubble and Retry are, as on Android.
 3. **The room** under the thread is the screen's height less the turn: the pinned row's top to
    the thread's last row, measured as laid out (`PinnedTurn`). It's a whole screen until the
    turn is measured. As the work and the answer grow, the room shrinks by as much, so nothing
@@ -245,11 +246,10 @@ that does the same:
 8. **Coming back from another app changes nothing.** Taking the room away left a shorter
    thread scrolled past its end, blank (the 845 test).
 
-`ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat.
+`ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat, and a message that couldn't go
+(`-sampleSendFails`).
 
-The two apps differ in two places. A message that couldn't go keeps the pin on iOS, on its Not
-sent bubble, and Retry leaves the pin on a row that's gone. Android lets the pin go and goes to
-the end. iOS is to follow Android here. Also, only iOS pins Coach's answered card.
+The two apps differ in one place: only iOS pins Coach's answered card.
 
 With no message pinned (a chat just opened, or a reply that came without the owner sending),
 the thread follows its end. While a run works, the dots and then its answer are one row at

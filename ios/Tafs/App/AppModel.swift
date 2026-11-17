@@ -5050,6 +5050,12 @@ final class AppModel: ObservableObject {
         chats[tafID, default: []].append(pending)
         if mode != .sample { chatSent[tafID, default: []].append(pending) }
 
+        if mode == .sample, Screenshots.sampleSendFails {
+            // For the UI test only: the message isn't sent, as when tafs cloud can't be reached.
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            keepUnsent(text, tafID, why: Words.Chat.notOnCloud)
+            return .kept
+        }
         if mode == .sample {
             // The sample answers as a taf does (kiff/tafs#285): it thinks, takes a step, then
             // writes, into the live answer; then the answer is the thread's, with its work.
@@ -9896,6 +9902,9 @@ enum Screenshots {
         let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
         return enabled && s > 0 ? s : nil
     }
+    /// `-sampleSendFails YES`: the sample taf's chat keeps each message as not sent, for a UI test that a
+    /// message that couldn't go lets the pin go and the chat goes to its end, as on Android.
+    static var sampleSendFails: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleSendFails") }
     /// `-listSettlesOnReturn YES`: the list opens on its first taf, as for a person, and each
     /// time the app comes back its last taf moves to the top, as when another was used
     /// meanwhile: for a UI test that a pick stays open when the list settles (the 901 test).
