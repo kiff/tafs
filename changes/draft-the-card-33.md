@@ -1,0 +1,1 @@
+- **Rules: a column-only write says where that's kept, as its own sentence** (`draft-the-card@33`). The clause sat inside a parenthetical in @32, and Coach missed it once in three runs (Eval 44023858161, Replay run 3). It now reads: a rule that keeps a write to one column ends "(that column is in its instructions)", unless the request fixes that column.
