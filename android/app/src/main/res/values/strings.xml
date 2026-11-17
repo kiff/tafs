@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Settings → Face ID &amp; Passcode</string>
     <string name="approval_settings_path_mac_touch_id">System Settings → Touch ID &amp; Password</string>
     <string name="approval_settings_path_touch_id">Settings → Touch ID &amp; Passcode</string>
+    <string name="approval_settings_path_windows">Settings → Accounts → Sign-in options</string>
     <string name="approval_state_none_enrolled">No fingerprint is set up on this phone. Add one in its settings, then come back.</string>
     <string name="approval_state_ready">Approvals are set up on this phone.</string>
     <string name="approval_state_temporarily_unavailable">The fingerprint sensor can\'t be used just now. Wait a moment, or unlock the phone once, then check again.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">How is it going?</string>
     <string name="coach_improve_why_refused">Why was something refused or held?</string>
     <string name="coach_improve_line">Say what should change, or ask how it\'s going. Coach mode starts from what %1$s did and what its Card allows.</string>
+    <string name="coach_improve_no_files">Files go with your next message: send this one first, then attach them.</string>
     <string name="coach_improve_taf">Improve %1$s</string>
     <string name="coach_intro">Name an app for your taf, like your payment provider.</string>
     <string name="coach_kiff_counts_way">KIFF counts it this way</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">This %1$s wasn\'t added: %2$s. Show a new code and try again.</string>
     <string name="pair_from_sign_in">Already use tafs on your phone? Add this %1$s with it.</string>
     <string name="pair_keychain_refused">This Mac couldn\'t save its sign-in to the Keychain (error %1$s), so it wasn\'t added. Show a new code and try again.</string>
+    <string name="pair_keyring_refused">This computer couldn\'t save its sign-in, so it wasn\'t added: it needs a keyring that\'s running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again.</string>
     <string name="pair_new_code">Show a new code</string>
     <string name="pair_passkey_why_body">It stays on this %1$s, behind %2$s. With it, this %1$s approves your tafs\' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.</string>
     <string name="pair_passkey_why_go">Make the passkey</string>

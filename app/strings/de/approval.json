@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Einstellungen → Face ID & Code",
   "approval.settings_path.mac_touch_id": "Systemeinstellungen → Touch ID & Passwort",
   "approval.settings_path.touch_id": "Einstellungen → Touch ID & Code",
+  "approval.settings_path.windows": "Einstellungen → Konten → Anmeldeoptionen",
   "approval.state.none_enrolled": "Auf diesem Telefon ist kein Fingerabdruck eingerichtet. Füge in seinen Einstellungen einen hinzu und komm dann zurück.",
   "approval.state.ready": "Genehmigungen sind auf diesem Telefon eingerichtet.",
   "approval.state.temporarily_unavailable": "Der Fingerabdrucksensor kann gerade nicht verwendet werden. Warte einen Moment oder entsperre das Telefon einmal und prüfe dann erneut.",

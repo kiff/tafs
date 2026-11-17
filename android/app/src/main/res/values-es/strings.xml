@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Ajustes → Face ID y código</string>
     <string name="approval_settings_path_mac_touch_id">Ajustes del Sistema → Touch ID y contraseña</string>
     <string name="approval_settings_path_touch_id">Ajustes → Touch ID y código</string>
+    <string name="approval_settings_path_windows">Configuración → Cuentas → Opciones de inicio de sesión</string>
     <string name="approval_state_none_enrolled">No hay ninguna huella configurada en este teléfono. Añade una en sus ajustes y vuelve.</string>
     <string name="approval_state_ready">Las aprobaciones están configuradas en este teléfono.</string>
     <string name="approval_state_temporarily_unavailable">Ahora mismo no se puede usar el sensor de huellas. Espera un momento, o desbloquea el teléfono una vez, y vuelve a comprobarlo.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">¿Cómo va?</string>
     <string name="coach_improve_why_refused">¿Por qué algo fue rechazado o retenido?</string>
     <string name="coach_improve_line">Di qué debería cambiar, o pregunta cómo va. El modo Coach parte de lo que hizo %1$s y de lo que permite su Card.</string>
+    <string name="coach_improve_no_files">Los archivos van con tu próximo mensaje: envía primero este y luego adjúntalos.</string>
     <string name="coach_improve_taf">Mejorar %1$s</string>
     <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos.</string>
     <string name="coach_kiff_counts_way">KIFF lo cuenta así</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">Este %1$s no se añadió: %2$s. Muestra un código nuevo y vuelve a intentarlo.</string>
     <string name="pair_from_sign_in">¿Ya usas tafs en tu teléfono? Añade este %1$s con él.</string>
     <string name="pair_keychain_refused">Este Mac no pudo guardar su inicio de sesión en el llavero (error %1$s), así que no se añadió. Muestra un código nuevo y vuelve a intentarlo.</string>
+    <string name="pair_keyring_refused">Este ordenador no pudo guardar su inicio de sesión, así que no se añadió: necesita un llavero en marcha y desbloqueado, como GNOME Keyring, KWallet o KeePassXC. Configura uno o desbloquéalo, y después muestra un código nuevo y vuelve a intentarlo.</string>
     <string name="pair_new_code">Mostrar un código nuevo</string>
     <string name="pair_passkey_why_body">Se queda en este %1$s, protegida por %2$s. Con ella, este %1$s aprueba las acciones de tus tafs, y nada se aprueba sin ti. A continuación, Windows te pedirá tu cara, tu huella o tu PIN.</string>
     <string name="pair_passkey_why_go">Crear la llave de acceso</string>

@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Definições → Face ID e código</string>
     <string name="approval_settings_path_mac_touch_id">Definições do Sistema → Touch ID e palavra-passe</string>
     <string name="approval_settings_path_touch_id">Definições → Touch ID e código</string>
+    <string name="approval_settings_path_windows">Definições → Contas → Opções de início de sessão</string>
     <string name="approval_state_none_enrolled">Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.</string>
     <string name="approval_state_ready">As aprovações estão configuradas neste telefone.</string>
     <string name="approval_state_temporarily_unavailable">Não é possível usar o sensor de impressões digitais neste momento. Aguarde um pouco, ou desbloqueie o telefone uma vez, e verifique novamente.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Como está a correr?</string>
     <string name="coach_improve_why_refused">Porque é que algo foi recusado ou retido?</string>
     <string name="coach_improve_line">Diga o que deve mudar, ou pergunte como está a correr. O modo Coach parte do que %1$s fez e do que o seu Card permite.</string>
+    <string name="coach_improve_no_files">Os ficheiros vão com a próxima mensagem: envie primeiro esta e depois anexe-os.</string>
     <string name="coach_improve_taf">Melhorar %1$s</string>
     <string name="coach_intro">Indique uma app para o seu taf, como o seu fornecedor de pagamentos.</string>
     <string name="coach_kiff_counts_way">O KIFF conta desta forma</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">Este %1$s não foi adicionado: %2$s. Mostre um código novo e tente outra vez.</string>
     <string name="pair_from_sign_in">Já usa o tafs no telemóvel? Adicione este %1$s com ele.</string>
     <string name="pair_keychain_refused">Este Mac não conseguiu guardar o início de sessão no porta-chaves (erro %1$s), por isso não foi adicionado. Mostre um código novo e tente outra vez.</string>
+    <string name="pair_keyring_refused">Este computador não conseguiu guardar o início de sessão, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez.</string>
     <string name="pair_new_code">Mostrar um código novo</string>
     <string name="pair_passkey_why_body">Fica neste %1$s, protegida pelo %2$s. Com ela, este %1$s aprova as ações dos seus tafs, e nada é aprovado sem si. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.</string>
     <string name="pair_passkey_why_go">Criar a chave de acesso</string>

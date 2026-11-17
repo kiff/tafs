@@ -145,6 +145,7 @@ object Words {
       val faceId: String get() = Res.s(R.string.approval_settings_path_face_id)
       val macTouchId: String get() = Res.s(R.string.approval_settings_path_mac_touch_id)
       val touchId: String get() = Res.s(R.string.approval_settings_path_touch_id)
+      val windows: String get() = Res.s(R.string.approval_settings_path_windows)
     }
     object State {
       val noneEnrolled: String get() = Res.s(R.string.approval_state_none_enrolled)
@@ -683,6 +684,7 @@ object Words {
       val whyRefused: String get() = Res.s(R.string.coach_improve_why_refused)
     }
     fun improveLine(name: String): String = Res.s(R.string.coach_improve_line, name)
+    val improveNoFiles: String get() = Res.s(R.string.coach_improve_no_files)
     fun improveTaf(taf: String): String = Res.s(R.string.coach_improve_taf, taf)
     val intro: String get() = Res.s(R.string.coach_intro)
     val kiffCountsWay: String get() = Res.s(R.string.coach_kiff_counts_way)
@@ -1480,6 +1482,7 @@ object Words {
     fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why, Words.demonstrative(device, capital = true))
     fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device, Words.demonstrative(device))
     fun keychainRefused(code: String): String = Res.s(R.string.pair_keychain_refused, code)
+    val keyringRefused: String get() = Res.s(R.string.pair_keyring_refused)
     val newCode: String get() = Res.s(R.string.pair_new_code)
     fun passkeyWhyBody(device: String, biometry: String): String = Res.s(R.string.pair_passkey_why_body, device, biometry, Words.demonstrative(device))
     val passkeyWhyGo: String get() = Res.s(R.string.pair_passkey_why_go)

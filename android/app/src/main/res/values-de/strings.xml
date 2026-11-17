@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Einstellungen → Face ID &amp; Code</string>
     <string name="approval_settings_path_mac_touch_id">Systemeinstellungen → Touch ID &amp; Passwort</string>
     <string name="approval_settings_path_touch_id">Einstellungen → Touch ID &amp; Code</string>
+    <string name="approval_settings_path_windows">Einstellungen → Konten → Anmeldeoptionen</string>
     <string name="approval_state_none_enrolled">Auf diesem Telefon ist kein Fingerabdruck eingerichtet. Füge in seinen Einstellungen einen hinzu und komm dann zurück.</string>
     <string name="approval_state_ready">Genehmigungen sind auf diesem Telefon eingerichtet.</string>
     <string name="approval_state_temporarily_unavailable">Der Fingerabdrucksensor kann gerade nicht verwendet werden. Warte einen Moment oder entsperre das Telefon einmal und prüfe dann erneut.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Wie läuft es?</string>
     <string name="coach_improve_why_refused">Warum wurde etwas abgelehnt oder zurückgehalten?</string>
     <string name="coach_improve_line">Sag, was sich ändern soll, oder frag, wie es läuft. Der Coach-Modus geht davon aus, was %1$s getan hat und was seine Card erlaubt.</string>
+    <string name="coach_improve_no_files">Dateien kommen mit deiner nächsten Nachricht: Sende zuerst diese, dann häng sie an.</string>
     <string name="coach_improve_taf">%1$s verbessern</string>
     <string name="coach_intro">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter.</string>
     <string name="coach_kiff_counts_way">KIFF zählt es so</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">Dieser %1$s wurde nicht hinzugefügt: %2$s. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_from_sign_in">Nutzt du tafs schon auf deinem Handy? Füge diesen %1$s damit hinzu.</string>
     <string name="pair_keychain_refused">Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$s) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.</string>
+    <string name="pair_keyring_refused">Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_new_code">Neuen Code zeigen</string>
     <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
     <string name="pair_passkey_why_go">Passkey anlegen</string>

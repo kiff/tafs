@@ -91,6 +91,7 @@
   "coach.improve.how_is_it_going": "How is it going?",
   "coach.improve.why_refused": "Why was something refused or held?",
   "coach.improve_line": "Say what should change, or ask how it's going. Coach mode starts from what {name} did and what its Card allows.",
+  "coach.improve_no_files": "Files go with your next message: send this one first, then attach them.",
   "coach.improve_taf": "Improve {taf}",
   "coach.intro": "Name an app for your taf, like your payment provider.",
   "coach.kiff_counts_way": "KIFF counts it this way",

@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Definições → Face ID e código",
   "approval.settings_path.mac_touch_id": "Definições do Sistema → Touch ID e palavra-passe",
   "approval.settings_path.touch_id": "Definições → Touch ID e código",
+  "approval.settings_path.windows": "Definições → Contas → Opções de início de sessão",
   "approval.state.none_enrolled": "Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.",
   "approval.state.ready": "As aprovações estão configuradas neste telefone.",
   "approval.state.temporarily_unavailable": "Não é possível usar o sensor de impressões digitais neste momento. Aguarde um pouco, ou desbloqueie o telefone uma vez, e verifique novamente.",

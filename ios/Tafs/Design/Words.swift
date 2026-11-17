@@ -262,6 +262,8 @@ enum Words {
             static var macTouchId: String { Words.line("approval.settings_path.mac_touch_id") }
             /// Settings → Touch ID & Passcode
             static var touchId: String { Words.line("approval.settings_path.touch_id") }
+            /// Settings → Accounts → Sign-in options
+            static var windows: String { Words.line("approval.settings_path.windows") }
         }
         enum State {
             /// No fingerprint is set up on this phone. Add one in its settings, then come back.
@@ -1257,6 +1259,8 @@ enum Words {
         }
         /// Say what should change, or ask how it's going. Coach mode starts from what {name} did and what its Card allows.
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
+        /// Files go with your next message: send this one first, then attach them.
+        static var improveNoFiles: String { Words.line("coach.improve_no_files") }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
         /// Name an app for your taf, like your payment provider.
@@ -2741,6 +2745,8 @@ enum Words {
         static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device, Words.demonstrative(device)) }
         /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
         static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
+        /// This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again.
+        static var keyringRefused: String { Words.line("pair.keyring_refused") }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
         /// It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.

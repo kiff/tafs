@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Réglages → Face ID et code</string>
     <string name="approval_settings_path_mac_touch_id">Réglages Système → Touch ID et mot de passe</string>
     <string name="approval_settings_path_touch_id">Réglages → Touch ID et code</string>
+    <string name="approval_settings_path_windows">Paramètres → Comptes → Options de connexion</string>
     <string name="approval_state_none_enrolled">Aucune empreinte n\'est configurée sur ce téléphone. Ajoutez-en une dans ses paramètres, puis revenez.</string>
     <string name="approval_state_ready">Les approbations sont configurées sur ce téléphone.</string>
     <string name="approval_state_temporarily_unavailable">Le capteur d\'empreintes ne peut pas être utilisé pour le moment. Patientez un instant, ou déverrouillez le téléphone une fois, puis vérifiez à nouveau.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Comment ça se passe ?</string>
     <string name="coach_improve_why_refused">Pourquoi quelque chose a-t-il été refusé ou retenu ?</string>
     <string name="coach_improve_line">Dites ce qui doit changer, ou demandez comment ça se passe. Le mode Coach part de ce que %1$s a fait et de ce que sa Card autorise.</string>
+    <string name="coach_improve_no_files">Les fichiers partent avec votre prochain message : envoyez d\'abord celui-ci, puis joignez-les.</string>
     <string name="coach_improve_taf">Améliorer %1$s</string>
     <string name="coach_intro">Nommez une app pour votre taf, comme votre prestataire de paiement.</string>
     <string name="coach_kiff_counts_way">KIFF le compte ainsi</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">%3$s n\'a pas été ajouté : %2$s. Affichez un nouveau code et réessayez.</string>
     <string name="pair_from_sign_in">Vous utilisez déjà tafs sur votre téléphone ? Ajoutez %2$s avec lui.</string>
     <string name="pair_keychain_refused">Ce Mac n\'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$s), il n\'a donc pas été ajouté. Affichez un nouveau code et réessayez.</string>
+    <string name="pair_keyring_refused">Cet ordinateur n\'a pas pu enregistrer sa connexion, il n\'a donc pas été ajouté : il lui faut un trousseau actif et déverrouillé, comme GNOME Keyring, KWallet ou KeePassXC. Configurez-en un ou déverrouillez-le, puis affichez un nouveau code et réessayez.</string>
     <string name="pair_new_code">Afficher un nouveau code</string>
     <string name="pair_passkey_why_body">Elle reste sur %3$s, protégée par %2$s. Avec elle, %3$s approuve les actions de vos tafs, et rien n\'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.</string>
     <string name="pair_passkey_why_go">Créer la clé d\'accès</string>

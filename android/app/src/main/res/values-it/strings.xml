@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Impostazioni → Face ID e codice</string>
     <string name="approval_settings_path_mac_touch_id">Impostazioni di Sistema → Touch ID e password</string>
     <string name="approval_settings_path_touch_id">Impostazioni → Touch ID e codice</string>
+    <string name="approval_settings_path_windows">Impostazioni → Account → Opzioni di accesso</string>
     <string name="approval_state_none_enrolled">Nessuna impronta è configurata su questo telefono. Aggiungine una nelle sue impostazioni, poi torna qui.</string>
     <string name="approval_state_ready">Le approvazioni sono configurate su questo telefono.</string>
     <string name="approval_state_temporarily_unavailable">Il sensore di impronte non può essere usato ora. Attendi un attimo, o sblocca il telefono una volta, poi controlla di nuovo.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Come sta andando?</string>
     <string name="coach_improve_why_refused">Perché qualcosa è stato rifiutato o trattenuto?</string>
     <string name="coach_improve_line">Di\' cosa dovrebbe cambiare, o chiedi come sta andando. La modalità Coach parte da ciò che %1$s ha fatto e da ciò che la sua Card consente.</string>
+    <string name="coach_improve_no_files">I file vanno con il prossimo messaggio: invia prima questo, poi allegali.</string>
     <string name="coach_improve_taf">Migliora %1$s</string>
     <string name="coach_intro">Indica un\'app per il tuo taf, come il tuo fornitore di pagamenti.</string>
     <string name="coach_kiff_counts_way">KIFF lo conteggia così</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">Questo %1$s non è stato aggiunto: %2$s. Mostra un nuovo codice e riprova.</string>
     <string name="pair_from_sign_in">Usi già tafs sul telefono? Aggiungi questo %1$s con il telefono.</string>
     <string name="pair_keychain_refused">Questo Mac non è riuscito a salvare l\'accesso nel portachiavi (errore %1$s), quindi non è stato aggiunto. Mostra un nuovo codice e riprova.</string>
+    <string name="pair_keyring_refused">Questo computer non è riuscito a salvare l\'accesso, quindi non è stato aggiunto: serve un portachiavi attivo e sbloccato, come GNOME Keyring, KWallet o KeePassXC. Configurane uno o sbloccalo, poi mostra un nuovo codice e riprova.</string>
     <string name="pair_new_code">Mostra un nuovo codice</string>
     <string name="pair_passkey_why_body">Resta su questo %1$s, protetta da %2$s. Così questo %1$s può approvare le azioni dei tuoi tafs, e nulla viene approvato senza di te. Poi Windows ti chiederà il volto, l\'impronta digitale o il PIN.</string>
     <string name="pair_passkey_why_go">Crea la passkey</string>

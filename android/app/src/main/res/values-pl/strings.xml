@@ -137,6 +137,7 @@
     <string name="approval_settings_path_face_id">Ustawienia → Face ID i kod</string>
     <string name="approval_settings_path_mac_touch_id">Ustawienia systemowe → Touch ID i hasło</string>
     <string name="approval_settings_path_touch_id">Ustawienia → Touch ID i kod</string>
+    <string name="approval_settings_path_windows">Ustawienia → Konta → Opcje logowania</string>
     <string name="approval_state_none_enrolled">Na tym telefonie nie skonfigurowano odcisku palca. Dodaj go w ustawieniach telefonu, a potem wróć.</string>
     <string name="approval_state_ready">Zatwierdzanie jest skonfigurowane na tym telefonie.</string>
     <string name="approval_state_temporarily_unavailable">Czytnika linii papilarnych nie można teraz użyć. Poczekaj chwilę albo raz odblokuj telefon, a potem sprawdź ponownie.</string>
@@ -739,6 +740,7 @@
     <string name="coach_improve_how_is_it_going">Jak mu idzie?</string>
     <string name="coach_improve_why_refused">Dlaczego coś zostało odrzucone lub jest oczekujące?</string>
     <string name="coach_improve_line">Powiedz, co powinno się zmienić, albo zapytaj, jak idzie. Tryb Coach zaczyna od tego, co zrobił %1$s i na co pozwala jego Card.</string>
+    <string name="coach_improve_no_files">Pliki trafią do następnej wiadomości: najpierw wyślij tę, a potem je załącz.</string>
     <string name="coach_improve_taf">Ulepsz %1$s</string>
     <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności.</string>
     <string name="coach_kiff_counts_way">KIFF liczy to w ten sposób</string>
@@ -1526,6 +1528,7 @@
     <string name="pair_failed">Ten %1$s nie został dodany: %2$s. Pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_from_sign_in">Używasz już tafs na telefonie? Dodaj ten %1$s za jego pomocą.</string>
     <string name="pair_keychain_refused">Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd %1$s), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie.</string>
+    <string name="pair_keyring_refused">Ten komputer nie mógł zapisać logowania, więc nie został dodany: potrzebuje działającego, odblokowanego pęku kluczy, takiego jak GNOME Keyring, KWallet lub KeePassXC. Skonfiguruj go lub odblokuj, a potem pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_new_code">Pokaż nowy kod</string>
     <string name="pair_passkey_why_body">Zostaje na tym urządzeniu (%1$s), chroniony przez %2$s. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN.</string>
     <string name="pair_passkey_why_go">Utwórz klucz dostępu</string>

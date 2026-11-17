@@ -131,6 +131,7 @@
     <string name="approval_settings_path_face_id">Instellingen → Face ID en toegangscode</string>
     <string name="approval_settings_path_mac_touch_id">Systeeminstellingen → Touch ID en wachtwoord</string>
     <string name="approval_settings_path_touch_id">Instellingen → Touch ID en toegangscode</string>
+    <string name="approval_settings_path_windows">Instellingen → Accounts → Aanmeldingsopties</string>
     <string name="approval_state_none_enrolled">Er is geen vingerafdruk ingesteld op deze telefoon. Voeg er een toe in de instellingen en kom dan terug.</string>
     <string name="approval_state_ready">Goedkeuringen zijn ingesteld op deze telefoon.</string>
     <string name="approval_state_temporarily_unavailable">De vingerafdruksensor kan nu niet worden gebruikt. Wacht even of ontgrendel de telefoon één keer, en controleer het dan opnieuw.</string>
@@ -675,6 +676,7 @@
     <string name="coach_improve_how_is_it_going">Hoe gaat het?</string>
     <string name="coach_improve_why_refused">Waarom is iets geweigerd of vastgehouden?</string>
     <string name="coach_improve_line">Zeg wat er moet veranderen, of vraag hoe het gaat. De Coach-modus begint bij wat %1$s heeft gedaan en wat zijn Card toestaat.</string>
+    <string name="coach_improve_no_files">Bestanden gaan mee met je volgende bericht: stuur eerst dit bericht en voeg ze daarna bij.</string>
     <string name="coach_improve_taf">%1$s verbeteren</string>
     <string name="coach_intro">Noem een app voor je taf, zoals je betaalprovider.</string>
     <string name="coach_kiff_counts_way">KIFF telt het zo</string>
@@ -1422,6 +1424,7 @@
     <string name="pair_failed">Deze %1$s is niet toegevoegd: %2$s. Toon een nieuwe code en probeer het opnieuw.</string>
     <string name="pair_from_sign_in">Gebruik je tafs al op je telefoon? Voeg deze %1$s ermee toe.</string>
     <string name="pair_keychain_refused">Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout %1$s) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw.</string>
+    <string name="pair_keyring_refused">Deze computer kon zijn login niet bewaren en is dus niet toegevoegd: er is een actieve, ontgrendelde sleutelhanger nodig, zoals GNOME Keyring, KWallet of KeePassXC. Stel er een in of ontgrendel hem, toon dan een nieuwe code en probeer het opnieuw.</string>
     <string name="pair_new_code">Toon een nieuwe code</string>
     <string name="pair_passkey_why_body">Hij blijft op deze %1$s, beveiligd met %2$s. Daarmee keurt deze %1$s de acties van je tafs goed, en niets wordt goedgekeurd zonder jou. Daarna vraagt Windows om je gezicht, vingerafdruk of pincode.</string>
     <string name="pair_passkey_why_go">Passkey maken</string>
