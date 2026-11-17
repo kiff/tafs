@@ -1,1 +1,2 @@
 - **A taf's hand-off always has its heading:** a taf whose result goes to another taf writes the "Hand-off" heading every time, even with nothing to hand, and writes "Nothing to hand over" only when there's nothing; when something is handed, the section starts with what the other taf acts on.
+- **Coach never writes "read only" or "read-only":** a core rule, so it says what the taf reads instead. The wording rules hold such a message at most twice a run, and a closing message is said as written.
