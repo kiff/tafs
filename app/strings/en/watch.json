@@ -2,18 +2,49 @@
   "watch.already_answered": "Already answered, or it ended.",
   "watch.approve_on_phone": "Approve on your phone",
   "watch.as_of": "As of {time}",
+  "watch.ask": "Ask tafs",
+  "watch.ask_needs_consent": "Before you ask tafs, allow AI use in tafs on your phone.",
+  "watch.ask_not_on": "Asking from your watch isn't on yet.",
+  "watch.ask_text_only": "tafs gets your words as text, never your voice.",
   "watch.asking_phone": "Asking your phone…",
+  "watch.check_phone": "Check your phone's connection",
   "watch.coach_needs_consent": "Before you talk to Coach, allow AI use in tafs on your phone.",
+  "watch.didnt_catch": "Didn't catch that. Tap to try again.",
   "watch.glance_description": "How many need you, never what or who.",
+  "watch.halting": "Halting {taf}…",
+  "watch.halting_all": "Halting all your tafs…",
+  "watch.hear": "Hear",
   "watch.held_calls": {
     "one": "{count} held call needs you",
     "other": "{count} held calls need you"
   },
+  "watch.mic_needed": "To ask by voice, allow the microphone for tafs on this watch.",
   "watch.more_on_phone": "The rest is on your phone.",
   "watch.needs_lock": "To refuse or halt from this watch, set a screen lock on it and unlock it.",
+  "watch.needs_you_count": {
+    "one": "{count} needs you",
+    "other": "{count} need you"
+  },
+  "watch.not_sure": "Not sure it arrived",
   "watch.open_on_phone": "Open on phone",
   "watch.phone_not_reachable": "Your phone isn't in reach. Bring it closer, then try again.",
+  "watch.ready_count": {
+    "one": "{count} ready",
+    "other": "{count} ready"
+  },
   "watch.refused": "Refused. Nothing was sent.",
+  "watch.reply": "Reply",
+  "watch.result_ready": "A result is ready",
+  "watch.results_channel": "Results",
+  "watch.retry": "Retry",
+  "watch.sending": "Sending…",
+  "watch.sent": "Sent",
   "watch.sign_in_on_phone": "Sign in to tafs on your phone first.",
-  "watch.voice_text_only": "Coach gets your words as text, never your voice."
+  "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",
+  "watch.update_phone": "Update tafs on your phone, then try again.",
+  "watch.voice_text_only": "Coach gets your words as text, never your voice.",
+  "watch.working_count": {
+    "one": "{count} working",
+    "other": "{count} working"
+  }
 }

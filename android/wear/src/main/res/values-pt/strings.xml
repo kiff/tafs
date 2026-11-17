@@ -22,18 +22,49 @@
     <string name="watch_already_answered">Já respondido, ou terminado.</string>
     <string name="watch_approve_on_phone">Aprove no telemóvel</string>
     <string name="watch_as_of">Atualizado às %1$s</string>
+    <string name="watch_ask">Pedir ao tafs</string>
+    <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_ask_not_on">Pedir a partir do relógio ainda não está ativo.</string>
+    <string name="watch_ask_text_only">O tafs recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
+    <string name="watch_check_phone">Verifique a ligação do telemóvel</string>
     <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
+    <string name="watch_halting">A bloquear %1$s…</string>
+    <string name="watch_halting_all">A bloquear todos os seus tafs…</string>
+    <string name="watch_hear">Ouvir</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chamada retida precisa de si</item>
         <item quantity="other">%1$s chamadas retidas precisam de si</item>
     </plurals>
+    <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
     <string name="watch_more_on_phone">O resto está no telemóvel.</string>
     <string name="watch_needs_lock">Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s precisa de si</item>
+        <item quantity="other">%1$s precisam de si</item>
+    </plurals>
+    <string name="watch_not_sure">Não se sabe se chegou</string>
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s pronto</item>
+        <item quantity="other">%1$s prontos</item>
+    </plurals>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
+    <string name="watch_reply">Responder</string>
+    <string name="watch_result_ready">Há um resultado pronto</string>
+    <string name="watch_results_channel">Resultados</string>
+    <string name="watch_retry">Repetir</string>
+    <string name="watch_sending">A enviar…</string>
+    <string name="watch_sent">Enviado</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
+    <string name="watch_update_phone">Atualize o tafs no telemóvel e tente novamente.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s a trabalhar</item>
+        <item quantity="other">%1$s a trabalhar</item>
+    </plurals>
 </resources>

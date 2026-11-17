@@ -2,18 +2,49 @@
   "watch.already_answered": "Já respondido, ou terminado.",
   "watch.approve_on_phone": "Aprove no telemóvel",
   "watch.as_of": "Atualizado às {time}",
+  "watch.ask": "Pedir ao tafs",
+  "watch.ask_needs_consent": "Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel.",
+  "watch.ask_not_on": "Pedir a partir do relógio ainda não está ativo.",
+  "watch.ask_text_only": "O tafs recebe as suas palavras como texto, nunca a sua voz.",
   "watch.asking_phone": "A perguntar ao telemóvel…",
+  "watch.check_phone": "Verifique a ligação do telemóvel",
   "watch.coach_needs_consent": "Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.",
+  "watch.didnt_catch": "Não percebi. Toque para tentar novamente.",
   "watch.glance_description": "Quantos precisam de si, nunca o quê nem quem.",
+  "watch.halting": "A bloquear {taf}…",
+  "watch.halting_all": "A bloquear todos os seus tafs…",
+  "watch.hear": "Ouvir",
   "watch.held_calls": {
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"
   },
+  "watch.mic_needed": "Para pedir por voz, autorize o microfone para o tafs neste relógio.",
   "watch.more_on_phone": "O resto está no telemóvel.",
   "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.",
+  "watch.needs_you_count": {
+    "one": "{count} precisa de si",
+    "other": "{count} precisam de si"
+  },
+  "watch.not_sure": "Não se sabe se chegou",
   "watch.open_on_phone": "Abrir no telemóvel",
   "watch.phone_not_reachable": "O telemóvel não está ao alcance. Aproxime-o e tente novamente.",
+  "watch.ready_count": {
+    "one": "{count} pronto",
+    "other": "{count} prontos"
+  },
   "watch.refused": "Recusado. Nada foi enviado.",
+  "watch.reply": "Responder",
+  "watch.result_ready": "Há um resultado pronto",
+  "watch.results_channel": "Resultados",
+  "watch.retry": "Repetir",
+  "watch.sending": "A enviar…",
+  "watch.sent": "Enviado",
   "watch.sign_in_on_phone": "Primeiro, inicie sessão no tafs no telemóvel.",
-  "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz."
+  "watch.timing": "Escuta {listen} ms · receção {receipt} ms · resultado {result} ms",
+  "watch.update_phone": "Atualize o tafs no telemóvel e tente novamente.",
+  "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz.",
+  "watch.working_count": {
+    "one": "{count} a trabalhar",
+    "other": "{count} a trabalhar"
+  }
 }

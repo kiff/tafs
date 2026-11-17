@@ -22,18 +22,49 @@
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
+    <string name="watch_ask">Demander à tafs</string>
+    <string name="watch_ask_needs_consent">Avant de demander à tafs, autorisez l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_ask_not_on">Demander depuis la montre n\'est pas encore activé.</string>
+    <string name="watch_ask_text_only">tafs reçoit vos mots en texte, jamais votre voix.</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
+    <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
+    <string name="watch_halting">Blocage de %1$s…</string>
+    <string name="watch_halting_all">Blocage de tous vos tafs…</string>
+    <string name="watch_hear">Écouter</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s appel retenu vous attend</item>
         <item quantity="other">%1$s appels retenus vous attendent</item>
     </plurals>
+    <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
     <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s vous attend</item>
+        <item quantity="other">%1$s vous attendent</item>
+    </plurals>
+    <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s prêt</item>
+        <item quantity="other">%1$s prêts</item>
+    </plurals>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
+    <string name="watch_reply">Répondre</string>
+    <string name="watch_result_ready">Un résultat est prêt</string>
+    <string name="watch_results_channel">Résultats</string>
+    <string name="watch_retry">Réessayer</string>
+    <string name="watch_sending">Envoi…</string>
+    <string name="watch_sent">Envoyé</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s en cours</item>
+        <item quantity="other">%1$s en cours</item>
+    </plurals>
 </resources>

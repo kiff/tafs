@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Already use tafs on your phone? Add this %1$s with it.</string>
     <string name="pair_keychain_refused">This Mac couldn\'t save its sign-in to the Keychain (error %1$s), so it wasn\'t added. Show a new code and try again.</string>
     <string name="pair_new_code">Show a new code</string>
+    <string name="pair_passkey_why_body">It stays on this %1$s, behind %2$s. With it, this %1$s approves your tafs\' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.</string>
+    <string name="pair_passkey_why_go">Make the passkey</string>
+    <string name="pair_passkey_why_title">Make a passkey for this %1$s</string>
     <string name="pair_steps">On your phone, open tafs, then %1$s, %2$s, %3$s. Scan this code.</string>
     <string name="pair_title">Add this %1$s with your phone</string>
     <string name="pair_view_only_add">Add this %1$s</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Deletes every taf, its runs, chats and notes, your Cards and your connections. It can\'t be undone.</string>
     <string name="sign_in_didnt_work">Signing in didn\'t work.</string>
     <string name="sign_in_every_action_taf_takes_goes">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your approvals are signed on your phone.</string>
     <string name="sign_in_how_works">How it works</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
     <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>
@@ -2471,20 +2475,51 @@
     <string name="watch_already_answered">Already answered, or it ended.</string>
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_as_of">As of %1$s</string>
+    <string name="watch_ask">Ask tafs</string>
+    <string name="watch_ask_needs_consent">Before you ask tafs, allow AI use in tafs on your phone.</string>
+    <string name="watch_ask_not_on">Asking from your watch isn\'t on yet.</string>
+    <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
+    <string name="watch_check_phone">Check your phone\'s connection</string>
     <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
+    <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
+    <string name="watch_halting">Halting %1$s…</string>
+    <string name="watch_halting_all">Halting all your tafs…</string>
+    <string name="watch_hear">Hear</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>
     </plurals>
+    <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>
     <string name="watch_more_on_phone">The rest is on your phone.</string>
     <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s needs you</item>
+        <item quantity="other">%1$s need you</item>
+    </plurals>
+    <string name="watch_not_sure">Not sure it arrived</string>
     <string name="watch_open_on_phone">Open on phone</string>
     <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s ready</item>
+        <item quantity="other">%1$s ready</item>
+    </plurals>
     <string name="watch_refused">Refused. Nothing was sent.</string>
+    <string name="watch_reply">Reply</string>
+    <string name="watch_result_ready">A result is ready</string>
+    <string name="watch_results_channel">Results</string>
+    <string name="watch_retry">Retry</string>
+    <string name="watch_sending">Sending…</string>
+    <string name="watch_sent">Sent</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
+    <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s working</item>
+        <item quantity="other">%1$s working</item>
+    </plurals>
     <string name="work_answer_within">Answer within</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s day</item>

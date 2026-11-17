@@ -6,6 +6,8 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
+import bot.tafs.watchlink.AskLine
+import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
@@ -21,7 +23,8 @@ import kotlinx.coroutines.flow.first
  * Refuse and Halt from the wrist only take authority away, so the phone signs them with its signing key and no prompt of its
  * own, as a notification's Refuse on iPhone: the watch sends one only while its own screen lock is set and it's unlocked. The
  * approval key is never used here, and nothing on this path approves. Coach from the wrist is text only (the watch's own speech
- * input), sent as the phone's own message to Coach, after the AI consent given on the phone.
+ * input), sent as the phone's own message to Coach, after the AI consent given on the phone. Ask tafs from the wrist is text
+ * too, sent to tafs cloud as this phone's, signed with its device key: tafs cloud marks it as the watch's and hands it to one taf.
  */
 class WatchRelay(
   /** The app's model, its session restored; null when there's none to read with. */
@@ -38,17 +41,61 @@ class WatchRelay(
       is WatchLink.Accepted.Yes -> accepted.request
     }
     return when (request) {
-      is WatchRequest.NeedsYou, is WatchRequest.Tafs -> {
+      is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew. Within the floor of the
-        // last read, that read stands.
-        if (request is WatchRequest.NeedsYou && floor.due(now())) model.refresh()
+        // last read, that read stands. The brief is the one the phone holds, read with Needs you (`AppModel.refresh`): no read
+        // of its own.
+        if (request !is WatchRequest.Tafs && floor.due(now())) model.refresh()
         val state = model.state.value
-        if (state.mode != Mode.kiff) WatchReply.SignedOut else if (request is WatchRequest.NeedsYou) needsYou(state) else tafs(state)
+        when {
+          state.mode != Mode.kiff -> WatchReply.SignedOut
+          request is WatchRequest.NeedsYou -> needsYou(state)
+          request is WatchRequest.Brief -> brief(state)
+          else -> tafs(state)
+        }
       }
       is WatchRequest.Refuse -> refuse(request.holdId)
       is WatchRequest.Halt -> halt(request.tafId)
       is WatchRequest.Coach -> coach(request.text)
+      is WatchRequest.Ask -> ask(request)
+      is WatchRequest.Asks -> asks(request.since)
+    }
+  }
+
+  /**
+   * Ask tafs from the wrist (docs/watch-wear.md): the words, as text, sent to tafs cloud as this phone's, signed with its device
+   * key; tafs cloud asks for the AI consent given on the phone. It gives its receipt, the same for a retry with the same id; with no
+   * answer from it, the watch is told it may have arrived ([WatchReply.Unsure]) and retries with the same id.
+   */
+  private suspend fun ask(request: WatchRequest.Ask): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    // The AI consent is tafs cloud's to check: it refuses with `ai_consent_required`, said in the watch's words below.
+    return try {
+      val ask = model.watchAsk(request.clientId, request.text, request.replyTo) ?: return WatchReply.SignedOut
+      WatchReply.AskTaken(lineOf(ask))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: bot.tafs.app.kiff.CloudError) {
+      refusedAsk(e)
+    } catch (_: java.io.IOException) {
+      // Sent, perhaps, with no answer back: only a retry with the same id tells.
+      WatchReply.Unsure
+    }
+  }
+
+  /** The watch's asks as tafs cloud has them, updated after [since]. */
+  private suspend fun asks(since: String?): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val asks = model.watchAsks(since) ?: return WatchReply.SignedOut
+      WatchReply.AskList(asks.map(::lineOf))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: bot.tafs.app.kiff.CloudError) {
+      refusedAsk(e)
+    } catch (_: java.io.IOException) {
+      WatchReply.Failed(Words.Watch.openOnPhone)
     }
   }
 
@@ -122,6 +169,22 @@ class WatchRelay(
   }
 
   companion object {
+    /** An ask as the watch draws it: tafs cloud's state and words, the taf's name, and the checked line, as they come. */
+    fun lineOf(ask: bot.tafs.app.kiff.WatchAsk): AskLine =
+      AskLine(ask.id, ask.clientId, ask.state, ask.taf?.name, ask.line, ask.words, ask.updated)
+
+    /**
+     * tafs cloud's refusal of an ask, in its words: asking from the watch not on yet says so; 5xx, which may have come after the
+     * ask was taken, is "may have arrived", so the watch retries with the same id; anything else, tafs cloud's own words.
+     */
+    fun refusedAsk(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
+      e.code == "watch_off" -> WatchReply.Failed(Words.Watch.askNotOn)
+      e.code == "ai_consent_required" -> WatchReply.Failed(Words.Watch.askNeedsConsent)
+      e.status >= 500 -> WatchReply.Unsure
+      e.status == 401 -> WatchReply.SignedOut
+      else -> WatchReply.Failed(e.message?.takeIf { it.isNotBlank() } ?: Words.Watch.openOnPhone)
+    }
+
     /**
      * What's left of [budgetMs] for Coach's answer, the request having started at [startedMs]: the send's own time comes off it,
      * so a slow network never takes the whole answer past the watch's limit. Never below 0, never above the budget (a clock
@@ -174,6 +237,42 @@ class WatchRelay(
         )
       },
     )
+
+    /**
+     * Your brief as the phone shows it in Needs you's place (`AppState.brief`), in tafs cloud's words: the decisions still to answer
+     * here (one set aside on the phone isn't), in tafs cloud's order; Done's heading with its first two cases by name; the rest line,
+     * and the phone's own count of what Needs you holds beyond the brief. A decision about a held call the phone holds names it as
+     * Needs you does ([HeldLine.holdId]), so the watch's Refuse is Needs you's own. No brief: [WatchReply.NoBrief], and the watch
+     * shows Needs you.
+     */
+    fun brief(state: AppState): WatchReply {
+      val brief = state.brief ?: return WatchReply.NoBrief
+      val cases = brief.done.flatMap { it.cases }.map { it.name.ifEmpty { it.words } }.filter { it.isNotEmpty() }
+      return WatchReply.Brief(
+        title = brief.words.titleShown,
+        whenLine = brief.words.`when`.takeIf { it.isNotBlank() },
+        decisions = state.briefDecisions.map { d ->
+          val call = if (d.ref.kind == "hold" && d.ref.id.isNotEmpty()) state.held.firstOrNull { it.kiffId == d.ref.id } else null
+          DecisionLine(
+            id = d.id,
+            question = d.question,
+            taf = state.tafs.firstOrNull { it.cloudId != null && it.cloudId == d.ref.taf }?.name ?: call?.let { state.taf(it.tafId)?.name },
+            deadline = d.deadline,
+            urgent = d.urgent,
+            cantWait = d.cantWait,
+            refKind = d.ref.kind,
+            refId = d.ref.id,
+            holdId = call?.id,
+          )
+        },
+        more = brief.more?.words,
+        urgent = brief.words.urgentShown,
+        done = if (cases.isEmpty()) null else brief.words.doneShown,
+        doneCases = cases.take(2),
+        rest = brief.rest?.words,
+        needsYou = state.briefNeedsYouLine,
+      )
+    }
 
     /** Each taf in one line, in tafs cloud's words, and whether it, or the whole account, is halted. */
     fun tafs(state: AppState): WatchReply.Tafs = WatchReply.Tafs(

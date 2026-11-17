@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Gebruik je tafs al op je telefoon? Voeg deze %1$s ermee toe.</string>
     <string name="pair_keychain_refused">Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout %1$s) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw.</string>
     <string name="pair_new_code">Toon een nieuwe code</string>
+    <string name="pair_passkey_why_body">Hij blijft op deze %1$s, beveiligd met %2$s. Daarmee keurt deze %1$s de acties van je tafs goed, en niets wordt goedgekeurd zonder jou. Daarna vraagt Windows om je gezicht, vingerafdruk of pincode.</string>
+    <string name="pair_passkey_why_go">Passkey maken</string>
+    <string name="pair_passkey_why_title">Maak een passkey voor deze %1$s</string>
     <string name="pair_steps">Open tafs op je telefoon, dan %1$s, %2$s, %3$s. Scan deze code.</string>
     <string name="pair_title">Voeg deze %1$s toe met je telefoon</string>
     <string name="pair_view_only_add">Deze %1$s toevoegen</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Verwijdert elk taf, met zijn runs, chats en notities, je Cards en je koppelingen. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="sign_in_didnt_work">Inloggen is niet gelukt.</string>
     <string name="sign_in_every_action_taf_takes_goes">Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op deze %1$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je goedkeuringen worden ondertekend op je telefoon.</string>
     <string name="sign_in_how_works">Hoe het werkt</string>
     <string name="sign_in_ios_did_not_open_sign">iOS heeft de inlogpagina niet geopend (fout %1$s; %2$s). Probeer het opnieuw met tafs geopend.</string>
     <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze %1$s goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
@@ -2471,20 +2475,51 @@
     <string name="watch_already_answered">Al beantwoord, of beëindigd.</string>
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
     <string name="watch_as_of">Bijgewerkt om %1$s</string>
+    <string name="watch_ask">Vraag tafs</string>
+    <string name="watch_ask_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.</string>
+    <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
+    <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
+    <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
+    <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
+    <string name="watch_halting">%1$s wordt stilgezet…</string>
+    <string name="watch_halting_all">Al je tafs worden stilgezet…</string>
+    <string name="watch_hear">Beluisteren</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
     <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s wacht op jou</item>
+        <item quantity="other">%1$s wachten op jou</item>
+    </plurals>
+    <string name="watch_not_sure">Onzeker of het aankwam</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s klaar</item>
+        <item quantity="other">%1$s klaar</item>
+    </plurals>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
+    <string name="watch_reply">Antwoorden</string>
+    <string name="watch_result_ready">Er is een resultaat</string>
+    <string name="watch_results_channel">Resultaten</string>
+    <string name="watch_retry">Opnieuw</string>
+    <string name="watch_sending">Versturen…</string>
+    <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
+    <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s bezig</item>
+        <item quantity="other">%1$s bezig</item>
+    </plurals>
     <string name="work_answer_within">Antwoord binnen</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s dag</item>

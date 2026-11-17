@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- What the phone looks for to pass an ask's result to this watch (WatchLink.WATCH_CAPABILITY, docs/watch-wear.md). Read by
+         Google Play services, never by code, so res/raw/keep.xml keeps it through the release build's shrinker. -->
+    <string-array name="android_wear_capabilities" translatable="false">
+        <item>tafs_watch_app</item>
+    </string-array>
+</resources>

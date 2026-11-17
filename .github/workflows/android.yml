@@ -23,6 +23,10 @@ on:
         type: choice
         options: [phone, wear]
         default: phone
+      watch_timing:
+        description: "Watch only: show the timing readout (an internal build for a test on a real watch; never one for production)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -138,6 +142,14 @@ jobs:
         with:
           name: android-ui-test-results
           path: android/app/build/reports/androidTests
+      # The app map (docs/android-app.md, "The app map"): AppMapWalkTest's walk over every route in the sample, kept whether or
+      # not it matched app/map/android.json, so a changed map can be copied from here.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: android-app-map
+          path: android/app/build/outputs/connected_android_test_additional_output/**/app-map-android.json
+          if-no-files-found: warn
 
   # Whether this push to main raised versionCode: a release, built and sent to Play's internal track. The phone's and the
   # watch's are compared each on their own, so either one ships without the other.
@@ -305,7 +317,9 @@ jobs:
             case $f in store_password) export TAFS_UPLOAD_STORE_PASSWORD="$v";; key_password) export TAFS_UPLOAD_KEY_PASSWORD="$v";; alias) export TAFS_UPLOAD_KEY_ALIAS="$v";; esac
           done
           unset secret
-          TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
+          # The timing readout only when asked for by hand (docs/watch-wear.md): a build that a version raise starts never has it.
+          TAFS_WATCH_TIMING="${{ github.event_name == 'workflow_dispatch' && inputs.watch_timing && '1' || '' }}" \
+            TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
           rm -f "$key"
           # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
           # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.

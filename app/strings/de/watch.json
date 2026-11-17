@@ -2,18 +2,49 @@
   "watch.already_answered": "Schon beantwortet oder beendet.",
   "watch.approve_on_phone": "Genehmige auf deinem Handy",
   "watch.as_of": "Stand: {time}",
+  "watch.ask": "tafs fragen",
+  "watch.ask_needs_consent": "Bevor du tafs fragst, erlaube die KI-Nutzung in tafs auf deinem Handy.",
+  "watch.ask_not_on": "Fragen von der Uhr aus ist noch nicht an.",
+  "watch.ask_text_only": "tafs bekommt deine Worte als Text, nie deine Stimme.",
   "watch.asking_phone": "Fragt dein Handy…",
+  "watch.check_phone": "Prüf die Verbindung deines Handys",
   "watch.coach_needs_consent": "Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.",
+  "watch.didnt_catch": "Nicht verstanden. Tippe, um es erneut zu versuchen.",
   "watch.glance_description": "Wie viele dich brauchen, nie was oder wer.",
+  "watch.halting": "{taf} wird angehalten…",
+  "watch.halting_all": "Alle deine tafs werden angehalten…",
+  "watch.hear": "Anhören",
   "watch.held_calls": {
     "one": "{count} zurückgehaltener Aufruf braucht dich",
     "other": "{count} zurückgehaltene Aufrufe brauchen dich"
   },
+  "watch.mic_needed": "Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.",
   "watch.more_on_phone": "Der Rest ist auf deinem Handy.",
   "watch.needs_lock": "Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.",
+  "watch.needs_you_count": {
+    "one": "{count} braucht dich",
+    "other": "{count} brauchen dich"
+  },
+  "watch.not_sure": "Unklar, ob es ankam",
   "watch.open_on_phone": "Auf dem Handy öffnen",
   "watch.phone_not_reachable": "Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.",
+  "watch.ready_count": {
+    "one": "{count} fertig",
+    "other": "{count} fertig"
+  },
   "watch.refused": "Abgelehnt. Nichts wurde gesendet.",
+  "watch.reply": "Antworten",
+  "watch.result_ready": "Ein Ergebnis ist da",
+  "watch.results_channel": "Ergebnisse",
+  "watch.retry": "Erneut senden",
+  "watch.sending": "Wird gesendet…",
+  "watch.sent": "Gesendet",
   "watch.sign_in_on_phone": "Melde dich zuerst auf deinem Handy bei tafs an.",
-  "watch.voice_text_only": "Coach bekommt deine Worte als Text, nie deine Stimme."
+  "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",
+  "watch.update_phone": "Aktualisiere tafs auf deinem Handy und versuch es dann erneut.",
+  "watch.voice_text_only": "Coach bekommt deine Worte als Text, nie deine Stimme.",
+  "watch.working_count": {
+    "one": "{count} arbeitet",
+    "other": "{count} arbeiten"
+  }
 }

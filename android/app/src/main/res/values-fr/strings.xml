@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">Vous utilisez déjà tafs sur votre téléphone ? Ajoutez %2$s avec lui.</string>
     <string name="pair_keychain_refused">Ce Mac n\'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$s), il n\'a donc pas été ajouté. Affichez un nouveau code et réessayez.</string>
     <string name="pair_new_code">Afficher un nouveau code</string>
+    <string name="pair_passkey_why_body">Elle reste sur %3$s, protégée par %2$s. Avec elle, %3$s approuve les actions de vos tafs, et rien n\'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN.</string>
+    <string name="pair_passkey_why_go">Créer la clé d\'accès</string>
+    <string name="pair_passkey_why_title">Créer une clé d\'accès pour %2$s</string>
     <string name="pair_steps">Sur votre téléphone, ouvrez tafs, puis %1$s, %2$s, %3$s. Scannez ce code.</string>
     <string name="pair_title">Ajouter %2$s avec votre téléphone</string>
     <string name="pair_view_only_add">Ajouter %2$s</string>
@@ -2086,6 +2089,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Supprime chaque taf, ses exécutions, chats et notes, vos Cards et vos connexions. C\'est irréversible.</string>
     <string name="sign_in_didnt_work">La connexion n\'a pas fonctionné.</string>
     <string name="sign_in_every_action_taf_takes_goes">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos réponses sont signées sur %2$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos approbations sont signées sur votre téléphone.</string>
     <string name="sign_in_how_works">Comment ça marche</string>
     <string name="sign_in_ios_did_not_open_sign">iOS n\'a pas ouvert la page de connexion (erreur %1$s ; %2$s). Réessayez avec tafs ouvert.</string>
     <string name="sign_in_lead">Vos tafs agissent sous des Cards KIFF. Approuvez %2$s dans KIFF, et les Cards que vous avez émises s\'affichent ici.</string>
@@ -2471,20 +2475,51 @@
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
+    <string name="watch_ask">Demander à tafs</string>
+    <string name="watch_ask_needs_consent">Avant de demander à tafs, autorisez l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_ask_not_on">Demander depuis la montre n\'est pas encore activé.</string>
+    <string name="watch_ask_text_only">tafs reçoit vos mots en texte, jamais votre voix.</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
+    <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
+    <string name="watch_halting">Blocage de %1$s…</string>
+    <string name="watch_halting_all">Blocage de tous vos tafs…</string>
+    <string name="watch_hear">Écouter</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s appel retenu vous attend</item>
         <item quantity="other">%1$s appels retenus vous attendent</item>
     </plurals>
+    <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
     <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s vous attend</item>
+        <item quantity="other">%1$s vous attendent</item>
+    </plurals>
+    <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s prêt</item>
+        <item quantity="other">%1$s prêts</item>
+    </plurals>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
+    <string name="watch_reply">Répondre</string>
+    <string name="watch_result_ready">Un résultat est prêt</string>
+    <string name="watch_results_channel">Résultats</string>
+    <string name="watch_retry">Réessayer</string>
+    <string name="watch_sending">Envoi…</string>
+    <string name="watch_sent">Envoyé</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s en cours</item>
+        <item quantity="other">%1$s en cours</item>
+    </plurals>
     <string name="work_answer_within">Répondre sous</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s jour</item>

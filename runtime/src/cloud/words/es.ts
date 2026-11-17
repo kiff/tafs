@@ -885,4 +885,6 @@ export const es: Words = {
   ai_consent_paused_no_one: "En pausa: nadie ha permitido aún el uso de la IA para las ejecuciones de este taf. Sigue en cuanto alguien que gestiona los tafs lo permita en Cuenta.",
   ai_consent_paused_not_given: "En pausa: se retiró el uso de la IA para las ejecuciones de este taf. Sigue en cuanto se vuelva a permitir o alguien que gestiona los tafs se haga cargo.",
   ai_consent_paused_left: "En pausa: la persona cuyo permiso de IA usaban sus ejecuciones ya no está en la cuenta. Sigue en cuanto alguien que gestiona los tafs se haga cargo.",
+  // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
+  watch_ask: { accepted: "Enviado", working: "En curso", done: "Hecho", no_taf: "Ningún taf lo ha aceptado", failed: "No ha funcionado" },
 };

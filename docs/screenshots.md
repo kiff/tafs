@@ -9,6 +9,13 @@ From iOS CI's `screenshots` artifact, full set (a tag's build, or a manual run o
 workflow with `screenshots: full` and `upload` off, once no other manual run is in the
 queue; a pull request that changes a screen takes a key set). See [ios-app.md](ios-app.md).
 
+Both sets end with the smallest iPhone any available iOS runtime supports, by screen height (an
+iPhone SE where there is one), made for the run. They shoot the welcome, the tafs list and Needs you,
+in light and dark (`small-…`), each look from a fresh install. The step fails if no iPhone can be
+made, and warns if the smallest is taller than an SE. The welcome has no scroll view, so these show
+that its drawing shrinks and leaves both buttons on the screen. The key set also takes the welcome on
+the largest iPhone (`1-welcome`).
+
 <p>
   <img src="screenshots/ios/welcome.png" width="200" alt="Welcome: They taf. You kiff.">
   <img src="screenshots/ios/tafs.png" width="200" alt="Tafs: three working, two need you, a held migration on top">

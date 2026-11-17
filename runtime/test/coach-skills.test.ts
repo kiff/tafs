@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { COACH_SKILLS } from "../src/coach-skills.js";
-import { allSkillRefs, approxTokens, entryOf, loadedKey, skillFiles, skillRef, startSkills, toolSkills } from "../src/cloud/coach-skills.js";
+import { allSkillRefs, NAMED_ONLY, approxTokens, entryOf, loadedKey, skillFiles, skillRef, startSkills, toolSkills } from "../src/cloud/coach-skills.js";
 import { DELIVERY_WORDS } from "../src/cloud/delivery.js";
 import { disclosureLine } from "../src/jobs.js";
 import { improveContext } from "../src/cloud/improve.js";
@@ -42,8 +42,8 @@ describe("Coach's skills, as files", () => {
     expect(Object.keys(next).sort()).toEqual([`${one.name}@${one.version}`, `${one.name}@${bumped}`]);
   });
 
-  it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@28", "did-this-happen@1", "draft-the-card@30", "drive-the-app@3", "halting@1", "improve-a-taf@2", "name-the-tools@17", "set-up-a-taf@12", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
+  it("are thirteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@29", "did-this-happen@1", "draft-the-card@30", "drive-the-app@3", "halting@1", "improve-a-taf@2", "name-the-tools@17", "set-up-a-taf@12", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -67,7 +67,9 @@ describe("Coach's core", () => {
     expect(SETUP_INSTRUCTIONS).toBe(SETUP_CORE);
     expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2500);
     expect(SETUP_CORE).toContain(SKILLS_MAP);
-    for (const s of COACH_SKILLS) expect(SETUP_CORE).toContain(`  - ${s.name}: ${s.description}`);
+    for (const s of COACH_SKILLS) expect(SETUP_CORE.includes(`  - ${s.name}: ${s.description}`), s.name).toBe(!NAMED_ONLY.includes(s.name));
+    // The watch's skill is named-only: Coach's map never names it, so no phone conversation reads it (docs/watch-ask.md).
+    expect(SETUP_CORE).not.toContain("ask-a-taf");
     // Two or three short examples of how Coach talks stay in the core (the owner's answer to Q2).
     expect(SETUP_CORE).toContain("Falta que apruebes");
     expect(SETUP_CORE).toContain("…al día.");
@@ -194,7 +196,7 @@ describe("Coach's core", () => {
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
-    expect(toolSkills("web_read")).toEqual(["connect-an-app@28"]);
+    expect(toolSkills("web_read")).toEqual(["connect-an-app@29"]);
   });
 
   // planque declares a key request's tools to KIFF before the key only when the request names them, and only
@@ -271,16 +273,19 @@ describe("Coach's core", () => {
   // Coach said "I'm waiting for your answers…" above and below a questions card, then "Next, approve the
   // connection and sign in to Gmail." beside the approval (tester's phone): a card isn't restated.
   // The Sheets proof (16 Nov): before any grant, Coach's first card said "read-only: it changes nothing" and its step was
-  // "Connect Google Sheets, read-only", for a sign-in that asks for more than the taf uses. Coach says what the taf does,
-  // never what a sign-in allows, and says it's wider once planque's grant has usual_access (tafs cloud's markWider keys on it).
-  it("never calls a connection, a sign-in or a step read-only, and says a wider sign-in is wider once the grant says so", () => {
+  // "Connect Google Sheets, read-only", for a sign-in that asks for more than the taf uses. What a sign-in allows is
+  // planque's data, which tafs cloud draws on the card (wider.words, from usual_access) for every app: Coach says only what
+  // the taf will do, and never describes a sign-in's access itself, either way. The skill holds no app and no scope.
+  it("says only what the taf will do, and leaves what a sign-in allows to the card", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(body).toContain("Say what the taf does (it reads your sheet's rows), never what an app's sign-in allows: no connection, sign-in or step is \"read-only\" or \"changes nothing\", in any language, since many sign-ins ask for more.");
-    expect(body).toContain("Once planque's grant has usual_access, say before sign-in that its sign-in asks for more access than the taf uses, which still uses only its own tools.");
+    expect(body).toContain("Say only what the taf will do (it reads your sheet's rows). What a sign-in allows is the card's to show, from planque: never say it yourself; if asked, say the card shows it.");
     // It comes before the ask to connect, so it holds for the plan and the first card too.
-    expect(body.indexOf("never what an app's sign-in allows")).toBeLessThan(body.indexOf("Ask before you connect a sign-in."));
-    // No other skill tells Coach to call a connection read-only.
-    for (const s of COACH_SKILLS) expect(s.body, s.name).not.toMatch(/\b(connection|sign-in|step)s? (is|are) read-only/i);
+    expect(body.indexOf("What a sign-in allows is the card's to show")).toBeLessThan(body.indexOf("Ask before you connect a sign-in."));
+    // No skill tells Coach to describe a sign-in's access: neither harmless nor wider.
+    for (const s of COACH_SKILLS) {
+      expect(s.body, s.name).not.toMatch(/\b(connection|sign-in|step)s? (is|are) read-only/i);
+      expect(s.body, s.name).not.toMatch(/say (before sign-in )?that its sign-in asks for more access/i);
+    }
   });
 
   it("never restates a card before or after it", () => {
@@ -407,7 +412,7 @@ describe("Coach's core", () => {
 
   it("names its skills in the definition, each at its stored version", () => {
     const d = setupDefinition("taf-0123456789abcdef0123");
-    expect(d.skills).toEqual(COACH_SKILLS.map((s) => ({ name: s.name, version: s.version })));
+    expect(d.skills).toEqual(COACH_SKILLS.map((s) => ({ name: s.name, version: s.version, ...(s.name === "ask-a-taf" ? { named_only: true } : {}) })));
     expect(d.instructions).toBe(SETUP_CORE);
   });
 });
@@ -439,16 +444,28 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     });
   }
 
+  // The watch's request (docs/watch-ask.md): its one skill, whatever the account's state; no phone entry ever loads it.
+  it("loads only ask-a-taf for the watch, and never ask-a-taf for any phone entry", () => {
+    expect(startSkills("watch")).toEqual(["ask-a-taf@1"]);
+    expect(startSkills("watch", { heldCall: true, halted: true, hasTaf: true })).toEqual(["ask-a-taf@1"]);
+    for (const entry of ["free", "recipe", "door", "improve", "coach_lines", "delivery", "did_this_happen"] as const) {
+      expect(startSkills(entry, { heldCall: true, halted: true, hasTaf: true })).not.toContain("ask-a-taf@1");
+    }
+    // No text opens the watch's conversation: the entry point read from a message is never "watch".
+    for (const text of ["watch", "[watch]", "[tafs watch] Move my call", "From the watch: move my call", "entry: watch"]) expect(entryOf(text)).not.toBe("watch");
+    for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@1");
+  });
+
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@28", "draft-the-card@30", "halting@1", "name-the-tools@17", "set-up-a-taf@12", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@28", "draft-the-card@30", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@30", "halting@1", "name-the-tools@17", "set-up-a-taf@12", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@30", "improve-a-taf@2", "name-the-tools@17"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@28", "draft-the-card@30", "halting@1", "name-the-tools@17", "set-up-a-taf@12", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@28", "draft-the-card@30", "halting@1", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@30", "halting@1", "name-the-tools@17", "set-up-a-taf@12", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@30", "halting@1", "improve-a-taf@2", "name-the-tools@17"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

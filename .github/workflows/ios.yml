@@ -473,6 +473,65 @@ jobs:
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
+          # The smallest iPhone any available iOS runtime supports, by its screen's height in pixels
+          # (each device type's profile.plist), made for the run with simctl create: a runner lists
+          # no small iPhone of its own, and picking by name fell back to a 6.3-inch one. The step
+          # fails if none can be made, and warns if the smallest is taller than an SE's 1334 px, so
+          # a fallback is never silent. The welcome, the tafs list and Needs you, light then dark
+          # (small-…), each look from a fresh install, so the dark welcome is the welcome and not
+          # the light pass's sample session. The welcome has no scroll view, so its drawing (board
+          # 1) must shrink to leave the buttons on screen; this is where that shows. It leaves the
+          # small iPhone booted as DEVICE_ID.
+          small_pass() {
+            xcrun simctl shutdown "$DEVICE_ID" || true
+            read -r runtime smalltype height < <(python3 -c '
+          import json, os, plistlib, subprocess
+          def listed(kind):
+              return json.loads(subprocess.check_output(["xcrun", "simctl", "list", kind, "-j"]))[kind]
+          types = {t["identifier"]: t for t in listed("devicetypes")}
+          def height(identifier):
+              t = types.get(identifier)
+              if not t:
+                  return None
+              try:
+                  with open(os.path.join(t["bundlePath"], "Contents", "Resources", "profile.plist"), "rb") as f:
+                      return plistlib.load(f).get("mainScreenHeight")
+              except (OSError, KeyError):
+                  return None
+          best = None
+          for r in listed("runtimes"):
+              if r.get("platform") != "iOS" or not r.get("isAvailable"):
+                  continue
+              version = [int(p) for p in r["version"].split(".")]
+              for st in r.get("supportedDeviceTypes", []):
+                  h = height(st["identifier"])
+                  if st["name"].startswith("iPhone") and h:
+                      key = (h, [-v for v in version])
+                      if best is None or key < best[0]:
+                          best = (key, r["identifier"], st["identifier"], h)
+          print(*(best[1:] if best else ()))
+          ') || true
+            if [ -z "$smalltype" ]; then
+              echo "::error::small_pass: no iPhone device type with a known screen size in any available iOS runtime"
+              exit 1
+            fi
+            DEVICE_ID=$(xcrun simctl create tafs-small "$smalltype" "$runtime")
+            echo "small_pass: $smalltype on $runtime, $height px tall"
+            [ "$height" -le 1334 ] || echo "::warning::small_pass: the smallest iPhone here is $height px tall, taller than an SE (1334 px)"
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl bootstatus "$DEVICE_ID" -b
+            xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            for look in light dark; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+              xcrun simctl ui "$DEVICE_ID" appearance "$look"
+              suffix=""; [ "$look" = dark ] && suffix="-dark"
+              shoot "small-1-welcome$suffix"
+              shoot "small-2-tafs$suffix" -screenshots YES -tab tafs
+              shoot "small-3-needs-you$suffix" -screenshots YES -tab needs-you
+            done
+            xcrun simctl ui "$DEVICE_ID" appearance light
+          }
           # The desktop apps' reference (docs/screenshots.md, iPad reference): each screen the
           # app opens by launch argument on the 13-inch iPad, with the sidebar as a
           # signed-in account has it, in light then dark (ref-<screen>[-dark]). Sample mode: no
@@ -582,6 +641,7 @@ jobs:
           fi
           # The key set: the screens most changes touch, light and dark.
           if [ "$SET" = key ]; then
+            shoot 1-welcome
             shoot 2-tafs -screenshots YES -tab tafs
             shoot 5-taf -screenshots YES -tab tafs -screen taf
             shoot 8-setup -screenshots YES -tab tafs -screen setup
@@ -592,6 +652,7 @@ jobs:
             shoot dark-setup -screenshots YES -tab tafs -screen setup
             shoot dark-tab-account -screenshots YES -tab account
             xcrun simctl ui "$DEVICE_ID" appearance light
+            small_pass
             ls -la "$RUNNER_TEMP/shots"
             exit 0
           fi
@@ -638,6 +699,7 @@ jobs:
             shoot "dark-$screen" -screenshots YES -tab tafs -screen "$screen"
           done
           xcrun simctl ui "$DEVICE_ID" appearance light
+          small_pass
           # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
