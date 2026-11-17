@@ -660,6 +660,10 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
   batch, then the draft; the draft's submit is the confirmation, as for `card`. Without the flag, or when
   KIFF can't word the pair, it's the batch, then the Cards on the next read, as before; `connect` and
   `card` stay for apps that don't read `requests`.
+- **The phone signs only the step it showed.** At Give, the app reads `tools` again and compares the batch, the
+  Cards' draft and the pair, byte for byte, with what the step showed. On any difference it signs nothing, draws the
+  step again from the new read, and the person gives again. Cards drafted only after the batch are drawn before
+  they're given, never signed with it (iPhone and iPad: `AppModel.toolsBodies`; Windows: tafs-windows#163).
 
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than

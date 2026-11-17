@@ -1810,6 +1810,8 @@ final class AppModel: ObservableObject {
         defer { givingCoachTools = false }
         let gen = accountGeneration
         coachToolsError = nil
+        // What the step showed the person, before the read below redraws it: only its bytes are signed.
+        let shown = coachTools
         let tools: TafsCloud.CoachTools
         do {
             guard let read = try await cloud.setupRead().tools else { return false }
@@ -1831,6 +1833,13 @@ final class AppModel: ObservableObject {
             return false
         }
         guard tools.connect != nil || tools.card != nil || tools.together != nil else { return false }
+        // Only the step that was shown is signed: tafs cloud's read now must be byte for byte the batch, the
+        // Cards' draft and the pair the person read. On any difference nothing is signed; the step is drawn
+        // again from this read (above), and the person reads it and gives again.
+        guard let shown, Self.toolsBodies(shown) == Self.toolsBodies(tools) else {
+            coachToolsError = Words.Version.outOfDateCard
+            return false
+        }
         // The one confirmation: it gives Coach its Cards, and the connections go under it.
         do {
             _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.giveCard, grants: true)
@@ -1855,12 +1864,18 @@ final class AppModel: ObservableObject {
             if let connect = tools.connect { try await kiff.connectBatch(connect.body) }
             guard gen == accountGeneration else { return false }
             // tafs cloud drafts the Cards over tools KIFF holds: where it sent none with the
-            // batch, they come once the batch is in, so they're read again and given in the
-            // same step, and the person confirms once.
-            var card = tools.card
-            if card == nil, tools.connect != nil { card = try await cloud.setupRead().tools?.card }
-            guard gen == accountGeneration else { return false }
-            if let card { try await kiff.submitDraft(card.body) }
+            // batch, they come once the batch is in. The person never read them, so they're never
+            // signed here: the step is drawn again with them, and the next Give gives them.
+            if tools.card == nil, tools.connect != nil {
+                let after = try await cloud.setupRead().tools
+                guard gen == accountGeneration else { return false }
+                if after?.card != nil {
+                    showCoachTools(after)
+                    coachToolsError = Words.Version.outOfDateCard
+                    return false
+                }
+            }
+            if let card = tools.card { try await kiff.submitDraft(card.body) }
         } catch {
             if gen == accountGeneration { coachToolsError = Words.Coach.toolsNotGiven(why: error.localizedDescription) }
             return false
@@ -1868,6 +1883,12 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return false }
         await loadCoachTools()
         return coachTools?.given == true
+    }
+
+    /// The bytes Coach's tools step signs, as tafs cloud wrote them: the batch, the Cards' draft,
+    /// and the pair's two. What was shown and what's signed are compared by these alone.
+    nonisolated static func toolsBodies(_ tools: TafsCloud.CoachTools) -> [Data?] {
+        [tools.connect?.body, tools.card?.body, tools.together?.connect?.body, tools.together?.draft?.body]
     }
 
     /// The account's Coach, once tafs cloud says its tools are given; nil before. Only its held
