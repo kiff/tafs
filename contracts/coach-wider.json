@@ -23,7 +23,7 @@
           "grant": "g_1",
           "waits": "owner",
           "wider": {
-            "words": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+            "words": "The sign-in for Google Sheets can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it."
           },
           "signs": {
             "card": false,
@@ -59,7 +59,7 @@
             "grant": "g_1",
             "waits": "owner",
             "wider": {
-              "words": "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+              "words": "The sign-in for Google Sheets can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it."
             },
             "signs": {
               "card": false,

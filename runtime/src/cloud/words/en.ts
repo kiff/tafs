@@ -324,7 +324,7 @@ export const en = {
   brief_sign_in_again: "Sign in again",
   brief_connection_meanwhile: (taf: string, vendor: string) => `${taf} can't reach ${vendor} until then.`,
   brief_open_taf: "Open the taf",
-  card_wider: (vendor?: string) => `${vendor ? `The sign-in for ${vendor}` : "This sign-in"} can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools.`,
+  card_wider: (vendor?: string) => `${vendor ? `The sign-in for ${vendor}` : "This sign-in"} can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it.`,
   brief_check_meanwhile: (taf: string) => `${taf} finds no new work until its check can read again.`,
   mission_log_delivered: (done: number, held: number, refused: number) => [`${done} done`, held ? `${held} held for you` : "", refused ? `${refused} refused` : ""].filter(Boolean).join(" · "),
   business_title: "What tafs know about your business",
