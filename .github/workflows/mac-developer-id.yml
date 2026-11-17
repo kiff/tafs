@@ -16,8 +16,9 @@ name: Mac Developer ID
 #
 # The order, as the review asked:
 # 1. The Xcode project is generated in a job of its own, with no environment and no secret,
-#    by an XcodeGen release pinned by its SHA-256, and handed over as an artifact: the job that
-#    holds the keys installs and runs no tool of its own.
+#    by an XcodeGen release pinned by its SHA-256. Only what generating made or changed is handed
+#    over, never a script: the job that holds the keys installs nothing and runs only its own
+#    checkout's scripts.
 # 2. The Developer ID profiles carry webcredentials:kiff.dev, and the signed app's own
 #    entitlements are read back and must name it: without it, passkey sign-in breaks.
 # 3. The app is notarized and stapled, then checked as Gatekeeper and codesign judge it.
@@ -53,8 +54,15 @@ jobs:
             "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
           echo "$XCODEGEN_SHA256  $RUNNER_TEMP/xcodegen.zip" | shasum -a 256 -c -
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
-          cd ios && "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate
-          cd .. && tar -czf "$RUNNER_TEMP/ios.tgz" ios
+          cd ios && "$RUNNER_TEMP/xcodegen/bin/xcodegen" generate && cd ..
+          # Only what generating made or changed (the project, Info.plists, entitlements), never a
+          # script or source: the signing job runs only its own checkout's scripts.
+          { git ls-files --others -- ios; git ls-files --modified -- ios; } | sort -u > "$RUNNER_TEMP/generated.txt"
+          if grep -E '\.(sh|rb|py|swift|js)$' "$RUNNER_TEMP/generated.txt"; then
+            echo "::error::Generating the project changed a script or source file"; exit 1
+          fi
+          wc -l < "$RUNNER_TEMP/generated.txt"
+          tar -czf "$RUNNER_TEMP/ios.tgz" -T "$RUNNER_TEMP/generated.txt"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

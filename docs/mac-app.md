@@ -87,8 +87,9 @@ secrets can't be read by a pull request or by a workflow on any other branch, an
 key, certificate, password or profile. It does this, in order:
 
 0. **The project:** generated in a job of its own, with no environment and no secret, by an
-   XcodeGen release pinned by its SHA-256. It's handed to the signing job, which installs and runs
-   no tool of its own, so nothing a package brings can reach the keys.
+   XcodeGen release pinned by its SHA-256. Only what generating made or changed (the project, its
+   Info.plists and entitlements) goes to the signing job, never a script. That job installs nothing
+   and runs only its own checkout's scripts, so nothing a package brings can reach the keys.
 1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_DIRECT`), made through the
    API with the Developer ID Application certificate (`asc-profiles.rb --developer-id`): "tafs
    Developer ID CI" and "tafs notify Developer ID CI". They're made with the same capabilities as the
@@ -117,8 +118,10 @@ passed. The download page shows it within 10 minutes.
   this repository's own Developer ID Application certificate. It's not tafs-macos's: each repository
   has its own, so neither repository's key is copied to the other. Also `ASC_KEY_ID`, `ASC_ISSUER_ID`,
   `ASC_KEY_P8` and `APPLE_TEAM_ID`. The run names any that are missing.
-- **The environment's protection:** a required reviewer, deployments from `main` only, and admin
-  bypass off. A run's approval is the owner's own.
+- **The environment's protection, as it is today:** a required reviewer and deployments from `main`
+  only. Admin bypass is on, by the owner's choice. Turning it off and moving to a reviewer account
+  only the owner uses both come before any download is published. A run's approval is the owner's
+  own, in GitHub, and never a session's.
 
 **Updates:** the App Store doesn't update this copy. An updater that reads a signed feed comes in the
 next version: it tells the person a new version is ready, checks the download against the signed
