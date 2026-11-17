@@ -4076,6 +4076,19 @@ async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; ru
  * needs signing, if anything; with nothing to sign it answers Coach itself. The phone
  * signs only what it's asked, and never builds an answer.
  */
+/**
+ * One line per Approve on a card (approvalAskRoute): which card and grant, whether the card carried a Card draft, and what
+ * tafs cloud decided: the outcome with its code, or the step it asks the phone to sign. Ids and codes only, never words or
+ * keys. A tap the phone then refuses (a step that isn't its card's mark) is read from this line, not inferred.
+ */
+export function approvalAskLine(component: string, kind: "approval" | "sign_in", ask: { grant: string; draft?: string; shown_draft?: string },
+  decision: { outcome: string; code?: string; ask?: { step: string } }): string {
+  return JSON.stringify({
+    event: "approval_ask", component, kind, grant: ask.grant, card_draft: Boolean(ask.draft), shown_draft: ask.shown_draft ?? null,
+    outcome: decision.outcome, code: decision.code ?? null, step: decision.ask?.step ?? null,
+  });
+}
+
 async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
   // Coach hears the outcome as the person's answer: a model turn.
   await requireAIConsent(event, me, deps);
@@ -4091,6 +4104,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const decision = await decideApproval(ask, withRules({ ...ctx, session: card.session }, me, card.session, deps)).catch(approvalFailure);
+  console.log(approvalAskLine(component, approval ? "approval" : "sign_in", ask, decision));
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
