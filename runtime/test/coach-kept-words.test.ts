@@ -19,8 +19,10 @@ describe("Coach's rules-notice endings", () => {
     expect(COACH_KEPT_WORDS.en).toEqual({ connection: "(the connection keeps it)", kiff: "(KIFF adds it)", instructions: "(in its instructions)" });
   });
 
-  it("goes to Coach in Setup's definition, as it is", () => {
-    const def = setupDefinition("setup-1") as unknown as { kept_words: Record<string, Record<string, string>> };
-    expect(def.kept_words).toEqual(COACH_KEPT_WORDS);
+  // Eval 44128040350: Setup's notices with lines failed "signs what was agreed" in 3 of 3 runs, so until the Upgrade
+  // Setup's definition carries none, show offers no lines, and Coach writes the notice's text (draft-the-card@36).
+  it("stays out of Setup's definition while the rules notice is text only", () => {
+    const def = setupDefinition("setup-1") as unknown as { kept_words?: unknown };
+    expect(def.kept_words).toBeUndefined();
   });
 });
