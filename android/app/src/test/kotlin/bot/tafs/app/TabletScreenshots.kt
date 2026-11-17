@@ -61,6 +61,26 @@ class TabletScreenshots {
   /** Beside the iPad's `Overview.PNG`: the sidebar, and the Overview a tablet opens on. */
   @Test fun overview() { show(); shot("overview") }
 
+  /** Beside the iPad's `Record-overview.PNG`: the Record's days, each heading with what its money came to (`record.day_spent`). */
+  @Test fun recordDay() {
+    kiffTablet()
+    val now = java.time.Instant.now()
+    fun call(title: String, value: String) = bot.tafs.app.model.RecordEntry(
+      tafId = "refunds-1", kind = bot.tafs.app.model.RecordEntry.Kind.done, title = title, detail = "€$value, within the Card", at = now,
+      amountValue = value, amountUnit = "EUR", amountText = "€$value",
+    )
+    val state = kiffState().copy(record = listOf(call("Refund order #4471", "40.00"), call("Credit on account #2290", "25.00"), call("Refund order #4480", "575.00")))
+    compose.setContent {
+      TafsTheme {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(bot.tafs.app.design.Theme.background)) {
+          bot.tafs.app.views.RecordView(state)
+        }
+      }
+    }
+    compose.waitForIdle()
+    shot("record-day")
+  }
+
   /** Beside the iPad's `Needs-you.PNG`: Needs you, opened from the sidebar, beside it. */
   @Test fun needsYou() { show("Needs you"); shot("needs-you") }
 
