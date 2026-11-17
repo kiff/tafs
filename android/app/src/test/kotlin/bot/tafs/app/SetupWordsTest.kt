@@ -13,6 +13,7 @@ import bot.tafs.app.views.startsSummary
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** The taf screen's summaries, drawn from what tafs cloud and KIFF send: what starts it, where results go, a day's spend. */
@@ -42,7 +43,10 @@ class SetupWordsTest {
     val spent = spentOn(day)!!
     assertEquals("refused money didn't move", true, spent.contains("120") && !spent.contains("620"))
     assertNull("nothing moved", spentOn(listOf(call(RecordEntry.Kind.refused, "5.00", "EUR"))))
-    assertEquals("two units, both said", 2, spentOn(day + call(RecordEntry.Kind.done, "30", "USD"))!!.split(" · ").size)
+    assertEquals("two units, both said", 2, spentOn(day + call(RecordEntry.Kind.done, "30", "USD"))!!.split(" + ").size)
+    // In the app's words for it, with the amounts in their place (record.day_spent).
+    assertEquals(bot.tafs.app.model.Words.Record.daySpent(spent.removeSuffix(" spent")), spent)
+    assertTrue(spent, spent.endsWith(" spent"))
   }
 
   @Test fun stoppingAnEventTakesOnlyItsTriggerOutOfTheSetting() {

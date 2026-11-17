@@ -1,0 +1,1 @@
+- **Android: a Record day says what its money came to in words,** "€640 spent" in the app's language, with " + " between currencies, as the iPad's ([android-app.md](docs/android-app.md)).

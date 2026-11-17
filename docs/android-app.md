@@ -717,7 +717,8 @@ accepted goes on at tafs cloud), and a read of it that lands later doesn't repla
 
 **Record** filters by taf too: All tafs, then a chip per taf with its colour, combined with the
 kind filter. Each entry starts with its taf's colour and name, and each day says what its money
-moved came to, by unit (`spentOn`).
+moved came to, by unit, in the app's words, as the iPad's: "Today · 17 Nov · €640 spent", or "€120 +
+$30 spent" across units (`spentOn`, `record.day_spent`), counting its folded reads too.
 
 ## The taf's screen
 
