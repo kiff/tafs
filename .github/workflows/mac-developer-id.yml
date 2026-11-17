@@ -47,6 +47,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 2
+
+      # GitHub refuses this run's token a release at a commit that changes .github/, and only after
+      # the build and both notarizations. So stop here, before the signing job waits for its approval.
+      # Main gets squash merges, so HEAD~1 is the commit before; a merge commit would be compared only
+      # with its first parent.
+      - name: The commit doesn't change .github/
+        run: |
+          changed="$(git diff --name-only HEAD~1 HEAD -- .github)"
+          if [ -n "$changed" ]; then
+            printf '%s\n' "$changed"
+            echo "::error::$GITHUB_SHA changes .github/, and GitHub refuses a release there. Run from a later main commit that doesn't (docs/mac-app.md)."
+            exit 1
+          fi
 
       - name: Generate the Xcode project with a pinned XcodeGen
         run: |
@@ -110,6 +124,13 @@ jobs:
         run: |
           gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -n mac-developer-id-project -D "$RUNNER_TEMP/project"
           tar -xzf "$RUNNER_TEMP/project/ios.tgz"
+
+      # Before any key is written: the generated project and its schemes run no script, build rule or
+      # external build that ios/project.yml doesn't declare, checked by this checkout's own script.
+      - name: No build step beyond what project.yml declares
+        run: |
+          plutil -convert json -o "$RUNNER_TEMP/pbxproj.json" ios/Tafs.xcodeproj/project.pbxproj
+          python3 -I ios/scripts/build_phases.py ios "$RUNNER_TEMP/pbxproj.json"
 
       - name: Write the App Store Connect key
         env:
