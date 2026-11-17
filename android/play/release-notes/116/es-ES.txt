@@ -1,0 +1,7 @@
+- Tu resumen: dos veces al día, lo que te necesita y lo que hicieron tus tafs.
+- Coach crea un taf a partir de tus propias palabras, con una sola huella.
+- «Permitir a partir de ahora» en una llamada retenida.
+- Con el teléfono bloqueado, una alerta solo dice «Un taf te necesita».
+- En tableta, inicia sesión con KIFF o con tu teléfono.
+- Nuevos dibujos en la pantalla de bienvenida y en las pantallas vacías.
+- Correcciones al conectar apps, en Dispositivos y en las aprobaciones.

@@ -69,6 +69,77 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
   credits, the app's own words; anything else, "Not sent" and why.
 
+## Ask tafs: the plan for the Apple Watch (not built yet)
+
+The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in
+[watch-ask.md](watch-ask.md)). The Apple Watch gets the same product on the same contract, once the Wear OS
+slice is proved on a real watch. Nothing below is built yet. Each **verify** is a fact to check on a real
+Apple Watch before the iOS PR.
+
+**Unchanged from the contract:**
+- **The phone signs; the watch holds no keys.** The phone signs the ask with its **device key, no prompt**
+  (`signConfirmed`, as the wrist's Refuse) and sends `POST /v1/watch/asks` `{client_id, text, reply_to?}`. The
+  approval key is never used on this path.
+- **What the ask is:** tafs cloud's route alone marks it as the watch's, and Coach's watch-only skill picks the one
+  taf. The checked line (140 characters at most) and its state's words come from tafs cloud.
+- **The watch's own `client_id`** (`w_` and 24 random hex digits), kept for a retry, so a retry starts nothing.
+- **Only from a watch with a passcode, unlocked** (`WristLock`, `watch.needs_lock`), as Refuse and Halt.
+- **Kept in memory only.** A locked watch doesn't show the app.
+- **Words:** every line the watch needs is already a shared key, so there are no new strings: `watch.ask`,
+  `sending`, `sent`, `not_sure`, `retry`, `hear`, `reply`, `result_ready`, `didnt_catch`, `mic_needed`,
+  `ask_needs_consent`, `ask_not_on`, `update_phone`, `ask_text_only`, `timing`.
+
+**The relay (`WatchMessage.swift`, `WatchRelay.swift`, `PhoneLink.swift`):**
+- **Two new requests:**
+  - `ask`, with the text, the `client_id` and an optional `reply_to`;
+  - `asks`, the last day's asks, read when the app opens.
+- **Their answers:**
+  - the request as tafs cloud answers it (`accepted`, `working`, `done`, `no_taf`, `failed`);
+  - `unsure` when the phone or tafs cloud didn't answer (no reply, a 5xx);
+  - a definite refusal in tafs cloud's or the phone's words.
+- **The old `coach` request stays** for a watch from before, and this watch never sends it, as on Wear OS.
+- **A result after the ask:** the phone reads the one ask (`GET /v1/watch/asks/{id}`) and sends it to the watch with
+  WatchConnectivity's `transferUserInfo`, which is queued and delivered when the watch can take it, not only while
+  the app is open. **Verify:** how soon a backgrounded watch app gets it, and whether it can then post its own
+  notification ("A result is ready" while locked; the taf and its line otherwise).
+
+**Two gaps on the service's side, before iOS can match:**
+1. **The result push reaches Android only.** `watch-ask.md` sends each change to the person's **Android** phone
+   (`change: watch_ask`, `ask_id`). iOS needs the same as a silent push to the iPhone (`content-available`, the ask's
+   id alone). iOS throttles silent pushes, so the watch also reads `asks` whenever it opens, and a missed push costs
+   only time. This is one tafs cloud change, and the phone's side in `AppDelegate`'s remote notification handler.
+2. **Nothing new in KIFF or planque.**
+
+**Where watchOS differs:**
+- **Listening that sends on its own.**
+  - watchOS has no speech recognizer an app can drive (no `Speech` framework), so the watch uses the system's
+    dictation: SwiftUI's `TextField` input, or `presentTextInputController` with no suggestions, which can open
+    straight on dictation.
+  - **Verify:** that it ends on silence and hands the text back with **no** extra tap. If watchOS insists on a
+    **Done**, that one tap is the only difference from Wear OS, and the screen says nothing else.
+  - **The alternative, recording on the watch** (`AVAudioRecorder`) and having the phone transcribe it, is a
+    change to where the voice goes, and so to the privacy policy: it isn't in this plan.
+  - The words leave as text only, as `watch.ask_text_only` says. The system's dictation may be processed by Apple,
+    so the watch never claims the voice stays on the device.
+- **Hear: `AVSpeechSynthesizer`,** in the result's language, on the watch's speaker or the AirPods it's connected
+  to. **Verify:** the speaker route with no headphones, silent mode, Low Power Mode, and that a speech failure still
+  leaves the line on screen.
+- **The one-gesture entry.** watchOS has no tiles, so:
+  - a **complication** and a **Smart Stack widget** (WidgetKit accessory families) that open the app on listening
+    (`widgetURL`);
+  - on a watch with an **Action button** (Ultra), an App Intent that starts listening.
+  
+  **Verify:** each on the models and watchOS versions we support, before any is promised. The complication shows
+  no count of what's waiting while the watch is locked, as the existing one.
+- **Sent, Not sure it arrived, Retry, the result card (Hear, Reply), Halt pending until the phone confirms:** the
+  same screens and states as Wear OS, drawn in SwiftUI. An older state never replaces a newer one.
+- **Timing readout:** debug builds only (`#if DEBUG`), as `watch.timing` on Wear OS. A TestFlight build for the
+  owner's test is a separate scheme, never the App Store one.
+
+**Order:** the Wear OS slice is proved on the owner's watch, then the tafs cloud iOS push (gap 1), then one iOS PR:
+the relay's `ask` and `asks`, the watch's microphone-first home and result card, Hear, the complication. The entry by
+the Action button comes after, if verified.
+
 ## The illustration
 
 Needs you with nothing waiting shows the approved board 11 (`AllClearArt`): a calm check in a green

@@ -1,0 +1,7 @@
+- Your brief: twice a day, what needs you and what your tafs did.
+- Coach sets up a taf from your own words, with one fingerprint.
+- "Allow this from now on" on a held call.
+- A locked phone shows only "A taf needs you".
+- On a tablet, sign in with KIFF or with your phone.
+- New drawings on the welcome and on empty screens.
+- Fixes for connecting apps, Devices and approvals.
