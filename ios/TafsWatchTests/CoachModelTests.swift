@@ -16,7 +16,7 @@ final class CoachModelTests: XCTestCase {
         }
     }
 
-    private static let firstID = UUID(uuidString: "6F1C2A4E-0B8D-4E57-9A3C-2D5E8F7B1C90")!
+    nonisolated private static let firstID = UUID(uuidString: "6F1C2A4E-0B8D-4E57-9A3C-2D5E8F7B1C90")!
 
     /// Ids in turn: the first, then new ones.
     private final class IDs {

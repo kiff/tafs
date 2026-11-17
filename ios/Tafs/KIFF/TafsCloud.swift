@@ -38,7 +38,10 @@ final class TafsCloud {
         // The consent's words, read on their own, so one that doesn't read leaves the rest of the refusal:
         // with a refused turn, and with an older screen's refused yes (409), which carries the new words.
         let consent = (try? JSONDecoder().decode(Consent.self, from: data))?.consent
-        let error = CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
+        // An id already used for another message (docs/api.md, "One message, sent once") comes with no words:
+        // the shared line says it, and to send it again as a new message.
+        let words = body?.words ?? (body?.code == dedupKeyConflict ? Words.Error.sentWithOtherText : nil)
+        let error = CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: words,
                                code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent,
                                cards: body?.cards ?? [])
         // Every route that would start a model turn can refuse this way: said once here, so the
@@ -1533,6 +1536,15 @@ final class TafsCloud {
     func sendMessage(_ id: String, text: String, to target: ChatTarget = .live, files: [AttachmentRef] = [],
                      messageID: UUID? = nil) async throws -> Sent {
         try await send("POST", "/v1/tafs/\(escaped(id))/messages", body: MessageBody(text, target, files: files, messageID: messageID))
+    }
+
+    /// 409: this message's id (`client_message_id`) was already used for another message.
+    nonisolated static let dedupKeyConflict = "dedup_key_conflict"
+
+    /// The id a message keeps for Retry after `error`: its own, so a send that reached tafs cloud is acted on
+    /// once; none after `dedup_key_conflict`, whose Retry is a new message, as its words say.
+    nonisolated static func messageID(_ id: UUID, after error: Error) -> UUID? {
+        (error as? CloudError)?.code == dedupKeyConflict ? nil : id
     }
 
     /// A message's id as tafs cloud reads it: a UUID, in lower case.

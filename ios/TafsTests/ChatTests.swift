@@ -233,6 +233,34 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(posts("/v1/tafs/depl_1/steer").map(messageID), [steerID], "written again, under the same id")
     }
 
+    /// tafs cloud's 409 `dedup_key_conflict`: an id already used for another message. It comes with no
+    /// words, so the Not sent row says the shared line, never tafs cloud's English error; and its Retry is
+    /// a new message, under a new id, as the line says, since the same id would be refused again.
+    func testAnIdAlreadyUsedForOtherWordsSaysSoAndRetryIsANewMessage() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, #"{"messages":[]}"#)
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (409, #"{"error":"this client_message_id was already used for another message","code":"dedup_key_conflict"}"#)
+        StubProtocol.sent = []
+        let sent = await model.sendChat("hello", to: id)
+        XCTAssertFalse(sent)
+        let refusedID = messageID(posts("/v1/tafs/depl_1/messages").last)
+        let unsent = try XCTUnwrap(model.chatState(id).unsent.first)
+        XCTAssertEqual(unsent.why, Words.Error.sentWithOtherText)
+        XCTAssertNil(unsent.messageID, "its id is spent")
+
+        StubProtocol.responses["POST /v1/tafs/depl_1/messages"] = (200, #"{"session":"sesn_9","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.retryChat(unsent, to: id)
+        let retried = messageID(posts("/v1/tafs/depl_1/messages").last)
+        XCTAssertTrue(isMessageID(retried))
+        XCTAssertNotEqual(retried, refusedID, "Retry is a new message")
+        XCTAssertTrue(model.chatState(id).unsent.isEmpty)
+
+        // tafs cloud's own words, when it sends them, still come first.
+        let worded = TafsCloud.refusal(409, Data(#"{"error":"x","code":"dedup_key_conflict","words":"Said by tafs cloud."}"#.utf8))
+        XCTAssertEqual(worded.localizedDescription, "Said by tafs cloud.")
+    }
+
     /// What a run never read comes back from tafs cloud's `not_sent`: Retry sends it as a new
     /// message, under a new id, never one the app made.
     func testWhatARunNeverReadIsSentAgainAsANewMessage() async throws {

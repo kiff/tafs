@@ -5159,7 +5159,8 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = error.localizedDescription
                 return .notTried
             }
-            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error), messageID: messageID)
+            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error),
+                       messageID: TafsCloud.messageID(messageID, after: error))
             return .kept
         }
     }
@@ -5570,7 +5571,8 @@ final class AppModel: ObservableObject {
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry. The app
                 // never resends it on its own.
-                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error), messageID: messageID)
+                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error),
+                       messageID: TafsCloud.messageID(messageID, after: error))
                 return true
             }
         }
@@ -8356,7 +8358,7 @@ final class AppModel: ObservableObject {
             }
             // An improvement's first message went under no id, so Retry gives it one of its own.
             setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error),
-                                             messageID: setupImproving == nil ? messageID : nil))
+                                             messageID: setupImproving == nil ? TafsCloud.messageID(messageID, after: error) : nil))
             return .kept
         }
     }
@@ -8436,7 +8438,7 @@ final class AppModel: ObservableObject {
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
                 setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error),
-                                                 messageID: messageID))
+                                                 messageID: TafsCloud.messageID(messageID, after: error)))
                 return true
             }
         }
