@@ -80,6 +80,15 @@ describe("jobs", () => {
     for (const j of JOBS) expect(j.cron.split(" ")).toHaveLength(5);
   });
 
+  // Eval 44076575553's chargebacks: one run retyped a dispute id and Stripe found no such dispute; another told one
+  // dispute's failed attempt as another's. The job copies ids from the record and keeps each dispute's calls to it.
+  it("has the chargebacks taf copy ids from what a tool returned and tell each dispute from its own calls", () => {
+    const words = jobById("chargebacks").instructions;
+    expect(words).toContain("Copy each dispute's id, and any order or ticket id, from what a tool returned,\nnever typed from memory.");
+    expect(words).toContain("Tell each dispute from its own calls: an attempt that\nfailed on one dispute is never part of another's story.");
+    expect(systemPrompt({ ...jobById("chargebacks"), writesFor: "Acme" })).toContain("never typed from memory");
+  });
+
   it("builds a taf's own job from what Coach drafted: any job, under the same rules as the five (kiff/tafs#476)", () => {
     const own = ownJob({ name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", instructions: "Never change an invoice." });
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",

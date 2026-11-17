@@ -200,6 +200,9 @@ For each open dispute: gather the order, delivery proof and the customer's
 messages, and submit them as evidence before the deadline. When the evidence
 is weak and the amount is small, accept the dispute instead.
 Never contact the cardholder's bank or the customer outside the dispute.
+Copy each dispute's id, and any order or ticket id, from what a tool returned,
+never typed from memory. Tell each dispute from its own calls: an attempt that
+failed on one dispute is never part of another's story.
 The evidence's free text ends with the line that says an AI agent wrote it.`,
     // Evidence for a card network carries the disclosure alone: no credit line (the owner's call).
     disclose: [{ tool: "update_dispute", fields: ["evidence.uncategorized_text", "evidence.product_description"], credit: false }],
