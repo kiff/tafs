@@ -6847,6 +6847,8 @@ final class AppModel: ObservableObject {
                 useWindow(false, reconfirm: {})
                 try await confirmConnect()
                 windowed = try await openWindow()
+                // KIFF no longer opens one: stop, rather than make the call again with no window.
+                guard windowed else { throw PlanqueClient.PlanqueError.windowRequired }
                 useWindow(windowed, reconfirm: confirmConnect)
                 return try await call()
             }
