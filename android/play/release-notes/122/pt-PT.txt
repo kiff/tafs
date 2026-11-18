@@ -1,0 +1,3 @@
+• Aprovar uma ligação: o ecrã agora preenche-se sozinho. Se ao fim de um minuto ainda não se conseguir ler, di-lo, com «Tentar novamente».
+• Coach: um chat novo começa do zero e, quando não é possível dar uma resposta, o chat di-lo numa linha.
+• Os tafs de exemplo são agora Respostas de suporte, Encomendas atrasadas e Seguimento de contactos. Nenhum movimenta dinheiro.
