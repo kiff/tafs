@@ -1,11 +1,13 @@
 name: Upgrade gate
-# The owner's rule B (upgrade.yml's rule_b_run) read from saved Eval logs: one
-# that meets it, and each way of breaking it refused.
+# The owner's rule B (upgrade.yml's rule_b_run) and override (owner_override)
+# read from saved Eval runs: one that meets each, and each way of breaking it refused.
 on:
   pull_request:
     paths:
       - .github/upgrade-rule-b.sh
       - .github/upgrade-rule-b/**
+      - .github/upgrade-override.sh
+      - .github/upgrade-override/**
       - .github/workflows/upgrade.yml
       - .github/workflows/upgrade-gate.yml
 permissions:
@@ -19,3 +21,4 @@ jobs:
         with:
           persist-credentials: false
       - run: bash .github/upgrade-rule-b/test.sh
+      - run: bash .github/upgrade-override/test.sh

@@ -1,0 +1,10 @@
+2026-11-18T04:20:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -setup defs/setup.json -owner en -grade -repeat "1" -transcript t.md
+2026-11-18T04:21:00.0000000Z PASS
+2026-11-18T04:20:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -desk -repeat "1" -transcript t.md
+2026-11-18T04:21:00.0000000Z PASS
+2026-11-18T04:20:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -invoices -repeat "1" -transcript t.md
+2026-11-18T04:21:00.0000000Z PASS
+2026-11-18T04:20:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -replay intros -repeat "1" -transcript t.md
+2026-11-18T04:21:00.0000000Z PASS
+2026-11-18T04:20:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -route -repeat "1" -transcript t.md
+2026-11-18T04:21:00.0000000Z PASS
