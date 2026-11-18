@@ -1,0 +1,1 @@
+- **Coach never says what stays unchanged.** Beside "read only", the core rule now covers a line or option saying something isn't changed: Coach says what the taf does instead, since a wide sign-in could change it (docs/coach.md).
