@@ -71,7 +71,7 @@ export class Steps {
         if (callID && i.action === "request" && i.api) this.keyRequests.add(callID);
         // A reuse names the grant whose sign-in it uses: that's what it connects, and its app is that grant's.
         const reuse = i.action === "request" && typeof i.reuse === "string" && i.reuse ? i.reuse : undefined;
-        const ofGrant = (g: unknown): string => typeof g === "string" ? this.vendors.get(g) ?? this.apps.get(g) ?? "" : "";
+        const ofGrant = (g: unknown): string => typeof g === "string" ? this.apps.get(g) ?? this.vendors.get(g) ?? "" : "";
         const grant = ofGrant(i.grant);
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         // An app from search (`entry`, such as connector:composio:gmail): named by its app and keyed by its entry, so a refused
@@ -216,7 +216,11 @@ export class Steps {
     if (typeof callID !== "string" || typeof text !== "string") return;
     if (this.planqueCalls.delete(callID)) {
       const app = appNamed(text);
-      if (app) this.apps.set(app.grant, app.name);
+      if (app) {
+        this.apps.set(app.grant, app.name);
+        // A request named from its entry's slug ("Googlesheets") is the app's published name once planque answers.
+        if (this.requests.has(callID)) this.connections.set(callID, app.name);
+      }
       for (const v of keyAppsIn(text)) this.keyApps.add(v);
     }
     const vendor = this.asked.get(callID);

@@ -58,3 +58,25 @@ describe("the app a sign-in card names", () => {
     expect(steps.appOf("grt_sheets1")).toBeUndefined();
   });
 });
+
+describe("a person reads the app's published name, never its slug", () => {
+  it("says Google Sheets once planque named the grant, in the request's and the grant's later steps", () => {
+    for (const lang of ["en", "es"] as const) {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      steps.result("c1", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets", status: "pending" }));
+      steps.call("planque", { action: "approve", grant: "grt_sheets1" }, "c2");
+      for (const id of ["c1", "c2"]) {
+        const why = steps.connectionWhy(id) ?? "";
+        expect(why, `${lang} ${id}`).toContain("Google Sheets");
+        expect(why, `${lang} ${id}`).not.toMatch(/Googlesheets/);
+      }
+    }
+  });
+
+  it("falls back to the slug's name only while planque hasn't named the app", () => {
+    const steps = new Steps();
+    steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+    expect(steps.connectionWhy("c1")).toContain("Googlesheets");
+  });
+});
