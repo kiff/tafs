@@ -6999,13 +6999,13 @@ describe("the first run", () => {
 // taf there was. Starting a connection from Connect apps now goes only to a taf that needs the app (needed.ts).
 describe("Connect apps: which taf a connection goes to", () => {
   const DESK = "taf-dddd0000000000000000";
-  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; grantsStatus?: number; mandates?: unknown[]; token?: string; lang?: string } = {}) {
+  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; grantsStatus?: number; mandates?: unknown[]; token?: string; lang?: string; login?: unknown } = {}) {
     const started: string[] = [];
     const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
     const r = await handle({ rawPath: `/v1/connect/apps/${encodeURIComponent(entry)}`, requestContext: { http: { method: "POST" } },
       headers: { Authorization: `Bearer ${opts.token ?? "ana_co"}`, "content-type": "application/json", ...(opts.proof ? { "planque-device-signature": opts.proof } : {}),
         ...(opts.lang ? { "accept-language": opts.lang } : {}) },
-      body: JSON.stringify({ taf }) },
+      body: JSON.stringify({ taf, ...(opts.login !== undefined ? { login: opts.login } : {}) }) },
     { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog?") || url === "https://planque.test/v1/accounts/t_acme/catalog") return ok({ entries: [
         { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
@@ -7015,7 +7015,8 @@ describe("Connect apps: which taf a connection goes to", () => {
         { entry: "acme-pay@2", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
       ] });
       if (url.includes("/catalog/") && url.endsWith("/grants") && init?.method === "POST") {
-        started.push(`${decodeURIComponent(url.split("/catalog/")[1]!.replace(/\/grants$/, ""))} for ${JSON.parse(String(init.body)).agent}`);
+        const sent = JSON.parse(String(init.body)) as { agent: string; login?: string };
+        started.push(`${decodeURIComponent(url.split("/catalog/")[1]!.replace(/\/grants$/, ""))} for ${sent.agent}${sent.login ? ` as ${sent.login}` : ""}`);
         return ok({ grant: { id: "g-new" } });
       }
       if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
@@ -7049,6 +7050,18 @@ describe("Connect apps: which taf a connection goes to", () => {
   it("reads the app's vendor from the catalog: an entry whose slug isn't the recipe's vendor still goes to the taf whose recipe names it", async () => {
     const w = tafs();
     expect((await post(w, "acme-pay@2", NEW)).started).toEqual(["acme-pay@2 for chargebacks"]);
+  });
+
+  // A key entry that takes the owner's login (Zendesk's "{login}/token"): the app sends it, and it goes to planque as
+  // given. One that isn't one email address is refused here, and nothing starts.
+  it("passes the owner's login to planque with the grant request, and refuses one that isn't an email (login_invalid)", async () => {
+    const w = tafs();
+    expect((await post(w, "stripe@3", NEW, { login: "ana@shop.example" })).started).toEqual(["stripe@3 for chargebacks as ana@shop.example"]);
+    for (const bad of ["ana@shop.example/token", "ana", 42, ""]) {
+      const r = await post(w, "stripe@3", NEW, { login: bad });
+      expect(r, String(bad)).toMatchObject({ status: 400, body: { code: "login_invalid" } });
+      expect(r.started).toEqual([]);
+    }
   });
 
   // kiff-qa's 2 on the review: the tafs unread, nothing starts, and the person hears to try again, not "doesn't use it".
