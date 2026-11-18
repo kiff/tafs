@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, askedInSession, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { AGREE_FIRST, askedInSession, checkDraft, type DecideContext, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -912,6 +912,56 @@ describe("a half-made connection from an earlier conversation: resumed only for 
     expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_1"}`, true)], "g_1")).toBe(false);
     expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_2"}`)], "g_1")).toBe(false);
     expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_1"}`)], "")).toBe(false);
+    // Another tool's "request" isn't Coach's connection request.
+    expect(askedInSession([{ kind: "tool_call", body: { call_id: "c1", tool: "other", input: { action: "request" } } }, result("c1", `{"grant":"g_1"}`)], "g_1")).toBe(false);
+    // The id as a whole token: g_12 isn't g_1.
+    expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_12"}`)], "g_1")).toBe(false);
+  });
+
+  it("a grant asked before this conversation began isn't its own, even when its own request answered with it (planque handing back a pending grant)", async () => {
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    const w = await world(s);
+    const list = w.agents.events.get(w.stored.session) ?? [];
+    const at = { session: w.stored.session, run: w.stored.id, time: "2026-10-16T12:00:04Z" };
+    list.push({ ...at, seq: list.length + 1, kind: "tool_call", body: { call_id: "c_req", tool: "planque", input: { action: "request", entry: "stripe@3" } } });
+    list.push({ ...at, seq: list.length + 1, kind: "tool_result", body: { call_id: "c_req", text: JSON.stringify({ grant: "g_1", status: "pending" }) } });
+    w.agents.events.set(w.stored.session, list);
+    refusedAsResumed((await w.call("POST", ASK, ask(g))).body, "only with this conversation's Card draft");
+  });
+
+  describe("the rule as the chat's read checks a draft (checkDraft), and when the conversation can't be read", () => {
+    const ctxOf = (s: Services, over: Partial<DecideContext>): DecideContext => ({
+      tenant: "t_acme", taf: COACH, component: "a1", token: "ana", proof: PROOF, store: memoryCoach(() => NOW),
+      planqueBase: "https://planque.test", kiffBase: "https://api.test", fetch: net(s), now: NOW, newID: () => "id_1", lang: "en",
+      session: "sess1", sessionStarted: async () => NOW.toISOString(), ...over,
+    });
+    const DRAFT = { grant: "g_1", draft: "drf_1", shown_draft: "v3" };
+
+    it("another taf's draft over an earlier grant: refused on the read too, before a card is drawn", async () => {
+      const s = services();
+      const g = resumed();
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4", cards: CARD("refund") };
+      expect(await checkDraft(DRAFT, ctxOf(s, {}), [g as unknown as ApprovalGrant])).toMatchObject({ outcome: "answered", code: "resumed_other_taf" });
+    });
+
+    it("its start unread, or none: read again, never taken as this conversation's", async () => {
+      const s = services();
+      const g = resumed();
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+      for (const sessionStarted of [async () => { throw new Error("agents down"); }, async () => undefined]) {
+        expect(await checkDraft(DRAFT, ctxOf(s, { sessionStarted }), [g as unknown as ApprovalGrant])).toMatchObject({ outcome: "read_again", code: "session_unread" });
+      }
+    });
+
+    it("its requests unread, for a grant inside the clocks' margin: read again, never taken as its own", async () => {
+      const s = services();
+      const g = resumed({}, { created_at: "2026-10-16T12:00:05Z" });
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+      const askedHere = async () => { throw new Error("agents down"); };
+      expect(await checkDraft(DRAFT, ctxOf(s, { askedHere }), [g as unknown as ApprovalGrant])).toMatchObject({ outcome: "read_again", code: "session_unread" });
+    });
   });
 });
 

@@ -1024,16 +1024,17 @@ export const RESUME_CLOCK_MARGIN_MS = 10_000;
 
 /**
  * Whether a conversation's events hold its own connection request (Coach's `planque` call with `action: "request"`)
- * answered with the grant: the request's result names its id.
+ * answered with the grant: the request's result names its id, as a whole token (`g_1` never matches `g_12`).
  */
 export function askedInSession(events: ReadonlyArray<{ kind: string; body: unknown }>, grant: string): boolean {
   if (!grant) return false;
+  const named = new RegExp(`(^|[^A-Za-z0-9_.:-])${grant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z0-9_.:-])`);
   const requests = new Set<string>();
   for (const e of events) {
     const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; text?: unknown; is_error?: unknown };
     if (typeof b.call_id !== "string") continue;
     if (e.kind === "tool_call" && b.tool === "planque" && (b.input as { action?: unknown } | null)?.action === "request") requests.add(b.call_id);
-    else if (e.kind === "tool_result" && requests.has(b.call_id) && b.is_error !== true && typeof b.text === "string" && b.text.includes(grant)) return true;
+    else if (e.kind === "tool_result" && requests.has(b.call_id) && b.is_error !== true && typeof b.text === "string" && named.test(b.text)) return true;
   }
   return false;
 }
@@ -1061,7 +1062,9 @@ async function resumedRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: st
     return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
   }
   const startedAt = started ? Date.parse(started) : NaN;
-  if (Number.isNaN(startedAt) || askedAt >= startedAt + RESUME_CLOCK_MARGIN_MS) return undefined;
+  // A conversation with no start it can read is read again, never taken as this one's.
+  if (Number.isNaN(startedAt)) return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
+  if (askedAt >= startedAt + RESUME_CLOCK_MARGIN_MS) return undefined;
   // Within the margin after it began, this conversation's own request is its own.
   if (askedAt >= startedAt && ctx.askedHere) {
     let own: boolean;
