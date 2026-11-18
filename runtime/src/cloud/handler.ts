@@ -1,5 +1,5 @@
 import { checkMisfitSeen } from "./checkseen.js";
-import { anotherConnectionsTool, connectionsOfJob, rulesAgreement } from "./rules.js";
+import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -5181,7 +5181,8 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     // has two; the dial from the app sends back the check it was given, so it isn't asked to.
     if (check.grant) {
       const own = anotherConnectionsTool(check.tool, check.grant, known ?? []);
-      if (own) throw new HTTPError(400, `check.tool names ${check.tool}, which isn't a tool of the connection ${check.grant}: its tools among the taf's are ${own.join(", ")}. Name its read`);
+      if (own) throw new HTTPError(400, `check.tool names ${check.tool}, which isn't a tool of the connection ${check.grant} (its tools end ${grantSuffix(check.grant)}): ` +
+        (own.length ? `its tools among the taf's are ${own.join(", ")}. Name its read` : `the taf has none of its tools yet: add its read with tools {grant, tools}, then name it`));
     } else if (!event) {
       const two = connectionsOfJob(check.tool, known ?? []);
       if (two.size > 1) {
@@ -5209,9 +5210,20 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     for (const p of event ? [] : vendor) {
       if (p.place !== "action") continue;
       const own = anotherConnectionsTool(p.action, p.grant, taf.tools ?? []);
-      if (own) throw new HTTPError(400, `${p.name} names ${p.action}, which isn't a tool of the connection ${p.grant}: its tools among the taf's are ${own.join(", ")}. Name its write`);
+      if (own) throw new HTTPError(400, `${p.name} names ${p.action}, which isn't a tool of the connection ${p.grant} (its tools end ${grantSuffix(p.grant)}): ` +
+        (own.length ? `its tools among the taf's are ${own.join(", ")}. Name its write` : `the taf has none of its tools yet: add the write with tools {grant, tools}, then name it`));
     }
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
+  }
+  // Coach's check with no connection, beside a place or an app's event on a connection its read doesn't end in: the
+  // taf may have just moved to that connection, with only the old one's tools kept, so the check says which it reads.
+  const tail = body.check !== undefined && check && !check.grant && !event ? connectionTail(check.tool) : undefined;
+  if (tail) {
+    const named = [...wakes.filter((t) => t.kind === "app_event").map((t) => t.grant),
+      ...results.filter((p): p is VendorPlace => typeof p !== "string" && p.place === "action").map((p) => (p as { grant: string }).grant)];
+    const others = [...new Set(named.filter((g): g is string => typeof g === "string" && !!grantSuffix(g) && grantSuffix(g) !== tail))];
+    if (others.length) throw new HTTPError(400, `check.tool names ${check!.tool}, a tool of the connection whose tools end ${tail}, and this change also names ${others.join(", ")}: ` +
+      "name the connection the read is on as check.grant, with that connection's own read as check.tool");
   }
   let what: KnobSetting["what"];
   try { what = body.what === undefined ? latest?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }

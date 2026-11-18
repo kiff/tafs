@@ -281,17 +281,24 @@ function tailOf(name: string): { job: string; four: string } | undefined {
 }
 
 /**
- * The connection's own tools among the taf's when `tool` is another connection's: `tool` doesn't carry `grant`'s
- * suffix, and a tool of the same job does. A taf switched to a new connection of the same app has both
- * connections' tools, and only the suffix says whose each is (kiff/tafs: the phone's retest, 18 Nov). Undefined when
- * nothing says it's another's: a tool the request named without the suffix, or a job only one connection has.
+ * The connection's own tools among the taf's when `tool` isn't that connection's (kiff/tafs: the phone's retest, 18
+ * Nov): a taf switched to a new connection of the same app keeps the old one's tools too. A tool ending as planque
+ * names a connection's tools (`toolKey`, `numberedKey`) is the connection whose suffix it ends in, so one that doesn't
+ * end in `grant`'s is another's, whatever tools the taf keeps (none of the connection's own, maybe). A tool named
+ * without a suffix is another's only when a tool of its job ends in `grant`'s. Undefined when it may be the connection's.
  */
 export function anotherConnectionsTool(tool: string, grant: string, tools: readonly string[]): string[] | undefined {
   const suffix = grantSuffix(grant);
   if (!suffix || jobOf(tool, suffix)) return undefined;
-  const job = tailOf(tool)?.job ?? tool;
   const own = tools.filter((t) => jobOf(t, suffix));
-  return own.some((t) => tailOf(t)?.job === job) ? own : undefined;
+  if (tailOf(tool)) return own;
+  return own.some((t) => tailOf(t)?.job === tool) ? own : undefined;
+}
+
+/** The suffix a tool's name ends in when planque named it for a connection (`_` and four letters or digits), else undefined. */
+export function connectionTail(tool: string): string | undefined {
+  const t = tailOf(tool);
+  return t ? `_${t.four}` : undefined;
 }
 
 /**
