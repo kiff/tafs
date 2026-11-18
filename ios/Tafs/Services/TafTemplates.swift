@@ -43,10 +43,12 @@ enum TafTemplates {
             CardRule(action: "promise", label: Words.Sample.Support.Rule.promises, alwaysAsk: true, nextSteps: [Words.Sample.Support.nextStep]),
             CardRule(action: "share_customer_data", label: Words.Sample.Support.Rule.customerData, never: true, outside: .refuse),
         ],
+        // The sample plays two rounds at load, so the promise is second: it waits in Needs you, as the
+        // money samples' holds did, and the iPad's sidebar lists the tafs that wait.
         script: [
             ProposedAction(action: "reply_ticket", summary: Words.Sample.Support.reply7781, context: Words.Sample.Support.reply7781Why),
-            ProposedAction(action: "reply_ticket", summary: Words.Sample.Support.reply7790, context: Words.Sample.Support.reply7790Why),
             ProposedAction(action: "promise", summary: Words.Sample.Support.promise7802, context: Words.Sample.Support.promise7802Why),
+            ProposedAction(action: "reply_ticket", summary: Words.Sample.Support.reply7790, context: Words.Sample.Support.reply7790Why),
             ProposedAction(action: "share_customer_data", summary: Words.Sample.Support.shareHistory, context: Words.Sample.Support.shareHistoryWhy),
         ]
     )
@@ -64,10 +66,11 @@ enum TafTemplates {
             CardRule(action: "change_address", label: Words.Sample.Parcels.Rule.addressChanges, never: true, outside: .refuse),
             CardRule(action: "parcel_refund", label: Words.Sample.Parcels.Rule.refunds, never: true, outside: .refuse),
         ],
+        // The reship is second, so it waits in Needs you after the sample's two rounds.
         script: [
             ProposedAction(action: "delay_message", summary: Words.Sample.Parcels.tell5120, context: Words.Sample.Parcels.tell5120Why),
-            ProposedAction(action: "delay_message", summary: Words.Sample.Parcels.tell5134, context: Words.Sample.Parcels.tell5134Why),
             ProposedAction(action: "reship", summary: Words.Sample.Parcels.reship5098, context: Words.Sample.Parcels.reship5098Why),
+            ProposedAction(action: "delay_message", summary: Words.Sample.Parcels.tell5134, context: Words.Sample.Parcels.tell5134Why),
             ProposedAction(action: "change_address", summary: Words.Sample.Parcels.changeAddress, context: Words.Sample.Parcels.changeAddressWhy),
         ]
     )
