@@ -80,6 +80,8 @@ case_ "$two runs=\$(edit 's/^touched 102 ([^ ]+) eb05ab7/touched 102 \1 1234567/
 case_ "$two runs=\$(edit 's/^touched 102 [^ ]+/touched 102 2026-11-17T23:00:00Z/' runs-two-touched r5)" refused "the touched run isn't newer than the base"
 # The first of two touched runs with no steps: refused, not read as the second.
 case_ "$two touched=$tmp/empty,touched-setup-alone.steps tlog=$tmp/empty,touched-setup-alone.log" refused "the touched runs and their steps don't line up"
+# Two touched runs and three files, the first empty: the files given must be the touched runs', one each.
+case_ "$two touched=$tmp/empty,touched-setup-unsigned.steps,touched-setup-alone.steps tlog=$tmp/empty,touched-setup-unsigned.log,touched-setup-alone.log" refused "the touched runs and their steps don't line up"
 # A failed job in the second is never excused.
 case_ "$two touched=touched-setup-unsigned.steps,\$(edit 's/^55 success /55 failure /' touched-setup-alone.steps t5) tlog=touched-setup-unsigned.log,touched-setup-alone.log" refused "failed outside its steps"
 # The second on another model is refused.
