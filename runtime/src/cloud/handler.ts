@@ -4214,6 +4214,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   const signed = { method: "POST", uri, body: rawBody(event), ...signedBy(event) };
   const outcome = await settleApproval(askID, report, { ...ctx, signed, session: card.session }).catch(approvalFailure);
   await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
+  if (outcome.connection) await keepConnectionTools(me.tenantID, outcome.connection, deps);
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
   try {
     told = await tellCoach(me, taf, card, component, outcome.answer, deps);
@@ -4228,6 +4229,26 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
     told = { session: card.session };
   }
   return { outcome: "answered", answer: outcome.answer, ...(outcome.note ? { note: outcome.note } : {}), ...told };
+}
+
+/**
+ * An approved connection's tools are its taf's from now on (Taf.tools), as an improvement's are: a taf moved to a new
+ * connection of an app gets that connection's tools beside the old one's, so its dial can name the new read
+ * (check.grant). A taf not made yet (its setup's connection) takes its tools from the result that makes it. Never fails
+ * the approval it follows: the approval holds either way.
+ */
+async function keepConnectionTools(tenant: string, c: { agent: string; tools: string[] }, deps: Deps): Promise<void> {
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const cur = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent === c.agent && !t.removing && t.job !== SETUP_JOB);
+      if (!cur) return;
+      const all = [...new Set([...(cur.tools ?? []), ...c.tools])];
+      if (all.length === (cur.tools ?? []).length) return;
+      if (await deps.tafs.putIf(tenant, { ...cur, tools: all }, cur)) return;
+    }
+  } catch (err) {
+    console.error("approval: the connection's tools weren't kept on the taf:", (err as Error).message);
+  }
 }
 
 function askOrRefuse<T>(read: () => T): T {

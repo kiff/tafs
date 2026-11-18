@@ -1,4 +1,4 @@
-import { kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
+import { grantSuffix, kiffsOwnCount, KIFF_COUNT_A_DAY, rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement, unpinnedConnection } from "./rules.js";
 import { noteSendingOutside, sendingProfileOf } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -1324,6 +1324,20 @@ export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | 
 export interface Outcome {
   answer: "approved" | `failed: ${string}`;
   note?: string;
+  /**
+   * Approved with a connection's tools: their names in KIFF and the agent they're for, so that taf keeps them (Taf.tools)
+   * and its dial can name them. A taf moved to a new connection of an app reads with that connection's tools from then on.
+   */
+  connection?: { agent: string; tools: string[] };
+}
+
+/** A connected grant's tools as KIFF names them, and its taf's agent; nothing when the grant names neither. */
+function connectionOf(grant: ApprovalGrant | undefined): Pick<Outcome, "connection"> {
+  const agent = typeof grant?.request.agent === "string" ? grant.request.agent : "";
+  // A tool asked for with no name is planque's `toolKey`: the vendor's name, cut to 59, and the grant's suffix.
+  const named = (t: { tool?: string; name?: string }) => t.name || (t.tool && grant ? t.tool.slice(0, 59) + grantSuffix(grant.id) : "");
+  const tools = [...new Set((grant?.request.tools ?? []).map(named).filter((n): n is string => !!n))];
+  return agent && tools.length ? { connection: { agent, tools } } : {};
 }
 
 /**
@@ -1378,7 +1392,7 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
     // Approved only when every app the Card covers is connected: never while another app's tools still wait.
     const waiting = grant && draft?.cards ? appsWaiting(grant, sameTafOf(grant, grants), draft.cards) : [];
     if (connected && draft && issued(draft.status) && waiting.length) return { answer: `failed: ${pending.vendor} is connected and its Card is issued, but ${waitsLine(waiting[0]!)}`, note: W.otherAppFirst(waiting[0]!.name) };
-    if (connected && draft && issued(draft.status)) return { answer: "approved" };
+    if (connected && draft && issued(draft.status)) return { answer: "approved", ...connectionOf(grant) };
     if (!connected) {
       const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor);
       return { answer: `failed: ${why}`, note: why };
@@ -1436,7 +1450,7 @@ async function settleAsk(askID: string, report: Report, ctx: ReportContext): Pro
       const waiting = draft.cards ? appsWaiting(grant, sameTafOf(grant, all), draft.cards) : [];
       if (waiting.length) return { answer: `failed: ${pending.vendor} is connected and its Card is issued, but ${waitsLine(waiting[0]!)}`, note: W.otherAppFirst(waiting[0]!.name) };
     }
-    return { answer: "approved" };
+    return { answer: "approved", ...connectionOf(grant) };
   }
   const vendor = pending.vendor;
   let why: string;
