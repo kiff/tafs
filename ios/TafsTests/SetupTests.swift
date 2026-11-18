@@ -2005,6 +2005,54 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The behavioural half of #1391's poll line (the iOS side of #1390): a live stream reads the thread at the
+    /// card's component and then stays open, quiet, with no end. planque lists the card's grant only after that
+    /// read. With the stream still open, the poll reads on, and the card fills in by itself: no navigation, no
+    /// Try again.
+    func testACardFillsInByItselfWhenItsGrantIsListedAfterAQuietStreamsLastRead() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        model.setupPollInterval = 10_000_000
+        model.setupWorkingPollInterval = 10_000_000
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func at(_ ago: TimeInterval) -> String { iso.string(from: Date().addingTimeInterval(-ago)) }
+        func waitFor(_ condition: () -> Bool) async throws {
+            for _ in 0..<300 where !condition() { try await Task.sleep(nanoseconds: 10_000_000) }
+        }
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[{"at":"\#(at(20))","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[{"at":"\#(at(5))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect","grant":"g_01"}}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        let streams = OpenStreams()
+        model.streamOpener = { _, _ in streams.open() }
+        let follow = Task { await model.followSetup() }
+        try await waitFor { model.setupTaf != nil }
+
+        // The stream reads the thread at the card, before planque lists its grant, and then says nothing more.
+        let sent = await model.sendSetup("Connect my Stripe")
+        XCTAssertTrue(sent)
+        streams.continuations.first?.yield(.session("s1", newSession: false))
+        streams.continuations.first?.yield(.component)
+        try await waitFor { model.cardWaitsOnItsGrant }
+        XCTAssertTrue(model.cardWaitsOnItsGrant, "the card is shown and waits on its grant")
+        XCTAssertNotNil(model.setupLive, "the stream is open")
+        XCTAssertFalse(model.grants.contains { $0.id == "g_01" })
+
+        // planque lists the grant now. The stream stays quiet and open; the poll alone reads it.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        try await waitFor { model.grants.contains { $0.id == "g_01" } }
+        XCTAssertTrue(model.grants.contains { $0.id == "g_01" }, "the card's grant is read with the stream still open")
+        XCTAssertNotNil(model.setupLive, "no end came: the stream didn't read it")
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "the card filled in by itself")
+        XCTAssertFalse(model.cardNotRead("connect"))
+
+        streams.close()
+        await model.setupStream?.value
+        follow.cancel()
+        await follow.value
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A sent message is found again by its words (kiff/tafs#138, review on #154): as stored,
     /// and as the end of a queued message it was joined to; never a different message.
     func testASentMessageIsFoundByItsWords() {
