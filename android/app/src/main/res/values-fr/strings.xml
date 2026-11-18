@@ -1766,7 +1766,7 @@
     <string name="sample_bill_pay_rule_wires">Virements</string>
     <string name="sample_bill_pay_update_bank">Modifier le compte bancaire d\'Atlas Freight</string>
     <string name="sample_bill_pay_update_bank_why">Demandé par un e-mail venant d\'une nouvelle adresse</string>
-    <string name="sample_brief_case_bills_line">12 colis suivis, 2 en retard : 5120, 5134</string>
+    <string name="sample_brief_case_bills_line">12 colis suivis, 2 en retard : 5120, 5134</string>
     <string name="sample_brief_case_brio">Nord Atelier, appel prévu</string>
     <string name="sample_brief_case_brio_line">confirmé jeudi · terminé</string>
     <string name="sample_brief_case_dubois">Studio Kaya, demande de devis</string>
@@ -1778,11 +1778,11 @@
     <string name="sample_brief_case_support_line">9 tickets traités · 1 attend une promesse de remplacement · prochaine vérification à 13:00</string>
     <string name="sample_brief_credits">Aujourd\'hui : 38 crédits, exécutions du responsable comprises.</string>
     <string name="sample_brief_expires_answer">L\'envoyer</string>
-    <string name="sample_brief_expires_cant_wait">Ça ne peut pas attendre : le délai expire à 12:00, avant le prochain briefing.</string>
+    <string name="sample_brief_expires_cant_wait">Ça ne peut pas attendre : le délai expire à 12:00, avant le prochain briefing.</string>
     <string name="sample_brief_expires_decline">Ne pas envoyer</string>
-    <string name="sample_brief_expires_meanwhile">le renvoi est retenu ; rien n\'est envoyé.</string>
+    <string name="sample_brief_expires_meanwhile">le renvoi est retenu ; rien n\'est envoyé.</string>
     <string name="sample_brief_expires_question">Envoyer un nouveau colis pour la commande #5098 avant la fin du délai de réclamation du transporteur à 12:00 ?</string>
-    <string name="sample_brief_expires_why">Perdu en transit, 10 jours sans scan ; %1$s a vérifié auprès du transporteur ce matin.</string>
+    <string name="sample_brief_expires_why">Perdu en transit, 10 jours sans scan ; %1$s a vérifié auprès du transporteur ce matin.</string>
     <string name="sample_brief_label_clients">Prospects</string>
     <string name="sample_brief_label_money">Colis</string>
     <string name="sample_brief_label_support">Support</string>
@@ -1792,12 +1792,12 @@
     <string name="sample_brief_next_move_dismiss">Ignorer</string>
     <string name="sample_brief_pay_answer">Envoyer les 3</string>
     <string name="sample_brief_pay_deadline">d\'ici ven. 12:00</string>
-    <string name="sample_brief_pay_meanwhile">les autres messages continuent ; ces trois-là attendent.</string>
+    <string name="sample_brief_pay_meanwhile">les autres messages continuent ; ces trois-là attendent.</string>
     <string name="sample_brief_pay_note">« Envoyer les 3 » ouvre trois approbations, l\'une après l\'autre.</string>
     <string name="sample_brief_pay_question">Envoyer 3 messages de retard pour des colis attendus vendredi ?</string>
     <string name="sample_brief_pay_why">Le transporteur confirme le retard des trois, et %1$s les a vérifiés.</string>
     <string name="sample_brief_remind_decline">Ne pas proposer</string>
-    <string name="sample_brief_remind_meanwhile">l\'offre est retenue ; rien n\'est envoyé.</string>
+    <string name="sample_brief_remind_meanwhile">l\'offre est retenue ; rien n\'est envoyé.</string>
     <string name="sample_brief_remind_question">Proposer 15 % de remise à Lumen &amp; Co sur leur devis ?</string>
     <string name="sample_brief_remind_why">Ils ont demandé un meilleur prix, et le devis date de 9 jours.</string>
     <plurals name="sample_brief_rest">
@@ -1881,7 +1881,7 @@
     <string name="sample_log_s4_evidence">colis 5098</string>
     <string name="sample_log_s4_line">Colis 5098, pour une réponse à son client. Une référence, pas ses données.</string>
     <string name="sample_log_s4_title">Colis en retard → Réponses au support</string>
-    <string name="sample_log_s5_line">« Colis en retard » ne s\'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous.</string>
+    <string name="sample_log_s5_line">« Colis en retard » ne s\'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous.</string>
     <string name="sample_look_up_charge">Rechercher un paiement</string>
     <string name="sample_memory_ask_first">Demander avant toute chose inhabituelle, même si cela entre dans la Card.</string>
     <string name="sample_memory_explain">Vous préférez que j\'explique une décision en une ligne plutôt qu\'en un paragraphe.</string>
@@ -1935,7 +1935,7 @@
     <string name="sample_support_promise_7802">Promettre un remplacement sur le ticket #7802</string>
     <string name="sample_support_promise_7802_why">Arrivé cassé, photo jointe</string>
     <string name="sample_support_reply_7781">Répondre au ticket #7781</string>
-    <string name="sample_support_reply_7781_why">Demande où en est la commande ; suivi joint</string>
+    <string name="sample_support_reply_7781_why">Demande où en est la commande ; suivi joint</string>
     <string name="sample_support_reply_7790">Répondre au ticket #7790</string>
     <string name="sample_support_reply_7790_why">Veut changer la date de livraison</string>
     <string name="sample_support_rule_customer_data">Données clients</string>

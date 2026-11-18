@@ -88943,7 +88943,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 colis suivis, 2 en retard : 5120, 5134"
+            "value": "12 colis suivis, 2 en retard : 5120, 5134"
           }
         },
         "it": {
@@ -89579,7 +89579,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ça ne peut pas attendre : le délai expire à 12:00, avant le prochain briefing."
+            "value": "Ça ne peut pas attendre : le délai expire à 12:00, avant le prochain briefing."
           }
         },
         "it": {
@@ -89685,7 +89685,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "le renvoi est retenu ; rien n'est envoyé."
+            "value": "le renvoi est retenu ; rien n'est envoyé."
           }
         },
         "it": {
@@ -89791,7 +89791,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Perdu en transit, 10 jours sans scan ; %1$@ a vérifié auprès du transporteur ce matin."
+            "value": "Perdu en transit, 10 jours sans scan ; %1$@ a vérifié auprès du transporteur ce matin."
           }
         },
         "it": {
@@ -90321,7 +90321,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "les autres messages continuent ; ces trois-là attendent."
+            "value": "les autres messages continuent ; ces trois-là attendent."
           }
         },
         "it": {
@@ -90586,7 +90586,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "l'offre est retenue ; rien n'est envoyé."
+            "value": "l'offre est retenue ; rien n'est envoyé."
           }
         },
         "it": {
@@ -94954,7 +94954,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "« Colis en retard » ne s'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous."
+            "value": "« Colis en retard » ne s'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous."
           }
         },
         "it": {
@@ -97732,7 +97732,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demande où en est la commande ; suivi joint"
+            "value": "Demande où en est la commande ; suivi joint"
           }
         },
         "it": {
