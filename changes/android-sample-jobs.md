@@ -1,0 +1,1 @@
+- **Android: the sample's jobs are support replies, late parcels and lead follow-up,** in place of refunds, bill pay and chargebacks, in all 8 languages, and the sample's brief reads Parcels, Leads and Support. iOS and the desktops follow on the same words ([android-app.md](docs/android-app.md)).

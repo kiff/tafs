@@ -40,10 +40,10 @@ class ChatTest {
 
   // MARK: The sample's threads
 
-  @Test fun theSampleStartsRefundsWithAMorningsConversation() {
+  @Test fun theSampleStartsSupportRepliesWithAMorningsConversation() {
     val m = model()
-    val refunds = m.state.value.tafs.first { it.name == "Refunds" }
-    val thread = m.messages(refunds.id)
+    val support = m.state.value.tafs.first { it.name == "Support replies" }
+    val thread = m.messages(support.id)
     assertEquals(listOf(ChatMessage.From.taf, ChatMessage.From.owner, ChatMessage.From.taf), thread.map { it.from })
     assertEquals("How did this morning go?", thread[1].text)
     assertTrue(thread[2].text.contains("Sample reply"))
@@ -51,7 +51,7 @@ class ChatTest {
 
   @Test fun everyMessageInAThreadHasItsOwnId() {
     val m = model()
-    val ids = m.messages(m.state.value.tafs.first { it.name == "Refunds" }.id).map { it.id }
+    val ids = m.messages(m.state.value.tafs.first { it.name == "Support replies" }.id).map { it.id }
     assertEquals(ids.size, ids.toSet().size)
   }
 

@@ -7,6 +7,9 @@ import bot.tafs.app.model.ProposedAction
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.TafTemplates
 import bot.tafs.app.model.Card
+import bot.tafs.app.model.CardRule
+import bot.tafs.app.model.Outside
+import bot.tafs.app.model.Window
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -16,24 +19,49 @@ class CardCheckTest {
     Taf(name = it.name, job = it.job, tools = it.tools, colorIndex = 0, card = Card(it.rules, "You"))
   }
 
+  /** A Card with money limits: the sample's jobs count calls since 18 Nov, and a Card can still limit money. */
+  private fun refunds() = Taf(
+    name = "Refunds", job = "", tools = emptyList(), colorIndex = 0,
+    card = Card(
+      listOf(
+        CardRule(action = "refund", label = "Refunds", perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day),
+        CardRule(action = "payout", label = "Payouts", never = true, outside = Outside.refuse),
+      ),
+      "You",
+    ),
+  )
+
+  /**
+   * Each sample job plays its script as its words say: replies and delay messages within the Card, a promise, a reship and a
+   * discount wait for the owner, and a customer's details or an address change never go through.
+   */
+  @Test fun eachSampleJobsScriptIsDecidedAsItsWordsSay() {
+    fun decided(key: String) = TafTemplates.template(key)!!.script.map { a ->
+      when (CardCheck.decide(a, taf(key))) { Decision.Allowed -> "within"; is Decision.Held -> "waits"; is Decision.Refused -> "never" }
+    }
+    assertEquals(listOf("within", "within", "waits", "never"), decided("support"))
+    assertEquals(listOf("within", "within", "waits"), decided("leads"))
+    assertEquals(listOf("within", "within", "waits", "never"), decided("parcels"))
+  }
+
   @Test fun withinTheCardIsAllowed() {
-    val d = CardCheck.decide(ProposedAction("refund", "Refund order #4471", Money.usd(40.0)), taf("refunds"))
+    val d = CardCheck.decide(ProposedAction("refund", "Refund order #4471", Money.usd(40.0)), refunds())
     assertEquals(Decision.Allowed, d)
   }
 
   @Test fun overTheLimitForOneCallIsHeld() {
-    val d = CardCheck.decide(ProposedAction("refund", "Refund order #4502", Money.usd(480.0)), taf("refunds"))
+    val d = CardCheck.decide(ProposedAction("refund", "Refund order #4502", Money.usd(480.0)), refunds())
     assertTrue(d is Decision.Held)
     assertTrue((d as Decision.Held).reason.startsWith("Over"))
   }
 
   @Test fun aNeverRuleIsRefusedWithoutAsking() {
-    val d = CardCheck.decide(ProposedAction("payout", "Pay out", Money.usd(900.0)), taf("refunds"))
+    val d = CardCheck.decide(ProposedAction("payout", "Pay out", Money.usd(900.0)), refunds())
     assertEquals(Decision.Refused("Payouts: never allowed"), d)
   }
 
   @Test fun anActionNotOnTheCardIsRefused() {
-    val d = CardCheck.decide(ProposedAction("wire", "Wire"), taf("refunds"))
+    val d = CardCheck.decide(ProposedAction("wire", "Wire"), refunds())
     assertEquals(Decision.Refused("Not on this taf's Card"), d)
   }
 
@@ -43,7 +71,7 @@ class CardCheckTest {
   }
 
   @Test fun theWindowTotalCountsWhatIsUsed() {
-    var t = taf("refunds")
+    var t = refunds()
     // 2 000 a day, 150 each: thirteen at 150 use 1 950, so the next 100 passes the total.
     repeat(13) { t = CardCheck.draw(ProposedAction("refund", "r", Money.usd(150.0)), t) }
     val d = CardCheck.decide(ProposedAction("refund", "r", Money.usd(100.0)), t)
@@ -58,7 +86,7 @@ class CardCheckTest {
   }
 
   @Test fun aRevokedCardRefusesEverything() {
-    val t = taf("refunds").let { it.copy(card = it.card.copy(revoked = true)) }
+    val t = refunds().let { it.copy(card = it.card.copy(revoked = true)) }
     assertEquals(Decision.Refused("Card revoked"), CardCheck.decide(ProposedAction("refund", "r", Money.usd(1.0)), t))
   }
 }

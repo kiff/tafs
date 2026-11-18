@@ -15,7 +15,7 @@ data class TafTemplate(
 )
 
 object TafTemplates {
-  val all: List<TafTemplate> get() = listOf(refunds, billPay, access, deploys, chargebacks)
+  val all: List<TafTemplate> get() = listOf(support, parcels, access, deploys, leads)
 
   fun template(key: String?): TafTemplate? = all.firstOrNull { it.key == key }
 
@@ -27,39 +27,40 @@ object TafTemplates {
   private fun sampleRules(vararg rules: CardRule): List<CardRule> =
     rules.map { it.copy(id = java.util.UUID.nameUUIDFromBytes("tafs.sample.rule.${it.action}".toByteArray()).toString()) }
 
-  /** Support: settle refund and credit requests within policy. */
-  val refunds: TafTemplate get() = TafTemplate(
-    key = "refunds", name = Words.Sample.Refunds.name,
-    job = Words.Sample.Refunds.job,
-    tools = listOf(Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email),
+  /** Support: answer tickets the same day; promises wait for the owner, a customer's details never leave. */
+  val support: TafTemplate get() = TafTemplate(
+    key = "support", name = Words.Sample.Support.name,
+    job = Words.Sample.Support.job,
+    tools = listOf(Words.Sample.Tool.email, Words.Sample.Tool.store),
     rules = sampleRules(
-      CardRule(action = "refund", label = Words.Sample.Refunds.Rule.refunds, perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf(Words.Sample.Refunds.nextStep)),
-      CardRule(action = "credit", label = Words.Sample.Refunds.Rule.credits, perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
-      CardRule(action = "payout", label = Words.Sample.Refunds.Rule.payouts, never = true, outside = Outside.refuse),
+      CardRule(action = "reply_ticket", label = Words.Sample.Support.Rule.replies, countPerWindow = 60, window = Window.day),
+      CardRule(action = "promise", label = Words.Sample.Support.Rule.promises, alwaysAsk = true, nextSteps = listOf(Words.Sample.Support.nextStep)),
+      CardRule(action = "share_customer_data", label = Words.Sample.Support.Rule.customerData, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("refund", Words.Sample.Refunds.refund4471, Money.eur(40.0), Words.Sample.Refunds.refund4471Why),
-      ProposedAction("credit", Words.Sample.Refunds.credit2290, Money.eur(25.0), Words.Sample.Refunds.credit2290Why),
-      ProposedAction("refund", Words.Sample.Refunds.refund4502, Money.eur(480.0), Words.Sample.Refunds.refund4502Why),
-      ProposedAction("payout", Words.Sample.Refunds.payout, Money.eur(900.0), Words.Sample.Refunds.payoutWhy),
+      ProposedAction("reply_ticket", Words.Sample.Support.reply7781, null, Words.Sample.Support.reply7781Why),
+      ProposedAction("reply_ticket", Words.Sample.Support.reply7790, null, Words.Sample.Support.reply7790Why),
+      ProposedAction("promise", Words.Sample.Support.promise7802, null, Words.Sample.Support.promise7802Why),
+      ProposedAction("share_customer_data", Words.Sample.Support.shareHistory, null, Words.Sample.Support.shareHistoryWhy),
     ),
   )
 
-  /** Accounts payable: match, approve and pay routine vendor bills. */
-  val billPay: TafTemplate get() = TafTemplate(
-    key = "billpay", name = Words.Sample.BillPay.name,
-    job = Words.Sample.BillPay.job,
-    tools = listOf(Words.Sample.Tool.accounting, Words.Sample.Tool.email),
+  /** Operations: tell customers of a late parcel before they ask; reships wait, an address never changes from an email. */
+  val parcels: TafTemplate get() = TafTemplate(
+    key = "parcels", name = Words.Sample.Parcels.name,
+    job = Words.Sample.Parcels.job,
+    tools = listOf(Words.Sample.Tool.store, Words.Sample.Tool.email),
     rules = sampleRules(
-      CardRule(action = "pay_bill", label = Words.Sample.BillPay.Rule.bills, perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf(Words.Sample.BillPay.nextStep)),
-      CardRule(action = "wire", label = Words.Sample.BillPay.Rule.wires, alwaysAsk = true),
-      CardRule(action = "bank_details", label = Words.Sample.BillPay.Rule.bankDetails, never = true, outside = Outside.refuse),
-      CardRule(action = "new_payee", label = Words.Sample.BillPay.Rule.newPayees, never = true, outside = Outside.refuse),
+      CardRule(action = "delay_message", label = Words.Sample.Parcels.Rule.delayMessages, countPerWindow = 100, window = Window.day),
+      CardRule(action = "reship", label = Words.Sample.Parcels.Rule.reships, alwaysAsk = true, nextSteps = listOf(Words.Sample.Parcels.nextStep)),
+      CardRule(action = "change_address", label = Words.Sample.Parcels.Rule.addressChanges, never = true, outside = Outside.refuse),
+      CardRule(action = "parcel_refund", label = Words.Sample.Parcels.Rule.refunds, never = true, outside = Outside.refuse),
     ),
     script = listOf(
-      ProposedAction("pay_bill", Words.Sample.BillPay.payNorthwind, Money.eur(1_240.0), Words.Sample.BillPay.payNorthwindWhy),
-      ProposedAction("pay_bill", Words.Sample.BillPay.payAtlas, Money.eur(8_400.0), Words.Sample.BillPay.payAtlasWhy),
-      ProposedAction("bank_details", Words.Sample.BillPay.updateBank, null, Words.Sample.BillPay.updateBankWhy),
+      ProposedAction("delay_message", Words.Sample.Parcels.tell5120, null, Words.Sample.Parcels.tell5120Why),
+      ProposedAction("delay_message", Words.Sample.Parcels.tell5134, null, Words.Sample.Parcels.tell5134Why),
+      ProposedAction("reship", Words.Sample.Parcels.reship5098, null, Words.Sample.Parcels.reship5098Why),
+      ProposedAction("change_address", Words.Sample.Parcels.changeAddress, null, Words.Sample.Parcels.changeAddressWhy),
     ),
   )
 
@@ -101,19 +102,19 @@ object TafTemplates {
     ),
   )
 
-  /** Payments: answer disputes with evidence before the deadline. */
-  val chargebacks: TafTemplate get() = TafTemplate(
-    key = "chargebacks", name = Words.Sample.Chargebacks.name,
-    job = Words.Sample.Chargebacks.job,
-    tools = listOf(Words.Sample.Tool.payments),
+  /** Sales: reply to new leads within the hour and book a call; discounts wait for the owner. */
+  val leads: TafTemplate get() = TafTemplate(
+    key = "leads", name = Words.Sample.Leads.name,
+    job = Words.Sample.Leads.job,
+    tools = listOf(Words.Sample.Tool.email),
     rules = sampleRules(
-      CardRule(action = "submit_evidence", label = Words.Sample.Chargebacks.Rule.evidence, perAction = Money.eur(500.0), countPerWindow = 50, window = Window.day),
-      CardRule(action = "accept_dispute", label = Words.Sample.Chargebacks.Rule.acceptingLoss, perAction = Money.eur(100.0), perWindow = Money.eur(500.0), window = Window.week),
+      CardRule(action = "reply_lead", label = Words.Sample.Leads.Rule.replies, countPerWindow = 50, window = Window.day),
+      CardRule(action = "offer_discount", label = Words.Sample.Leads.Rule.discounts, alwaysAsk = true),
     ),
     script = listOf(
-      ProposedAction("submit_evidence", Words.Sample.Chargebacks.answer3318, Money.eur(120.0), Words.Sample.Chargebacks.answer3318Why),
-      ProposedAction("accept_dispute", Words.Sample.Chargebacks.accept3342, Money.eur(35.0), Words.Sample.Chargebacks.accept3342Why),
-      ProposedAction("submit_evidence", Words.Sample.Chargebacks.answer3360, Money.eur(1_800.0), Words.Sample.Chargebacks.answer3360Why),
+      ProposedAction("reply_lead", Words.Sample.Leads.replyKaya, null, Words.Sample.Leads.replyKayaWhy),
+      ProposedAction("reply_lead", Words.Sample.Leads.confirmNord, null, Words.Sample.Leads.confirmNordWhy),
+      ProposedAction("offer_discount", Words.Sample.Leads.discountLumen, null, Words.Sample.Leads.discountLumenWhy),
     ),
   )
 }

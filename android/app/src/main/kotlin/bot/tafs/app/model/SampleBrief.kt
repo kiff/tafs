@@ -26,15 +26,16 @@ object SampleBrief {
    */
   fun brief(label: String? = null, urgent: Boolean = false): Brief {
     val money = label == MONEY
-    val billPay = Words.Sample.BillPay.name
+    val parcels = Words.Sample.Parcels.name
+    val leads = Words.Sample.Leads.name
     val pay = Brief.Decision(
       id = "d-pay", question = Lines.Pay.question,
       answers = listOf(Brief.Answer(Lines.Pay.answer, "approve", recommended = true), Brief.Answer(Words.Common.notNow, "reject", decline = true)),
-      why = Lines.Pay.why(billPay),
+      why = Lines.Pay.why(parcels),
       meanwhile = Lines.Pay.meanwhile,
       deadline = Lines.Pay.deadline, later = Lines.later,
       note = Lines.Pay.note,
-      ref = Brief.Ref("hold", "sample-hold-pay", billPay),
+      ref = Brief.Ref("hold", "sample-hold-pay", parcels),
     )
     val remind = Brief.Decision(
       id = "d-remind", question = Lines.Remind.question,
@@ -42,23 +43,28 @@ object SampleBrief {
       why = Lines.Remind.why,
       meanwhile = Lines.Remind.meanwhile,
       later = Lines.later,
-      ref = Brief.Ref("hold", "sample-hold-remind", Words.Sample.Refunds.name),
+      ref = Brief.Ref("hold", "sample-hold-remind", leads),
     )
     val expires = Brief.Decision(
       id = "d-urgent", question = Lines.Expires.question,
       answers = listOf(Brief.Answer(Lines.Expires.answer, "approve", recommended = true), Brief.Answer(Lines.Expires.decline, "reject", decline = true)),
-      why = Lines.Expires.why(billPay),
+      why = Lines.Expires.why(parcels),
       meanwhile = Lines.Expires.meanwhile,
       cantWait = Lines.Expires.cantWait,
       urgent = true,
-      ref = Brief.Ref("hold", "sample-hold-urgent", billPay),
+      ref = Brief.Ref("hold", "sample-hold-urgent", parcels),
     )
+    // The parcels' mission (the label `money` keeps its id): its taf's line, with the value its brief leads with.
     val moneyDone = Brief.Done(
       mission = Lines.Label.money, value = Lines.moneyValue, log = MONEY,
+      cases = listOf(Brief.Case(parcels, Lines.Case.billsLine, "open")),
+    )
+    // The leads' mission (the label `clients`): one case per lead.
+    val leadsDone = Brief.Done(
+      mission = Lines.Label.clients,
       cases = listOf(
         Brief.Case(Lines.Case.dubois, Lines.Case.duboisLine, "waiting", Lines.Case.duboisNext),
         Brief.Case(Lines.Case.brio, Lines.Case.brioLine, "closed"),
-        Brief.Case(billPay, Lines.Case.billsLine, "open"),
         Brief.Case(Lines.Case.fern, Lines.Case.fernLine, "waiting"),
       ),
     )
@@ -85,7 +91,7 @@ object SampleBrief {
       ),
       decisions = decisions,
       nextMove = Brief.NextMove(Lines.nextMove, Words.Coach.start, Lines.nextMoveDismiss, listOf("0142", "0137", "0129")),
-      done = if (money) listOf(moneyDone) else listOf(moneyDone, support),
+      done = if (money) listOf(moneyDone) else listOf(moneyDone, leadsDone, support),
       rest = Brief.Counted(rest, Lines.rest(rest)),
       credits = Lines.credits,
     )
