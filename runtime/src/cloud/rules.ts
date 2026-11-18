@@ -179,7 +179,7 @@ function sameLimits(a: AgreedLimit[] | undefined, b: AgreedLimit[] | undefined):
 export type RulesMismatch =
   | { kind: "on_exceed"; tool: string; over: "ask" | "refuse"; onExceed: "owner" | "refuse" }
   | { kind: "mixed"; tool: string }
-  | { kind: "missing"; tool: string; rule: string }
+  | { kind: "missing"; tool: string }
   | { kind: "figure"; tool: string; quantity: string; window: string; per?: string; agreed: number; drafted?: number };
 
 /**
@@ -191,21 +191,25 @@ export type RulesMismatch =
  */
 export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[]): RulesMismatch | undefined {
   for (const g of grants) {
+    const suffix = grantSuffix(g.id);
     for (const t of g.request.tools ?? []) {
       const name = fold(t.name || t.tool);
       if (!name) continue;
       const before = fold(t.tool || t.name);
+      // The name a rule gives: KIFF's name with this grant's own suffix off ("send_reminder" for "send_reminder_3qa1" on
+      // grt_3Qa1…), as Coach reads it. A managed app's `tool` is its connector's id, which no rule names (the owner's
+      // phone, 18 Nov: a Gmail write refused three times though every notice named it).
+      const job = suffix && name.endsWith(suffix) && name.length > suffix.length ? name.slice(0, -suffix.length) : "";
       const covering = cards.filter((raw) => {
         const card = raw as { grants?: unknown };
         return Array.isArray(card.grants) && card.grants.some((x) => fold((x as { action?: unknown }).action) === name);
       });
       if (!covering.length) continue;
       const shown = t.title || t.name || t.tool || name;
-      const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name);
+      const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name) ??
+        (job ? rules.find((r) => fold(r.tool) === job) : undefined);
       if (!rule) {
-        // `rule` is what a rule must name to cover it (planque's name, as matched above), never its title: told the
-        // title, Coach wrote the title into the rule and was refused again (the owner's phone, 18 Nov).
-        if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown, rule: t.tool || t.name || name };
+        if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown };
         continue;
       }
       for (const raw of covering) {
@@ -259,6 +263,15 @@ export function kiffsOwnCount(cards: readonly unknown[], card: unknown, a: unkno
       Array.isArray(other.aggregates) && other.aggregates.some((t) => fold((t as { quantity?: unknown })?.quantity).startsWith("sum(") && !fold((t as { per?: unknown })?.per));
   });
   return actions.length > 0 && actions.every(bounded);
+}
+
+/**
+ * The suffix planque gives a grant's tools in KIFF when the request names none (`toolKey`): `_` and the first four
+ * letters or digits of the grant's id after `grt_`, lowercased. Empty when the id has none.
+ */
+export function grantSuffix(id: string): string {
+  const four = (id.startsWith("grt_") ? id.slice(4) : id).toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4);
+  return four ? `_${four}` : "";
 }
 
 /** A figure on the Cards: `per` is "" on each call's and on a total over all items, else folded. */

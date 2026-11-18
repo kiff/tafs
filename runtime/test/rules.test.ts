@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApprovalGrant } from "../src/cloud/approval.js";
-import { LIMITS_MAX, RULES_MAX, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
+import { LIMITS_MAX, RULES_MAX, grantSuffix, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
 
 /** A conversation's events, as kiff/agents records them, in order. */
 const notice = (id: string, rules: unknown, run = "r1") => ({ kind: "component", run, body: { type: "notice", id, tone: "info", text: "The rules", rules } });
@@ -99,14 +99,29 @@ describe("a draft's Cards against the agreed rules", () => {
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "refund_charge_k3", over: "ask" }])).toBeUndefined();
   });
 
-  it("a missing rule names the tool's name, which covers it, never its title, which doesn't", () => {
-    // The owner's phone, 18 Nov: told the title, Coach wrote it into the rule and was refused three times.
-    const reminder = grantOf("g2", [{ tool: "send_reminder", name: "send_reminder_q7", title: "Email a payment reminder to you" }]);
-    const byTitle = [{ tool: "Email a payment reminder to you", over: "ask" as const }];
-    const off = rulesMismatch([reminder], [card("send_reminder_q7", "owner")], byTitle);
-    expect(off).toEqual({ kind: "missing", tool: "Email a payment reminder to you", rule: "send_reminder" });
-    // The name it gives is the one that covers it.
-    expect(rulesMismatch([reminder], [card("send_reminder_q7", "owner")], [{ tool: off!.kind === "missing" ? off!.rule : "", over: "ask" }])).toBeUndefined();
+  it("a rule names a managed tool by its job name: KIFF's name with this grant's own suffix off", () => {
+    // The owner's phone, 18 Nov: a Gmail write whose `tool` is the connector's id, named send_reminder_3qa1 on
+    // grt_3Qa1…; every notice's rule said send_reminder, and the write was refused three times as missing.
+    const gmail: ApprovalGrant = { id: "grt_3Qa1xYz9", status: "pending", digest: "d", request: { agent: "chase-x", tools: [
+      { tool: "connector_cac677194bf6ba46b262eed82d2a52fd", name: "send_reminder_3qa1", title: "Email a payment reminder to you" },
+    ] as never } };
+    const rules = [{ tool: "send_reminder", over: "ask" as const }];
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], rules)).toBeUndefined();
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "refuse")], rules)?.kind).toBe("on_exceed");
+    // Only this grant's own suffix comes off: another grant's tool, or a name the suffix doesn't end, isn't covered.
+    const other: ApprovalGrant = { ...gmail, id: "grt_9zzzAbc" };
+    expect(rulesMismatch([other], [card("send_reminder_3qa1", "owner")], rules)).toEqual({ kind: "missing", tool: "Email a payment reminder to you" });
+    const bare: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder", title: "t" }] as never } };
+    expect(rulesMismatch([bare], [card("send_reminder", "owner")], [{ tool: "send", over: "ask" }])).toEqual({ kind: "missing", tool: "t" });
+    // The title still covers nothing.
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], [{ tool: "Email a payment reminder to you", over: "ask" }])?.kind).toBe("missing");
+  });
+
+  it("a grant's suffix is planque's toolKey: _ and the id's first four letters or digits, lowercased", () => {
+    expect(grantSuffix("grt_3Qa1xYz9")).toBe("_3qa1");
+    expect(grantSuffix("grt_-A_b-C1d")).toBe("_abc1");
+    expect(grantSuffix("grt_")).toBe("");
+    expect(grantSuffix("g1")).toBe("_g1");
   });
 
   it("every Card covering the tool must match, not one of them", () => {
@@ -115,10 +130,10 @@ describe("a draft's Cards against the agreed rules", () => {
   });
 
   it("a write with no rule isn't signed; a read with none is; a rule for a tool no grant has is ignored", () => {
-    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "list_charges", over: "refuse" }])).toEqual({ kind: "missing", tool: "refund charge", rule: "refund_charge" });
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "list_charges", over: "refuse" }])).toEqual({ kind: "missing", tool: "refund charge" });
     expect(rulesMismatch([stripe], [card("list_charges_k3", "refuse")], [{ tool: "refund_charge", over: "refuse" }])).toBeUndefined();
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "delete_everything", over: "ask" }, { tool: "refund_charge", over: "refuse" }])?.kind).toBe("on_exceed");
-    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "delete_everything", over: "ask" }])).toEqual({ kind: "missing", tool: "refund charge", rule: "refund_charge" });
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "delete_everything", over: "ask" }])).toEqual({ kind: "missing", tool: "refund charge" });
   });
 
   it("two apps: the app whose Card doesn't match is the one named", () => {
