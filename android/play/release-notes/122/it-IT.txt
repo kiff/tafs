@@ -1,0 +1,3 @@
+• Approvare un collegamento: la schermata ora si compila da sola. Se dopo un minuto non si riesce ancora a leggere, lo dice, con «Riprova».
+• Coach: una nuova chat parte da zero e, quando non si può dare una risposta, la chat lo dice in una riga.
+• I taf di esempio ora sono Risposte al supporto, Pacchi in ritardo e Ricontatto dei contatti. Nessuno muove denaro.

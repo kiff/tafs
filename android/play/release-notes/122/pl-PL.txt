@@ -1,0 +1,3 @@
+• Zatwierdzanie połączenia: ekran wypełnia się teraz sam. Jeśli po minucie nadal nie da się go odczytać, mówi o tym, z przyciskiem „Spróbuj ponownie”.
+• Coach: nowy czat zaczyna od zera, a gdy nie da się udzielić odpowiedzi, czat mówi o tym w jednym wierszu.
+• Przykładowe tafy to teraz Odpowiedzi wsparcia, Spóźnione paczki i Kontakt z leadami. Żaden z nich nie przesyła pieniędzy.

@@ -1,0 +1,3 @@
+• Approving a connection: the screen now fills in on its own. If it still can't be read after a minute, it says so, with Try again.
+• Coach: a new chat starts clean, and when a reply can't be made, the chat says so in one line.
+• The sample tafs are now Support replies, Late parcels and Lead follow-up. None of them moves money.

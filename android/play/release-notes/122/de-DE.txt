@@ -1,0 +1,3 @@
+• Verbindung genehmigen: Der Bildschirm füllt sich jetzt von selbst. Ist er nach einer Minute noch nicht lesbar, sagt er es, mit „Erneut versuchen“.
+• Coach: Ein neuer Chat beginnt bei null, und wenn eine Antwort nicht möglich ist, sagt der Chat es in einer Zeile.
+• Die Beispiel-tafs sind jetzt Support-Antworten, Verspätete Pakete und Lead-Nachfassen. Keiner von ihnen bewegt Geld.
