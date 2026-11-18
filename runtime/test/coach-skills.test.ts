@@ -67,9 +67,10 @@ describe("Coach's skills, as files", () => {
 describe("Coach's core", () => {
   it("is about 2,000 tokens, with the map of its skills and the rules that hold whatever is loaded", () => {
     expect(SETUP_INSTRUCTIONS).toBe(SETUP_CORE);
-    // 2,520 since Eval 44128040350: the "read only" line (17 tokens) went in with the core at 2,499. 2,530 since Eval
-    // 44204192951: the same line names what stays unchanged (an option "the sheet isn't changed" on a wide sign-in).
-    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2530);
+    // 2,520 since Eval 44128040350: the "read only" line (17 tokens) went in with the core at 2,499. 2,550 since Eval
+    // 44204192951: the same line names an app's data left unchanged (an option "the sheet isn't changed" on a wide
+    // sign-in), and says a Card's never-lines stay its rules, so they're still proposed (draft-the-card@36).
+    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2550);
     expect(SETUP_CORE).toContain(SKILLS_MAP);
     for (const s of COACH_SKILLS) expect(SETUP_CORE.includes(`  - ${s.name}: ${s.description}`), s.name).toBe(!NAMED_ONLY.includes(s.name));
     // The watch's skill is named-only: Coach's map never names it, so no phone conversation reads it (docs/watch-ask.md).
