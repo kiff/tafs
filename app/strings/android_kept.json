@@ -137,20 +137,9 @@
     "not a passkey: ${made.type}": "diagnostics: Credential Manager answering a passkey request with another kind of credential, which it doesn't; the line says why under the app's own words"
   },
   "model/SampleBrief.kt": {
-    "Bill pay": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "Bill pay didn't run at 07:00: its bank sign-in needs you.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
     "Coach": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "Bill 0412, for payment. A reference, not its data.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "Bill pay → Refunds": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "bill 0412": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "12 bills sorted, 2 didn't match their order.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
     "12 record lines": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "€4,120 sorted": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "Sent the reminder to Atelier Dubois.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "You": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "invoice 0142": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "3 quotes drafted for new clients.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
-    "Quotes": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)"
+    "You": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)"
   },
   "model/SetupShape.kt": {
     " · it didn't go through: ": "kiff/agents' recorded answer, read as data, never shown",

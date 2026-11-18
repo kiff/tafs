@@ -427,7 +427,7 @@ class BriefTest {
     val log = SampleBrief.log()
     assertEquals(5, MissionLogs.drawn(listOf(log)).size)
     assertTrue(log.items.any { it.removed })
-    assertEquals(listOf("Coach", "Bill pay → Refunds", "Bill pay", "You", "Quotes"), log.items.map { MissionLogs.byName(it) })
+    assertEquals(listOf("Coach", "Late parcels → Support replies", "Late parcels", "You", "Quotes"), log.items.map { MissionLogs.byName(it) })
     assertNull("one page, no more", log.before)
     val m = testModel()
     assertNull("the sample walk has no log", m.missionLog(SampleBrief.MONEY))

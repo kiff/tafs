@@ -2004,6 +2004,20 @@ object Words {
       }
     }
     val listCharges: String get() = Res.s(R.string.sample_list_charges)
+    object Log {
+      val s1Line: String get() = Res.s(R.string.sample_log_s1_line)
+      val s1Title: String get() = Res.s(R.string.sample_log_s1_title)
+      val s2Evidence: String get() = Res.s(R.string.sample_log_s2_evidence)
+      val s2Line: String get() = Res.s(R.string.sample_log_s2_line)
+      val s3By: String get() = Res.s(R.string.sample_log_s3_by)
+      val s3Line: String get() = Res.s(R.string.sample_log_s3_line)
+      val s3Value: String get() = Res.s(R.string.sample_log_s3_value)
+      val s4By: String get() = Res.s(R.string.sample_log_s4_by)
+      val s4Evidence: String get() = Res.s(R.string.sample_log_s4_evidence)
+      val s4Line: String get() = Res.s(R.string.sample_log_s4_line)
+      val s4Title: String get() = Res.s(R.string.sample_log_s4_title)
+      val s5Line: String get() = Res.s(R.string.sample_log_s5_line)
+    }
     val lookUpCharge: String get() = Res.s(R.string.sample_look_up_charge)
     object Memory {
       val askFirst: String get() = Res.s(R.string.sample_memory_ask_first)

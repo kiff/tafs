@@ -101,23 +101,23 @@ object SampleBrief {
   fun log(): MissionLogPage = MissionLogPage(
     listOf(
       MissionLogItem(
-        "s5", "2026-11-14T06:10:00Z", MissionLogBy("lead"), "Coach", "stuck", "stuck", "Bill pay didn't run at 07:00: its bank sign-in needs you.",
+        "s5", "2026-11-14T06:10:00Z", MissionLogBy("lead"), "Coach", "stuck", "stuck", Words.Sample.Log.s5Line,
         listOf(MissionLogEvidence("run", "r1", "run"), MissionLogEvidence("hold", "h1", "hold")),
       ),
       MissionLogItem(
-        "s4", "2026-11-14T06:03:00Z", MissionLogBy("taf", "Bill pay"), "Bill pay → Refunds", "handed", "handed", "Bill 0412, for payment. A reference, not its data.",
-        listOf(MissionLogEvidence("item", "0412", "bill 0412")),
+        "s4", "2026-11-14T06:03:00Z", MissionLogBy("taf", Words.Sample.Log.s4By), Words.Sample.Log.s4Title, "handed", "handed", Words.Sample.Log.s4Line,
+        listOf(MissionLogEvidence("item", "5098", Words.Sample.Log.s4Evidence)),
       ),
       MissionLogItem(
-        "s3", "2026-11-14T06:02:00Z", MissionLogBy("taf", "Bill pay"), null, "delivered", "delivered", "12 bills sorted, 2 didn't match their order.",
-        listOf(MissionLogEvidence("run", "r2", "run"), MissionLogEvidence("record", "rec", "12 record lines")), value = "€4,120 sorted",
+        "s3", "2026-11-14T06:02:00Z", MissionLogBy("taf", Words.Sample.Log.s3By), null, "delivered", "delivered", Words.Sample.Log.s3Line,
+        listOf(MissionLogEvidence("run", "r2", "run"), MissionLogEvidence("record", "rec", "12 record lines")), value = Words.Sample.Log.s3Value,
       ),
       MissionLogItem(
-        "s2", "2026-11-13T17:28:00Z", MissionLogBy("person"), "You", "decided", "decided", "Sent the reminder to Atelier Dubois.",
-        listOf(MissionLogEvidence("item", "0142", "invoice 0142"), MissionLogEvidence("hold", "h2", "hold")),
+        "s2", "2026-11-13T17:28:00Z", MissionLogBy("person"), "You", "decided", "decided", Words.Sample.Log.s2Line,
+        listOf(MissionLogEvidence("item", "kaya", Words.Sample.Log.s2Evidence), MissionLogEvidence("hold", "h2", "hold")),
       ),
       MissionLogItem(
-        "s1", "2026-11-13T08:12:00Z", MissionLogBy("taf"), "Quotes", "delivered", "delivered", "3 quotes drafted for new clients.",
+        "s1", "2026-11-13T08:12:00Z", MissionLogBy("taf"), Words.Sample.Log.s1Title, "delivered", "delivered", Words.Sample.Log.s1Line,
         listOf(MissionLogEvidence("run", "r3", "run")), removed = true,
       ),
     ),
