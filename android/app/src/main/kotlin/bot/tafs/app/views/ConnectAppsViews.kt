@@ -664,6 +664,8 @@ fun ConnectApprovalSheet(
   onDisconnect: (String) -> Unit = {},
   /** Back on the sheet with no link from the vendor's page: the same page again, as Coach's card offers. */
   onReopen: () -> Unit = {},
+  /** Its Try again, once it said its connection couldn't be read ([AppState.listApprovalNotRead]). */
+  onRetry: () -> Unit = {},
 ) {
   // Kept only while the sheet is open, never saved: it goes to planque once.
   var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
@@ -702,7 +704,15 @@ fun ConnectApprovalSheet(
         return@Column
       }
       Text(bot.tafs.app.model.ConnectWords.APPROVE_TITLE, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
-      if (grant == null) {
+      if (grant == null && state.listApprovalNotRead) {
+        // Still not in planque's list a minute on: said, with Try again, never "Reading…" for ever.
+        Text(Words.Connect.approveNotRead(why = state.connectionsError ?: Words.Error.onOurSide), style = scaled(14, color = Theme.no))
+        Text(
+          Words.Common.tryAgain,
+          style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { onRetry() }.padding(vertical = 10.dp).testTag("connect.approval.retry"),
+        )
+      } else if (grant == null) {
         Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
       } else {
         // planque's own words for what it will do.

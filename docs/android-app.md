@@ -1603,7 +1603,13 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     them from being read at all.
   - **A minute in, a card still not drawable says so**: "Couldn't read what to approve", with planque's last reason or
     "we're on it", and **Try again**, which reads the thread at once (`AppState.cardsNotRead`, `AppModel.retryCards`). The
-    reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`).
+    reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`). Try again starts a new minute (the
+    follower that said it ends), a sign-in card that names no grant says the same under its button, and an account change ends
+    the follower at once.
+  - **The approval sheet over Connect apps** reads planque again the same way while its connection isn't listed
+    (`AppModel.followListApproval`), from Connect, a sign-in again or a card's key sheet: it read planque once and could stay on
+    "Reading…". A minute in it says it couldn't be read, with Try again (`AppState.listApprovalNotRead`,
+    `retryListApproval`); closing the sheet ends the reads (`ConnectAppsTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).

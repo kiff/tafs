@@ -1,0 +1,1 @@
+- **Android: the approval sheet over Connect apps no longer stays on "Reading what it asks for…",** and a card's Try again starts a new minute; a sign-in card says when it can't be read ([android-app.md](docs/android-app.md)).

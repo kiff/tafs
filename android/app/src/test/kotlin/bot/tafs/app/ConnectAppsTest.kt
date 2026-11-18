@@ -4,6 +4,8 @@ import bot.tafs.app.app.AppModel
 import bot.tafs.app.kiff.InMemorySecretStore
 import java.time.Instant
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -55,6 +57,58 @@ class ConnectAppsTest {
     assertNull(m.state.value.startingApp)
     m.closeListApproval()
     assertNull(m.state.value.listApproval)
+  }
+
+  /** The model on the test's clock, so the sheet's reads of planque can be stepped through. */
+  private suspend fun timedModel(scope: kotlinx.coroutines.CoroutineScope): AppModel {
+    model()
+    // planque reads with this device's key: KIFF names this device.
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
+    return testModel(transport = transport, secrets = secrets, clock = { Instant.parse("2026-11-02T21:00:00Z") }, start = false, scope = scope)
+      .also { it.restore(); it.refresh() }
+  }
+
+  // The Coach card's P0 on this sheet: Connect from the list read planque once, and a grant not listed yet left the sheet on
+  // "Reading what it asks for…" for good. planque is read again until it lists the grant, and the sheet then draws it.
+  @Test fun theSheetReadsPlanqueAgainUntilItListsTheGrant() = kotlinx.coroutines.test.runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = timedModel(backgroundScope)
+    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":{"id":"g7","status":"pending"}}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"), m.state.value.connectableTafs.single().id)
+    assertEquals("g7", m.state.value.listApproval)
+    assertTrue(m.state.value.grants.none { it.id == "g7" })
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[{"id":"g7","status":"pending","text":"Connect Notion."}]}""")
+    advanceTimeBy(3_000 + 1)
+    runCurrent()
+    assertTrue("the sheet has its grant without being opened again", m.state.value.grants.any { it.id == "g7" })
+    assertFalse(m.state.value.listApprovalNotRead)
+  }
+
+  // Never "Reading…" for ever: a minute in, the sheet says its connection couldn't be read, with Try again; Try again reads
+  // planque at once and starts a new minute; closing the sheet ends the reads.
+  @Test fun theSheetSaysAfterAMinuteThatItCouldntBeRead() = kotlinx.coroutines.test.runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = timedModel(backgroundScope)
+    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":{"id":"g7","status":"pending"}}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"), m.state.value.connectableTafs.single().id)
+    advanceTimeBy(AppModel.CARD_NOT_READ_MS - 3_000)
+    runCurrent()
+    assertFalse("not before the minute", m.state.value.listApprovalNotRead)
+    advanceTimeBy(3_000 + 1)
+    runCurrent()
+    assertTrue(m.state.value.listApprovalNotRead)
+    assertTrue("planque was read again through the minute", transport.requestsTo("GET /v1/accounts/t_01/grants").size >= 20)
+    m.retryListApproval()
+    runCurrent()
+    assertFalse(m.state.value.listApprovalNotRead)
+    advanceTimeBy(10_000 + 1)
+    runCurrent()
+    assertFalse("a new minute, not the next tick", m.state.value.listApprovalNotRead)
+    m.closeListApproval()
+    val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(AppModel.CARD_GRANT_READ_DELAYS.sum())
+    runCurrent()
+    assertEquals("closed: no more reads", read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
   }
 
   @Test fun aVendorThatTakesAKeyOpensItsApprovalToTakeTheKeyThere() = runTest {
