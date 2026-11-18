@@ -170,7 +170,7 @@ class ChatStreamTest {
     val m = model()
     m.deliverChat("Refund Ana", "refunds-1")
     settle()
-    assertEquals(ChatEnd.Failed("Refund Ana", listOf(DoneCall("create_refund", "ch_1"))), m.state.value.chatEnded["refunds-1"])
+    assertEquals(ChatEnd.Failed("Refund Ana", listOf(DoneCall("create_refund", "ch_1")), run = "run_1"), m.state.value.chatEnded["refunds-1"])
     assertEquals("Refunds stopped part-way, after this went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1"))))
   }
 
@@ -185,7 +185,7 @@ class ChatStreamTest {
     m.deliverChat("Refund Ana", "refunds-1")
     settle()
     val end = m.state.value.chatEnded["refunds-1"] as ChatEnd.Failed
-    assertEquals(ChatEnd.Failed("Refund Ana", emptyList(), words), end)
+    assertEquals(ChatEnd.Failed("Refund Ana", emptyList(), words, run = "run_1"), end)
     assertEquals(words, AppModel.failedWords("Refunds", end.done, end.words))
     // What went through before it stopped still follows the words.
     assertEquals("$words This went through: create refund on ch_1.", AppModel.failedWords("Refunds", listOf(DoneCall("create_refund", "ch_1")), words))
