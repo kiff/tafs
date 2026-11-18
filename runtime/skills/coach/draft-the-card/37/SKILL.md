@@ -10,7 +10,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
 ## Procedure
 
 - Propose the rules in plain words before you set anything: what the taf may
-  do, the limits (each action, and over a day), what it can never touch, and
+  do, the limits (each action, and over a day), what it may not do (as a Card rule), and
   whether an action over a limit is held for the owner or refused. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
   A limit for each item ("one invoice per order, ever") is a total with per:
