@@ -141,4 +141,43 @@ class WatchRelayTest {
     assertNull(AlertPayload.openedFromWatch("tafs://planque/signed-in"))
     assertNull(AlertPayload.openedFromWatch(null))
   }
+
+  /** A taf's page is the phone's Card tab: the taf's state and job, each Card's face and rules, and what of it waits. */
+  @Test fun aTafsPageIsThePhonesOwn() {
+    val state = testModel().state.value.copy(mode = Mode.kiff)
+    val taf = state.tafs.first { state.held.any { h -> h.tafId == it.id } }
+    val page = WatchRelay.tafPage(state, taf.id)!!
+    assertEquals(taf.name, page.name)
+    assertEquals(taf.job, page.job)
+    assertEquals(taf.shownCards.map { it.title }, page.cards.map { it.title })
+    assertEquals(taf.shownCards.first().hero?.figure, page.cards.first().figure)
+    assertEquals(taf.card.rules.size, page.cards.first().rules.size)
+    assertEquals(state.held.count { it.tafId == taf.id }, page.waiting)
+    assertNull("a taf the phone doesn't list", WatchRelay.tafPage(state, "no_such_taf"))
+  }
+
+  /** A calendar day: tafs cloud's line, and that day's events alone, in time order, with each taf's name. */
+  @Test fun aCalendarDayIsTafsCloudsRead() {
+    val read = bot.tafs.app.kiff.KiffClient.json.decodeFromString(
+      bot.tafs.app.kiff.CalendarRead.serializer(),
+      """{"events":[
+        {"taf":"t2","name":"Late parcels","at":"2026-11-19T15:00:00Z","day":"2026-11-19","time":"16:00","minute":960,"words":"Every day at 16:00"},
+        {"taf":"t1","name":"Morning inbox","at":"2026-11-19T08:00:00Z","day":"2026-11-19","time":"09:00","minute":540,"words":"Every day at 09:00"},
+        {"taf":"t1","name":"Morning inbox","at":"2026-11-20T08:00:00Z","day":"2026-11-20","time":"09:00","minute":540,"words":"Every day at 09:00"}
+      ],"days":["2026-11-19","2026-11-20"],"words":"2 to come"}""",
+    )
+    val day = WatchRelay.calendarDay("2026-11-19", read)
+    assertEquals("2 to come", day.words)
+    assertEquals(listOf("Morning inbox", "Late parcels"), day.events.map { it.taf })
+    assertEquals(listOf("09:00", "16:00"), day.events.map { it.time })
+  }
+
+  /** Signed out, none of v2's reads tells the watch anything. */
+  @Test fun v2sReadsSaySignedOutWithNoSession() = runTest {
+    for (r in listOf(WatchRequest.Taf(now, "taf_1"), WatchRequest.Calendar(now), WatchRequest.Account(now))) {
+      val (path, data) = request(r)
+      assertEquals(WatchReply.SignedOut, WatchRelay(model = { null }, now = { now }).answer(path, data))
+      assertEquals(WatchReply.SignedOut, WatchRelay(model = { testModel() }, now = { now }).answer(path, data))
+    }
+  }
 }
