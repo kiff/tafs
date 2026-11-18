@@ -1,0 +1,6 @@
+2026-11-18T03:40:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -setup defs/setup.json -plan sheets -owner en -grade -max-cost 2 -owner-turns 8 -repeat "3" -transcript plan.md
+2026-11-18T03:41:00.0000000Z PASS
+2026-11-18T03:40:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -setup defs/setup.json -plan sheets -owner fr -grade -max-cost 2 -owner-turns 8 -repeat "3" -transcript plan.md
+2026-11-18T03:41:00.0000000Z PASS
+2026-11-18T03:40:00.0000000Z ##[group]Run go run ./cmd/e2e $([ -d defs/skills ] && echo -skills defs/skills) -setup defs/setup.json -plan gmail -owner en -grade -max-cost 2 -owner-turns 8 -repeat "3" -transcript plan.md
+2026-11-18T03:41:00.0000000Z PASS

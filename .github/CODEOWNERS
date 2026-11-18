@@ -68,6 +68,8 @@
 /.github/workflows/upgrade.yml @kiff-qa
 /.github/upgrade-rule-b.sh @kiff-qa
 /.github/upgrade-rule-b/ @kiff-qa
+/.github/upgrade-override.sh @kiff-qa
+/.github/upgrade-override/ @kiff-qa
 /.github/workflows/upgrade-gate.yml @kiff-qa
 /.github/workflows/automerge.yml @kiff-qa
 /.github/automerge.json @kiff-qa

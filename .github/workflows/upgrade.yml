@@ -23,6 +23,10 @@ on:
         description: "The owner's rule B: the id of the latest full Eval run, red only on Coach's wording check (blank: the plain gate)"
         type: string
         default: ""
+      owner_override:
+        description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <reason>\" (blank: none)"
+        type: string
+        default: ""
 permissions:
   contents: read
   id-token: write
@@ -44,6 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RULE_B_RUN: ${{ inputs.rule_b_run }}
+          OWNER_OVERRIDE: ${{ inputs.owner_override }}
         run: |
           set -euo pipefail
           run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha) \(.id)"')
@@ -66,6 +71,34 @@ jobs:
               gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > eval.log
               bash .github/upgrade-rule-b.sh eval.log eval.steps && conclusion=success
             fi
+          fi
+          # The owner's override (.github/upgrade-override.sh, tested on saved runs in upgrade-gate.yml): a full
+          # Eval red in exactly one step, and the latest run, of that step's suite alone at repeat 3, green on it.
+          # Only with a named owner decision on the thread; both runs, their tafs refs and the reason are this run's record.
+          # The check run is the latest, so the definitions this rolls out are its ref's (the sources check below).
+          if [ -n "$OWNER_OVERRIDE" ]; then
+            [ -z "$RULE_B_RUN" ] || { echo "::error::owner_override and rule_b_run are one or the other"; exit 1; }
+            read -r base check reason <<<"$OWNER_OVERRIDE"
+            [[ "$base" =~ ^[0-9]+$ && "$check" =~ ^[0-9]+$ && -n "$reason" && ${#reason} -le 200 ]] \
+              || { echo "::error::owner_override is \"<base run id> <check run id> <reason>\""; exit 1; }
+            [ "$check" = "$run_id" ] || { echo "::error::the check run $check isn't the latest completed Eval on main ($run_id)"; exit 1; }
+            [ "$check" != "$base" ] || { echo "::error::the check run must be a later run than the base"; exit 1; }
+            info=$(gh api "repos/kiff/agents/actions/runs/$base" --jq '"\(.path) \(.head_branch) \(.status) \(.created_at) \(.head_sha)"')
+            read -r path branch status created base_sha <<<"$info"
+            [ "$path" = .github/workflows/eval.yml ] && [ "$branch" = main ] && [ "$status" = completed ] \
+              || { echo "::error::the base run $base isn't a completed Eval on main"; exit 1; }
+            [[ "$created" < "$(gh api "repos/kiff/agents/actions/runs/$check" --jq .created_at)" ]] \
+              || { echo "::error::the base run $base isn't older than the check run $check"; exit 1; }
+            for r in base check; do
+              id=${!r}
+              job=$(gh api "repos/kiff/agents/actions/runs/$id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
+              jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$r.steps"
+              gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > "$r.log"
+            done
+            step=$(bash .github/upgrade-override.sh base.steps base.log check.log check.steps)
+            base_ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$base_sha" --jq .content | base64 -d | tr -d '[:space:]')
+            conclusion=success
+            echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$step\"; Eval $check (kiff/tafs@${ref:0:12}) passed it. Reason: $reason" | tee -a "$GITHUB_STEP_SUMMARY"
           fi
           sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then

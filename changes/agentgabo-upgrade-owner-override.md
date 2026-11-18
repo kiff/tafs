@@ -1,0 +1,1 @@
+- **The Upgrade takes an owner override (`upgrade.yml`, `owner_override`).** Only on a named owner decision on the thread, it accepts a full Eval red in exactly one step once a later run of that step's suite alone, at repeat 3, passed it (`.github/upgrade-override.sh`, tested on saved runs in `upgrade-gate.yml`). The run ids and the reason go in the run's summary.

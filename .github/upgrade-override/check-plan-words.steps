@@ -1,0 +1,32 @@
+1 success Set up job
+2 success Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+3 skipped Unchanged since the last pass?
+4 success Run actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+5 success Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+6 success The suites to run
+7 success tafs' definitions, at eval/tafs.ref
+8 success What's deployed, at the start
+9 skipped The model and effort to compare
+10 skipped Chargebacks, two seeded runs
+11 skipped Hand-offs between tafs, a sender and a receiver
+12 skipped Tickets, a recipe's taf on the fake desk
+13 skipped Setup with the taf, in English, graded
+14 skipped Setup on the second vendor, a desk by its key
+15 skipped Setup on billing, invoices that stay drafts
+16 skipped Replay, introductions from a list
+17 success Plan words, Google Sheets in English
+18 success Plan words, Google Sheets in French
+19 success Plan words, Gmail in English
+20 skipped Route, the watch's requests over ten tafs
+21 success The sweep, the test account's leftover tafs
+22 success What's deployed, at the end
+23 success Run aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+24 success The full report, to the private bucket
+25 skipped An override doesn't count for the Upgrade gate
+26 skipped A run with a deploy in the middle counts only once judged
+27 failure A run of some suites counts only on earlier passes
+51 success Post Run aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+52 skipped Post Run actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+53 skipped Post Run actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+54 success Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+55 success Complete job
