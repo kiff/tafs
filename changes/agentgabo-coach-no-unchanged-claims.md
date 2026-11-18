@@ -1,0 +1,1 @@
+- **Coach never says an app or its data is left unchanged.** Beside "read only", the core rule now covers a line or option saying an app or its data stays as it is: Coach says what the taf does instead, since a wide sign-in could change it. What a Card never allows is still said, as the Card's rule (docs/coach.md).
