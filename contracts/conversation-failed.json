@@ -1,0 +1,96 @@
+{
+  "about": "GET /v1/tafs/{id}/conversation once the run a card's answer resumed was refused by the AI provider: `failed` with its code and words, neither at work nor waiting. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "messages": [
+      {
+        "id": "run2.in",
+        "at": "2026-10-16T12:00:00.000Z",
+        "from": "owner",
+        "kind": "message",
+        "text": "Connect my Stripe",
+        "session": "sess1"
+      }
+    ],
+    "components": [
+      {
+        "at": "2026-10-16T12:00:00.000Z",
+        "session": "sess1",
+        "run": "run2",
+        "seq": 2,
+        "component": {
+          "type": "confirm",
+          "id": "which",
+          "title": "Which mode?",
+          "options": [
+            {
+              "value": "test",
+              "label": "Test mode"
+            },
+            {
+              "value": "live",
+              "label": "Live"
+            }
+          ],
+          "waits": "owner"
+        },
+        "answer": {
+          "state": "answered",
+          "words": "Test mode",
+          "at": "2026-10-16T12:00:00.000Z"
+        },
+        "key": "sess1#which"
+      }
+    ],
+    "items": [
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.in",
+          "at": "2026-10-16T12:00:00.000Z",
+          "from": "owner",
+          "kind": "message",
+          "text": "Connect my Stripe",
+          "session": "sess1"
+        }
+      },
+      {
+        "type": "card",
+        "card": {
+          "at": "2026-10-16T12:00:00.000Z",
+          "session": "sess1",
+          "run": "run2",
+          "seq": 2,
+          "component": {
+            "type": "confirm",
+            "id": "which",
+            "title": "Which mode?",
+            "options": [
+              {
+                "value": "test",
+                "label": "Test mode"
+              },
+              {
+                "value": "live",
+                "label": "Live"
+              }
+            ],
+            "waits": "owner"
+          },
+          "answer": {
+            "state": "answered",
+            "words": "Test mode",
+            "at": "2026-10-16T12:00:00.000Z"
+          },
+          "key": "sess1#which"
+        }
+      }
+    ],
+    "working": null,
+    "steering": null,
+    "failed": {
+      "run": "run2",
+      "code": "ai_unavailable",
+      "words": "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later."
+    }
+  }
+}
