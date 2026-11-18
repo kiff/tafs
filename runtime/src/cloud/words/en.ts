@@ -97,6 +97,7 @@ export const en = {
   approval_no_grant: "There's no connection with that id.",
   approval_removed_tafs_connection: (app: string) => `This ${app} connection belongs to a taf that was removed, so it isn't used for this one. Coach connects ${app} for this taf instead.`,
   approval_other_tafs_connection: (app: string) => `This Card is for another taf than this ${app} connection. Coach shows the approval again with this taf's own connection.`,
+  approval_earlier_connection: (app: string) => `This ${app} connection was started in an earlier chat, so it isn't resumed here. Coach asks for ${app} again, for this taf.`,
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} is connected. Next, its Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} still waits for its own approval. Approve ${vendor} first; this Card comes with the last app.`,

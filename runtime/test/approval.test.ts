@@ -803,6 +803,99 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
   });
 });
 
+// A half-made connection of the same taf from an earlier conversation (asked before this one began, still pending or
+// approved and never signed in to) is resumed only with this conversation's Card draft for its taf, inside its seven days,
+// its tools all on that Card, and a fresh tap; anything else, Coach asks for the app again for this taf.
+describe("a half-made connection from an earlier conversation: resumed only for its taf, in its time, under this conversation's Card", () => {
+  // The Coach run (this conversation) began at NOW; a day earlier is an earlier conversation's.
+  const EARLIER = "2026-10-15T12:00:00Z";
+  const TOOLS = [{ tool: "refund", name: "refund" }];
+  const CARD = (...actions: string[]) => [{ id: "c1", subject: "refunds-x", grants: actions.map((action) => ({ action })), aggregates: [] }];
+  const resumed = (over: Record<string, unknown> = {}, request: Record<string, unknown> = {}) =>
+    grant({ status: "pending", ...over }, { created_at: EARLIER, tools: TOOLS, ...request });
+  const ask = (g: ReturnType<typeof grant>, draft?: string) =>
+    ({ grant: "g_1", shown_digest: g.digest, ...(draft ? { draft, shown_draft: "v3" } : {}) });
+  /** A refusal of the resumed rule: the earlier-connection note, Coach asked to request the app again, nothing to sign. */
+  const refusedAsResumed = (body: Record<string, unknown>, why: string) => {
+    expect(body).toMatchObject({ outcome: "answered", note: wordsIn("en").approval_earlier_connection("Stripe") });
+    expect(String(body.answer)).toContain(why);
+    expect(String(body.answer)).toContain("request Stripe again for this taf as a new connection");
+    expect(body).not.toHaveProperty("ask");
+  };
+
+  it("the same taf's connection, with this conversation's Card over all its tools: signed on a fresh tap", async () => {
+    for (const status of ["pending", "approved"]) {
+      const s = services();
+      const g = resumed({ status });
+      s.grants = [g];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+      const r = await (await world(s, { draft: "drf_1" })).call("POST", ASK, ask(g, "drf_1"));
+      expect(r.body, status).toMatchObject({ outcome: "sign" });
+      expect((r.body.ask as { message: string }).message).toContain("|g_1|");
+    }
+  });
+
+  it("with no Card draft: refused, so it's never signed alone", async () => {
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    refusedAsResumed((await (await world(s)).call("POST", ASK, ask(g))).body, "only with this conversation's Card draft");
+  });
+
+  it("with a Card draft for another taf: refused, naming neither that taf nor the grant", async () => {
+    const s = services();
+    const g = resumed();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4", cards: CARD("refund") };
+    const r = await (await world(s, { draft: "drf_1" })).call("POST", ASK, ask(g, "drf_1"));
+    refusedAsResumed(r.body, "isn't for its taf");
+    expect(String(r.body.answer)).not.toContain("another-taf");
+    expect(String(r.body.answer)).not.toContain("g_1");
+  });
+
+  it("asked over seven days ago: refused, even with its taf's Card", async () => {
+    const s = services();
+    const g = resumed({}, { created_at: "2026-10-09T11:59:00Z" });
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+    refusedAsResumed((await (await world(s, { draft: "drf_1" })).call("POST", ASK, ask(g, "drf_1"))).body, "over seven days ago");
+  });
+
+  it("asking for a tool this conversation's Card doesn't cover: refused, whatever Cards were in force before", async () => {
+    const s = services();
+    const g = resumed({}, { tools: [...TOOLS, { tool: "payout", name: "payout", title: "Pay out" }] });
+    s.grants = [g];
+    s.mandates = [{ id: "m_old", subject: "refunds-x", active: true, grants: [{ action: "payout" }] }];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+    const r = await (await world(s, { draft: "drf_1" })).call("POST", ASK, ask(g, "drf_1"));
+    refusedAsResumed(r.body, "this conversation's Card doesn't cover");
+    expect(String(r.body.answer)).toContain("Pay out");
+  });
+
+  it("a grant this conversation asked for, or one connected already, isn't resumed: the rule leaves it as it was", async () => {
+    // Asked after this conversation began, past the clocks' margin: this conversation's own, no draft needed to connect.
+    const s = services();
+    const g = resumed({}, { created_at: "2026-10-16T12:00:30Z" });
+    s.grants = [g];
+    expect((await (await world(s)).call("POST", ASK, ask(g))).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    // Connected in an earlier conversation, with a new version's Card over one tool here and the other on a Card in
+    // force: the Cards step, as before. Read as resumed, the payout this Card leaves to the earlier one would refuse it.
+    const c = services();
+    const connected = resumed({ status: "connected" }, { tools: [...TOOLS, { tool: "payout", name: "payout" }] });
+    c.grants = [connected];
+    c.mandates = [{ id: "m_old", subject: "refunds-x", active: true, grants: [{ action: "payout" }] }];
+    c.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: CARD("refund") };
+    expect((await (await world(c, { draft: "drf_1" })).call("POST", ASK, ask(connected, "drf_1"))).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+  });
+
+  it("asked a few seconds after this conversation began is still read as earlier: the two services' clocks differ", async () => {
+    const s = services();
+    const g = resumed({}, { created_at: "2026-10-16T12:00:05Z" });
+    s.grants = [g];
+    refusedAsResumed((await (await world(s)).call("POST", ASK, ask(g))).body, "only with this conversation's Card draft");
+  });
+});
+
 describe("the report: Coach hears approved only after KIFF says the phone signed it and the service holds it", () => {
   async function asked(s: Services, card: Record<string, unknown> = {}, ask: Record<string, unknown> = { grant: "g_1", shown_digest: sha256(grant().request) }) {
     const w = await world(s, card);

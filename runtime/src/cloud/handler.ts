@@ -4112,6 +4112,7 @@ function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity,
     rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
     rulesPerToTheLetter: process.env.TAFS_RULES_PER === "on",
     rulesAgreement: async () => rulesAgreement((await deps.agents.session(me.tenantID, session, ownerKey(me))).events),
+    sessionStarted: async () => (await deps.agents.session(me.tenantID, session, ownerKey(me))).session.started,
   };
 }
 
