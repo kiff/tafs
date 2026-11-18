@@ -11,6 +11,7 @@ import bot.tafs.app.model.LiveState
 import bot.tafs.app.model.LiveStep
 import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.TestScope
@@ -408,6 +409,70 @@ class ChatStreamTest {
     assertTrue("no …", m.state.value.chatLive.isEmpty())
     assertNull("no Stop", m.state.value.chatWorking["refunds-1"])
     assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Done: 3 refunds." })
+  }
+
+  /**
+   * The owner, 18 Nov (P0): on a phone the stream's lines come through `flowOn`, so the stream's own reads run in a child of its
+   * job. A read the stream made once the run looked quiet (nothing at work, the live answer over 15 s old) cancelled the stream
+   * and that read with it: the run's end never showed, and a card stayed on "Reading what it asks for…". Here the lines go
+   * through a buffer, as on a phone, and the run's end still shows.
+   */
+  @Test fun aStreamsOwnReadNeverCancelsTheStream() = runTest {
+    reads()
+    transport.openStream = { request ->
+      if (!request.url.contains("/messages/stream")) null
+      else {
+        transport.send(request)
+        bot.tafs.app.kiff.StreamedResponse(200, kotlinx.coroutines.flow.flow {
+          sse("session" to """{"session":"s1","new_session":false,"run":"run_1","message_id":"m1"}""").lines().forEach { emit(it) }
+          kotlinx.coroutines.delay(AppModel.STALE_LIVE_MS + 1_000)
+          sse("said" to """{}""").lines().forEach { emit(it) }
+          sse("end" to """{"status":"ERROR","stop":"error","done":[]}""").lines().forEach { emit(it) }
+        }.buffer())
+      }
+    }
+    val m = model()
+    // The run is over by the time it says something: tafs cloud has the message and nothing at work.
+    transport.answer(conversation, 200, """{"messages":[{"id":"m1","at":"2026-10-28T09:00:00Z","from":"owner","text":"Refund Ana","session":"s1"}]}""")
+    m.deliverChat("Refund Ana", "refunds-1")
+    testScheduler.advanceTimeBy(AppModel.STALE_LIVE_MS + 2_000)
+    testScheduler.runCurrent()
+    settle()
+    assertTrue("the stream read on to its end", m.state.value.chatEnded["refunds-1"] is ChatEnd.Failed)
+  }
+
+  /**
+   * A stream that went quiet on a phone (its lines through `flowOn`, so its 30 s check runs under its job) is still closed by
+   * that check: the chat no longer looks at work, and a later run in it, one this phone didn't start, is followed by its own
+   * stream. A check that could never close it left the chat unfollowed, the same "stops updating" by another road.
+   */
+  @Test fun aQuietStreamOnAPhoneIsClosedByItsCheckAndALaterRunIsFollowed() = runTest {
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.openStream = { request ->
+      if (!request.url.contains("/runs/run_1/stream")) null
+      else {
+        transport.send(request)
+        bot.tafs.app.kiff.StreamedResponse(200, kotlinx.coroutines.flow.flow {
+          sse("activity" to """{"tool":"list_charges","step":"Reading payments…","call_id":"c1"}""").lines().forEach { emit(it) }
+          kotlinx.coroutines.awaitCancellation()
+        }.buffer())
+      }
+    }
+    transport.answer("GET /v1/tafs/taf_1/runs/run_2/stream", 200, sse("end" to """{"status":"COMPLETED","stop":"answered"}"""))
+    val m = model()
+    m.loadChat("refunds-1")
+    settle()
+    assertTrue("the live answer while the stream is open", m.state.value.chatLive.containsKey("refunds-1"))
+    transport.answer(conversation, 200, """{"messages":[{"at":"2026-10-28T09:00:05Z","from":"taf","text":"Done: 3 refunds.","session":"s1"}]}""")
+    testScheduler.advanceTimeBy(AppModel.STREAM_CHECK_MS + 1)
+    testScheduler.runCurrent()
+    settle()
+    assertTrue("closed by its check: no …", m.state.value.chatLive.isEmpty())
+    // A run this phone didn't start goes on in the chat: its stream is opened.
+    transport.answer(conversation, 200, """{"messages":[],"working":{"session":"s1","run":"run_2"}}""")
+    m.loadChat("refunds-1")
+    settle()
+    assertEquals("the later run is followed", 1, transport.requestsTo("GET /v1/tafs/taf_1/runs/run_2/stream").size)
   }
 
   @Test fun aLongRunIsReadUntilItEndsPastTheFastReads() = runTest {
