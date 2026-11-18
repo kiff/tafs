@@ -1721,6 +1721,14 @@ enum Words {
         static func keptConnection(count: Int, vendor: String, names: String) -> String { Words.count("connect.kept_connection", count, vendor, names) }
         /// The key
         static var key: String { Words.line("connect.key") }
+        /// Your {vendor} login
+        static func loginTitle(vendor: String) -> String { Words.line("connect.login_title", vendor) }
+        /// The email address you sign in to {vendor} with. The key acts as this person in {vendor}, so use your own.
+        static func loginWhat(vendor: String) -> String { Words.line("connect.login_what", vendor) }
+        /// name@company.com
+        static var loginPlaceholder: String { Words.line("connect.login_placeholder") }
+        /// Enter one email address, with no spaces.
+        static var loginInvalid: String { Words.line("connect.login_invalid") }
         /// The clipboard is cleared after you paste.
         static var keyClipboard: String { Words.line("connect.key_clipboard") }
         /// The key goes from this phone to the connection server, which sends it only to {host}. It never goes to Coach.

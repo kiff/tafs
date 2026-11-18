@@ -112,6 +112,39 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertEqual(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=1,v1=read")
     }
 
+    /// An app whose key goes with the owner's login (Zendesk's): `login` reads as sent, and only a `true` one counts.
+    func testLoginReadsAsSent() throws {
+        let json = #"{"apps":[{"entry":"zendesk@1","how":"key","login":true},{"entry":"holded@1","how":"key","login":"yes"},{"entry":"gmail"}],"by_key":true}"#
+        let apps = try JSONDecoder().decode(TafsCloud.ConnectApps.self, from: Data(json.utf8)).apps
+        XCTAssertEqual(apps.map(\.login), [true, false, false])
+    }
+
+    /// The owner's login goes with the start as `login`; without one, nothing is added.
+    func testStartSendsTheLoginWhenGiven() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["POST /v1/connect/apps/zendesk@1"] = (200, #"{"grant":"g_5","needs_key":true}"#)
+        _ = try await cloud.startConnect("zendesk@1", taf: "taf_01", login: "ana@shop.example")
+        var json = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(StubProtocol.sent.last?.httpBody)) as? [String: Any])
+        XCTAssertEqual(json["login"] as? String, "ana@shop.example")
+        _ = try await cloud.startConnect("zendesk@1", taf: "taf_01")
+        json = try XCTUnwrap(try JSONSerialization.jsonObject(with: try XCTUnwrap(StubProtocol.sent.last?.httpBody)) as? [String: Any])
+        XCTAssertNil(json["login"])
+    }
+
+    /// The login is checked as planque checks it: one email address, nothing that could end a Basic username.
+    func testALoginIsOneEmailAddress() {
+        for good in ["ana@shop.example", "ana.b+desk@shop.example.co", "a_b%c-d@x-y.example"] { XCTAssertTrue(ConnectLogin.valid(good), good) }
+        for bad in ["", "ana", "ana@shop", "ana b@shop.example", "ana@shop.example/token", "ana:x@shop.example",
+                    "a@b.example,c@d.example", "ané@shop.example", String(repeating: "a", count: 65) + "@shop.example"] {
+            XCTAssertFalse(ConnectLogin.valid(bad), bad)
+        }
+    }
+
     /// `needed_by` and `misplaced` read as tafs cloud sends them; none sent is every taf, never an empty list.
     func testNeededByAndMisplacedReadAsSent() throws {
         let json = #"{"apps":[{"entry":"stripe@3","needed_by":[{"taf":"taf-a","name":"Refunds"}],"misplaced":[{"grant":"g9","taf":"taf-b","name":"Unanswered emails"}]},{"entry":"qonto@2","needed_by":[]},{"entry":"gmail"}],"by_key":false}"#
