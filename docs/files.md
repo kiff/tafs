@@ -27,8 +27,27 @@ cloud's store and reads land; until then the iPhone and iPad read `StubFilesStor
 
 Tests: `FilesTests`.
 
+## The screens (`ios/Tafs/Views/FilesViews.swift`)
+
+- **Where it opens:** Account's Files row (beside People, Devices and Connect apps) opens the account's files; the taf page's
+  Files line, under its version, and the Files entry at the top of its chat open that taf's, by tafs cloud's id.
+- **The list** (`FilesView`): the account's files with All, By taf and By run and a chip per taf, or one taf's by run; each
+  row its type, name, taf and size, and when it goes ("goes today", "goes tomorrow", "goes in 12 days"). The days are
+  under the run's day in the account's zone. With none, what lands there; a failed read says so.
+- **A file** (`FileDetailView`): the system's preview of the file on the device (QuickLook; nothing goes to a viewer
+  service), **Download** (saved where the person picks), **Share** (the share sheet, with the file itself), the taf, the
+  run, the type and size, where else it went, "Everyone on this account", and when it goes; **Delete now** apart, behind
+  a confirm that says it's gone for everyone and that a copy sent elsewhere stays.
+- **iPad, full width:** the list and the open file side by side; a file deleted there clears the side.
+- **Under the chat** (`ChatFileChips`): a run's files as chips under its message, each opening the same file screen, with
+  the date they're kept until. Drawn once tafs cloud says which run a chat message is: today's chat messages don't carry
+  their run.
+
+Words: `files.*`, in the 8 languages.
+
 ## Still to come
 
-The screens (Account's row, the taf's row, the files under the chat, a file with its preview, Download, Share and Delete
-now, and the iPad's list beside the open file), with the `files.*` words in the 8 languages; then tafs cloud's reads in place
-of the stub, once its contract is set.
+- tafs cloud's reads in place of the stub, once its contract is set (the account's files, by taf, by run, by chat, a
+  file's bytes and Delete now).
+- A chat message's run, for the chips under it.
+- The counts on Account's and the taf's rows, from the same read.

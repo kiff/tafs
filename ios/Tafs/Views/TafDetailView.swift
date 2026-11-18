@@ -211,6 +211,14 @@ struct TafDetailView: View {
     private func headerLine(_ taf: Taf) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             versionLine(taf)
+            // Files (docs/files.md): what its runs delivered, behind its switch.
+            if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
+                NavigationLink { FilesView(taf: cloud.id) } label: {
+                    Label(Words.Files.title, systemImage: "doc.on.doc")
+                        .scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
+                }
+                .buttonStyle(.drivablePlain)
+            }
             // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
             if model.manages(taf.id) { ShareLine(tafID: taf.id) }
         }
