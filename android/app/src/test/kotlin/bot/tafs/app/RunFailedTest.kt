@@ -78,4 +78,16 @@ class RunFailedTest {
     m.loadChat(COACH_CHAT)
     assertEquals("Next you'll approve Day summary's two actions.", (last(m) as ChatItem.Message).message.text)
   }
+
+  /** One refused line per run: a run followed live ends with its own line (the stream's end, with Retry), so the thread's isn't added. */
+  @Test fun aRunFollowedLiveKeepsItsOwnRefusedLineAndGetsNoSecond() {
+    val state = bot.tafs.app.app.AppState(
+      chats = mapOf("refunds-1" to listOf(ChatMessage(t0, ChatMessage.From.owner, "Refund order 4471", "s1"))),
+      chatFailed = mapOf("refunds-1" to bot.tafs.app.kiff.TafsCloud.RunFailed("r9", words)),
+      chatEnded = mapOf("refunds-1" to bot.tafs.app.model.ChatEnd.Failed("Refund order 4471", emptyList(), words)),
+    )
+    assertTrue(state.chatItems("refunds-1").none { it is ChatItem.Message && it.message.text == words })
+    // Without the live end, the thread's line is the last one.
+    assertEquals(words, (state.copy(chatEnded = emptyMap()).chatItems("refunds-1").last() as ChatItem.Message).message.text)
+  }
 }
