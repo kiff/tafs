@@ -6301,6 +6301,12 @@ final class AppModel: ObservableObject {
         // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
+        // Support replies has answered tickets since the morning, not only the one the Record shows:
+        // 12 of its 40 today, so its bar, the list and its Card all say 28 left, as the Card screen does.
+        if let i = tafs.firstIndex(where: { $0.name == TafTemplates.support.name }) {
+            tafs[i].counted["reply_ticket"] = Self.sampleRepliesToday
+            save()
+        }
         if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == TafTemplates.support.name }) {
             tafs[i].kiffCards = Screenshots.cards(tafs[i])
         }
@@ -6312,6 +6318,10 @@ final class AppModel: ObservableObject {
             ]
         }
     }
+
+    /// The replies Support replies has sent today in the sample: as many as the Card screen's
+    /// live Card counts (`Screenshots.cards`), so every screen says the same 28 left of 40.
+    static let sampleRepliesToday = 12
 
     // MARK: Saving the sample
 

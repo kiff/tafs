@@ -125,6 +125,16 @@ final class AppModelTests: XCTestCase {
         }
     }
 
+    /// Support replies counts 12 of its 40 replies today in the sample, as its Card screen does, so the
+    /// list, its bar and its Card all say 28 left.
+    func testSupportRepliesCountsTheSameRepliesEverywhere() async throws {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        let support = try XCTUnwrap(model.tafs.first { $0.name == TafTemplates.support.name })
+        XCTAssertEqual(support.counted["reply_ticket"], 12)
+        XCTAssertEqual(support.counted["reply_ticket"], Screenshots.cards(support).first?.calls?.used)
+    }
+
     /// The sample has no new-taf form: a new taf starts in Coach, signed in, and its foot says so.
     func testTheSampleHasNoNewTafButtonAndSaysWhereOneStarts() async {
         let model = AppModel(signer: StubSigner())
