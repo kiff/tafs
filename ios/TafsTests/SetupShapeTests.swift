@@ -82,6 +82,11 @@ final class SetupShapeTests: XCTestCase {
         XCTAssertEqual(tools(try grant("listed", signedIn: true)).first?.state, .signedIn)
         XCTAssertEqual(tools(try grant("pending", signedIn: true)).first?.state, .signedIn)
         XCTAssertEqual(tools(try grant("failed")).first?.state, .failed(nil))
+        // A failed grant says planque's words for its state, never its English `reason`, which is for the log.
+        func decoded(_ json: String) throws -> PlanqueClient.Grant { try JSONDecoder().decode(PlanqueClient.Grant.self, from: Data(json.utf8)) }
+        XCTAssertEqual(tools(try decoded(PlanqueTests.grantJSONFor(status: "failed", reason: "vendor said no", statusWords: "Échec"))).first?.state, .failed("Échec"))
+        XCTAssertEqual(tools(try decoded(PlanqueTests.grantJSONFor(status: "disconnected", reason: "KIFF answered 403: approval_refused"))).first?.state, .failed(nil),
+                       "never the reason")
         let connected = try XCTUnwrap(tools(try grant("connected")).first)
         XCTAssertEqual(connected.state, .connected)
         XCTAssertEqual(connected.actions, ["refund_payment", "list_payments"])
