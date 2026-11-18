@@ -1,0 +1,1 @@
+- **A connection refused in one Coach chat stays in that chat.** The server's refusal goes before the person's next words in the chat it happened in, and a new chat starts without it, so Coach asks its questions again instead of acting on another chat's failed request. Notes kept before this, which named no chat, reach none (tafs cloud, docs/coach.md).

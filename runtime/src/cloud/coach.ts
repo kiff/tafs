@@ -477,6 +477,11 @@ export const keys = {
   task: (tenant: string, ref: string) => `${tenant}#coach-task#${ref}`,
   /** How a person's Coach tasks went, for that person's Coach only. */
   notes: (tenant: string, person: string) => `${tenant}#coach-notes#${person}`,
+  /**
+   * A chat's own notes for Coach (a connection the server refused in it): read only by that chat's next message, never
+   * by another chat of the person's, so a new chat starts without them.
+   */
+  chatNotes: (tenant: string, person: string, session: string) => `${tenant}#coach-chat-notes#${person}#${session}`,
 };
 
 /** A task's ref: the account, so the note finds its record, and a value no one guesses. */

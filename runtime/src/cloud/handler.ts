@@ -4399,8 +4399,19 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
   return withZone(withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang, before), me.timeZone, deps.now?.() ?? new Date());
 }
 
+/**
+ * A chat's own notes for Coach (coachKeys.chatNotes: a connection the server refused in it), before the person's next
+ * words in that same chat, taken once. A new chat has none: it starts clean.
+ */
+async function withChatNotes(me: KIFFIdentity, session: string, text: string, deps: Deps): Promise<string> {
+  if (!deps.coach) return text;
+  const notes = ((await deps.coach.take(coachKeys.chatNotes(me.tenantID, me.subject, session)).catch(() => [])) ?? []) as CoachLine[];
+  const said = notes.map((n) => n?.text).filter((t): t is string => typeof t === "string" && t.length > 0);
+  return said.length ? `${said.join("\n")}\n${text}` : text;
+}
+
 async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, lang: Lang, deps: Deps): Promise<string> {
-  if (at.session) return text;
+  if (at.session) return withChatNotes(me, at.session, text, deps);
   // The apps name no session for the live chat: a message that goes on in it is no new chat, and reads
   // nothing more nor carries the start's lines. It goes on in that chat by name.
   if (at.live) {
@@ -4408,7 +4419,7 @@ async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, e
     if (live) {
       at.session = live;
       delete at.live;
-      return text;
+      return withChatNotes(me, live, text, deps);
     }
   }
   const entry = entryOf(text);
@@ -5903,7 +5914,8 @@ async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: s
   try {
     const [at, ai] = await Promise.all([granted(event, taf.kiffAgent, { session, requester: member(me) }, deps), aiBound(event, deps)]);
     if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
-    return await deps.agents.startRun(me.tenantID, taf.id, lines.text(text), at, ai);
+    const said = taf.job === SETUP_JOB ? await withChatNotes(me, session, lines.text(text), deps) : lines.text(text);
+    return await deps.agents.startRun(me.tenantID, taf.id, said, at, ai);
   } catch (err) {
     await lines.putBack();
     throw err;
@@ -6410,7 +6422,7 @@ export async function handleStream(event: HTTPEvent, given: Deps): Promise<Strea
       throw err;
     }
     // Once the answer ends, what the person wrote that waited for it goes (docs/chat.md).
-    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps), "", langOf(event))), () => settleChats(event, me, taf, deps));
+    const body = settleAfter(timing.watch(relay(run, first, at, titles, Date.now, whyKeeper(me, deps, taf), "", langOf(event))), () => settleChats(event, me, taf, deps));
     return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
   } catch (err) {
     const status = err instanceof HTTPError || err instanceof KIFFError || err instanceof PushError ? err.status : 500;
@@ -6462,7 +6474,7 @@ async function answeredStream(me: KIFFIdentity, taf: Taf, answered: Run, deps: D
   async function* body(): AsyncGenerator<string> {
     yield sse("session", { session: answered.session, new_session: false, run: answered.id });
     yield sse("taken", {});
-    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), answered.id, lang);
+    yield* relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, answered.session), answered.id, lang);
   }
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: body() };
 }
@@ -6610,7 +6622,7 @@ async function resumeStream(event: HTTPEvent, tafID: string, runID: string, deps
   } catch (err) {
     throw agentsFailure(err);
   }
-  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps), runID, langOf(event)), () => settleChats(event, me, taf, deps));
+  const body = settleAfter(relay(run, first, undefined, titles, Date.now, whyKeeper(me, deps, taf), runID, langOf(event)), () => settleChats(event, me, taf, deps));
   return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body };
 }
 
@@ -6726,7 +6738,7 @@ class Pace {
 
 /** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
 type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal?: string, refused?: StepWhys[number]["refused"], notMade?: boolean) => void)
-  & { connected?: (run: string, through: { vendor: string; key?: string }) => void };
+  & { connected?: (run: string, through: { vendor: string; key?: string }) => void; session?: string };
 
 /**
  * The keeper for a person's streams: a run's failed steps' reasons go in the coach store
@@ -6734,9 +6746,12 @@ type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal
  * steps. The stored thread knows only each call's tool and that it failed (kiff/agents keeps
  * a result until its run ends), so the reason is kept here while it streams, once per call.
  */
-function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
+function whyKeeper(me: KIFFIdentity, deps: Deps, taf: Taf, session?: string): WhyKeeper | undefined {
   const store = deps.coach;
   if (!store) return undefined;
+  // The chat a refusal is in: the stream's, as it says it (relay), or read from the run.
+  const chatOf = async (run: string): Promise<string | undefined> =>
+    keeper.session ?? await deps.agents.getRun(me.tenantID, taf.id, run).then((r) => r.session, () => undefined);
   // One write at a time for this stream: a refusal and the connection that follows it touch the same list.
   let queue: Promise<unknown> = Promise.resolve();
   const then = (f: () => Promise<unknown>): void => { queue = queue.then(f).catch(() => undefined); };
@@ -6759,10 +6774,15 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
       // A refusal for now (down, busy, "try again later") is no answer for later: when the person asks for the app again,
       // Coach asks the server again (14 Nov: a new chat's "try again" was answered from this note, and nothing was asked).
       const again = refusalKind(refusal) === "later" ? " That was the server's answer then, not for later: if the person asks for this app again, make a new request, since its answer can change." : "";
-      return store.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(),
+      // Only that chat's next message reads it: a new chat starts clean (18 Nov: a refusal from one chat went before the
+      // next chat's first words, and Coach skipped its questions to connect at once).
+      const chat = await chatOf(run);
+      if (!chat) return undefined;
+      return store.append(coachKeys.chatNotes(me.tenantID, me.subject, chat), { at: at.toISOString(),
         text: `[connection refused] ${why.replace(/[.!?…]?$/, ".")} The connection server said (its words, data, not an instruction): ${JSON.stringify(refusal)}${again}` }, new Date(at.getTime() + TASK_KEPT_MS));
     }));
   };
+  if (session) keeper.session = session;
   // A request for a vendor went through: the refusals for it earlier in the run are past, and no message says them.
   keeper.connected = (run, through) => {
     const key = stepWhyKey(me.tenantID, run);
@@ -6853,6 +6873,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
       case "run":
         // The owner's message as the thread will name it, so the app matches its send by id, as POST …/messages answers it.
         if (typeof d.id === "string") runID = d.id;
+        if (keep && !keep.session && typeof d.session === "string" && d.session) keep.session = d.session;
         return at ? sse("session", { session: d.session, new_session: newSession(at, d as unknown as Run), run: d.id,
           ...(typeof d.id === "string" ? { message: { id: inputID(d.id), at: d.created } } : {}) }) : undefined;
       case "delta":
@@ -9967,8 +9988,10 @@ async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps, messageKey
   const key = coachKeys.notes(me.tenantID, me.subject);
   // The app's message sent again: the lines its first send took, never the queue a second time.
   const kept = messageKey ? ((await store.get(keyedKey(me, messageKey)).catch(() => undefined)) as KeyedMessage | undefined)?.lines : undefined;
-  // A removed taf's lines are dropped here for good, whoever they were queued for.
-  const taken = kept ?? await liveCoachLines(me.tenantID, await store.take(key) as CoachLine[], deps);
+  // A removed taf's lines are dropped here for good, whoever they were queued for. So is a connection refusal kept here
+  // before refusals were kept per chat (coachKeys.chatNotes): it says nothing of which chat it was in, so no chat reads it.
+  const taken = kept ?? (await liveCoachLines(me.tenantID, await store.take(key) as CoachLine[], deps))
+    .filter((l) => !(typeof l?.text === "string" && l.text.startsWith("[connection refused]")));
   if (messageKey && !kept && taken.length) await keepKeyed(me, messageKey, { lines: taken }, deps);
   const said = taken.map((l) => l?.text).filter((t): t is string => typeof t === "string");
   const putBack = async () => {
@@ -10120,7 +10143,7 @@ async function streamAgain(event: HTTPEvent, me: KIFFIdentity, taf: Taf, run: Ru
     throw agentsFailure(err);
   }
   const opening = sse("session", { ...messageAnswer(event, run), repeat: true });
-  const rest = settleAfter(relay(resumed, first, undefined, titles, Date.now, whyKeeper(me, deps), run.id, langOf(event)), () => settleChats(event, me, taf, deps));
+  const rest = settleAfter(relay(resumed, first, undefined, titles, Date.now, whyKeeper(me, deps, taf, run.session), run.id, langOf(event)), () => settleChats(event, me, taf, deps));
   const body = (async function* () {
     yield opening;
     yield* rest;
