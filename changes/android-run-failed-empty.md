@@ -1,0 +1,1 @@
+- **Android: a new Coach chat no longer shows the last chat's refused line.** It had read "1 Jan 1970" over the old words ([android-app.md](docs/android-app.md)).

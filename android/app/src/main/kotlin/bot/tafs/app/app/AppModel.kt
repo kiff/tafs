@@ -1005,7 +1005,8 @@ data class AppState(
     // named no run, that line is taken to be this run's.
     val live = chatEnded[tafId] as? ChatEnd.Failed
     if (live != null && (live.run == null || live.run == failed.run)) return@let items
-    val after = (items.maxOfOrNull { it.at } ?: java.time.Instant.EPOCH).plusMillis(1)
+    // A chat with nothing in it (a new chat) had no run here to fail: the line belongs to the chat it came from.
+    val after = items.maxOfOrNull { it.at }?.plusMillis(1) ?: return@let items
     items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = "failed|" + failed.run))
   }
 
