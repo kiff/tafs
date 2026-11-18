@@ -20,6 +20,10 @@ Coach's bar is the iPad's (`CoachHeader`), from Coach's first screen: Back in a 
 (with ⤢ in a tablet's panel), "Coach" centred, and, once Coach has started, new conversation and ⋯
 (the earlier conversations) in one capsule at the end, in Coach's own blue (`Theme.coach`, the
 iPad's).
+**A run that ended without an answer** (the thread's `failed: {run, code?, words}`: the model unreachable or out of funds,
+`ai_unavailable`, or an uncoded `ERROR`) is the chat's last line, in tafs cloud's words, as Coach's or the taf's
+(`AppState.chatFailed`, `RunFailedTest`). A later read with none clears it. A `failed` of another shape, or with no words, is no
+line. Before it, a turn refused after an approval read as "Waiting for you", then as nothing.
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">

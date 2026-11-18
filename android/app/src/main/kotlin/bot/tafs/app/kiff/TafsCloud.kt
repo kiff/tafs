@@ -66,7 +66,12 @@ class TafsCloud(
     val drives: List<bot.tafs.app.drive.DriveRecap> = emptyList(),
     /** What tafs cloud holds of the person's, for the thread's latest chat: what waits, and what a stopped run never read. */
     val steering: WireSteering? = null,
+    /** The latest run ended without an answer: tafs cloud's words for it, drawn as the chat's last line. */
+    val failed: RunFailed? = null,
   )
+
+  /** A run that ended without an answer, in tafs cloud's words (never the agent's). */
+  data class RunFailed(val run: String, val words: String)
 
   /** The account's Setup (Coach), or null before it is started. */
   suspend fun setup(): CloudSetup? = get<SetupResponse>("/v1/setup").setup
@@ -202,6 +207,8 @@ class TafsCloud(
           ?.takeIf { runCatching { java.time.Instant.parse(it.at) }.isSuccess }
       },
       steering = wire.steering?.let { runCatching { KiffClient.json.decodeFromJsonElement(WireSteering.serializer(), it) }.getOrNull() },
+      failed = wire.failed?.let { runCatching { KiffClient.json.decodeFromJsonElement(WireRunFailed.serializer(), it) }.getOrNull() }
+        ?.takeIf { it.words.isNotBlank() }?.let { RunFailed(it.run, it.words.trim()) },
     )
   }
 
