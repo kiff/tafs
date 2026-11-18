@@ -1,0 +1,1 @@
+- **iOS: an approval card no longer stays on "Reading the request…".** A card that names no grant yet keeps Coach's chat read too, and a card still unread a minute after it was shown says it couldn't be read, with Try again.

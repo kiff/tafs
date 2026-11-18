@@ -1952,6 +1952,59 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A connect card that names no grant yet keeps the thread read too, and a card still unread a minute
+    /// after it was shown says it couldn't be read, with Try again, never "Reading the request…" for ever:
+    /// not before the minute, not once planque lists its grant, and not once it's answered.
+    func testACardStillUnreadAfterAMinuteSaysSoAndOneWithNoGrantIsStillFollowed() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func at(_ ago: TimeInterval) -> String { iso.string(from: Date().addingTimeInterval(-ago)) }
+        func thread(cardAgo: TimeInterval, grant: String? = "g_01", answered: Bool = false) -> String {
+            let named = grant.map { #","grant":"\#($0)""# } ?? ""
+            let card = #"{"at":"\#(at(cardAgo))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect"\#(named)}}"#
+            let answer = answered ? #",{"at":"\#(at(1))","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"}"# : ""
+            return #"{"messages":[{"at":"\#(at(cardAgo + 600))","from":"owner","kind":"message","text":"Refunds, please","session":"s1"}\#(answer)],"components":[\#(card)]}"#
+        }
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+        // No grant named yet: still followed, and after a minute it says it couldn't be read.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 30, grant: nil))
+        await model.loadSetup()
+        XCTAssertTrue(model.cardWaitsOnItsGrant, "a card with no grant yet is followed")
+        XCTAssertFalse(model.cardNotRead("connect"), "not before the minute")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 90, grant: nil))
+        await model.loadSetupThread()
+        XCTAssertTrue(model.cardNotRead("connect"), "a minute on, it says it couldn't be read")
+
+        // Its grant named but not listed: the same, a minute on.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 90))
+        await model.retryCards()
+        XCTAssertTrue(model.cardNotRead("connect"))
+
+        // planque lists it: Try again reads it, and the card is drawn.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.retryCards()
+        XCTAssertEqual(model.grants.first?.id, "g_01")
+        XCTAssertFalse(model.cardNotRead("connect"), "read")
+
+        // Answered: never said.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 90, answered: true))
+        await model.retryCards()
+        XCTAssertFalse(model.cardNotRead("connect"), "answered")
+
+        // A live stream doesn't stop the poll while a card waits on its grant: planque can list it after the
+        // stream's last read, and a quiet stream reads nothing more (the iOS side of #1390).
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("if setupLive != nil && !cardWaitsOnItsGrant { continue }"))
+        XCTAssertFalse(file.contains("if setupLive != nil { continue }"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A sent message is found again by its words (kiff/tafs#138, review on #154): as stored,
     /// and as the end of a queued message it was joined to; never a different message.
     func testASentMessageIsFoundByItsWords() {
