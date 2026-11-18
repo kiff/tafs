@@ -51,6 +51,10 @@ jobs:
           OWNER_OVERRIDE: ${{ inputs.owner_override }}
         run: |
           set -euo pipefail
+          # An Eval job's log, as GitHub serves it. Not through gh: its newer releases refuse a response holding the
+          # terminal colours the Eval's log has ("contains terminal escape sequences"), which stopped the gate.
+          joblog() { curl -sSfL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/kiff/agents/actions/jobs/$1/logs"; }
           run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha) \(.id)"')
           read -r conclusion agents_sha run_id <<<"$run"
           ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$agents_sha" --jq .content | base64 -d | tr -d '[:space:]')
@@ -68,7 +72,7 @@ jobs:
             if [ "$conclusion" = failure ]; then
               job=$(gh api "repos/kiff/agents/actions/runs/$run_id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
               jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > eval.steps
-              gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > eval.log
+              joblog "$(jq .id <<<"$job")" > eval.log
               bash .github/upgrade-rule-b.sh eval.log eval.steps && conclusion=success
             fi
           fi
@@ -99,7 +103,7 @@ jobs:
               [ "$r" != base ] || base_sha=$sha
               job=$(gh api "repos/kiff/agents/actions/runs/$id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
               jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$r.steps"
-              gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > "$r.log"
+              joblog "$(jq .id <<<"$job")" > "$r.log"
             done
             echo "shipped - - $agents_sha" >> runs
             # The definitions changed between the base and the check (a move lists both paths), and the suites they touch,
