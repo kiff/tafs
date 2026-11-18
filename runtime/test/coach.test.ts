@@ -466,6 +466,34 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check })).isError).toBeFalsy();
   });
 
+  // The phone retest, 18 Nov: a taf switched to a new connection of the same app kept reading with the old one's
+  // tools, because both are among the taf's tools and nothing ties a tool to its connection. A tool's name ends in
+  // its connection's suffix (rules.ts grantSuffix), so the dial can tell them apart without reading planque.
+  it("taf_dial ties each tool to the connection it names: another connection's tool is refused, and so is a tool with no connection when the app has two", async () => {
+    const w = world();
+    w.agents.versions.set(`${T}|${RAE}`, []);
+    const g1 = "grt_3ojwQx7Lm2", g2 = "grt_iyjqR4tNp8";
+    w.tafs.held.set(`${T}#${RAE}`, { ...w.tafs.held.get(`${T}#${RAE}`)!, tools: ["list_invoices_3ojw", "send_invoice_3ojw", "list_invoices_iyjq", "send_invoice_iyjq"] });
+    const wakes = [{ kind: "schedule", form: "weekdays", at: "09:00" }];
+    const check = { arguments: {}, items: "data", cursor: "created", first: "new" };
+    // The new connection, with the old connection's read: refused, naming the tools the new connection has.
+    const crossed = await w.tool("taf_dial", { taf: RAE, wakes, check: { ...check, grant: g2, tool: "list_invoices_3ojw" } });
+    expect(crossed).toMatchObject({ isError: true, text: expect.stringContaining("list_invoices_iyjq") });
+    expect(crossed.text).toContain(g2);
+    // No connection named, and the app has two: refused, naming each connection's tools.
+    const bare = await w.tool("taf_dial", { taf: RAE, wakes, check: { ...check, tool: "list_invoices_3ojw" } });
+    expect(bare).toMatchObject({ isError: true });
+    for (const s of [g1, g2, "list_invoices_3ojw", "list_invoices_iyjq"]) expect(bare.text).toContain(s);
+    // A result place of the new connection, writing with the old one's tool: refused too.
+    const place = { place: "action", grant: g2, action: "send_invoice_3ojw", args: {}, name: "Invoices · send" };
+    expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "door" }], results: [place] })).toMatchObject({ isError: true, text: expect.stringContaining("send_invoice_iyjq") });
+    // Nothing was drafted by the refused calls.
+    expect(Object.keys(w.tafs.held.get(`${T}#${RAE}`)!.knobs ?? {})).toEqual([]);
+    // The new connection with its own read: drafted, and the check keeps the connection it named.
+    const made = (await w.tool("taf_dial", { taf: RAE, wakes, check: { ...check, grant: g2, tool: "list_invoices_iyjq" } })).json as { version: number };
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]?.check).toMatchObject({ grant: g2, tool: "list_invoices_iyjq" });
+  });
+
   it("run_stop and taf_pause act through kiff/agents; an unknown taf is refused", async () => {
     const w = world();
     const run = await w.agents.api.startRun(T, RAE, "go");
