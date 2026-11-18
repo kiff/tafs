@@ -503,6 +503,11 @@ data class AppState(
   val listApproval: String? = null,
   /** Whether that connection takes an API key, given on the sheet instead of a vendor's sign-in. */
   val listApprovalNeedsKey: Boolean = false,
+  /**
+   * The sheet's connection still isn't in planque's list a minute after it opened ([AppModel.followListApproval]): the sheet says
+   * it couldn't be read, with Try again, never "Reading what it asks for…" for ever.
+   */
+  val listApprovalNotRead: Boolean = false,
   /** The secure connection sheet's words, by grant, from tafs cloud (docs/secure-connection.md); and why one couldn't be read. */
   val secureSheets: Map<String, bot.tafs.app.kiff.SecureSheet> = emptyMap(),
   val secureSheetErrors: Map<String, String> = emptyMap(),
@@ -1377,6 +1382,11 @@ class AppModel(
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
+    // A card or sheet followed for the last account is never read for the next: its follower ends now, not at its next tick.
+    cardsFollow?.cancel()
+    cardsFollow = null
+    listFollow?.cancel()
+    listFollow = null
     decided.clear()
     followers.values.forEach { it.cancel() }
     followers.clear()
@@ -1888,6 +1898,11 @@ class AppModel(
     eventReceipts.clear()
     forgetPlanqueDevice()
     relinkJob?.cancel()
+    // A card or sheet followed for the last account is never read for the next: its follower ends now, not at its next tick.
+    cardsFollow?.cancel()
+    cardsFollow = null
+    listFollow?.cancel()
+    listFollow = null
     decided.clear()
     followers.values.forEach { it.cancel() }
     followers.clear()
@@ -4448,6 +4463,7 @@ class AppModel(
     if (app.needsReconnect && app.grant != null) {
       refreshConnections()
       _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false) }
+      followListApproval()
       return
     }
     // The taf it's for, by its tafs cloud id: the one the person named, never a guess (not even the only one they manage).
@@ -4459,7 +4475,10 @@ class AppModel(
       val started = cloud.startConnect(app.entry, cloudId, proof = connectAppsProof(), login = login?.trim()?.takeIf { app.login })
       if (generation != accountGeneration) return
       refreshConnections()
-      if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
+      if (generation == accountGeneration) {
+        _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
+        followListApproval()
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -4479,6 +4498,46 @@ class AppModel(
 
   /** The approval the sheet over Connect apps started, while it runs: "Not now" ends it, and with it the vendor's wait. */
   private var listApprovalJob: Job? = null
+
+  /** The one follower reading planque's grants while the sheet over Connect apps waits for its connection ([followListApproval]). */
+  private var listFollow: Job? = null
+
+  /**
+   * The sheet over Connect apps opened on a connection planque doesn't list yet: planque's grants are read again, 3 s apart for
+   * a minute and 10 s apart after (CARD_GRANT_READ_DELAYS), until it does, the sheet closes or the account changes. A minute in,
+   * the sheet says it couldn't be read, with Try again, and the reads go on. Before, it read planque once and stayed on
+   * "Reading what it asks for…" (the Coach card's bug, on this sheet).
+   */
+  private fun followListApproval() {
+    listFollow?.cancel()
+    listFollow = null
+    val grantId = _state.value.listApproval ?: return
+    if (_state.value.grants.any { it.id == grantId }) return
+    val generation = accountGeneration
+    listFollow = scope.launch {
+      var waited = 0L
+      for (wait in CARD_GRANT_READ_DELAYS) {
+        delay(wait)
+        waited += wait
+        if (generation != accountGeneration || _state.value.listApproval != grantId) return@launch
+        refreshConnections()
+        if (_state.value.grants.any { it.id == grantId }) {
+          _state.update { it.copy(listApprovalNotRead = false) }
+          return@launch
+        }
+        if (waited >= CARD_NOT_READ_MS) _state.update { it.copy(listApprovalNotRead = true) }
+      }
+    }
+  }
+
+  /** The sheet's Try again, once it said its connection couldn't be read: planque read now, and a new minute of reads. */
+  fun retryListApproval() {
+    _state.update { it.copy(listApprovalNotRead = false) }
+    scope.launch {
+      refreshConnections()
+      followListApproval()
+    }
+  }
 
   /**
    * While the sheet's approval waits on the vendor's page, planque's grants are read again (3 s apart for a minute, then 10 s, as
@@ -4535,7 +4594,9 @@ class AppModel(
   fun closeListApproval() {
     listApprovalJob?.cancel()
     listApprovalJob = null
-    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+    listFollow?.cancel()
+    listFollow = null
+    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, listApprovalNotRead = false, keyForCard = null, keyReceipt = null) }
   }
 
   /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
@@ -4685,6 +4746,7 @@ class AppModel(
   fun openCardKeySheet(c: SetupComponent, shownDraft: String?) {
     val grant = c.grant ?: return
     _state.update { it.copy(listApproval = grant, listApprovalNeedsKey = true, keyForCard = KeyForCard(c, shownDraft)) }
+    followListApproval()
   }
 
   /**
@@ -5602,6 +5664,10 @@ class AppModel(
 
   /** A card's Try again, once it said it couldn't be read: Coach's thread read now, which follows the cards again if they wait. */
   fun retryCards() {
+    // A new minute from now: the follower that said it couldn't be read ends, and the thread's read starts a new one if the card
+    // still waits (before, the old one said it again at its next tick, ten seconds on).
+    cardsFollow?.cancel()
+    cardsFollow = null
     _state.update { it.copy(cardsNotRead = emptySet()) }
     scope.launch { readThread(COACH_CHAT) }
   }

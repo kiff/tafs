@@ -1000,10 +1000,13 @@ class CoachStartTest {
     advanceTimeBy(3_000 + 1)
     runCurrent()
     assertEquals(setOf("a1"), m.state.value.cardsNotRead)
-    // Try again reads the chat at once; still nothing, so the card keeps waiting, said again a minute on.
+    // Try again reads the chat at once and starts a new minute: still nothing, and it isn't said again at the next tick.
     m.retryCards()
     runCurrent()
     assertTrue(m.state.value.cardsNotRead.isEmpty())
+    advanceTimeBy(10_000 + 1)
+    runCurrent()
+    assertTrue("a new minute, not the old follower's next tick", m.state.value.cardsNotRead.isEmpty())
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
     advanceTimeBy(10_000 + 1)
     runCurrent()

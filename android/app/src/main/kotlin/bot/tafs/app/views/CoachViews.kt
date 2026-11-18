@@ -766,6 +766,10 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
             modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
           )
         }
+        // A sign-in whose grant still can't be read a minute on: said, with Try again, never a button that stays off unexplained.
+        if (grant == null && c.id in state.cardsNotRead) {
+          DraftNotRead(Words.Connect.approveNotRead(why = state.connectionsError ?: Words.Error.onOurSide)) { actions.retryCards() }
+        }
         state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
         error?.let { Text(it, style = scaled(13, color = Theme.no)) }
       }

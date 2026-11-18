@@ -1009,6 +1009,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
         onReopen = model::reopenSignIn,
+        onRetry = model::retryListApproval,
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).
