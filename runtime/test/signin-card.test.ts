@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { withLine } from "../src/cloud/handler.js";
 import { appNamed, Steps } from "../src/cloud/steps.js";
+import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 
 describe("a sign-in card's buttons", () => {
   const card = { type: "sign_in", id: "si", grant: "grt_abcdef", service: "Stripe", title: "Połącz Stripe", text: "Zaloguj się w Stripe, aby taf mógł zwracać płatności.", yes: "Zaloguj się", no: "Nie teraz", waits: "owner" };
@@ -60,23 +61,39 @@ describe("the app a sign-in card names", () => {
 });
 
 describe("a person reads the app's published name, never its slug", () => {
-  it("says Google Sheets once planque named the grant, in the request's and the grant's later steps", () => {
-    for (const lang of ["en", "es"] as const) {
+  const catalog = JSON.stringify({ entries: [{ entry: "connector:composio:googlesheets@1", vendor: "googlesheets", title: "Google Sheets", how: "oauth" }] });
+
+  it("says Google Sheets once a catalog answer named the entry, in the request's and the grant's later steps, in every language", () => {
+    for (const lang of LANGUAGES) {
       const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "catalog" }, "c0");
+      steps.result("c0", catalog);
       steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
       steps.result("c1", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets", status: "pending" }));
       steps.call("planque", { action: "approve", grant: "grt_sheets1" }, "c2");
       for (const id of ["c1", "c2"]) {
         const why = steps.connectionWhy(id) ?? "";
-        expect(why, `${lang} ${id}`).toContain("Google Sheets");
-        expect(why, `${lang} ${id}`).not.toMatch(/Googlesheets/);
+        expect(why, `${lang} ${id}`).toBe(wordsIn(lang).step_connection_not_yet("Google Sheets"));
+        expect(why, `${lang} ${id}`).not.toMatch(/Googlesheets/i);
       }
     }
   });
 
-  it("falls back to the slug's name only while planque hasn't named the app", () => {
+  it("names no app, rather than one made from the slug, when nothing has named the entry, in every language", () => {
+    for (const lang of LANGUAGES) {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      expect(steps.connectionWhy("c1"), lang).toBe(wordsIn(lang).step_connection_not_yet(""));
+      expect(steps.connectionWhy("c1"), lang).not.toMatch(/Googlesheets/i);
+    }
+  });
+
+  it("takes planque's name over a catalog's when the grant is named", () => {
     const steps = new Steps();
+    steps.call("planque", { action: "catalog" }, "c0");
+    steps.result("c0", catalog);
     steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
-    expect(steps.connectionWhy("c1")).toContain("Googlesheets");
+    steps.result("c1", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets (work)", status: "pending" }));
+    expect(steps.connectionWhy("c1")).toContain("Google Sheets (work)");
   });
 });

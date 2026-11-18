@@ -48,6 +48,7 @@ export class Steps {
   private requests = new Set<string>(); // call ids of connection requests, to tell a connected app from a read
   private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
   private planqueCalls = new Set<string>(); // call ids of connection calls whose answer may name a grant's app
+  private entryNames = new Map<string, string>(); // a search entry's slug → the app's published name, from this run's catalog answers
   private apps = new Map<string, string>(); // grant id → the app's name as planque answered it ("Google Sheets")
   private keyApps = new Set<string>(); // apps planque's answers this run listed with a key path (how: key), folded
   private keyRequests = new Set<string>(); // call ids of connection requests by a key (api)
@@ -77,7 +78,7 @@ export class Steps {
         // An app from search (`entry`, such as connector:composio:gmail): named by its app and keyed by its entry, so a refused
         // connect of it is cleared once a connect of the same entry goes through (kiff-qa, 14 Nov: entry was never read).
         const entry = i.action === "request" && typeof i.entry === "string" && i.entry ? i.entry : undefined;
-        const asked = reuse ? ofGrant(reuse) : entry ? entryApp(entry) : vendorName(i.server ?? api);
+        const asked = reuse ? ofGrant(reuse) : entry ? this.entryNames.get(entrySlug(entry)) ?? "" : vendorName(i.server ?? api);
         if (callID) this.connections.set(callID, i.action === "request" ? asked : grant);
         if (callID && i.action === "read") this.reads.add(callID);
         const target = i.action === "request" ? i.server ?? api ?? entry ?? reuse : i.grant;
@@ -215,6 +216,7 @@ export class Steps {
   result(callID: unknown, text: unknown): void {
     if (typeof callID !== "string" || typeof text !== "string") return;
     if (this.planqueCalls.delete(callID)) {
+      for (const [slug, name] of entryNamesIn(text)) this.entryNames.set(slug, name);
       const app = appNamed(text);
       if (app) {
         this.apps.set(app.grant, app.name);
@@ -475,8 +477,30 @@ export function lacksAccess(text: unknown): boolean {
   return /\bscopes?\b|\bpermission\b|\bforbidden\b|\bnot (?:allowed|authori[sz]ed)\b/i.test(line);
 }
 
-/** The app an entry from search names, as the person would ("connector:composio:google_sheets@2" → "Google sheets"). */
-export function entryApp(entry: string): string {
-  const slug = entry.replace(/^connector:[^:]+:/, "").replace(/@\d+$/, "").replace(/[_-]+/g, " ").trim();
-  return slug ? slug[0]!.toUpperCase() + slug.slice(1) : "";
+/** An entry's app slug: "connector:composio:googlesheets@1" → "googlesheets". */
+function entrySlug(entry: string): string {
+  return entry.replace(/^connector:[^:]+:/, "").replace(/@\d+$/, "");
+}
+
+/**
+ * The published names a planque answer gives its entries (a catalog or a search: `{entry, title}`), by the entry's slug.
+ * A person reads "Google Sheets", never the slug made into a name: an entry no answer named has no name here, and the
+ * words say "the app".
+ */
+export function entryNamesIn(text: string): Array<[string, string]> {
+  let v: unknown;
+  try { v = JSON.parse(text); } catch { return []; }
+  const out: Array<[string, string]> = [];
+  const walk = (x: unknown, depth: number): void => {
+    if (depth > 6 || !x || typeof x !== "object") return;
+    if (Array.isArray(x)) { for (const e of x.slice(0, 500)) walk(e, depth + 1); return; }
+    const o = x as Record<string, unknown>;
+    if (typeof o.entry === "string" && typeof o.title === "string") {
+      const name = o.title.replace(/\s+/g, " ").trim().slice(0, 60);
+      if (plainName(name)) out.push([entrySlug(o.entry), name]);
+    }
+    for (const val of Object.values(o)) walk(val, depth + 1);
+  };
+  walk(v, 0);
+  return out;
 }
