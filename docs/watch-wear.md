@@ -113,7 +113,7 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     only, so "ready" means not opened yet. When the app opens, it reads the asks of the last day again (`asks`).
   - **Timing, on internal builds only:** a result's card shows how long listening took to start, sending took to get tafs
     cloud's receipt and the result took after it (`watch.timing`, in ms). It's on in debug builds and in a release build made
-    with `TAFS_WATCH_TIMING=1` (or `-PwatchTiming`), and off in any other (`BuildConfig.TIMING`). On Play, it's the Android
+    with a `-test` version name, `TAFS_WATCH_TIMING=1` or `-PwatchTiming`, and off in any other (`BuildConfig.TIMING`). On Play, it's the Android
     workflow run by hand with **form** `wear` and **watch_timing** ticked: an internal build for a test on a real watch. A
     build a version raise starts never has it, and neither does one for production.
   - The phone still answers the old `coach` request, for a watch from before this one (`WatchCoachTest`); this watch never
@@ -156,6 +156,10 @@ The watch shares the phone's package, and Play needs every `versionCode` on the 
 the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Versions). **The watch has its own band: it
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
+
+**400,000,003 (0.3.0-test)** is Ask tafs's test build for a real watch: its `-test` name turns on the timing readout on a
+result's card, so the build a merge raising it starts has it, and it's never promoted to production. Production gets its own
+raise with a plain name (0.3.0), which never shows the readout.
 
 **400,000,002 (0.2.0)** carries the all-clear. Its notes are the watch's first in production, since Play shows only the latest
 release's, so they describe the whole watch app, with Wear OS's own word for a tile in each language (Ansicht, carte,

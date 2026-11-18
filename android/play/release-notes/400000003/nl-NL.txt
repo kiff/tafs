@@ -1,0 +1,6 @@
+De tafs-app voor Wear OS, als metgezel van de tafs-app op je telefoon.
+- Vraag je tafs iets vanaf je horloge: spreek, en hoor het resultaat.
+- "Wacht op jou" en "Je tafs" om je pols, gelezen van je telefoon.
+- Weiger een vastgehouden aanroep of zet een taf stil vanaf het horloge. Goedkeuren blijft op je telefoon.
+- Als er niets op je wacht, laat een groen vinkje dat zien.
+- Een tegel om te vragen, met hoeveel er op je wachten als het horloge ontgrendeld is.

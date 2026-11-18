@@ -1,0 +1,6 @@
+La app de tafs para Wear OS, compañera de la app de tafs del teléfono.
+- Pide a tus tafs desde tu reloj: habla y escucha el resultado.
+- «Te necesita» y «Tus tafs» en tu muñeca, leídos desde tu teléfono.
+- Rechaza una llamada retenida o bloquea un taf desde el reloj. Aprobar sigue en tu teléfono.
+- Cuando nada te necesita, una marca verde te lo dice.
+- Una tarjeta para pedir, con cuántos te necesitan con el reloj desbloqueado.

@@ -1,0 +1,6 @@
+Die tafs-App für Wear OS, als Begleiter der tafs-App auf dem Handy.
+- Frag deine tafs von deiner Wear-OS-Uhr: sprich und hör das Ergebnis.
+- „Braucht dich“ und „Deine tafs“ am Handgelenk, von deinem Handy gelesen.
+- Einen zurückgehaltenen Aufruf ablehnen oder einen taf anhalten, direkt von der Uhr. Genehmigen bleibt auf dem Handy.
+- Wenn dich nichts braucht, zeigt es ein grünes Häkchen.
+- Eine Ansicht zum Fragen, mit der Zahl, die dich braucht, solange die Uhr entsperrt ist.

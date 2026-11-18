@@ -33,8 +33,10 @@ android {
     // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
     // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
     // 400,000,001 and the two never meet.
-    versionCode = 400_000_002
-    versionName = "0.2.0"
+    versionCode = 400_000_003
+    // "-test": an internal build for a test on a real watch, with the timing readout (below). A build for production has a
+    // plain name, so it never shows it.
+    versionName = "0.3.0-test"
   }
 
   buildTypes {
@@ -43,8 +45,9 @@ android {
       buildConfigField("boolean", "TIMING", "true")
     }
     release {
-      // Only an internal build asks for it (TAFS_WATCH_TIMING=1 or -PwatchTiming); a production build never shows it.
-      val timing = System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
+      // Only an internal build asks for it: a test version ("-test"), TAFS_WATCH_TIMING=1 or -PwatchTiming. A production build
+      // never shows it.
+      val timing = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
       buildConfigField("boolean", "TIMING", timing.toString())
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
