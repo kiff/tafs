@@ -697,6 +697,26 @@ export class Agents {
     await this.call("DELETE", tenant, ["tenant"]);
   }
 
+  // The tafs' KIFF keys, once kiff/agents keeps them (sealed in its own store).
+
+  /**
+   * Keeps the taf's KIFF key with kiff/agents, replacing one kept before (PUT
+   * /tenant/keys/kiff/<taf>, the key alone in the body). false: kiff/agents
+   * keeps no keys yet (404), and the caller keeps it as before.
+   */
+  async putKey(tenant: string, tafID: string, key: string): Promise<boolean> {
+    return keptByAgents(this.call("PUT", tenant, ["tenant", "keys", "kiff", tafID], { key }));
+  }
+
+  /**
+   * Removes the taf's KIFF key for good, wherever kiff/agents keeps it
+   * (DELETE /tenant/keys/kiff/<taf>). false: kiff/agents keeps no keys yet
+   * (404), and the caller removes it as before.
+   */
+  async removeKey(tenant: string, tafID: string): Promise<boolean> {
+    return keptByAgents(this.call("DELETE", tenant, ["tenant", "keys", "kiff", tafID]));
+  }
+
   // Attachments (kiff/tafs#209).
 
   /**
@@ -1034,6 +1054,17 @@ export class Agents {
     // fetch sets Host itself, from the URL; it is signed with the same value.
     const { host: _host, ...signedHeaders } = signed.headers;
     return (this.cfg.fetch ?? fetch)(url, { method, headers: signedHeaders, ...(payload !== undefined ? { body: payload } : {}) });
+  }
+}
+
+/** true once the call is done; false when kiff/agents has no such route (404): it keeps no keys yet. */
+async function keptByAgents(call: Promise<unknown>): Promise<boolean> {
+  try {
+    await call;
+    return true;
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 404) return false;
+    throw err;
   }
 }
 
