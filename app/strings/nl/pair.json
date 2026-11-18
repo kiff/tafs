@@ -7,6 +7,7 @@
   "pair.failed": "Deze {device} is niet toegevoegd: {why}. Toon een nieuwe code en probeer het opnieuw.",
   "pair.from_sign_in": "Gebruik je tafs al op je telefoon? Voeg deze {device} ermee toe.",
   "pair.keychain_refused": "Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout {code}) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw.",
+  "pair.keyring_refused": "Deze computer kon zijn login niet bewaren en is dus niet toegevoegd: er is een actieve, ontgrendelde sleutelhanger nodig, zoals GNOME Keyring, KWallet of KeePassXC. Stel er een in of ontgrendel hem, toon dan een nieuwe code en probeer het opnieuw.",
   "pair.new_code": "Toon een nieuwe code",
   "pair.passkey_why_body": "Hij blijft op deze {device}, beveiligd met {biometry}. Daarmee keurt deze {device} de acties van je tafs goed, en niets wordt goedgekeurd zonder jou. Daarna vraagt Windows om je gezicht, vingerafdruk of pincode.",
   "pair.passkey_why_go": "Passkey maken",

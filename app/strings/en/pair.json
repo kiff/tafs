@@ -7,6 +7,7 @@
   "pair.failed": "This {device} wasn't added: {why}. Show a new code and try again.",
   "pair.from_sign_in": "Already use tafs on your phone? Add this {device} with it.",
   "pair.keychain_refused": "This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.",
+  "pair.keyring_refused": "This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again.",
   "pair.new_code": "Show a new code",
   "pair.passkey_why_body": "It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.",
   "pair.passkey_why_go": "Make the passkey",

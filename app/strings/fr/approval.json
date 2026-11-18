@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Réglages → Face ID et code",
   "approval.settings_path.mac_touch_id": "Réglages Système → Touch ID et mot de passe",
   "approval.settings_path.touch_id": "Réglages → Touch ID et code",
+  "approval.settings_path.windows": "Paramètres → Comptes → Options de connexion",
   "approval.state.none_enrolled": "Aucune empreinte n'est configurée sur ce téléphone. Ajoutez-en une dans ses paramètres, puis revenez.",
   "approval.state.ready": "Les approbations sont configurées sur ce téléphone.",
   "approval.state.temporarily_unavailable": "Le capteur d'empreintes ne peut pas être utilisé pour le moment. Patientez un instant, ou déverrouillez le téléphone une fois, puis vérifiez à nouveau.",

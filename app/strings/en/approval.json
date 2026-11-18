@@ -84,6 +84,7 @@
   "approval.settings_path.face_id": "Settings → Face ID & Passcode",
   "approval.settings_path.mac_touch_id": "System Settings → Touch ID & Password",
   "approval.settings_path.touch_id": "Settings → Touch ID & Passcode",
+  "approval.settings_path.windows": "Settings → Accounts → Sign-in options",
   "approval.state.none_enrolled": "No fingerprint is set up on this phone. Add one in its settings, then come back.",
   "approval.state.ready": "Approvals are set up on this phone.",
   "approval.state.temporarily_unavailable": "The fingerprint sensor can't be used just now. Wait a moment, or unlock the phone once, then check again.",

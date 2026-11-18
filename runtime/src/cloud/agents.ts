@@ -153,6 +153,8 @@ export interface AgentDefinition {
   close_in_text?: boolean;
   /** What the agent's cards may not say (kiff/agents' show.Wording); needs show. */
   wording?: Array<{ patterns: string[]; unless_next?: string[]; fix: string }>;
+  /** The endings show writes after each line of a rules notice, by language then where it's kept (kiff/agents' show.KeptWords); needs show. */
+  kept_words?: Record<string, Record<string, string>>;
 }
 
 /** The period a chat counts toward for AI fair use, and its bound in micro US dollars (0: none). */
@@ -418,6 +420,15 @@ export interface RunAt {
    */
   dedupKey?: string;
   source?: string;
+}
+
+/** What a dedup key named in kiff/agents (runByKey). */
+export interface KeyedRun {
+  id: string;
+  status: RunStatus;
+  session_id: string;
+  input_sha256: string;
+  steered: boolean;
 }
 
 /** A file as a message records it (kiff/tafs#209): never its bytes. */
@@ -765,6 +776,21 @@ export class Agents {
     return p.spent_micro_usd ?? 0;
   }
 
+  /**
+   * What a dedup key already named (GET /agents/{id}/runs/by-key): the run it started, or the run a message
+   * under it was steered into (`steered`), with the hex SHA-256 of the message under it (`input_sha256`: the
+   * run's input, or the steered text). Undefined when the key named nothing for this reader (404); any other
+   * failure throws, and is never taken as a key unused.
+   */
+  async runByKey(tenant: string, agent: string, key: string, requester: string): Promise<KeyedRun | undefined> {
+    try {
+      return await this.call<KeyedRun>("GET", tenant, ["agents", agent, "runs", "by-key"], undefined, { dedup_key: key, requester });
+    } catch (err) {
+      if (err instanceof AgentsError && err.status === 404) return undefined;
+      throw err;
+    }
+  }
+
   /** A run, read as the service: tafs cloud checks whose it is before showing what it said. */
   getRun(tenant: string, agent: string, run: string): Promise<Run> {
     return this.call("GET", tenant, ["agents", agent, "runs", run], undefined, { ...AS_SERVICE });
@@ -774,10 +800,11 @@ export class Agents {
    * Steers a run that hasn't ended (kiff/agents#102): the owner's message, taken at
    * the run's next checkpoint. A run that ended, or was asked to stop, is 409.
    * With `requester`, only their own run, counted toward their flood guard (429);
-   * without, tafs cloud itself writes.
+   * without, tafs cloud itself writes. With `dedupKey`, the app's one message: sent again,
+   * kiff/agents takes it once, and another text under the same key is 409 `dedup_key_conflict`.
    */
-  steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester): Promise<Run> {
-    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}) }, requester ? undefined : { ...AS_SERVICE });
+  steerRun(tenant: string, agent: string, run: string, text: string, requester?: Requester, dedupKey?: string): Promise<Run> {
+    return this.call("POST", tenant, ["agents", agent, "runs", run, "messages"], { text, ...(requester ? { requester } : {}), ...(dedupKey ? { dedup_key: dedupKey } : {}) }, requester ? undefined : { ...AS_SERVICE });
   }
 
   /**

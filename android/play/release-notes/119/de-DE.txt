@@ -1,0 +1,3 @@
+- Die Leiste von Coach ist ab dem ersten Bildschirm gleich: Zurück und auf dem Tablet die Schaltfläche, die ihn breiter macht.
+- Der Hinweis unter „Genehmigen“ im Setup nennt jetzt das Gerät, auf dem du genehmigst, nicht immer ein Telefon.
+- Auf dem Card-Tab eines tafs ist „Widerrufen“ die letzte Zeile, nach „Anhalten“, „Änderungen daran, wie er arbeitet“ und „Nutzung“.

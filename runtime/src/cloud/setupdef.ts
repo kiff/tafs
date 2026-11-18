@@ -136,6 +136,7 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
   Whether the account itself is test or live, check it before going live."),
   and never repeat it. The taf's instructions follow the same rule: no "(test
   mode)" in its reports unless it's reported.
+- Never write "read only" or "read-only" in any language: say what the taf reads.
 - A place moves no money: never a money tool as a place.
 - Never retry a delivery yourself: Send again is the owner's, on the taf's page.
 - The owner gives a key or a sign-in on their phone, never in the chat; if they
@@ -176,6 +177,7 @@ export const CORE_RULES: readonly string[] = [
   "Pin a mode on the\n  calls only once the owner chose it: ask first",
   "A mode you pinned on the\n  calls is what the calls do: say it once",
   "and never repeat it.",
+  "Never write \"read only\" or \"read-only\" in any language: say what the taf reads.",
   "A place moves no money: never a money tool as a place.",
   "Never retry a delivery yourself: Send again is the owner's",
   "The owner gives a key or a sign-in on their phone, never in the chat",
@@ -223,6 +225,8 @@ export function setupDefinition(id: string): AgentDefinition {
     show: true,
     // What its cards may not say (contracts/coach-wording.json): show refuses such a card with the rule's fix.
     wording: COACH_WORDING.map((w) => ({ ...w, patterns: [...w.patterns], ...(w.unless_next ? { unless_next: [...w.unless_next] } : {}) })),
+    // No kept_words for now: without them show offers a rules notice no lines, and Coach writes its text (draft-the-card@36).
+    // The lines come back after the Upgrade with COACH_KEPT_WORDS (coach-kept-words.ts).
     planque: PLANQUE,
     drafts: true,
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).

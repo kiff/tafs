@@ -88,6 +88,7 @@
   "approval.settings_path.face_id": "Ustawienia → Face ID i kod",
   "approval.settings_path.mac_touch_id": "Ustawienia systemowe → Touch ID i hasło",
   "approval.settings_path.touch_id": "Ustawienia → Touch ID i kod",
+  "approval.settings_path.windows": "Ustawienia → Konta → Opcje logowania",
   "approval.state.none_enrolled": "Na tym telefonie nie skonfigurowano odcisku palca. Dodaj go w ustawieniach telefonu, a potem wróć.",
   "approval.state.ready": "Zatwierdzanie jest skonfigurowane na tym telefonie.",
   "approval.state.temporarily_unavailable": "Czytnika linii papilarnych nie można teraz użyć. Poczekaj chwilę albo raz odblokuj telefon, a potem sprawdź ponownie.",

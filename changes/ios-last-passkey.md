@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: removing your last passkey that can approve now warns first.** A computer's own passkey counts, since it approves too, and a passkey you removed no longer reappears in Devices from an earlier read ([ios-app.md](docs/ios-app.md#pairing-a-computer)).

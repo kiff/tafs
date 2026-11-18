@@ -25,12 +25,15 @@ class CoachConversationsTest {
   private val t0 = Instant.parse("2026-10-28T09:00:00Z")
   private val send = "POST /v1/tafs/setup_1/messages"
 
-  private fun reads(conversation: String = """{"messages":[]}""") {
+  /** KIFF's access: by default this person manages Refunds, as its owner does. */
+  private val manager = """{"agents":{"refunds-1":{"use":true,"oversee":true,"manage":true}}}"""
+
+  private fun reads(conversation: String = """{"messages":[]}""", access: String = manager) {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["members.manage","cards.manage"]}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
-    transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
+    transport.answer("GET /v1/me/access", 200, access)
     transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, conversation)
   }
@@ -150,6 +153,15 @@ class CoachConversationsTest {
     assertNull(m.state.value.coachChat)
     assertTrue(m.state.value.coachFresh)
     assertEquals("refunds-1", m.state.value.coachImproving)
+  }
+
+  @Test fun coachFromAPageOfATafThePersonDoesNotManageIsCoachAsItIs() = runTest {
+    // Uses Refunds, doesn't manage it: Coach opens as it was, never on Improve Refunds, which tafs cloud would refuse.
+    reads(access = """{"agents":{"refunds-1":{"use":true}}}""")
+    val m = model()
+    m.openCoachOn("refunds-1")
+    assertNull(m.state.value.coachImproving)
+    assertFalse(m.state.value.mayAskCoachAbout("refunds-1"))
   }
 
   @Test fun aReadOfTheConversationLeftDoesNotReplaceTheNewTafsOne() = runTest {

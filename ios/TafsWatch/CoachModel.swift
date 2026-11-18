@@ -19,11 +19,19 @@ final class CoachModel: ObservableObject {
     private let clock: () -> Date
     /// Sending needs a passcode on this watch (`WristLock`).
     private let lock: WristLock
+    /// Makes a message's id.
+    private let newID: () -> UUID
+    /// The words last sent and their id: the same words sent again, after no answer came, go under
+    /// the same id, so Coach acts on them once (docs/chat.md, "One message, one id"). Other words are
+    /// another message.
+    private var sending: (words: String, id: UUID)?
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
+         newID: @escaping () -> UUID = UUID.init) {
         self.phone = phone
         self.clock = clock
         self.lock = lock
+        self.newID = newID
     }
 
     var canSend: Bool { state != .sending && !words.isEmpty && words.count <= WatchRequest.coachLimit }
@@ -35,12 +43,15 @@ final class CoachModel: ObservableObject {
         // No passcode on this watch: nothing is sent, and the words stay to send once one is set.
         guard lock.isSecure else { state = .failed(Words.Watch.needsLock); return }
         let text = words
+        let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
+        sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text))
+        let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased()))
         guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
         switch reply.outcome {
         case .ok:
             draft = ""
+            sending = nil
             state = .answered(reply.coach)
         case .signedOut:
             state = .failed(Words.Watch.signInOnPhone)
@@ -54,6 +65,7 @@ final class CoachModel: ObservableObject {
     /// The app left the screen: the words and the answer go.
     func leave() {
         draft = ""
+        sending = nil
         state = .writing
     }
 }

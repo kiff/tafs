@@ -98,11 +98,14 @@ object Haptics {
   }
 }
 
-/** A tappable that plays the touch effect, as the app's buttons do (`Haptics.tap`). */
+/**
+ * A tappable that plays the touch effect, as the app's buttons do (`Haptics.tap`). TalkBack hears it as a button unless the caller
+ * says it's something else (a tab, one of a few choices), so no tappable is left without a role.
+ */
 fun androidx.compose.ui.Modifier.tapping(
   enabled: Boolean = true,
   onClickLabel: String? = null,
-  role: androidx.compose.ui.semantics.Role? = null,
+  role: androidx.compose.ui.semantics.Role? = androidx.compose.ui.semantics.Role.Button,
   onClick: () -> Unit,
 ): androidx.compose.ui.Modifier =
   this.then(androidx.compose.ui.Modifier.clickable(enabled = enabled, onClickLabel = onClickLabel, role = role) { Haptics.tap(); onClick() })

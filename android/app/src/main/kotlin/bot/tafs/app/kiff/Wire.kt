@@ -111,6 +111,8 @@ data class HomeTaf(
   /** The account's clock its times are in, in tafs cloud's words ("Times in Europe/Paris"), and the zone its schedule runs in. */
   @SerialName("time_zone") val timeZone: String? = null,
   @SerialName("time_zone_words") val timeZoneWords: String? = null,
+  /** tafs cloud's word on whether it belongs in a tablet's sidebar now (docs/api.md, Home); absent from a tafs cloud before it. */
+  @SerialName("relevant_now") val relevantNow: Boolean? = null,
   @SerialName("schedule_time_zone") val scheduleTimeZone: String? = null,
   /** Only while its recurring schedule still runs in another zone: what to do about it, in tafs cloud's words. */
   @SerialName("schedule_time_zone_words") val scheduleTimeZoneWords: String? = null,

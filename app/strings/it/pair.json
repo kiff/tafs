@@ -7,6 +7,7 @@
   "pair.failed": "Questo {device} non è stato aggiunto: {why}. Mostra un nuovo codice e riprova.",
   "pair.from_sign_in": "Usi già tafs sul telefono? Aggiungi questo {device} con il telefono.",
   "pair.keychain_refused": "Questo Mac non è riuscito a salvare l'accesso nel portachiavi (errore {code}), quindi non è stato aggiunto. Mostra un nuovo codice e riprova.",
+  "pair.keyring_refused": "Questo computer non è riuscito a salvare l'accesso, quindi non è stato aggiunto: serve un portachiavi attivo e sbloccato, come GNOME Keyring, KWallet o KeePassXC. Configurane uno o sbloccalo, poi mostra un nuovo codice e riprova.",
   "pair.new_code": "Mostra un nuovo codice",
   "pair.passkey_why_body": "Resta su questo {device}, protetta da {biometry}. Così questo {device} può approvare le azioni dei tuoi tafs, e nulla viene approvato senza di te. Poi Windows ti chiederà il volto, l'impronta digitale o il PIN.",
   "pair.passkey_why_go": "Crea la passkey",

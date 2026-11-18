@@ -4,6 +4,7 @@
   "setup.app_events": "App-events",
   "setup.approve": "Goedkeuren",
   "setup.approve_note": "Goedkeuren ondertekent op deze telefoon; pas daarna begint de app het taf te informeren.",
+  "setup.approve_note_device": "Goedkeuren ondertekent op deze {device}; pas daarna begint de app het taf te informeren.",
   "setup.at_least_one": "Er blijft minstens één plek aan.",
   "setup.change_starts": "Met Coach wijzigen wanneer het start",
   "setup.choose_actions": "Acties kiezen",

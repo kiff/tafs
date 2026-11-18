@@ -1,0 +1,5 @@
+- Je verzonden bericht blijft bovenaan de chat terwijl het taf werkt en antwoordt.
+- Een bericht dat na een verbroken verbinding opnieuw wordt verzonden, wordt maar één keer uitgevoerd.
+- Coach bij een taf wordt alleen aangeboden aan wie dat taf beheert.
+- Je laatste passkey die kan goedkeuren verwijderen geeft eerst een waarschuwing.
+- Coach zijn tools geven keurt alleen de stap goed die je zag.

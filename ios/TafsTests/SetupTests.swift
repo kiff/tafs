@@ -1367,6 +1367,39 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Coach's message carries one id (`client_message_id`): on a stream cut before its answer, on the
+    /// plain send that takes its place, and on Retry once it wasn't sent, so Coach acts on it once.
+    /// An improvement's first message goes through `/improve`, with none.
+    func testCoachsMessageCarriesOneIdThroughTheFallbackAndRetry() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        func id(_ r: URLRequest?) -> String? { body(r)["client_message_id"] as? String }
+        StubProtocol.dropped["POST /v1/tafs/taf-setup/messages/stream"] = [.networkConnectionLost]
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (503, #"{"error":"down"}"#)
+        StubProtocol.sent = []
+        await model.sendSetup("Use the test account")
+        let first = try XCTUnwrap(id(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").first))
+        XCTAssertNotNil(UUID(uuidString: first))
+        XCTAssertEqual(first, first.lowercased())
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages/stream").map(id), [first], "the stream and the plain send: one id")
+        XCTAssertEqual(model.setupUnsent.map(\.text), ["Use the test account"])
+
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false}"#)
+        StubProtocol.sent = []
+        await model.retrySetup(try XCTUnwrap(model.setupUnsent.first))
+        XCTAssertTrue(model.setupUnsent.isEmpty)
+        XCTAssertEqual(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").map(id), [first], "Retry, under the same id")
+
+        StubProtocol.sent = []
+        await model.sendSetup("And the live one later")
+        let next = id(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").last)
+        XCTAssertNotNil(next.flatMap(UUID.init(uuidString:)))
+        XCTAssertNotEqual(next, first, "another message, another id")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Edit takes a message that wasn't sent out of Setup's thread and gives its words back
     /// for the composer (kiff/tafs#476); a second Edit finds nothing.
     func testEditGivesBackTheWordsOfAMessageThatIsntSent() async throws {

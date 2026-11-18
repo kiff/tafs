@@ -422,13 +422,7 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
         }
         // A connection its vendor signed out says so, in planque's words, in place of what it's doing: it waits on the owner.
         // At risk or failing, tafs cloud's first reason, amber or red.
-        val tone = when {
-          // Its setup stopped partway: it needs the owner.
-          signedOut != null || taf.finish != null -> Theme.amberText
-          taf.nowHealth == "failing" -> Theme.no
-          taf.nowHealth == "at_risk" -> Theme.amberText
-          else -> Theme.dim
-        }
+        val tone = tafLineTone(taf, signedOut)
         (signedOut ?: taf.now).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = tone), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         // Its labels, as chips (docs/android-app.md, Labels).
         LabelTags(tags)
@@ -453,9 +447,20 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
   }
 }
 
+/**
+ * The colour of a taf's line under its name, on Home and in a tablet's sidebar: amber when it waits on the owner (a connection
+ * signed out, a setup stopped partway), red when tafs cloud says it's failing, amber at risk, else dim.
+ */
+internal fun tafLineTone(taf: Taf, signedOut: String?): androidx.compose.ui.graphics.Color = when {
+  signedOut != null || taf.finish != null -> Theme.amberText
+  taf.nowHealth == "failing" -> Theme.no
+  taf.nowHealth == "at_risk" -> Theme.amberText
+  else -> Theme.dim
+}
+
 /** Play's newer version, in one line with one button: Update while it's offered, Restart once it's downloaded. */
 @Composable
-private fun UpdateLine() {
+internal fun UpdateLine() {
   val row = bot.tafs.app.push.LocalAppUpdate.current ?: return
   val (words, button, action) = when (row.stage) {
     bot.tafs.app.push.UpdateStage.None -> return

@@ -11,6 +11,7 @@
   "record.approved_then_done": "Von dir genehmigt, dann erledigt",
   "record.card_issued_by": "Card ausgestellt von {owner}",
   "record.connection_refused_before_sending": "Die Verbindung hat es vor dem Senden abgelehnt. Es wurde nichts gesendet.",
+  "record.day_spent": "{amount} ausgegeben",
   "record.decided.approved_by": "genehmigt von {who}",
   "record.decided.approved_by_you": "von dir genehmigt",
   "record.decided.card_issued": "Card ausgestellt",

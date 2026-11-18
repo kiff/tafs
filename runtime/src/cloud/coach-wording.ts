@@ -12,13 +12,16 @@ export interface Wording { patterns: string[]; unless_next?: string[]; fix: stri
 export const COACH_WORDING: readonly Wording[] = [
   {
     "patterns": [
-      "read-only"
+      "read-only",
+      "read access only",
+      "only read access"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
   {
     "patterns": [
-      "read only(\\s+\\pL+)?"
+      "read only(\\s+\\pL+)?",
+      "reading only(\\s+\\pL+)?"
     ],
     "unless_next": [
       "the",
@@ -39,7 +42,9 @@ export const COACH_WORDING: readonly Wording[] = [
       "lines",
       "emails",
       "messages",
-      "pages"
+      "pages",
+      "unread",
+      "incoming"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -55,7 +60,9 @@ export const COACH_WORDING: readonly Wording[] = [
       "lecture seule",
       "ne (?:change|modifie|touche)(?:ra)? rien",
       "ne peut rien (?:changer|modifier)",
-      "aucune modification"
+      "aucune modification",
+      "en lecture(?: \\pL+){0,3} (?:seulement|uniquement)",
+      "lecture (?:seulement|uniquement)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -67,7 +74,8 @@ export const COACH_WORDING: readonly Wording[] = [
       "nur[ -]lese(?:zugriff|rechte?)",
       "(?:ändert|verändert|rührt) nichts(?: an)?",
       "nichts (?:ändern|verändern)",
-      "keine änderungen"
+      "keine änderungen",
+      "nur zum lesen"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -99,7 +107,10 @@ export const COACH_WORDING: readonly Wording[] = [
       "(?:sólo|solo|únicamente) (?:de )?lectura",
       "no (?:cambia|cambiará|modifica|modificará|toca|tocará) nada",
       "no puede (?:cambiar|modificar) nada",
-      "ningún cambio"
+      "ningún cambio",
+      "lectura (?:solamente|únicamente)",
+      "(?:solo|sólo|solamente|únicamente) para (?:leer|lectura)",
+      "en (?:modo )?lectura(?: \\pL+){0,3} (?:solamente|únicamente)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -134,7 +145,9 @@ export const COACH_WORDING: readonly Wording[] = [
       "si limita a leggere",
       "non (?:cambia|cambierà|modifica|modificherà|tocca|toccherà) (?:nulla|niente)",
       "non può (?:cambiare|modificare) (?:nulla|niente)",
-      "nessuna modifica"
+      "nessuna modifica",
+      "lettura (?:soltanto|solamente)",
+      "in lettura(?: \\pL+){0,3} (?:soltanto|solamente)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -169,7 +182,8 @@ export const COACH_WORDING: readonly Wording[] = [
       "alleen[- ]lees(?:rechten|toegang)",
       "(?:verandert|wijzigt|raakt) niets(?: aan)?",
       "kan niets (?:veranderen|wijzigen)",
-      "geen wijzigingen"
+      "geen wijzigingen",
+      "alleen (?:om te|voor) lezen"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },
@@ -230,7 +244,10 @@ export const COACH_WORDING: readonly Wording[] = [
       "(?:só|apenas|somente) (?:de )?leitura",
       "não (?:muda|mudará|altera|alterará|modifica|modificará|toca|tocará) nada",
       "não pode (?:mudar|alterar|modificar) nada",
-      "nenhuma alteração"
+      "nenhuma alteração",
+      "leitura (?:apenas|somente)",
+      "(?:apenas|só|somente) para (?:leitura|ler)",
+      "em (?:modo de )?leitura(?: \\pL+){0,3} (?:apenas|somente)"
     ],
     "fix": "Describe only what the taf's job will do, in plain words. Don't say what a connection or a sign-in can or can't do, or that it changes nothing."
   },

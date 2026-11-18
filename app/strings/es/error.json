@@ -20,6 +20,7 @@
   "error.on_our_side": "No tienes que hacer nada; ya estamos en ello.",
   "error.ours": "Este teléfono y el servidor no se entendieron. Ya estamos en ello.",
   "error.request_mismatch": "Esta solicitud no coincide con lo que pide. No se aprobó nada.",
+  "error.sent_with_other_text": "Este mensaje ya se envió con otro texto. Vuelve a enviarlo como un mensaje nuevo.",
   "error.sign_in_code_expired": "El código de inicio de sesión caducó. Empieza de nuevo.",
   "error.sign_in_first": "Inicia sesión con KIFF primero.",
   "error.sign_in_first_on_device": "Inicia sesión con KIFF en este {device} primero.",

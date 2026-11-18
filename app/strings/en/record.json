@@ -11,6 +11,7 @@
   "record.approved_then_done": "Approved by you, then done",
   "record.card_issued_by": "Card issued by {owner}",
   "record.connection_refused_before_sending": "The connection refused it before sending. Nothing was sent.",
+  "record.day_spent": "{amount} spent",
   "record.decided.approved_by": "approved by {who}",
   "record.decided.approved_by_you": "approved by you",
   "record.decided.card_issued": "Card issued",

@@ -1,0 +1,5 @@
+- Your sent message stays at the top of the chat while the taf works and answers.
+- A message sent again after a dropped connection is acted on only once.
+- Coach on a taf is offered only to people who manage that taf.
+- Removing your last passkey that can approve warns you first.
+- Giving Coach its tools approves only the step you saw.

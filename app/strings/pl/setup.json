@@ -4,6 +4,7 @@
   "setup.app_events": "Zdarzenia aplikacji",
   "setup.approve": "Zatwierdź",
   "setup.approve_note": "„Zatwierdź” podpisuje na tym telefonie; aplikacja zaczyna powiadamiać tafa dopiero potem.",
+  "setup.approve_note_device": "„Zatwierdź” podpisuje na tym urządzeniu ({device}); aplikacja zaczyna powiadamiać tafa dopiero potem.",
   "setup.at_least_one": "Co najmniej jedno miejsce pozostaje włączone.",
   "setup.change_starts": "Zmień z Coachem, kiedy się uruchamia",
   "setup.choose_actions": "Wybierz akcje",

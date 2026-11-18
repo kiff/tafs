@@ -11,6 +11,7 @@
   "record.approved_then_done": "Door jou goedgekeurd, daarna klaar",
   "record.card_issued_by": "Card uitgegeven door {owner}",
   "record.connection_refused_before_sending": "De koppeling heeft het vóór verzending geweigerd. Er is niets verzonden.",
+  "record.day_spent": "{amount} uitgegeven",
   "record.decided.approved_by": "goedgekeurd door {who}",
   "record.decided.approved_by_you": "door jou goedgekeurd",
   "record.decided.card_issued": "Card uitgegeven",

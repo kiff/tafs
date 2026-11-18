@@ -18,6 +18,7 @@ final class WatchRelayTests: XCTestCase {
         var refuseOutcome = NotificationRefuse.Outcome.refused(left: 0)
         var haltOutcome = HaltAll.Outcome.done("Halted. Resuming starts only new work.")
         var coached: [String] = []
+        var coachedIDs: [UUID] = []
         let page: WatchNeedsYou
         init(at: Date) {
             page = WatchNeedsYou(count: 2, calls: [.init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00",
@@ -41,9 +42,16 @@ final class WatchRelayTests: XCTestCase {
             halted.append(taf)
             return haltOutcome
         }
-        func coach(text: String) async -> WatchReply {
+        func coach(text: String, messageID: UUID) async -> WatchReply {
             coached.append(text)
+            coachedIDs.append(messageID)
             return WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false))
+        }
+        var briefRead: WatchBrief?
+        func brief() async throws -> WatchBrief? {
+            reads += 1
+            if fails { throw URLError(.notConnectedToInternet) }
+            return briefRead
         }
         /// Nothing was read, refused, halted or sent to Coach.
         var untouched: Bool { reads == 0 && refused.isEmpty && halted.isEmpty && coached.isEmpty }
@@ -59,6 +67,66 @@ final class WatchRelayTests: XCTestCase {
     }
 
     private var made: String { "\(now.timeIntervalSinceReferenceDate)" }
+
+    /// Your brief (S2, behind the watch's switch): a read, answered from what tafs cloud sends; none is no brief,
+    /// and nothing is answered or signed. Signed out answers nothing of the account.
+    func testTheBriefIsReadOnly() async {
+        let reading = Reading(at: now)
+        let decision = WatchBrief.Decision(id: "hold:ce_1", question: "Refund order 4502, €480.00?", taf: "Rae", deadline: "by 10:51",
+                                           urgent: true, cantWait: nil, refKind: "hold", refID: "ce_1", holdID: "ce_1")
+        reading.briefRead = WatchBrief(title: "Your brief", when: "Morning brief · 08:00", urgent: "Urgent", decisions: [decision],
+                                       more: nil, done: nil, doneCases: [], rest: nil)
+        let reply = await send(WatchRequest(.brief, made: now), reading: reading)
+        XCTAssertEqual(reply, WatchReply(.ok, brief: reading.briefRead))
+        XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(reply)), reply, "it survives the wire")
+        XCTAssertTrue(reading.refused.isEmpty && reading.halted.isEmpty && reading.coached.isEmpty, "a read: nothing answered")
+        reading.briefRead = nil
+        let none = await send(WatchRequest(.brief, made: now), reading: reading)
+        XCTAssertEqual(none, WatchReply(.ok), "no brief: the watch shows Needs you")
+        reading.signedIn = false
+        let out = await send(WatchRequest(.brief, made: now), reading: reading)
+        XCTAssertEqual(out, WatchReply(.signedOut))
+        XCTAssertEqual(reading.reads, 2)
+    }
+
+    /// The brief as the wrist gets it: tafs cloud's words, each decision without its answers, a held call's id for
+    /// Refuse, the taf by name, every decision tafs cloud sends and two of Done's cases; an empty brief is none.
+    func testTheWristsBriefIsTafsCloudsWords() throws {
+        let json = #"""
+        {"words":{"title":"Your brief","when":"Morning brief · 08:00","urgent":"Urgent","done":"Done since last evening"},
+         "decisions":[{"id":"hold:ce_1","question":"Refund order 4502, €480.00?","deadline":"by 10:51","urgent":true,
+                       "answers":[{"words":"Approve","answer":"approve"},{"words":"Refuse","answer":"refuse"}],
+                       "ref":{"kind":"hold","id":"ce_1","taf":"depl_1"}},
+                      {"id":"step:h1","question":"Sign in to Stripe again?","answers":[{"words":"Open","answer":"open"}],
+                       "now_why":"It stops at noon.","ref":{"kind":"step","id":"h1","taf":"depl_9"}},
+                      {"id":"d3","question":"No answers, so not drawn","answers":[]}],
+         "more":{"count":2,"words":"2 more decisions"},
+         "done":[{"mission":"Refunds","cases":[{"name":"Order 4501","words":"Refunded"},{"name":"Order 4499","words":"Refunded"},{"name":"Order 4498","words":"Refunded"}]}],
+         "rest":{"count":4,"words":"4 tafs need nothing now"}}
+        """#
+        let brief = try JSONDecoder().decode(TafsCloud.Brief.self, from: Data(json.utf8))
+        let wrist = try XCTUnwrap(KeptWatchReading.watchBrief(brief, tafNames: ["depl_1": "Rae"]))
+        XCTAssertEqual(wrist.title, "Your brief")
+        XCTAssertEqual(wrist.when, "Morning brief · 08:00")
+        XCTAssertEqual(wrist.decisions.map(\.id), ["hold:ce_1", "step:h1"], "only decisions the phone draws")
+        XCTAssertEqual(wrist.decisions[0].holdID, "ce_1")
+        XCTAssertEqual(wrist.decisions[0].taf, "Rae")
+        XCTAssertEqual(wrist.decisions[0].deadline, "by 10:51")
+        XCTAssertTrue(wrist.decisions[0].urgent)
+        XCTAssertNil(wrist.decisions[1].holdID, "a step names no held call")
+        XCTAssertNil(wrist.decisions[1].taf, "a taf the phone can't name stays unnamed")
+        XCTAssertEqual(wrist.decisions[1].cantWait, "It stops at noon.")
+        XCTAssertEqual(wrist.more, "2 more decisions")
+        XCTAssertEqual(wrist.done, "Done since last evening")
+        XCTAssertEqual(wrist.doneCases, ["Order 4501", "Order 4499"])
+        XCTAssertEqual(wrist.rest, "4 tafs need nothing now")
+        // Never cut: tafs cloud keeps every urgent decision past its own cap, and `more` counts only the rest.
+        let many = (1...7).map { #"{"id":"d\#($0)","question":"Q\#($0)?","urgent":true,"answers":[{"words":"Open","answer":"open"}]}"# }
+        let urgentSeven = try JSONDecoder().decode(TafsCloud.Brief.self, from: Data(#"{"decisions":[\#(many.joined(separator: ","))]}"#.utf8))
+        XCTAssertEqual(KeptWatchReading.watchBrief(urgentSeven, tafNames: [:])?.decisions.count, 7)
+        let empty = try JSONDecoder().decode(TafsCloud.Brief.self, from: Data(#"{"decisions":[],"done":[]}"#.utf8))
+        XCTAssertNil(KeptWatchReading.watchBrief(empty, tafNames: [:]), "nothing in it: Needs you")
+    }
 
     func testNeedsYouIsReadAndAnswered() async {
         let reading = Reading(at: now)
@@ -133,6 +201,23 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reply.coach?.text, "Rae is paused.")
         XCTAssertEqual(reading.coached, ["Pause Rae"])
         XCTAssertTrue(reading.refused.isEmpty && reading.halted.isEmpty)
+    }
+
+    /// The watch's id for the words goes on as the message's id, the same when the watch sends them
+    /// again; a watch from before it sends none, or a malformed one, and the phone gives it one of its own.
+    func testCoachsWordsGoUnderTheWatchsIdForThem() async {
+        let reading = Reading(at: now)
+        let watchID = UUID(uuidString: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90")!
+        _ = await send(WatchRequest(.coach, made: now, text: "Pause Rae", message: watchID.uuidString.lowercased()), reading: reading)
+        _ = await send(WatchRequest(.coach, made: now, text: "Pause Rae", message: watchID.uuidString.lowercased()), reading: reading)
+        XCTAssertEqual(reading.coachedIDs, [watchID, watchID], "sent again, the same message")
+        _ = await send(WatchRequest(.coach, made: now, text: "Pause Rae"), reading: reading)
+        _ = await send(WatchRequest(.coach, made: now, text: "Pause Rae", message: "not-a-uuid"), reading: reading)
+        XCTAssertEqual(reading.coachedIDs.count, 4)
+        XCTAssertFalse(reading.coachedIDs[2...].contains(watchID), "none, or malformed: the phone's own")
+        XCTAssertNotEqual(reading.coachedIDs[2], reading.coachedIDs[3])
+        let wire = WatchMessage.decode(WatchRequest.self, from: WatchMessage.encode(WatchRequest(.coach, made: now, text: "x", message: "m")))
+        XCTAssertEqual(wire?.message, "m", "it survives the wire")
     }
 
     func testRefuseNamesItsHoldAndSaysWhatKIFFDid() async {
@@ -293,16 +378,20 @@ final class WatchRelayTests: XCTestCase {
         let reading = coachReading()
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"message":{"id":"m1"}}"#)
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[{"at":"2026-10-14T10:44:00Z","from":"taf","kind":"message","text":"An older answer","session":"s1"},{"id":"m1","at":"2026-10-14T10:45:00Z","from":"owner","kind":"message","text":"Pause Rae","session":"s1"},{"at":"2026-10-14T10:45:05Z","from":"taf","kind":"message","text":"Rae is paused.","session":"s1"}],"components":[]}"#)
-        let reply = await reading.coach(text: "Pause Rae")
+        let messageID = UUID()
+        let reply = await reading.coach(text: "Pause Rae", messageID: messageID)
         XCTAssertEqual(reply, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)))
         XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" }.map { $0.url?.path }, ["/v1/tafs/taf-setup/messages"],
                        "the words, once, and nothing signed or approved")
+        let body = sent("POST", "/v1/tafs/taf-setup/messages").last?.httpBody
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        XCTAssertEqual(body?["client_message_id"] as? String, messageID.uuidString.lowercased(), "under the message's id")
     }
 
     func testCoachRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
         let reading = coachReading()
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (403, #"{"error":"Allow AI use first.","code":"ai_consent_required","consent":{"given":false}}"#)
-        let reply = await reading.coach(text: "Pause Rae")
+        let reply = await reading.coach(text: "Pause Rae", messageID: UUID())
         XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.coachNeedsConsent))
     }
 

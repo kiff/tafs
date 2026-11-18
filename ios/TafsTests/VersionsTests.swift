@@ -100,6 +100,9 @@ final class VersionsTests: XCTestCase {
     /// taf, even on that taf's page (item 36), and the taf is one tap away.
     func testCoachModeOpensOnTheTafOnScreenAndKeepsAConversation() async throws {
         let (model, id) = await kiffModel(signer: StubSigner())
+        // Coach mode is on a taf its manager opens Coach on.
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
         let cloudID = try XCTUnwrap(model.cloudTaf(for: id)?.id)
         model.newSetupChat()
         model.tafOnScreen = id
@@ -127,6 +130,58 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(model.coachChatIsEmpty, "one on a taf gives way to a new one, on no taf")
     }
 
+    /// Coach opens on the taf on screen only for someone who manages it: tafs cloud takes improving a taf only
+    /// from them, as every other way into Coach on a taf. Anyone else gets Coach on no taf.
+    func testCoachOpensOnATafOnlyForItsManager() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-other", name: "Other", id: "depl_9")]))
+        await model.refresh()
+        let other = try XCTUnwrap(model.tafs.first { $0.name == "Other" }?.id)
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"setup":{"use":true,"oversee":false,"manage":false,"groups":[]}}}"#)
+        await model.refreshPeople()
+        XCTAssertTrue(model.manages(id))
+        XCTAssertTrue(model.mayUseCoach, "KIFF lets this person use Coach")
+        XCTAssertFalse(model.manages(other), "KIFF gives no manage on it")
+        model.newSetupChat()
+        model.tafOnScreen = other
+        model.openCoach()
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertNil(model.setupImproving, "not a taf this person manages: Coach on no taf")
+        model.coachOpen = false
+        model.tafOnScreen = id
+        model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, "depl_1", "their own taf: Coach mode on it")
+        // Needs you's Change the limit in Coach: the same gate, since a limit is the taf's Card.
+        XCTAssertTrue(model.mayImproveInCoach(id))
+        XCTAssertFalse(model.mayImproveInCoach(other), "not their taf: no Change the limit in Coach")
+    }
+
+    /// Files picked in a plain chat stay in the tray when Coach is then opened on a taf. An improvement's first
+    /// message carries none, so they wait for the next message, and the composer says so; a plain chat sends them.
+    func testFilesWaitForTheNextMessageWhileCoachImprovesATaf() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        let ref = TafsCloud.AttachmentRef(id: "att_1", kind: "text", mediaType: "text/plain", name: "policy.txt", size: 12)
+        model.putBackFiles([PendingFile(id: UUID(), name: "policy.txt", mediaType: "text/plain", thumbnail: nil, state: .ready(ref))], AppModel.setupFiles)
+        model.newSetupChat()
+        XCTAssertFalse(model.improvementHoldsFiles, "a plain chat sends its files")
+        model.improveTaf(id)
+        XCTAssertNotNil(model.setupImproving)
+        XCTAssertTrue(model.improvementHoldsFiles, "an improvement's first message: they wait")
+        XCTAssertNil(model.filesTarget(AppModel.setupFiles), "and no paperclip while it improves")
+        XCTAssertEqual(model.files(AppModel.setupFiles).map(\.name), ["policy.txt"], "still in the tray for the next one")
+        XCTAssertEqual(Words.Coach.improveNoFiles, "Files go with your next message: send this one first, then attach them.")
+        model.newSetupChat()
+        XCTAssertFalse(model.improvementHoldsFiles)
+    }
+
+    /// A run's Ask Coach shows only for someone who may use Coach and manages the taf; the sample shows it.
+    func testARunsAskCoachIsOnlyForWhoMayImproveTheTaf() {
+        XCTAssertTrue(KnobRequestDetail.offersAskCoach(mode: .kiff, mayUseCoach: true, manages: true))
+        XCTAssertFalse(KnobRequestDetail.offersAskCoach(mode: .kiff, mayUseCoach: true, manages: false))
+        XCTAssertFalse(KnobRequestDetail.offersAskCoach(mode: .kiff, mayUseCoach: false, manages: true))
+        XCTAssertTrue(KnobRequestDetail.offersAskCoach(mode: .sample, mayUseCoach: false, manages: false))
+    }
+
     /// The pencil in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat, with no
     /// taf mode, and it stays plain: Coach closed and opened again on the same taf's page doesn't
     /// put the taf back (the live run: the pencil kept the taf's mode). Another taf's page still
@@ -136,6 +191,9 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-second", name: "Second", id: "depl_2")]))
         await model.refresh()
         let second = try XCTUnwrap(model.tafs.first { $0.name == "Second" }?.id)
+        // Coach mode is on a taf its manager opens Coach on: both are theirs here.
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"example-second":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
         model.tafOnScreen = first
         model.openCoach()
         XCTAssertEqual(model.setupImproving?.id, "depl_1", "Coach mode on the taf")
@@ -202,6 +260,9 @@ final class VersionsTests: XCTestCase {
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-second", name: "Second", id: "depl_2")]))
         await model.refresh()
         let second = try XCTUnwrap(model.tafs.first { $0.name == "Second" }?.id)
+        // Coach mode is on a taf its manager opens Coach on: both are theirs here.
+        StubProtocol.responses["GET /v1/me/access"] = (200, #"{"agents":{"rae-k3f9":{"use":true,"oversee":true,"manage":true,"groups":[]},"example-second":{"use":true,"oversee":true,"manage":true,"groups":[]}}}"#)
+        await model.refreshPeople()
         model.tafOnScreen = first; model.openCoach()
         XCTAssertEqual(model.setupImproving?.id, "depl_1")
         model.coachOpen = false

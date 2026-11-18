@@ -20,6 +20,7 @@
   "error.on_our_side": "Du musst nichts tun; wir kümmern uns darum.",
   "error.ours": "Dieses Telefon und der Server haben sich nicht verstanden. Wir kümmern uns darum.",
   "error.request_mismatch": "Diese Anfrage stimmt nicht mit dem überein, worum sie bittet. Es wurde nichts genehmigt.",
+  "error.sent_with_other_text": "Diese Nachricht wurde schon mit anderem Text gesendet. Sende sie noch einmal als neue Nachricht.",
   "error.sign_in_code_expired": "Der Anmeldecode ist abgelaufen. Beginne von vorn.",
   "error.sign_in_first": "Melde dich zuerst mit KIFF an.",
   "error.sign_in_first_on_device": "Melde dich zuerst auf diesem {device} mit KIFF an.",

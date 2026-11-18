@@ -194,6 +194,16 @@ async function call(deps: ReturnType<typeof world>, path: string, method = "GET"
 }
 
 describe("GET /v1/usage/balance", () => {
+  // Every app signs out on tafs cloud's 401: only KIFF's 401 may become one. A forbidden read stays a 403, never a 401 or a 503.
+  it("answers KIFF's 403 on the credits read as 403, its 401 as 401, and a failure as before", async () => {
+    const forbidden = await call(world(kiff({ status: 403 })), "/v1/usage/balance");
+    expect(forbidden.status).toBe(403);
+    expect(forbidden.body).toMatchObject({ code: "forbidden" });
+    expect((await call(world(kiff({ status: 403 })), "/v1/usage/credits")).status).toBe(403);
+    expect((await call(world(kiff({ status: 401 })), "/v1/usage/balance")).status).toBe(401);
+    expect((await call(world(kiff({ status: 500 })), "/v1/usage/balance")).status).toBe(503);
+  });
+
   it("answers the balance now, in words, from KIFF's credits read with the person's session", async () => {
     const asked: string[] = [];
     const r = await call(world(kiff({ balance: balance({ state: "warning", meter_pct: 85 }), asked })), "/v1/usage/balance");

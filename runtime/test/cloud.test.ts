@@ -1323,6 +1323,35 @@ describe("calmEnough", () => {
 });
 
 describe("the home list", () => {
+  // The iPad's owner sidebar shows only the tafs that matter now. tafs cloud says which, so every app shows the same ones.
+  it("says which tafs are relevant now, and why: a held call, then a recent run, then a recent change, else not", async () => {
+    const w = world();
+    const rae = () => call(w, "GET", "/v1/home", { token: "ana" }).then((r) => r.body.tafs.find((t: { id: string }) => t.id === RAE));
+    // Rae was made on 15 Oct and never ran; the clock reads 29 Oct: nothing of it now.
+    expect(await rae()).toMatchObject({ relevant_now: false });
+    expect((await rae()).relevant_because).toBeUndefined();
+    // A run 23 hours ago: relevant, for the run.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "r_recent", agent: RAE, session: "s_recent", trigger: "schedule", status: "COMPLETED", stop: "answered", cost_micro_usd: 0, turns: 1,
+      created: "2026-10-28T11:00:00Z", updated: "2026-10-28T11:01:00Z" } as never);
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_run" });
+    // A held call for its agent comes before the run.
+    w.account.held = [{ subject: "rae", kind: "hold" }];
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "held", waiting: 1 });
+    // A currency ask (card_unit) isn't a held call: the run still says why.
+    w.account.held = [{ id: "exc-1", kind: "card_unit", subject: "rae", action: "answer_case", status: "held", count: 1,
+      created_at: "2026-10-28T12:00:00Z", last_at: "2026-10-28T12:00:00Z", breaches: [{ outcome: "amount_unit_mismatch", unit: "USD", card_unit: "EUR" }] }];
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_run" });
+    // 25 hours after that run, and nothing else: not relevant.
+    w.account.held = [];
+    w.now = new Date("2026-10-29T12:00:00Z");
+    expect(await rae()).toMatchObject({ relevant_now: false });
+    // Made an hour ago and never ran: relevant, for the change.
+    const t = w.tafs.held.get(`t_acme#${RAE}`)!;
+    w.tafs.held.set(`t_acme#${RAE}`, { ...t, created: "2026-10-29T11:00:00Z" });
+    w.agents.runs.shift();
+    expect(await rae()).toMatchObject({ relevant_now: true, relevant_because: "recent_change" });
+  });
+
   /** Rae's refund Card: €100 a call, €1,000 a day with €200 used, 20 calls a day. */
   const raeCard: Mandate = {
     id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
@@ -1382,6 +1411,8 @@ describe("the home list", () => {
       color: 0, state: "working", waiting: 0,
       // Its last change: no version yet, so when it was made.
       last_change: "2026-10-15T09:00:00Z",
+      // Nothing of it waits, and it neither ran nor changed in the last 24 hours: not in a "relevant now" sidebar.
+      relevant_now: false,
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
       // Its health over its recent work (health.ts): nothing against it.
@@ -5862,7 +5893,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@29,draft-the-card@32,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@29,draft-the-card@36,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -5870,23 +5901,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@32,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@36,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@29,draft-the-card@32,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@29,draft-the-card@36,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@32,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@36,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@32,halting@1,improve-a-taf@2,name-the-tools@17`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@36,halting@1,improve-a-taf@2,name-the-tools@17`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -5904,7 +5935,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@32,halting@1,name-the-tools@17,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@29,draft-the-card@36,halting@1,name-the-tools@17,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -6756,6 +6787,8 @@ describe("a step a taf handed its owner", () => {
       words: { title: "Your step", done: "Done", skip: "Skip it", open: "Open in Example", line: "Your step: Approve 3 supplier payments" } })]);
     const listed = home.body.tafs.find((t: { id: string }) => t.id === RAE);
     expect(listed.work).toMatchObject({ status: "needs_you", line: "Your step: Approve 3 supplier payments" });
+    // The step makes it relevant now; its run 30 minutes ago would too, but a step comes first (docs/api.md, Home).
+    expect(listed).toMatchObject({ relevant_now: true, relevant_because: "step" });
     // Without planque's list, the step still shows, with no link.
     const bare = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(bare.body.your_steps[0].link).toBeUndefined();

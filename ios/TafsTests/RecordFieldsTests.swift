@@ -186,4 +186,22 @@ final class RecordFieldsTests: XCTestCase {
         XCTAssertEqual(words("door_removed", app: "email"), "You removed its email door")
         XCTAssertNil(words("something new"), "a kind this app doesn't know isn't shown")
     }
+
+    /// The day heading's money moved (`RecordView.spent`) is said in the app's words, `record.day_spent`,
+    /// never " spent" appended in code: a sum for each currency, joined with " + ". None moved: nothing.
+    func testTheDaysMoneyIsSaidInTheAppsWords() {
+        func entry(_ value: String, _ unit: String, _ kind: RecordEntry.Kind = .done) -> RecordEntry {
+            var e = RecordEntry(tafID: UUID(), kind: kind, title: "Refund", detail: "", at: Date())
+            e.amount = .init(value: value, unit: unit)
+            return e
+        }
+        let euros = [entry("400.00", "EUR"), entry("240.00", "EUR")]
+        let eurSum = RecordView.spent(euros)
+        XCTAssertEqual(eurSum, Words.Record.daySpent(amount: Money(minor: 64000, currency: "EUR", scale: 2).formatted))
+        let both = RecordView.spent(euros + [entry("12.00", "USD")])
+        XCTAssertEqual(both, Words.Record.daySpent(amount: Money(minor: 64000, currency: "EUR", scale: 2).formatted + " + "
+                                                    + Money(minor: 1200, currency: "USD", scale: 2).formatted))
+        XCTAssertNil(RecordView.spent([entry("5.00", "EUR", .refused)]), "a refused call moved nothing")
+        XCTAssertNil(RecordView.spent([]))
+    }
 }

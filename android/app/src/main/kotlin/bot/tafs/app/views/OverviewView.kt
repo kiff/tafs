@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,7 +44,20 @@ import bot.tafs.app.model.shortTime
  * line per taf with what it does now, its Card as its page says it, and its last result. Each line opens the taf.
  */
 @Composable
-fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCalendar: () -> Unit = {}, onOpenTaf: (String) -> Unit) {
+fun OverviewView(
+  state: AppState,
+  loadReport: suspend (String) -> Unit,
+  /** The calendar's button by the title; null where the Calendar is the sidebar's own item, as the iPad's whole-app sidebar. */
+  onOpenCalendar: (() -> Unit)? = {},
+  /** A mission's Log, from its row over the table when it's filtered to the mission's label; null where there's none to open. */
+  onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
+  /** Needs you, from the line that says how much more waits than the held calls listed; null where there's no such screen. */
+  onNeedsYou: (() -> Unit)? = null,
+  onOpenTaf: (String) -> Unit,
+) {
+  // The label the table is filtered to, as Home's list is on a phone (docs/android-app.md, Labels): All each time it opens.
+  var labelId by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+  val label = chosenLabel(state.labels, labelId)
   LaunchedEffect(state.tafs.map { it.id }) {
     state.tafs.filter { it.cloudId != null && state.reports[it.id] == null }.forEach { loadReport(it.id) }
   }
@@ -56,7 +71,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         Text(Words.Home.Overview.subtitle, style = scaled(14, color = Theme.dim))
       }
       // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
-      androidx.compose.foundation.layout.Box(
+      if (onOpenCalendar != null) androidx.compose.foundation.layout.Box(
         Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).tapping(onClick = onOpenCalendar)
           .semantics { contentDescription = Words.Calendar.heading }.testTag("overview.calendar"),
         contentAlignment = Alignment.Center,
@@ -66,13 +81,15 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
     }
     // The owner's board 10, under the Overview's title (a tablet's: the phone has no Overview).
     bot.tafs.app.design.Illustrated(height = 200.dp) { bot.tafs.app.design.OverviewArt(it) }
-    if (state.held.isNotEmpty()) {
+    // Everything Needs you counts, not only the held calls (as the iPad's: a Coach chat or a step still waits).
+    val rest = onNeedsYou != null && state.needsYouCount > state.held.size
+    if (state.held.isNotEmpty() || rest) {
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Eyebrow(Words.NeedsYou.title, color = Theme.amber)
         state.held.forEach { call ->
           val taf = state.taf(call.tafId) ?: return@forEach
           Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.panel).tapping { onOpenTaf(taf.id) }.padding(12.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised).tapping { onOpenTaf(taf.id) }.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
           ) {
@@ -81,8 +98,26 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
             Text(Words.NeedsYou.answerBy(shortTime(call.expiresAt)), style = scaled(12, color = Theme.soft))
           }
         }
+        // What else waits (Coach's chats, steps, "Did this happen?", Card units): tafs cloud's count, in its words, opening Needs
+        // you, where each is answered.
+        if (rest) Row(
+          Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.raised).tapping { onNeedsYou?.invoke() }
+            .testTag("overview.needsYou").padding(12.dp),
+          horizontalArrangement = Arrangement.spacedBy(10.dp),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Dot(Theme.amber, 8.dp)
+          Text(state.needsYouWords, style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+          Text("›", style = scaled(16, FontWeight.SemiBold, Theme.soft))
+        }
       }
     }
+    // The account's labels over the table, as the iPad's Overview has them: All, then each with its count; none, and no row.
+    if (state.mode == bot.tafs.app.app.Mode.kiff && state.listLoaded) {
+      LabelRow(state.labels, allWords(state.labelsAll), state.listedTafs.size, label?.id) { labelId = it }
+    }
+    // Filtered to a mission's label: the mission's row, with its goal and Log (Missions v2.1).
+    label?.mission?.takeIf { it.id.isNotBlank() && onMissionLog != null }?.let { mission -> MissionRow(mission) { onMissionLog?.invoke(mission) } }
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         listOf(Words.Home.Overview.columnTaf to 1.3f, Words.Home.Overview.columnNow to 1f, Words.Home.Overview.columnCard to 1.2f, Words.Home.Overview.columnLastResult to 1.5f).forEach { (title, weight) ->
@@ -90,7 +125,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         }
       }
       if (state.tafs.isEmpty()) Text(Words.Home.noTafs, style = scaled(14, color = Theme.dim))
-      state.tafs.forEach { taf ->
+      onLabel(state.tafs, label?.id).forEach { taf ->
         androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
         val card = OverviewWords.cardLine(taf)
         val last = if (taf.cloudId != null) OverviewWords.lastResult(state.reports[taf.id]) else "–"

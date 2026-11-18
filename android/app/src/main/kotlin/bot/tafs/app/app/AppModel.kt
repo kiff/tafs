@@ -869,6 +869,12 @@ data class AppState(
     get() = (mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))) ||
       (mode == Mode.sample && screenshots)
 
+  /**
+   * Whether Coach may be asked about [tafId] from its page (a health line's fix, a delivery still not made): whoever may use Coach
+   * and manages the taf, as on the iPad. Anyone else gets no button, rather than one tafs cloud refuses.
+   */
+  fun mayAskCoachAbout(tafId: String): Boolean = mayUseCoach && manages(tafId)
+
   /** Whether this person sees every taf's Record (oversees or manages each), which the receipts export needs; tafs cloud still decides. */
   val seesEveryTaf: Boolean
     get() = mode == Mode.kiff && tafs.any { it.cloudId != null } &&
@@ -2031,11 +2037,13 @@ class AppModel(
   }
 
   /**
-   * Opens Coach from the bar. On a taf's page it's that taf's conversation: the one already open about it, else a new one.
+   * Opens Coach from the bar. On a taf's page, for whoever may ask Coach about it, it's that taf's conversation: the one already
+   * open about it, else a new one.
    * Elsewhere, the conversation open as it was.
    */
   fun openCoachOn(tafId: String?) {
-    if (tafId != null && _state.value.coachContext != tafId) improveTaf(tafId)
+    // Coach on the taf only for whoever may ask about it (it manages it): anyone else gets Coach as it is, never Improve <taf>.
+    if (tafId != null && _state.value.mayAskCoachAbout(tafId) && _state.value.coachContext != tafId) improveTaf(tafId)
   }
 
   /** Improves a taf from wherever its hold is ("Change the limit in Coach mode"): Coach opens on a new conversation about it. */
@@ -3647,6 +3655,8 @@ class AppModel(
     val tenant = kiffTenant ?: return false
     if (_state.value.mode != Mode.kiff || _state.value.coachCloudId == null) return false
     val generation = accountGeneration
+    // The step the person read: their yes is to that, never to a later read of it.
+    val shown = _state.value.coachTools
     val tools = try {
       cloud.coachTools()
     } catch (e: CancellationException) {
@@ -3656,6 +3666,12 @@ class AppModel(
       return false
     } ?: return false
     if (generation != accountGeneration) return false
+    // tafs cloud's batch or Cards changed since the step was drawn (more tools, another draft): nothing is signed. The step is
+    // drawn again from this read, and the next Give signs exactly that.
+    if (tools.toGive && (shown == null || !sameToolsToGive(shown, tools))) {
+      _state.update { it.copy(coachTools = tools, coachToolsError = VersionWords.OUT_OF_DATE_CARD) }
+      return false
+    }
     _state.update { it.copy(coachTools = tools, coachToolsError = null) }
     when (tools.state) {
       "given" -> return true
@@ -3674,11 +3690,9 @@ class AppModel(
     try {
       tools.connect?.let { kiff.connectBatch(it.body) }
       if (generation != accountGeneration) return false
-      // tafs cloud drafts the Card over tools KIFF holds: one sent without it comes once the batch is in, so it's read again
-      // here and given in the same flow, and the owner taps once.
-      val card = tools.card ?: if (tools.connect != null) cloud.coachTools()?.card else null
-      if (generation != accountGeneration) return false
-      card?.let {
+      // Only Cards the step showed are given. tafs cloud drafts a Card over tools KIFF holds, so one that comes only once the
+      // batch is in was never on the step: the step is drawn again with it, in KIFF's words, and the next Give gives it.
+      tools.card?.let {
         // Its own fingerprint, in its own words: it gives Coach its Cards.
         approvalReason = Words.Coach.Prompt.giveCard
         kiff.submitDraft(it.body)
@@ -3696,8 +3710,13 @@ class AppModel(
     }
     if (generation != accountGeneration) return false
     loadCoachTools()
-    return true
+    // True once nothing's left to give; a Card drafted after the batch is still to give, on the step drawn again.
+    return _state.value.coachTools?.toGive != true
   }
+
+  /** Whether [read] asks for exactly what [shown] showed: the same batch and the same Cards' draft, or the same none. */
+  private fun sameToolsToGive(shown: bot.tafs.app.kiff.CoachTools, read: bot.tafs.app.kiff.CoachTools): Boolean =
+    shown.connect?.body == read.connect?.body && shown.card?.body == read.card?.body
 
   // MARK: Coach's approvals (planque and KIFF)
 
@@ -3780,6 +3799,8 @@ class AppModel(
         if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
       }
     }
+    // Each card's words for its own grant, by the card's grant id, read as the thread is: not left to the card being drawn.
+    approvals.mapNotNull { it.grant }.distinct().forEach(::readProfileWords)
     for (c in approvals) {
       val id = c.draft ?: continue
       if (_state.value.setupDrafts[id]?.confirmed == true) continue
@@ -4735,6 +4756,24 @@ class AppModel(
     }
   }
 
+  /** The profiles whose words are being read now, by grant and digest: one read each, however many cards or reads ask. */
+  private val profileWordsReading: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
+
+  /**
+   * Reads [grantId]'s words in the model's own scope, never a card's: an approval card that is drawn again (two cards arriving in
+   * the same second, Coach's thread read while its run streams) cancelled the card's own read, and nothing read them again until
+   * the card left the screen and came back, so it said "Reading KIFF's words…" with Approve greyed.
+   */
+  fun readProfileWords(grantId: String) {
+    val s = _state.value
+    val grant = s.grants.firstOrNull { it.id == grantId } ?: return
+    val digest = s.profileDigest(grant) ?: return
+    if (s.profileWordsFor(grant) != null) return
+    val reading = "$grantId:$digest"
+    if (!profileWordsReading.add(reading)) return
+    scope.launch { try { loadProfileWords(grantId) } finally { profileWordsReading.remove(reading) } }
+  }
+
   /**
    * KIFF's words for [grantId]'s profile (KIFF's profile contract, `kiff.words.v1`), read with this person's session and checked against their digests, so
    * the card shows them before any approval. Nothing is read for a grant with no profile.
@@ -5332,6 +5371,9 @@ class AppModel(
    */
   /** Whether the last [holdWindow] asked for the fingerprint (the approval key signs the window's opening), held or not. */
   private var windowAsked = false
+
+  /** A message's one id (`client_message_id`, docs/api.md), made when the owner sends it. */
+  private fun newMessageId(): String = java.util.UUID.randomUUID().toString()
 
   private suspend fun holdWindow(reason: String): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
@@ -6024,8 +6066,10 @@ class AppModel(
     val unsent = takeUnsent(tafId, message, remember = false) ?: return false
     unsent.notSentKey?.let { (settledNotSent() as MutableSet<String>).add(it) }
     // With its own files, never the tray's.
-    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files)
-    else deliverChat(message.text, tafId)
+    // Under its own id: if the first try reached tafs cloud after all, this one gets that run back, not a second.
+    val id = unsent.messageId ?: newMessageId()
+    val sent = if (_state.value.mode == Mode.kiff && unsent.files.isNotEmpty()) deliverToTafsCloud(message.text, tafId, again = unsent.files, messageId = id)
+    else deliverChat(message.text, tafId, messageId = id)
     unsent.notSentKey?.let { key -> if (sent) rememberNotSent(listOf(key)) else (settledNotSent() as MutableSet<String>).remove(key) }
     if (!sent) keepUnsent(tafId, unsent)
     return sent
@@ -6072,11 +6116,11 @@ class AppModel(
    * Sends the owner's message to the taf and waits for its answer. The sample answers from its
    * own record; signed in, the thread is tafs cloud's. A message may be words, files, or both.
    */
-  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false): Boolean =
+  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false, messageId: String? = null): Boolean =
     // A send that goes through ticks success; one refused or failed, a warning (docs/android-app.md, "Haptics").
-    deliverChatNow(text, tafId, withFiles).also { sent -> if (sent) bot.tafs.app.design.Haptics.success() else if (text.isNotBlank() || withFiles) bot.tafs.app.design.Haptics.warning() }
+    deliverChatNow(text, tafId, withFiles, messageId).also { sent -> if (sent) bot.tafs.app.design.Haptics.success() else if (text.isNotBlank() || withFiles) bot.tafs.app.design.Haptics.warning() }
 
-  private suspend fun deliverChatNow(text: String, tafId: String, withFiles: Boolean): Boolean {
+  private suspend fun deliverChatNow(text: String, tafId: String, withFiles: Boolean, messageId: String? = null): Boolean {
     val words = text.trim()
     val files = withFiles && _state.value.mode == Mode.kiff && _state.value.files(tafId).any { it.ref != null }
     if (words.isEmpty() && !files) return false
@@ -6084,7 +6128,7 @@ class AppModel(
       _state.update { it.copy(chatErrors = it.chatErrors + (tafId to Words.Chat.tooLong(count = Chat.LIMIT))) }
       return false
     }
-    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles)
+    if (_state.value.mode == Mode.kiff) return deliverToTafsCloud(words, tafId, withFiles, messageId = messageId ?: newMessageId())
     if (tafId in _state.value.chatSending) return false
     _state.update { it.copy(chatSending = it.chatSending + tafId, chatErrors = it.chatErrors - tafId) }
     try {
@@ -6109,7 +6153,11 @@ class AppModel(
    * step, or, when none is at work (or it just ended), as a new message that starts one. It shows at once, dimmed,
    * until the thread has it; then the thread is read and followed as the taf answers.
    */
-  private suspend fun deliverToTafsCloud(words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList()): Boolean {
+  private suspend fun deliverToTafsCloud(
+    words: String, tafId: String, withFiles: Boolean = false, again: List<PendingFile> = emptyList(),
+    /** The message's one id, on its stream, its plain send and its steer alike, and kept for its Retry (docs/api.md). */
+    messageId: String = newMessageId(),
+  ): Boolean {
     val taf = _state.value.taf(tafId)
     val cloudId = taf?.cloudId
     if (cloudId == null) {
@@ -6151,7 +6199,7 @@ class AppModel(
           var steered = false
           if (run != null && refs.isEmpty()) {
             try {
-              val steer = cloud.steer(cloudId, run, words)
+              val steer = cloud.steer(cloudId, run, words, clientMessageId = messageId)
               steered = true
               // Sent once (docs/chat.md): what the run didn't take is tafs cloud's, held in this chat until the taf is done, or sent
               // at once as the next message. The thread shows which, a held one as what waits, so its pending copy goes now.
@@ -6171,8 +6219,10 @@ class AppModel(
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach)
-          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach).also { sent ->
+          // One id for the message, on the stream and on the plain send that takes it when the stream can't open: a stream that
+          // reached tafs cloud before it failed is then the same message, never run a second time.
+          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach, messageId = messageId)
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach, clientMessageId = messageId).also { sent ->
             if (current()) {
               if (coach) coachSession(sent.session, sent.newSession)
               sent.message?.let { markSent(tafId, pending, it.id) }
@@ -6205,7 +6255,7 @@ class AppModel(
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           // Its words stay where they were written, marked not sent with why, for Retry or Edit (kiff/tafs#476).
-          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted)
+          val unsent = Unsent(pending.copy(session = Unsent.SESSION), sendFailure(e, taf.name), files, halted = (e as? CloudError)?.takeIf { it.code == "halted" }?.halted, messageId = messageId.takeIf { Unsent.keepsId(e) })
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
@@ -6338,8 +6388,9 @@ class AppModel(
     session: String? = null,
     newChat: Boolean = false,
     followsNewChat: Boolean = false,
+    messageId: String? = null,
   ): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat)
+    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat, clientMessageId = messageId)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {
@@ -7988,9 +8039,12 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || tenant == null) return
     val generation = accountGeneration
     kiff.tenant = tenant
+    val read = ++passkeysRead
     try {
       val list = kiff.passkeys()
-      if (generation == accountGeneration) _state.update { it.copy(passkeys = list, passkeysError = null) }
+      // A read that started before a removal, or before a later read, is dropped: the removed passkey never comes back, and
+      // the last-passkey warning counts what's really left.
+      if (generation == accountGeneration && read == passkeysRead) _state.update { it.copy(passkeys = list, passkeysError = null) }
       // Whether to offer Add a passkey: KIFF takes one from owners and admins only.
       val role = runCatching { kiff.people().firstOrNull { it.you == true }?.role }.getOrNull()
       if (generation == accountGeneration && role != null) _state.update { it.copy(passkeyMayAdd = PasskeyRegistration.mayAdd(role)) }
@@ -8084,6 +8138,9 @@ class AppModel(
     return true
   }
 
+  /** Each read of the passkeys, and each removal, takes the next number: only the latest read's answer is kept. */
+  private var passkeysRead = 0
+
   /**
    * Removes one of the account's passkeys, behind one fingerprint that names it, signed by the approval key as a device's
    * removal is. A computer's own passkey has no id and goes with its computer: it's never removed here. False when it didn't go.
@@ -8121,6 +8178,9 @@ class AppModel(
       kiff.setupSigner = null
       approvalReason = Words.Approval.Prompt.approveOnKiff
     }
+    // Removed: any read already under way is from before it, so it's dropped when it ends.
+    passkeysRead++
+    if (generation == accountGeneration) _state.update { s -> s.copy(passkeys = s.passkeys.filter { it.id != id }) }
     refreshPasskeys()
     return true
   }

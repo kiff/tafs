@@ -262,6 +262,8 @@ enum Words {
             static var macTouchId: String { Words.line("approval.settings_path.mac_touch_id") }
             /// Settings → Touch ID & Passcode
             static var touchId: String { Words.line("approval.settings_path.touch_id") }
+            /// Settings → Accounts → Sign-in options
+            static var windows: String { Words.line("approval.settings_path.windows") }
         }
         enum State {
             /// No fingerprint is set up on this phone. Add one in its settings, then come back.
@@ -1257,6 +1259,8 @@ enum Words {
         }
         /// Say what should change, or ask how it's going. Coach mode starts from what {name} did and what its Card allows.
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
+        /// Files go with your next message: send this one first, then attach them.
+        static var improveNoFiles: String { Words.line("coach.improve_no_files") }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
         /// Name an app for your taf, like your payment provider.
@@ -2265,6 +2269,8 @@ enum Words {
         static var ours: String { Words.line("error.ours") }
         /// This request doesn't match what it asks for. Nothing was approved.
         static var requestMismatch: String { Words.line("error.request_mismatch") }
+        /// This message was already sent with different text. Send it again as a new message.
+        static var sentWithOtherText: String { Words.line("error.sent_with_other_text") }
         /// The sign-in code expired. Start again.
         static var signInCodeExpired: String { Words.line("error.sign_in_code_expired") }
         /// Sign in with KIFF first.
@@ -2741,6 +2747,8 @@ enum Words {
         static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device, Words.demonstrative(device)) }
         /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
         static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
+        /// This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again.
+        static var keyringRefused: String { Words.line("pair.keyring_refused") }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
         /// It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.
@@ -3123,6 +3131,8 @@ enum Words {
         static func cardIssuedBy(owner: String) -> String { Words.line("record.card_issued_by", owner) }
         /// The connection refused it before sending. Nothing was sent.
         static var connectionRefusedBeforeSending: String { Words.line("record.connection_refused_before_sending") }
+        /// {amount} spent
+        static func daySpent(amount: String) -> String { Words.line("record.day_spent", amount) }
         enum Decided {
             /// approved by {who}
             static func approvedBy(who: String) -> String { Words.line("record.decided.approved_by", who) }
@@ -4037,6 +4047,8 @@ enum Words {
         static var approve: String { Words.line("setup.approve") }
         /// Approve signs on this phone; the app starts telling the taf only after that.
         static var approveNote: String { Words.line("setup.approve_note") }
+        /// Approve signs on this {device}; the app starts telling the taf only after that.
+        static func approveNoteDevice(device: String) -> String { Words.line("setup.approve_note_device", device, Words.demonstrative(device)) }
         /// At least one place stays on.
         static var atLeastOne: String { Words.line("setup.at_least_one") }
         /// Change when it starts with Coach

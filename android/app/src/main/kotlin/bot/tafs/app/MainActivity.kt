@@ -67,6 +67,8 @@ import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
 import bot.tafs.app.views.BriefActions
 import bot.tafs.app.views.BriefTab
+import bot.tafs.app.views.Beside
+import bot.tafs.app.views.TabletSidebar
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachChatActions
 import bot.tafs.app.views.ConnectionActions
@@ -582,6 +584,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       loadMemory = model::loadMemory,
       forget = model::forget,
       loadChat = model::loadChat,
+      loadVersions = model::loadVersions,
       sendChat = { text, tafId, withFiles, onNotSent -> model.sendChat(text, tafId, withFiles, onNotSent) },
       issuer = model.issuer,
       doors = doorActions,
@@ -624,7 +627,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
-        loadProfileWords = model::loadProfileWords,
+        loadProfileWords = { model.readProfileWords(it) },
         loadDraft = model::loadDraft,
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
@@ -746,10 +749,65 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (tab == Tab.NeedsYou && t == Tab.NeedsYou) model.closeBriefOpen()
     tab = t
   }
+  val coachChats = remember(model) { CoachChatActions(
+    newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
+    loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
+    giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
+  ) }
+  // What's open beside a tablet's sidebar, highlighted in it.
+  val beside = when {
+    showingSettings -> Beside.Account
+    usageOpen -> Beside.Usage
+    showingConnectApps -> Beside.ConnectApps
+    haltOpen && haltTaf == null -> Beside.HaltAll
+    tab == Tab.NeedsYou -> Beside.NeedsYou
+    tab == Tab.Record -> Beside.Record
+    // Coach on a tablet is a panel over what stays open beside the sidebar, which keeps its highlight.
+    (coachOpen && !wide) || trialTaf != null || missionOpen != null -> Beside.Other
+    openTaf != null -> Beside.Taf(openTaf!!)
+    calendarOpen -> Beside.Calendar
+    removingBeside != null -> Beside.Taf(removingBeside!!)
+    else -> Beside.Overview
+  }
+  // What the sidebar opened beside it, closed when it opens something else: one screen beside it at a time, as the iPad's.
+  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false }
+  // A taf opened from the sidebar: on the Tafs tab, with nothing else over it.
+  val openFromSidebar: (String) -> Unit = { id ->
+    closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
+  }
+  Box(Modifier.fillMaxSize()) {
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
-    // Landscape and tablets: the same places as a rail on the left, Coach at its foot.
+    // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the
+    // handle that brings it back.
     if (wide) {
-      TabRail(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
+      if (!listFolded) {
+        TabletSidebar(
+          state, beside,
+          onOverview = { closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; calendarOpen = false; missionOpen = null; removingBeside = null; overviewOpen = true },
+          onNeedsYou = { closeBeside(); onTab(Tab.NeedsYou) },
+          onRecord = { closeBeside(); onTab(Tab.Record) },
+          onCalendar = if (state.mode == Mode.kiff && state.tafs.isNotEmpty()) ({
+            closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = null; missionOpen = null; removingBeside = null; calendarOpen = true
+          }) else null,
+          onUsage = if (state.mode == Mode.kiff) ({ closeBeside(); usageOpen = true }) else null,
+          onConnectApps = if (state.mode == Mode.kiff) ({ closeBeside(); showingConnectApps = true }) else null,
+          onHaltAll = { closeBeside(); haltTaf = null; haltOpen = true },
+          onOpenTaf = openFromSidebar,
+          onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
+          onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
+          onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
+          // A new taf: every job a taf can take where tafs cloud sends the gallery, else Coach, empty. The sample has none.
+          onNewTaf = if (state.mode == Mode.kiff && state.mayUseCoach) ({
+            if (state.gallery != null) { galleryBrowsing = false; galleryOpen = true } else model.openCoachEmpty()
+          }) else null,
+          onPlayNext = if (state.mode == Mode.sample) ({ scope.launch { model.playNextDemoActions() } }) else null,
+          onCoach = openCoach,
+          onAccount = { closeBeside(); openAccount() },
+          onFold = { listFolded = true },
+        )
+      } else {
+        FoldHandle(folded = true) { listFolded = false }
+      }
       Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
     }
   Column(Modifier.weight(1f).fillMaxHeight()) {
@@ -806,21 +864,17 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             missionOpen != null && openTaf == null && !coachOpen -> state.labels.firstNotNullOfOrNull { it.mission?.takeIf { m -> m.id == missionOpen } }?.let { m ->
               ({ bot.tafs.app.views.MissionLogView(m, load = model::missionLog, onBack = { missionOpen = null }, askCoach = if (state.mayUseCoach) model::askCoachAboutMission else null) })
             }
-            openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
+            // On a tablet, Coach is its own panel over the whole app (CoachPanel, below), not part of what's beside the sidebar.
+            openTaf != null || (!wide && (coachOpen || coachVisibility.currentState || !coachVisibility.isIdle)) -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
-                androidx.compose.animation.AnimatedVisibility(
+                if (!wide) androidx.compose.animation.AnimatedVisibility(
                   visibleState = coachVisibility,
                   enter = androidx.compose.animation.slideInHorizontally { it },
                   exit = androidx.compose.animation.slideOutHorizontally { it },
                 ) {
                   Box(Modifier.fillMaxSize().background(Theme.background)) {
-                    CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false },
-                      chats = remember(model) { CoachChatActions(
-                        newChat = model::newCoachChat, open = model::openCoachChat, load = model::loadCoachChats,
-                        loadArchived = model::loadArchivedCoachChats, archive = model::archiveCoachChat, unarchive = model::unarchiveCoachChat,
-                        giveTools = model::giveCoachTools, notNowTools = model::notNowCoachTools,
-                      ) })
+                    CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats)
                   }
                 }
               }
@@ -828,30 +882,19 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             else -> null
           }
           if (wide) {
-            // A tablet (as iOS's HomeSplitView): the list beside what's open. It opens on the list's first taf until another is
-            // picked.
-            Row(Modifier.fillMaxSize()) {
-              // The list can fold away so what's open takes the width (the owner, 5 Nov), and comes back from the handle.
-              if (!listFolded) androidx.compose.foundation.layout.Column(Modifier.width(SIDEBAR_WIDTH).fillMaxHeight()) {
-                Box(Modifier.weight(1f)) { home() }
-                // Overview: today across the tafs, at the foot of the list (as iOS's sidebar row).
-                Box(Modifier.fillMaxWidth().height(1.dp).background(Theme.line))
-                androidx.compose.material3.Text(
-                  Words.Home.Overview.title,
-                  style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                )
-              }
-              FoldHandle(folded = listFolded) { listFolded = !listFolded }
-              Box(Modifier.weight(1f).fillMaxHeight()) {
-                when {
-                  open != null -> open()
-                  calendarOpen -> calendar(false)
-                  overviewOpen -> OverviewView(state, loadReport = model::loadReport, onOpenCalendar = { calendarOpen = true }) { overviewOpen = false; openTaf = it }
-                  removingBeside != null || state.tafs.isNotEmpty() -> detail(removingBeside ?: state.tafs.first().id)
-                  else -> Unit
-                }
+            // A tablet (as the iPad's HomeSplitView): what the sidebar chose, beside it. It opens on the Overview, today across the
+            // tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs and its line (docs/android-app.md, Tablets).
+            Box(Modifier.fillMaxSize()) {
+              when {
+                open != null -> open()
+                calendarOpen -> calendar(false)
+                removingBeside != null -> detail(removingBeside!!)
+                state.tafs.isNotEmpty() -> OverviewView(
+                  state, loadReport = model::loadReport, onOpenCalendar = null,
+                  onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
+                  onNeedsYou = { onTab(Tab.NeedsYou) },
+                ) { overviewOpen = false; openTaf = it }
+                else -> home()
               }
             }
           } else {
@@ -870,6 +913,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide)) {
     if (showingSettings) {
       SettingsSheet(
         state,
@@ -905,6 +949,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onFocused = { settingsFocus = null },
       )
     }
+    }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(
@@ -922,6 +967,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         removePasskey = model::removePasskey,
       )
     }
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide)) {
     if (showingConnectApps) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
@@ -948,12 +994,13 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         dismissConnectedNow = model::dismissConnectedNow,
       )
     }
+    }
     // Its approval, over Connect apps' list, or a new key over a taf's own connection (gap 13): KIFF's words, the signature,
     // then the vendor's page or planque's one read with the key.
     state.listApproval?.let { grantId ->
       bot.tafs.app.views.ConnectApprovalSheet(
         state, state.grants.firstOrNull { it.id == grantId },
-        loadWords = model::loadProfileWords,
+        loadWords = { model.readProfileWords(it) },
         onApprove = { grant -> model.startListApproval(grant.id, grant.digest) },
         onClose = model::closeListApproval,
         needsKey = state.listApprovalNeedsKey,
@@ -987,14 +1034,17 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         detail,
         sending = detail.id in state.sendingAgain,
         onTryReply = if (canSend) ({ scope.launch { model.sendAgain(tafId, detail.id); model.openRequest(tafId, detail.id) } }) else null,
-        onAskCoach = if (state.mayUseCoach) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
+        onAskCoach = if (state.mayAskCoachAbout(tafId)) ({ model.closeRequest(); model.improveInCoach(tafId) }) else null,
         onClose = model::closeRequest,
       )
     }
     if (deletingAccount) {
       DeleteAccountSheet(state, delete = model::deleteAccount, clearError = model::clearDeleteAccountError, onClose = { deletingAccount = false })
     }
-    if (haltOpen) HaltSheet(haltTaf, state, account, onClose = { haltOpen = false })
+    // Halt all beside a tablet's sidebar, as the iPad's; a taf's own Halt stays a sheet over its page.
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides (wide && haltTaf == null)) {
+      if (haltOpen) HaltSheet(haltTaf, state, account, onClose = { haltOpen = false })
+    }
     versionsTaf?.let { taf ->
       VersionsSheet(taf, state, versionActions, onOpenTrial = { versionsTaf = null; trialTaf = taf; tab = Tab.Tafs; openTaf = taf }, onClose = { versionsTaf = null })
     }
@@ -1023,12 +1073,21 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         )
       }
     }
-    if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
+    androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.drive.LocalSheetBeside provides wide) {
+      if (usageOpen) UsageSheet(state, account, onClose = { usageOpen = false; model.closeTafCredits() })
+    }
     // A taf's runs: over Plan & usage from its Credits row, or over its page from its Usage row.
     state.tafCredits?.let { CreditsRunsSheet(it, state, account, onClose = model::closeTafCredits) }
     if (!keyboardUp && !wide) {
       HorizontalDivider(color = Theme.line)
       TabBar(tab, state, onTab = onTab, onAccount = openAccount, onCoach = openCoach)
+    }
+  }
+  }
+  // Coach on a tablet: a panel from the trailing edge over the whole app, as the iPad's (docs/android-app.md, Tablets).
+  if (wide) bot.tafs.app.views.CoachPanel(open = coachOpen, onClose = { coachOpen = false }) { full, toggleFull ->
+    Box(Modifier.fillMaxSize().imePadding()) {
+      CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats, full = full, onToggleFull = toggleFull)
     }
   }
   }
@@ -1062,38 +1121,6 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
     onCoach?.let { open -> Box(Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.Center) { CoachButton(open) } }
   }
 }
-
-/** The same places as a rail, for landscape and tablets: Account, the three tabs, then Coach at the foot. */
-@Composable
-private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> Unit, onAccount: () -> Unit, onCoach: (() -> Unit)?) {
-  // A thin rail (the owner, 5 Nov: landscape's was a fifth of the screen): a fixed width, one-line labels, Coach compact.
-  androidx.compose.material3.NavigationRail(
-    Modifier.width(RAIL_WIDTH).fillMaxHeight().navigationBarsPadding().statusBarsPadding(),
-    containerColor = Theme.background,
-  ) {
-    androidx.compose.material3.NavigationRailItem(
-      selected = false,
-      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
-      icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
-      label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
-      colors = railColors(),
-    )
-    Tab.entries.forEach { t ->
-      androidx.compose.material3.NavigationRailItem(
-        selected = tab == t,
-        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
-        icon = { TabIcon(t, state) },
-        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
-        colors = railColors(),
-      )
-    }
-    Spacer(Modifier.weight(1f))
-    onCoach?.let { CoachButton(it, Modifier.padding(bottom = 12.dp), compact = true) }
-  }
-}
-
-/** The rail's width: room for an icon and a one-line label, whatever the text size. */
-private val RAIL_WIDTH = 72.dp
 
 /** The line between the list and what's open, with the control that folds the list away or brings it back. */
 @Composable
@@ -1150,14 +1177,6 @@ private fun barColors() = NavigationBarItemDefaults.colors(
   indicatorColor = Theme.amber.copy(alpha = 0.14f),
 )
 
-@Composable
-private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults.colors(
-  selectedIconColor = Theme.amber,
-  selectedTextColor = Theme.amber,
-  unselectedIconColor = Theme.dim,
-  unselectedTextColor = Theme.dim,
-  indicatorColor = Theme.amber.copy(alpha = 0.14f),
-)
 
 /** Whether tapping [tapped] while on [current] goes back to its start: Tafs tapped again closes the taf on screen. */
 /** A tab's name: Needs you's place says tafs cloud's "Your brief" once there is one. */
@@ -1172,5 +1191,3 @@ val COACH: String get() = Words.Coach.title
 /** From this width the Tafs tab shows the list beside what's open, as iOS on an iPad: a tablet either way up, or a large phone on its side. */
 private const val WIDE_DP = 720
 
-/** The list's width beside what's open: iOS's sidebar. */
-private val SIDEBAR_WIDTH = 360.dp

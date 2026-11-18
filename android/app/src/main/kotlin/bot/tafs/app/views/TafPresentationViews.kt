@@ -39,6 +39,9 @@ import bot.tafs.app.model.Taf
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.role
 
 /** Every label, action count, step and statistic is a service representation. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -212,12 +215,14 @@ internal fun TafActivityList(taf: Taf, state: AppState, actions: TafActions, sel
     item { RetainedRuns(taf, state, actions) }
     if (selection.isNotBlank()) item { TextButton(clearSelection) { Text(Words.Taf.Activity.allApps, color = Theme.amberText) } }
     item {
-      Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { cache?.pages?.firstOrNull()?.filters?.forEach { choice ->
-        FilterChip(selected = filter == choice.id, onClick = { filter = choice.id }, label = { Text(choice.title) })
-      } }
+      // As the iPad's: bordered pills, tinted amber for the one chosen and soft for the rest.
+      Row(Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        cache?.pages?.firstOrNull()?.filters?.forEach { choice -> ActivityFilterPill(choice.title, filter == choice.id) { filter = choice.id } }
+      }
     }
     cache?.pages?.forEachIndexed { page, value -> value.groups.forEach { group ->
-      if (group.title.isNotBlank()) item(key = "heading-$page-${group.id}") { Eyebrow(group.title) }
+      // A group's own title ("Today"), as the iPad's: small and quiet, in tafs cloud's words.
+      if (group.title.isNotBlank()) item(key = "heading-$page-${group.id}") { Text(group.title, style = scaled(12, FontWeight.SemiBold, Theme.dim)) }
       items(group.entries, key = { it.id }) { entry -> SourceActivityRow(entry, taf, state, actions, onConnectApps) }
     } }
     cache?.error?.let { error -> item { Text(error, color = Theme.no); TextButton({ scope.launch { actions.loadActivity(taf.id, filter, false, selection) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } } }
@@ -367,4 +372,18 @@ internal fun ConnectAgainPanel(ask: ConnectAgain, taf: Taf, state: AppState, act
     }
     state.coachNotes[ask.grant]?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
+}
+
+/** One of Activity's filters, as the iPad's bordered button: its tint's wash behind its words, amber when chosen, soft otherwise. */
+@Composable
+private fun ActivityFilterPill(title: String, selected: Boolean, onClick: () -> Unit) {
+  val tint = if (selected) Theme.amberText else Theme.soft
+  Text(
+    title,
+    style = scaled(15, FontWeight.Medium, tint),
+    maxLines = 1,
+    modifier = Modifier.heightIn(min = 36.dp).clip(androidx.compose.foundation.shape.CircleShape).background(tint.copy(alpha = 0.14f))
+      .tapping(role = androidx.compose.ui.semantics.Role.Tab, onClick = onClick).semantics { this.selected = selected }
+      .padding(horizontal = 14.dp, vertical = 8.dp),
+  )
 }

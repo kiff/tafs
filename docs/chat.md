@@ -29,6 +29,19 @@ the answer shows as it's written. When the stream can't open, it sends it plainl
 (`POST /v1/tafs/{id}/messages`) and reloads the thread while the answer is owed: every 4
 seconds, at most 30 times for each unanswered message.
 
+**One message, one id.** On Android each message the owner sends gets a `client_message_id`
+(a UUID), sent on the stream, on the plain send that takes its place and on a steer, and kept
+with a message that wasn't sent so its Retry goes under the same id. That holds only where
+nothing was taken or it isn't known (no answer, a timeout, tafs cloud's 5xx or 408): after any other
+refusal, a 4xx, the message gives up its id and Retry is a new message (`Unsent.keepsId`), since the
+same id would only be refused again. A stream that reached tafs
+cloud before it failed, or a send that dropped with no answer, is then the same message, and
+tafs cloud answers a repeat with the run it already started, never a second one. A message
+written after it, or edited, is a new one with its own id. If tafs cloud ever refuses an id as
+already used for other words (409 `dedup_key_conflict`), the message is marked not sent with the
+app's `error.sent_with_other_text` ("This message was already sent with different text…"),
+never "It changed in the meantime" (`ErrorWords`).
+
 The sent message shows at once, faded until the thread has it. The thread's copy is found by
 tafs cloud's id for it: `POST …/messages` answers `message: {id}`, and so does the stream's first
 event, and each thread message carries its `id` (Android: `SentMessages.merge`). Only a message
@@ -187,12 +200,64 @@ whatever came last. On Android a door's knocks sit at their own times among the 
 (`Chat.withKnocks`), so a reply newer than a knock comes after it, and the app's own scrolling
 to the end never counts as the owner reading back.
 
-On Android, while a run works, the dots and then its answer are one row at the thread's end, at
-least as tall as either, so the answer taking the dots' place never moves the thread back. A new
-item at the end is glided to; an answer growing word by word is kept at its end without an
-animation, since one started on every word was cut off by the next. `ChatFollowTest` holds
-this: an earlier message only ever moves up the screen while a reply streams, in a taf's chat
-and in Coach's.
+On Android (`TafChatView`), sending glides the owner's message to the top of the list, with
+room under it the height of the screen less its turn (the message, the work and the answer),
+so even a short one reaches the top and the answer grows into the room without moving it.
+The pin follows the message from the copy shown on sending to tafs cloud's (matched by its
+words among the rows that are new since the send), and to the words held for a run at work.
+It's put back at once when the thread changes under it or the screen grows as the keyboard
+goes down, unless the owner has scrolled since; and it stays once the run ends, until the
+next message. "Jump to the latest" lets it go and goes to the end. A message that couldn't
+go at all lets it go too. `ChatPinTest` holds this, in a taf's chat and in Coach's, with a
+long thread and a short one.
+
+On iPhone and iPad (`TafChatView`, and `SetupChatView` for Coach), step by step, for an app
+that does the same:
+
+1. **Sending** empties the box and puts the keyboard down. The app keeps the thread's row ids
+   as they were (`sentBefore`) and the sent words, trimmed (`pinText`). An earlier pin goes at
+   once: the keyboard going down puts a pin back, and it went back to the earlier message.
+2. **The first row to show takes the pin**, glided to the top in a quarter of a second. It can
+   be the owner's message in the thread: its words match (`SetupThread.matchesSent`), and it's
+   not in `sentBefore`, so a reply that came first or an older copy of the same words never
+   takes it. It can also be the words held for a run at work (`steer|i`), or the ones queued
+   behind it (`queued`). In Coach's chat, an answered card also takes the pin, since its answer
+   starts Coach's next answer (the 870 test). A message that couldn't go takes no pin: the chat
+   goes to its end, where its Not sent bubble and Retry are, as on Android.
+3. **The room** under the thread is the screen's height less the turn: the pinned row's top to
+   the thread's last row, measured as laid out (`PinnedTurn`). It's a whole screen until the
+   turn is measured. As the work and the answer grow, the room shrinks by as much, so nothing
+   moves. It stays once the run ends, until the next message.
+4. **The pin moves with the message, without moving the view.** When the pinned row leaves the
+   thread, the pin goes, unanimated, to the newest owner message with the same words
+   (`pinnedWords`). That happens when tafs cloud's copy takes the place of the one shown, under
+   another id. If no row has those words, the pin goes, and the chat goes to its end rather
+   than stay past it, blank.
+5. **It's put back at the top, unanimated,** when the thread changes under it, or the screen's
+   height changes as the keyboard goes down. It isn't put back once the owner has dragged the
+   thread since it was pinned (`touched`).
+6. **Scrolling waits for the room.** The room is laid out only once the pin is set, so a scroll
+   in that same pass stopped at the old end, in the blank under it (the iPad, 21 Oct).
+   `pinToTop` scrolls on the next pass, then again at 0.1, 0.35 and 0.7 s, unless the owner has
+   scrolled meanwhile.
+7. **Letting it go.** "Jump to the latest" lets the pin go and goes to the end. It shows while
+   the end is off screen and the thread doesn't follow, with a dot when something new came.
+   Seeing the end under a pinned message doesn't make the thread follow.
+8. **Coming back from another app changes nothing.** Taking the room away left a shorter
+   thread scrolled past its end, blank (the 845 test).
+
+`ChatPinUITests` holds steps 2 to 5 and step 8 in a taf's chat, and a message that couldn't go
+(`-sampleSendFails`).
+
+The two apps differ in one place: only iOS pins Coach's answered card.
+
+With no message pinned (a chat just opened, or a reply that came without the owner sending),
+the thread follows its end. While a run works, the dots and then its answer are one row at
+the thread's end, at least as tall as either, so the answer taking the dots' place never
+moves the thread back. A new item at the end is glided to; an answer growing word by word is
+kept at its end without an animation, since one started on every word was cut off by the
+next. `ChatFollowTest` holds this: an earlier message only ever moves up the screen while a
+reply streams, in a taf's chat and in Coach's.
 
 ## Writing while the taf works
 
@@ -279,6 +344,17 @@ iOS drops its own queue the same way, with the same words.
 
 - **Stop** cancels the run at work (`POST /v1/tafs/{id}/stop`). One already ended stays
   as it ended.
+- **In the apps,** while a run is at work, the round button is Stop when the box is empty.
+  With words in it, the button is Send, which writes to the run. Stop names the run's session:
+  the live stream's, or else the run tafs cloud says is at work. iOS also falls back to the
+  thread's last session. When tafs cloud has taken the stop, the chat is ready again at once:
+  the live answer and "…" go, the stream closes, the run reads as stopped, and the thread is
+  read again. The run itself ends at its next step, and does nothing after it. A taf's chat
+  shows no line for a stop. Coach's says "Stopped". The pin stays: the thread read again under
+  it puts it back at the top. A stop tafs cloud refused says so under the thread, and nothing
+  else changes. The words differ for now: iOS says "It didn't stop: why" (`work.did_not_stop`),
+  and Android says "Not stopped. why" (`chat.not_stopped`). iOS `stopChat` and `stopSetup`,
+  Android `stopChat`.
 - A run that stopped at a **cap** says so, never "…": "stopped: this task would cost more
   than its limit for one task…" (`cost_cap`), or "…took more steps than its limit…"
   (`turn_cap`) (`capWords`). A reply cut off at its length limit (`max_token`) says "stopped: its reply ran out of
@@ -528,6 +604,28 @@ Every message in the thread has a stable `id` (`conversation` in `handler.ts`). 
 owner message is `<run>.in`, and that's the id `POST …/messages` answers for the message just
 sent. Every other message is `<run>.<seq>`. An app matches what it sent to the thread by that id,
 and never by text or time.
+
+**The app's own id for a message (`client_message_id`, [api.md](api.md)).** It's made by the app, before the send.
+On iPhone and iPad, each message the owner composes, to a taf or to Coach, gets its own UUID, in lower case.
+- **The same id goes on every path the message takes:**
+  - the stream;
+  - the plain send that takes its place when the stream can't open or is cut;
+  - a steer to the run at work.
+- **A message that wasn't sent keeps its id when nothing answered** (`UnsentMessage.messageID`): a dropped
+  connection, a timeout, or a 5xx such as a 503. Retry then sends it under that id. If the first send reached tafs
+  cloud after all, tafs cloud answers with what it already did, never a second run.
+- **A new id:** Edit, Send again and a new message are new messages.
+- **A refusal (a 4xx) gives up the id,** so Retry is a new message (`TafsCloud.messageID(_:after:)`). Among them is
+  409 `dedup_key_conflict`, an id already used for other words. It comes with no words of its own, so the message
+  is marked not sent with `error.sent_with_other_text`, which says to send it again as a new message. The same id
+  would only be refused again. tafs cloud's own words, when it sends them, come first.
+- **No id of the app's own:**
+  - what a run never read (tafs cloud's `not_sent`), whose Retry sends it as a new message, under a new id;
+  - an improvement's first message, which goes through `/improve`;
+  - a trial's chat.
+- **On the Apple Watch,** the watch makes the id for the words it sends to Coach. The phone sends it on unchanged.
+  The same words sent again after no answer came keep it; other words, or the next message once answered, get
+  another ([watch-app.md](watch-app.md)).
 
 ## The live line
 

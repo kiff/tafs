@@ -1,0 +1,1 @@
+- **tafs cloud: a message sent again is acted on once.** An app may give each message its own id (`client_message_id`), the same on the stream and on the plain send it falls back to, and on a write to a run at work. Sent again, the message gets what the first send did, never a second run or steer, and Coach's waiting lines go with it once ([api.md](../docs/api.md#a-tafs-chat)).

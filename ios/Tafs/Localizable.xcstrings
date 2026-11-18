@@ -6800,6 +6800,59 @@
         }
       }
     },
+    "approval.settings_path.windows": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen → Konten → Anmeldeoptionen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings → Accounts → Sign-in options"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración → Cuentas → Opciones de inicio de sesión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres → Comptes → Options de connexion"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni → Account → Opzioni di accesso"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen → Accounts → Aanmeldingsopties"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustawienia → Konta → Opcje logowania"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definições → Contas → Opções de início de sessão"
+          }
+        }
+      }
+    },
     "approval.state.none_enrolled": {
       "extractionState": "manual",
       "localizations": {
@@ -33196,6 +33249,59 @@
         }
       }
     },
+    "coach.improve_no_files": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dateien kommen mit deiner nächsten Nachricht: Sende zuerst diese, dann häng sie an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Files go with your next message: send this one first, then attach them."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los archivos van con tu próximo mensaje: envía primero este y luego adjúntalos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les fichiers partent avec votre prochain message : envoyez d'abord celui-ci, puis joignez-les."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I file vanno con il prossimo messaggio: invia prima questo, poi allegali."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestanden gaan mee met je volgende bericht: stuur eerst dit bericht en voeg ze daarna bij."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pliki trafią do następnej wiadomości: najpierw wyślij tę, a potem je załącz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os ficheiros vão com a próxima mensagem: envie primeiro esta e depois anexe-os."
+          }
+        }
+      }
+    },
     "coach.improve_taf": {
       "extractionState": "manual",
       "localizations": {
@@ -58975,6 +59081,59 @@
         }
       }
     },
+    "error.sent_with_other_text": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Nachricht wurde schon mit anderem Text gesendet. Sende sie noch einmal als neue Nachricht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message was already sent with different text. Send it again as a new message."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este mensaje ya se envió con otro texto. Vuelve a enviarlo como un mensaje nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce message a déjà été envoyé avec un autre texte. Renvoyez-le comme un nouveau message."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo messaggio è già stato inviato con un testo diverso. Invialo di nuovo come nuovo messaggio."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit bericht is al met een andere tekst verzonden. Stuur het opnieuw als nieuw bericht."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta wiadomość została już wysłana z innym tekstem. Wyślij ją ponownie jako nową wiadomość."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta mensagem já foi enviada com outro texto. Envie-a de novo como uma mensagem nova."
+          }
+        }
+      }
+    },
     "error.sign_in_code_expired": {
       "extractionState": "manual",
       "localizations": {
@@ -71107,6 +71266,59 @@
         }
       }
     },
+    "pair.keyring_refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Computer konnte seine Anmeldung nicht sichern und wurde nicht hinzugefügt: Er braucht einen laufenden, entsperrten Schlüsselbund wie GNOME Keyring, KWallet oder KeePassXC. Richte einen ein oder entsperre ihn, zeig dann einen neuen Code und versuch es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer couldn't save its sign-in, so it wasn't added: it needs a keyring that's running and unlocked, such as GNOME Keyring, KWallet or KeePassXC. Set one up or unlock it, then show a new code and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador no pudo guardar su inicio de sesión, así que no se añadió: necesita un llavero en marcha y desbloqueado, como GNOME Keyring, KWallet o KeePassXC. Configura uno o desbloquéalo, y después muestra un código nuevo y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur n'a pas pu enregistrer sa connexion, il n'a donc pas été ajouté : il lui faut un trousseau actif et déverrouillé, comme GNOME Keyring, KWallet ou KeePassXC. Configurez-en un ou déverrouillez-le, puis affichez un nouveau code et réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer non è riuscito a salvare l'accesso, quindi non è stato aggiunto: serve un portachiavi attivo e sbloccato, come GNOME Keyring, KWallet o KeePassXC. Configurane uno o sbloccalo, poi mostra un nuovo codice e riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer kon zijn login niet bewaren en is dus niet toegevoegd: er is een actieve, ontgrendelde sleutelhanger nodig, zoals GNOME Keyring, KWallet of KeePassXC. Stel er een in of ontgrendel hem, toon dan een nieuwe code en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer nie mógł zapisać logowania, więc nie został dodany: potrzebuje działającego, odblokowanego pęku kluczy, takiego jak GNOME Keyring, KWallet lub KeePassXC. Skonfiguruj go lub odblokuj, a potem pokaż nowy kod i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador não conseguiu guardar o início de sessão, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez."
+          }
+        }
+      }
+    },
     "pair.new_code": {
       "extractionState": "manual",
       "localizations": {
@@ -80506,6 +80718,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "A ligação recusou antes do envio. Nada foi enviado."
+          }
+        }
+      }
+    },
+    "record.day_spent": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ausgegeben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ spent"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gasto de %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ de dépenses"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ di spesa"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ uitgegeven"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wydatki: %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gasto de %1$@"
           }
         }
       }
@@ -102792,6 +103057,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aprovar assina neste telefone; só depois disso a app começa a avisar o taf."
+          }
+        }
+      }
+    },
+    "setup.approve_note_device": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Genehmigen“ signiert auf diesem %1$@; erst danach beginnt die App, dem taf Bescheid zu geben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve signs on this %1$@; the app starts telling the taf only after that."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar firma en este %1$@; la app empieza a avisar al taf solo después."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver signe sur %2$@ ; l'app ne commence à prévenir le taf qu'ensuite."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva firma su questo %1$@; l'app inizia ad avvisare il taf solo dopo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren ondertekent op deze %1$@; pas daarna begint de app het taf te informeren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Zatwierdź” podpisuje na tym urządzeniu (%1$@); aplikacja zaczyna powiadamiać tafa dopiero potem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar assina neste %1$@; só depois disso a app começa a avisar o taf."
           }
         }
       }

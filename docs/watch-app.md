@@ -31,9 +31,9 @@ What the watch asks and the phone answers is `ios/WatchShared/WatchMessage.swift
 apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the watch's is
 `ios/TafsWatch/PhoneLink.swift`.
 
-- **Six requests:** Needs you, your tafs, Refuse (naming its held call), Halt (naming its
-  taf), Halt all, and Coach (the words dictated on the watch, never audio). Nothing else
-  decodes, so an approval can't even be asked for.
+- **Seven requests:** Needs you, your tafs, Refuse (naming its held call), Halt (naming its
+  taf), Halt all, Coach (the words dictated on the watch, never audio), and Your brief (a read,
+  behind the watch's switch). Nothing else decodes, so an approval can't even be asked for.
 - **Refused before anything is read:** an unknown or malformed request, or one missing what
   it names. Nothing on this path signs.
 - **Live only:** each request goes with WatchConnectivity's message data and a reply, never
@@ -56,6 +56,10 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   before they're sent. The phone sends them to Coach's current chat with the session it keeps,
   then reads the thread for up to 12 seconds for Coach's answer to them, so the watch always hears
   back before it gives up; past that, "The rest is on your phone".
+- **Coach's words carry the message's id** (`message`, a UUID the watch makes). The phone sends it to tafs cloud
+  as `client_message_id`, so words sent again after no answer came are acted on once. The watch keeps the id while
+  the same words are sent again, and makes a new one for other words or once Coach has answered. If a watch from
+  before sends none, or one that isn't a UUID, the phone gives the message an id of its own.
 
 ## Coach
 
@@ -68,6 +72,33 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **At most 2,000 characters,** as on Wear OS: longer is refused before anything is sent.
 - **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
   credits, the app's own words; anything else, "Not sent" and why.
+
+## Your brief (behind a switch)
+
+Where the phone shows Your brief in Needs you's place, the watch can show it too, in tafs cloud's words, as
+Wear OS's (`docs/watch-wear.md`). It's built and **off**: `NeedsYouModel.briefOnWatch` is `false`, and turns on
+with the owner's yes, as that one line. Off, the watch asks and draws exactly what it did before
+(`NeedsYouModelTests.testTheBriefIsOffAndOffChangesNothing`).
+
+With it on (`NeedsYouModel(briefOn: true)` in the tests):
+- **The read.** After Needs you, the watch asks `brief`. The phone reads `GET /v1/brief` with the session it
+  keeps, as Needs you's read is made, since tafs may be closed (`KeptWatchReading.brief`). A route tafs cloud
+  doesn't serve (404), or a brief with nothing in it, is no brief: the watch shows Needs you. So does a failed
+  read, a phone that doesn't know the request, and no answer. The phone answers `brief` whatever the watch's
+  switch, as answering a read is harmless.
+- **What's sent** (`WatchBrief`, `KeptWatchReading.watchBrief`): the title and its `when` line; the decisions
+  the phone draws, every one tafs cloud sends (it caps them itself and keeps every urgent one), in its order, each with its question, its taf by the phone's name for it,
+  its deadline, why it can't wait, what it's about (`ref` kind and id), and the held call's id when it's about
+  one (`holdID`). **No answers are sent:** decisions are answered on the phone. Then the line for more, Done's
+  heading and its first two cases by name, and the rest line.
+- **What's drawn** (`BriefList`): the brief in Needs you's place, then Your tafs with Halt, unchanged. Each
+  decision says **Approve on your phone**. **Refuse** shows only where the watch's own Needs you read lists the
+  same held call, as Needs you's own row (`HeldCallRow`): the same request, confirmed, behind the passcode.
+  Under it, Needs you's count of what the brief doesn't show, matched item by item, never by number (as the phone's
+  `needsYouBeyondBrief`): each held call no decision names, by KIFF's id, plus the rest of Needs you's count less
+  the brief's steps. A held call the brief names but Needs you no longer lists never hides one it does.
+- **Unchanged:** no keys and nothing signed on the watch; kept in memory and forgotten when the app leaves the
+  screen; no new words (the brief's are tafs cloud's, the rest the watch's own).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 

@@ -30,6 +30,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -143,6 +145,8 @@ class TafActions(
   val loadActivity: suspend (String, String, Boolean, String) -> Unit = { _, _, _, _ -> },
   val loadRuns: suspend (String, Boolean, Boolean) -> Unit = { _, _, _ -> },
   val loadAllMemory: (String) -> Unit = {},
+  /** Its versions, read for the head's version line ("Version 2 · live ›"). */
+  val loadVersions: suspend (String) -> Unit = {},
   /** Answers a card in the taf's own chat, the loop card's Read on or Stop here (taf, type, card, answer). */
   val answerCard: (String, String, String, String) -> Unit = { _, _, _, _ -> },
   /** The screen a route asked for (AppModel.open) is on screen: the request is taken. */
@@ -247,8 +251,24 @@ fun TafDetailView(
     val side = config.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE &&
       section != Section.Card && section != Section.Setup && pageWidth - SIDE_WIDTH - 32 >= CHAT_AT_LEAST
 
+    // Starts when or Results go to, beside a tablet's sidebar: in the page's place, as the iPad pushes them; Back returns to Setup.
+    var setupPage by rememberSaveable(taf.id) { mutableStateOf<SetupPage?>(null) }
+    val knob = state.knobs[taf.id]
+    if (!showBack && knob != null) when (setupPage) {
+      SetupPage.StartsWhen -> { StartsWhenSheet(taf, knob, state, actions, pushed = true) { setupPage = null }; return@Column }
+      SetupPage.ResultsGoTo -> { ResultsSheet(taf, knob, state, actions, pushed = true) { setupPage = null }; return@Column }
+      null -> Unit
+    }
+
     Header(taf, if (showBack) onBack else null)
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+      // Its live version, opening Versions, for whoever manages it on KIFF (as the iPad's head). It folds with the page.
+      if (state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)) {
+        LaunchedEffect(taf.id) { actions.loadVersions(taf.id) }
+        androidx.compose.animation.AnimatedVisibility(visible = !folded) {
+          VersionLine(state.versions[taf.id]?.firstOrNull { it.live }?.n) { onVersions(taf.id) }
+        }
+      }
       // Who it's shared with, and Share: the taf's manager's to see. It folds with the page.
       if (people != null && taf.cloudId != null) {
         androidx.compose.animation.AnimatedVisibility(visible = !folded) { ShareLine(taf.id, state, people, routeTaken = actions.routeTaken) }
@@ -281,18 +301,20 @@ fun TafDetailView(
           Section.Card -> {
             // Only what's on its Card: the Card, its limits and how they're counted, its usage, Halt and Revoke.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere, onRevoke = { confirmRevoke = true })
-            // The clock its limits' days and its times are in, in tafs cloud's words.
-            taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp)) }
+            // The clock its limits' days and its times are in, in tafs cloud's words: above the Card, as the iPad's.
+            taf.timeZoneWords?.let { Text(it, style = scaled(13, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp)) }
             taf.scheduleTimeZoneWords?.let { Text(it, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(horizontal = 4.dp)) }
+            CardTab(taf, state.issuer(taf), actions, frontCard, { frontCard = it }, manages = managesHere)
             // Halting is a job of its own: its row opens its screen. Its usage is the account's Usage, with this taf's count.
             // Only what this person manages, as KIFF says: a Viewer sees no Halt, refused only once tapped.
+            // In the iPad's order: Halt, Changes to how it runs, Usage, then Revoke last.
+            if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.canHalt(taf.id) && state.manages(taf.id)) {
               val version = state.tafSetups[taf.id]?.versions
               VersionsRow({ onVersions(taf.id) }, title = version?.title ?: Words.Version.changesRow, summary = version?.summary)
             }
-            if (state.canHalt(taf.id) && state.manages(taf.id) && taf.state != TafState.revoked) HaltRow(taf.id, state.haltOf(taf.id), { onHalt(taf.id) })
             if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
+            RevokeRow(taf, managesHere, onRevoke = { confirmRevoke = true })
           }
           Section.Setup -> {
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
@@ -304,7 +326,8 @@ fun TafDetailView(
                 onRemoving(taf.id)
                 removeScope.launch { try { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } finally { removeOpening = false } }
               }
-            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity })
+            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity },
+              onOpenPage = if (!showBack) ({ setupPage = it }) else null)
           }
           Section.Chat -> Unit
         }
@@ -391,9 +414,26 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
         Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = Words.Common.back, tint = Theme.amber, modifier = Modifier.size(20.dp))
       }
     }
-    TafAvatar(taf, 30.dp)
-    Text(taf.name, style = scaled(18, FontWeight.SemiBold, Theme.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+    // As the iPad's head: its avatar and its name, large, then its state.
+    TafAvatar(taf, 34.dp)
+    Text(taf.name, style = scaled(20, FontWeight.Bold, Theme.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
     StateChip(taf.state)
+  }
+}
+
+/** The head's way into its versions: the live one's number, quiet, with its mark and a caret; "Versions" before they're read. */
+@Composable
+private fun VersionLine(live: Int?, onOpen: () -> Unit) {
+  val words = live?.let { Words.Version.liveNumber("$it") } ?: Words.Version.title
+  Row(
+    Modifier.heightIn(min = 32.dp).tapping(onClickLabel = words, onClick = onOpen)
+      .semantics { contentDescription = words },
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Icon(painterResource(R.drawable.ic_history), contentDescription = null, tint = Theme.soft, modifier = Modifier.size(15.dp))
+    Text(words, style = scaled(13, FontWeight.SemiBold, Theme.soft), maxLines = 1)
+    Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Theme.dim, modifier = Modifier.size(12.dp))
   }
 }
 
@@ -411,7 +451,7 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
 internal const val REVOKE_NEEDS_APPROVER = "taf.revoke_needs_approver"
 
 @Composable
-private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean, onRevoke: () -> Unit) {
+private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean) {
   val cards = taf.shownCards
   val shown = cards.firstOrNull { it.id == front } ?: cards.firstOrNull()
   Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -436,7 +476,14 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
       )
     }
   }
-  // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
+}
+
+/**
+ * Revoke, the Card tab's last row, as the iPad's (under Halt, Changes to how it runs and Usage): in the sample its own; signed in,
+ * KIFF's, for whoever manages it. Pausing is in Setup.
+ */
+@Composable
+private fun RevokeRow(taf: Taf, manages: Boolean, onRevoke: () -> Unit) {
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
     if (taf.cloudId != null && LocalViewOnly.current) {
       // A view-only session (KIFF's approval_mode "view") isn't offered Revoke, on every device alike: the line every app
@@ -498,7 +545,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
     // An idle taf's work line is its first health reason: said once, under its health.
     work?.summary?.line?.takeIf { it.isNotBlank() && work.health?.repeats(it) != true }?.let { Text(it, style = scaled(15, color = Theme.ink)) }
     work?.health?.let { h ->
-      HealthLines(h, canUseCoach = state.mayUseCoach, onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
+      HealthLines(h, canUseCoach = state.mayAskCoachAbout(taf.id), onCoach = { say -> actions.askCoachAbout(taf.id, say) }, onPlan = actions.openPlan)
     }
     // Its oldest waiting case, in tafs cloud's words, amber once it's past the promise.
     work?.oldestWaiting?.words?.takeIf { it.isNotBlank() }?.let { words ->
@@ -534,7 +581,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
               )
             }
             // Still not delivered: Coach, asked in tafs cloud's words.
-            d.coachWords?.takeIf { d.openCoach && state.mayUseCoach }?.let { words ->
+            d.coachWords?.takeIf { d.openCoach && state.mayAskCoachAbout(taf.id) }?.let { words ->
               Text(
                 RequestWords.ASK_COACH,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),

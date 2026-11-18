@@ -596,4 +596,12 @@ class MappingTest {
     val vendor = KiffMapping.record(listOf(call(null, code = null, by = null)), setOf("a1"), mapOf("list_subscriptions" to "Stripe")).single()
     assertEquals("Stripe", vendor.refusedBy)
   }
+
+  /** Home's `relevant_now` reaches the taf as tafs cloud sent it, and stays unknown from a tafs cloud before it. */
+  @Test fun relevantNowIsReadFromHome() {
+    fun one(extra: String) = KiffMapping.taf(KiffClient.json.decodeFromString<bot.tafs.app.kiff.HomeTaf>("""{"id":"taf_1","name":"Bills in","kiff_agent":"bills-in","state":"idle"$extra}"""), "You")
+    assertEquals(true, one(""","relevant_now":true""").relevantNow)
+    assertEquals(false, one(""","relevant_now":false""").relevantNow)
+    assertEquals(null, one("").relevantNow)
+  }
 }

@@ -16,6 +16,10 @@ tablet without one installs tafs, and its mic says it can't dictate there.
 Drawn by `CoachScreenTest` from synthetic data, at phone size: the compact header with the plan
 in tafs cloud's one line, the plan opened, the conversations menu, and the live line thinking,
 working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-as-it-comes)).
+Coach's bar is the iPad's (`CoachHeader`), from Coach's first screen: Back in a capsule at the start
+(with ⤢ in a tablet's panel), "Coach" centred, and, once Coach has started, new conversation and ⋯
+(the earlier conversations) in one capsule at the end, in Coach's own blue (`Theme.coach`, the
+iPad's).
 
 <p>
   <img src="screenshots/android/coach-card.png" width="180" alt="Coach: the header, the plan line, an answered approval and the rules card">
@@ -28,7 +32,7 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
-Where Coach's screen is 600 dp wide or more (a tablet, beside the tafs list or with it folded
+Where Coach's screen is 600 dp wide or more (a tablet, beside the sidebar or with it folded
 away), Coach's conversation has "Taking shape" beside it, as on an iPad (`SetupShapePanel`, from `AppState.setupShape`): what Coach
 has made so far, read only from what the app already holds. The taf's name once it's handed over,
 else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
@@ -119,7 +123,7 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 - **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
   headline: {words}}]`, each taf's `labels: [id]` (0 to 3; missing reads as none), and `labels_words: {all}` (`HomeLabel`,
   `HomeLabelsWords`). `waiting` counts the label's tafs that wait; `color` is one of Explore's category tokens.
-- **The filter row** (`LabelRow`), under the headline: All with the listed tafs' count, then each label with its count and an
+- **The filter row** (`LabelRow`), under the headline on a phone and over the Overview's table on a tablet: All with the listed tafs' count, then each label with its count and an
   amber dot when one of its tafs waits. Two labels show, then "+N" for the rest, which opens the row out; a chosen label further
   on stays in sight (`shownLabels`). No labels, no row.
 - **It opens on All every time** the list opens (`HomeView` remembers the choice only while it's on screen). A label that went
@@ -415,7 +419,7 @@ icons dark on the light ground and light on the dark one when the choice changes
 
 | Package | What's in it |
 |---|---|
-| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
+| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach; on a tablet, `TabletSidebar` with what it chose beside it), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
@@ -597,7 +601,10 @@ it's dim. A delivery given up on after its tries shows **Send again** to whoever
 a place of the taf's own (an app's action, another taf) goes by its `key`, retried as the taf's
 task. It signs nothing, and the work is read again after. One still not delivered offers **Ask
 Coach** (`open_coach`): a new conversation about the taf with tafs cloud's `coach_words` in the
-message box, sent only by the owner (`askCoachAbout`). The request sheet's **Try the reply now**
+message box, sent only by the owner (`askCoachAbout`). **Coach on a taf is only for whoever may use Coach and manages
+it** (`AppState.mayAskCoachAbout`), as on the iPad: this Ask Coach, a health line's fix that asks Coach, the request sheet's
+Ask Coach, Needs you's "Change the limit in Coach" (changing a limit is changing the taf's Card), and the bar's Coach on the
+taf's page (`openCoachOn`), which for anyone else opens Coach as it was, never on the taf. The request sheet's **Try the reply now**
 is the door reply's alone. A `taf` live update reads it again where the page has.
 
 **Its health** ([reliability.md](reliability.md#its-health); `HealthLines`, `TafWork.health`)
@@ -659,9 +666,66 @@ its count. Coach is a filled button (ink, with the ground's colour as its label)
 someone KIFF lets use Coach, so the bar has four places otherwise. The one exception is the store's
 screenshots: a debug build opened with `adb shell am start -n dev.kiff.tafs/bot.tafs.app.MainActivity --ez screenshots true`
 shows Coach in the sample, and it opens on what Coach is, as a new account first sees it (`AppState.screenshots`). A real
-sample session never offers it. In landscape and on tablets
-the same places are a rail on the left, with Coach at its foot (`TabBar`, `TabRail` in
-`MainActivity`). Home's header keeps the account's name; Settings and Coach are no longer there.
+sample session never offers it. Home's header keeps the account's name; Settings and Coach are no
+longer there.
+
+**Tablets** (and a large phone on its side, from `WIDE_DP`) have one sidebar for the whole app in
+the bar's place, as the iPad's (`TabletSidebar`, from `HomeSplitView`); the phone keeps its bar:
+- **At the top,** the fold button, which hides the sidebar so what's open takes the width (a handle
+  brings it back), then the app's mark, the mascot and "tafs", which opens the **Overview**.
+- **The app's screens:** Needs you with its count, Record, and on a KIFF account Calendar, Plan &
+  usage and Connect apps. Then **Halt all**, with where it stands when it isn't running.
+- **NEEDS YOU:** each held call, opening its taf. **YOUR TAFS:** each taf with its line under its
+  name, in the colour Home's row gives it (`tafLineTone`), then those being set up; **SHARED WITH
+  YOU** and other agents apart. Then Explore jobs, where tafs cloud sends its words.
+- **At the foot,** always in sight: Start a new taf (a KIFF account, for whoever may use Coach), KIFF
+  out of reach, the plan's line, a lost approval key and a newer build, as Home says them; the
+  sample's "Play the next sample actions"; **Coach** (ink, 44 high, with its sparkle); and
+  **Account**, with the account's name.
+
+What the sidebar chooses opens beside it, its row highlighted (`Beside`): Needs you, Record, the
+Calendar, a taf, and, as on the iPad, Account, Plan & usage, Connect apps and Halt all, which a phone
+opens as sheets. Those four are drawn in place by `DriveSheet` where `LocalSheetBeside` is set,
+without their Done, and Back or another row closes them; what they open in turn is a sheet again.
+
+**Coach on a tablet** is a panel, as the iPad's (`CoachPanel`): it slides in from the trailing edge
+over the whole app, which stays in view, dimmed a little, and a tap on that closes it. It opens at
+a third of the screen, or the width last chosen on this device; its leading edge drags it wider, up
+to the whole screen, and back, never narrower than a third, and past that it closes. ⤢ in Coach's
+bar takes the whole screen and back. What's beside the sidebar keeps its highlight under it. It opens on the
+Overview, today across the tafs, as the iPad's whole-app sidebar does; with no taf yet, Home's jobs
+and its line. Its tafs are those tafs cloud says are relevant now (`relevant_now` on `GET /v1/home`: a held call,
+a step, a knock, a run or a change in the last day), as the iPad's; every taf is on the Overview,
+behind the mark. From a tafs cloud that doesn't say yet, every taf. Home's label chips sit over the
+Overview's table on a tablet, as on the iPad, and filter it; filtered to a mission's label, its row
+and Log are there too. `TabletSidebarTest` holds this at the iPad's size and a phone's.
+
+The tablet's screens at the iPad's size (1366 × 1024 dp), over the sample, to set beside the iPad's
+reference files, are drawn on the JVM by `TabletScreenshots` into `docs/screenshots/android/tablet/`
+when asked (`./gradlew :app:testDebugUnitTest --tests '*TabletScreenshots*' -PtabletScreenshots`):
+
+<p>
+  <img src="screenshots/android/tablet/overview.png" width="320" alt="A tablet: the sidebar, and the Overview it opens on">
+  <img src="screenshots/android/tablet/needs-you.png" width="320" alt="Needs you beside the sidebar, its row highlighted">
+  <img src="screenshots/android/tablet/taf.png" width="320" alt="A taf chosen in the sidebar, highlighted there, its page beside it">
+</p>
+
+**TalkBack and the largest text.** Every control says what it is: `tapping` makes a tappable a
+button unless its caller says it's a tab or one of a few choices, and the app's two buttons
+(`PrimaryButton`, `OutlineButton`) are buttons. A taf's tabs and the calendar's modes (`Segmented`),
+Record's filters, Home's label chips and job categories, and Activity's pills are tabs, the one shown selected. The theme and
+Setup's two answers are radio buttons; Coach's answers are radio buttons, or boxes where several may be
+picked, each saying whether it's picked. Coach's panel needs no drag: its edge is a button whose tap
+switches between a third and the whole screen, as ⤢ does. A sent message's menu (Send again, Change it
+first, Copy) opens on a long press, and on TalkBack's (double-tap and hold), with no tap offered that
+would do nothing. At Android's largest font size (200 %) nothing is cut off: rows that end in "…" read
+whole to TalkBack, and a Card's face keeps its shape at the usual size but grows taller, with its stack,
+rather than lose its last line, who issued it and until when. `TabletAccessibilityTest` holds this,
+walking the tablet's screens at 200 % for any control without a role or a name.
+
+<p>
+  <img src="screenshots/android/tablet/taf-chat-largest-text.png" width="320" alt="A taf's chat at 200 % text, its Card beside it whole, down to who issued it and until when">
+</p>
 A new taf starts in Coach, signed in. The sample has no form for one: under its list it says
 "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf
 starts in Coach." (`HomeWords.SAMPLE_FOOT`). Coach from a taf's page is that taf's conversation: the one
@@ -671,9 +735,15 @@ accepted goes on at tafs cloud), and a read of it that lands later doesn't repla
 
 **Record** filters by taf too: All tafs, then a chip per taf with its colour, combined with the
 kind filter. Each entry starts with its taf's colour and name, and each day says what its money
-moved came to, by unit (`spentOn`).
+moved came to, by unit, in the app's words, as the iPad's: "Today · 17 Nov · €640 spent", or "€120 +
+$30 spent" across units (`spentOn`, `record.day_spent`), counting its folded reads too.
 
 ## The taf's screen
+
+Its head, as the iPad's: its avatar and its name (20, bold) with its state; under them, for whoever
+manages it on KIFF, its live version ("Version 2 · live ›", read as the page opens, "Versions" until
+then), which opens Versions, then who it's shared with and Share. Both fold away as the page scrolls
+down. `TafHeadTest` holds the version line.
 
 Four tabs, each with one job (`TafDetailView`). It opens on Chat, except from a door's knock alert
 (tafs cloud's `knock`, `AlertPayload.opensActivity`), which opens it on Activity, where knocks are
@@ -681,9 +751,11 @@ answered:
 - **Chat:** talking to it.
 - **Activity:** what it did and what waits for you. Its holds and its doors' knocks first (Do it,
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
-  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
-- **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
-  Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
+  its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`). Signed in, tafs
+  cloud's filters are bordered pills as on the iPad, amber for the one chosen and soft for the rest,
+  and each group's title is small and quiet (`ActivityFilterPill`).
+- **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
+  iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
@@ -692,7 +764,9 @@ never named, and a taf shared with no one else reads "Not shared".
 - **Setup** (`SetupTab`): how it runs, in sections.
   - **The job**, with Improve in Coach.
   - **Starts when**, one line per start in tafs cloud's words, opening its sheet
-    (`StartsWhenSheet`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
+    (`StartsWhenSheet`; beside a tablet's sidebar, its own screen in the page's place, with a round
+    Back and its title in the bar, as the iPad pushes it, and so does Results go to: `SetupFrame`,
+    `SetupPage`): its schedule (the line, "Next run at 13:00 · Europe/Paris", − and + from
     its `size`, each choice's `setting` sent as it is), and **If it is still working when the next
     start comes: Skip it / Run after** (`busy`, sent in the knob's `setting`); its app events, each
     with its filter in words, **Approve** while it waits for the owner (the signed approval, below)
@@ -908,7 +982,7 @@ fingerprint (Android 1.27.2; before, one signed a message nothing sent or checke
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
-  gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
+  gets it. Also on the bottom bar (Account and each tab) and every row of a tablet's sidebar, Coach's button, a segment changed in a segmented control
   (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0). Home's calendar
   icon and everything tapped in the calendar (days, weeks, the chevrons, Choose a date, a taf's slot) tap too, through
   `Modifier.tapping`, the shared tappable for anything that isn't a button (Android 1.27.6). Since Android 1.27.7 every
@@ -1072,6 +1146,14 @@ cloud marks each waiting approval card with `signs: {card, words?}` (read lenien
   `AppState.draftErrors`, `coach.card_draft_not_read`). It used to stay on "Reading KIFF's words…".
 - `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
   under its own title as if signed now; with no `words`, not drawn.
+
+**KIFF's words for a connection's profile** (`POST /v1/profiles/words`) are what a card shows above Approve, which waits
+for them. Each card reads its own grant's words, by the card's grant id, kept only while their `profile_sha256` is that
+grant's profile digest (`AppState.profileWordsFor`). They're read when Coach's thread is (`readApprovals`), every waiting
+card's at once, and again when a card is drawn, each time in the model's own scope (`AppModel.readProfileWords`), once
+per grant and profile. A card's own read used to be lost when the card was drawn again (two cards arriving in the same
+second, Coach's thread read while its run streams), and it said "Reading KIFF's words…" with Approve greyed until the
+card left the screen and came back (`ProfileWordsCardsTest`).
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
 
 **A sign-in wider than the job** (`wider: {words}`, docs/chat.md): when planque couldn't narrow an app's sign-in to
@@ -1249,7 +1331,11 @@ answers it. That part is Android's own, with nothing in the app.
     So adding one is tested from a build Play installed (the internal track).
 - **Removing one** (`KiffClient.removePasskey`): `DELETE /v1/me/passkeys/{id}`, signed by the approval key behind a
   fingerprint that names it, as a device's removal is. A computer's own passkey has no id (it goes with its device,
-  `device_id`), so it says "Goes with its computer", with no Remove.
+  `device_id`), so it says "Goes with its computer", with no Remove. **Removing the last passkey that can approve
+  warns first:** "This is your only passkey that can approve. Without it, you need another device that can approve."
+  (`settings.devices.passkey_remove_last`, `Passkey.removesLast`). Every passkey KIFF lists counts, a computer's own
+  included, as on Windows and iOS. A read of the list that started before a removal is dropped when it ends, so the
+  removed passkey never comes back.
 - **Tests:** `PasskeyRegistrationTest` reads `vectors/passkey-registration.json`, the vector the iPhone and iPad's
   tests read too, so the apps can't drift. `PasskeyAddTest` covers the model: the fingerprint, the body, the 409, the
   sheet put away, no approval key, KIFF's refusals, and a computer's own passkey.
@@ -1366,8 +1452,8 @@ pace, expiry, a refused proof, a phone with no approval key) and `PairSignInView
 ## The calendar
 
 As iOS's (`docs/ios-app.md`, "The calendar"): the tafs' scheduled work still to
-come (kiff/tafs#534), opened from the calendar icon at the top right of the
-Overview on a tablet and from the home's header on a phone.
+come (kiff/tafs#534), opened from the sidebar's Calendar on a tablet (the Overview then
+draws no calendar button of its own, as the iPad's) and from the home's header on a phone.
 `views/CalendarView.kt` draws Day, Week and Month, Week first; `model/Calendar.kt`
 (`CalendarMath`, `CalendarLayout`, `CalendarState`) counts dates, groups and picks
 the layout exactly as iOS's does, and the titles are the same words. Every
@@ -1559,7 +1645,7 @@ existing signed KIFF flow; once KIFF
 has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
 (`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
 home and each dial again; a page, Setup, dial or work read begun in the old zone is dropped when
-it lands. A 503 shows tafs cloud's words, and choosing again retries it. The Card tab names the
+it lands. A 503 shows tafs cloud's words, and choosing again retries it. The Card tab names, above the Card as on the iPad, the
 clock its times are in, in tafs cloud's words (`time_zone_words`), and, while a schedule still
 runs in another zone, what to do about it (`schedule_time_zone_words`).
 Its sheets open at full height, so the back key closes them. Signing in from the

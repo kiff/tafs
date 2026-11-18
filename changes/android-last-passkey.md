@@ -1,0 +1,1 @@
+- **Android: removing your last passkey that can approve warns first,** counting a computer's own, and a passkey you removed never reappears from an earlier read ([android-app.md](docs/android-app.md#passkeys-on-this-phone)).

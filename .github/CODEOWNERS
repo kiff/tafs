@@ -28,6 +28,8 @@
 /ios/Tafs/KIFF/SigningTime.swift @kiff-qa
 /ios/Tafs/Services/ApprovalSigner.swift @kiff-qa
 /ios/Tafs/Services/PasskeyMaker.swift @kiff-qa
+/ios/scripts/asc-profiles.rb @kiff-qa
+/ios/scripts/build_phases.py @kiff-qa
 *.entitlements @kiff-qa
 /ios/scripts/asc-*.rb @kiff-qa
 
@@ -45,6 +47,11 @@
 /android/app/build.gradle.kts @kiff-qa
 /android/play/*.py @kiff-qa
 
+# Where the apps send the session's token (app/hosts.json) and the check that holds
+# each app's constants to it
+/app/hosts.json @kiff-qa
+/app/test_hosts.py @kiff-qa
+
 # tafs cloud, the shared test vectors, and the cloud's secrets
 /runtime/src/cloud/approval.ts @kiff-qa
 /runtime/src/cloud/doors/sign.ts @kiff-qa
@@ -56,8 +63,12 @@
 /.github/workflows/android.yml @kiff-qa
 /.github/workflows/mac-testflight.yml @kiff-qa
 /.github/workflows/mac-installer-cert.yml @kiff-qa
+/.github/workflows/mac-developer-id.yml @kiff-qa
 /.github/workflows/runtime.yml @kiff-qa
 /.github/workflows/upgrade.yml @kiff-qa
+/.github/upgrade-rule-b.sh @kiff-qa
+/.github/upgrade-rule-b/ @kiff-qa
+/.github/workflows/upgrade-gate.yml @kiff-qa
 /.github/workflows/automerge.yml @kiff-qa
 /.github/automerge.json @kiff-qa
 /scripts/automerge.py @kiff-qa

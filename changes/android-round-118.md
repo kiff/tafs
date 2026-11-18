@@ -1,0 +1,1 @@
+- **Android: Coach on a taf is offered only to whoever may use Coach and manages the taf,** as on the iPad: a health line's fix, a delivery not made, the request sheet's Ask Coach, Needs you's "Change the limit in Coach", and the bar's Coach on a taf's page, never a button tafs cloud then refuses ([android-app.md](docs/android-app.md)).

@@ -1,0 +1,5 @@
+- Wysłana wiadomość zostaje na górze czatu, gdy taf pracuje i odpowiada.
+- Wiadomość wysłana ponownie po zerwaniu połączenia jest wykonywana tylko raz.
+- Coach przy tafie jest dostępny tylko dla osób, które zarządzają tym tafem.
+- Usunięcie ostatniego klucza dostępu, który może zatwierdzać, najpierw wyświetla ostrzeżenie.
+- Przekazanie Coachowi narzędzi zatwierdza tylko krok, który widzisz.

@@ -170,23 +170,64 @@ class CoachStartTest {
     assertEquals(2, transport.requestsTo("POST /v1/me/agent-drafts").size)
   }
 
-  @Test fun aConnectBatchWithNoCardYetGivesTheCardInTheSameFlow() = runTest {
+  @Test fun aCardDraftedOnlyAfterTheBatchIsShownFirstThenGivenOnTheNextGive() = runTest {
     reads()
     val connectOnly = """{"state":"to_give","connect":{"body":$connectBody,"lines":["Read your tafs"]}}"""
+    val cardOnly = """{"state":"to_give","card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]}]}}"""
+    // The step shows the batch alone, and Give's read agrees; once the batch is in, tafs cloud drafts the Card over its tools.
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
-    // Once the batch is in, tafs cloud drafts the Card over the tools KIFF now holds.
-    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$connectOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$cardOnly}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$cardOnly}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":{"state":"given"}}""")
     transport.answer("POST /v1/connections/batch", 200)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_c","status":"confirmed"}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
     val m = model()
     m.loadCoach()
-    assertTrue(m.giveCoachTools())
-    // One tap: the batch, then the Card it waited for, under its own fingerprint.
+    // The first Give: the batch it showed, and not the Card it never showed. The step is drawn again with the Card.
+    assertFalse(m.giveCoachTools())
     assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertFalse(auth.asked.contains("Give Coach its Card"))
+    assertNotNull(m.state.value.coachTools?.card)
+    assertNull(m.state.value.coachToolsError)
+    // The second Give: the Card, as shown, under its own fingerprint.
+    assertTrue(m.giveCoachTools())
     assertEquals(KiffClient.json.parseToJsonElement(cardBody), KiffClient.json.parseToJsonElement(String(transport.requestsTo("POST /v1/me/agent-drafts").single().body!!)))
     assertEquals("Give Coach its Card", auth.asked.last())
+    assertEquals(1, transport.requestsTo("POST /v1/connections/batch").size)
+  }
+
+  @Test fun aBatchThatChangedSinceTheStepWasShownSignsNothingAndDrawsTheStepAgain() = runTest {
+    reads()
+    val more = connectBody.replace("\"connections\":[", "\"connections\":[{\"name\":\"tafs_send\",\"url\":\"https://cloud.tafs.kiff.dev/v1/mcp\",\"tool\":\"tafs_send\"},")
+    val changed = toGive.replace(connectBody, more)
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$changed}""")
+    val m = model()
+    m.loadCoach()
+    assertFalse(m.giveCoachTools())
+    assertTrue("no fingerprint", auth.asked.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertEquals(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, m.state.value.coachToolsError)
+    // The step is drawn again from the read: the next Give is to what it shows now.
+    assertEquals(KiffClient.json.parseToJsonElement(more), m.state.value.coachTools?.connect?.body)
+  }
+
+  @Test fun aCardDraftThatChangedAloneSignsNothingEither() = runTest {
+    reads()
+    val changed = toGive.replace(cardBody, cardBody.replace("\"limit\":0", "\"limit\":5"))
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
+    transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$changed}""")
+    val m = model()
+    m.loadCoach()
+    assertFalse(m.giveCoachTools())
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertEquals(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, m.state.value.coachToolsError)
   }
 
   @Test fun theToolsStepReadsInTafsCloudsWordsAndAnOlderOneWithout() {

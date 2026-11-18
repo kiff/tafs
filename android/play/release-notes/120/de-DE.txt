@@ -1,0 +1,3 @@
+- Die Genehmigungskarten von Coach zeigen sofort, was du genehmigst, auch wenn zwei gleichzeitig kommen. Sie warten nicht mehr, bis du den Bildschirm verlässt und zurückkommst.
+- TalkBack nennt jede Schaltfläche, jeden Tab und jede Auswahl und sagt, was ausgewählt ist.
+- Bei der größten Schrift schneidet eine Card ihre letzte Zeile nicht mehr ab.

@@ -58,10 +58,28 @@ describe("Coach's wording rules", () => {
       // A sign-in breadth claim with the app's name between "full" and "access", and the curly apostrophe Coach writes in French and Italian.
       "Google will ask you for full access to Gmail.", "The sign-in shows full Gmail access, but the taf only reads.",
       "Google chiede l’accesso completo.", "Google demandera l’accès complet à votre messagerie.",
+      // Eval 44099835231: Coach's progress line said the connection only reads, with planque's sign-in wide (Gmail EN run 1,
+      // Sheets FR run 2). The same order in each language.
+      "Connecting your Gmail, reading only.", "Je connecte Google Sheets pour Total de la semaine, en lecture des cellules seulement.",
+      "Connecting Google Sheets with read access only.", "Ich verbinde Google Sheets nur zum Lesen.",
+      "Conecto Google Sheets en modo lectura de celdas solamente.", "Collego Google Sheets in lettura delle celle soltanto.",
+      "Ik koppel Google Sheets alleen om te lezen.", "Ligo o Google Sheets em leitura das células apenas.",
+      "Je connecte Google Sheets, lecture uniquement.",
+      // Said of the connection, adverbially (legal-i18n, after Eval 44099835231): es "sólo para leer", pt "apenas para leitura".
+      "Conecto Gmail, sólo para leer.", "Conecto Google Sheets solo para lectura.", "A ligar o Gmail, apenas para leitura.", "Ligo o Google Sheets só para ler.",
+      // Still the connection, after Eval 44128040350's unless_next words: no job object follows "read only".
+      "Connecting Gmail, read only.", "It uses a read only connection.",
+      // kiff-qa: "from", "mail" and "whatever" can follow the label, so they stay caught.
+      "Gmail stays read only from now on.", "It uses a read only mail connection.", "It's read only whatever you approve.",
+      // kiff-qa: "what" can follow an access claim too, so Eval 44128040350's Gmail EN run-2 line stays caught: Coach says what the taf reads instead.
+      "I'll set Accountant emails to read only what accounts@example.com sends you.", "The sign-in can read only what the taf needs.",
     ]) {
       expect(claims(bad), bad).toBe(true);
     }
-    for (const good of ["It will read only the rows added since its last run.", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once."]) {
+    for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
+      "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "El taf solo lee los correos nuevos.", "O taf só lê as linhas novas da folha.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once.",
+      // "read" as the job's verb, with "unread" or "incoming" after "only" (legal-i18n, kiff-qa).
+      "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies."]) {
       expect(claims(good), good).toBe(false);
     }
   });

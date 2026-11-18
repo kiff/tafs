@@ -1,7 +1,8 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
+import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { contract } from "./contract.js";
@@ -1616,6 +1617,33 @@ describe("the app that waits is named so it differs from this one (other_app_fir
     expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval with this same draft: it carries the Card");
     expect(String(r.body.note)).not.toContain("(");
   });
+
+  // Eval 44162956815's night: five taps on two approval cards were answered 200, and the log said nothing of what tafs cloud
+  // decided. Each tap now leaves its decision's code in the log (approvalAskLine), never in the phone's answer.
+  it("logs each tap's decision with its code: other_app_first, and out_of_date for a card shown before it changed", async () => {
+    const lines: string[] = [];
+    const log = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { lines.push(a.map(String).join(" ")); });
+    try {
+      const s = services();
+      s.grants = [sheet({ status: "connected" }), mailbox()];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+      const w = await world(s, { draft: "drf_1" });
+      const first = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+      expect(first.body).toMatchObject({ outcome: "answered" });
+      expect(first.body).not.toHaveProperty("code");
+      const asks = () => lines.filter((l) => l.includes('"event":"approval_ask"')).map((l) => JSON.parse(l));
+      expect(asks().at(-1)).toEqual({ event: "approval_ask", component: "a1", kind: "approval", grant: "g_1", card_draft: true, shown_draft: "v3",
+        outcome: "answered", code: "other_app_first", step: null });
+      // A card the phone drew before its connection changed: read again, said in the log as out_of_date.
+      const s2 = services();
+      const w2 = await world(s2);
+      const stale = await w2.call("POST", ASK, { grant: "g_1", shown_digest: "old" });
+      expect(stale.body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
+      expect(asks().at(-1)).toMatchObject({ grant: "g_1", card_draft: false, outcome: "read_again", code: "out_of_date", step: null });
+    } finally {
+      log.mockRestore();
+    }
+  });
 });
 
 // Eval 20b, intros run 1: told other_app_first, Coach showed the mailbox's key approval without the draft, the owner
@@ -2219,7 +2247,7 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
     s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true } })];
     const w = await world(s, {});
     const first = await w.call("GET", CHAT, undefined);
-    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
+    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it." });
     // Every app that can approve a card draws this line (contracts/README.md): it reads the same answer.
     contract("coach-wider", "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons.", first.body);
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
@@ -2356,6 +2384,65 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(await tap()).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
   });
 
+  // A line the owner agreed as kept by the connection is held to the grant's pins at Approve, before anything is signed:
+  // the owner never signs a rule nothing holds (kiff/agents' show writes "(the connection keeps it)" from the line's kept).
+  describe("a line agreed as kept by the connection", () => {
+    const LINES = [{ text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge"] }];
+    async function withPins(pinRefund: boolean, extra?: ReturnType<typeof grant>) {
+      const s = services();
+      const pinned = tools.map((t) => (t.tool === "refund_charge" && pinRefund ? { ...t, fixed_arguments: { "refund.reason": "requested_by_customer" } } : t));
+      s.grants = [grant({ status: "connected" }, { tools: pinned }), ...(extra ? [extra] : [])];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards("refuse") };
+      const w = await world(s, { draft: "drf_1" });
+      return { s, w };
+    }
+    function agree(w: Awaited<ReturnType<typeof world>>, lines: unknown) {
+      w.agents.show(w.stored, { type: "notice", id: "rules-1", tone: "info", text: "Refunds only to the original card (the connection keeps it)", rules: RULES, lang: "en", lines });
+      w.agents.show(w.stored, { type: "confirm", id: "ok-rules-1", text: "Agree?", agrees: "rules-1", options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      const list = w.agents.events.get(w.stored.session)!;
+      list.push({ session: w.stored.session, run: w.stored.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "ok-rules-1", type: "confirm", answer: "agree", words: "Agree" } });
+    }
+    const tap = async (w: Awaited<ReturnType<typeof world>>) => (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+
+    it("refuses a tool the grant doesn't pin, naming it, with no signing request and no grant", async () => {
+      const { s, w } = await withPins(false);
+      agree(w, LINES);
+      const r = await tap(w);
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnpinned("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed say the connection keeps "Refunds only to the original card" for "refund_charge", but the connection doesn't pin "refund_charge".`);
+      expect(s.checks).toEqual([]);
+      expect(r.signs).toBeUndefined();
+    });
+
+    it("approves when every tool the line names is pinned", async () => {
+      const { w } = await withPins(true);
+      agree(w, LINES);
+      expect(await tap(w)).toMatchObject({ outcome: "sign" });
+    });
+
+    it("still refuses when the pin is on another app's tool of the same name", async () => {
+      const other = grant({ status: "connected", id: "g_2" }, { agent: "other-taf", tools: [{ tool: "refund_charge", name: "refund_charge_z9", title: "Refund a charge (other app)", fixed_arguments: { amount: 1 } }] });
+      const { w } = await withPins(false, other);
+      agree(w, LINES);
+      expect(await tap(w)).toMatchObject({ outcome: "answered", note: WORDS.rulesUnpinned("Refund a charge") });
+      // Within one taf's grants too: every entry for the tool is pinned, or the line isn't kept.
+      const g = (id: string, fixed?: Record<string, unknown>) => ({ id, request: { tools: [{ tool: "refund_charge", name: `refund_charge_${id}`, title: "Refund a charge", ...(fixed ? { fixed_arguments: fixed } : {}) }] } }) as unknown as ApprovalGrant;
+      expect(unpinnedConnection([g("a", { amount: 1 }), g("b")], LINES)).toEqual({ line: LINES[0]!.text, tool: "refund_charge", title: "Refund a charge" });
+      expect(unpinnedConnection([g("a", { amount: 1 }), g("b", { amount: 1 })], LINES)).toBeUndefined();
+      expect(unpinnedConnection([g("a", {})], LINES)?.tool).toBe("refund_charge");
+      expect(unpinnedConnection([], [{ text: "No tool named", tools: [] }])).toEqual({ line: "No tool named", tool: "", title: "No tool named" });
+    });
+
+    it("leaves a notice with no connection line as it was", async () => {
+      const { w } = await withPins(false);
+      agree(w, [{ text: "Skips refunds it already made", kept: "instructions" }]);
+      expect(await tap(w)).toMatchObject({ outcome: "sign" });
+      const plain = await withPins(false);
+      agree(plain.w, undefined);
+      expect(await tap(plain.w)).toMatchObject({ outcome: "sign" });
+    });
+  });
+
   // kiff-qa on #1100: the conversation that can't be read is never trusted; it's read again, nothing signed.
   it("a conversation that can't be read isn't trusted: the card reads again, and nothing is signed", async () => {
     // How many conversation reads a tap makes, the rules' own read last; then the same tap with only that read failing.
@@ -2443,7 +2530,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesFigures("X")).toContain("X");
       expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unpinned") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
   });
 
   describe("the figures the owner agreed", () => {
@@ -2547,5 +2634,65 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
       expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
     });
+  });
+});
+
+// The owner's phone, 17 Nov: two approval cards drawn in one second, a Card over both apps on the first app's card and
+// the other app still waiting. The chat's read marked the first card as signing the Card while its tap asked for the
+// connection alone; the phone refuses a step that isn't its mark and reads again, so five taps did nothing.
+describe("two approval cards in one read: each card's mark is what its tap asks (other_app_first, 17 Nov)", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const CAN = "can=key_and_cards,tools_and_cards";
+  const base = (name: string, tool: string, title: string) => ({ kind: "api_key", server: "desk.example.com",
+    api: { url: `https://desk.example.com/${name}/openapi.json`, digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } },
+    tools: [{ tool, name: `${tool}_k3`, title }] });
+  const mailbox = () => grant({ id: "g_1", vendor: "desk.example.com", title: "desk.example.com" }, base("mail", "send_mail", "Send an email"));
+  const books = () => grant({ id: "g_2", vendor: "desk.example.com", title: "desk.example.com" }, base("books", "list_invoices", "List invoices"));
+  const both = [{ id: "c1", subject: "refunds-x", grants: [{ action: "send_mail_k3" }, { action: "list_invoices_k3" }], aggregates: [] }];
+  const card = (r: { body: Record<string, unknown> }, id: string) =>
+    (r.body.components as Array<{ component: { id?: string; signs?: { card?: boolean } }; answer?: { state: string } }>).find((c) => c.component.id === id);
+  afterEach(() => { delete process.env.TAFS_KEY_AND_CARDS; });
+
+  async function twoCards() {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [mailbox(), books()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { grant: "g_1", draft: "drf_1" });
+    w.agents.ask(w.stored, { type: "approval", id: "a2", grant: "g_2" });
+    return { s, w };
+  }
+
+  it("marks the Card's card as connecting its app alone while the other app waits, as its tap asks, read after read", async () => {
+    const { w } = await twoCards();
+    for (let i = 0; i < 3; i++) {
+      const r = await w.call("GET", CHAT, undefined, {}, CAN);
+      expect(card(r, "a1")?.answer).toBeUndefined();
+      expect(card(r, "a1")?.component.signs?.card).toBe(false);
+      const tap = await w.call("POST", ASK, { grant: "g_1", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3", can: ["key_and_cards", "tools_and_cards"] });
+      expect(tap.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    }
+  });
+
+  it("still keeps the waiting app's note, and answers its draftless card on the first read, with no Approve", async () => {
+    const { w } = await twoCards();
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toMatchObject({ draft: "drf_1" });
+    expect(card(r, "a2")?.answer?.state).toBe("answered");
+    expect(card(r, "a2")?.component.signs).toBeUndefined();
+    // Its tap finds it waits no more: the books' key is never approved apart from its Card.
+    expect((await w.call("POST", `/v1/tafs/${COACH}/components/a2/approval`, { grant: "g_2", shown_digest: books().digest })).status).toBe(409);
+  });
+
+  it("marks the combined step as before once no other app waits", async () => {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [mailbox(), { ...books(), status: "connected" }];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { grant: "g_1", draft: "drf_1" });
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(card(r, "a1")?.component.signs?.card).toBe(true);
+    const tap = await w.call("POST", ASK, { grant: "g_1", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3", can: ["key_and_cards", "tools_and_cards"] });
+    expect(tap.body).toMatchObject({ outcome: "sign", ask: { step: "key_and_cards" } });
   });
 });

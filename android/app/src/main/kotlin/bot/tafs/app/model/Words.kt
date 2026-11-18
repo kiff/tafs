@@ -145,6 +145,7 @@ object Words {
       val faceId: String get() = Res.s(R.string.approval_settings_path_face_id)
       val macTouchId: String get() = Res.s(R.string.approval_settings_path_mac_touch_id)
       val touchId: String get() = Res.s(R.string.approval_settings_path_touch_id)
+      val windows: String get() = Res.s(R.string.approval_settings_path_windows)
     }
     object State {
       val noneEnrolled: String get() = Res.s(R.string.approval_state_none_enrolled)
@@ -683,6 +684,7 @@ object Words {
       val whyRefused: String get() = Res.s(R.string.coach_improve_why_refused)
     }
     fun improveLine(name: String): String = Res.s(R.string.coach_improve_line, name)
+    val improveNoFiles: String get() = Res.s(R.string.coach_improve_no_files)
     fun improveTaf(taf: String): String = Res.s(R.string.coach_improve_taf, taf)
     val intro: String get() = Res.s(R.string.coach_intro)
     val kiffCountsWay: String get() = Res.s(R.string.coach_kiff_counts_way)
@@ -1223,6 +1225,7 @@ object Words {
     val onOurSide: String get() = Res.s(R.string.error_on_our_side)
     val ours: String get() = Res.s(R.string.error_ours)
     val requestMismatch: String get() = Res.s(R.string.error_request_mismatch)
+    val sentWithOtherText: String get() = Res.s(R.string.error_sent_with_other_text)
     val signInCodeExpired: String get() = Res.s(R.string.error_sign_in_code_expired)
     val signInFirst: String get() = Res.s(R.string.error_sign_in_first)
     fun signInFirstOnDevice(device: String): String = Res.s(R.string.error_sign_in_first_on_device, device, Words.demonstrative(device))
@@ -1480,6 +1483,7 @@ object Words {
     fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why, Words.demonstrative(device, capital = true))
     fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device, Words.demonstrative(device))
     fun keychainRefused(code: String): String = Res.s(R.string.pair_keychain_refused, code)
+    val keyringRefused: String get() = Res.s(R.string.pair_keyring_refused)
     val newCode: String get() = Res.s(R.string.pair_new_code)
     fun passkeyWhyBody(device: String, biometry: String): String = Res.s(R.string.pair_passkey_why_body, device, biometry, Words.demonstrative(device))
     val passkeyWhyGo: String get() = Res.s(R.string.pair_passkey_why_go)
@@ -1686,6 +1690,7 @@ object Words {
     val approvedThenDone: String get() = Res.s(R.string.record_approved_then_done)
     fun cardIssuedBy(owner: String): String = Res.s(R.string.record_card_issued_by, owner)
     val connectionRefusedBeforeSending: String get() = Res.s(R.string.record_connection_refused_before_sending)
+    fun daySpent(amount: String): String = Res.s(R.string.record_day_spent, amount)
     object Decided {
       fun approvedBy(who: String): String = Res.s(R.string.record_decided_approved_by, who)
       val approvedByYou: String get() = Res.s(R.string.record_decided_approved_by_you)
@@ -2188,6 +2193,7 @@ object Words {
     val appEvents: String get() = Res.s(R.string.setup_app_events)
     val approve: String get() = Res.s(R.string.setup_approve)
     val approveNote: String get() = Res.s(R.string.setup_approve_note)
+    fun approveNoteDevice(device: String): String = Res.s(R.string.setup_approve_note_device, device, Words.demonstrative(device))
     val atLeastOne: String get() = Res.s(R.string.setup_at_least_one)
     val changeStarts: String get() = Res.s(R.string.setup_change_starts)
     val chooseActions: String get() = Res.s(R.string.setup_choose_actions)

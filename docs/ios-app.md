@@ -203,10 +203,14 @@ the app in sample mode.
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
     usage) and Connect apps, then the held calls. With Calendar an item, the Overview has no calendar
     button of its own (`calendarInSidebar`);
-  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
-    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
-    (`last_run`, `last_change`), and
-    those being set up. The rest are in the list behind the mascot;
+  - **only the tafs relevant now** (`AppModel.relevantNow`), and those being set up. The rest are
+    in the list behind the mascot:
+    - **tafs cloud decides** whenever Home sends `relevant_now` for a taf (kiff/tafs#1320), on its own
+      clock, so every app lists the same tafs. Pausing a taf or changing where its results go keeps
+      that flag until Home is read again;
+    - **with no flag** (an older tafs cloud, or an agent tafs doesn't run), the app's rule: an item in
+      Needs you (a held call, a step it handed over, a knock at its door), or a run or a change in
+      the last 24 hours (`last_run`, `last_change`). A flag that isn't true or false counts as none;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
   - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
@@ -944,6 +948,13 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
   accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
   confirming.
+- **Coach on a taf is only for its manager.** Coach opened on a taf's page takes that taf (Improve <taf>) only for
+  someone who manages it (`AppModel.openCoach`), as every other way into Coach on a taf (`askCoachAbout`,
+  `discussCardUnit`): tafs cloud takes improving a taf only from them. Anyone else gets Coach on no taf. A run's
+  **Ask Coach** (A taf's work › a run) shows only for someone who may use Coach and manages the taf
+  (`KnobRequestDetail.offersAskCoach`), as on Windows. So does Needs you's **Change the limit in Coach**, in both
+  its places (`AppModel.mayImproveInCoach`): a limit is the taf's Card, and answering a held call doesn't make
+  someone its manager.
 - **The pencil** (New conversation) in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat,
   on no taf (`newCoachConversation`), and so does New taf at the chat's top. It stays plain: Coach closed
   and opened again on the same taf's page doesn't go back to that taf's mode; another taf's page opens on
@@ -1033,6 +1044,12 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   closing Devices and opening it again.
 - **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
   device that holds an approval key or a passkey is an approval.
+- **The account's passkeys** are listed under Devices, with Remove for the person's own (the approval key signs
+  `DELETE /v1/me/passkeys/{id}`); a computer's own goes with its computer. **Removing the last passkey that can
+  approve warns first:** "This is your only passkey that can approve. Without it, you need another device that can
+  approve." (`settings.devices.passkey_remove_last`). Every passkey KIFF lists counts, a computer's own included, told apart by id (a computer's by its device),
+  since they all approve (`AppModel.removesLastPasskey`, as on Windows). A read of the list that started before a
+  Remove is dropped when it ends, so the removed passkey never comes back on screen.
 - **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with
   `device_kind` sent on as it came; whether a kind matches its platform is KIFF's check
   (`invalid_pairing`), as on Android. Its alert says what it gets whatever its biometric
@@ -1045,6 +1062,12 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 
 The approved redesign (`SignInView`, `PairSignInView`, `ConnectedView`, `SignInArt`). Every word is a shared
 key, and the drawings are shapes only, with no letter, number or word in them.
+
+**A session KIFF no longer accepts shows sign-in, never an error.** When a refresh hears that the session has
+ended, from KIFF (401) or from tafs cloud passing on KIFF's refusal (401, "KIFF did not accept this sign-in"),
+whichever read says so first, the kept session is forgotten (`forgetSession`) and this screen shows, with
+"Signed out of KIFF". That's the case of a session left by an older build. Anything but a 401 (an outage, a 5xx)
+keeps the session and says it couldn't load, as before.
 
 - **On an iPad or a Mac, two halves** (`SignInView.offersPhone`): on the left, **Sign in with KIFF** with
   **Continue**; on the right, **Sign in with your phone** with the pairing QR and "Scan with tafs"

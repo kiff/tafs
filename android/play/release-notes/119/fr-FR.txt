@@ -1,0 +1,3 @@
+- La barre de Coach est la même dès son premier écran : Retour et, sur tablette, le bouton qui l'élargit.
+- La note sous Approuver, dans Setup, nomme désormais l'appareil sur lequel vous approuvez, et plus toujours un téléphone.
+- Dans l'onglet Card d'un taf, Révoquer est la dernière ligne, après Bloquer, Changements de son fonctionnement et Utilisation.

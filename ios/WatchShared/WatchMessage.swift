@@ -4,7 +4,7 @@ import Foundation
 // Both apps compile this file. A request goes live with WatchConnectivity's message data and a
 // reply, never queued: one made more than `WatchRequest.maxAge` ago is dropped on the phone.
 
-/// A request from the watch. Only the six kinds below decode, so anything else, an approval
+/// A request from the watch. Only the seven kinds below decode, so anything else, an approval
 /// among them, never reaches the phone's code.
 struct WatchRequest: Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable {
@@ -14,6 +14,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case halt
         case haltAll = "halt_all"
         case coach
+        /// Your brief, as the phone reads it: read only, behind the watch's switch (`briefOnWatch`).
+        case brief
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -30,20 +32,26 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var taf: String?
     /// Coach: the person's words, as the watch's dictation wrote them. Never audio.
     var text: String?
+    /// Coach: the message's own id (a UUID), made on the watch for the words it sends, and the same when
+    /// the person sends those words again after no answer came. The phone sends it to tafs cloud as
+    /// `client_message_id`, so a message that reached Coach once is acted on once. A phone from before
+    /// it ignores it.
+    var message: String?
 
-    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil) {
+    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil) {
         self.kind = kind
         self.made = made
         self.hold = hold
         self.taf = taf
         self.text = text
+        self.message = message
     }
 
     /// Whether it names what its kind needs: Refuse its hold, Halt its taf, Coach its words.
     var isComplete: Bool {
         func given(_ value: String?) -> Bool { !(value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         switch kind {
-        case .needsYou, .tafs, .haltAll: return true
+        case .needsYou, .tafs, .haltAll, .brief: return true
         case .refuse: return given(hold)
         case .halt: return given(taf)
         case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
@@ -74,17 +82,61 @@ struct WatchReply: Codable, Equatable, Sendable {
     var needsYou: WatchNeedsYou?
     var tafs: [WatchTaf]?
     var coach: WatchCoachAnswer?
+    /// Your brief; nil with `ok` when the account has none, and the watch shows Needs you.
+    var brief: WatchBrief?
     /// What happened, or why not, in the phone's words: shown only once the phone has KIFF's
     /// or tafs cloud's answer.
     var line: String?
 
-    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil, line: String? = nil) {
+    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
+         brief: WatchBrief? = nil, line: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
         self.coach = coach
+        self.brief = brief
         self.line = line
     }
+}
+
+/// Your brief on the wrist, every word tafs cloud's: its title and when, every decision it sends still to answer
+/// with no answers (they're answered on the phone), the line for more, Done's heading and its first cases,
+/// and the rest. Read only: a decision about a held call names it (`holdID`), so the watch can offer
+/// Refuse where its own Needs you read does.
+struct WatchBrief: Codable, Equatable, Sendable {
+    struct Decision: Codable, Equatable, Sendable, Identifiable {
+        var id: String
+        var question: String
+        /// The taf's name, when the phone could name it.
+        var taf: String?
+        /// When it must be decided by, in tafs cloud's words.
+        var deadline: String?
+        var urgent: Bool
+        /// Why it can't wait, in tafs cloud's words.
+        var cantWait: String?
+        /// What it's about: `hold`, `step`, `connection`, `proposal` or `check`, and its id.
+        var refKind: String
+        var refID: String
+        /// KIFF's id for the held call, when it's about one: what Refuse names.
+        var holdID: String?
+    }
+
+    /// The most of Done's cases sent by name. Decisions aren't cut: tafs cloud already caps them (every urgent
+    /// one kept), and `more` is its count of the rest.
+    static let wristCases = 2
+
+    var title: String
+    var when: String?
+    /// tafs cloud's word for urgent.
+    var urgent: String?
+    var decisions: [Decision]
+    /// tafs cloud's line for more decisions than shown.
+    var more: String?
+    /// Done's heading, and its first cases by name.
+    var done: String?
+    var doneCases: [String]
+    /// tafs cloud's line for the rest, which needs nothing now.
+    var rest: String?
 }
 
 /// Coach's answer on the wrist: its words, cut short, never its cards. Anything Coach asks

@@ -19,6 +19,10 @@ on:
         description: "Only say what would change"
         type: boolean
         default: true
+      rule_b_run:
+        description: "The owner's rule B: the id of the latest full Eval run, red only on Coach's wording check (blank: the plain gate)"
+        type: string
+        default: ""
 permissions:
   contents: read
   id-token: write
@@ -39,13 +43,30 @@ jobs:
         id: gate
         env:
           GH_TOKEN: ${{ github.token }}
+          RULE_B_RUN: ${{ inputs.rule_b_run }}
         run: |
           set -euo pipefail
-          run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha)"')
-          conclusion=${run% *}; agents_sha=${run#* }
+          run=$(gh api "repos/kiff/agents/actions/workflows/eval.yml/runs?branch=main&status=completed&per_page=1" --jq '.workflow_runs[0] | "\(.conclusion) \(.head_sha) \(.id)"')
+          read -r conclusion agents_sha run_id <<<"$run"
           ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$agents_sha" --jq .content | base64 -d | tr -d '[:space:]')
           echo "kiff/agents' latest nightly eval: $conclusion, measuring kiff/tafs@${ref:0:12}"
           git cat-file -e "$ref^{commit}"
+          # The owner's rule B: that same latest run, red only where its log shows
+          # Coach's wording check failing once in 3 runs, and nothing else
+          # (.github/upgrade-rule-b.sh, tested on saved logs in upgrade-gate.yml).
+          # What the log can't show, that no failing line claims more than a Card,
+          # connection or KIFF holds, is read and confirmed on the thread before
+          # a real run, as the owner set.
+          if [ -n "$RULE_B_RUN" ]; then
+            [[ "$RULE_B_RUN" =~ ^[0-9]+$ ]] || { echo "::error::rule_b_run is an Eval run's id"; exit 1; }
+            [ "$RULE_B_RUN" = "$run_id" ] || { echo "::error::rule_b_run $RULE_B_RUN isn't the latest completed Eval on main ($run_id)"; exit 1; }
+            if [ "$conclusion" = failure ]; then
+              job=$(gh api "repos/kiff/agents/actions/runs/$run_id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
+              jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > eval.steps
+              gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > eval.log
+              bash .github/upgrade-rule-b.sh eval.log eval.steps && conclusion=success
+            fi
+          fi
           sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then
             echo "evaluated=true" >> "$GITHUB_OUTPUT"

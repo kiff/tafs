@@ -7,10 +7,16 @@
 #   DIST_CERT_SERIAL                          the certificate in the keychain
 #   ruby asc-profiles.rb bot.tafs.app+push+timesensitive+associateddomains="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
 #   ruby asc-profiles.rb --mac bot.tafs.app+push+timesensitive+associateddomains="tafs Mac App Store CI"
+#   ruby asc-profiles.rb --developer-id bot.tafs.app+push+timesensitive+associateddomains="tafs Developer ID CI"
 #
 # "--mac" makes Mac Catalyst App Store profiles (docs/mac-app.md), with the same
 # distribution certificate and the iPhone's and iPad's bundle IDs: on a Mac, push
 # is named com.apple.developer.aps-environment in the profile.
+#
+# "--developer-id" makes Mac Catalyst Developer ID profiles, for the notarized download
+# (docs/mac-app.md, "The download for macOS 13 and later"): the same bundle IDs and
+# capabilities, with the Developer ID Application certificate whose serial is
+# DIST_CERT_SERIAL. Its profile must name webcredentials:kiff.dev, or passkeys break.
 #
 # "+push" turns on Push Notifications for that bundle ID first, and replaces a
 # profile made before it was on: a profile carries the capabilities its bundle
@@ -37,8 +43,11 @@ end
 
 TOKEN = jwt
 
-MAC = ARGV.delete("--mac") ? true : false
-PROFILE_TYPE = MAC ? "MAC_CATALYST_APP_STORE" : "IOS_APP_STORE"
+DEVELOPER_ID = ARGV.delete("--developer-id") ? true : false
+MAC = (ARGV.delete("--mac") ? true : false) || DEVELOPER_ID
+PROFILE_TYPE = DEVELOPER_ID ? "MAC_CATALYST_DIRECT" : MAC ? "MAC_CATALYST_APP_STORE" : "IOS_APP_STORE"
+# The certificate a profile of that type is made with.
+CERTIFICATE_TYPES = DEVELOPER_ID ? "DEVELOPER_ID_APPLICATION,DEVELOPER_ID_APPLICATION_G2" : "DISTRIBUTION"
 
 # Each "+capability": App Store Connect's type (nil: the API has none), and the
 # entitlement a profile made with it names.
@@ -67,9 +76,9 @@ def api(method, path, body = nil)
 end
 
 serial = ENV.fetch("DIST_CERT_SERIAL").downcase.sub(/\A0+/, "")
-certs = api("get", "/v1/certificates?filter[certificateType]=DISTRIBUTION&limit=200")["data"]
+certs = api("get", "/v1/certificates?filter[certificateType]=#{CERTIFICATE_TYPES}&limit=200")["data"]
 cert = certs.find { |c| c.dig("attributes", "serialNumber").to_s.downcase.sub(/\A0+/, "") == serial }
-abort "no distribution certificate with the keychain's serial number" unless cert
+abort "no #{DEVELOPER_ID ? "Developer ID Application" : "distribution"} certificate with the keychain's serial number" unless cert
 puts "certificate #{cert["id"]} (#{cert.dig("attributes", "name")})"
 
 dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")

@@ -577,8 +577,11 @@ final class AppModel: ObservableObject {
     /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
     /// call, a step it handed over, a knock at its door), or it ran or changed in the last 24 hours, as tafs cloud says. The
     /// rest are in the tafs list behind the mascot.
+    /// tafs cloud's `relevant_now` decides whenever Home sends it (kiff/tafs#1320), so every app lists the same tafs;
+    /// the rule below is only for a tafs cloud that doesn't, and for an agent tafs doesn't run.
     func relevantNow(_ taf: Taf) -> Bool {
         let cloud = cloudTaf(for: taf.id)
+        if let flag = cloud?.relevantNow { return flag }
         return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
                                 step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
                                 knock: (taf.doors ?? []).contains { $0.knocks > 0 },
@@ -1234,18 +1237,33 @@ final class AppModel: ObservableObject {
         mode == .kiff && sessionHasApprovalKey && !approvalViewOnly && ["owner", "admin"].contains(me?.role ?? "")
     }
 
+    /// Each read of the passkeys takes the next number, and so does a removal: only the newest read's list is
+    /// kept, so a read that started before a Remove never brings the removed passkey back.
+    private var passkeysRead = 0
+
     func refreshPasskeys() async {
         guard mode == .kiff else { return }
         let gen = accountGeneration
+        passkeysRead += 1
+        let read = passkeysRead
         do {
             let list = try await kiff.passkeys()
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, read == passkeysRead else { return }
             passkeys = list
             passkeysError = nil
         } catch {
-            guard gen == accountGeneration else { return }
+            guard gen == accountGeneration, read == passkeysRead else { return }
             passkeysError = Words.Settings.Devices.passkeysNotLoaded(why: "\(error.localizedDescription)")
         }
+    }
+
+    /// Whether removing `passkey` leaves no passkey that can approve: every one KIFF lists approves, a
+    /// computer's own included (KIFF drops a computer's with the computer). Then Remove warns first
+    /// (`settings.devices.passkey_remove_last`). As Windows' count.
+    /// Passkeys are told apart by KIFF's id, or for a computer's own by its device, so a name changed while
+    /// the dialog is open still finds the same one.
+    nonisolated static func removesLastPasskey(_ passkey: KIFFClient.Passkey, among passkeys: [KIFFClient.Passkey]) -> Bool {
+        !passkeys.contains { !$0.isSamePasskey(as: passkey) }
     }
 
     /// How adding a passkey ended. The view says each in its words.
@@ -1349,6 +1367,9 @@ final class AppModel: ObservableObject {
             passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
             return false
         }
+        // A read already on its way may have started before the removal: it's dropped, and the list read again.
+        passkeysRead += 1
+        passkeys.removeAll { $0.passkeyID == id }
         await refreshPasskeys()
         return true
     }
@@ -2253,6 +2274,13 @@ final class AppModel: ObservableObject {
             // The balance, for Settings' Plan card and Home's line: tafs cloud's read alone, quietly.
             await refreshPlan(gen: gen)
         } catch KIFFClient.KIFFError.unauthorized {
+            forgetSession()
+            lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
+        } catch let error as TafsCloud.CloudError where error.status == 401 {
+            // tafs cloud passes on KIFF's refusal of this sign-in as a 401 ("KIFF did not accept this sign-in"):
+            // the session has ended, whichever read said so first. It's forgotten and sign-in shows, never
+            // "Couldn't load your tafs" with a Try again that can't help (a session left by an older build).
+            // Only a 401: an outage or any other refusal keeps the session, as before.
             forgetSession()
             lastError = KIFFClient.KIFFError.unauthorized.localizedDescription
         } catch is CancellationError {
@@ -3793,8 +3821,10 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         lastError = nil
         do {
-            let updated = try await cloud.setPaused(c.id, paused)
+            var updated = try await cloud.setPaused(c.id, paused)
             guard gen == accountGeneration else { return }
+            // Home's word on the sidebar stands until Home is read again: the taf's own record doesn't carry it.
+            updated.relevantNow = c.relevantNow
             cloudTafs[agent] = updated
             if let i = tafs.firstIndex(where: { $0.id == tafID }), tafs[i].state != .waiting, tafs[i].state != .revoked {
                 tafs[i].state = updated.paused ? .paused : .working
@@ -3822,8 +3852,9 @@ final class AppModel: ObservableObject {
               let agent = holderIDs.first(where: { $0.value == tafID })?.key else { return false }
         let gen = accountGeneration
         do {
-            let updated = try await cloud.putResults(c.id, places: places)
+            var updated = try await cloud.putResults(c.id, places: places)
             guard gen == accountGeneration else { return false }
+            updated.relevantNow = c.relevantNow
             cloudTafs[agent] = updated
             await loadKnob(tafID)
             return true
@@ -4998,13 +5029,15 @@ final class AppModel: ObservableObject {
     /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
     /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
     /// A send that went through ticks (Haptics), whichever way it went; one kept unsent warns.
-    private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
-        let delivery = await deliverChatOnce(text, to: tafID, files: files)
+    /// `messageID`: the message's own id (docs/chat.md, "One message, one id"), the same on its stream and on
+    /// the plain send that takes its place; a new one for each message the owner composes.
+    private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = [], messageID: UUID = UUID()) async -> Delivery {
+        let delivery = await deliverChatOnce(text, to: tafID, files: files, messageID: messageID)
         Haptics.play(delivery.feel)
         return delivery
     }
 
-    private func deliverChatOnce(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+    private func deliverChatOnce(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef], messageID: UUID) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
@@ -5023,6 +5056,12 @@ final class AppModel: ObservableObject {
         chats[tafID, default: []].append(pending)
         if mode != .sample { chatSent[tafID, default: []].append(pending) }
 
+        if mode == .sample, Screenshots.sampleSendFails {
+            // For the UI test only: the message isn't sent, as when tafs cloud can't be reached.
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            keepUnsent(text, tafID, why: Words.Chat.notOnCloud)
+            return .kept
+        }
         if mode == .sample {
             // The sample answers as a taf does (kiff/tafs#285): it thinks, takes a step, then
             // writes, into the live answer; then the answer is the thread's, with its work.
@@ -5078,7 +5117,7 @@ final class AppModel: ObservableObject {
             // Streamed, so the taf's words show as it writes them (#64); sent plainly
             // when the stream can't open.
             // A trial's turn runs in the background, and its chat reloads as it goes.
-            if trialChats[tafID] == nil, let events = try await openStream(c.id, text: text, files: files) {
+            if trialChats[tafID] == nil, let events = try await openStream(c.id, text: text, files: files, messageID: messageID) {
                 guard current() else { return .notTried }
                 chatStates[tafID, default: ChatState()].awaiting = clock()
                 chatStates[tafID]?.live = LiveAnswer(started: clock())
@@ -5091,7 +5130,7 @@ final class AppModel: ObservableObject {
             if trialChats[tafID] != nil {
                 _ = try await cloud.trialMessage(c.id, text: text)
             } else {
-                let sent = try await cloud.sendMessage(c.id, text: text, files: files)
+                let sent = try await cloud.sendMessage(c.id, text: text, files: files, messageID: messageID)
                 if current(), let id = sent.message?.id { markSent(pending.id, serverID: id, in: tafID) }
             }
             guard current() else { return .notTried }
@@ -5107,7 +5146,7 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = Self.busyWords(c.name)
                 return .notTried
             }
-            keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
+            keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: TafsCloud.messageID(messageID, after: e))
             return .kept
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
             // Refused for want of the AI-data consent: its screen says why, and the message goes
@@ -5132,7 +5171,8 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = error.localizedDescription
                 return .notTried
             }
-            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
+            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error),
+                       messageID: TafsCloud.messageID(messageID, after: error))
             return .kept
         }
     }
@@ -5172,6 +5212,12 @@ final class AppModel: ObservableObject {
     }
 
     func files(_ key: String) -> [PendingFile] { chatFiles[key] ?? [] }
+
+    /// Coach improving a taf holds the files in its tray back: an improvement's first message carries none, since
+    /// tafs cloud adds the taf's context to it. The words go alone, the files wait for the next message (once
+    /// it's sent, the chat goes on as any other), and the composer says so (`coach.improve_no_files`). Files are
+    /// there only when picked before Coach was opened on the taf: its paperclip isn't offered while it improves.
+    var improvementHoldsFiles: Bool { setupImproving != nil && !files(Self.setupFiles).isEmpty }
 
     /// Adds a file to the chat's next message and uploads it: declared to tafs cloud, which
     /// checks its type and size, then its bytes straight to storage. One that can't go says
@@ -5327,8 +5373,10 @@ final class AppModel: ObservableObject {
         return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil, halted: String? = nil) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle, halted: halted))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil, halted: String? = nil,
+                            messageID: UUID? = nil) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle,
+                                                                            halted: halted, messageID: messageID))
     }
 
     /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
@@ -5482,12 +5530,14 @@ final class AppModel: ObservableObject {
     /// taf is done; a second message joins what waits. True once the message is taken:
     /// sent, written to the run, held, or kept in the thread as not sent. False leaves it with
     /// the composer: nothing to send, no run to write to yet, or more than tafs cloud holds.
+    /// `messageID`: Retry's, the id its message was first sent under; a new message gets its own.
     @discardableResult
-    func submitChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
+    func submitChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = [], messageID: UUID? = nil) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let messageID = messageID ?? UUID()
         // A message with files goes as a message of its own, never into the run at work
         // (kiff/tafs#209): the composer sends it once the taf is done.
-        if !files.isEmpty { return await deliverChat(text, to: tafID, files: files) == .sent }
+        if !files.isEmpty { return await deliverChat(text, to: tafID, files: files, messageID: messageID) == .sent }
         guard !text.isEmpty else { return false }
         if mode == .kiff, chatThinking(tafID) || chatSending.contains(tafID) {
             // To the run at work, which reads it at its next step (kiff/agents#102). The
@@ -5495,7 +5545,7 @@ final class AppModel: ObservableObject {
             let s = chatState(tafID)
             guard let run = s.live?.run ?? s.workingRun, let c = cloudTaf(for: tafID) else { return false }
             do {
-                switch try await cloud.steer(c.id, run: run, text: text) {
+                switch try await cloud.steer(c.id, run: run, text: text, messageID: messageID) {
                 case .taken(let status):
                     // Shown at once, as the run now holds it; the next reload says the same.
                     let current = chatState(tafID).steering.flatMap { $0.run == run ? $0 : nil }
@@ -5528,16 +5578,17 @@ final class AppModel: ObservableObject {
                 // The consent's screen says why; the words stay in the composer.
                 return false
             } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
-                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
+                keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true, messageID: TafsCloud.messageID(messageID, after: e))
                 return true
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry. The app
                 // never resends it on its own.
-                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
+                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error),
+                       messageID: TafsCloud.messageID(messageID, after: error))
                 return true
             }
         }
-        return await deliverChat(text, to: tafID) != .notTried
+        return await deliverChat(text, to: tafID, messageID: messageID) != .notTried
     }
 
     /// Where the unread messages already dealt with are kept across launches, so one the
@@ -5586,7 +5637,8 @@ final class AppModel: ObservableObject {
         let left = chatState(tafID).unsent.count
         // Not taken at all (too long to join the queue): back in its place. A send that
         // fails keeps it again itself.
-        if !(await submitChat(message.text, to: tafID)) {
+        // Under the id it was sent under: a send that reached tafs cloud after all is acted on once.
+        if !(await submitChat(message.text, to: tafID, messageID: message.messageID)) {
             chatStates[tafID]?.unsent.insert(message, at: min(at, chatState(tafID).unsent.count))
         } else if chatState(tafID).unsent.count > left, message.settle != nil, let i = chatStates[tafID]?.unsent.indices.last {
             // Tried and kept as not sent again: still owed, so the new row carries its hash on.
@@ -7219,6 +7271,10 @@ final class AppModel: ObservableObject {
         /// Refused because of a halt, as tafs cloud says: the whole `account`, or the `taf` on
         /// its own. The bubble then offers Resume, which Retry can't stand in for.
         var halted: String? = nil
+        /// The id it was sent under (`client_message_id`): Retry sends it under the same one, so a send
+        /// that reached tafs cloud after all is acted on once. None for what a run never read, which
+        /// Retry sends as a new message.
+        var messageID: UUID? = nil
     }
 
     /// What a send's failure says of a halt: tafs cloud's `halted`, or nil for any other failure.
@@ -7410,7 +7466,9 @@ final class AppModel: ObservableObject {
             DriveSession.shared.stop("stopped")
             return
         }
-        if let taf = tafOnScreen, setupContextTafID != cloudTaf(for: taf)?.id {
+        // Coach opens on the taf on screen only for someone who manages it, as every other way into Coach on a
+        // taf (`askCoachAbout`): tafs cloud takes improving a taf only from them. Anyone else gets Coach as it was.
+        if let taf = tafOnScreen, mode != .kiff || manages(taf), setupContextTafID != cloudTaf(for: taf)?.id {
             improveTaf(taf)
         }
         coachOpen = true
@@ -7448,6 +7506,12 @@ final class AppModel: ObservableObject {
         newSetupChat()
         setupImproving = cloudTaf(for: tafID)
         setupContextTafID = setupImproving?.id
+    }
+
+    /// Whether Coach may be opened to improve this taf here (Needs you's Change the limit in Coach): someone who
+    /// may use Coach and manages the taf, since changing a limit is changing its Card; the sample shows it.
+    func mayImproveInCoach(_ tafID: UUID) -> Bool {
+        mayUseCoach && (mode != .kiff || manages(tafID))
     }
 
     /// Coach on a taf, with words in the box for the owner to send (kiff/tafs#476, gaps 10 and
@@ -8214,13 +8278,14 @@ final class AppModel: ObservableObject {
     }
 
     /// A send to Coach that went through ticks (Haptics), whichever way it went; one kept unsent warns.
-    private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
-        let delivery = await deliverSetupOnce(text, files: files)
+    private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = [], messageID: UUID = UUID()) async -> Delivery {
+        let delivery = await deliverSetupOnce(text, files: files, messageID: messageID)
         Haptics.play(delivery.feel)
         return delivery
     }
 
-    private func deliverSetupOnce(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+    /// `messageID`: the message's own id, as a taf's chat sends it. None goes with an improvement's first message.
+    private func deliverSetupOnce(_ text: String, files: [TafsCloud.AttachmentRef], messageID: UUID) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
@@ -8261,7 +8326,7 @@ final class AppModel: ObservableObject {
             }
             // Streamed, so Setup's words show as it writes them (#60); sent plainly
             // when the stream can't open.
-            if let events = try await openStream(s.id, text: text, to: setupTarget, files: files) {
+            if let events = try await openStream(s.id, text: text, to: setupTarget, files: files, messageID: messageID) {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
                 setupAwaiting = clock()
                 setupStreamWorks = true
@@ -8272,7 +8337,7 @@ final class AppModel: ObservableObject {
                 setupStream = Task { await self.followSetupStream(events, text: text, gen: gen, conversation: conversation, sent: sentID) }
                 return .sent
             }
-            let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
+            let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files, messageID: messageID)
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             settleSetupChat(sent.session)
             if followNewSetupChat(sent.session, newSession: sent.newSession, sent: mine.id) { conversation = setupConversationGeneration }
@@ -8303,7 +8368,9 @@ final class AppModel: ObservableObject {
                 fileNotices[Self.setupFiles] = error.localizedDescription
                 return .notTried
             }
-            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
+            // An improvement's first message went under no id, so Retry gives it one of its own.
+            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error),
+                                             messageID: setupImproving == nil ? TafsCloud.messageID(messageID, after: error) : nil))
             return .kept
         }
     }
@@ -8314,9 +8381,11 @@ final class AppModel: ObservableObject {
     /// message is taken: sent, written to the run, held, or kept in the thread as not sent.
     /// False leaves it with the composer: nothing to send, no run to write to yet, more than
     /// tafs cloud holds, or no Setup.
+    /// `messageID`: Retry's, the id its message was first sent under; a new message gets its own.
     @discardableResult
-    func submitSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Bool {
+    func submitSetup(_ text: String, files: [TafsCloud.AttachmentRef] = [], messageID: UUID? = nil) async -> Bool {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let messageID = messageID ?? UUID()
         // Words first (docs/ios-app.md): on a phone where Coach isn't started, Send starts it,
         // behind its one prompt, and then sends. A Start that's cancelled or fails sends
         // nothing: the words stay with the composer.
@@ -8339,14 +8408,14 @@ final class AppModel: ObservableObject {
             }
         }
         // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.
-        if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }
+        if !files.isEmpty { return await deliverSetup(text, files: files, messageID: messageID) == .sent }
         guard !text.isEmpty else { return false }
         if setupThinking || setupSending {
             // The message that starts Coach's run is still on its way: no run yet, so it stays in the composer.
             guard let s = setupTaf, let run = setupLive?.run ?? setupThread.workingRun else { return false }
             let conversation = setupConversationGeneration
             do {
-                switch try await cloud.steer(s.id, run: run, text: text) {
+                switch try await cloud.steer(s.id, run: run, text: text, messageID: messageID) {
                 case .taken(let status):
                     guard conversation == setupConversationGeneration else { return true }
                     // Shown at once, as the run now holds it; the next read says the same.
@@ -8380,11 +8449,12 @@ final class AppModel: ObservableObject {
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
-                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
+                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error),
+                                                 messageID: TafsCloud.messageID(messageID, after: error)))
                 return true
             }
         }
-        return await deliverSetup(text) != .notTried
+        return await deliverSetup(text, messageID: messageID) != .notTried
     }
 
     /// What Coach's run never got to, as its thread says, shown once as not sent, with why and
@@ -8421,7 +8491,7 @@ final class AppModel: ObservableObject {
         setupUnsent.remove(at: at)
         let left = setupUnsent.count
         if let answer { answered.insert(cardRef(answer.id)) }
-        if !(await submitSetup(message.text)) {
+        if !(await submitSetup(message.text, messageID: message.messageID)) {
             // Not taken at all (too long to join the queue, or no Setup): back in its place.
             if let answer { answered.remove(cardRef(answer.id)) }
             setupUnsent.insert(message, at: min(at, setupUnsent.count))
@@ -8579,10 +8649,10 @@ final class AppModel: ObservableObject {
     /// without the route, or failing); a refusal (the flood guard, the role) throws, as
     /// the plain send's would.
     private func openStream(_ id: String, text: String, to target: TafsCloud.ChatTarget = .live,
-                            files: [TafsCloud.AttachmentRef] = []) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
+                            files: [TafsCloud.AttachmentRef] = [], messageID: UUID) async throws -> AsyncThrowingStream<TafsCloud.StreamEvent, Error>? {
         do {
             if let streamOpener { return try await streamOpener(id, text) }
-            return try await cloud.streamMessage(id, text: text, to: target, files: files)
+            return try await cloud.streamMessage(id, text: text, to: target, files: files, messageID: messageID)
         } catch let e as TafsCloud.CloudError where (400..<500).contains(e.status) && e.status != 404 && e.status != 408 {
             throw e
         } catch {
@@ -9838,6 +9908,9 @@ enum Screenshots {
         let s = UserDefaults.standard.double(forKey: "sampleReplySeconds")
         return enabled && s > 0 ? s : nil
     }
+    /// `-sampleSendFails YES`: the sample taf's chat keeps each message as not sent, for a UI test that a
+    /// message that couldn't go lets the pin go and the chat goes to its end, as on Android.
+    static var sampleSendFails: Bool { enabled && UserDefaults.standard.bool(forKey: "sampleSendFails") }
     /// `-listSettlesOnReturn YES`: the list opens on its first taf, as for a person, and each
     /// time the app comes back its last taf moves to the top, as when another was used
     /// meanwhile: for a UI test that a pick stays open when the list settles (the 901 test).

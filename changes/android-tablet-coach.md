@@ -1,0 +1,1 @@
+- **Android: Coach's bar as the iPad's, and on a tablet Coach is a panel.** Back in a capsule, "Coach" centred, new conversation and the earlier ones in one capsule, in Coach's blue. On a tablet, Coach slides in from the side over the app at a third of the screen, wider by its edge or ⤢, and a tap on the app behind it closes it ([android-app.md](docs/android-app.md)).

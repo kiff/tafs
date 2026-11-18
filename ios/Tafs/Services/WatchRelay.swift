@@ -18,8 +18,15 @@ protocol WatchReading {
     func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome
     /// Halts a taf, or with none every taf, as the app and Siri do: no Face ID.
     func halt(taf: String?) async -> HaltAll.Outcome
-    /// Sends Coach the person's words, and reads its answer for a moment.
-    func coach(text: String) async -> WatchReply
+    /// Sends Coach the person's words under the message's id, and reads its answer for a moment.
+    func coach(text: String, messageID: UUID) async -> WatchReply
+    /// Your brief, as tafs cloud sends it; nil when the account has none.
+    func brief() async throws -> WatchBrief?
+}
+
+extension WatchReading {
+    /// No brief: the watch shows Needs you, as it always has.
+    func brief() async throws -> WatchBrief? { nil }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -60,7 +67,16 @@ enum WatchRelay {
             case .needsApp(let said): return WatchReply(.failed, line: said)
             }
         case .coach:
-            return await reading.coach(text: request.text ?? "")
+            // The watch's id for the words, the same when they're sent again; a watch from before it
+            // sends none, and the phone gives the message one.
+            return await reading.coach(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
+        case .brief:
+            // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
+            do {
+                return WatchReply(.ok, brief: try await reading.brief())
+            } catch {
+                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            }
         }
     }
 }
@@ -139,6 +155,39 @@ struct KeptWatchReading: WatchReading {
         return tafs
     }
 
+    /// Your brief, read with the session the app keeps, as Needs you is (the app may be closed): tafs
+    /// cloud's `GET /v1/brief`, unfiltered. A route tafs cloud doesn't serve yet (404) is no brief, as on
+    /// the phone. Each decision goes with its words and none of its answers; a held call's names its id.
+    func brief() async throws -> WatchBrief? {
+        let read: TafsCloud.Brief
+        do {
+            read = try await cloud.brief(label: nil)
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            return nil
+        }
+        let names = (try? await cloud.tafs()) ?? []
+        return Self.watchBrief(read, tafNames: Dictionary(names.map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first }))
+    }
+
+    /// The brief as the wrist gets it, from tafs cloud's: nil when there's nothing in it, as the phone shows
+    /// Needs you then. Every word is tafs cloud's; the taf's name is the phone's, by tafs cloud's id.
+    nonisolated static func watchBrief(_ brief: TafsCloud.Brief, tafNames: [String: String]) -> WatchBrief? {
+        let usable = brief.decisions.filter(\.usable)
+        guard !usable.isEmpty || !brief.done.isEmpty else { return nil }
+        // All of them: tafs cloud caps the decisions itself and keeps every urgent one, and `more` counts the rest.
+        let decisions = usable.map { d in
+            WatchBrief.Decision(id: d.id, question: d.question, taf: tafNames[d.ref.taf], deadline: d.deadline, urgent: d.urgent,
+                                cantWait: d.cantWait, refKind: d.ref.kind, refID: d.ref.id,
+                                holdID: d.ref.kind == "hold" && !d.ref.id.isEmpty ? d.ref.id : nil)
+        }
+        let cases = brief.done.flatMap(\.cases).map { $0.name.isEmpty ? $0.words : $0.name }.filter { !$0.isEmpty }
+        func words(_ s: String) -> String? { s.isEmpty ? nil : s }
+        return WatchBrief(title: brief.words.title, when: words(brief.words.when), urgent: words(brief.words.urgent),
+                          decisions: decisions, more: brief.more.flatMap { words($0.words) },
+                          done: brief.done.isEmpty ? nil : words(brief.words.done),
+                          doneCases: Array(cases.prefix(WatchBrief.wristCases)), rest: brief.rest.flatMap { words($0.words) })
+    }
+
     /// `NotificationRefuse.refuseKept`, answering the watch: the same signed refusal, then the
     /// lock screen in step. The phone posts no notification of its own: the watch says why.
     func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome {
@@ -162,13 +211,13 @@ struct KeptWatchReading: WatchReading {
     /// Coach, as the app's plain send does (`AppModel`'s setup send when the stream can't open):
     /// the words to Coach's current chat, then its thread read until Coach's answer to them is
     /// written, for `coachWait` at most. Refusals come back in the phone's words.
-    func coach(text: String) async -> WatchReply {
+    func coach(text: String, messageID: UUID) async -> WatchReply {
         let setup: TafsCloud.CloudTaf
         let sent: TafsCloud.Sent
         do {
             guard let s = try await cloud.setup() else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
             setup = s
-            sent = try await cloud.sendMessage(s.id, text: text)
+            sent = try await cloud.sendMessage(s.id, text: text, messageID: messageID)
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
             return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
         } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {

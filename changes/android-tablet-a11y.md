@@ -1,0 +1,1 @@
+- **Android: TalkBack and the largest text on a tablet.** Every control now has a role (button, tab, radio button or box) and says when it's selected; Coach's panel widens without a drag; a sent message's menu opens with TalkBack's long press; and a Card's face grows at 200 % text rather than cut off who issued it and until when ([android-app.md](docs/android-app.md)).

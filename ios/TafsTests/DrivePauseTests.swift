@@ -38,8 +38,10 @@ final class DrivePauseTests: XCTestCase {
     }
 
     /// Waits until `condition` holds, for at most `seconds`: for what a request's answer brings
-    /// about, which takes as long as the runner takes. A fixed wait there fails on a slow one.
-    private func until(_ seconds: Double = 5, _ condition: () -> Bool) async {
+    /// about, which takes as long as the runner takes. A fixed wait there fails on a slow one. The
+    /// limit is generous because it costs nothing when the answer comes: a loaded runner took over
+    /// 5 seconds for one answer, and a request that fails is posted again after 1, then 2 seconds.
+    private func until(_ seconds: Double = 20, _ condition: () -> Bool) async {
         let end = Date().addingTimeInterval(seconds)
         while !condition(), Date() < end {
             try? await Task.sleep(nanoseconds: 50_000_000)
@@ -220,8 +222,10 @@ final class DrivePauseTests: XCTestCase {
         StubProtocol.responses["POST /v1/coach/drive/resume"] = (200, #"{"resumed":false,"ended":{"why":"halted","words":"The account is halted, so Coach stopped"}}"#)
         begin()
         personTaps(CGPoint(x: 4, y: 300))
-        await settle(0.5)
+        // The pause reaches tafs cloud first, so the Continue is the next thing it's told.
+        await until { self.sent("/v1/coach/drive/pause").count == 1 && self.drive.paused }
         XCTAssertTrue(drive.isOn)
+        XCTAssertTrue(drive.paused)
         drive.resume()
         // The end comes with the Continue's answer: waited for, not timed.
         await until { !self.drive.isOn }

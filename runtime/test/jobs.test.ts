@@ -80,6 +80,15 @@ describe("jobs", () => {
     for (const j of JOBS) expect(j.cron.split(" ")).toHaveLength(5);
   });
 
+  // Eval 44076575553's chargebacks: one run retyped a dispute id and Stripe found no such dispute; another told one
+  // dispute's failed attempt as another's. The job copies ids from the record and keeps each dispute's calls to it.
+  it("has the chargebacks taf copy ids from what a tool returned and tell each dispute from its own calls", () => {
+    const words = jobById("chargebacks").instructions;
+    expect(words).toContain("Copy each dispute's id, and any order or ticket id, from what a tool returned,\nnever typed from memory.");
+    expect(words).toContain("Tell each dispute from its own calls: an attempt that\nfailed on one dispute is never part of another's story.");
+    expect(systemPrompt({ ...jobById("chargebacks"), writesFor: "Acme" })).toContain("never typed from memory");
+  });
+
   it("builds a taf's own job from what Coach drafted: any job, under the same rules as the five (kiff/tafs#476)", () => {
     const own = ownJob({ name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", instructions: "Never change an invoice." });
     expect(own).toEqual({ id: "custom", name: "Invoices", summary: "Reminds customers of overdue invoices.", kickoff: "Find every overdue invoice and remind its customer once.", cron: "",
@@ -180,7 +189,17 @@ describe("jobs", () => {
       expect(flat).toContain("the owner also sees any text you write between tool calls: write none, or speak to them as \"you\"");
       // Concise, not a word count (the owner, kiff/agents#78).
       expect(flat).not.toMatch(/\d+ words/);
-      expect(flat).toContain("amounts in the currency the record or the call gives, with its symbol (€150, $12), never converted into another currency, never \"the equivalent\", and never in cents");
+      expect(flat).toContain("amounts in the currency the record or the call gives, with its symbol (€150, $12), never converted into another currency and never \"the equivalent\"");
+      // An API's amount is in its smallest unit, by the currency's own decimals, and a record's major form is said as
+      // given: a taf told the owner "a €700 refund" for 700 cents (Eval 44055541451, Setup run 1, answer 8).
+      expect(flat).toContain("an amount the tool or record says is in its currency's smallest unit (as Stripe's are: an integer in cents) is said in the currency's own unit, by that currency's decimals: 700 in eur is €7.00, 700 in jpy is ¥700, 700 in kwd is KWD 0.700.");
+      expect(flat).toContain("Where the record gives it in that unit too (a field ending _major, \"7.00 EUR\"), say that one, never your own sum.");
+      // Only an amount declared in the smallest unit is: a vendor's decimal ("150.00", a Card's decimal_string) is said
+      // as given, never divided, so the fix can't understate by 100 the other way (kiff-qa, review of this rule).
+      expect(flat).toContain("Any other amount is said as the record gives it (\"150.00\" in eur is €150.00), never divided");
+      expect(flat).not.toContain("an API's amount is in its currency's smallest unit");
+      // The owner's own smallest unit is said back as they wrote it, never converted, until a record carries it.
+      expect(flat).toContain("an amount the owner gives in the smallest unit (\"700 cents\") goes into the call as they gave it, and you say it back in their words (\"700 cents\"), never converted, until the call's record gives it in the currency's own unit");
       expect(flat).toContain("no ids (payments, refunds, operations, cards) unless the owner asks for one");
       expect(flat).toContain("nothing about your notes, earlier runs, or what you checked and didn't change");
       // A held call in one sentence: the wait, the one limit, the deadline (the Eval's judges,

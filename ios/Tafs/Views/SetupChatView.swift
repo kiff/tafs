@@ -488,13 +488,14 @@ struct SetupChatView: View {
                 }
             }
             .onChange(of: model.setupUnsent) { unsent in
-                // Not sent: its bubble, with Retry, is the one at the top.
-                if pinNext, let last = unsent.last {
+                // Not sent: nothing is pinned, and the chat goes to its end, where the bubble with Retry
+                // is, as on Android (docs/chat.md). Pinned, Retry left the pin on a row that was gone.
+                if pinNext, !unsent.isEmpty {
                     pinNext = false
                     pinText = nil
-                    pinned = last.id.uuidString
-                    touched = false
-                    proxy.pinToTop(last.id, animated: true) { touched }
+                    pinned = nil
+                    following = true
+                    withMotion(.easeOut(duration: 0.2)) { proxy.scrollTo(Self.bottom, anchor: .bottom) }
                     return
                 }
                 follow(proxy)
@@ -725,15 +726,25 @@ struct SetupChatView: View {
 
     private var composer: some View {
         let key = AppModel.setupFiles
-        let ready = model.files(key).contains { $0.ref != nil }
+        // While Coach improves a taf, files in the tray wait for the next message: the words go alone.
+        let filesWait = model.improvementHoldsFiles
+        let ready = !filesWait && model.files(key).contains { $0.ref != nil }
         let uploading = model.filesUploading(key)
         let empty = model.setupDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !ready
         let thinking = model.setupThinking
         // Files go with a message of their own, once Setup is done; and nothing goes while a file
         // is still going up, so a message never leaves one behind (kiff/tafs#209).
-        let held = model.holdsSend(key, thinking: thinking)
+        let held = !filesWait && model.holdsSend(key, thinking: thinking)
         return VStack(spacing: 0) {
         FileTray(key: key)
+        if filesWait {
+            Text(Words.Coach.improveNoFiles)
+                .scaledFont(13).foregroundColor(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14).padding(.top, 8)
+                .accessibilityIdentifier("coach.improve-no-files")
+        }
         VStack(alignment: .leading, spacing: 4) {
             ChatField(title: thinking ? Words.Chat.writeNext : Words.Coach.askAnything, text: $model.setupDraft, cursor: { model.dictation.cursor = $0 })
                 .focused($typing)
@@ -814,7 +825,8 @@ struct SetupChatView: View {
         typing = false
         Haptics.tap()
         let key = AppModel.setupFiles
-        let files = model.takeFiles(key)
+        // An improvement's first message goes without them: they stay in the tray for the next one.
+        let files = model.improvementHoldsFiles ? [] : model.takeFiles(key)
         Task {
             if !(await model.submitSetup(text, files: files.compactMap(\.ref))) {
                 if model.setupDraft.isEmpty { model.setupDraft = text }
@@ -1047,6 +1059,7 @@ struct UnsentBubble: View {
                     Button(Self.retryWord) { Task { await retry() } }
                         .foregroundColor(Theme.ink).semibold()
                         .disabled(busy)
+                        .accessibilityIdentifier("unsent.retry")
                 }
                 .scaledFont(14, relativeTo: .footnote)
             }

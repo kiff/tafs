@@ -12,7 +12,7 @@ const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "send_reply", 
 describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
   it("the person's agree to a confirm naming the notice agrees to its rules", () => {
     expect(rulesAgreement([notice("n1", RULES), confirm("c1", "n1"), answered("c1", "agree")]))
-      .toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
+      .toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules", connection: [] });
   });
 
   it("no rules notice: none, whatever else the conversation shows", () => {
@@ -43,9 +43,32 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([...agreed, notice("n2", changed)])).toEqual({ state: "unagreed", notice: "n2" });
     // The same notice shown again with other rules: also unagreed; with the same rules, still agreed.
     expect(rulesAgreement([...agreed, notice("n1", changed)])).toEqual({ state: "unagreed", notice: "n1" });
-    expect(rulesAgreement([...agreed, notice("n1", RULES)])).toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
+    expect(rulesAgreement([...agreed, notice("n1", RULES)])).toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules", connection: [] });
     // Agreed in turn: the newest agreement counts.
-    expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules" });
+    expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules", connection: [] });
+  });
+
+  it("the same notice shown again with other lines is unagreed: the owner reads another claim (kiff-qa's lines gap)", () => {
+    const withLines = (lines: unknown[]) => ({ kind: "component", run: "r1", body: { type: "notice", id: "n1", tone: "info", lang: "en", rules: RULES, lines } });
+    const card = { text: "Refunds at most $50 a call", kept: "card", tools: ["refund_charge"] };
+    const original = { text: "Refunds only to the original card", kept: "instructions" };
+    const agreed = [withLines([card, original]), confirm("c1", "n1"), answered("c1", "agree")];
+    // A line's kept changed, from the instructions to the connection.
+    expect(rulesAgreement([...agreed, withLines([card, { ...original, kept: "connection", tools: ["refund_charge"] }])])).toEqual({ state: "unagreed", notice: "n1" });
+    // A connection line's tools changed.
+    const kept = { text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge"] };
+    const agreedKept = [withLines([card, kept]), confirm("c1", "n1"), answered("c1", "agree")];
+    expect(rulesAgreement([...agreedKept, withLines([card, { ...kept, tools: ["refund_charge", "send_reply"] }])])).toEqual({ state: "unagreed", notice: "n1" });
+    // A line's words, or a kiff line's what, changed; a line added.
+    expect(rulesAgreement([...agreed, withLines([card, { ...original, text: "Refunds to any card" }])])).toEqual({ state: "unagreed", notice: "n1" });
+    const disclosure = { text: "Signs each reply as AI", kept: "kiff", what: "disclosure" };
+    expect(rulesAgreement([withLines([disclosure]), confirm("c1", "n1"), answered("c1", "agree"), withLines([{ ...disclosure, what: "held_approval" }])])).toEqual({ state: "unagreed", notice: "n1" });
+    expect(rulesAgreement([...agreed, withLines([card, original, disclosure])])).toEqual({ state: "unagreed", notice: "n1" });
+    // Shown again identical, the tools in another order: still agreed, with its connection lines.
+    const same = rulesAgreement([...agreedKept, withLines([card, { ...kept }])]);
+    expect(same).toMatchObject({ state: "agreed", notice: "n1", connection: [{ text: "Refunds only to the original card", tools: ["refund_charge"] }] });
+    const two = { text: "Refunds only to the original card", kept: "connection", tools: ["refund_charge", "send_reply"] };
+    expect(rulesAgreement([withLines([two]), confirm("c1", "n1"), answered("c1", "agree"), withLines([{ ...two, tools: ["send_reply", "refund_charge"] }])])).toMatchObject({ state: "agreed" });
   });
 
   it("a notice whose rules can't be read whole carries none", () => {
@@ -114,7 +137,7 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
 
   it("read with the rules: agreed, and the same notice shown with another figure is other rules", () => {
     const withFigures = rule();
-    expect(rulesAgreement([notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules: withFigures, text: "The rules" });
+    expect(rulesAgreement([notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules: withFigures, text: "The rules", connection: [] });
     const agreed = [notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")];
     expect(rulesAgreement([...agreed, notice("n1", rule([EACH, { ...DAY, limit: 50000 }]))])).toEqual({ state: "unagreed", notice: "n1" });
     // The same figures in another order are the same rules.
@@ -265,7 +288,7 @@ describe("what happens past each figure (over on a limit)", () => {
   const day = (onExceed: string) => ({ id: "day", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "refund_charge_k3" }], aggregates: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] });
 
   it("reads a figure's over with the rules, and the same rules with another over are other rules", () => {
-    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules, text: "The rules" });
+    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules, text: "The rules", connection: [] });
     const flipped = [{ ...rules[0]!, limits: [{ ...EACH, over: "refuse" as const }, DAY] }];
     expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree"), notice("n1", flipped)])).toEqual({ state: "unagreed", notice: "n1" });
     for (const over of ["maybe", "", 1, null]) {

@@ -1,0 +1,5 @@
+- Tu mensaje enviado se queda arriba en el chat mientras el taf trabaja y responde.
+- Un mensaje enviado de nuevo tras una conexión caída se procesa una sola vez.
+- Coach sobre un taf solo se ofrece a quien gestiona ese taf.
+- Quitar tu última llave de acceso que puede aprobar ahora te avisa antes.
+- Dar a Coach sus herramientas aprueba solo el paso que viste.

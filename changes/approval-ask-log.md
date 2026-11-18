@@ -1,0 +1,1 @@
+- **tafs cloud logs what it decided on each Approve tap:** one line per tap on an approval or sign-in card, with the card, its grant, whether it carried a Card draft, and the outcome with its code or the step to sign. Ids and codes only, never words or keys.
