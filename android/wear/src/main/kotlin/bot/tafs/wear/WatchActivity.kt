@@ -74,7 +74,10 @@ class WatchActivity : ComponentActivity() {
     runCatching { typed.launch(intent) }
   }
 
-  /** The system's speech input, where the watch has no recognizer for apps: its text comes back here, and is sent at once. */
+  /**
+   * The system's speech input, where the watch has no recognizer for apps: its text comes back here, through [WatchModel.heard], so
+   * v1 sends it at once and v2 shows it to check first.
+   */
   private val speechInput = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
     val heard = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
     lifecycleScope.launch { if (heard != null) model.heard(heard) else model.heardNothing() }
