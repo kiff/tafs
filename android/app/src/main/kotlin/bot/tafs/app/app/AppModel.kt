@@ -2777,7 +2777,12 @@ class AppModel(
    * [alongside] changes the state in the same update that brings the thread: the live answer leaving as its words land in the thread,
    * so the chat's end never grows by a row and shrinks again, which moved the thread about while Coach wrote.
    */
-  private suspend fun readThread(tafId: String, alongside: ((AppState) -> AppState)? = null) {
+  /**
+   * [ownStream]: the stream that follows this chat asked for this read itself (one of its events, or its end), so a quiet run
+   * never closes it from here: the stream is still speaking. Every other read (the stream's 30 s check, a refresh, a push) may
+   * close a stream that went quiet, once everything else this read does is done.
+   */
+  private suspend fun readThread(tafId: String, alongside: ((AppState) -> AppState)? = null, ownStream: Boolean = false) {
     val cloudId = _state.value.taf(tafId)?.cloudId ?: return
     // A new Coach conversation has nothing to read until its first message is sent.
     if (tafId == COACH_CHAT && _state.value.coachFresh) return
@@ -2865,11 +2870,16 @@ class AppModel(
     }
     // The stream that went quiet is closed: it no longer holds the chat, so a later run is followed again.
     // Never from inside that stream's own reads: its end is about to come, with how the run ended.
-    if (endedQuiet && followers[tafId] !== kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)?.cancel()
     if (tafId == COACH_CHAT) {
       readApprovals()
       followHandOvers()
     }
+    // The stream that went quiet is closed: it no longer holds the chat, so a later run is followed again. Never from the
+    // stream's own reads, told apart by their caller ([ownStream]), never by comparing jobs: on a phone the stream's lines come
+    // through `flowOn(Dispatchers.IO)`, so its reads run in a child of its job, and on 18 Nov such a read cancelled the stream
+    // and itself, leaving a card on "Reading what it asks for…". Done last: the stream's 30 s check runs under the stream's job,
+    // so closing the stream ends that read too, and before, it ended before the card was read.
+    if (endedQuiet && !ownStream) followers.remove(tafId)?.cancel()
     // A run at work that this phone isn't following: its stream is picked back up, once.
     thread.workingRun?.let { run -> resumeChat(tafId, cloudId, run) }
   }
@@ -6587,10 +6597,10 @@ class AppModel(
               // KIFF is read for the card, where the call was made, and for Needs you.
               scope.launch { refresh() }
             }
-            StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId)
+            StreamEvent.Taken, StreamEvent.Said, StreamEvent.Component -> readThread(tafId, ownStream = true)
             StreamEvent.Part -> {
               // The part's words leave the live row in the update that brings them into the thread, never a frame before.
-              readThread(tafId) { s -> s.chatLive[tafId]?.let { a -> s.copy(chatLive = s.chatLive + (tafId to a.newPart())) } ?: s }
+              readThread(tafId, alongside = { s -> s.chatLive[tafId]?.let { a -> s.copy(chatLive = s.chatLive + (tafId to a.newPart())) } ?: s }, ownStream = true)
             }
             is StreamEvent.End -> {
               ended = e
@@ -6624,7 +6634,7 @@ class AppModel(
       if (end != null || waitsOnYou) refresh()
       // The live answer goes in the update that brings the answer into the thread: one row takes the other's place.
       val settle: (AppState) -> AppState = { s -> s.copy(chatLive = s.chatLive - tafId, chatAwaiting = if (end != null) s.chatAwaiting - tafId else s.chatAwaiting) }
-      readThread(tafId, settle)
+      readThread(tafId, settle, ownStream = true)
       if (!current()) return@launch
       // Where the thread couldn't be read, the live answer goes all the same.
       _state.update(settle)
