@@ -99,7 +99,8 @@ struct SetupShape: Equatable {
             if grant.connected {
                 state = .connected
             } else if grant.status == "failed" || grant.status == "disconnected" {
-                state = .failed(grant.reason)
+                // planque's words for its state, never its `reason` (English, for the log).
+                state = .failed(grant.statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 })
             } else if grant.holdsSignIn {
                 state = .signedIn
             } else {
