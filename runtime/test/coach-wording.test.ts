@@ -73,13 +73,34 @@ describe("Coach's wording rules", () => {
       "Gmail stays read only from now on.", "It uses a read only mail connection.", "It's read only whatever you approve.",
       // kiff-qa: "what" can follow an access claim too, so Eval 44128040350's Gmail EN run-2 line stays caught: Coach says what the taf reads instead.
       "I'll set Accountant emails to read only what accounts@example.com sends you.", "The sign-in can read only what the taf needs.",
+      // The prompt audit: an app or its data said to be left unchanged, which Setup's core bans, now caught by the
+      // contract rather than the model alone. legal-i18n's lines, one claim form each: is not changed, stays, is left.
+      "Your inbox isn't changed.", "Your Gmail stays as it is.", "The sheet is left untouched.", "It leaves your invoices unchanged.", "Nothing is modified in Moneybird.",
+      "Dein Postfach wird nicht geändert.", "Deine Tabelle bleibt unverändert.", "Es lässt deine Rechnungen unangetastet.",
+      "Tu bandeja no se modifica.", "Tu hoja queda intacta.", "Tus facturas siguen sin cambios.",
+      "Votre boîte n'est pas modifiée.", "Votre feuille reste inchangée.", "Il laisse vos factures intactes.",
+      "La tua casella non viene modificata.", "Il foglio rimane invariato.", "Lascia le tue fatture intatte.",
+      "Je inbox wordt niet gewijzigd.", "Je sheet blijft ongewijzigd.", "Het laat je facturen onaangeroerd.",
+      "Twoja skrzynka nie zostanie zmieniona.", "Arkusz pozostaje bez zmian.", "Zostawia twoje faktury nietknięte.",
+      "A sua caixa não é alterada.", "A folha fica intacta.", "Deixa as suas faturas inalteradas.",
     ]) {
       expect(claims(bad), bad).toBe(true);
     }
     for (const good of ["It will read only the rows added since its last run.", "Reading only the new rows from your sheet.",
       "Total de la semaine lit les nouvelles lignes, sans rien écrire.", "El taf solo lee los correos nuevos.", "O taf só lê as linhas novas da folha.", "Connecting your Gmail…", "If you decline, nothing changes.", "The taf only gets the tools to read.", "Full name and email are on the card.", "The taf reads your full inbox history once.",
       // "read" as the job's verb, with "unread" or "incoming" after "only" (legal-i18n, kiff-qa).
-      "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies."]) {
+      "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies.",
+      // "Unchanged" as the job's own word (legal-i18n): a taf that forwards something as it came is no claim about the app.
+      "Nothing is sent until you approve.",
+      "It forwards each invoice unchanged to your accountant.", "It copies each new row into the sheet.", "It keeps the subject line as you wrote it.",
+      "Es leitet jede Rechnung unverändert an deine Buchhaltung weiter.",
+      "Reenvía cada factura sin cambios a tu gestor.",
+      "Il transfère chaque facture telle quelle à votre comptable.",
+      "Inoltra ogni fattura invariata al tuo commercialista.",
+      "Het stuurt elke factuur ongewijzigd door naar je boekhouder.",
+      "Przesyła każdą fakturę bez zmian do księgowego.",
+      "Reencaminha cada fatura inalterada para o seu contabilista.",
+    ]) {
       expect(claims(good), good).toBe(false);
     }
   });
