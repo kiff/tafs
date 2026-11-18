@@ -1,0 +1,1 @@
+- Quando a chave de uma app age como si nessa app, Ligar pede primeiro o endereço de email com que inicia sessão nela, para que as suas chamadas ajam como si e não como outra pessoa.
