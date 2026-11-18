@@ -395,6 +395,8 @@ class CoachActions(
   val loadProfileWords: suspend (String) -> Unit = {},
   /** Reads KIFF's draft for an approval card again, by draft id: its Try again. */
   val loadDraft: suspend (String) -> Unit = {},
+  /** Reads Coach's thread again for a card that couldn't be read: its Try again ([AppModel.retryCards]). */
+  val retryCards: () -> Unit = {},
   /** A taf's dial, read again; and Coach's dial draft made live (the version switch), both by taf id. */
   val loadKnob: suspend (String) -> Unit = {},
   val confirmKnob: suspend (String) -> Boolean = { false },
@@ -471,6 +473,9 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
     when {
       state.approvalKeyLost -> ApprovalKeyLine()
       !state.planqueReady -> Text(CoachWords.NOT_CONNECTABLE, style = scaled(14, color = Theme.soft))
+      // Still not drawable a minute after the phone began reading it again: said, with Try again, never "Reading…" for ever.
+      grant == null && c.id in state.cardsNotRead ->
+        DraftNotRead(Words.Connect.approveNotRead(why = state.connectionsError ?: Words.Error.onOurSide)) { actions.retryCards() }
       grant == null -> Text(Words.Connect.readingAsks, style = scaled(14, color = Theme.soft))
       else -> {
         // Already connected, as tafs cloud marks it: its one line, then Its Card; the connection's text isn't asked again.

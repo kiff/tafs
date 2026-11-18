@@ -947,6 +947,70 @@ class CoachStartTest {
     assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
   }
 
+  // The owner, 18 Nov (P0): the card stayed on "Reading what it asks for…" for minutes and filled in only once the screen was left
+  // and opened again. The card can be written before it names its grant, and Coach's run is done by then, so no stream reads the
+  // thread again: the phone reads the thread again while a card can't be drawn, and the card fills in on its own.
+  @Test fun aCardThatNamesItsGrantLaterFillsInWithoutLeavingTheScreen() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertEquals(setOf("a1"), AppModel.cardsWaiting(m.state.value.coachComponents, m.state.value.grants))
+    // tafs cloud now names the card's grant; nothing on the phone opens the chat again.
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    advanceTimeBy(3_000 + 1)
+    runCurrent()
+    assertTrue("the card is drawn", AppModel.cardsWaiting(m.state.value.coachComponents, m.state.value.grants).isEmpty())
+    assertTrue(m.state.value.cardsNotRead.isEmpty())
+  }
+
+  // A grant id this phone followed before (an earlier card, its ten minutes over) on a later card is followed again: a set of
+  // followed ids kept it from being read at all, and the card said "Reading…" until the chat was opened again.
+  @Test fun aGrantFollowedBeforeIsFollowedAgainOnALaterRead() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    advanceTimeBy(AppModel.CARD_GRANT_READ_DELAYS.sum() + 1)
+    runCurrent()
+    // A later read of the chat, planque still without the grant: the reads start again.
+    m.loadChat(COACH_CHAT)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(3_000 + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+  }
+
+  // Never "Reading…" for ever: a minute in, a card still not drawable says it couldn't be read, with Try again; the reads go on,
+  // and once the card can be drawn the line goes.
+  @Test fun aCardStillUnreadAfterAMinuteSaysSoWithTryAgain() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    advanceTimeBy(AppModel.CARD_NOT_READ_MS - 3_000)
+    runCurrent()
+    assertTrue("not before the minute", m.state.value.cardsNotRead.isEmpty())
+    advanceTimeBy(3_000 + 1)
+    runCurrent()
+    assertEquals(setOf("a1"), m.state.value.cardsNotRead)
+    // Try again reads the chat at once; still nothing, so the card keeps waiting, said again a minute on.
+    m.retryCards()
+    runCurrent()
+    assertTrue(m.state.value.cardsNotRead.isEmpty())
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(10_000 + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+    assertTrue(m.state.value.cardsNotRead.isEmpty())
+  }
+
   // A grant planque never lists: read for ten minutes at most, never for as long as the chat stays open.
   @Test fun aCardsGrantIsReadForTenMinutesAtMost() = runTest {
     reads()

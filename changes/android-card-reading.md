@@ -1,0 +1,1 @@
+- **Android: an approval card no longer stays on "Reading what it asks for…".** It reads Coach's chat again until the card can be drawn, and after a minute says it couldn't be read, with Try again ([android-app.md](docs/android-app.md)).

@@ -629,6 +629,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
         loadProfileWords = { model.readProfileWords(it) },
         loadDraft = model::loadDraft,
+        retryCards = model::retryCards,
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
         approveDrive = model::approveDrive,
