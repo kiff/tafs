@@ -69,6 +69,8 @@ internal object Look {
   val faint = Color(0xFF6E6E78)
   val surface = Color(0xFF1F1F24)
   val surfaceHi = Color(0xFF2C2C33)
+  /** Recording, as mockup v2.1 draws it: the Stop button and "● Recording". */
+  val red = Color(0xFFE5303A)
 }
 
 // MARK: Glyphs, drawn with shapes

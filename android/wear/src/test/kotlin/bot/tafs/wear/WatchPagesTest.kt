@@ -1,6 +1,9 @@
 package bot.tafs.wear
 
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -175,15 +178,19 @@ class WatchPagesTest {
     compose.onNodeWithText("${Words.Watch.ready} · ${Words.Watch.limit}").assertExists()
     compose.onNodeWithText(Words.Watch.tapStart).assertExists()
     compose.onNodeWithText("0:00 / 0:30").assertExists()
-    compose.onNodeWithText(Words.Coach.start).performClick()
+    // Start is its own control: the brand's round button with the microphone, never Stop's.
+    compose.onAllNodesWithTag(RECORD_STOP).assertCountEquals(0)
+    compose.onNodeWithTag(RECORD_START).assertContentDescriptionEquals(Words.Coach.start).performClick()
     assertEquals(listOf("start ask_1"), did)
   }
 
   @Test fun listeningShowsTheWordsAsHeardAndStop() {
     show(read, voice = WatchModel.Voice.Listening("Move my call", null, since = System.currentTimeMillis()))
-    compose.onNodeWithText(Words.Watch.recording).assertExists()
+    compose.onNodeWithText("● ${Words.Watch.recording} · ${Words.Watch.limit}").assertExists()
     compose.onNodeWithText("Move my call").assertExists()
-    compose.onNodeWithText(Words.Chat.stop).performClick()
+    // Stop is another control, not Start relabelled: the red one with the square.
+    compose.onAllNodesWithTag(RECORD_START).assertCountEquals(0)
+    compose.onNodeWithTag(RECORD_STOP).assertContentDescriptionEquals(Words.Chat.stop).performClick()
     compose.onNodeWithText(Words.Common.cancel).performClick()
     assertEquals(listOf("stop", "close"), did)
   }

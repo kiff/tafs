@@ -14,6 +14,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -81,7 +92,8 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
 private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() -> Unit)?) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
     Column(Modifier.align(Alignment.TopCenter).padding(top = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-      T(if (start != null) "${Words.Watch.ready} · ${Words.Watch.limit}" else Words.Watch.recording, 11.sp, Look.dim, lines = 1)
+      if (start != null) T("${Words.Watch.ready} · ${Words.Watch.limit}", 11.sp, Look.dim, lines = 1)
+      else T("● ${Words.Watch.recording} · ${Words.Watch.limit}", 11.sp, Look.red, lines = 1)
       Spacer(Modifier.height(4.dp))
       Box(Modifier.size(78.dp), contentAlignment = Alignment.Center) {
         // The ring fills to the limit.
@@ -95,7 +107,7 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
             style = Stroke(stroke, cap = StrokeCap.Round),
           )
         }
-        AmberButton(if (start != null) Words.Coach.start else Words.Chat.stop, start ?: act.stop, width = 62.dp)
+        RecordButton(recording = start == null, onClick = start ?: act.stop)
       }
       T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
       Spacer(Modifier.height(2.dp))
@@ -106,6 +118,41 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
     Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
   }
 }
+
+/**
+ * The one control, in two looks you can't mistake at a glance (mockup v2.1): before, a round button in the brand's colours with the
+ * microphone and Start; while recording, a solid red one with a white square, Stop, and a halo around it.
+ */
+@Composable
+private fun RecordButton(recording: Boolean, onClick: () -> Unit) {
+  val label = if (recording) Words.Chat.stop else Words.Coach.start
+  Box(
+    Modifier.size(62.dp)
+      .then(if (recording) Modifier.border(5.dp, Look.red.copy(alpha = 0.28f), CircleShape) else Modifier)
+      .padding(if (recording) 5.dp else 0.dp)
+      .clip(CircleShape)
+      .then(if (recording) Modifier.background(Look.red) else Modifier.background(Brush.linearGradient(Look.brand)))
+      .clickable(onClick = onClick)
+      .semantics { role = Role.Button; contentDescription = label }
+      .testTag(if (recording) RECORD_STOP else RECORD_START),
+    contentAlignment = Alignment.Center,
+  ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      if (recording) {
+        Box(Modifier.size(14.dp).background(Color.White, RoundedCornerShape(3.dp)))
+      } else {
+        Glyph(Modifier.size(20.dp)) { micGlyph(Color.White) }
+      }
+      Spacer(Modifier.height(2.dp))
+      Text(label, color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+        modifier = Modifier.clearAndSetSemantics {})
+    }
+  }
+}
+
+/** Test tags for the two looks of the recording control. */
+internal const val RECORD_START = "record-start"
+internal const val RECORD_STOP = "record-stop"
 
 /** Check before sending: the words in full, scrolled with the crown and never cut, then Re-record, Delete and Send. */
 @Composable

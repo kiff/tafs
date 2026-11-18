@@ -177,8 +177,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 
 **Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
 `WatchPagesTest`). Nothing leaves the watch before Send:
-- **The microphone** opens its screen ready (`Voice.Ready`): Start, "Ready · 30 s at most", and what to do. Start listens; the
-  screen shows "Recording", the timer against 0:30, a ring that fills to the limit, the words as they're heard, and **Stop**. At
+- **The microphone** opens its screen ready (`Voice.Ready`): **Start**, a round button in the brand's colours with the
+  microphone, "Ready · 30 s at most", and what to do. Start listens; the screen shows "● Recording" in red, the timer against
+  0:30, a ring that fills to the limit, the words as they're heard, and **Stop**: another control, not Start relabelled, a solid
+  red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`, `RECORD_STOP`). At
   30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for the same ask.
 - **Stopped, or the recognizer heard the end:** the words go to **Check before sending** (`Voice.Review`), never to the phone.
   It shows them in full, scrolled with the crown, with **Re-record** (the words dropped, ready again for the same ask),
