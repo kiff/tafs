@@ -24,7 +24,7 @@ on:
         type: string
         default: ""
       owner_override:
-        description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <touched run id, or -> <reason>\" (blank: none)"
+        description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <touched run ids, comma-separated, or -> <reason>\" (blank: none)"
         type: string
         default: ""
 permissions:
@@ -87,14 +87,15 @@ jobs:
           if [ -n "$OWNER_OVERRIDE" ]; then
             [ -z "$RULE_B_RUN" ] || { echo "::error::owner_override and rule_b_run are one or the other"; exit 1; }
             read -r base check touched reason <<<"$OWNER_OVERRIDE"
-            [[ "$base" =~ ^[0-9]+$ && "$check" =~ ^[0-9]+$ && ( "$touched" = - || "$touched" =~ ^[0-9]+$ ) && -n "$reason" && ${#reason} -le 200 ]] \
-              || { echo "::error::owner_override is \"<base run id> <check run id> <touched run id, or -> <reason>\""; exit 1; }
-            [ "$check" = "$run_id" ] || [ "$touched" = "$run_id" ] \
-              || { echo "::error::neither later run is the latest completed Eval on main ($run_id)"; exit 1; }
+            # The touched runs: one, or several (a case one couldn't grade, run again alone), comma-separated.
+            [[ "$base" =~ ^[0-9]+$ && "$check" =~ ^[0-9]+$ && ( "$touched" = - || "$touched" =~ ^[0-9]+(,[0-9]+)*$ ) && -n "$reason" && ${#reason} -le 200 ]] \
+              || { echo "::error::owner_override is \"<base run id> <check run id> <touched run ids, comma-separated, or -> <reason>\""; exit 1; }
+            [ "$check" = "$run_id" ] || [[ ",$touched," == *",$run_id,"* ]] \
+              || { echo "::error::no later run is the latest completed Eval on main ($run_id)"; exit 1; }
             : > runs; : > touched.steps; : > touched.log
-            for r in base check touched; do
-              id=${!r}
-              [ "$id" != - ] || continue
+            tlogs=touched.log tsteps=touched.steps
+            fetch() {
+              local r=$1 id=$2 out=$3 info path branch status created sha job
               info=$(gh api "repos/kiff/agents/actions/runs/$id" --jq '"\(.path) \(.head_branch) \(.status) \(.created_at) \(.head_sha)"')
               read -r path branch status created sha <<<"$info"
               [ "$path" = .github/workflows/eval.yml ] && [ "$branch" = main ] && [ "$status" = completed ] \
@@ -102,9 +103,19 @@ jobs:
               echo "$r $id $created $sha" >> runs
               [ "$r" != base ] || base_sha=$sha
               job=$(gh api "repos/kiff/agents/actions/runs/$id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
-              jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$r.steps"
-              joblog "$(jq .id <<<"$job")" > "$r.log"
-            done
+              jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$out.steps"
+              joblog "$(jq .id <<<"$job")" > "$out.log"
+            }
+            fetch base "$base" base
+            fetch check "$check" check
+            if [ "$touched" != - ]; then
+              tlogs="" tsteps="" k=0
+              for id in ${touched//,/ }; do
+                k=$((k + 1))
+                fetch touched "$id" "touched-$k"
+                tlogs="$tlogs${tlogs:+,}touched-$k.log" tsteps="$tsteps${tsteps:+,}touched-$k.steps"
+              done
+            fi
             echo "shipped - - $agents_sha" >> runs
             # The definitions changed between the base and the check (a move lists both paths), and the suites they touch,
             # as kiff/agents maps them at the commit shipped.
@@ -112,7 +123,7 @@ jobs:
             git cat-file -e "$base_ref^{commit}"
             git diff --no-renames --name-only "$base_ref" "$ref" -- $sources > changed.paths
             gh api "repos/kiff/agents/contents/eval/suites.json?ref=$agents_sha" --jq .content | base64 -d > suites.json
-            out=$(bash .github/upgrade-override.sh runs base.steps base.log check.log check.steps touched.log touched.steps suites.json changed.paths)
+            out=$(bash .github/upgrade-override.sh runs base.steps base.log check.log check.steps "$tlogs" "$tsteps" suites.json changed.paths)
             conclusion=success
             { echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$(head -1 <<<"$out")\"; later runs at kiff/tafs@${ref:0:12}: $(sed -n 2p <<<"$out")."
               echo "Reason: $reason"; } | tee -a "$GITHUB_STEP_SUMMARY"
