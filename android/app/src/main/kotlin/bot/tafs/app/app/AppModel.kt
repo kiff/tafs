@@ -4762,7 +4762,7 @@ class AppModel(
   /**
    * Reads [grantId]'s words in the model's own scope, never a card's: an approval card that is drawn again (two cards arriving in
    * the same second, Coach's thread read while its run streams) cancelled the card's own read, and nothing read them again until
-   * the card left the screen and came back, so it said "Reading KIFF's words…" with Approve greyed (the owner's phone, 17 Nov).
+   * the card left the screen and came back, so it said "Reading KIFF's words…" with Approve greyed.
    */
   fun readProfileWords(grantId: String) {
     val s = _state.value
