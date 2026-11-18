@@ -11,7 +11,7 @@ final class FilesTests: XCTestCase {
                       goesInDays: Double = 30) -> DeliveredFile {
         let at = now.addingTimeInterval(-hoursAgo * 3_600)
         return DeliveredFile(id: id, name: name ?? "\(id).csv", type: "CSV", bytes: 1_000, tafID: taf, tafName: taf, runID: run,
-                             runAt: at, sentTo: nil, goesAt: now.addingTimeInterval(goesInDays * 86_400))
+                             runAt: at, chat: "s_" + run, sentTo: nil, goesAt: now.addingTimeInterval(goesInDays * 86_400))
     }
 
     private final class Store: FilesStore, @unchecked Sendable {
@@ -73,6 +73,8 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(model.state, .loaded([file("b", taf: "ivo", run: "r2", hoursAgo: 1), file("a", taf: "rae", run: "r1", hoursAgo: 3)]))
         XCTAssertEqual(model.files(taf: "rae").map(\.id), ["a"])
         XCTAssertEqual(model.files(run: "r2").map(\.id), ["b"])
+        XCTAssertEqual(model.files(chat: "s_r1").map(\.id), ["a"], "a chat's chips: the files its runs delivered")
+        XCTAssertEqual(model.files(chat: "s_none"), [])
         store.fails = true
         await model.load()
         XCTAssertEqual(model.state, .failed)

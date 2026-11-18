@@ -47,7 +47,9 @@ Words: `files.*`, in the 8 languages.
 
 ## Still to come
 
-- tafs cloud's reads in place of the stub, once its contract is set (the account's files, by taf, by run, by chat, a
-  file's bytes and Delete now).
-- A chat message's run, for the chips under it.
+- tafs cloud's reads in place of the stub (the server plan): `GET /v1/files` with `?taf=`, `?run=` or `?chat=` (each file
+  carries its run and chat, so the chips under a chat read `?chat=<session>`), `GET /v1/files/{id}` with its preview,
+  `GET /v1/files/{id}/download` (a URL that lasts 60 seconds, for Download and the share sheet's file; never handed out
+  as a link) and `DELETE /v1/files/{id}`.
 - The counts on Account's and the taf's rows, from the same read.
+- "Also sent to", once tafs cloud says where else a run sent a file; until then the line doesn't show.

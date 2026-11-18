@@ -22,6 +22,8 @@ struct DeliveredFile: Identifiable, Hashable, Codable, Sendable {
     /// The run it came from, and when that run was.
     var runID: String
     var runAt: Date
+    /// The chat the run answered in (its session), for the files under that chat; nil for a run with no chat.
+    var chat: String? = nil
     /// Where else the run sent it, in tafs cloud's words ("Google Drive · Support"); nil when nowhere else.
     var sentTo: String?
     /// When it goes away, as tafs cloud says: the app counts the days to it and never decides it.
@@ -120,10 +122,10 @@ final class FilesModel: ObservableObject {
         }
     }
 
-    /// The files of one taf, or of one run, from what was read.
-    func files(taf: String? = nil, run: String? = nil) -> [DeliveredFile] {
+    /// The files of one taf, one run or one chat, from what was read (tafs cloud's `?taf=`, `?run=` and `?chat=`).
+    func files(taf: String? = nil, run: String? = nil, chat: String? = nil) -> [DeliveredFile] {
         guard case .loaded(let all) = state else { return [] }
-        return all.filter { (taf == nil || $0.tafID == taf) && (run == nil || $0.runID == run) }
+        return all.filter { (taf == nil || $0.tafID == taf) && (run == nil || $0.runID == run) && (chat == nil || $0.chat == chat) }
     }
 
     /// Delete now: gone from the list only once the store has deleted it. False when it couldn't be.
@@ -151,7 +153,8 @@ struct StubFilesStore: FilesStore {
                   sentTo: String? = nil) -> DeliveredFile {
             let at = now.addingTimeInterval(-daysAgo * 86_400)
             return DeliveredFile(id: id, name: name, type: type, bytes: kb * 1_000, tafID: taf.0, tafName: taf.1, runID: run,
-                                 runAt: at, sentTo: sentTo, goesAt: at.addingTimeInterval(Double(FilesFeature.keptDays) * 86_400))
+                                 runAt: at, chat: "s_" + run, sentTo: sentTo,
+                                 goesAt: at.addingTimeInterval(Double(FilesFeature.keptDays) * 86_400))
         }
         let support = ("depl_support", "Support replies"), parcels = ("depl_parcels", "Late parcels"),
             leads = ("depl_leads", "Lead follow-up"), access = ("depl_access", "Access")
