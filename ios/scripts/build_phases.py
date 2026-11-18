@@ -123,6 +123,29 @@ class OpenStep:
             return data
         return self.string()
 
+    SIMPLE = {"a": "\a", "b": "\b", "f": "\f", "n": "\n", "r": "\r", "t": "\t", "v": "\v", '"': '"', "\\": "\\", "'": "'"}
+
+    def escape(self) -> str:
+        """One backslash escape in a quoted string, as Xcode writes them: \\Uxxxx (four hex digits), up to
+        three octal digits, or a single character. Unknown ones stand for the character itself."""
+        nxt = self.text[self.i + 1:self.i + 2]
+        if nxt == "U":
+            digits = self.text[self.i + 2:self.i + 6]
+            if len(digits) == 4 and all(c in "0123456789abcdefABCDEF" for c in digits):
+                self.i += 6
+                return chr(int(digits, 16))
+            raise ValueError(f"a \\U escape needs four hex digits at {self.i}")
+        if nxt in "01234567" and nxt:
+            j = self.i + 1
+            while j < self.i + 4 and self.text[j:j + 1] in tuple("01234567"):
+                j += 1
+            value, self.i = int(self.text[self.i + 1:j], 8), j
+            return chr(value)
+        if not nxt:
+            raise ValueError("a string ends in a backslash")
+        self.i += 2
+        return self.SIMPLE.get(nxt, nxt)
+
     def string(self) -> str:
         self.space()
         if self.text[self.i:self.i + 1] == '"':
@@ -131,11 +154,10 @@ class OpenStep:
                 ch = self.text[self.i]
                 if ch == '"':
                     self.i += 1
-                    return "".join(out)
+                    # \U escapes can spell a surrogate pair; joined, they're the one character they name.
+                    return "".join(out).encode("utf-16", "surrogatepass").decode("utf-16")
                 if ch == "\\":
-                    nxt = self.text[self.i + 1:self.i + 2]
-                    out.append({"n": "\n", "t": "\t", '"': '"', "\\": "\\"}.get(nxt, nxt))
-                    self.i += 2
+                    out.append(self.escape())
                     continue
                 out.append(ch)
                 self.i += 1

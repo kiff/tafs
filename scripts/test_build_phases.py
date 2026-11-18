@@ -172,6 +172,19 @@ class BuildPhasesTest(unittest.TestCase):
         extra = PACKAGE.replace("P1", "P2").replace("21-DOT-DEV/swift-secp256k1", "example/more")
         self.assertNotEqual(self.found(pbxproj=project(extra)), [], "an extra package")
 
+    def test_escapes_in_the_text_are_read_as_xcode_reads_them(self):
+        # Without plutil, a setting spelled with escapes is still the setting it names.
+        for key in ['"\\U0043\\U0043"', '"\\103\\103"', '"SWIFT_\\U0045XEC"']:
+            with self.subTest(key):
+                config = CONFIG.replace("PRODUCT_NAME = tafs;", f"{key} = /tmp/tool;")
+                self.assertNotEqual(self.found(pbxproj=project().replace(CONFIG, config)), [], key)
+        reader = build_phases.OpenStep
+        self.assertEqual(reader('"caf\\U00e9 \\101\\n\\"q\\""').parse(), 'café A\n"q"')
+        self.assertEqual(reader('"\\Ud83d\\Ude00"').parse(), "\U0001F600")
+        for bad in ['"\\U12"', '"\\Uzzzz"', '"ends in \\']:
+            with self.subTest(bad), self.assertRaises(ValueError):
+                reader(bad).parse()
+
     def test_an_unreadable_project_fails(self):
         self.assertNotEqual(self.found(pbxproj="{ objects = { X = { isa = "), [])
 
