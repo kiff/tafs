@@ -15,7 +15,7 @@ import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
-import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
+import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
@@ -1068,8 +1068,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     await markSigns(event, me, taf, components, deps);
-    const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
+    const latest = await latestRun(me, taf, sessions, deps, langOf(event));
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
   if (parts.length === 5 && method === "GET" && action === "conversation") {
     // What waits in this chat goes now, if the taf is done in it: only this chat's.
@@ -1078,8 +1078,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     await markSigns(event, me, taf, components, deps);
-    const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
+    const latest = await latestRun(me, taf, sessions, deps, langOf(event));
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
   if (parts.length === 4 && method === "GET" && action === "chats") {
     return { chats: await chats(me, taf, deps) };
@@ -3543,7 +3543,7 @@ function parkedOnDrive(r: Run): boolean {
   return open.length > 0 && open.every((q) => q.kind === "event" && q.wait?.grant === DRIVE_WAIT_GRANT);
 }
 
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped }> {
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps, lang: Lang = "en"): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped; failed?: Failed }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
@@ -3580,6 +3580,7 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
         : null,
       ...(r.stop === "cost_cap" || r.stop === "turn_cap" ? { capped: { run, stop: r.stop } } : {}),
       ...(STOPS_TO_WORD.has(r.stop ?? "") ? { stopped: { run, stop: r.stop as Stopped["stop"] } } : {}),
+      ...(r.status === "ERROR" ? { failed: failedOf(r, lang) } : {}),
     };
   } catch {
     return none;
@@ -3606,6 +3607,23 @@ interface Stopped {
 }
 
 const STOPS_TO_WORD = new Set<string>(["cost_cap", "turn_cap", "max_token", "refused"]);
+
+/**
+ * The latest run failed: the thread says so in tafs cloud's words, in the person's language, so a run that ends with
+ * no stream to tell it (one an answer to a card resumed) never reads as at work, waiting, or nothing at all. `code` and
+ * its words when kiff/agents stopped it with one (`ai_unavailable`, as the stream's `end` says it); else kiff/agents'
+ * reason in the person's language, or a plain "It failed", never its English inside another language's screen.
+ */
+interface Failed {
+  run: string;
+  code?: string;
+  words: string;
+}
+
+function failedOf(r: Run, lang: Lang): Failed {
+  const coded = runFailure(r, lang);
+  return coded ? { run: r.id, code: coded.code, words: coded.words } : { run: r.id, words: failedLine(r.error, lang) };
+}
 
 /**
  * What the owner wrote to the latest run that it hasn't read (kiff/agents#102), as
@@ -4773,8 +4791,8 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     if (!open.session) return { messages: [], components: [], working: false, steering: [] };
     const [only, titles] = await Promise.all([ownChat(me, taf, open.session, deps, "trial"), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions } = await conversation(me, taf, deps, only, false, titles, langOf(event));
-    const latest = await latestRun(me, taf, sessions, deps);
-    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}) };
+    const latest = await latestRun(me, taf, sessions, deps, langOf(event));
+    return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}) };
   }
   await needTaf(event, me, taf, deps);
   const token = bearer(event);

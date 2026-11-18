@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
+import { wordsIn } from "../src/cloud/words/index.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -1159,6 +1160,43 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(r.status).toBe(200);
     expect(r.body).toEqual({ session: run.session, run: run.id, status: "RUNNING" });
     expect(w.agents.calls).toEqual([`answerCard ${RAE} ${run.id} which "test"`]);
+  });
+
+  // 18 Nov, production: the owner approved a card, kiff/agents resumed the run with no stream, and the AI provider
+  // refused its next turn for our account's balance. The run ended ERROR with `ai_unavailable` and no new event, so
+  // the thread still showed the card's wait ("Waiting for you"), then nothing at all. A run that ends refused says so
+  // in the thread, in the person's language, and is neither at work nor waiting.
+  it("says in the thread that the run an answer resumed was refused, in the person's words, never a silent wait", async () => {
+    const w = world();
+    const run = await waiting(w);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/components/which/answer`, { token: "ana", body: { answer: "test" } })).status).toBe(200);
+    // kiff/agents' copy: refused before its next turn, so nothing more in the session.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "ERROR", code: "ai_unavailable", error: "Our AI provider isn't serving us right now, so this stopped." });
+    const thread = async (lang?: string) => (await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", ...(lang ? { headers: { "accept-language": lang } } : {}) })).body;
+    const en = await thread();
+    expect(en.working).toBeNull();
+    expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
+    expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
+    // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
+    // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
+    // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable (PM, 18 Nov 11:56).
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
+    const partway = await thread();
+    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });
+    expect(partway.failed.words).not.toBe(wordsIn("en").code_ai_unavailable);
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
+    expect((await thread()).failed.words).toBe(wordsIn("en").code_ai_unavailable);
+    // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
+    const plain = await thread("fr");
+    expect(plain.failed?.run).toBe(run.id);
+    expect(typeof plain.failed?.words === "string" && plain.failed.words.length > 0).toBe(true);
+    expect(plain.failed.words).not.toContain("the run failed");
+    // A later run that answered closes it: no failure line left over.
+    const next = await w.agents.api.startRun("t_acme", RAE, "Try again", { ...ANA, session: run.session });
+    w.agents.say(next, "Connected.");
+    (next as { status: string }).status = "COMPLETED";
+    expect((await thread()).failed).toBeUndefined();
   });
 
   it("is 404 for a card no chat of theirs showed, 409 once it doesn't wait, 400 for an answer it doesn't take", async () => {

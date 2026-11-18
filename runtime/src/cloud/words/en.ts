@@ -370,6 +370,8 @@ export const en = {
   work_nothing_yet: "Nothing yet",
   // A run kiff/agents stopped with a code, in tafs cloud's own words (work.ts runFailure).
   code_ai_unavailable: "Our AI provider isn't serving us right now, so this stopped and used none of your credits. It's on our side, not yours: try again a little later.",
+  // The same, for a run that had sent something first: no claim about credits (work.ts runFailure).
+  code_ai_unavailable_partway: "Our AI provider stopped serving us partway through, so this stopped. It's on our side, not yours: try again a little later.",
   // Credits and the balance (credits.ts): the period, each taf's row, why runs weren't counted, and the balance's lines.
   // Counts come formatted for the person's locale, with their plural form; "Solo" and "Company" are plan names.
   cr_unreadable: "Credits can't be read right now. Try again in a moment.",

@@ -1,0 +1,1 @@
+- **A Coach or taf run that ends refused after you answer a card now says so in the chat.** When the AI provider stopped serving us after an approval, the chat showed nothing: the conversation now carries `failed` with the reason in your language, and a run that had already sent something says it stopped partway (tafs cloud, docs/chat.md).
