@@ -1,0 +1,1 @@
+- **Android: a Coach chat no longer stops updating mid-turn,** which left an approval card on "Reading what it asks for…" until the chat was opened again ([android-app.md](docs/android-app.md)).

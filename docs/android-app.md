@@ -1603,6 +1603,10 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     owner's card stayed on "Reading…" for minutes until the screen was left and opened again. One follower reads at a time,
     whatever grant ids were followed before: a set of followed ids (`grantsFollowed`) once kept a later card naming one of
     them from being read at all.
+  - **A stream never cancels itself** (`readThread`, `Job.holds`): on a phone a stream's lines come through
+    `flowOn(Dispatchers.IO)`, so its own reads run in a child of its job. A read it made once the run looked quiet (nothing at
+    work, the live answer over 15 s old) cancelled the stream and that read with it, so the chat stopped updating and a card
+    stayed on "Reading…": the owner's case on 18 Nov, which the follower above couldn't reach (`ChatStreamTest`).
   - **A minute in, a card still not drawable says so**: "Couldn't read what to approve", with planque's last reason or
     "we're on it", and **Try again**, which reads the thread at once (`AppState.cardsNotRead`, `AppModel.retryCards`). The
     reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`).

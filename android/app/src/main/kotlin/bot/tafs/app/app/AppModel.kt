@@ -2013,6 +2013,9 @@ class AppModel(
 
   // MARK: Coach's conversations (kiff/tafs#73, #82, #97, #107)
 
+  /** Whether [job] is this job or runs under it: a stream's own reads run in a child of its job. */
+  private fun kotlinx.coroutines.Job.holds(job: kotlinx.coroutines.Job): Boolean = this === job || children.any { it.holds(job) }
+
   /** A new Coach conversation: an empty chat, and the next message starts it. */
   fun newCoachChat() {
     leaveCoachChat()
@@ -2850,7 +2853,12 @@ class AppModel(
     }
     // The stream that went quiet is closed: it no longer holds the chat, so a later run is followed again.
     // Never from inside that stream's own reads: its end is about to come, with how the run ended.
-    if (endedQuiet && followers[tafId] !== kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)?.cancel()
+    // On a phone the stream's lines come through `flowOn(Dispatchers.IO)`, so its own reads run in a child of the stream's job,
+    // never the job itself: on 18 Nov a read the stream itself made cancelled the stream, and with it that read, so the chat
+    // stopped updating with a card on "Reading what it asks for…" until it was opened again. A stream's job and every job
+    // under it are the stream's.
+    val me = kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]
+    if (endedQuiet && followers[tafId]?.let { me != null && it.holds(me) } == false) followers.remove(tafId)?.cancel()
     if (tafId == COACH_CHAT) {
       readApprovals()
       followHandOvers()
