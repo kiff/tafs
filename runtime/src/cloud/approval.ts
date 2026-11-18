@@ -893,7 +893,9 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
     return undefined;
   }
   if (off.kind === "missing") {
-    return { outcome: "answered", answer: `failed: the rules the owner agreed say nothing of "${off.tool}", a write the draft covers, so what happens past its limit was never agreed. Show the rules again with "${off.tool}" in them, then draft it again.`, note: W.rulesMissing(off.tool), code: "rules_missing" };
+    // Names only, so the next refusal reads in a minute: the agreed rules' tools against the write's.
+    console.log(`approval rules: no rule for ${JSON.stringify(off.rule)} (${JSON.stringify(off.tool)}); agreed rules name ${JSON.stringify(agreement.rules.map((r) => r.tool))}`);
+    return { outcome: "answered", answer: `failed: the rules the owner agreed have no rule for "${off.tool}", a write the draft covers, so what happens past its limit was never agreed. A rule names a tool by its name, "${off.rule}", not by its title. Show the rules again with a rule whose tool is "${off.rule}", then draft it again.`, note: W.rulesMissing(off.tool), code: "rules_missing" };
   }
   if (off.kind === "mixed") {
     return { outcome: "answered", answer: `failed: the rules the owner agreed ask past one of "${off.tool}"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card: on_exceed "owner" on the one whose limit asks, "refuse" on the one whose limit refuses.`, note: W.rulesOnExceed(off.tool), code: "rules_on_exceed" };

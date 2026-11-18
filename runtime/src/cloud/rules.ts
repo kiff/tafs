@@ -179,7 +179,7 @@ function sameLimits(a: AgreedLimit[] | undefined, b: AgreedLimit[] | undefined):
 export type RulesMismatch =
   | { kind: "on_exceed"; tool: string; over: "ask" | "refuse"; onExceed: "owner" | "refuse" }
   | { kind: "mixed"; tool: string }
-  | { kind: "missing"; tool: string }
+  | { kind: "missing"; tool: string; rule: string }
   | { kind: "figure"; tool: string; quantity: string; window: string; per?: string; agreed: number; drafted?: number };
 
 /**
@@ -203,7 +203,9 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
       const shown = t.title || t.name || t.tool || name;
       const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name);
       if (!rule) {
-        if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown };
+        // `rule` is what a rule must name to cover it (planque's name, as matched above), never its title: told the
+        // title, Coach wrote the title into the rule and was refused again (the owner's phone, 18 Nov).
+        if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown, rule: t.tool || t.name || name };
         continue;
       }
       for (const raw of covering) {

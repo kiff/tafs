@@ -99,16 +99,26 @@ describe("a draft's Cards against the agreed rules", () => {
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "refund_charge_k3", over: "ask" }])).toBeUndefined();
   });
 
+  it("a missing rule names the tool's name, which covers it, never its title, which doesn't", () => {
+    // The owner's phone, 18 Nov: told the title, Coach wrote it into the rule and was refused three times.
+    const reminder = grantOf("g2", [{ tool: "send_reminder", name: "send_reminder_q7", title: "Email a payment reminder to you" }]);
+    const byTitle = [{ tool: "Email a payment reminder to you", over: "ask" as const }];
+    const off = rulesMismatch([reminder], [card("send_reminder_q7", "owner")], byTitle);
+    expect(off).toEqual({ kind: "missing", tool: "Email a payment reminder to you", rule: "send_reminder" });
+    // The name it gives is the one that covers it.
+    expect(rulesMismatch([reminder], [card("send_reminder_q7", "owner")], [{ tool: off!.kind === "missing" ? off!.rule : "", over: "ask" }])).toBeUndefined();
+  });
+
   it("every Card covering the tool must match, not one of them", () => {
     const rules = [{ tool: "refund_charge", over: "refuse" as const }];
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse"), card("refund_charge_k3", "owner")], rules)?.kind).toBe("on_exceed");
   });
 
   it("a write with no rule isn't signed; a read with none is; a rule for a tool no grant has is ignored", () => {
-    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "list_charges", over: "refuse" }])).toEqual({ kind: "missing", tool: "refund charge" });
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "list_charges", over: "refuse" }])).toEqual({ kind: "missing", tool: "refund charge", rule: "refund_charge" });
     expect(rulesMismatch([stripe], [card("list_charges_k3", "refuse")], [{ tool: "refund_charge", over: "refuse" }])).toBeUndefined();
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "delete_everything", over: "ask" }, { tool: "refund_charge", over: "refuse" }])?.kind).toBe("on_exceed");
-    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "delete_everything", over: "ask" }])).toEqual({ kind: "missing", tool: "refund charge" });
+    expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], [{ tool: "delete_everything", over: "ask" }])).toEqual({ kind: "missing", tool: "refund charge", rule: "refund_charge" });
   });
 
   it("two apps: the app whose Card doesn't match is the one named", () => {
