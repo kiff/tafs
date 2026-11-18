@@ -1596,6 +1596,14 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   Android 1.29.4 it read them three times only, so a grant planque listed after nine seconds, with Coach's run done, left
   the card on that line until the chat was opened again. It reads for ten minutes at most, 74 reads, counted on the
   phone.
+  - **Since 18 Nov it reads Coach's whole thread again, not only the grants** (`AppModel.cardsWaiting`, `followCards`): a
+    card can be written before it names its grant, or have its grant named or changed after it first showed, and the
+    owner's card stayed on "Reading…" for minutes until the screen was left and opened again. One follower reads at a time,
+    whatever grant ids were followed before: a set of followed ids (`grantsFollowed`) once kept a later card naming one of
+    them from being read at all.
+  - **A minute in, a card still not drawable says so**: "Couldn't read what to approve", with planque's last reason or
+    "we're on it", and **Try again**, which reads the thread at once (`AppState.cardsNotRead`, `AppModel.retryCards`). The
+    reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).

@@ -523,6 +523,11 @@ data class AppState(
   val profileWordsErrors: Map<String, String> = emptyMap(),
   /** Why KIFF's draft for an approval card couldn't be read, by draft id: said on the card, with Try again ([AppModel.loadDraft]). */
   val draftErrors: Map<String, String> = emptyMap(),
+  /**
+   * The open approval and sign-in cards, by component id, that still couldn't be drawn a minute after the phone began reading
+   * them again ([AppModel.cardsWaiting]): each says it couldn't be read, with Try again, never "Reading what it asks for…" for ever.
+   */
+  val cardsNotRead: Set<String> = emptySet(),
   val planqueReady: Boolean = false,
   /** Why the last read of planque's connections failed, in words; null once a read went through. */
   val connectionsError: String? = null,
@@ -3798,23 +3803,16 @@ class AppModel(
     val approvals = _state.value.coachComponents.map { it.component }.filter { it.type == "approval" || it.type == "sign_in" }
     if (approvals.isEmpty()) return
     refreshConnections()
-    // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
-    // say "Reading what it asks for…" until the chat was opened again (a live test: over a minute, with Coach's run done, so
-    // the thread wasn't read again either). Planque's grants are read again while such a card waits, 3 s apart for the first
-    // minute and 10 s apart after (CARD_GRANT_READ_DELAYS): until planque lists its grant or the card is answered, for ten
-    // minutes at most from when this phone began reading.
-    val unread = grantsCardsWaitOn(_state.value.coachComponents, _state.value.grants)
-      // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
-      .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
-    if (unread.isNotEmpty()) scope.launch {
-      for (wait in CARD_GRANT_READ_DELAYS) {
-        delay(wait)
-        if (generation != accountGeneration) return@launch
-        refreshConnections()
-        val s = _state.value
-        if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
-      }
-    }
+    // An open card that can't be drawn yet ("Reading what it asks for…"): planque doesn't list its grant, or the card names none
+    // yet. tafs cloud can write a card before planque lists its grant, and name or change the card's grant after the card first
+    // showed, with Coach's run done, so no stream reads the thread again: on 18 Nov the owner's card stayed on "Reading…" for
+    // minutes, until the screen was left and opened again. While one waits, the whole thread is read again (planque's grants
+    // with it), 3 s apart for the first minute and 10 s apart after (CARD_GRANT_READ_DELAYS), by one follower at a time, whatever
+    // grant ids were followed before: a set of followed ids once kept a later card naming one of them from being read at all.
+    // Started only once planque answers, so a read planque refused leaves the follow to the next thread read.
+    val waiting = cardsWaiting(_state.value.coachComponents, _state.value.grants)
+    _state.update { s -> if (s.cardsNotRead.isEmpty()) s else s.copy(cardsNotRead = s.cardsNotRead intersect waiting) }
+    if (waiting.isNotEmpty() && _state.value.planqueReady && cardsFollow?.isActive != true) followCards(generation)
     // Each card's words for its own grant, by the card's grant id, read as the thread is: not left to the card being drawn.
     approvals.mapNotNull { it.grant }.distinct().forEach(::readProfileWords)
     for (c in approvals) {
@@ -5576,8 +5574,34 @@ class AppModel(
   /** The tafs tafs cloud said it set up that the list was read again for, so a taf not listed yet is read for once. */
   private val setUpTafs = mutableSetOf<String>()
 
-  /** The grants an open approval card names that planque didn't list yet, read again for once each. */
-  private val grantsFollowed = mutableSetOf<String>()
+  /** The one follower reading Coach's thread again while an open card can't be drawn ([readApprovals]). */
+  private var cardsFollow: kotlinx.coroutines.Job? = null
+
+  /**
+   * Reads Coach's thread again until no open card waits ([cardsWaiting]): each read takes the cards as tafs cloud has them now
+   * and planque's grants with them. A minute in, the cards still waiting say they couldn't be read ([AppState.cardsNotRead]),
+   * and the reads go on, ten minutes at most.
+   */
+  private fun followCards(generation: Int) {
+    cardsFollow = scope.launch {
+      var waited = 0L
+      for (wait in CARD_GRANT_READ_DELAYS) {
+        delay(wait)
+        waited += wait
+        if (generation != accountGeneration) return@launch
+        readThread(COACH_CHAT)
+        val waiting = _state.value.let { cardsWaiting(it.coachComponents, it.grants) }
+        if (waiting.isEmpty()) return@launch
+        if (waited >= CARD_NOT_READ_MS) _state.update { it.copy(cardsNotRead = waiting) }
+      }
+    }
+  }
+
+  /** A card's Try again, once it said it couldn't be read: Coach's thread read now, which follows the cards again if they wait. */
+  fun retryCards() {
+    _state.update { it.copy(cardsNotRead = emptySet()) }
+    scope.launch { readThread(COACH_CHAT) }
+  }
 
   /** The drafts an open approval card names that KIFF didn't give yet, read again for once each. */
   private val draftsFollowed = mutableSetOf<String>()
@@ -8885,6 +8909,20 @@ class AppModel(
      * time, which is tafs cloud's clock). 74 signed reads at most, where 3 s throughout took 200.
      */
     val CARD_GRANT_READ_DELAYS: List<Long> = List(20) { 3_000L } + List(54) { 10_000L }
+
+    /** How long an open card may wait before it says it couldn't be read, with Try again: the first minute's reads. */
+    const val CARD_NOT_READ_MS = 60_000L
+
+    /**
+     * The open approval and sign-in cards, by component id, that can't be drawn yet: the card names no grant, or planque doesn't
+     * list the one it names. While one does, Coach's thread is read again ([AppModel.readApprovals]).
+     */
+    fun cardsWaiting(components: List<ShownComponent>, grants: List<Grant>): Set<String> =
+      components.asSequence()
+        .filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+        .filter { c -> c.component.grant.let { g -> g == null || grants.none { it.id == g } } }
+        .map { it.component.id }
+        .toSet()
 
     /**
      * The grants that an unanswered approval or sign-in card in the thread waits on: planque doesn't list them yet. While one
