@@ -1,0 +1,1 @@
+- **Android: the sample's Support replies shows one count everywhere,** 12 of 40 replies used today and 28 left, on its Card, its Activity bar and the Overview ([android-app.md](docs/android-app.md)).

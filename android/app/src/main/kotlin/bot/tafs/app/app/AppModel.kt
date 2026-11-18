@@ -1923,7 +1923,10 @@ class AppModel(
   private fun loadSample() {
     if (_state.value.tafs.isNotEmpty()) return
     for (key in listOf("leads", "deploys", "access", "parcels", "support")) {
-      TafTemplates.template(key)?.let { t -> create(TafDraft(t.name, t.job, t.tools, t.rules, t.key)) }
+      TafTemplates.template(key)?.let { t ->
+        val taf = create(TafDraft(t.name, t.job, t.tools, t.rules, t.key))
+        if (t.countedEarlier.isNotEmpty()) update(taf.copy(counted = taf.counted + t.countedEarlier))
+      }
     }
     // Two rounds: a few actions within the Cards, and two held for the owner.
     playNextDemoActions()

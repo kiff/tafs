@@ -30,6 +30,19 @@ class AppModelTest {
     assertEquals(setOf("Late parcels", "Deploys"), s.held.map { h -> s.taf(h.tafId)!!.name }.toSet())
   }
 
+  /**
+   * Support replies opens with 12 of its 40 replies used today, 28 left: the number its Card, its Activity bar and the Overview
+   * show, in every app's sample and the Store's frames (one number, where the Card said 28 and the bar 39).
+   */
+  @Test fun supportRepliesOpensWith28RepliesLeftToday() {
+    val s = model().state.value
+    val support = s.tafs.first { it.name == "Support replies" }
+    assertEquals(12, support.counted["reply_ticket"])
+    val hero = support.shownCards.first().hero!!
+    assertEquals("28", hero.figure)
+    assertTrue(hero.words, hero.words.contains("40"))
+  }
+
   @Test fun aTafWithAHeldCallIsWaitingOnTheOwner() {
     val s = model().state.value
     for (call in s.held) assertEquals(TafState.waiting, s.taf(call.tafId)!!.state)
