@@ -89,5 +89,22 @@ class RunFailedTest {
     assertTrue(state.chatItems("refunds-1").none { it is ChatItem.Message && it.message.text == words })
     // Without the live end, the thread's line is the last one.
     assertEquals(words, (state.copy(chatEnded = emptyMap()).chatItems("refunds-1").last() as ChatItem.Message).message.text)
+    // The live end names its run: the same run gets no second line, another run's refusal still shows.
+    val same = state.copy(chatEnded = mapOf("refunds-1" to bot.tafs.app.model.ChatEnd.Failed("Refund order 4471", emptyList(), words, run = "r9")))
+    assertTrue(same.chatItems("refunds-1").none { it is ChatItem.Message && it.message.text == words })
+    val other = state.copy(chatEnded = mapOf("refunds-1" to bot.tafs.app.model.ChatEnd.Failed("Refund order 4471", emptyList(), words, run = "r8")))
+    assertEquals(words, (other.chatItems("refunds-1").last() as ChatItem.Message).message.text)
+  }
+
+  /** tafs cloud's own answer for a refused run (contracts/conversation-failed.json), read as the app reads it. */
+  @Test fun theContractsRefusedRunIsTheLastLineInItsWords() = runTest {
+    reads()
+    val file = kotlinx.serialization.json.Json.parseToJsonElement(java.io.File("../../contracts/conversation-failed.json").readText())
+    val answer = (file as kotlinx.serialization.json.JsonObject)["answer"]!!
+    val sent = (answer as kotlinx.serialization.json.JsonObject)["failed"] as kotlinx.serialization.json.JsonObject
+    val sentWords = (sent["words"] as kotlinx.serialization.json.JsonPrimitive).content
+    val m = read(answer.toString())
+    assertEquals(sentWords, (last(m) as ChatItem.Message).message.text)
+    assertNull(m.state.value.chatWorking[COACH_CHAT])
   }
 }
