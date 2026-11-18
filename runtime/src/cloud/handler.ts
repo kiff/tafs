@@ -4256,11 +4256,11 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
     told = await tellCoach(me, taf, card, component, outcome.answer, deps);
   } catch (err) {
     // The card stopped waiting while the person approved (a message started a new run before this came in): the
-    // approval still happened, so Coach reads its outcome with the next message, and the card shows it, never
-    // "changed in the meantime" beside a connection that's made.
+    // approval still happened, so Coach reads its outcome with the next message in the card's chat, and the card shows
+    // it, never "changed in the meantime" beside a connection that's made. Another chat never reads it.
     if (!(err instanceof HTTPError && err.status === 409)) throw err;
     const at = nowOf(deps);
-    await deps.coach!.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: `[approval ${component}] The owner's approval was settled after their message: ${outcome.answer}`, taf: taf.name, taf_id: taf.id } satisfies CoachLine,
+    await deps.coach!.append(coachKeys.chatNotes(me.tenantID, me.subject, card.session), { at: at.toISOString(), text: `[approval ${component}] The owner's approval was settled after their message: ${outcome.answer}`, taf: taf.name, taf_id: taf.id } satisfies CoachLine,
       new Date(at.getTime() + TASK_KEPT_MS));
     told = { session: card.session };
   }
@@ -9982,16 +9982,22 @@ interface CoachLinesTaken {
   afterFailure: (err: unknown, steering: boolean, runMade: () => Promise<boolean | undefined>) => Promise<void>;
 }
 
+/** A line that belongs to the chat it came from, so it never goes before another chat's words (coachKeys.chatNotes). */
+function chatsOwn(line: CoachLine): boolean {
+  const text = typeof line?.text === "string" ? line.text : "";
+  return text.startsWith("[connection refused]") || /^\[approval [^\]]*\] The owner's approval was settled after their message:/.test(text);
+}
+
 async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps, messageKey?: string): Promise<CoachLinesTaken> {
   if (taf.job !== SETUP_JOB || !deps.coach) return { text: (owner) => owner, putBack: async () => {}, afterFailure: async () => {} };
   const store = deps.coach;
   const key = coachKeys.notes(me.tenantID, me.subject);
   // The app's message sent again: the lines its first send took, never the queue a second time.
   const kept = messageKey ? ((await store.get(keyedKey(me, messageKey)).catch(() => undefined)) as KeyedMessage | undefined)?.lines : undefined;
-  // A removed taf's lines are dropped here for good, whoever they were queued for. So is a connection refusal kept here
-  // before refusals were kept per chat (coachKeys.chatNotes): it says nothing of which chat it was in, so no chat reads it.
-  const taken = kept ?? (await liveCoachLines(me.tenantID, await store.take(key) as CoachLine[], deps))
-    .filter((l) => !(typeof l?.text === "string" && l.text.startsWith("[connection refused]")));
+  // A removed taf's lines are dropped here for good, whoever they were queued for. So are a connection refusal and an
+  // approval settled after its card stopped waiting, kept here before they were kept per chat (coachKeys.chatNotes):
+  // they say nothing of which chat they were in, so no chat reads them.
+  const taken = kept ?? (await liveCoachLines(me.tenantID, await store.take(key) as CoachLine[], deps)).filter((l) => !chatsOwn(l));
   if (messageKey && !kept && taken.length) await keepKeyed(me, messageKey, { lines: taken }, deps);
   const said = taken.map((l) => l?.text).filter((t): t is string => typeof t === "string");
   const putBack = async () => {

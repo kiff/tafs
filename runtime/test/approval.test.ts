@@ -1093,8 +1093,21 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const r = await w.report({ result: "connected" });
     expect(r.status).toBe(200);
     expect(r.body).toMatchObject({ outcome: "answered", answer: "approved" });
-    const notes = (await w.coach.take("t_acme#coach-notes#u_ana")) as Array<{ text?: string }>;
-    expect(notes.map((n) => n.text)).toContainEqual(expect.stringContaining("[approval a1] The owner's approval was settled after their message: approved"));
+    // Kept for the card's chat alone: a new chat's first words never carry it, that chat's next words do, once.
+    const settled = "[approval a1] The owner's approval was settled after their message: approved";
+    expect(await w.coach.get("t_acme#coach-notes#u_ana")).toBeFalsy();
+    // One kept for the person before this, which named no chat, reaches no chat either.
+    await w.coach.append("t_acme#coach-notes#u_ana", { at: NOW.toISOString(), text: "[approval a0] The owner's approval was settled after their message: approved" }, new Date(NOW.getTime() + 3600_000));
+    const said = (session: string) => (w.agents.events.get(session)!.filter((e) => e.kind === "owner_message").at(-1)!.body as { text: string }).text;
+    const fresh = await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "Connect Slack", new_chat: true });
+    expect(fresh.status).toBe(200);
+    expect(fresh.body.session).not.toBe(w.stored.session);
+    expect(said(fresh.body.session as string)).not.toContain("settled after their message");
+    for (const r of w.agents.runs) Object.assign(r, { status: "COMPLETED" });
+    expect((await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "Thanks", session: w.stored.session })).status).toBe(200);
+    expect(said(w.stored.session)).toContain(settled);
+    expect(said(w.stored.session)).not.toContain("[approval a0]");
+    expect(await w.coach.get(`t_acme#coach-chat-notes#u_ana#${w.stored.session}`)).toBeFalsy();
   });
 
   it("a report this phone didn't sign is refused, and Coach hears nothing", async () => {

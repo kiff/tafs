@@ -1097,6 +1097,17 @@ describe("a connection refused in a Coach chat is that chat's", () => {
     expect((await w.send("POST", `/v1/tafs/${SETUP}/steer`, { run: ended.id, text: "And now?", hold: true }, "ana")).status).toBe(202);
     expect(sentIn(w, a)).toContain("the scope isn't one Sheets grants");
     expect(sentIn(w, a)).toContain("And now?");
+    // The apps' usual send names no chat: it goes on in the live one, A, and A's refusal goes with it, once.
+    for (const r of w.agents.runs) Object.assign(r, { status: "COMPLETED" });
+    await w.coach.append(coachKeys.chatNotes(T, "u_ana", a), REFUSED("the sign-in was closed"), new Date(Date.now() + 3600_000));
+    // B went quiet before A's last words (the fake keeps one clock), so A is the live chat.
+    (await w.agents.api.sessions(T, SETUP, 5, "member:u_ana", true)).find((x) => x.id === b)!.updated = "2026-10-16T11:50:00.000Z";
+    const live = await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "I closed it, sorry" }, "ana");
+    expect(live.body.session).toBe(a);
+    expect(sentIn(w, a)).toContain("the sign-in was closed");
+    for (const r of w.agents.runs) Object.assign(r, { status: "COMPLETED" });
+    await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "Go on" }, "ana");
+    expect(sentIn(w, a)).not.toContain("the sign-in was closed");
   });
 });
 
