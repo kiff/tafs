@@ -1,0 +1,1 @@
+- **CI builds the Apple Watch app when the watch's request and reply contract changes** (`ios/WatchShared/`), not only its own folders.
