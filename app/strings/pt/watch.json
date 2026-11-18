@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Todos os chats",
   "watch.already_answered": "Já respondido, ou terminado.",
   "watch.approve_on_phone": "Aprove no telemóvel",
   "watch.as_of": "Atualizado às {time}",
@@ -18,6 +19,12 @@
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"
   },
+  "watch.inbox_empty": "Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.",
+  "watch.inbox_unread": {
+    "one": "{count} por ler na Caixa de entrada",
+    "other": "{count} por ler na Caixa de entrada"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "Para pedir por voz, autorize o microfone para o tafs neste relógio.",
   "watch.more_on_phone": "O resto está no telemóvel.",
   "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Não se sabe se chegou",
   "watch.open_on_phone": "Abrir no telemóvel",
+  "watch.page.brief": "Resumo",
+  "watch.page.inbox": "Caixa de entrada",
   "watch.phone_not_reachable": "O telemóvel não está ao alcance. Aproxime-o e tente novamente.",
   "watch.ready_count": {
     "one": "{count} pronto",
     "other": "{count} prontos"
   },
+  "watch.recent_chats": "Chats recentes",
   "watch.refused": "Recusado. Nada foi enviado.",
   "watch.reply": "Responder",
   "watch.result_ready": "Há um resultado pronto",
@@ -41,6 +51,7 @@
   "watch.sent": "Enviado",
   "watch.sign_in_on_phone": "Primeiro, inicie sessão no tafs no telemóvel.",
   "watch.timing": "Escuta {listen} ms · receção {receipt} ms · resultado {result} ms",
+  "watch.trust": "Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.",
   "watch.update_phone": "Atualize o tafs no telemóvel e tente novamente.",
   "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz.",
   "watch.working_count": {

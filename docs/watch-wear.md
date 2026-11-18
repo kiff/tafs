@@ -150,6 +150,31 @@ With it on (`WatchModel(briefOn = true)` in the tests):
   drawn only inside the app's screen today, so only on an unlocked watch; a tile or complication for the brief would follow the
   tile's rule: nothing but a count, and only while the watch is unlocked.
 
+## Version 2 (behind a switch, being built)
+
+Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built one step at a time behind `WATCH_V2`
+(`wear/…/WatchPages.kt`), which is `false`, so a watch shows v1 whole until every step is in; it turns on, as that one line,
+once the last step lands and the owner has tried the build. Steps: (i) the phone's three new reads (`taf`, `calendar`,
+`account`, above); (ii) the pages and Coach's home; (iii) record, review and send, with Type and Quick reply; (iv) the inbox
+kept on the watch; (v) Tafs, a taf's page, its settings and choosing which to halt; (vi) the held call, the calendar day and
+Account; (vii) the switches for what needs a new server piece (a watch ask as a Coach chat, the chats read, the inbox's read and
+dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
+
+**Step (ii), what's built** (`WatchPages`, `WatchPagesTest`):
+- **The pages,** side by side, moved between with a swipe, with the page dots at the foot: Coach (home), Inbox, Tafs, Brief and
+  Account. Brief is there only with Your brief on (`BRIEF_ON_WATCH`). The microphone's screens, a result's card and Halting take
+  the whole face, as in v1.
+- **Coach's home:** the microphone, named "Ask Coach", with the asks at work under it; how many wait in the Inbox ("2 unread in
+  Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
+- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest. Until step (v) Halt is Halt all, asked
+  once more, as v1's; it's offered only while a taf runs.
+- **Until their steps:** the Inbox is what the phone answered now (Needs you's held calls, Refuse where allowed and Approve on
+  your phone, then each result ready to open; with nothing, what lands there); Tafs is each taf with its state, no Halt;
+  Account is the trust line and Open on phone. Before the phone answers, or when it can't, each page says so in v1's words.
+- **Words:** `watch.page.*`, `watch.inbox_unread`, `watch.inbox_empty`, `watch.menu` and `watch.trust` are new, in all 8
+  languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
+  `taf.halt.title`). Nothing new is asked of the phone, and nothing is stored on the watch.
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and

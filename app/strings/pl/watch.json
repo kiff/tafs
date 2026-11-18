@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Wszystkie czaty",
   "watch.already_answered": "Już odpowiedziano albo zakończono.",
   "watch.approve_on_phone": "Zatwierdź na telefonie",
   "watch.as_of": "Stan na {time}",
@@ -20,6 +21,14 @@
     "one": "{count} oczekujące wywołanie czeka na Ciebie",
     "other": "{count} oczekującego wywołania czeka na Ciebie"
   },
+  "watch.inbox_empty": "Nic nowego. Tu trafiają odpowiedzi Coacha i alerty Twoich tafs.",
+  "watch.inbox_unread": {
+    "few": "Nieprzeczytane w Skrzynce: {count}",
+    "many": "Nieprzeczytane w Skrzynce: {count}",
+    "one": "Nieprzeczytane w Skrzynce: {count}",
+    "other": "Nieprzeczytane w Skrzynce: {count}"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "Aby pytać głosem, zezwól tafs na mikrofon na tym zegarku.",
   "watch.more_on_phone": "Reszta jest na telefonie.",
   "watch.needs_lock": "Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.",
@@ -31,6 +40,8 @@
   },
   "watch.not_sure": "Nie wiadomo, czy dotarło",
   "watch.open_on_phone": "Otwórz na telefonie",
+  "watch.page.brief": "Podsumowanie",
+  "watch.page.inbox": "Skrzynka",
   "watch.phone_not_reachable": "Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.",
   "watch.ready_count": {
     "few": "{count} gotowe",
@@ -38,6 +49,7 @@
     "one": "{count} gotowy",
     "other": "{count} gotowego"
   },
+  "watch.recent_chats": "Ostatnie czaty",
   "watch.refused": "Odrzucono. Nic nie zostało wysłane.",
   "watch.reply": "Odpowiedz",
   "watch.result_ready": "Wynik jest gotowy",
@@ -47,6 +59,7 @@
   "watch.sent": "Wysłano",
   "watch.sign_in_on_phone": "Najpierw zaloguj się do tafs na telefonie.",
   "watch.timing": "Słuchanie {listen} ms · potwierdzenie {receipt} ms · wynik {result} ms",
+  "watch.trust": "Ten zegarek nie przechowuje haseł ani kluczy i niczego nie zatwierdza: to, co wymaga Twojej zgody, czeka na telefon. Twoje tafs robią tylko to, na co pozwalają ich Cards.",
   "watch.update_phone": "Zaktualizuj tafs na telefonie i spróbuj ponownie.",
   "watch.voice_text_only": "Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.",
   "watch.working_count": {

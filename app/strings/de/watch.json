@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Alle Chats",
   "watch.already_answered": "Schon beantwortet oder beendet.",
   "watch.approve_on_phone": "Genehmige auf deinem Handy",
   "watch.as_of": "Stand: {time}",
@@ -18,6 +19,12 @@
     "one": "{count} zurückgehaltener Aufruf braucht dich",
     "other": "{count} zurückgehaltene Aufrufe brauchen dich"
   },
+  "watch.inbox_empty": "Nichts Neues. Hier landen die Antworten von Coach und die Hinweise deiner tafs.",
+  "watch.inbox_unread": {
+    "one": "{count} ungelesen im Eingang",
+    "other": "{count} ungelesen im Eingang"
+  },
+  "watch.menu": "Menü",
   "watch.mic_needed": "Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.",
   "watch.more_on_phone": "Der Rest ist auf deinem Handy.",
   "watch.needs_lock": "Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Unklar, ob es ankam",
   "watch.open_on_phone": "Auf dem Handy öffnen",
+  "watch.page.brief": "Briefing",
+  "watch.page.inbox": "Eingang",
   "watch.phone_not_reachable": "Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.",
   "watch.ready_count": {
     "one": "{count} fertig",
     "other": "{count} fertig"
   },
+  "watch.recent_chats": "Letzte Chats",
   "watch.refused": "Abgelehnt. Nichts wurde gesendet.",
   "watch.reply": "Antworten",
   "watch.result_ready": "Ein Ergebnis ist da",
@@ -41,6 +51,7 @@
   "watch.sent": "Gesendet",
   "watch.sign_in_on_phone": "Melde dich zuerst auf deinem Handy bei tafs an.",
   "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",
+  "watch.trust": "Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.",
   "watch.update_phone": "Aktualisiere tafs auf deinem Handy und versuch es dann erneut.",
   "watch.voice_text_only": "Coach bekommt deine Worte als Text, nie deine Stimme.",
   "watch.working_count": {

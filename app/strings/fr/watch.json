@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Tous les chats",
   "watch.already_answered": "Déjà répondu, ou terminé.",
   "watch.approve_on_phone": "Approuvez sur votre téléphone",
   "watch.as_of": "Mis à jour à {time}",
@@ -18,6 +19,12 @@
     "one": "{count} appel retenu vous attend",
     "other": "{count} appels retenus vous attendent"
   },
+  "watch.inbox_empty": "Rien de nouveau. Les réponses de Coach et les alertes de vos tafs arrivent ici.",
+  "watch.inbox_unread": {
+    "one": "Non lus dans la boîte de réception : {count}",
+    "other": "Non lus dans la boîte de réception : {count}"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "Pour demander à la voix, autorisez le micro pour tafs sur cette montre.",
   "watch.more_on_phone": "La suite est sur votre téléphone.",
   "watch.needs_lock": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Envoi incertain",
   "watch.open_on_phone": "Ouvrir sur le téléphone",
+  "watch.page.brief": "Résumé",
+  "watch.page.inbox": "Boîte de réception",
   "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
   "watch.ready_count": {
     "one": "{count} prêt",
     "other": "{count} prêts"
   },
+  "watch.recent_chats": "Chats récents",
   "watch.refused": "Refusé. Rien n'a été envoyé.",
   "watch.reply": "Répondre",
   "watch.result_ready": "Un résultat est prêt",
@@ -41,6 +51,7 @@
   "watch.sent": "Envoyé",
   "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone.",
   "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",
+  "watch.trust": "Cette montre ne garde ni mot de passe ni clé, et n'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.",
   "watch.update_phone": "Mettez à jour tafs sur votre téléphone, puis réessayez.",
   "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix.",
   "watch.working_count": {

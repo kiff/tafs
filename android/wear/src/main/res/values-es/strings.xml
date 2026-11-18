@@ -5,6 +5,7 @@
     <string name="alert_needs_you">Un taf te necesita</string>
     <string name="alert_not_refused">No rechazada</string>
     <string name="coach_ask">Preguntar a Coach</string>
+    <string name="coach_title">Coach</string>
     <string name="common_cancel">Cancelar</string>
     <string name="common_close">Cerrar</string>
     <string name="common_done">Hecho</string>
@@ -14,11 +15,15 @@
     <string name="halt_all_now">Bloquear todo ahora</string>
     <string name="halt_now">Bloquear ahora</string>
     <string name="halt_all_title">Bloquear todos los tafs</string>
+    <string name="home_title">Tafs</string>
     <string name="home_your_tafs">Tus tafs</string>
     <string name="needs_you_nothing">Nada te necesita.</string>
     <string name="needs_you_refuse">Rechazar</string>
     <string name="needs_you_title">Te necesita</string>
+    <string name="settings_title">Cuenta</string>
+    <string name="taf_halt_title">Bloquear</string>
     <string name="taf_state_halted">Bloqueado</string>
+    <string name="watch_all_chats">Todos los chats</string>
     <string name="watch_already_answered">Ya respondida, o terminada.</string>
     <string name="watch_approve_on_phone">Aprueba en tu teléfono</string>
     <string name="watch_as_of">Actualizado a las %1$s</string>
@@ -38,6 +43,12 @@
         <item quantity="one">%1$s llamada retenida te necesita</item>
         <item quantity="other">%1$s llamadas retenidas te necesitan</item>
     </plurals>
+    <string name="watch_inbox_empty">Nada nuevo. Aquí llegan las respuestas de Coach y los avisos de tus tafs.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s sin leer en la Bandeja</item>
+        <item quantity="other">%1$s sin leer en la Bandeja</item>
+    </plurals>
+    <string name="watch_menu">Menú</string>
     <string name="watch_mic_needed">Para pedir con la voz, permite el micrófono a tafs en este reloj.</string>
     <string name="watch_more_on_phone">El resto está en tu teléfono.</string>
     <string name="watch_needs_lock">Para rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.</string>
@@ -47,11 +58,14 @@
     </plurals>
     <string name="watch_not_sure">No se sabe si llegó</string>
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
+    <string name="watch_page_brief">Resumen</string>
+    <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_phone_not_reachable">Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo.</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s listo</item>
         <item quantity="other">%1$s listos</item>
     </plurals>
+    <string name="watch_recent_chats">Chats recientes</string>
     <string name="watch_refused">Rechazada. No se envió nada.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_result_ready">Hay un resultado listo</string>
@@ -61,6 +75,7 @@
     <string name="watch_sent">Enviado</string>
     <string name="watch_sign_in_on_phone">Primero inicia sesión en tafs en tu teléfono.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
+    <string name="watch_trust">Este reloj no guarda contraseñas ni claves y no aprueba nada: lo que necesita tu sí espera a tu teléfono. Tus tafs solo hacen lo que permiten sus Cards.</string>
     <string name="watch_update_phone">Actualiza tafs en tu teléfono y vuelve a intentarlo.</string>
     <string name="watch_voice_text_only">Coach recibe tus palabras como texto, nunca tu voz.</string>
     <plurals name="watch_working_count">
