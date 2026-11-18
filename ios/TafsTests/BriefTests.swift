@@ -256,13 +256,15 @@ final class BriefTests: XCTestCase {
         XCTAssertNil(b.decisions.first?.recommended)
     }
 
-    /// The sample's brief filters as tafs cloud does: Money keeps its decisions and cases, drops Support's,
-    /// and its rest line counts only its own.
+    /// The sample's brief filters as tafs cloud does: the parcels' label (`money`) keeps its decisions and
+    /// cases, drops the leads' and Support's, and its rest line counts only its own. Its missions read from
+    /// the shared words, so a translated sample keeps them.
     func testTheSampleFiltersByLabel() {
         let all = TafsCloud.Brief.sample()
         let money = TafsCloud.Brief.sample(label: TafsCloud.Brief.sampleMoney)
-        XCTAssertEqual(all.done.compactMap(\.mission), ["Money", "Support"])
-        XCTAssertEqual(money.done.compactMap(\.mission), ["Money"])
+        let label = Words.Sample.Brief.Label.self
+        XCTAssertEqual(all.done.compactMap(\.mission), [label.money, label.clients, label.support])
+        XCTAssertEqual(money.done.compactMap(\.mission), [label.money])
         XCTAssertEqual(all.rest?.count, 14)
         XCTAssertEqual(money.rest?.count, 9)
         XCTAssertEqual(all.decisions.count, 2)

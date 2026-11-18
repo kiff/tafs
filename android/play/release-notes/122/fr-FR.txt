@@ -1,0 +1,3 @@
+• Approuver une connexion : l'écran se remplit désormais tout seul. S'il n'est toujours pas lisible après une minute, il le dit, avec « Réessayer ».
+• Coach : un nouveau chat repart de zéro, et quand une réponse ne peut pas être donnée, le chat le dit en une ligne.
+• Les tafs d'exemple sont désormais Réponses au support, Colis en retard et Relance des prospects. Aucun ne déplace d'argent.

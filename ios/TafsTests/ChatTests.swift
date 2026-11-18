@@ -61,7 +61,7 @@ final class ChatTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         model.sampleReplyDelay = 0
         await model.startSample()
-        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Bill pay" })
+        let bills = try XCTUnwrap(model.tafs.first { $0.name == TafTemplates.parcels.name })
         XCTAssertTrue(model.canChat(bills.id))
 
         await model.loadChat(bills.id)
@@ -91,10 +91,10 @@ final class ChatTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         model.sampleReplyDelay = 0
         await model.startSample()
-        let refunds = try XCTUnwrap(model.tafs.first { $0.name == "Refunds" })
-        XCTAssertEqual(model.chats[refunds.id]?.count, 3, "the sample opens Refunds with a short exchange")
-        await model.sendChat("Raise your limit to $5,000", to: refunds.id)
-        XCTAssertTrue(model.chats[refunds.id]?.last?.text.contains("only you can") ?? false)
+        let support = try XCTUnwrap(model.tafs.first { $0.name == TafTemplates.support.name })
+        XCTAssertEqual(model.chats[support.id]?.count, 3, "the sample opens Support replies with a short exchange")
+        await model.sendChat("Raise your limit to 200 replies a day", to: support.id)
+        XCTAssertTrue(model.chats[support.id]?.last?.text.contains("only you can") ?? false)
     }
 
     func testEmptyAndOverlongMessagesAreNotSent() async throws {
@@ -1400,7 +1400,7 @@ final class ChatTests: XCTestCase {
     func testASampleTafRemembersAndForgets() async throws {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
-        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Bill pay" })
+        let bills = try XCTUnwrap(model.tafs.first { $0.name == TafTemplates.parcels.name })
         await model.loadMemory(bills.id)
         let notes = try XCTUnwrap(model.memories[bills.id])
         XCTAssertEqual(notes.count, 3)

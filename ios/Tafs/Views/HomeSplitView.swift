@@ -271,10 +271,10 @@ struct HomeSplitView: View {
 
     /// The taf the app opens on by itself: the first in the list as it stands, which puts the
     /// one a call waits on first, then the one used last (the 859 test). CI's screenshots open
-    /// Refunds, as on the phone.
+    /// Support replies, as on the phone.
     static func opening(_ listed: [Taf], screenshot: Bool) -> HomeSelection? {
-        let refunds = screenshot ? listed.first(where: { $0.name == TafTemplates.refunds.name })?.id : nil
-        return (refunds ?? listed.first?.id).map { .taf($0) }
+        let support = screenshot ? listed.first(where: { $0.name == TafTemplates.support.name })?.id : nil
+        return (support ?? listed.first?.id).map { .taf($0) }
     }
 
     /// The signed-in account's items: KIFF mode, or its screenshot over the sample (`-signedIn`).

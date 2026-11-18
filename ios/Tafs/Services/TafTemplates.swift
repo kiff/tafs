@@ -25,47 +25,53 @@ struct TafDraft: Hashable {
 }
 
 enum TafTemplates {
-    static let all: [TafTemplate] = [refunds, billPay, access, deploys, chargebacks]
+    static let all: [TafTemplate] = [support, parcels, access, deploys, leads]
 
     static func template(_ key: String?) -> TafTemplate? {
         all.first { $0.key == key }
     }
 
-    /// Support: settle refund and credit requests within policy.
-    static let refunds = TafTemplate(
-        key: "refunds", name: Words.Sample.Refunds.name,
-        keywords: ["refund", "credit", "return", "goodwill"],
-        job: Words.Sample.Refunds.job,
-        tools: [Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email],
+    /// Support: answer tickets the same day; a promise of money or goods waits for the owner, and a
+    /// customer's details never leave. Up to 40 replies a day, as /tafs's example Card says.
+    static let support = TafTemplate(
+        key: "support", name: Words.Sample.Support.name,
+        keywords: ["support", "ticket", "helpdesk", "customer"],
+        job: Words.Sample.Support.job,
+        tools: [Words.Sample.Tool.email, Words.Sample.Tool.store],
         rules: [
-            CardRule(action: "refund", label: Words.Sample.Refunds.Rule.refunds, perAction: .eur(150), perWindow: .eur(2_000), window: .day, nextSteps: [Words.Sample.Refunds.nextStep]),
-            CardRule(action: "credit", label: Words.Sample.Refunds.Rule.credits, perAction: .eur(100), perWindow: .eur(1_000), window: .day),
-            CardRule(action: "payout", label: Words.Sample.Refunds.Rule.payouts, never: true, outside: .refuse),
+            CardRule(action: "reply_ticket", label: Words.Sample.Support.Rule.replies, countPerWindow: 40, window: .day),
+            CardRule(action: "promise", label: Words.Sample.Support.Rule.promises, alwaysAsk: true, nextSteps: [Words.Sample.Support.nextStep]),
+            CardRule(action: "share_customer_data", label: Words.Sample.Support.Rule.customerData, never: true, outside: .refuse),
         ],
+        // The sample plays two rounds at load, so the promise is second: it waits in Needs you, as the
+        // money samples' holds did, and the iPad's sidebar lists the tafs that wait.
         script: [
-            ProposedAction(action: "refund", summary: Words.Sample.Refunds.refund4471, amount: .eur(40), context: Words.Sample.Refunds.refund4471Why),
-            ProposedAction(action: "credit", summary: Words.Sample.Refunds.credit2290, amount: .eur(25), context: Words.Sample.Refunds.credit2290Why),
-            ProposedAction(action: "refund", summary: Words.Sample.Refunds.refund4502, amount: .eur(480), context: Words.Sample.Refunds.refund4502Why),
-            ProposedAction(action: "payout", summary: Words.Sample.Refunds.payout, amount: .eur(900), context: Words.Sample.Refunds.payoutWhy),
+            ProposedAction(action: "reply_ticket", summary: Words.Sample.Support.reply7781, context: Words.Sample.Support.reply7781Why),
+            ProposedAction(action: "promise", summary: Words.Sample.Support.promise7802, context: Words.Sample.Support.promise7802Why),
+            ProposedAction(action: "reply_ticket", summary: Words.Sample.Support.reply7790, context: Words.Sample.Support.reply7790Why),
+            ProposedAction(action: "share_customer_data", summary: Words.Sample.Support.shareHistory, context: Words.Sample.Support.shareHistoryWhy),
         ]
     )
 
-    /// Accounts payable: match, approve and pay routine vendor bills.
-    static let billPay = TafTemplate(
-        key: "billpay", name: Words.Sample.BillPay.name,
-        keywords: ["bill", "vendor", "payable", "pay invoice", "supplier"],
-        job: Words.Sample.BillPay.job,
-        tools: [Words.Sample.Tool.accounting, Words.Sample.Tool.email],
+    /// Operations: tell customers of a late parcel before they ask; a reship waits for the owner, and an
+    /// address never changes from an email.
+    static let parcels = TafTemplate(
+        key: "parcels", name: Words.Sample.Parcels.name,
+        keywords: ["parcel", "delivery", "shipping", "late", "carrier"],
+        job: Words.Sample.Parcels.job,
+        tools: [Words.Sample.Tool.store, Words.Sample.Tool.email],
         rules: [
-            CardRule(action: "pay_bill", label: Words.Sample.BillPay.Rule.bills, perAction: .eur(5_000), perWindow: .eur(25_000), window: .week, nextSteps: [Words.Sample.BillPay.nextStep]),
-            CardRule(action: "wire", label: Words.Sample.BillPay.Rule.wires, alwaysAsk: true),
-            CardRule(action: "bank_details", label: Words.Sample.BillPay.Rule.bankDetails, never: true, outside: .refuse),
-            CardRule(action: "new_payee", label: Words.Sample.BillPay.Rule.newPayees, never: true, outside: .refuse),
+            CardRule(action: "delay_message", label: Words.Sample.Parcels.Rule.delayMessages, countPerWindow: 100, window: .day),
+            CardRule(action: "reship", label: Words.Sample.Parcels.Rule.reships, alwaysAsk: true, nextSteps: [Words.Sample.Parcels.nextStep]),
+            CardRule(action: "change_address", label: Words.Sample.Parcels.Rule.addressChanges, never: true, outside: .refuse),
+            CardRule(action: "parcel_refund", label: Words.Sample.Parcels.Rule.refunds, never: true, outside: .refuse),
         ],
+        // The reship is second, so it waits in Needs you after the sample's two rounds.
         script: [
-            ProposedAction(action: "pay_bill", summary: Words.Sample.BillPay.payNorthwind, amount: .eur(1_240), context: Words.Sample.BillPay.payNorthwindWhy),
-            ProposedAction(action: "pay_bill", summary: Words.Sample.BillPay.payAtlas, amount: .eur(8_400), context: Words.Sample.BillPay.payAtlasWhy),
-            ProposedAction(action: "bank_details", summary: Words.Sample.BillPay.updateBank, context: Words.Sample.BillPay.updateBankWhy),
+            ProposedAction(action: "delay_message", summary: Words.Sample.Parcels.tell5120, context: Words.Sample.Parcels.tell5120Why),
+            ProposedAction(action: "reship", summary: Words.Sample.Parcels.reship5098, context: Words.Sample.Parcels.reship5098Why),
+            ProposedAction(action: "delay_message", summary: Words.Sample.Parcels.tell5134, context: Words.Sample.Parcels.tell5134Why),
+            ProposedAction(action: "change_address", summary: Words.Sample.Parcels.changeAddress, context: Words.Sample.Parcels.changeAddressWhy),
         ]
     )
 
@@ -109,20 +115,20 @@ enum TafTemplates {
         ]
     )
 
-    /// Payments: answer disputes with evidence before the deadline.
-    static let chargebacks = TafTemplate(
-        key: "chargebacks", name: Words.Sample.Chargebacks.name,
-        keywords: ["chargeback", "dispute"],
-        job: Words.Sample.Chargebacks.job,
-        tools: [Words.Sample.Tool.payments],
+    /// Sales: reply to new leads within the hour and book a call; a discount waits for the owner.
+    static let leads = TafTemplate(
+        key: "leads", name: Words.Sample.Leads.name,
+        keywords: ["lead", "sales", "quote", "prospect", "follow up"],
+        job: Words.Sample.Leads.job,
+        tools: [Words.Sample.Tool.email],
         rules: [
-            CardRule(action: "submit_evidence", label: Words.Sample.Chargebacks.Rule.evidence, perAction: .eur(500), countPerWindow: 50, window: .day),
-            CardRule(action: "accept_dispute", label: Words.Sample.Chargebacks.Rule.acceptingLoss, perAction: .eur(100), perWindow: .eur(500), window: .week),
+            CardRule(action: "reply_lead", label: Words.Sample.Leads.Rule.replies, countPerWindow: 50, window: .day),
+            CardRule(action: "offer_discount", label: Words.Sample.Leads.Rule.discounts, alwaysAsk: true),
         ],
         script: [
-            ProposedAction(action: "submit_evidence", summary: Words.Sample.Chargebacks.answer3318, amount: .eur(120), context: Words.Sample.Chargebacks.answer3318Why),
-            ProposedAction(action: "accept_dispute", summary: Words.Sample.Chargebacks.accept3342, amount: .eur(35), context: Words.Sample.Chargebacks.accept3342Why),
-            ProposedAction(action: "submit_evidence", summary: Words.Sample.Chargebacks.answer3360, amount: .eur(1_800), context: Words.Sample.Chargebacks.answer3360Why),
+            ProposedAction(action: "reply_lead", summary: Words.Sample.Leads.replyKaya, context: Words.Sample.Leads.replyKayaWhy),
+            ProposedAction(action: "reply_lead", summary: Words.Sample.Leads.confirmNord, context: Words.Sample.Leads.confirmNordWhy),
+            ProposedAction(action: "offer_discount", summary: Words.Sample.Leads.discountLumen, context: Words.Sample.Leads.discountLumenWhy),
         ]
     )
 }

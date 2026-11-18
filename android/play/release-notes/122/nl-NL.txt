@@ -1,0 +1,3 @@
+• Een koppeling goedkeuren: het scherm vult zich nu vanzelf. Is het na een minuut nog niet leesbaar, dan zegt het dat, met ‘Opnieuw proberen’.
+• Coach: een nieuwe chat begint met een schone lei, en als een antwoord niet lukt, zegt de chat dat in één regel.
+• De voorbeeld-tafs zijn nu Supportantwoorden, Vertraagde pakketten en Leads opvolgen. Geen ervan verplaatst geld.

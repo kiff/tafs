@@ -34,7 +34,7 @@ final class ReferenceScreensTests: XCTestCase {
     func testTheSamplesReadAsTafsCloudsAnswers() throws {
         let apps = try XCTUnwrap(SampleScreens.connectApps, "Samples/connect-apps.json is in the app and reads")
         let parts = ConnectRow.split(apps.apps)
-        XCTAssertEqual(parts.yours.map(\.displayName), ["Gmail", "Stripe"], "two of the person's own first")
+        XCTAssertEqual(parts.yours.map(\.displayName), ["Gmail", "Zendesk"], "two of the person's own first")
         XCTAssertEqual(parts.discover.count, 4)
         XCTAssertTrue(apps.byKey)
 
@@ -121,9 +121,9 @@ final class ReferenceScreensTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
         await model.loadConnectApps()
-        let stripe = try XCTUnwrap(model.connectApps?.apps.first { $0.entry == "stripe@3" })
-        XCTAssertEqual(model.connectionGroups(of: stripe).tafs.map(\.taf).sorted(),
-                       [TafTemplates.chargebacks.name, TafTemplates.refunds.name].sorted(), "Stripe's connections, each under its taf")
+        let gmail = try XCTUnwrap(model.connectApps?.apps.first { $0.entry == "connector:composio:gmail" })
+        XCTAssertEqual(model.connectionGroups(of: gmail).tafs.map(\.taf).sorted(),
+                       [TafTemplates.leads.name, TafTemplates.support.name].sorted(), "Gmail's connections, each under its taf")
 
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         let connect = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)

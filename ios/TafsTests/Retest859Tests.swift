@@ -12,7 +12,7 @@ final class Retest859Tests: XCTestCase {
     /// The iPad opened Refunds, the first taf made, while Refunds 4 led the list. The app
     /// opens on the list's first taf: the one a call waits on, else the one used last.
     func testTheAppOpensOnTheListsFirstTaf() {
-        let a = taf("Refunds"), b = taf("Refunds 2"), c = taf("Refunds 4")
+        let a = taf(TafTemplates.support.name), b = taf("Refunds 2"), c = taf("Refunds 4")
         let now = Date()
         let record = [RecordEntry(tafID: c.id, kind: .done, title: "Refund", detail: "", at: now.addingTimeInterval(-60)),
                       RecordEntry(tafID: a.id, kind: .done, title: "Refund", detail: "", at: now.addingTimeInterval(-3600))]
@@ -24,7 +24,7 @@ final class Retest859Tests: XCTestCase {
         let held = AppModel.byRecent([a, b, c], record: record, held: [waiting], chats: [:])
         XCTAssertEqual(HomeSplitView.opening(held, screenshot: false), .taf(b.id), "the one a call waits on")
 
-        XCTAssertEqual(HomeSplitView.opening(listed, screenshot: true), .taf(a.id), "CI's screenshots open Refunds")
+        XCTAssertEqual(HomeSplitView.opening(listed, screenshot: true), .taf(a.id), "CI's screenshots open Support replies, the sample's first")
         XCTAssertNil(HomeSplitView.opening([], screenshot: false))
     }
 }
