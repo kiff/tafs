@@ -3397,7 +3397,8 @@ function markWider(cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang
 export function connectRoute(grant: ApprovalGrant): ConnectRoute | undefined {
   const r = grant.request;
   if (r.kind === "api_key" || r.kind === "key") return "key";
-  if (typeof r.application === "string" && r.application !== "") return "own";
+  // planque sends its own app at the vendor as an object ({id, client_id, …}); a name alone counts too.
+  if ((typeof r.application === "string" && r.application !== "") || (typeof r.application === "object" && r.application !== null)) return "own";
   if (r.connector?.provider === "composio") return "managed";
   return undefined;
 }

@@ -975,8 +975,15 @@ export interface WiderParts {
   may: string; may_x: string; key_may: string; rest: string;
 }
 
-/** The line, joined from its parts: who connects is left out when the route isn't known, since it's never guessed. */
-export function wider(p: WiderParts, vendor?: string, route?: ConnectRoute): string {
+/** The routes a line names someone for: any other value, as data on a card's path, is no route. */
+const ROUTES: ReadonlySet<string> = new Set<ConnectRoute>(["managed", "own", "key"]);
+
+/**
+ * The line, joined from its parts: who connects is left out when the route isn't known, since it's never guessed. A route
+ * that isn't one of the three is no route, never a failed card read.
+ */
+export function wider(p: WiderParts, vendor?: string, given?: string): string {
+  const route = given !== undefined && ROUTES.has(given) ? (given as ConnectRoute) : undefined;
   const app = (s: string) => s.split("{app}").join(vendor ?? "");
   const who = route ? (vendor ? app(p[route]) : p[`${route}_x`]) : "";
   const may = route === "key" ? p.key_may : vendor ? app(p.may) : p.may_x;

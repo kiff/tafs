@@ -24,6 +24,9 @@ describe("the card's broader-access line", () => {
       // Every route says something different about who connects; an unknown one names nobody.
       const lines = ROUTES.map((r) => w.card_wider("Zendesk", r));
       expect(new Set(lines).size, lang).toBe(4);
+      // A route that isn't one of the three, as data on the card's path, is no route: never a throw.
+      expect(w.card_wider("Zendesk", "other" as never), lang).toBe(w.card_wider("Zendesk", undefined));
+      expect(w.card_wider(undefined, "Y" as never), lang).toBe(w.card_wider(undefined, undefined));
     }
   });
 
@@ -42,10 +45,13 @@ describe("the card's broader-access line", () => {
     const g = (request: Record<string, unknown>) => ({ id: "g", status: "pending", digest: "d", request }) as ApprovalGrant;
     expect(connectRoute(g({ connector: { provider: "composio", usual_access: true } }))).toBe("managed");
     expect(connectRoute(g({ application: "googlesheets@1", connector: { usual_access: true } }))).toBe("own");
+    // As planque sends it: an object.
+    expect(connectRoute(g({ application: { id: "googlesheets@1", client_id: "c" }, connector: { usual_access: true } }))).toBe("own");
     expect(connectRoute(g({ kind: "api_key" }))).toBe("key");
     expect(connectRoute(g({ kind: "key" }))).toBe("key");
     expect(connectRoute(g({ connector: { provider: "another", usual_access: true } }))).toBeUndefined();
     expect(connectRoute(g({ connector: { usual_access: true } }))).toBeUndefined();
     expect(connectRoute(g({ application: "" }))).toBeUndefined();
+    expect(connectRoute(g({ application: null }))).toBeUndefined();
   });
 });
