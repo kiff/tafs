@@ -1,0 +1,1 @@
+- **Android: Connect asks an app's login when its key goes with one.** For an app tafs cloud marks `login: true` (Zendesk), Connect asks for the email you sign in to it with, once the taf is chosen, and starts the connection with it; tafs cloud checks it ([android-app.md](docs/android-app.md)).

@@ -252,6 +252,11 @@ data class ConnectApps(
     val logo: String? = null,
     /** oauth or key. */
     val how: String = "oauth",
+    /**
+     * tafs cloud's mark that the app's key goes with the owner's own login at the vendor, an email (Zendesk's): Connect asks for it
+     * and starts the connection with it. Its format is tafs cloud's to check (`400 login_invalid`).
+     */
+    val login: Boolean = false,
     /** connected, available, needs_reconnect or needs_setup. */
     val state: String = "available",
     /** For `needs_setup`: tafs cloud's line in place of Connect. */

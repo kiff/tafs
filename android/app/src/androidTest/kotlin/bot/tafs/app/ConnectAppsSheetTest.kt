@@ -6,6 +6,9 @@ import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.TafsTheme
@@ -47,7 +50,7 @@ class ConnectAppsSheetTest {
       ConnectAppsSheet(
         AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = tafs, access = tafs.associate { it.id to bot.tafs.app.kiff.Access(use = true, manage = true) }, connectedNow = connectedNow),
         load = {},
-        onConnect = if (connect) ({ app, taf -> started += "${app.entry}>$taf" }) else null,
+        onConnect = if (connect) ({ app, taf, login -> started += "${app.entry}>$taf" + (login?.let { ":$it" } ?: "") }) else null,
         onAskCoach = { askedCoach += 1 },
         onClose = {},
         onChooseActions = { chose += "row ${it.grant}" },
@@ -321,5 +324,36 @@ class ConnectAppsSheetTest {
     val sheet = rule.onNodeWithTag(bot.tafs.app.views.CONNECT_APPS_SHEET).fetchSemanticsNode().boundsInWindow
     val screen = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.heightPixels
     assertTrue("the sheet is ${sheet.height} of $screen px tall", sheet.height > screen * 0.7f)
+  }
+
+  /**
+   * An app whose key goes with the owner's own login at the vendor (tafs cloud's `login: true`, Zendesk's): once the taf is chosen,
+   * the email is asked, in the app's words, and only Continue starts the connection, with it as typed (trimmed). tafs cloud checks it.
+   */
+  @Test fun anAppWithALoginAsksForTheEmailBeforeAnythingStarts() {
+    val refunds = taf("refunds-1", "Refunds")
+    rule.setShown {
+      TafsTheme {
+        ConnectAppsSheet(
+          AppState(mode = Mode.kiff, ready = true, connectApps = ConnectApps(listOf(ConnectApps.App("zendesk@1", "Zendesk", "Zendesk", how = "key", login = true))),
+            tafs = listOf(refunds), access = mapOf(refunds.id to bot.tafs.app.kiff.Access(use = true, manage = true))),
+          load = {},
+          onConnect = { app, taf, login -> started += "${app.entry}>$taf:$login" },
+          onAskCoach = {},
+          onClose = {},
+        )
+      }
+    }
+    rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
+    rule.onNodeWithText("Refunds").performClick()
+    // The taf is chosen, and nothing has started: the email comes first.
+    assertEquals(emptyList<String>(), started)
+    rule.onNodeWithText(Words.Connect.loginTitle("Zendesk")).assertIsDisplayed()
+    rule.onNodeWithText(Words.Connect.loginWhat("Zendesk")).assertIsDisplayed()
+    rule.onNode(hasText(Words.Common.`continue`) and androidx.compose.ui.test.hasClickAction()).assertIsNotEnabled()
+    rule.onNodeWithTag("connect-login-field").performTextInput(" ana@acme.com ")
+    rule.onNode(hasText(Words.Common.`continue`) and androidx.compose.ui.test.hasClickAction()).assertIsEnabled().performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("zendesk@1>refunds-1:ana@acme.com"), started)
   }
 }
