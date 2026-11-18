@@ -75,7 +75,7 @@ describe("Coach's wording rules", () => {
       "I'll set Accountant emails to read only what accounts@example.com sends you.", "The sign-in can read only what the taf needs.",
       // The prompt audit: an app or its data said to be left unchanged, which Setup's core bans, now caught by the
       // contract rather than the model alone. legal-i18n's lines, one claim form each: is not changed, stays, is left.
-      "Your inbox isn't changed.", "Your Gmail stays as it is.", "The sheet is left untouched.", "It leaves your invoices unchanged.", "Nothing is modified in Moneybird.",
+      "Your inbox isn't changed.", "Your Gmail stays as it is.", "The sheet is left untouched.", "It leaves your invoices unchanged.",
       "Dein Postfach wird nicht geändert.", "Deine Tabelle bleibt unverändert.", "Es lässt deine Rechnungen unangetastet.",
       "Tu bandeja no se modifica.", "Tu hoja queda intacta.", "Tus facturas siguen sin cambios.",
       "Votre boîte n'est pas modifiée.", "Votre feuille reste inchangée.", "Il laisse vos factures intactes.",
@@ -92,6 +92,10 @@ describe("Coach's wording rules", () => {
       "It will read only the Leads sheet.", "The taf will read only incoming replies.", "It will read only unread replies.",
       // "Unchanged" as the job's own word (legal-i18n): a taf that forwards something as it came is no claim about the app.
       "Nothing is sent until you approve.",
+      // A held write said as it is (agentgabo): "nothing is changed until you approve" is true of a gated write, so the
+      // "nothing is changed" and "without changing anything" forms aren't rules in any language.
+      "Nothing is changed in Stripe until you approve each refund.", "Nothing is changed before you approve.",
+      "Rien n'est modifié tant que vous n'avez pas approuvé.", "Nichts wird geändert, bevor du zustimmst.",
       "It forwards each invoice unchanged to your accountant.", "It copies each new row into the sheet.", "It keeps the subject line as you wrote it.",
       "Es leitet jede Rechnung unverändert an deine Buchhaltung weiter.",
       "Reenvía cada factura sin cambios a tu gestor.",

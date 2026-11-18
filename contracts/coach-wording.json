@@ -290,8 +290,7 @@
     "patterns": [
       "(?:isn['’]?t|is not|aren['’]?t|are not|won['’]?t be|will not be|is never|are never|never gets?) (?:changed|modified|touched|altered)",
       "(?:stays?|remains?|(?:is|are|will be) left|left) (?:unchanged|untouched|intact|as (?:it|they) (?:is|are|was|were))",
-      "leaves? (?:\\pL+ ){0,3}(?:unchanged|untouched|intact)",
-      "nothing (?:is|gets|will be) (?:changed|modified|touched)"
+      "leaves? (?:\\pL+ ){0,3}(?:unchanged|untouched|intact)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -299,9 +298,7 @@
     "patterns": [
       "(?:wird|werden) (?:nicht|nie|niemals) (?:geändert|verändert|angefasst|angerührt|angetastet)",
       "bleib(?:t|en) (?:unverändert|unangetastet|unberührt|wie (?:es|sie) (?:ist|sind|war|waren))",
-      "(?:lässt|lassen) (?:\\pL+ ){0,3}(?:unverändert|unangetastet|unberührt)",
-      "nichts wird (?:geändert|verändert|angefasst)",
-      "ohne etwas zu (?:ändern|verändern)"
+      "(?:lässt|lassen) (?:\\pL+ ){0,3}(?:unverändert|unangetastet|unberührt)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -310,8 +307,7 @@
       "no se (?:cambia|cambiará|modifica|modificará|toca|tocará)n?",
       "no (?:es|son|será|serán) (?:cambiad|modificad|tocad|alterad)[oa]s?",
       "(?:queda|quedan|quedará|quedarán|permanece|permanecen|sigue|siguen) (?:igual(?:es)?|intact[oa]s?|sin cambios|tal (?:cual|como está|como están))",
-      "(?:deja|dejará|dejan) (?:\\pL+ ){0,3}(?:intact[oa]s?|sin cambios)",
-      "sin (?:tocar|cambiar|modificar) nada"
+      "(?:deja|dejará|dejan) (?:\\pL+ ){0,3}(?:intact[oa]s?|sin cambios)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -319,9 +315,7 @@
     "patterns": [
       "(?:n['’]est|ne sont|ne sera|ne seront) (?:pas|jamais) (?:modifiée?s?|changée?s?|touchée?s?)",
       "(?:reste|restent|restera|resteront|demeure|demeurent) (?:inchangée?s?|intacte?s?|tel(?:le)?s? qu['’]\\pL+)",
-      "laisse(?:ra|nt)? (?:\\pL+ ){0,3}(?:inchangée?s?|intacte?s?)",
-      "rien n['’]est (?:modifié|changé|touché)",
-      "sans rien (?:modifier|changer|toucher)"
+      "laisse(?:ra|nt)? (?:\\pL+ ){0,3}(?:inchangée?s?|intacte?s?)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -329,8 +323,7 @@
     "patterns": [
       "non (?:viene|vengono|verrà|verranno|è|sono|sarà|saranno) (?:mai )?(?:modificat|cambiat|toccat)[oaie]",
       "(?:resta|restano|resterà|resteranno|rimane|rimangono|rimarrà|rimarranno) (?:invariat[oaie]|intatt[oaie]|com['’]è|come sono|così com['’]è)",
-      "lascia(?:no|rà)? (?:\\pL+ ){0,3}(?:invariat[oaie]|intatt[oaie])",
-      "senza (?:toccare|cambiare|modificare) (?:nulla|niente)"
+      "lascia(?:no|rà)? (?:\\pL+ ){0,3}(?:invariat[oaie]|intatt[oaie])"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -338,8 +331,7 @@
     "patterns": [
       "(?:wordt|worden) (?:niet|nooit) (?:gewijzigd|veranderd|aangeraakt|aangepast)",
       "blijf(?:t|en) (?:ongewijzigd|onaangeroerd|onveranderd|intact|zoals (?:het|ze) (?:is|zijn|was|waren))",
-      "laat (?:\\pL+ ){0,3}(?:ongewijzigd|onaangeroerd|onveranderd|intact)",
-      "zonder iets te (?:wijzigen|veranderen)"
+      "laat (?:\\pL+ ){0,3}(?:ongewijzigd|onaangeroerd|onveranderd|intact)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -347,8 +339,7 @@
     "patterns": [
       "nie (?:jest|są|będzie|będą|zostanie|zostaną) (?:zmienian|zmienion|modyfikowan|zmodyfikowan|ruszan|dotykan|naruszon)\\pL*",
       "(?:pozostaje|pozostają|pozostanie|pozostaną|zostaje|zostają) (?:bez zmian|nietknięt\\pL*|niezmienion\\pL*|nienaruszon\\pL*)",
-      "(?:zostawia|zostawi|pozostawia|pozostawi) (?:\\pL+ ){0,3}(?:bez zmian|nietknięt\\pL*|nienaruszon\\pL*)",
-      "niczego nie (?:zmieniając|ruszając|modyfikując)"
+      "(?:zostawia|zostawi|pozostawia|pozostawi) (?:\\pL+ ){0,3}(?:bez zmian|nietknięt\\pL*|nienaruszon\\pL*)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   },
@@ -356,8 +347,7 @@
     "patterns": [
       "não (?:é|são|será|serão) (?:alterad|modificad|mudad|tocad)[oa]s?",
       "(?:fica|ficam|ficará|ficarão|permanece|permanecem|continua|continuam) (?:inalterad[oa]s?|intact[oa]s?|sem alterações|como está|como estão)",
-      "(?:deixa|deixará|deixam) (?:\\pL+ ){0,3}(?:inalterad[oa]s?|intact[oa]s?|sem alterações)",
-      "sem (?:tocar|alterar|mudar|modificar) (?:em )?nada"
+      "(?:deixa|deixará|deixam) (?:\\pL+ ){0,3}(?:inalterad[oa]s?|intact[oa]s?|sem alterações)"
     ],
     "fix": "Say what the taf will do. Don't say that an app or its data stays unchanged or untouched: the Card shows what the taf may not do."
   }
