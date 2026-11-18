@@ -1989,12 +1989,45 @@ object Words {
       }
     }
     fun hello(name: String, now: String): String = Res.s(R.string.sample_hello, name, now)
+    object Leads {
+      val confirmNord: String get() = Res.s(R.string.sample_leads_confirm_nord)
+      val confirmNordWhy: String get() = Res.s(R.string.sample_leads_confirm_nord_why)
+      val discountLumen: String get() = Res.s(R.string.sample_leads_discount_lumen)
+      val discountLumenWhy: String get() = Res.s(R.string.sample_leads_discount_lumen_why)
+      val job: String get() = Res.s(R.string.sample_leads_job)
+      val name: String get() = Res.s(R.string.sample_leads_name)
+      val replyKaya: String get() = Res.s(R.string.sample_leads_reply_kaya)
+      val replyKayaWhy: String get() = Res.s(R.string.sample_leads_reply_kaya_why)
+      object Rule {
+        val discounts: String get() = Res.s(R.string.sample_leads_rule_discounts)
+        val replies: String get() = Res.s(R.string.sample_leads_rule_replies)
+      }
+    }
     val listCharges: String get() = Res.s(R.string.sample_list_charges)
     val lookUpCharge: String get() = Res.s(R.string.sample_look_up_charge)
     object Memory {
       val askFirst: String get() = Res.s(R.string.sample_memory_ask_first)
       val explain: String get() = Res.s(R.string.sample_memory_explain)
       val regulars: String get() = Res.s(R.string.sample_memory_regulars)
+    }
+    object Parcels {
+      val changeAddress: String get() = Res.s(R.string.sample_parcels_change_address)
+      val changeAddressWhy: String get() = Res.s(R.string.sample_parcels_change_address_why)
+      val job: String get() = Res.s(R.string.sample_parcels_job)
+      val name: String get() = Res.s(R.string.sample_parcels_name)
+      val nextStep: String get() = Res.s(R.string.sample_parcels_next_step)
+      val reship5098: String get() = Res.s(R.string.sample_parcels_reship_5098)
+      val reship5098Why: String get() = Res.s(R.string.sample_parcels_reship_5098_why)
+      object Rule {
+        val addressChanges: String get() = Res.s(R.string.sample_parcels_rule_address_changes)
+        val delayMessages: String get() = Res.s(R.string.sample_parcels_rule_delay_messages)
+        val refunds: String get() = Res.s(R.string.sample_parcels_rule_refunds)
+        val reships: String get() = Res.s(R.string.sample_parcels_rule_reships)
+      }
+      val tell5120: String get() = Res.s(R.string.sample_parcels_tell_5120)
+      val tell5120Why: String get() = Res.s(R.string.sample_parcels_tell_5120_why)
+      val tell5134: String get() = Res.s(R.string.sample_parcels_tell_5134)
+      val tell5134Why: String get() = Res.s(R.string.sample_parcels_tell_5134_why)
     }
     val playNext: String get() = Res.s(R.string.sample_play_next)
     object Refunds {
@@ -2026,6 +2059,24 @@ object Words {
       val nothingDone: String get() = Res.s(R.string.sample_reply_nothing_done)
       val paused: String get() = Res.s(R.string.sample_reply_paused)
       fun waiting(count: Int): String = Res.p(R.plurals.sample_reply_waiting, count, Res.number(count))
+    }
+    object Support {
+      val job: String get() = Res.s(R.string.sample_support_job)
+      val name: String get() = Res.s(R.string.sample_support_name)
+      val nextStep: String get() = Res.s(R.string.sample_support_next_step)
+      val promise7802: String get() = Res.s(R.string.sample_support_promise_7802)
+      val promise7802Why: String get() = Res.s(R.string.sample_support_promise_7802_why)
+      val reply7781: String get() = Res.s(R.string.sample_support_reply_7781)
+      val reply7781Why: String get() = Res.s(R.string.sample_support_reply_7781_why)
+      val reply7790: String get() = Res.s(R.string.sample_support_reply_7790)
+      val reply7790Why: String get() = Res.s(R.string.sample_support_reply_7790_why)
+      object Rule {
+        val customerData: String get() = Res.s(R.string.sample_support_rule_customer_data)
+        val promises: String get() = Res.s(R.string.sample_support_rule_promises)
+        val replies: String get() = Res.s(R.string.sample_support_rule_replies)
+      }
+      val shareHistory: String get() = Res.s(R.string.sample_support_share_history)
+      val shareHistoryWhy: String get() = Res.s(R.string.sample_support_share_history_why)
     }
     object Tool {
       val accounting: String get() = Res.s(R.string.sample_tool_accounting)
