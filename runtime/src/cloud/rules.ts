@@ -274,6 +274,39 @@ export function grantSuffix(id: string): string {
   return four ? `_${four}` : "";
 }
 
+/** A tool's job and the four letters or digits after it, when its name ends as `toolKey` or `numberedKey` make it. */
+function tailOf(name: string): { job: string; four: string } | undefined {
+  const m = /^(.+)_([a-z0-9]{4})(\d{0,2})$/.exec(name);
+  return m && !(m[3] && Number(m[3]) < 2) ? { job: m[1]!, four: m[2]! } : undefined;
+}
+
+/**
+ * The connection's own tools among the taf's when `tool` is another connection's: `tool` doesn't carry `grant`'s
+ * suffix, and a tool of the same job does. A taf switched to a new connection of the same app has both
+ * connections' tools, and only the suffix says whose each is (kiff/tafs: the phone's retest, 18 Nov). Undefined when
+ * nothing says it's another's: a tool the request named without the suffix, or a job only one connection has.
+ */
+export function anotherConnectionsTool(tool: string, grant: string, tools: readonly string[]): string[] | undefined {
+  const suffix = grantSuffix(grant);
+  if (!suffix || jobOf(tool, suffix)) return undefined;
+  const job = tailOf(tool)?.job ?? tool;
+  const own = tools.filter((t) => jobOf(t, suffix));
+  return own.some((t) => tailOf(t)?.job === job) ? own : undefined;
+}
+
+/**
+ * The connections a tool's job has among the taf's tools, by the suffix their tools end in, with each one's tools:
+ * two or more when the taf has that app twice, so a read named without its connection could be either.
+ */
+export function connectionsOfJob(tool: string, tools: readonly string[]): Map<string, string[]> {
+  const job = tailOf(tool)?.job;
+  const out = new Map<string, string[]>();
+  if (!job) return out;
+  const fours = new Set(tools.map(tailOf).filter((t) => t?.job === job).map((t) => t!.four));
+  for (const four of fours) out.set(four, tools.filter((t) => tailOf(t)?.four === four));
+  return out;
+}
+
 /**
  * The job name in KIFF's name for a tool, with this grant's suffix off: `<job><suffix>` (`toolKey`), or
  * `<job><suffix><n>` for n from 2 when that was taken (`numberedKey`). planque cuts the job to 59 characters, less

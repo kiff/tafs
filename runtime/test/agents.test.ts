@@ -175,6 +175,15 @@ describe("kiff/agents client", () => {
     expect(sent[0]!.url.pathname).toBe("/schedules/taf1");
   });
 
+  it("keeps a check's connection to tafs cloud: kiff/agents' check has no grant and refuses one", async () => {
+    const { agents, sent } = server((s) => new Response(s.body ?? "{}", { status: s.method === "POST" ? 201 : 200 }));
+    const check = { tool: "list_invoices_iyjq", arguments: {}, items: "data", cursor: "created", grant: "grt_iyjqR4tNp8" };
+    const s = { id: "taf1", agent: "taf1", cron: "0 9 * * 1-5", input: "Work the queue.", enabled: true, check };
+    await agents.createSchedule("t_acme", s);
+    await agents.updateSchedule("t_acme", s);
+    for (const x of sent) expect((JSON.parse(x.body ?? "") as { check: unknown }).check).toEqual({ tool: "list_invoices_iyjq", arguments: {}, items: "data", cursor: "created" });
+  });
+
   it("never sends an id that isn't one", async () => {
     const { agents, sent } = server();
     for (const id of ["", ".", "..", "../agents", "a/b", "a b", "x".repeat(129)]) {
