@@ -1,0 +1,1 @@
+- **Android: one refused line per run.** A chat followed live keeps only its own stopped line for that run; a refusal from another run still shows ([android-app.md](docs/android-app.md)).

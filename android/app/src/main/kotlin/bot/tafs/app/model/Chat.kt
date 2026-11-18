@@ -87,9 +87,9 @@ data class LiveState(val state: String, val words: String? = null)
 sealed interface ChatEnd {
   /**
    * It stopped part-way: Retry sends [retry] again; [done] is what went through before it stopped, from the run's own record.
-   * [words]: why, in tafs cloud's words, when it sends them.
+   * [words]: why, in tafs cloud's words, when it sends them. [run]: the run that stopped, when the stream named it.
    */
-  data class Failed(val retry: String, val done: List<bot.tafs.app.kiff.DoneCall>, val words: String? = null) : ChatEnd
+  data class Failed(val retry: String, val done: List<bot.tafs.app.kiff.DoneCall>, val words: String? = null, val run: String? = null) : ChatEnd
   /** The owner stopped it. */
   data object Stopped : ChatEnd
   /** It stopped at its cost or turn cap (`cost_cap`, `turn_cap`), and wrote nothing for it. */

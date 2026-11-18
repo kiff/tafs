@@ -1001,8 +1001,10 @@ data class AppState(
   fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }.let { items ->
     // A run that ended without an answer: tafs cloud's words, as the taf's (or Coach's) last line, after everything else.
     val failed = chatFailed[tafId] ?: return@let items
-    // One refused line per run: a run followed live already ends with its own (the stream's `end`, with Retry), the same run.
-    if (chatEnded[tafId] is ChatEnd.Failed) return@let items
+    // One refused line per run: a run followed live already ends with its own (the stream's `end`, with Retry). When the stream
+    // named no run, that line is taken to be this run's.
+    val live = chatEnded[tafId] as? ChatEnd.Failed
+    if (live != null && (live.run == null || live.run == failed.run)) return@let items
     val after = (items.maxOfOrNull { it.at } ?: java.time.Instant.EPOCH).plusMillis(1)
     items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = "failed|" + failed.run))
   }
@@ -6516,7 +6518,7 @@ class AppModel(
       _state.update { s ->
         val how = when {
           end == null -> null
-          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words)
+          end.status == "ERROR" && retry != null -> ChatEnd.Failed(retry, end.done, end.words, run)
           end.status == "CANCELLED" -> ChatEnd.Stopped
           end.stop in CAP_STOPS -> ChatEnd.Capped(end.stop)
           else -> null
