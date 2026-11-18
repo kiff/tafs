@@ -88,6 +88,34 @@ describe("a person reads the app's published name, never its slug", () => {
     }
   });
 
+  it("takes planque's name for a grant over the host-derived name of a request by server", () => {
+    const steps = new Steps();
+    steps.call("planque", { action: "request", server: "https://mcp.acme.example/v1" }, "c1");
+    steps.result("c1", JSON.stringify({ id: "grt_acme001", vendor: "Acme CRM", status: "pending" }));
+    steps.call("planque", { action: "approve", grant: "grt_acme001" }, "c2");
+    for (const id of ["c1", "c2"]) {
+      expect(steps.connectionWhy(id), id).toContain("Acme CRM");
+      expect(steps.connectionWhy(id), id).not.toContain("Acme crm");
+    }
+    expect(steps.appOf("grt_acme001")).toBe("Acme CRM");
+  });
+
+  it("gives an entry no name from a catalog title that is a host or a path, and cuts a long one", () => {
+    const named = (title: string, lang: "en" = "en") => {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "catalog" }, "c0");
+      steps.result("c0", JSON.stringify({ entries: [{ entry: "connector:composio:googlesheets@1", title }] }));
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      return steps.connectionWhy("c1") ?? "";
+    };
+    for (const bad of ["googlesheets.com", "Sheets / Drive", "https://sheets.example"]) {
+      expect(named(bad), bad).toBe(wordsIn("en").step_connection_not_yet(""));
+    }
+    expect(named("Google Sheets")).toBe(wordsIn("en").step_connection_not_yet("Google Sheets"));
+    const long = "A".repeat(80);
+    expect(named(long)).toBe(wordsIn("en").step_connection_not_yet("A".repeat(60)));
+  });
+
   it("takes planque's name over a catalog's when the grant is named", () => {
     const steps = new Steps();
     steps.call("planque", { action: "catalog" }, "c0");
