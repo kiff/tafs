@@ -102,7 +102,7 @@ key, certificate, password or profile. It does this, in order:
    - a scheme pre- or post-action.
 
    Today `ios/project.yml` declares none of these, so even a bad XcodeGen release can't add one.
-1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_DIRECT`), made through the
+1. **The profiles:** Mac Catalyst Developer ID profiles (`MAC_CATALYST_APP_DIRECT`), made through the
    API with the Developer ID Application certificate (`asc-profiles.rb --developer-id`): "tafs
    Developer ID CI" and "tafs notify Developer ID CI". They're made with the same capabilities as the
    App Store's, Associated Domains among them, and the script stops if a profile lacks one.
