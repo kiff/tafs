@@ -4,7 +4,7 @@ import SwiftUI
 /// `WATCH_V2`, so a watch shows v1 whole until every step is in; it turns on, as this one line, when the last of them
 /// lands and the owner has tried the build.
 enum WatchV2 {
-    nonisolated static let on = false
+    static let on = false
 }
 
 /// v2's pages, one under the other, moved between with the crown or a swipe: Coach is home, since talking to Coach is
