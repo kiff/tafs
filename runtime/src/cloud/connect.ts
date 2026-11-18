@@ -25,6 +25,11 @@ export interface CatalogApp {
   words?: string;
   grant?: string;
   /**
+   * The key goes with the owner's own login at the vendor, an email (planque's `login`, Zendesk's "{login}/token"):
+   * the apps ask for it before Connect and send it as `login`. Only on a key entry.
+   */
+  login?: true;
+  /**
    * When a check connected this app this way, how (`key` or `oauth`), and where it's recorded (planque's catalog, from
    * its reviewed list): only on the entry that is the way the app was proved; absent until a check has.
    */
@@ -56,6 +61,13 @@ const ENTRY = /^[A-Za-z0-9._@:-]{1,300}$/;
 /** A provider's id and its page cursor, as planque gives them back: passed on as they are. */
 const PROVIDER = /^[A-Za-z0-9_-]{1,64}$/;
 const CURSOR = /^[\x21-\x7e]{1,4096}$/;
+/**
+ * The owner's login at the vendor, as planque takes it (kiff/planque `loginAddress`): one email address of letters,
+ * digits and `. _ % + -` before the `@`, a domain of two labels or more, at most 254 characters. Checked here too, so
+ * a bad one is said before planque is asked.
+ */
+export const LOGIN = /^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(\.[A-Za-z0-9-]{1,63})+$/;
+export const validLogin = (v: unknown): v is string => typeof v === "string" && v.length <= 254 && LOGIN.test(v);
 
 async function call(fetchFn: Fetch, url: string, bearer: string, init: { method: string; body?: unknown }): Promise<unknown> {
   let res: Response;
@@ -117,6 +129,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
       entry: e.entry, vendor, title: e.title, ...displayName(e.entry, vendor, e.title),
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
       how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
+      ...(how === "key" && e.login === true ? { login: true as const } : {}),
       ...provedOf(e.proved),
     });
   }
@@ -200,12 +213,16 @@ function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
   return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || (x.r === 2 ? discover(x.a, y.a) : 0) || x.i - y.i).map((x) => x.a);
 }
 
-/** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */
-export async function startApp(fetchFn: Fetch, base: string, tenant: string, bearer: string, entry: string, agent: string, agentName?: string): Promise<{ grant: unknown; needs_key?: true }> {
+/**
+ * Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. `login` is the
+ * owner's login at the vendor, for an entry the catalog lists with `login: true`; planque refuses one it doesn't take.
+ */
+export async function startApp(fetchFn: Fetch, base: string, tenant: string, bearer: string, entry: string, agent: string, agentName?: string, login?: string): Promise<{ grant: unknown; needs_key?: true }> {
   if (!ENTRY.test(entry)) throw new ConnectError(404, "no such app in the catalog");
+  if (login !== undefined && !validLogin(login)) throw new ConnectError(400, "login is one email address: no space, colon, slash or other character");
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog/${encodeURIComponent(entry)}/grants`, bearer,
     // The taf's name, one line, for the words the owner reads and signs ("Connect Gmail for Refunds").
-    { method: "POST", body: { agent, ...(agentName ? { agent_name: agentName.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim().slice(0, 60).trim() } : {}) } }) as { grant?: unknown; needs_key?: unknown };
+    { method: "POST", body: { agent, ...(agentName ? { agent_name: agentName.replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim().slice(0, 60).trim() } : {}), ...(login !== undefined ? { login } : {}) } }) as { grant?: unknown; needs_key?: unknown };
   if (!got.grant || typeof got.grant !== "object") throw new ConnectError(502, "planque didn't answer; try again");
   return { grant: got.grant, ...(got.needs_key === true ? { needs_key: true as const } : {}) };
 }

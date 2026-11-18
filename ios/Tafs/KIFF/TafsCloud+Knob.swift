@@ -393,6 +393,9 @@ extension TafsCloud {
             var connectedFlag = false
             /// For `needs_setup`: tafs cloud's line in place of Connect.
             var setupWords: String?
+            /// Its key goes with the owner's own login at the vendor, an email (Zendesk's): Connect asks for it
+            /// first and sends it as `login`. False from a tafs cloud before it.
+            var login = false
             /// Whose the connection is, in tafs cloud's words, drawn as sent; nil when it sends none.
             var whose: String?
             /// The tafs that use it, by tafs cloud's names; nil when it sends none (the phone's own
@@ -417,7 +420,7 @@ extension TafsCloud {
             /// Connected, signed in, or to sign in again: the person's own, listed first, under Yours.
             var yours: Bool { connected || needsReconnect || state == "signed_in" }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, name, subtitle, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words", neededBy = "needed_by", misplaced }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, name, subtitle, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words", neededBy = "needed_by", misplaced, login }
             private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -446,6 +449,7 @@ extension TafsCloud {
                 // A list it can't read is none sent: every taf you manage, as before, never a guess from half a list.
                 neededBy = ((try? c.decodeIfPresent([UsedBy].self, forKey: .neededBy)) ?? nil)?.filter { !$0.taf.isEmpty }
                 misplaced = ((try? c.decodeIfPresent([Misplaced].self, forKey: .misplaced)) ?? nil) ?? []
+                login = ((try? c.decodeIfPresent(Bool.self, forKey: .login)) ?? nil) ?? false
             }
         }
         /// A live connection of an app made under a taf that doesn't need it: the grant, and that taf.
@@ -536,9 +540,12 @@ extension TafsCloud {
     }
 
     /// Starts connecting `entry` from the list for one taf (its tafs cloud id): planque makes
-    /// the grant for that taf's KIFF agent, with its profile.
-    func startConnect(_ entry: String, taf: String, proof: String? = nil) async throws -> ConnectStart {
-        try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: ["taf": taf],
+    /// the grant for that taf's KIFF agent, with its profile. `login` is the owner's login at the
+    /// vendor, for an app the list marks `login`.
+    func startConnect(_ entry: String, taf: String, login: String? = nil, proof: String? = nil) async throws -> ConnectStart {
+        var body = ["taf": taf]
+        if let login { body["login"] = login }
+        return try await send("POST", "/v1/connect/apps/\(escaped(entry))", body: body,
                        headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
 
@@ -583,5 +590,14 @@ enum JSONValue: Codable, Equatable, Sendable {
         case .array(let a): try c.encode(a)
         case .null: try c.encodeNil()
         }
+    }
+}
+
+/// The owner's login at the vendor, as planque takes it (`loginAddress`) and tafs cloud checks it
+/// (`login_invalid`): one email address of letters, digits and `. _ % + -` before the `@`, a domain
+/// of two labels or more, at most 254 characters.
+enum ConnectLogin {
+    static func valid(_ v: String) -> Bool {
+        v.count <= 254 && v.range(of: #"^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9-]{1,63}(\.[A-Za-z0-9-]{1,63})+$"#, options: .regularExpression) != nil
     }
 }

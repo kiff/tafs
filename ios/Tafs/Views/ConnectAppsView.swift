@@ -17,6 +17,8 @@ struct ConnectAppsView: View {
     @State private var loadingMore = false
     /// The app waiting for its taf to be chosen.
     @State private var choosing: TafsCloud.ConnectApps.App?
+    /// An app whose key goes with the owner's login, and the taf it's for: its email is asked first.
+    @State private var askingLogin: LoginAsk?
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// `-screen connect-app`: the app with the most connections, opened from the list, for the reference set.
     @State private var openingApp = Screenshots.enabled && Screenshots.screen == "connect-app"
@@ -85,9 +87,68 @@ struct ConnectAppsView: View {
         } message: { app in
             Text(Words.Connect.oneTaf(app: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))"))
         }
+        .sheet(item: $askingLogin) { ask in
+            LoginSheet(vendor: ask.vendor) { email in startNow(ask.app, for: ask.taf, login: email) }
+        }
         .sheet(item: Binding(get: { model.connectStart.map(StartSheet.init) }, set: { if $0 == nil { model.connectStart = nil } })) { sheet in
             ConnectApprovalSheet(start: sheet.start).environmentObject(model)
         }
+    }
+
+    /// The owner's login at the vendor, asked before Connect: one email address, checked as planque checks it.
+    /// A bad one is said under the field and nothing starts; Connect takes the email on.
+    struct LoginSheet: View {
+        let vendor: String
+        let connect: (String) -> Void
+        @Environment(\.dismiss) private var dismiss
+        @State private var email = ""
+        @State private var invalid = false
+
+        var body: some View {
+            NavigationStack {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(Words.Connect.loginWhat(vendor: vendor))
+                        .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    DriveField(Words.Connect.loginPlaceholder, text: $email)
+                        .textFieldStyle(.roundedBorder)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .onSubmit(submit)
+                    if invalid {
+                        Text(Words.Connect.loginInvalid).scaledFont(13).foregroundColor(Theme.no)
+                    }
+                    Spacer()
+                }
+                .padding(20)
+                .screenBackground()
+                .navigationTitle(Words.Connect.loginTitle(vendor: vendor))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(Words.Connect.Apps.connect, action: submit)
+                            .disabled(email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+
+        private func submit() {
+            let login = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard ConnectLogin.valid(login) else { invalid = true; return }
+            connect(login)
+        }
+    }
+
+    /// An app that takes the owner's login, for one taf, while its email is asked.
+    struct LoginAsk: Identifiable {
+        let app: TafsCloud.ConnectApps.App
+        let taf: UUID
+        var id: String { app.entry }
+        var vendor: String { app.name ?? (app.vendor.isEmpty ? app.title : app.vendor) }
     }
 
     private struct StartSheet: Identifiable {
@@ -226,9 +287,19 @@ struct ConnectAppsView: View {
 
     private func start(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) {
         choosing = nil
+        // A key that goes with the owner's login at the vendor: the email first, then the connection with it.
+        if app.login && app.takesKey {
+            askingLogin = LoginAsk(app: app, taf: tafID)
+            return
+        }
+        startNow(app, for: tafID, login: nil)
+    }
+
+    private func startNow(_ app: TafsCloud.ConnectApps.App, for tafID: UUID, login: String?) {
+        askingLogin = nil
         starting = app.entry
         Task {
-            await model.startConnect(app, for: tafID)
+            await model.startConnect(app, for: tafID, login: login)
             starting = nil
         }
     }

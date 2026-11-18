@@ -916,6 +916,10 @@
     <string name="connect_key_not_given">Der Schlüssel wurde nicht übergeben. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. Es wurde nichts genehmigt.</string>
     <string name="connect_last_failed">Zuletzt fehlgeschlagen: %1$s · %2$s</string>
+    <string name="connect_login_invalid">Gib eine E-Mail-Adresse ein, ohne Leerzeichen.</string>
+    <string name="connect_login_placeholder">name@firma.com</string>
+    <string name="connect_login_title">Dein %1$s-Login</string>
+    <string name="connect_login_what">Die E-Mail-Adresse, mit der du dich bei %1$s anmeldest. Der Schlüssel handelt in %1$s als diese Person, also nimm deine eigene.</string>
     <string name="connect_misplaced">Für %1$s angelegt, das %2$s nicht nutzt.</string>
     <string name="connect_more_apps">Mehr Apps</string>
     <string name="connect_more_apps_could_not_listed">Weitere Apps konnten nicht aufgelistet werden: %1$s</string>

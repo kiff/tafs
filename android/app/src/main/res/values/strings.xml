@@ -916,6 +916,10 @@
     <string name="connect_key_not_given">The key wasn\'t given. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">KIFF\'s words for this connection couldn\'t be read. Nothing was approved.</string>
     <string name="connect_last_failed">Last failed: %1$s · %2$s</string>
+    <string name="connect_login_invalid">Enter one email address, with no spaces.</string>
+    <string name="connect_login_placeholder">name@company.com</string>
+    <string name="connect_login_title">Your %1$s login</string>
+    <string name="connect_login_what">The email address you sign in to %1$s with. The key acts as this person in %1$s, so use your own.</string>
     <string name="connect_misplaced">Made for %1$s, which doesn\'t use %2$s.</string>
     <string name="connect_more_apps">More apps</string>
     <string name="connect_more_apps_could_not_listed">More apps couldn\'t be listed: %1$s</string>

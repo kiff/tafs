@@ -164,6 +164,28 @@ describe("Connect apps", () => {
     expect(got).toEqual({ grant: { id: "g2", request: { profile: {} } }, needs_key: true });
   });
 
+  it("lists an entry that takes the owner's login with login: true, on a key entry only", async () => {
+    const got = await listApps(fake(200, { entries: [
+      { entry: "zendesk@1", vendor: "Zendesk", title: "Zendesk", how: "key", login: true },
+      { entry: "holded@1", vendor: "Holded", title: "Holded", how: "key", login: "yes" },
+      { entry: "notion@1", vendor: "Notion", title: "Notion", how: "oauth", login: true },
+    ] }), BASE, "t1", "s", "");
+    expect(Object.fromEntries(got.apps.map((a) => [a.vendor, a.login]))).toEqual({ Zendesk: true, Holded: undefined, Notion: undefined });
+  });
+
+  it("sends the owner's login with the grant request when given, and refuses one that isn't one email address", async () => {
+    const seen: { url?: string; init?: RequestInit }[] = [];
+    await startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "zendesk@1", "a", "Tickets", "ana.b+desk@shop.example.co");
+    expect(JSON.parse(String(seen[0]!.init!.body))).toEqual({ agent: "a", agent_name: "Tickets", login: "ana.b+desk@shop.example.co" });
+    // Without one, nothing is added: planque says when an entry needs it.
+    await startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "zendesk@1", "a");
+    expect(JSON.parse(String(seen[1]!.init!.body))).toEqual({ agent: "a" });
+    for (const bad of ["", "ana", "ana@shop", "ana b@shop.example", "ana@shop.example/token", "ana:x@shop.example", "a@b.example,c@d.example", "ané@shop.example", `${"a".repeat(65)}@shop.example`, `a@${"b".repeat(63)}.${"c".repeat(63)}.${"d".repeat(63)}.${"e".repeat(63)}`]) {
+      await expect(startApp(fake(200, { grant: { id: "g" } }, seen), BASE, "t1", "s", "zendesk@1", "a", undefined, bad)).rejects.toMatchObject({ status: 400 });
+    }
+    expect(seen).toHaveLength(2);
+  });
+
   it("says what went wrong in words, never planque's own", async () => {
     await expect(startApp(fake(404, "nope"), BASE, "t1", "s", "x@1", "a")).rejects.toMatchObject({ status: 404 });
     await expect(listApps(fake(403, "{}"), BASE, "t1", "s", "")).rejects.toMatchObject({ status: 403 });

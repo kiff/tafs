@@ -916,6 +916,10 @@
     <string name="connect_key_not_given">De sleutel is niet gegeven. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">De woorden van KIFF voor deze koppeling konden niet worden gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_last_failed">Laatst mislukt: %1$s · %2$s</string>
+    <string name="connect_login_invalid">Vul één e-mailadres in, zonder spaties.</string>
+    <string name="connect_login_placeholder">naam@bedrijf.com</string>
+    <string name="connect_login_title">Je %1$s-login</string>
+    <string name="connect_login_what">Het e-mailadres waarmee je inlogt bij %1$s. De sleutel handelt in %1$s als deze persoon, dus gebruik je eigen adres.</string>
     <string name="connect_misplaced">Gemaakt voor %1$s, dat %2$s niet gebruikt.</string>
     <string name="connect_more_apps">Meer apps</string>
     <string name="connect_more_apps_could_not_listed">Meer apps konden niet worden getoond: %1$s</string>

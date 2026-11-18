@@ -26,7 +26,7 @@ import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { allowOffer } from "./allow.js";
-import { type CatalogApp, ConnectError, listApps, type Proof, startApp } from "./connect.js";
+import { type CatalogApp, ConnectError, listApps, type Proof, startApp, validLogin } from "./connect.js";
 import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
@@ -10171,7 +10171,9 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       if (!neededBy(app, needs.tafs, RECIPES, needs.grants, needs.cards).some((n) => n.taf === taf.id)) {
         throw new HTTPError(409, w.connect_not_needed(taf.name), { code: "not_needed", words: w.connect_not_needed(taf.name) });
       }
-      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent, taf.name);
+      // The owner's login at the vendor, for an entry that takes one (`login: true`); planque says whether it's needed.
+      if (body.login !== undefined && !validLogin(body.login)) throw new HTTPError(400, "login is one email address: no space, colon, slash or other character", { code: "login_invalid" });
+      return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent, taf.name, body.login as string | undefined);
     }
   } catch (err) {
     if (err instanceof ConnectError) throw new HTTPError(err.status, err.message);

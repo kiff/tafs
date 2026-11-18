@@ -2816,7 +2816,7 @@ final class AppModel: ObservableObject {
 
     /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
     /// the list.
-    func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
+    func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID, login: String? = nil) async {
         guard let c = cloudTaf(for: tafID) else {
             lastError = Words.Connect.tafNotTafsCloudApps
             return
@@ -2828,7 +2828,7 @@ final class AppModel: ObservableObject {
             let signer = self.signer
             planque.tenant = kiffTenant
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
-            let start = try await cloud.startConnect(app.entry, taf: c.id, proof: proof)
+            let start = try await cloud.startConnect(app.entry, taf: c.id, login: login, proof: proof)
             guard gen == accountGeneration else { return }
             await refreshConnections()
             guard gen == accountGeneration else { return }
