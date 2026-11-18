@@ -26,11 +26,30 @@ class WatchLinkTest {
       WatchRequest.Asks(now),
       WatchRequest.Asks(now, since = "2026-11-16T19:00:00.000Z"),
       WatchRequest.Brief(now),
+      WatchRequest.Taf(now, "taf_1"),
+      WatchRequest.Calendar(now),
+      WatchRequest.Calendar(now, day = "2026-11-19"),
+      WatchRequest.Account(now),
     )
     for (request in requests) {
       val (path, data) = WatchLink.encode(request)
       assertEquals(WatchLink.Accepted.Yes(request), WatchLink.accept(path, data, now))
     }
+  }
+
+  /** Wear v2's reads (a taf's page, a calendar day, the account) are reads, checked as the others: no field they don't take. */
+  @Test fun theV2ReadsAreCheckedAsTheOthers() {
+    assertEquals(WatchLink.Accepted.No(NotAccepted.MALFORMED), WatchLink.accept(WatchLink.TAF, """{"made_at":$now}""".encodeToByteArray(), now))
+    assertEquals(WatchLink.Accepted.No(NotAccepted.MALFORMED), WatchLink.accept(WatchLink.TAF, """{"made_at":$now,"taf_id":" "}""".encodeToByteArray(), now))
+    assertEquals(WatchLink.Accepted.No(NotAccepted.MALFORMED), WatchLink.accept(WatchLink.CALENDAR, """{"made_at":$now,"day":"tomorrow"}""".encodeToByteArray(), now))
+    assertEquals(WatchLink.Accepted.No(NotAccepted.MALFORMED), WatchLink.accept(WatchLink.ACCOUNT, """{"made_at":$now,"sign_out":true}""".encodeToByteArray(), now))
+    assertEquals(WatchLink.Accepted.No(NotAccepted.TOO_OLD), WatchLink.accept(WatchLink.ACCOUNT, """{"made_at":${now - 31_000}}""".encodeToByteArray(), now))
+    val replies = listOf(
+      WatchReply.TafPage("taf_1", "Support replies", "Working", false, "Answer tickets", listOf(CardLine("Replies", "28", "calls left today of 40", listOf("Replies: up to 40 a day"))), waiting = 1),
+      WatchReply.CalendarDay("2026-11-19", "2 to come", listOf(EventLine("09:00", "Morning inbox", "Every day at 09:00"))),
+      WatchReply.AccountPage("ana@acme.com", "Acme Pay", "Solo · 260 credits left"),
+    )
+    for (reply in replies) assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
   }
 
   @Test fun anApprovalIsNeverAWatchRequest() {

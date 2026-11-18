@@ -3339,6 +3339,17 @@ class AppModel(
     _state.update { it.copy(calendarState = calendar) }
   }
 
+  /**
+   * One calendar day for the watch (docs/watch-wear.md): [day], or today in the account's zone, read from tafs cloud for that day
+   * alone; the calendar screen's own read is left as it is. Null when not signed in.
+   */
+  suspend fun calendarDay(day: String?): Pair<String, bot.tafs.app.kiff.CalendarRead>? {
+    if (_state.value.mode != Mode.kiff) return null
+    val zone = _state.value.kiffAccount?.timeZone?.let { runCatching { java.time.ZoneId.of(it) }.getOrNull() } ?: java.time.ZoneId.systemDefault()
+    val shown = day ?: bot.tafs.app.model.CalendarMath.today(zone, clock())
+    return shown to cloud.calendar(shown, shown)
+  }
+
   /** The taf behind tafs cloud's id, as the calendar names it, when this person has it listed. */
   fun tafIdForCloud(cloudId: String): String? = _state.value.tafs.firstOrNull { it.cloudId == cloudId }?.id
 

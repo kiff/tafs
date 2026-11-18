@@ -202,7 +202,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask eight things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -214,6 +214,9 @@ The watch may ask eight things (`WatchRequest`), each a path under `/tafs/watch/
 | `ask` | Ask tafs: `client_id`, `text`, `reply_to`; signed with the device key and sent to tafs cloud, which answers its receipt |
 | `asks` | Reads the watch's asks as tafs cloud has them, updated after `since` (or in the last day) |
 | `brief` | Reads Your brief as the phone shows it, or says there's none (`no_brief`); asked only with the watch's switch on (below) |
+| `taf` | One taf's page (Wear v2), by `taf_id`: its state and job, each Card's title, face (figure and line) and rules as the phone's Card tab draws them, and how many of its calls wait on the person (`taf`); read again within the same floor as Needs you |
+| `calendar` | A calendar day (Wear v2), `day` as `YYYY-MM-DD` or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day alone, its line and that day's events in time order with each taf's name (`calendar`); the phone's own calendar screen keeps its read |
+| `account` | Who is signed in, the account's name and the plan's line as Account shows it (`account`) |
 
 And the phone sends the watch one message, never a request it answers: **`ask-result`**, an ask's new state, when tafs
 cloud's push says it changed.
@@ -223,10 +226,10 @@ the phone's approval key behind its fingerprint, so on the watch each says **App
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the eight (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
+- a path that isn't one of the eleven (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message or an ask that's empty or over 2,000 characters, or an ask whose id isn't 8 to 64 letters, digits, `_`
-  or `-`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
+  or `-`, a taf's page with no `taf_id`, or a calendar day that isn't `YYYY-MM-DD`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
 - a request made more than 30 seconds ago: `TOO_OLD`. Requests are live messages (`MessageClient.sendRequest`), never
   `DataItem`s, so nothing queued while the phone was away lands later;
 - a request dated more than 5 seconds ahead of the phone's clock: `FROM_THE_FUTURE`.

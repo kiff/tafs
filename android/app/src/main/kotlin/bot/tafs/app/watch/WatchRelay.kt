@@ -7,6 +7,8 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
 import bot.tafs.watchlink.AskLine
+import bot.tafs.watchlink.CardLine
+import bot.tafs.watchlink.EventLine
 import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
@@ -60,6 +62,30 @@ class WatchRelay(
       is WatchRequest.Coach -> coach(request.text)
       is WatchRequest.Ask -> ask(request)
       is WatchRequest.Asks -> asks(request.since)
+      is WatchRequest.Taf -> {
+        val model = signedIn() ?: return WatchReply.SignedOut
+        // Read again within the floor, as Needs you: today's use is KIFF's now, not what the phone last drew.
+        if (floor.due(now())) model.refresh()
+        tafPage(model.state.value, request.tafId) ?: WatchReply.Failed(Words.Watch.openOnPhone)
+      }
+      is WatchRequest.Calendar -> calendar(request.day)
+      is WatchRequest.Account -> {
+        val model = signedIn() ?: return WatchReply.SignedOut
+        account(model.state.value)
+      }
+    }
+  }
+
+  /** A calendar day, read from tafs cloud for that day alone (the phone's own calendar screen keeps its read). */
+  private suspend fun calendar(day: String?): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val (shown, read) = model.calendarDay(day) ?: return WatchReply.SignedOut
+      calendarDay(shown, read)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      WatchReply.Failed(Words.Watch.openOnPhone)
     }
   }
 
@@ -273,6 +299,46 @@ class WatchRelay(
         needsYou = state.briefNeedsYouLine,
       )
     }
+
+    /**
+     * One taf's page as the phone's Card tab draws it: its state and job, each Card's title, face and rules, and how many of its
+     * calls wait on the person. Null for a taf the phone doesn't list.
+     */
+    fun tafPage(state: AppState, tafId: String): WatchReply.TafPage? {
+      val taf = state.taf(tafId) ?: return null
+      val halted = state.haltOf(taf.id).halted || state.haltOf(null).halted
+      return WatchReply.TafPage(
+        tafId = taf.id,
+        name = taf.name,
+        state = if (halted) Words.Taf.State.halted else taf.now,
+        halted = halted,
+        job = taf.job,
+        cards = taf.shownCards.map { card ->
+          CardLine(
+            title = card.title,
+            figure = card.hero?.figure,
+            words = card.hero?.words,
+            rules = card.rules.map { Words.Card.ruleLine(it.label, it.summary) },
+          )
+        },
+        waiting = state.held.count { it.tafId == taf.id },
+      )
+    }
+
+    /** A calendar day as tafs cloud reads it: its line, and each event on that day with its time and its taf's name. */
+    fun calendarDay(day: String, read: bot.tafs.app.kiff.CalendarRead): WatchReply.CalendarDay = WatchReply.CalendarDay(
+      day = day,
+      words = read.words,
+      events = read.events.filter { it.day == day }.sortedBy { it.minute }.map { EventLine(it.time, it.name, it.words, it.count) },
+      halted = read.halted,
+    )
+
+    /** Who is signed in, the account's name, and the plan's line as Account shows it. */
+    fun account(state: AppState): WatchReply.AccountPage = WatchReply.AccountPage(
+      email = state.kiffAccount?.email,
+      account = state.kiffAccount?.displayName ?: state.kiffAccount?.slug,
+      plan = state.balance?.planLine,
+    )
 
     /** Each taf in one line, in tafs cloud's words, and whether it, or the whole account, is halted. */
     fun tafs(state: AppState): WatchReply.Tafs = WatchReply.Tafs(
