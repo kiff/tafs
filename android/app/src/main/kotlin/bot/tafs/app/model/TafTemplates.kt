@@ -12,6 +12,11 @@ data class TafTemplate(
   val rules: List<CardRule>,
   /** Actions the sample proposes, in order, to show the Card at work. */
   val script: List<ProposedAction>,
+  /**
+   * Calls already counted today when the sample opens, by action: so a taf's Card, its Activity bar and the Overview show the
+   * same day's use in every app's sample, whatever its own opening rounds play.
+   */
+  val countedEarlier: Map<String, Int> = emptyMap(),
 )
 
 object TafTemplates {
@@ -44,6 +49,8 @@ object TafTemplates {
       ProposedAction("promise", Words.Sample.Support.promise7802, null, Words.Sample.Support.promise7802Why),
       ProposedAction("share_customer_data", Words.Sample.Support.shareHistory, null, Words.Sample.Support.shareHistoryWhy),
     ),
+    // Ten replies before the sample opens, and its two opening replies: 12 of 40 used, 28 left today, as the Store's Card shows.
+    countedEarlier = mapOf("reply_ticket" to 10),
   )
 
   /** Operations: tell customers of a late parcel before they ask; reships wait, an address never changes from an email. */
