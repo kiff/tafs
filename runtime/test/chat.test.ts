@@ -1177,9 +1177,9 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(en.working).toBeNull();
     expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
     expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
-    // "…used none of your credits" holds only when the run counted nothing. Credits are a taf's calls that went
-    // through and aren't reads (kiff-cloud apps/api/internal/meter); AI turns never count. A run that sent a write
-    // before the card had used credits, so it gets the partway words instead, and never the "none" claim.
+    // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
+    // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
+    // make no claim about credits. A run with only refusals or reads keeps code_ai_unavailable (PM, 18 Nov 11:56).
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
     const partway = await thread();
     expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });
