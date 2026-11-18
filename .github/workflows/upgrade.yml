@@ -72,6 +72,8 @@ jobs:
               bash .github/upgrade-rule-b.sh eval.log eval.steps && conclusion=success
             fi
           fi
+          # The definition sources: what an Eval measures and the Upgrade rolls out.
+          sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
           # The owner's override (.github/upgrade-override.sh, tested on saved runs in upgrade-gate.yml): a full
           # Eval red in exactly one step, and the latest run, of that step's suite alone at repeat 3, green on it.
           # Only with a named owner decision on the thread; both runs, their tafs refs and the reason are this run's record.
@@ -95,12 +97,15 @@ jobs:
               jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$r.steps"
               gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > "$r.log"
             done
-            step=$(bash .github/upgrade-override.sh base.steps base.log check.log check.steps)
+            # The definitions changed between the two runs, and the suites they touch, as kiff/agents maps them at the check's commit.
             base_ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$base_sha" --jq .content | base64 -d | tr -d '[:space:]')
+            git cat-file -e "$base_ref^{commit}"
+            git diff --name-only "$base_ref" "$ref" -- $sources > changed.paths
+            gh api "repos/kiff/agents/contents/eval/suites.json?ref=$agents_sha" --jq .content | base64 -d > suites.json
+            step=$(bash .github/upgrade-override.sh base.steps base.log check.log check.steps suites.json changed.paths)
             conclusion=success
-            echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$step\"; Eval $check (kiff/tafs@${ref:0:12}) passed it. Reason: $reason" | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$step\"; Eval $check (kiff/tafs@${ref:0:12}) passed it, with every suite the $(grep -c . changed.paths || true) changed definition path(s) touch. Reason: $reason" | tee -a "$GITHUB_STEP_SUMMARY"
           fi
-          sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then
             echo "evaluated=true" >> "$GITHUB_OUTPUT"
           else
