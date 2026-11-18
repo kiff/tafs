@@ -11,6 +11,7 @@ import { everyWords, type Lang, midLine, wordsIn } from "./words/index.js";
  * without the model, and a run only for the items past `cursor`. `items` is the dotted path to the list in
  * the result ("" when the result is the list), `id` names an item (`id` when absent), and `first` says what
  * the first check does: `new` (kiff/agents' default) only takes the cursor, `all` hands every item listed.
+ * `grant` is the connection the read is on, tafs cloud's alone: kiff/agents never gets it (agents.ts writable).
  */
 export interface Check {
   tool: string;
@@ -19,6 +20,7 @@ export interface Check {
   cursor: string;
   id?: string;
   first?: "new" | "all";
+  grant?: string;
 }
 
 /** A schedule as kiff/agents stores it. */
@@ -35,6 +37,7 @@ export interface PlannedSchedule {
 export const CHECK_ARGS_MAX = 2048;
 const DOTTED = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$/;
 const FIELD = /^[A-Za-z0-9_.-]{1,128}$/;
+const GRANT = /^[A-Za-z0-9_-]{1,128}$/;
 
 /**
  * A check from a request (Coach's result, the dial), checked; an Error says what's wrong in words Coach can
@@ -55,7 +58,9 @@ export function checkOf(v: unknown, tools?: readonly string[]): Check {
   const id = c.id === undefined || c.id === "" ? undefined : typeof c.id === "string" && FIELD.test(c.id.trim()) ? c.id.trim() : null;
   if (id === null) throw new Error("check.id is the field that names an item, such as id");
   if (c.first !== undefined && c.first !== "new" && c.first !== "all") throw new Error("check.first is new (the first check only takes the cursor) or all (it hands every item it lists)");
-  return { tool, arguments: args as Record<string, unknown>, items: c.items, cursor, ...(id ? { id } : {}), ...(c.first ? { first: c.first as "new" | "all" } : {}) };
+  const grant = c.grant === undefined || c.grant === "" ? undefined : typeof c.grant === "string" && GRANT.test(c.grant.trim()) ? c.grant.trim() : null;
+  if (grant === null) throw new Error("check.grant is the connection the read is on, as tafs_state names it");
+  return { tool, arguments: args as Record<string, unknown>, items: c.items, cursor, ...(id ? { id } : {}), ...(c.first ? { first: c.first as "new" | "all" } : {}), ...(grant ? { grant } : {}) };
 }
 
 /** A trigger from the dial or Coach's draft. */

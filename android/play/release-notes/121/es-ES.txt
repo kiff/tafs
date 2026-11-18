@@ -1,0 +1,1 @@
+- Cuando la clave de una app actúa como tú en esa app, Conectar te pide primero la dirección de correo con la que inicias sesión en ella, para que sus llamadas actúen como tú y no como otra persona.

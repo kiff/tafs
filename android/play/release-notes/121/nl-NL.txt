@@ -1,0 +1,1 @@
+- Als de sleutel van een app in die app als jou handelt, vraagt Koppelen eerst het e-mailadres waarmee je daar inlogt, zodat de aanroepen als jou handelen en niet als iemand anders.

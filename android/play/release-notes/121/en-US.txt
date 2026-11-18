@@ -1,0 +1,1 @@
+- When an app's key acts as you in that app, Connect first asks for the email address you sign in to it with, so its calls act as you and no one else.

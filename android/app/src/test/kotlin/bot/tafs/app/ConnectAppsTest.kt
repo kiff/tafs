@@ -275,4 +275,38 @@ class ConnectAppsTest {
     val unsaid = json.decodeFromString<bot.tafs.app.kiff.ConnectedApp>("""{"id":"g2","name":"Notion","status":"connected"}""")
     org.junit.Assert.assertNull("nothing when tafs cloud says nothing", unsaid.accountWords)
   }
+
+  // An app whose key goes with the owner's login at the vendor (tafs cloud's `login: true`, Zendesk's): the email goes with the start.
+
+  @Test fun theCatalogsLoginMarkIsRead() {
+    val read = bot.tafs.app.kiff.KiffClient.json.decodeFromString(bot.tafs.app.kiff.ConnectApps.serializer(),
+      """{"apps":[{"entry":"zendesk@1","vendor":"Zendesk","title":"Zendesk","how":"key","login":true},{"entry":"notion@1","vendor":"Notion","title":"Notion"}]}""")
+    assertEquals(listOf(true, false), read.apps.map { it.login })
+  }
+
+  @Test fun anAppWithALoginStartsWithItAsTypedAndItsKeySheetFollows() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/zendesk@1", 200, """{"grant":"g9","needs_key":true}""")
+    val zendesk = bot.tafs.app.kiff.ConnectApps.App("zendesk@1", "Zendesk", "Zendesk", how = "key", login = true)
+    m.startConnectApp(zendesk, m.state.value.connectableTafs.single().id, " ana@acme.com ")
+    assertEquals("""{"taf":"taf_1","login":"ana@acme.com"}""", String(transport.requestsTo("POST /v1/connect/apps/zendesk@1").single().body!!))
+    assertEquals("g9", m.state.value.listApproval)
+    assertTrue("the key is typed on the sheet, as for any key app", m.state.value.listApprovalNeedsKey)
+  }
+
+  @Test fun anAppWithNoLoginNeverSendsOne() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":"g7"}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"), m.state.value.connectableTafs.single().id, "ana@acme.com")
+    assertEquals("""{"taf":"taf_1"}""", String(transport.requestsTo("POST /v1/connect/apps/notion@1").single().body!!))
+  }
+
+  @Test fun aLoginTafsCloudRefusesIsSaidAndNothingStarts() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/zendesk@1", 400, """{"error":"bad login","code":"login_invalid"}""")
+    val zendesk = bot.tafs.app.kiff.ConnectApps.App("zendesk@1", "Zendesk", "Zendesk", how = "key", login = true)
+    m.startConnectApp(zendesk, m.state.value.connectableTafs.single().id, "ana at acme")
+    assertNull(m.state.value.listApproval)
+    assertTrue(m.state.value.connectAppsError!!.contains(bot.tafs.app.model.Words.Connect.loginInvalid))
+  }
 }

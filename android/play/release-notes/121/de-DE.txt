@@ -1,0 +1,1 @@
+- Wenn der Schlüssel einer App in dieser App als du handelt, fragt „Verbinden“ zuerst nach der E-Mail-Adresse, mit der du dich dort anmeldest. So handeln ihre Aufrufe als du und als niemand sonst.

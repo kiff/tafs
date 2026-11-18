@@ -274,6 +274,46 @@ export function grantSuffix(id: string): string {
   return four ? `_${four}` : "";
 }
 
+/** A tool's job and the four letters or digits after it, when its name ends as `toolKey` or `numberedKey` make it. */
+function tailOf(name: string): { job: string; four: string } | undefined {
+  const m = /^(.+)_([a-z0-9]{4})(\d{0,2})$/.exec(name);
+  return m && !(m[3] && Number(m[3]) < 2) ? { job: m[1]!, four: m[2]! } : undefined;
+}
+
+/**
+ * The connection's own tools among the taf's when `tool` isn't that connection's (kiff/tafs: the phone's retest, 18
+ * Nov): a taf switched to a new connection of the same app keeps the old one's tools too. A tool ending as planque
+ * names a connection's tools (`toolKey`, `numberedKey`) is the connection whose suffix it ends in, so one that doesn't
+ * end in `grant`'s is another's, whatever tools the taf keeps (none of the connection's own, maybe). A tool named
+ * without a suffix is another's only when a tool of its job ends in `grant`'s. Undefined when it may be the connection's.
+ */
+export function anotherConnectionsTool(tool: string, grant: string, tools: readonly string[]): string[] | undefined {
+  const suffix = grantSuffix(grant);
+  if (!suffix || jobOf(tool, suffix)) return undefined;
+  const own = tools.filter((t) => jobOf(t, suffix));
+  if (tailOf(tool)) return own;
+  return own.some((t) => tailOf(t)?.job === tool) ? own : undefined;
+}
+
+/** The suffix a tool's name ends in when planque named it for a connection (`_` and four letters or digits), else undefined. */
+export function connectionTail(tool: string): string | undefined {
+  const t = tailOf(tool);
+  return t ? `_${t.four}` : undefined;
+}
+
+/**
+ * The connections a tool's job has among the taf's tools, by the suffix their tools end in, with each one's tools:
+ * two or more when the taf has that app twice, so a read named without its connection could be either.
+ */
+export function connectionsOfJob(tool: string, tools: readonly string[]): Map<string, string[]> {
+  const job = tailOf(tool)?.job;
+  const out = new Map<string, string[]>();
+  if (!job) return out;
+  const fours = new Set(tools.map(tailOf).filter((t) => t?.job === job).map((t) => t!.four));
+  for (const four of fours) out.set(four, tools.filter((t) => tailOf(t)?.four === four));
+  return out;
+}
+
 /**
  * The job name in KIFF's name for a tool, with this grant's suffix off: `<job><suffix>` (`toolKey`), or
  * `<job><suffix><n>` for n from 2 when that was taken (`numberedKey`). planque cuts the job to 59 characters, less

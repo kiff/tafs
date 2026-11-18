@@ -1101,8 +1101,14 @@ function writable(s: Schedule): Omit<Schedule, "next" | "tenant"> {
   return {
     id: s.id, agent: s.agent, cron: s.cron, ...(s.time_zone ? { time_zone: s.time_zone } : {}), input: s.input, enabled: s.enabled,
     ...(s.kind && s.kind !== "cron" ? { kind: s.kind } : {}), ...(s.at ? { at: s.at } : {}), ...(s.busy ? { busy: s.busy } : {}),
-    ...(s.skip?.length ? { skip: s.skip } : {}), ...(s.check ? { check: s.check } : {}),
+    ...(s.skip?.length ? { skip: s.skip } : {}), ...(s.check ? { check: checkFor(s.check) } : {}),
   };
+}
+
+/** A check as kiff/agents takes it: the connection it reads on is tafs cloud's alone, and kiff/agents refuses a field it doesn't know. */
+function checkFor(c: NonNullable<Schedule["check"]>): NonNullable<Schedule["check"]> {
+  const { grant: _grant, ...rest } = c;
+  return rest;
 }
 
 function notFound(err: unknown): undefined {
