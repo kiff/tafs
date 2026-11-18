@@ -132,7 +132,7 @@ async function world(s: Services, card: Record<string, unknown> = {}) {
   /** What Coach heard for the card, if anything. */
   const told = () => (stored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
   const boTold = () => (bosStored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a1")?.result as { answer?: unknown } | undefined;
-  return { agents, stored, call, told, boTold, coach, at: (d: Date) => { clock = d; } };
+  return { agents, tafs, stored, call, told, boTold, coach, at: (d: Date) => { clock = d; } };
 }
 
 const ASK = `/v1/tafs/${COACH}/components/a1/approval`;
@@ -826,6 +826,25 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect(s.checks).toEqual([{ method: "POST", uri: `${ASK}/${w.id}`, body_sha256: createHash("sha256").update(JSON.stringify({ result: "connected" })).digest("hex"), signature: "t=2026-10-16T12:00:30Z,v1=sig" }]);
     // The ask is spent: a second report finds nothing waiting.
     expect((await w.report({ result: "connected" })).status).toBe(404);
+  });
+
+  // A taf moved to a new connection of an app (the phone's retest, 18 Nov): its kept tools held only the old
+  // connection's, so its dial couldn't name the new connection's read. Approved, the connection's tools are the taf's.
+  it("approved: the connection's tools are its taf's from then on, beside the ones it kept, and a failed approval keeps none", async () => {
+    const s = services();
+    const RAE = "t_acme#taf-rrrr0000000000000000";
+    const w = await asked(s);
+    w.tafs.held.set(RAE, { ...w.tafs.held.get(RAE)!, tools: ["list_invoices_3ojw"] });
+    s.grants = [grant({ status: "connected" }, { tools: [{ tool: "list_invoices", name: "list_invoices_iyjq" }, { tool: "send_invoice" }] })];
+    expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
+    // A tool asked for with no name has planque's: the vendor's name and the grant's suffix.
+    expect(w.tafs.held.get(RAE)!.tools).toEqual(["list_invoices_3ojw", "list_invoices_iyjq", "send_invoice_g1"]);
+    // Coach's own taf keeps nothing of it: the connection is the Refunds taf's.
+    expect(w.tafs.held.get(`t_acme#${COACH}`)!.tools).toBeUndefined();
+    const f = await asked(services());
+    f.tafs.held.set(RAE, { ...f.tafs.held.get(RAE)!, tools: ["list_invoices_3ojw"] });
+    expect((await f.report({ result: "sign_in_closed" })).body.answer).toMatch(/^failed/);
+    expect(f.tafs.held.get(RAE)!.tools).toEqual(["list_invoices_3ojw"]);
   });
 
   it("KIFF is asked about the public path exactly as the phone signed it: no prefix, the query kept, the device grant dropped", async () => {

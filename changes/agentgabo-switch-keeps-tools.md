@@ -1,0 +1,1 @@
+- **A taf keeps an approved connection's tools.** When a connection is approved for a taf, its tools join the taf's kept tools, so after a move to a new connection of an app Coach's dial can name that connection's read with `check.grant` (docs/api.md).
