@@ -33,7 +33,7 @@ object TafTemplates {
     job = Words.Sample.Support.job,
     tools = listOf(Words.Sample.Tool.email, Words.Sample.Tool.store),
     rules = sampleRules(
-      CardRule(action = "reply_ticket", label = Words.Sample.Support.Rule.replies, countPerWindow = 60, window = Window.day),
+      CardRule(action = "reply_ticket", label = Words.Sample.Support.Rule.replies, countPerWindow = 40, window = Window.day),
       CardRule(action = "promise", label = Words.Sample.Support.Rule.promises, alwaysAsk = true, nextSteps = listOf(Words.Sample.Support.nextStep)),
       CardRule(action = "share_customer_data", label = Words.Sample.Support.Rule.customerData, never = true, outside = Outside.refuse),
     ),
