@@ -191,17 +191,23 @@ export type RulesMismatch =
  */
 export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[]): RulesMismatch | undefined {
   for (const g of grants) {
+    const suffix = grantSuffix(g.id);
     for (const t of g.request.tools ?? []) {
       const name = fold(t.name || t.tool);
       if (!name) continue;
       const before = fold(t.tool || t.name);
+      // The name a rule gives: KIFF's name with this grant's own suffix off ("send_reminder" for "send_reminder_3qa1" on
+      // grt_3Qa1…), as Coach reads it. A managed app's `tool` is its connector's id, which no rule names (the owner's
+      // phone, 18 Nov: a Gmail write refused three times though every notice named it).
+      const job = jobOf(name, suffix);
       const covering = cards.filter((raw) => {
         const card = raw as { grants?: unknown };
         return Array.isArray(card.grants) && card.grants.some((x) => fold((x as { action?: unknown }).action) === name);
       });
       if (!covering.length) continue;
       const shown = t.title || t.name || t.tool || name;
-      const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name);
+      const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name) ??
+        (job ? rules.find((r) => job.covers(fold(r.tool))) : undefined);
       if (!rule) {
         if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown };
         continue;
@@ -257,6 +263,29 @@ export function kiffsOwnCount(cards: readonly unknown[], card: unknown, a: unkno
       Array.isArray(other.aggregates) && other.aggregates.some((t) => fold((t as { quantity?: unknown })?.quantity).startsWith("sum(") && !fold((t as { per?: unknown })?.per));
   });
   return actions.length > 0 && actions.every(bounded);
+}
+
+/**
+ * The suffix planque gives a grant's tools in KIFF when the request names none (`toolKey`): `_` and the first four
+ * letters or digits of the grant's id after `grt_`, lowercased. Empty when the id has none.
+ */
+export function grantSuffix(id: string): string {
+  const four = (id.startsWith("grt_") ? id.slice(4) : id).toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 4);
+  return four ? `_${four}` : "";
+}
+
+/**
+ * The job name in KIFF's name for a tool, with this grant's suffix off: `<job><suffix>` (`toolKey`), or
+ * `<job><suffix><n>` for n from 2 when that was taken (`numberedKey`). planque cuts the job to 59 characters, less
+ * n's digits, so a job cut exactly there covers a rule that starts with it; any other covers only itself.
+ */
+function jobOf(name: string, suffix: string): { covers: (rule: string) => boolean } | undefined {
+  if (!suffix) return undefined;
+  const m = new RegExp(`^(.+)${suffix}(\\d{0,2})$`).exec(name);
+  if (!m || (m[2] && Number(m[2]) < 2)) return undefined;
+  const job = m[1]!;
+  const cut = job.length === 59 - m[2]!.length;
+  return { covers: (rule) => rule === job || (cut && rule.length > job.length && rule.startsWith(job)) };
 }
 
 /** A figure on the Cards: `per` is "" on each call's and on a total over all items, else folded. */

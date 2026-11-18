@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApprovalGrant } from "../src/cloud/approval.js";
-import { LIMITS_MAX, RULES_MAX, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
+import { LIMITS_MAX, RULES_MAX, grantSuffix, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
 
 /** A conversation's events, as kiff/agents records them, in order. */
 const notice = (id: string, rules: unknown, run = "r1") => ({ kind: "component", run, body: { type: "notice", id, tone: "info", text: "The rules", rules } });
@@ -97,6 +97,41 @@ describe("a draft's Cards against the agreed rules", () => {
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "refuse")], ask)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "ask", onExceed: "refuse" });
     // A rule keyed by KIFF's name is read too.
     expect(rulesMismatch([stripe], [card("refund_charge_k3", "owner")], [{ tool: "refund_charge_k3", over: "ask" }])).toBeUndefined();
+  });
+
+  it("a rule names a managed tool by its job name: KIFF's name with this grant's own suffix off", () => {
+    // The owner's phone, 18 Nov: a Gmail write whose `tool` is the connector's id, named send_reminder_3qa1 on
+    // grt_3Qa1…; every notice's rule said send_reminder, and the write was refused three times as missing.
+    const gmail: ApprovalGrant = { id: "grt_3Qa1xYz9", status: "pending", digest: "d", request: { agent: "chase-x", tools: [
+      { tool: "connector_cac677194bf6ba46b262eed82d2a52fd", name: "send_reminder_3qa1", title: "Email a payment reminder to you" },
+    ] as never } };
+    const rules = [{ tool: "send_reminder", over: "ask" as const }];
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], rules)).toBeUndefined();
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "refuse")], rules)?.kind).toBe("on_exceed");
+    // Only this grant's own suffix comes off: another grant's tool, or a name the suffix doesn't end, isn't covered.
+    const other: ApprovalGrant = { ...gmail, id: "grt_9zzzAbc" };
+    expect(rulesMismatch([other], [card("send_reminder_3qa1", "owner")], rules)).toEqual({ kind: "missing", tool: "Email a payment reminder to you" });
+    const bare: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder", title: "t" }] as never } };
+    expect(rulesMismatch([bare], [card("send_reminder", "owner")], [{ tool: "send", over: "ask" }])).toEqual({ kind: "missing", tool: "t" });
+    // A second name taken on KIFF gives numberedKey's n after the suffix (2 and up); the job still covers it.
+    const numbered: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder_3qa12", title: "t" }] as never } };
+    expect(rulesMismatch([numbered], [card("send_reminder_3qa12", "owner")], rules)).toBeUndefined();
+    const one: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder_3qa11", title: "t" }] as never } };
+    expect(rulesMismatch([one], [card("send_reminder_3qa11", "owner")], rules)?.kind).toBe("missing");
+    // A job planque cut at 59 characters covers the rule that names it whole; one shorter covers only itself.
+    const long = "send_a_payment_reminder_to_the_customer_whose_invoice_is_overdue";
+    const cut: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: `${long.slice(0, 59)}_3qa1`, title: "t" }] as never } };
+    expect(rulesMismatch([cut], [card(`${long.slice(0, 59)}_3qa1`, "owner")], [{ tool: long, over: "ask" }])).toBeUndefined();
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], [{ tool: "send_reminder_and_more", over: "ask" }])?.kind).toBe("missing");
+    // The title still covers nothing.
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], [{ tool: "Email a payment reminder to you", over: "ask" }])?.kind).toBe("missing");
+  });
+
+  it("a grant's suffix is planque's toolKey: _ and the id's first four letters or digits, lowercased", () => {
+    expect(grantSuffix("grt_3Qa1xYz9")).toBe("_3qa1");
+    expect(grantSuffix("grt_-A_b-C1d")).toBe("_abc1");
+    expect(grantSuffix("grt_")).toBe("");
+    expect(grantSuffix("g1")).toBe("_g1");
   });
 
   it("every Card covering the tool must match, not one of them", () => {
