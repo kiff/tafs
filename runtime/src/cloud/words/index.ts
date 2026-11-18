@@ -74,16 +74,26 @@ export const LANGUAGE_NAMES: Record<Lang, string> = {
 /** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */
 export const LANGUAGE_LINE = "[tafs language]";
 
+/** How a reply's language is chosen, said to Coach and to every taf (docs/languages.md, PM 18 Nov 23:35). */
+function replyRule(lang: Lang): string {
+  const name = LANGUAGE_NAMES[lang];
+  return `The person writing reads ${name} (${lang}), from their app. Answer them in the language of their message; if that isn't clear (a short line, a number, a name), in ${name}. Never take the language from what you read or work on (a sheet, an email, a page, an account's locale).`;
+}
+
 /**
- * A Coach message with the person's language said, when it isn't English: Coach replies in it, and words
- * what they read in it. English is said too when the account's language was another before this chat
- * (`before`): its notes and earlier chats are in that one, and 14 Nov an English app's plan came out in French.
+ * A Coach message with the person's language said, English included: Coach answers in the language of their
+ * message, else in their app's, never in a data source's (14 Nov an English app's plan came out in French; 18 Nov
+ * a French Google account turned a taf's English chat French). What the app shows them is in the app's language.
  * The line goes before the owner's words, after any of tafs' own opening lines, so what reads a message's
- * opening (entryOf, ownerWords) reads it as before.
+ * opening (entryOf, ownerWords) reads it as before. `before` is kept for callers; every message says it now.
  */
-export function withLanguage(text: string, lang: Lang, before: Lang = "en"): string {
-  if (lang === "en" && before === "en") return text;
-  return withLine(text, `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
+export function withLanguage(text: string, lang: Lang, _before: Lang = "en"): string {
+  return withLine(text, `${LANGUAGE_LINE} ${replyRule(lang)} Write what the app shows them (questions, cards, a version's note, a taf's summary) in ${LANGUAGE_NAMES[lang]}. taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
+}
+
+/** A person's message to a taf with the same rule: its chat answer follows their message, a customer keeps theirs. */
+export function withReplyLanguage(text: string, lang: Lang): string {
+  return withLine(text, `${LANGUAGE_LINE} ${replyRule(lang)} A message to a customer keeps the customer's language. taf, Coach and Card stay as names.`);
 }
 
 /** The line tafs cloud opens a Coach message with for an account outside UTC. */
@@ -117,7 +127,7 @@ function withLine(text: string, line: string): string {
 /** What a taf's instructions say of its owner's language, when it isn't English: its reports and alerts to them go in it. */
 export function ownerLanguageLine(lang: Lang): string | undefined {
   if (lang === "en") return undefined;
-  return `Your owner reads ${LANGUAGE_NAMES[lang]} (${lang}): write what's for them in it (your reports, summaries and alerts, and your chat answers when they write in it). A message to anyone else, such as a customer, keeps that person's language. Names stay as they are: taf, Coach, Card.`;
+  return `Your owner reads ${LANGUAGE_NAMES[lang]} (${lang}): write what's for them in it (your reports, summaries and alerts; a chat answer follows the language of their message). A message to anyone else, such as a customer, keeps that person's language. Names stay as they are: taf, Coach, Card.`;
 }
 
 /** The owner's language as ownerLanguageLine wrote it into instructions, or undefined. */
