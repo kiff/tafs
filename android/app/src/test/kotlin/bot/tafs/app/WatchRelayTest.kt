@@ -151,7 +151,7 @@ class WatchRelayTest {
     assertEquals(taf.job, page.job)
     assertEquals(taf.shownCards.map { it.title }, page.cards.map { it.title })
     assertEquals(taf.shownCards.first().hero?.figure, page.cards.first().figure)
-    assertEquals(taf.card.rules.size, page.cards.first().rules.size)
+    assertEquals(taf.shownCards.first().rules.size, page.cards.first().rules.size)
     assertEquals(state.held.count { it.tafId == taf.id }, page.waiting)
     assertNull("a taf the phone doesn't list", WatchRelay.tafPage(state, "no_such_taf"))
   }
