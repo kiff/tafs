@@ -347,6 +347,7 @@ export const pt: Words = {
   work_last_done: (t) => `Última concluída ${at(t)}`,
   work_nothing_yet: "Ainda nada",
   code_ai_unavailable: "O nosso fornecedor de IA não nos está a servir neste momento, por isso isto parou e não usou nenhum dos seus créditos. O problema é nosso, não seu: tente novamente um pouco mais tarde.",
+  code_ai_unavailable_partway: "O nosso fornecedor de IA deixou de nos servir a meio, por isso isto parou. O problema é nosso, não seu: tente novamente um pouco mais tarde.",
   cr_unreadable: "Neste momento não é possível ler os créditos. Tente novamente daqui a pouco.",
   cr_credits: (nf, form) => `${nf} ${form === "one" ? "crédito" : "créditos"}`,
   cr_runs: (nf, form) => `${nf} ${form === "one" ? "execução" : "execuções"}`,

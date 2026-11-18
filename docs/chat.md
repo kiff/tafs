@@ -360,6 +360,14 @@ iOS drops its own queue the same way, with the same words.
   (`turn_cap`) (`capWords`). A reply cut off at its length limit (`max_token`) says "stopped: its reply ran out of
   room…", and the AI declining to go on (`refused`) says "stopped: the AI declined to continue…". The thread's
   `stopped` names any of the four; an older tafs cloud sends only `capped`, with the two caps, which still works.
+- A run that **ended failed with nothing to tell it** (one an answer to a card resumed, which has no
+  stream) is said in the thread too: `failed: {run, code?, words}` on the conversation, from the
+  latest run, in the person's language, and that run is neither at work nor waiting. A run kiff/agents
+  stopped with a code has its `code` and tafs cloud's words for it. `ai_unavailable` says it stopped and
+  used none of your credits (a failed run is free); one that had already sent something, so
+  acted, says it stopped partway instead (`code_ai_unavailable_partway`), with no claim about credits. A failure
+  with no code says kiff/agents' reason in the person's language, or a plain "It failed", never
+  silence (`latestRun` and `runFailure`).
 - A run that **failed** part-way says it stopped part-way, with Retry, which sends its
   message again. If a call that acts went through before it stopped, the line names each
   one by its tool, what it acted on, and how much moved: "Refunds stopped part-way, after

@@ -140,15 +140,24 @@ function validZone(zone: string): string {
  * apps as they are, so a new code needs no tafs release. A run with no code has none: its error text is never shown
  * as words for people where a code would be. The words are one line, at most 400 characters.
  */
-export function runFailure(r: { status?: unknown; error?: unknown; code?: unknown }, lang: Lang = "en"): { code: string; words: string } | undefined {
+export function runFailure(r: { status?: unknown; error?: unknown; code?: unknown; tally?: Run["tally"] }, lang: Lang = "en"): { code: string; words: string } | undefined {
   if (r.status !== "ERROR" || typeof r.code !== "string" || !/^[a-z_]{1,40}$/.test(r.code) || typeof r.error !== "string") return undefined;
   // A code tafs cloud knows is worded from its own catalog, in the person's language; any other passes
   // kiff/agents' words through, so a new code needs no tafs release (docs/languages.md).
   const own = CODE_WORDS[r.code];
+  // A run that had sent something (a call that went through) already acted: it says it stopped partway, not that it
+  // stopped, and makes no claim about credits. A failed run uses none either way (KIFF counts it free). What the run
+  // did decides, never how it got there.
+  if (own === "code_ai_unavailable" && sentAny(r.tally)) return { code: r.code, words: wordsIn(lang).code_ai_unavailable_partway };
   if (own) return { code: r.code, words: wordsIn(lang)[own] };
   const flat = r.error.replace(/\s+/g, " ").trim();
   if (!flat) return undefined;
   return { code: r.code, words: flat.length > 400 ? `${flat.slice(0, 399)}…` : flat };
+}
+
+/** Whether a run's record has a call that went through: kiff/agents' `tally`, any tool's `sent` above 0. */
+function sentAny(tally: Run["tally"] | undefined): boolean {
+  return Object.values(tally ?? {}).some((t) => typeof t?.sent === "number" && t.sent > 0);
 }
 
 /** The run codes tafs cloud words itself, by catalog key. */

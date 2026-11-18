@@ -347,6 +347,7 @@ export const fr: Words = {
   work_last_done: (t) => `Dernière exécution terminée ${at(t)}`,
   work_nothing_yet: "Rien pour l'instant",
   code_ai_unavailable: "Notre fournisseur d'IA ne nous répond pas pour le moment : cela s'est donc arrêté, sans utiliser aucun de vos crédits. Le problème vient de nous, pas de vous : réessayez un peu plus tard.",
+  code_ai_unavailable_partway: "Notre fournisseur d'IA a cessé de nous répondre en cours de route : cela s'est donc arrêté. Le problème vient de nous, pas de vous : réessayez un peu plus tard.",
   cr_unreadable: "Les crédits ne peuvent pas être lus pour le moment. Réessayez dans un instant.",
   cr_credits: (nf, form) => `${nf} ${form === "one" ? "crédit" : "crédits"}`,
   cr_runs: (nf, form) => `${nf} ${form === "one" ? "exécution" : "exécutions"}`,

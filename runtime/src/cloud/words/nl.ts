@@ -347,6 +347,7 @@ export const nl: Words = {
   work_last_done: (t) => `Laatst klaar ${at(t)}`,
   work_nothing_yet: "Nog niets",
   code_ai_unavailable: "Onze AI-provider bedient ons op dit moment niet, dus dit is gestopt en er zijn geen credits van je gebruikt. Het ligt aan ons, niet aan jou: probeer het iets later opnieuw.",
+  code_ai_unavailable_partway: "Onze AI-provider bediende ons halverwege niet meer, dus dit is gestopt. Het ligt aan ons, niet aan jou: probeer het iets later opnieuw.",
   cr_unreadable: "Credits kunnen nu niet worden gelezen. Probeer het zo opnieuw.",
   cr_credits: (nf, form) => `${nf} ${form === "one" ? "credit" : "credits"}`,
   cr_runs: (nf, form) => `${nf} ${form === "one" ? "run" : "runs"}`,
