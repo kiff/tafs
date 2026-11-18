@@ -20,7 +20,7 @@ describe("Coach's rules-notice endings", () => {
   });
 
   // Eval 44128040350: Setup's notices with lines failed "signs what was agreed" in 3 of 3 runs, so until the Upgrade
-  // Setup's definition carries none, show offers no lines, and Coach writes the notice's text (draft-the-card@36).
+  // Setup's definition carries none, show offers no lines, and Coach writes the notice's text (draft-the-card@37).
   it("stays out of Setup's definition while the rules notice is text only", () => {
     const def = setupDefinition("setup-1") as unknown as { kept_words?: unknown };
     expect(def.kept_words).toBeUndefined();
