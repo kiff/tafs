@@ -1677,7 +1677,20 @@ struct SetupApproval: View {
                     }
                 }
             } else {
-                Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
+                // Redrawn every few seconds, so a card still unread a minute after it was shown says so.
+                TimelineView(.periodic(from: .now, by: 5)) { _ in
+                    if model.cardNotRead(component.id) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(Words.Connect.approveNotRead(why: Words.Error.onOurSide))
+                                .scaledFont(14).foregroundColor(Theme.no)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button(Words.Common.tryAgain) { Task { await model.retryCards() } }
+                                .buttonStyle(.bordered)
+                        }
+                    } else {
+                        Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
+                    }
+                }
             }
             // The taf's Card as this fingerprint signs it, or, by tafs cloud's mark (`signs`), as the one
             // approved next: under its words and dimmed, never as if signed now. Marked next with no

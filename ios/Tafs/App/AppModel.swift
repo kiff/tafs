@@ -8825,15 +8825,41 @@ final class AppModel: ObservableObject {
 
     /// An unanswered approval or sign-in card whose grant, or KIFF's draft of whose Card, this phone hasn't
     /// read yet, shown in the last ten minutes: the thread is read again while it waits, past the poll
-    /// budget, so the grant and the draft are read too.
+    /// budget, so the grant and the draft are read too. A card that names no grant yet waits too: the
+    /// thread is read again until it does.
     var cardWaitsOnItsGrant: Bool {
         setupThread.components.contains { shown in
             let c = shown.component
-            guard c.type == .approval || c.type == .signIn, let g = c.grant, setupThread.answer(to: c.id) == nil else { return false }
+            guard c.type == .approval || c.type == .signIn, setupThread.answer(to: c.id) == nil else { return false }
             // Its grant, or KIFF's draft of its Card, not read yet: Approve waits on both.
-            let unread = !grants.contains { $0.id == g } || c.draft.map { setupDrafts[$0] == nil } == true
+            let unread = grantUnread(c) || c.draft.map { setupDrafts[$0] == nil } == true
             return unread && clock().timeIntervalSince(shown.firstAt) < 600
         }
+    }
+
+    /// How long an open card may wait for its grant before it says it couldn't be read, with Try again,
+    /// as Android's `CARD_NOT_READ_MS`.
+    static let cardNotReadAfter: TimeInterval = 60
+
+    /// Whether a card's grant isn't read yet: it names none, or planque hasn't listed it.
+    private func grantUnread(_ c: SetupComponent) -> Bool {
+        guard let g = c.grant else { return true }
+        return !grants.contains { $0.id == g }
+    }
+
+    /// An open approval or sign-in card still waiting for its grant a minute after it was shown: it says it
+    /// couldn't be read, with Try again, never "Reading the request…" for ever. The reads go on meanwhile.
+    func cardNotRead(_ componentID: String) -> Bool {
+        guard let shown = setupThread.components.first(where: { $0.component.id == componentID }) else { return false }
+        let c = shown.component
+        guard c.type == .approval || c.type == .signIn, setupThread.answer(to: c.id) == nil, grantUnread(c) else { return false }
+        return clock().timeIntervalSince(shown.firstAt) >= Self.cardNotReadAfter
+    }
+
+    /// Try again, on a card that couldn't be read: the thread, then planque's grants.
+    func retryCards() async {
+        await loadSetupThread()
+        await refreshConnections()
     }
 
     /// The plan's Stop, and the composer's while Setup works: Setup's current run is cancelled.
