@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
-import { wordsIn } from "../src/cloud/words/index.js";
+import { ownerWords } from "../src/cloud/improve.js";
+import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -665,7 +666,9 @@ describe("steer with hold: tafs cloud holds what the run doesn't take (docs/chat
   const status = (w: ReturnType<typeof world>, id: string, to: string) => { (w.agents.runs.find((x) => x.id === id) as { status: string }).status = to; };
   /** The newest run, and the last message in a chat, as the fake keeps them. */
   const newest = (w: ReturnType<typeof world>) => w.agents.runs[0]!;
-  const lastSaid = (w: ReturnType<typeof world>, session: string) => (w.agents.events.get(session)?.at(-1)?.body as { text?: string } | undefined)?.text;
+  /** What kiff/agents was handed last in a chat, as the person wrote it: each message also carries the reply-language line. */
+  const handed = (w: ReturnType<typeof world>, session: string) => (w.agents.events.get(session)?.at(-1)?.body as { text?: string } | undefined)?.text;
+  const lastSaid = (w: ReturnType<typeof world>, session: string) => { const t = handed(w, session); return t === undefined ? t : ownerWords(t); };
   const started = (w: ReturnType<typeof world>) => w.agents.calls.filter((x) => x.startsWith("startRun"));
   /** The runs of one chat, as kiff/agents keeps them. */
   const runsIn = (w: ReturnType<typeof world>, session: string) => w.agents.runs.filter((x) => x.session === session);
@@ -681,6 +684,8 @@ describe("steer with hold: tafs cloud holds what the run doesn't take (docs/chat
     expect(r.body).toEqual({ sent: { run: next.id, session: chat.session } });
     expect(started(w)).toEqual([`startRun ${RAE} ${chat.session}`]);
     expect(lastSaid(w, chat.session)).toBe("and the other one");
+    // The next message says the reply-language rule too: the person may switch language mid-chat.
+    expect(handed(w, chat.session)).toBe(withReplyLanguage("and the other one", "en"));
     expect((await conversation(w)).body.steering?.held).toBeUndefined();
   });
 

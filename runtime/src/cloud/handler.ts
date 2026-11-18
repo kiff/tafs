@@ -19,7 +19,7 @@ import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
+import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { handedByOf, requestDetail } from "./request.js";
@@ -4390,7 +4390,8 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  * tafs cloud names the skills kiff/agents loads for the session. A session that exists keeps its own.
  */
 async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<string> {
-  if (taf.job !== SETUP_JOB) return text;
+  // A taf's chat answer follows the person's message, else their app's language, never a data source's (docs/languages.md).
+  if (taf.job !== SETUP_JOB) return withReplyLanguage(text, langOf(event));
   // Every Coach message says the person's language when it isn't English, or when the account's was another (docs/languages.md).
   const lang = langOf(event);
   // English is said too when the account's language was another until this chat (read before the start keeps this one).
@@ -5914,7 +5915,10 @@ async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: s
   try {
     const [at, ai] = await Promise.all([granted(event, taf.kiffAgent, { session, requester: member(me) }, deps), aiBound(event, deps)]);
     if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
-    const said = taf.job === SETUP_JOB ? await withChatNotes(me, session, lines.text(text), deps) : lines.text(text);
+    // Every message says the reply-language rule, a chat's next one too: the person may switch language mid-chat.
+    const said = taf.job === SETUP_JOB
+      ? withLanguage(await withChatNotes(me, session, lines.text(text), deps), langOf(event))
+      : withReplyLanguage(lines.text(text), langOf(event));
     return await deps.agents.startRun(me.tenantID, taf.id, said, at, ai);
   } catch (err) {
     await lines.putBack();
@@ -10099,12 +10103,14 @@ async function sentBefore(event: HTTPEvent, me: KIFFIdentity, taf: Taf, key: str
   if (found) {
     // No digest of tafs cloud's own: kiff/agents' is of what it was sent, the person's words for a taf. Coach's carry
     // the start's lines and waiting lines too, so a Coach message that differs can't be told: it's taken as sent again.
-    if (!kept?.said && found.input_sha256 !== textDigest(owner) && taf.job !== SETUP_JOB) throw keyConflict();
+    // A taf's message went with its reply-language line (withCoachSkills); one sent before that line, without it.
+    const sent = withReplyLanguage(owner, langOf(event));
+    if (!kept?.said && found.input_sha256 !== textDigest(sent) && found.input_sha256 !== textDigest(owner) && taf.job !== SETUP_JOB) throw keyConflict();
     if (found.steered) return { steered: { run: found.id, session: found.session_id } };
     // A run no invocation took yet (the first send went away before it began) is handed on once more, by
     // kiff/agents' own answer to a request sent again: one run, never two.
     const run = found.status === "PENDING"
-      ? await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, owner, { requester: member(me), dedupKey: key, source: APP_SOURCE }))
+      ? await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, taf.job === SETUP_JOB ? owner : sent, { requester: member(me), dedupKey: key, source: APP_SOURCE }))
       : await agentsCall(() => deps.agents.getRun(me.tenantID, taf.id, found.id));
     return { run };
   }

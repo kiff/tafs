@@ -1,5 +1,5 @@
 import { generateKeyPairSync, sign } from "node:crypto";
-import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, keys as coachKeys, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
@@ -761,7 +761,8 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(before.body.coach_lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: "It failed: Stripe said no." }]);
     await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
     const sent = w.agents.events.get(w.agents.runs[0]!.session)!.at(-1)!.body as { text: string };
-    expect(sent.text).toBe(`[tafs coach lines]\n[taf Refunds run ${task.json.run} ended: Refund order 42] It failed. error: "Stripe said no."\nThe owner says: How did it go?`);
+    // Coach's lines first, then the reply-language line every message carries, then the owner's words.
+    expect(sent.text).toBe(withLanguage(`[tafs coach lines]\n[taf Refunds run ${task.json.run} ended: Refund order 42] It failed. error: "Stripe said no."\nThe owner says: How did it go?`, "en"));
     const after = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
     expect(after.body.coach_lines).toBeUndefined();
     expect(after.body.messages.at(-1)).toMatchObject({ from: "owner", text: "How did it go?" });
