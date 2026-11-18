@@ -113,6 +113,16 @@ describe("a draft's Cards against the agreed rules", () => {
     expect(rulesMismatch([other], [card("send_reminder_3qa1", "owner")], rules)).toEqual({ kind: "missing", tool: "Email a payment reminder to you" });
     const bare: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder", title: "t" }] as never } };
     expect(rulesMismatch([bare], [card("send_reminder", "owner")], [{ tool: "send", over: "ask" }])).toEqual({ kind: "missing", tool: "t" });
+    // A second name taken on KIFF gives numberedKey's n after the suffix (2 and up); the job still covers it.
+    const numbered: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder_3qa12", title: "t" }] as never } };
+    expect(rulesMismatch([numbered], [card("send_reminder_3qa12", "owner")], rules)).toBeUndefined();
+    const one: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: "send_reminder_3qa11", title: "t" }] as never } };
+    expect(rulesMismatch([one], [card("send_reminder_3qa11", "owner")], rules)?.kind).toBe("missing");
+    // A job planque cut at 59 characters covers the rule that names it whole; one shorter covers only itself.
+    const long = "send_a_payment_reminder_to_the_customer_whose_invoice_is_overdue";
+    const cut: ApprovalGrant = { ...gmail, request: { agent: "chase-x", tools: [{ tool: "connector_x", name: `${long.slice(0, 59)}_3qa1`, title: "t" }] as never } };
+    expect(rulesMismatch([cut], [card(`${long.slice(0, 59)}_3qa1`, "owner")], [{ tool: long, over: "ask" }])).toBeUndefined();
+    expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], [{ tool: "send_reminder_and_more", over: "ask" }])?.kind).toBe("missing");
     // The title still covers nothing.
     expect(rulesMismatch([gmail], [card("send_reminder_3qa1", "owner")], [{ tool: "Email a payment reminder to you", over: "ask" }])?.kind).toBe("missing");
   });
