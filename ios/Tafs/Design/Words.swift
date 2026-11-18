@@ -3546,7 +3546,7 @@ enum Words {
         enum Card {
             /// Read Stripe
             static var readStripe: String { Words.line("sample.card.read_stripe") }
-            /// Refunds · Stripe
+            /// Support replies · Zendesk
             static var refundsStripe: String { Words.line("sample.card.refunds_stripe") }
         }
         enum Chargebacks {
@@ -3580,32 +3580,32 @@ enum Words {
         enum Coach {
             /// Agree
             static var agree: String { Words.line("sample.coach.agree") }
-            /// Set up refunds for my online shop
+            /// Set up support replies for my online shop
             static var ask: String { Words.line("sample.coach.ask") }
             /// Change them
             static var change: String { Words.line("sample.coach.change") }
-            /// I'll connect your payments first.
+            /// I'll connect your helpdesk first.
             static var connectFirst: String { Words.line("sample.coach.connect_first") }
             /// Connected. Here are the rules I'd use.
             static var connected: String { Words.line("sample.coach.connected") }
-            /// Read your payments and refund one.
+            /// Read your tickets and reply to them.
             static var grant: String { Words.line("sample.coach.grant") }
             /// Step 3 of 6 · Your rules
             static var planLine: String { Words.line("sample.coach.plan_line") }
-            /// Refund up to €50 each, €200 a day. Anything over waits for you.
+            /// Answer up to 40 tickets a day. Any promise of a refund, a discount or a replacement waits for you.
             static var rules: String { Words.line("sample.coach.rules") }
             /// Use these rules?
             static var rulesTitle: String { Words.line("sample.coach.rules_title") }
             enum Step {
                 /// Your Card
                 static var card: String { Words.line("sample.coach.step.card") }
-                /// Connect your payments
+                /// Connect your helpdesk
                 static var connect: String { Words.line("sample.coach.step.connect") }
-                /// Read your payments
+                /// Read your tickets
                 static var read: String { Words.line("sample.coach.step.read") }
                 /// Your rules
                 static var rules: String { Words.line("sample.coach.step.rules") }
-                /// Start Refunds
+                /// Start Support replies
                 static var start: String { Words.line("sample.coach.step.start") }
             }
         }
@@ -3614,9 +3614,9 @@ enum Words {
             static var balanceDetail: String { Words.line("sample.credits.balance_detail") }
             /// Solo · 260 of 500 credits left this period
             static var balanceWords: String { Words.line("sample.credits.balance_words") }
-            /// Overdue invoices · 830 credits · 52 runs
+            /// Late parcels · 830 credits · 52 runs
             static var invoicesLast: String { Words.line("sample.credits.invoices_last") }
-            /// Overdue invoices · 420 credits · 28 runs
+            /// Late parcels · 420 credits · 28 runs
             static var invoicesThis: String { Words.line("sample.credits.invoices_this") }
             /// Last period: 2,310 credits used · 1 Oct to 31 Oct
             static var lastPeriod: String { Words.line("sample.credits.last_period") }
@@ -3632,9 +3632,9 @@ enum Words {
             static var note: String { Words.line("sample.credits.note") }
             /// Solo · 260 credits left
             static var planLine: String { Words.line("sample.credits.plan_line") }
-            /// Refunds · 1,480 credits · 74 runs
+            /// Support replies · 1,480 credits · 74 runs
             static var refundsLast: String { Words.line("sample.credits.refunds_last") }
-            /// Refunds · 820 credits · 41 runs
+            /// Support replies · 820 credits · 41 runs
             static var refundsThis: String { Words.line("sample.credits.refunds_this") }
             /// This period: 1,240 credits used · ends on 30 Nov
             static var thisPeriod: String { Words.line("sample.credits.this_period") }
@@ -3695,6 +3695,32 @@ enum Words {
         }
         /// List charges
         static var listCharges: String { Words.line("sample.list_charges") }
+        enum Log {
+            /// 3 quotes drafted for new clients.
+            static var s1Line: String { Words.line("sample.log.s1_line") }
+            /// Quotes
+            static var s1Title: String { Words.line("sample.log.s1_title") }
+            /// lead Studio Kaya
+            static var s2Evidence: String { Words.line("sample.log.s2_evidence") }
+            /// Sent the follow-up to Studio Kaya.
+            static var s2Line: String { Words.line("sample.log.s2_line") }
+            /// Late parcels
+            static var s3By: String { Words.line("sample.log.s3_by") }
+            /// 12 parcels tracked, 2 running late.
+            static var s3Line: String { Words.line("sample.log.s3_line") }
+            /// 2 running late
+            static var s3Value: String { Words.line("sample.log.s3_value") }
+            /// Late parcels
+            static var s4By: String { Words.line("sample.log.s4_by") }
+            /// parcel 5098
+            static var s4Evidence: String { Words.line("sample.log.s4_evidence") }
+            /// Parcel 5098, for a reply to its customer. A reference, not its data.
+            static var s4Line: String { Words.line("sample.log.s4_line") }
+            /// Late parcels → Support replies
+            static var s4Title: String { Words.line("sample.log.s4_title") }
+            /// Late parcels didn't run at 07:00: its carrier sign-in needs you.
+            static var s5Line: String { Words.line("sample.log.s5_line") }
+        }
         /// Look up a charge
         static var lookUpCharge: String { Words.line("sample.look_up_charge") }
         enum Memory {

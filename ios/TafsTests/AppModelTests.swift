@@ -39,7 +39,7 @@ final class RecordingSigner: ApprovalSigning {
 @MainActor
 final class AppModelTests: XCTestCase {
     private func startedRefunds(_ model: AppModel) async -> Taf {
-        let t = TafTemplates.refunds
+        let t = TestTemplates.refunds
         let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
         let taf = await model.start(draft, confirm: false)
         return try! XCTUnwrap(taf)
@@ -107,25 +107,22 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.record.first?.kind, .refused, "nothing is allowed after a revoke")
     }
 
-    /// The sample is in euros, with the same numbers as Android's and kiff.dev/tafs.
-    func testTheSampleIsInEurosWithAndroidsNumbers() throws {
+    /// The sample moves no money (Support replies, Lead follow-up, Late parcels, Access, Deploys): its
+    /// Cards count, ask and refuse. Support answers up to 40 tickets a day, as kiff.dev/tafs's example
+    /// Card says; a promise, a reship and a discount always wait for the owner.
+    func testTheSampleMovesNoMoney() throws {
+        XCTAssertEqual(TafTemplates.all.map(\.key), ["support", "parcels", "access", "deploys", "leads"])
         for t in TafTemplates.all {
-            for money in t.rules.flatMap({ [$0.perAction, $0.perWindow] }).compactMap({ $0 }) + t.script.compactMap(\.amount) {
-                XCTAssertEqual(money.currency, "EUR", "\(t.key)")
-            }
+            XCTAssertTrue(t.rules.allSatisfy { $0.perAction == nil && $0.perWindow == nil }, "\(t.key)")
+            XCTAssertTrue(t.script.allSatisfy { $0.amount == nil }, "\(t.key)")
         }
-        let refund = try XCTUnwrap(TafTemplates.refunds.rules.first { $0.action == "refund" })
-        XCTAssertEqual(refund.perAction, .eur(150))
-        XCTAssertEqual(refund.perWindow, .eur(2_000))
-        let bills = try XCTUnwrap(TafTemplates.template("billpay")?.rules.first { $0.action == "pay_bill" })
-        XCTAssertEqual(bills.perAction, .eur(5_000))
-        XCTAssertEqual(bills.perWindow, .eur(25_000))
-        XCTAssertEqual(bills.window, .week)
-        XCTAssertEqual(bills.window.label, "a week")
-        let loss = try XCTUnwrap(TafTemplates.template("chargebacks")?.rules.first { $0.action == "accept_dispute" })
-        XCTAssertEqual(loss.perAction, .eur(100))
-        XCTAssertEqual(loss.perWindow, .eur(500))
-        XCTAssertEqual(loss.window, .week)
+        let replies = try XCTUnwrap(TafTemplates.template("support")?.rules.first { $0.action == "reply_ticket" })
+        XCTAssertEqual(replies.countPerWindow, 40)
+        XCTAssertEqual(replies.window, .day)
+        for (key, action) in [("support", "promise"), ("parcels", "reship"), ("leads", "offer_discount")] {
+            let rule = try XCTUnwrap(TafTemplates.template(key)?.rules.first { $0.action == action }, key)
+            XCTAssertTrue(rule.alwaysAsk, "\(key): \(action) waits for the owner")
+        }
     }
 
     /// The sample has no new-taf form: a new taf starts in Coach, signed in, and its foot says so.

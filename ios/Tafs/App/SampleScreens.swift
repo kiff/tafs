@@ -17,13 +17,14 @@ enum SampleScreens {
         bundle.url(forResource: name, withExtension: "json").flatMap { try? Data(contentsOf: $0) }
     }
 
-    /// planque's connections behind Connect apps: Stripe for Refunds and Chargebacks, Gmail for Refunds.
+    /// planque's connections behind Connect apps: Gmail for Support replies and for Lead follow-up, and
+    /// Zendesk for Support replies.
     static var grants: [PlanqueClient.Grant]? { fixture("grants") }
 
     /// Each sample connection's KIFF agent, and the sample taf it's for, by its template.
-    static let grantAgents = ["sample-refunds": "refunds", "sample-chargebacks": "chargebacks"]
+    static let grantAgents = ["sample-support": "support", "sample-leads": "leads"]
 
-    /// Coach mid-conversation: setting up a refunds taf, as tafs cloud's conversation sends it.
+    /// Coach mid-conversation: setting up a support replies taf, as tafs cloud's conversation sends it.
     static var coachThread: SetupThread? { data("coach-chat").flatMap { try? TafsCloud.setupThread(decoding: $0) } }
 
     /// Connect apps: two of the person's own, then apps to connect.
