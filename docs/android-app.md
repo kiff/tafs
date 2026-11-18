@@ -1086,6 +1086,12 @@ person manages. The start sends a fresh `Planque-Device-Signature`, as the list'
 the same way; its `409 not_needed` shows tafs cloud's words (`ErrorWords.CLOUD_WORDED`), never "It changed". A connection tafs
 cloud lists as `misplaced` (made under a taf that doesn't use the app) is drawn as the app's own row, saying "Made for ‹taf›,
 which doesn't use ‹app›.", with its Cancel or Disconnect.
+**An app whose key goes with the owner's own login** at the vendor (tafs cloud's `login: true`, Zendesk's: the key acts as that
+person) asks for it once the taf is chosen, before anything starts: "Your ‹app› login", what it's for, one email field
+(`connect.login_*`), and Continue, enabled once something is typed. The start sends it as `login`, trimmed, and only for such
+an app. Whether it's a well-formed address is tafs cloud's to say: its `400 login_invalid` reads "Enter one email address,
+with no spaces." on the list, and nothing starts. The key sheet follows as for any app taking a key (`ConnectAppsSheetTest`,
+`ConnectAppsTest`).
 While the vendor's page is open, planque is read again on Coach's card schedule, so a sign-in finished there ends the
 wait; back on the sheet with no link, **Open … again** opens the same page, and **Not now** ends the wait at once, so
 the next Connect isn't refused as another approval in progress (Android 1.30.1). When a sign-in

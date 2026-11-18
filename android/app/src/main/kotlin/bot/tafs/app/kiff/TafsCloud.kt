@@ -654,10 +654,15 @@ class TafsCloud(
    * Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval.
    * With [proof], this phone's signed grants read, tafs cloud decides `needed_by` as the list did; a taf not in it is `409 not_needed`.
    */
-  suspend fun startConnect(entry: String, taf: String, proof: String? = null): ConnectStart {
+  suspend fun startConnect(entry: String, taf: String, proof: String? = null, login: String? = null): ConnectStart {
+    val body = buildMap<String, kotlinx.serialization.json.JsonElement> {
+      put("taf", kotlinx.serialization.json.JsonPrimitive(taf))
+      // The owner's login at the vendor, for an app tafs cloud marks `login: true`, as typed: tafs cloud checks it.
+      login?.let { put("login", kotlinx.serialization.json.JsonPrimitive(it)) }
+    }
     val payload = KiffClient.json.encodeToString(
       kotlinx.serialization.json.JsonObject.serializer(),
-      kotlinx.serialization.json.JsonObject(mapOf("taf" to kotlinx.serialization.json.JsonPrimitive(taf))),
+      kotlinx.serialization.json.JsonObject(body),
     ).toByteArray()
     return KiffClient.json.decodeFromString(
       String(send("POST", "/v1/connect/apps/${escaped(entry)}", payload, proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())),

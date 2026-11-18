@@ -973,7 +973,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       bot.tafs.app.views.ConnectAppsSheet(
         state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
         onReadConnections = model::refreshConnections,
-        onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
+        onConnect = if (state.canManageCards) ({ app, taf, login -> scope.launch { model.startConnectApp(app, taf, login) } }) else null,
         // A new conversation: asking Coach from Connect apps is a new job, never the last chat (an audit found it reopening one
         // that ended).
         onAskCoach = { showingConnectApps = false; model.newCoachChat(); coachOpen = true },

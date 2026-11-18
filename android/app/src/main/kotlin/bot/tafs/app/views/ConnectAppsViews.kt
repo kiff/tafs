@@ -179,7 +179,8 @@ fun ConnectAppsSheet(
   state: AppState,
   load: suspend (String?) -> Unit,
   loadMore: suspend () -> Unit = {},
-  onConnect: ((ConnectApps.App, String?) -> Unit)?,
+  /** Starts an app's connection: the app, the taf it's for (none to sign in again), and the owner's login where the app asks one. */
+  onConnect: ((ConnectApps.App, String?, String?) -> Unit)?,
   onAskCoach: () -> Unit,
   onClose: () -> Unit,
   /** A signed-in app's next step: its taf's Coach, to choose its actions (the app, and its grant's taf when known). */
@@ -201,6 +202,9 @@ fun ConnectAppsSheet(
   var query by rememberSaveable { mutableStateOf("") }
   // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
   var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
+  // An app whose key goes with the owner's login (`login`): its email, asked once the taf is chosen, before anything starts.
+  var askingLogin by androidx.compose.runtime.remember { mutableStateOf<Pair<ConnectApps.App, String>?>(null) }
+  val startFor: (ConnectApps.App, String) -> Unit = { app, taf -> if (app.login) askingLogin = app to taf else onConnect?.invoke(app, taf, null) }
   // A connected app's connections, each with the taf it serves (or none, once its taf was removed) and Disconnect.
   var managing by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
   var confirmingDisconnect by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
@@ -214,9 +218,9 @@ fun ConnectAppsSheet(
     { app ->
       // Signing in again keeps its grant's taf; a new connection goes to the taf the person picks, among those tafs cloud says
       // need the app, asked even with one.
-      if (app.needsReconnect) start(app, null)
+      if (app.needsReconnect) start(app, null, null)
       else when (val to = connectFor(openedFrom = null, connectable = tafsFor(app, tafs).map { it.id })) {
-        is ConnectFor.Taf -> start(app, to.id)
+        is ConnectFor.Taf -> startFor(app, to.id)
         ConnectFor.Ask -> picking = app
         ConnectFor.NoTaf -> onAskCoach()
       }
@@ -451,7 +455,7 @@ fun ConnectAppsSheet(
               Text(
                 taf.name,
                 style = scaled(16, FontWeight.SemiBold, Theme.amber),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 14.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping { picking = null; startFor(app, taf.id) }.padding(top = 14.dp),
               )
             }
           }
@@ -460,6 +464,40 @@ fun ConnectAppsSheet(
         dismissButton = {
           Text(Words.Common.cancel, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping { picking = null }.padding(12.dp))
         },
+      )
+    }
+    // The owner's login at the vendor (`login`), in the app's words: one email field, then Continue starts the connection with it.
+    // Whether it's a well-formed address is tafs cloud's to say (`login_invalid`, said on the list), never the phone's.
+    askingLogin?.let { (app, taf) ->
+      var login by androidx.compose.runtime.remember(app.entry) { mutableStateOf("") }
+      DriveAlert(
+        onDismissRequest = { askingLogin = null },
+        containerColor = Theme.background,
+        title = { Text(Words.Connect.loginTitle(app.displayName), style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        text = {
+          Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(Words.Connect.loginWhat(app.displayName), style = scaled(14, color = Theme.soft))
+            OutlinedTextField(
+              value = login,
+              onValueChange = bot.tafs.app.drive.driveTyped({ login = it }),
+              placeholder = { Text(Words.Connect.loginPlaceholder) },
+              singleLine = true,
+              keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Email,
+                autoCorrectEnabled = false,
+                imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+              ),
+              modifier = Modifier.fillMaxWidth().testTag(CONNECT_LOGIN_FIELD),
+            )
+          }
+        },
+        confirmButton = {
+          androidx.compose.material3.TextButton(
+            { askingLogin = null; onConnect?.invoke(app, taf, login.trim()) },
+            enabled = login.isNotBlank(),
+          ) { Text(Words.Common.`continue`, color = if (login.isNotBlank()) Theme.amber else Theme.dim) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton({ askingLogin = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       )
     }
     // At full height from the first frame: the list it's waiting for never makes it open small and then grow (the owner on Android 97).
@@ -769,3 +807,6 @@ internal fun closesWhenEmptied(connectionsError: String?): Boolean = connections
 
 /** The Connect apps sheet's content, for tests: it fills the sheet's height from the first frame. */
 internal const val CONNECT_APPS_SHEET = "connect-apps-sheet"
+
+/** The owner's login at the vendor, asked before an app with `login` starts. */
+internal const val CONNECT_LOGIN_FIELD = "connect-login-field"

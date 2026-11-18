@@ -4426,7 +4426,7 @@ class AppModel(
    * Connect from Connect apps: starts the app's grant (or, for one to sign in again, takes the grant it has) and opens its
    * approval over the list. A vendor that takes an API key (`needs_key`) takes it on the same sheet ([startGiveKey]).
    */
-  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App, tafId: String? = null) {
+  suspend fun startConnectApp(app: bot.tafs.app.kiff.ConnectApps.App, tafId: String? = null, login: String? = null) {
     if (_state.value.mode != Mode.kiff || _state.value.startingApp != null) return
     if (app.needsReconnect && app.grant != null) {
       refreshConnections()
@@ -4439,14 +4439,16 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
     try {
-      val started = cloud.startConnect(app.entry, cloudId, proof = connectAppsProof())
+      val started = cloud.startConnect(app.entry, cloudId, proof = connectAppsProof(), login = login?.trim()?.takeIf { app.login })
       if (generation != accountGeneration) return
       refreshConnections()
       if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.displayName, why = ErrorWords.of(e))) }
+      // A login tafs cloud refused (`login_invalid`, no words of its own): the app's line for it. Nothing started.
+      val why = if (e is bot.tafs.app.kiff.CloudError && e.code == "login_invalid") Words.Connect.loginInvalid else ErrorWords.of(e)
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.displayName, why = why)) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
     }
