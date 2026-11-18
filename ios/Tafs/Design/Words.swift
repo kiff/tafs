@@ -35,7 +35,7 @@ enum Words {
         static var kiffDidNotTakeRefusal: String { Words.line("alert.kiff_did_not_take_refusal") }
         /// KIFF doesn't send alerts to tafs yet on this account.
         static var kiffDoesntSend: String { Words.line("alert.kiff_doesnt_send") }
-        /// Chargebacks needs you · Dispute #4825 · €640 is over its limit
+        /// Late parcels needs you · Order #5098 · Reships wait for your yes
         static var loudExample: String { Words.line("alert.loud_example") }
         /// A taf needs you
         static var needsYou: String { Words.line("alert.needs_you") }
@@ -65,7 +65,7 @@ enum Words {
         static var signInAgain: String { Words.line("alert.sign_in_again") }
         /// Silent
         static var silent: String { Words.line("alert.silent") }
-        /// Refunds answered maria@… · By email
+        /// Support replies answered maria@… · By email
         static var silentExample: String { Words.line("alert.silent_example") }
         /// Sound
         static var sound: String { Words.line("alert.sound") }
@@ -3897,7 +3897,7 @@ enum Words {
         }
         /// Change language
         static var changeLanguage: String { Words.line("settings.change_language") }
-        /// Chargebacks needs you
+        /// Late parcels needs you
         static var chargebacksNeedsYou: String { Words.line("settings.chargebacks_needs_you") }
         /// Choose time zone…
         static var chooseTimeZone: String { Words.line("settings.choose_time_zone") }
@@ -4055,7 +4055,7 @@ enum Words {
             /// Last used just now
             static var usedJustNow: String { Words.line("settings.devices.used_just_now") }
         }
-        /// Dispute #4825 · €640 is over its limit
+        /// Order #5098 · Reships wait for your yes
         static var disputeOverLimit: String { Words.line("settings.dispute_over_limit") }
         /// Each sends who was answered and through which door, never its words. Turn it off in the taf's Setup › Results go to.
         static var eachSendsWhoAnsweredThrough: String { Words.line("settings.each_sends_who_answered_through") }
@@ -4091,7 +4091,7 @@ enum Words {
         static var privacyPolicy: String { Words.line("settings.privacy_policy") }
         /// Read alert choices
         static var readAlerts: String { Words.line("settings.read_alerts") }
-        /// Refunds answered maria@…
+        /// Support replies answered maria@…
         static var refundsAnsweredMaria: String { Words.line("settings.refunds_answered_maria") }
         /// Search time zones
         static var searchTimeZones: String { Words.line("settings.search_time_zones") }

@@ -963,49 +963,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks braucht dich · Anfechtung #4825 · 640 € liegt über seinem Limit"
+            "value": "Verspätete Pakete braucht dich · Bestellung #5098 · Neuversand wartet auf dein Ja"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks needs you · Dispute #4825 · €640 is over its limit"
+            "value": "Late parcels needs you · Order #5098 · Reships wait for your yes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks te necesita · Disputa #4825 · 640 € supera su límite"
+            "value": "Paquetes con retraso te necesita · Pedido #5098 · Los reenvíos esperan tu sí"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks vous attend · Litige n° 4825 · 640 € dépasse sa limite"
+            "value": "Colis en retard vous attend · Commande #5098 · Les renvois attendent votre oui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks ti aspetta · Contestazione n. 4825 · 640 € supera il suo limite"
+            "value": "Pacchi in ritardo ti aspetta · Ordine #5098 · Le rispedizioni aspettano il tuo sì"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks wacht op jou · Geschil #4825 · € 640 is boven de limiet"
+            "value": "Vertraagde pakketten wacht op jou · Bestelling #5098 · Herzendingen wachten op jouw ja"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks czeka na Ciebie · Spór #4825 · 640 € przekracza limit"
+            "value": "Spóźnione paczki czeka na Ciebie · Zamówienie #5098 · Ponowne wysyłki czekają na Twoje „tak”"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks precisa de si · Disputa n.º 4825 · 640 € acima do limite"
+            "value": "Encomendas atrasadas precisa de si · Pedido #5098 · Os reenvios esperam pelo seu sim"
           }
         }
       }
@@ -1758,49 +1758,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds hat maria@… geantwortet · Per E-Mail"
+            "value": "Support-Antworten hat maria@… geantwortet · Per E-Mail"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds answered maria@… · By email"
+            "value": "Support replies answered maria@… · By email"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds respondió a maria@… · Por correo"
+            "value": "Respuestas de soporte respondió a maria@… · Por correo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds a répondu à maria@… · Par e-mail"
+            "value": "Réponses au support a répondu à maria@… · Par e-mail"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds ha risposto a maria@… · Via email"
+            "value": "Risposte al supporto ha risposto a maria@… · Via email"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds heeft maria@… geantwoord · Via e-mail"
+            "value": "Supportantwoorden heeft maria@… geantwoord · Via e-mail"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds odpowiedział maria@… · Przez e-mail"
+            "value": "Odpowiedzi wsparcia odpowiedział maria@… · Przez e-mail"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds respondeu a maria@… · Por email"
+            "value": "Respostas de suporte respondeu a maria@… · Por email"
           }
         }
       }
@@ -99145,49 +99145,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks braucht dich"
+            "value": "Verspätete Pakete braucht dich"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks needs you"
+            "value": "Late parcels needs you"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks te necesita"
+            "value": "Paquetes con retraso te necesita"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks vous attend"
+            "value": "Colis en retard vous attend"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks ti aspetta"
+            "value": "Pacchi in ritardo ti aspetta"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks wacht op jou"
+            "value": "Vertraagde pakketten wacht op jou"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks czeka na Ciebie"
+            "value": "Spóźnione paczki czeka na Ciebie"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chargebacks precisa de si"
+            "value": "Encomendas atrasadas precisa de si"
           }
         }
       }
@@ -103226,49 +103226,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anfechtung #4825 · 640 € liegt über seinem Limit"
+            "value": "Bestellung #5098 · Neuversand wartet auf dein Ja"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dispute #4825 · €640 is over its limit"
+            "value": "Order #5098 · Reships wait for your yes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disputa #4825 · 640 € supera su límite"
+            "value": "Pedido #5098 · Los reenvíos esperan tu sí"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Litige n° 4825 · 640 € dépasse sa limite"
+            "value": "Commande #5098 · Les renvois attendent votre oui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Contestazione n. 4825 · 640 € supera il suo limite"
+            "value": "Ordine #5098 · Le rispedizioni aspettano il tuo sì"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geschil #4825 · € 640 is boven de limiet"
+            "value": "Bestelling #5098 · Herzendingen wachten op jouw ja"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Spór #4825 · 640 € przekracza limit"
+            "value": "Zamówienie #5098 · Ponowne wysyłki czekają na Twoje „tak”"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disputa n.º 4825 · 640 € acima do limite"
+            "value": "Pedido #5098 · Os reenvios esperam pelo seu sim"
           }
         }
       }
@@ -104180,49 +104180,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds hat maria@… geantwortet"
+            "value": "Support-Antworten hat maria@… geantwortet"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds answered maria@…"
+            "value": "Support replies answered maria@…"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds respondió a maria@…"
+            "value": "Respuestas de soporte respondió a maria@…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds a répondu à maria@…"
+            "value": "Réponses au support a répondu à maria@…"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds ha risposto a maria@…"
+            "value": "Risposte al supporto ha risposto a maria@…"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds heeft maria@… geantwoord"
+            "value": "Supportantwoorden heeft maria@… geantwoord"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds odpowiedział maria@…"
+            "value": "Odpowiedzi wsparcia odpowiedział maria@…"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds respondeu a maria@…"
+            "value": "Respostas de suporte respondeu a maria@…"
           }
         }
       }

@@ -16,7 +16,7 @@
     <string name="alert_haptics">Trillingen</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF heeft de weigering niet aangenomen. Open tafs om te antwoorden.</string>
     <string name="alert_kiff_doesnt_send">KIFF stuurt in dit account nog geen meldingen naar tafs.</string>
-    <string name="alert_loud_example">Chargebacks wacht op jou · Geschil #4825 · € 640 is boven de limiet</string>
+    <string name="alert_loud_example">Vertraagde pakketten wacht op jou · Bestelling #5098 · Herzendingen wachten op jouw ja</string>
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_no_push_token_device">Deze %1$s heeft tafs geen pushtoken gegeven. Probeer het zo opnieuw.</string>
     <string name="alert_not_in_build">Meldingen zijn niet ingesteld in deze build van tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Jouw rol in dit KIFF-account kan geen meldingen aanzetten.</string>
     <string name="alert_sign_in_again">Log opnieuw in met KIFF om meldingen aan te zetten: deze login kan niet voor de telefoon ondertekenen.</string>
     <string name="alert_silent">Stil</string>
-    <string name="alert_silent_example">Refunds heeft maria@… geantwoord · Via e-mail</string>
+    <string name="alert_silent_example">Supportantwoorden heeft maria@… geantwoord · Via e-mail</string>
     <string name="alert_sound">Geluid</string>
     <string name="alert_sound_words">Alleen bij vasthouden of stilzetten</string>
     <string name="alert_status_not_available">Niet beschikbaar</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Meldingen staan uit op deze %1$s</string>
     <string name="settings_alerts_off_turn_on">Aanzetten</string>
     <string name="settings_change_language">Taal wijzigen</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks wacht op jou</string>
+    <string name="settings_chargebacks_needs_you">Vertraagde pakketten wacht op jou</string>
     <string name="settings_choose_time_zone">Tijdzone kiezen…</string>
     <string name="settings_clear_sample">Het voorbeeld wissen</string>
     <string name="settings_delete_account_confirm_with">Je bevestigt met %1$s. Andere apparaten worden ook uitgelogd.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Apparaten</string>
     <string name="settings_devices_unnamed">Een apparaat</string>
     <string name="settings_devices_used_just_now">Zojuist gebruikt</string>
-    <string name="settings_dispute_over_limit">Geschil #4825 · € 640 is boven de limiet</string>
+    <string name="settings_dispute_over_limit">Bestelling #5098 · Herzendingen wachten op jouw ja</string>
     <string name="settings_each_sends_who_answered_through">Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.</string>
     <string name="settings_find_time_zone">Een tijdzone zoeken</string>
     <string name="settings_kiff_account">KIFF-account</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Abonnement</string>
     <string name="settings_privacy_policy">Privacybeleid</string>
     <string name="settings_read_alerts">Meldingskeuzes lezen</string>
-    <string name="settings_refunds_answered_maria">Refunds heeft maria@… geantwoord</string>
+    <string name="settings_refunds_answered_maria">Supportantwoorden heeft maria@… geantwoord</string>
     <string name="settings_search_time_zones">Tijdzones zoeken</string>
     <string name="settings_show_suggestions">Suggesties tonen</string>
     <string name="settings_sign_in_again_confirm_body_device">Deze %1$s logt eerst uit bij KIFF, daarna log je opnieuw in via je browser.</string>

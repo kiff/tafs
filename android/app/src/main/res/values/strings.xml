@@ -16,7 +16,7 @@
     <string name="alert_haptics">Haptics</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF didn\'t take the refusal. Open tafs to answer it.</string>
     <string name="alert_kiff_doesnt_send">KIFF doesn\'t send alerts to tafs yet on this account.</string>
-    <string name="alert_loud_example">Chargebacks needs you · Dispute #4825 · €640 is over its limit</string>
+    <string name="alert_loud_example">Late parcels needs you · Order #5098 · Reships wait for your yes</string>
     <string name="alert_needs_you">A taf needs you</string>
     <string name="alert_no_push_token_device">This %1$s didn\'t give tafs a push token. Try again in a moment.</string>
     <string name="alert_not_in_build">Alerts aren\'t set up in this build of tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Your role on this KIFF account can\'t turn on alerts.</string>
     <string name="alert_sign_in_again">Sign in with KIFF again to turn on alerts: this sign-in can\'t sign for the phone.</string>
     <string name="alert_silent">Silent</string>
-    <string name="alert_silent_example">Refunds answered maria@… · By email</string>
+    <string name="alert_silent_example">Support replies answered maria@… · By email</string>
     <string name="alert_sound">Sound</string>
     <string name="alert_sound_words">For a hold or a halt only</string>
     <string name="alert_status_not_available">Not available</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Alerts are off on this %1$s</string>
     <string name="settings_alerts_off_turn_on">Turn on</string>
     <string name="settings_change_language">Change language</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks needs you</string>
+    <string name="settings_chargebacks_needs_you">Late parcels needs you</string>
     <string name="settings_choose_time_zone">Choose time zone…</string>
     <string name="settings_clear_sample">Clear the sample</string>
     <string name="settings_delete_account_confirm_with">You confirm with %1$s. Other devices sign out too.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Devices</string>
     <string name="settings_devices_unnamed">A device</string>
     <string name="settings_devices_used_just_now">Last used just now</string>
-    <string name="settings_dispute_over_limit">Dispute #4825 · €640 is over its limit</string>
+    <string name="settings_dispute_over_limit">Order #5098 · Reships wait for your yes</string>
     <string name="settings_each_sends_who_answered_through">Each sends who was answered and through which door, never its words. Turn it off in the taf\'s Setup › Results go to.</string>
     <string name="settings_find_time_zone">Find a time zone</string>
     <string name="settings_kiff_account">KIFF account</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Plan</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_read_alerts">Read alert choices</string>
-    <string name="settings_refunds_answered_maria">Refunds answered maria@…</string>
+    <string name="settings_refunds_answered_maria">Support replies answered maria@…</string>
     <string name="settings_search_time_zones">Search time zones</string>
     <string name="settings_show_suggestions">Show suggestions</string>
     <string name="settings_sign_in_again_confirm_body_device">This %1$s signs out of KIFF first, then you sign in again in your browser.</string>

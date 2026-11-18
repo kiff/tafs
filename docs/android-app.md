@@ -1524,7 +1524,10 @@ up for approvals and named in its language (`LocalBiometry`, as `MainActivity` p
 Support replies, Late parcels, Lead follow-up, Access and Deploys (app/strings' `sample.support.*`, `sample.parcels.*`,
 `sample.leads.*`, since 18 Nov in place of Refunds, Bill pay and Chargebacks): their Cards count calls, ask the owner first
 (a promised replacement, a reship, a discount) or never let a call through (a customer's details, an address change), with no
-money limit, and `CardCheckTest` plays each script. The
+money limit, and `CardCheckTest` plays each script. After its two opening rounds Needs you holds Late parcels' reship and
+Deploys' migration (`AppModelTest`). Support replies' promise plays third on purpose: the sample's morning chat is that taf's,
+and a held call's card counts down every second, which a chat on a tablet's tests can't wait out. iOS plays the promise second,
+so its sample loads with three waiting. Account's Alerts examples speak of the same samples (`alert.*_example`). The
 images are written only when asked:
 
 ```bash

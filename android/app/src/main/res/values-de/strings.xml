@@ -16,7 +16,7 @@
     <string name="alert_haptics">Haptik</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF hat die Ablehnung nicht angenommen. Öffne tafs, um zu antworten.</string>
     <string name="alert_kiff_doesnt_send">KIFF sendet in diesem Konto noch keine Benachrichtigungen an tafs.</string>
-    <string name="alert_loud_example">Chargebacks braucht dich · Anfechtung #4825 · 640 € liegt über seinem Limit</string>
+    <string name="alert_loud_example">Verspätete Pakete braucht dich · Bestellung #5098 · Neuversand wartet auf dein Ja</string>
     <string name="alert_needs_you">Ein taf braucht dich</string>
     <string name="alert_no_push_token_device">Dieses %1$s hat tafs kein Push-Token gegeben. Versuch es gleich noch einmal.</string>
     <string name="alert_not_in_build">Benachrichtigungen sind in diesem Build von tafs nicht eingerichtet.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Deine Rolle in diesem KIFF-Konto kann keine Benachrichtigungen einschalten.</string>
     <string name="alert_sign_in_again">Melde dich erneut mit KIFF an, um Benachrichtigungen einzuschalten: Diese Anmeldung kann nicht für das Telefon signieren.</string>
     <string name="alert_silent">Lautlos</string>
-    <string name="alert_silent_example">Refunds hat maria@… geantwortet · Per E-Mail</string>
+    <string name="alert_silent_example">Support-Antworten hat maria@… geantwortet · Per E-Mail</string>
     <string name="alert_sound">Ton</string>
     <string name="alert_sound_words">Nur beim Zurückhalten oder Anhalten</string>
     <string name="alert_status_not_available">Nicht verfügbar</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Benachrichtigungen sind auf diesem %1$s aus</string>
     <string name="settings_alerts_off_turn_on">Einschalten</string>
     <string name="settings_change_language">Sprache ändern</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks braucht dich</string>
+    <string name="settings_chargebacks_needs_you">Verspätete Pakete braucht dich</string>
     <string name="settings_choose_time_zone">Zeitzone wählen…</string>
     <string name="settings_clear_sample">Beispiel entfernen</string>
     <string name="settings_delete_account_confirm_with">Du bestätigst mit %1$s. Andere Geräte werden auch abgemeldet.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Geräte</string>
     <string name="settings_devices_unnamed">Ein Gerät</string>
     <string name="settings_devices_used_just_now">Gerade eben verwendet</string>
-    <string name="settings_dispute_over_limit">Anfechtung #4825 · 640 € liegt über seinem Limit</string>
+    <string name="settings_dispute_over_limit">Bestellung #5098 · Neuversand wartet auf dein Ja</string>
     <string name="settings_each_sends_who_answered_through">Jede sagt, wem über welche Tür geantwortet wurde, nie den Wortlaut. Ausschalten kannst du das im Setup des tafs › Ergebnisse gehen an.</string>
     <string name="settings_find_time_zone">Zeitzone suchen</string>
     <string name="settings_kiff_account">KIFF-Konto</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Tarif</string>
     <string name="settings_privacy_policy">Datenschutzerklärung</string>
     <string name="settings_read_alerts">Benachrichtigungsoptionen lesen</string>
-    <string name="settings_refunds_answered_maria">Refunds hat maria@… geantwortet</string>
+    <string name="settings_refunds_answered_maria">Support-Antworten hat maria@… geantwortet</string>
     <string name="settings_search_time_zones">Zeitzonen suchen</string>
     <string name="settings_show_suggestions">Vorschläge zeigen</string>
     <string name="settings_sign_in_again_confirm_body_device">Dieses %1$s meldet sich zuerst von KIFF ab, dann meldest du dich in deinem Browser erneut an.</string>

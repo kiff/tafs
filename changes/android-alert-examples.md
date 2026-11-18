@@ -1,0 +1,1 @@
+- **The apps: Account's Alerts examples speak of the new samples,** a Late parcels reship waiting for your yes and Support replies answering by email, in all 8 languages ([android-app.md](docs/android-app.md)).
