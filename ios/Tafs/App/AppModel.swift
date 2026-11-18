@@ -8811,8 +8811,10 @@ final class AppModel: ObservableObject {
             // Every second while Setup works, so its words show as soon as it writes them.
             try? await Task.sleep(nanoseconds: setupThinking ? setupWorkingPollInterval : setupPollInterval)
             if Task.isCancelled { return }
-            // A stream shows what Setup does, and reloads the thread itself.
-            if setupLive != nil { continue }
+            // A stream shows what Setup does, and reloads the thread itself, except a card still waiting on
+            // its grant: planque can list it after the stream's last read, and a quiet stream reads nothing
+            // more, so the poll reads on for it (the iOS side of #1390).
+            if setupLive != nil && !cardWaitsOnItsGrant { continue }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
             // A card whose grant planque hasn't listed yet, or whose Card KIFF hasn't given, keeps the thread

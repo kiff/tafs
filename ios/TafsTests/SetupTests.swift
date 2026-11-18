@@ -1995,6 +1995,13 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 90, answered: true))
         await model.retryCards()
         XCTAssertFalse(model.cardNotRead("connect"), "answered")
+
+        // A live stream doesn't stop the poll while a card waits on its grant: planque can list it after the
+        // stream's last read, and a quiet stream reads nothing more (the iOS side of #1390).
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("if setupLive != nil && !cardWaitsOnItsGrant { continue }"))
+        XCTAssertFalse(file.contains("if setupLive != nil { continue }"))
         Keychain.delete(AppModel.planqueAccount)
     }
 
