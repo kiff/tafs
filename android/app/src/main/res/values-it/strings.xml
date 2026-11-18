@@ -16,7 +16,7 @@
     <string name="alert_haptics">Feedback aptico</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF non ha accettato il rifiuto. Apri tafs per rispondere.</string>
     <string name="alert_kiff_doesnt_send">KIFF non invia ancora avvisi a tafs per questo account.</string>
-    <string name="alert_loud_example">Chargebacks ti aspetta · Contestazione n. 4825 · 640 € supera il suo limite</string>
+    <string name="alert_loud_example">Pacchi in ritardo ti aspetta · Ordine #5098 · Le rispedizioni aspettano il tuo sì</string>
     <string name="alert_needs_you">Un taf ti aspetta</string>
     <string name="alert_no_push_token_device">Questo %1$s non ha dato a tafs un token push. Riprova tra un attimo.</string>
     <string name="alert_not_in_build">Gli avvisi non sono configurati in questa build di tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Il tuo ruolo in questo account KIFF non può attivare gli avvisi.</string>
     <string name="alert_sign_in_again">Accedi di nuovo con KIFF per attivare gli avvisi: questo accesso non può firmare per il telefono.</string>
     <string name="alert_silent">Silenzioso</string>
-    <string name="alert_silent_example">Refunds ha risposto a maria@… · Via email</string>
+    <string name="alert_silent_example">Risposte al supporto ha risposto a maria@… · Via email</string>
     <string name="alert_sound">Suono</string>
     <string name="alert_sound_words">Solo per una trattenuta o un blocco</string>
     <string name="alert_status_not_available">Non disponibile</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Gli avvisi sono disattivati su questo %1$s</string>
     <string name="settings_alerts_off_turn_on">Attiva</string>
     <string name="settings_change_language">Cambia lingua</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks ti aspetta</string>
+    <string name="settings_chargebacks_needs_you">Pacchi in ritardo ti aspetta</string>
     <string name="settings_choose_time_zone">Scegli il fuso orario…</string>
     <string name="settings_clear_sample">Cancella l\'esempio</string>
     <string name="settings_delete_account_confirm_with">Confermi con %1$s. Anche gli altri dispositivi vengono disconnessi.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Dispositivi</string>
     <string name="settings_devices_unnamed">Un dispositivo</string>
     <string name="settings_devices_used_just_now">Usato proprio ora</string>
-    <string name="settings_dispute_over_limit">Contestazione n. 4825 · 640 € supera il suo limite</string>
+    <string name="settings_dispute_over_limit">Ordine #5098 · Le rispedizioni aspettano il tuo sì</string>
     <string name="settings_each_sends_who_answered_through">Ognuno indica a chi è stato risposto e tramite quale porta, mai le sue parole. Disattivalo in Configurazione › I risultati vanno a, nel taf.</string>
     <string name="settings_find_time_zone">Cerca un fuso orario</string>
     <string name="settings_kiff_account">Account KIFF</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Piano</string>
     <string name="settings_privacy_policy">Informativa sulla privacy</string>
     <string name="settings_read_alerts">Leggi le preferenze degli avvisi</string>
-    <string name="settings_refunds_answered_maria">Refunds ha risposto a maria@…</string>
+    <string name="settings_refunds_answered_maria">Risposte al supporto ha risposto a maria@…</string>
     <string name="settings_search_time_zones">Cerca fusi orari</string>
     <string name="settings_show_suggestions">Mostra suggerimenti</string>
     <string name="settings_sign_in_again_confirm_body_device">Questo %1$s esce prima da KIFF, poi accedi di nuovo nel browser.</string>

@@ -16,7 +16,7 @@
     <string name="alert_haptics">Wibracje</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF nie przyjął odrzucenia. Otwórz tafs, aby odpowiedzieć.</string>
     <string name="alert_kiff_doesnt_send">KIFF nie wysyła jeszcze alertów do tafs na tym koncie.</string>
-    <string name="alert_loud_example">Chargebacks czeka na Ciebie · Spór #4825 · 640 € przekracza limit</string>
+    <string name="alert_loud_example">Spóźnione paczki czeka na Ciebie · Zamówienie #5098 · Ponowne wysyłki czekają na Twoje „tak”</string>
     <string name="alert_needs_you">Taf czeka na Ciebie</string>
     <string name="alert_no_push_token_device">Ten %1$s nie przekazał tafs tokenu push. Spróbuj ponownie za chwilę.</string>
     <string name="alert_not_in_build">Alerty nie są skonfigurowane w tej wersji tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Twoja rola na tym koncie KIFF nie pozwala włączyć alertów.</string>
     <string name="alert_sign_in_again">Zaloguj się ponownie przez KIFF, aby włączyć alerty: to logowanie nie może podpisywać za ten telefon.</string>
     <string name="alert_silent">Bez dźwięku</string>
-    <string name="alert_silent_example">Refunds odpowiedział maria@… · Przez e-mail</string>
+    <string name="alert_silent_example">Odpowiedzi wsparcia odpowiedział maria@… · Przez e-mail</string>
     <string name="alert_sound">Dźwięk</string>
     <string name="alert_sound_words">Tylko przy oczekującym wywołaniu lub blokadzie</string>
     <string name="alert_status_not_available">Niedostępne</string>
@@ -2080,7 +2080,7 @@
     <string name="settings_alerts_off_title_device">Alerty są wyłączone na tym urządzeniu (%1$s)</string>
     <string name="settings_alerts_off_turn_on">Włącz</string>
     <string name="settings_change_language">Zmień język</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks czeka na Ciebie</string>
+    <string name="settings_chargebacks_needs_you">Spóźnione paczki czeka na Ciebie</string>
     <string name="settings_choose_time_zone">Wybierz strefę czasową…</string>
     <string name="settings_clear_sample">Wyczyść przykład</string>
     <string name="settings_delete_account_confirm_with">Potwierdzasz przez %1$s. Inne urządzenia też zostaną wylogowane.</string>
@@ -2157,7 +2157,7 @@
     <string name="settings_devices_title">Urządzenia</string>
     <string name="settings_devices_unnamed">Urządzenie</string>
     <string name="settings_devices_used_just_now">Używane przed chwilą</string>
-    <string name="settings_dispute_over_limit">Spór #4825 · 640 € przekracza limit</string>
+    <string name="settings_dispute_over_limit">Zamówienie #5098 · Ponowne wysyłki czekają na Twoje „tak”</string>
     <string name="settings_each_sends_who_answered_through">Każdy z nich wysyła, komu i przez które drzwi odpowiedziano, nigdy treść. Wyłącz to w tafie: Konfiguracja › Wyniki trafiają do.</string>
     <string name="settings_find_time_zone">Znajdź strefę czasową</string>
     <string name="settings_kiff_account">Konto KIFF</string>
@@ -2175,7 +2175,7 @@
     <string name="settings_plan">Plan</string>
     <string name="settings_privacy_policy">Polityka prywatności</string>
     <string name="settings_read_alerts">Odczytaj ustawienia alertów</string>
-    <string name="settings_refunds_answered_maria">Refunds odpowiedział maria@…</string>
+    <string name="settings_refunds_answered_maria">Odpowiedzi wsparcia odpowiedział maria@…</string>
     <string name="settings_search_time_zones">Szukaj stref czasowych</string>
     <string name="settings_show_suggestions">Pokazuj sugestie</string>
     <string name="settings_sign_in_again_confirm_body_device">Ten %1$s najpierw wyloguje się z KIFF, a potem zalogujesz się ponownie w przeglądarce.</string>

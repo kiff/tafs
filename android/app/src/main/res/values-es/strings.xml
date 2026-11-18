@@ -16,7 +16,7 @@
     <string name="alert_haptics">Vibración</string>
     <string name="alert_kiff_did_not_take_refusal">KIFF no aceptó el rechazo. Abre tafs para responder.</string>
     <string name="alert_kiff_doesnt_send">KIFF aún no envía alertas a tafs en esta cuenta.</string>
-    <string name="alert_loud_example">Chargebacks te necesita · Disputa #4825 · 640 € supera su límite</string>
+    <string name="alert_loud_example">Paquetes con retraso te necesita · Pedido #5098 · Los reenvíos esperan tu sí</string>
     <string name="alert_needs_you">Un taf te necesita</string>
     <string name="alert_no_push_token_device">Este %1$s no dio a tafs un token push. Vuelve a intentarlo en un momento.</string>
     <string name="alert_not_in_build">Las alertas no están configuradas en esta compilación de tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">Tu rol en esta cuenta de KIFF no puede activar alertas.</string>
     <string name="alert_sign_in_again">Vuelve a iniciar sesión con KIFF para activar las alertas: este inicio de sesión no puede firmar por el teléfono.</string>
     <string name="alert_silent">Sin sonido</string>
-    <string name="alert_silent_example">Refunds respondió a maria@… · Por correo</string>
+    <string name="alert_silent_example">Respuestas de soporte respondió a maria@… · Por correo</string>
     <string name="alert_sound">Sonido</string>
     <string name="alert_sound_words">Solo para una retención o un bloqueo</string>
     <string name="alert_status_not_available">No disponible</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Las alertas están desactivadas en este %1$s</string>
     <string name="settings_alerts_off_turn_on">Activar</string>
     <string name="settings_change_language">Cambiar idioma</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks te necesita</string>
+    <string name="settings_chargebacks_needs_you">Paquetes con retraso te necesita</string>
     <string name="settings_choose_time_zone">Elegir zona horaria…</string>
     <string name="settings_clear_sample">Borrar el ejemplo</string>
     <string name="settings_delete_account_confirm_with">Confirmas con %1$s. También se cierra la sesión en otros dispositivos.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Dispositivos</string>
     <string name="settings_devices_unnamed">Un dispositivo</string>
     <string name="settings_devices_used_just_now">Último uso: ahora mismo</string>
-    <string name="settings_dispute_over_limit">Disputa #4825 · 640 € supera su límite</string>
+    <string name="settings_dispute_over_limit">Pedido #5098 · Los reenvíos esperan tu sí</string>
     <string name="settings_each_sends_who_answered_through">Cada una indica a quién se respondió y por qué puerta, nunca sus palabras. Desactívalo en el taf, en Configuración › Los resultados van a.</string>
     <string name="settings_find_time_zone">Buscar una zona horaria</string>
     <string name="settings_kiff_account">Cuenta de KIFF</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Plan</string>
     <string name="settings_privacy_policy">Política de privacidad</string>
     <string name="settings_read_alerts">Leer las opciones de alertas</string>
-    <string name="settings_refunds_answered_maria">Refunds respondió a maria@…</string>
+    <string name="settings_refunds_answered_maria">Respuestas de soporte respondió a maria@…</string>
     <string name="settings_search_time_zones">Buscar zonas horarias</string>
     <string name="settings_show_suggestions">Mostrar sugerencias</string>
     <string name="settings_sign_in_again_confirm_body_device">Primero este %1$s cierra la sesión de KIFF y luego vuelves a iniciar sesión en tu navegador.</string>

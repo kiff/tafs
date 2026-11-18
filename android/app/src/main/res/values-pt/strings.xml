@@ -16,7 +16,7 @@
     <string name="alert_haptics">Vibração</string>
     <string name="alert_kiff_did_not_take_refusal">O KIFF não aceitou a recusa. Abra o tafs para responder.</string>
     <string name="alert_kiff_doesnt_send">O KIFF ainda não envia alertas para o tafs nesta conta.</string>
-    <string name="alert_loud_example">Chargebacks precisa de si · Disputa n.º 4825 · 640 € acima do limite</string>
+    <string name="alert_loud_example">Encomendas atrasadas precisa de si · Pedido #5098 · Os reenvios esperam pelo seu sim</string>
     <string name="alert_needs_you">Um taf precisa de si</string>
     <string name="alert_no_push_token_device">Este %1$s não deu ao tafs um token de notificações. Tente novamente daqui a pouco.</string>
     <string name="alert_not_in_build">Os alertas não estão configurados nesta versão do tafs.</string>
@@ -31,7 +31,7 @@
     <string name="alert_role_cant">A sua função nesta conta KIFF não pode ativar alertas.</string>
     <string name="alert_sign_in_again">Inicie sessão novamente com o KIFF para ativar os alertas: esta sessão não pode assinar pelo telefone.</string>
     <string name="alert_silent">Silencioso</string>
-    <string name="alert_silent_example">Refunds respondeu a maria@… · Por email</string>
+    <string name="alert_silent_example">Respostas de suporte respondeu a maria@… · Por email</string>
     <string name="alert_sound">Som</string>
     <string name="alert_sound_words">Só para uma retenção ou um bloqueio</string>
     <string name="alert_status_not_available">Indisponível</string>
@@ -1962,7 +1962,7 @@
     <string name="settings_alerts_off_title_device">Os alertas estão desativados neste %1$s</string>
     <string name="settings_alerts_off_turn_on">Ativar</string>
     <string name="settings_change_language">Alterar idioma</string>
-    <string name="settings_chargebacks_needs_you">Chargebacks precisa de si</string>
+    <string name="settings_chargebacks_needs_you">Encomendas atrasadas precisa de si</string>
     <string name="settings_choose_time_zone">Escolher fuso horário…</string>
     <string name="settings_clear_sample">Limpar o exemplo</string>
     <string name="settings_delete_account_confirm_with">Confirma com %1$s. A sessão também é terminada noutros dispositivos.</string>
@@ -2039,7 +2039,7 @@
     <string name="settings_devices_title">Dispositivos</string>
     <string name="settings_devices_unnamed">Um dispositivo</string>
     <string name="settings_devices_used_just_now">Usado agora mesmo</string>
-    <string name="settings_dispute_over_limit">Disputa n.º 4825 · 640 € acima do limite</string>
+    <string name="settings_dispute_over_limit">Pedido #5098 · Os reenvios esperam pelo seu sim</string>
     <string name="settings_each_sends_who_answered_through">Cada um indica a quem foi respondido e por que porta, nunca as palavras. Desative-o na Configuração do taf › Os resultados vão para.</string>
     <string name="settings_find_time_zone">Procurar um fuso horário</string>
     <string name="settings_kiff_account">Conta KIFF</string>
@@ -2057,7 +2057,7 @@
     <string name="settings_plan">Plano</string>
     <string name="settings_privacy_policy">Política de privacidade</string>
     <string name="settings_read_alerts">Ler as opções de alertas</string>
-    <string name="settings_refunds_answered_maria">Refunds respondeu a maria@…</string>
+    <string name="settings_refunds_answered_maria">Respostas de suporte respondeu a maria@…</string>
     <string name="settings_search_time_zones">Pesquisar fusos horários</string>
     <string name="settings_show_suggestions">Mostrar sugestões</string>
     <string name="settings_sign_in_again_confirm_body_device">Este %1$s termina primeiro a sessão no KIFF, e depois inicia sessão novamente no seu navegador.</string>
