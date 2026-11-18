@@ -65,4 +65,20 @@ case_ "chg=\$(printf 'runtime/src/cloud/tafdef.ts\n' > $tmp/all; echo $tmp/all)"
 # A carry that held is as good.
 case_ "check=\$(edit 's/^27 failure /27 success /' check-plan-words.steps c4)" holds "carry held"
 
+# Two touched runs (the second a case the first couldn't grade, run again alone): each touched suite passed every step
+# in one of them, and a step red in the first counts only because the second passed it.
+two="runs=runs-two-touched touched=touched-setup-unsigned.steps,touched-setup-alone.steps tlog=touched-setup-unsigned.log,touched-setup-alone.log"
+case_ "$two" holds "two touched runs" "touched suites connect route setup at repeat 1 (Eval 101,102), the owner's choice"
+# The first alone: its red step passed nowhere else.
+case_ "runs=runs-two-touched touched=touched-setup-unsigned.steps tlog=touched-setup-unsigned.log" refused "the touched run failed: Setup with the taf, in English, graded"
+# The second red in the same step: nobody passed it.
+case_ "$two touched=touched-setup-unsigned.steps,\$(edit 's/^13 success /13 failure /' touched-setup-alone.steps t4) tlog=touched-setup-unsigned.log,touched-setup-alone.log" refused "the touched run failed: Setup with the taf, in English, graded"
+# The second run newer than the base and at the commit shipped, like the first.
+case_ "$two runs=\$(edit 's/^touched 102 ([^ ]+) eb05ab7/touched 102 \1 1234567/' runs-two-touched r4)" refused "the touched run isn't at the agents commit"
+case_ "$two runs=\$(edit 's/^touched 102 [^ ]+/touched 102 2026-11-17T23:00:00Z/' runs-two-touched r5)" refused "the touched run isn't newer than the base"
+# A failed job in the second is never excused.
+case_ "$two touched=touched-setup-unsigned.steps,\$(edit 's/^55 success /55 failure /' touched-setup-alone.steps t5) tlog=touched-setup-unsigned.log,touched-setup-alone.log" refused "failed outside its steps"
+# The second on another model is refused.
+case_ "$two touched=touched-setup-unsigned.steps,\$(edit 's/^25 skipped /25 success /' touched-setup-alone.steps t6) tlog=touched-setup-unsigned.log,touched-setup-alone.log" refused "overrode the model"
+
 [ "$fails" = 0 ] && echo "the owner's override: every case as expected" || exit 1
