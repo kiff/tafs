@@ -1,0 +1,1 @@
+- **The Upgrade reads an Eval job's log with curl, not gh.** Newer gh releases refuse a response holding terminal colours, which the Eval's log has, so the gate stopped before rule B or the owner's override could read it.
