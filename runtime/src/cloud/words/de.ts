@@ -1,4 +1,4 @@
-import type { When, Words } from "./en.js";
+import { type When, type Words, wider } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `am ${t.day} um ${t.hm}` : `um ${t.hm}`);
@@ -306,7 +306,7 @@ export const de: Words = {
   brief_sign_in_again: "Erneut anmelden",
   brief_connection_meanwhile: (taf, vendor) => `${taf} erreicht ${vendor} bis dahin nicht.`,
   brief_open_taf: "Den taf öffnen",
-  card_wider: (vendor) => `${vendor ? `Die Anmeldung bei ${vendor}` : "Diese Anmeldung"} lässt sich nicht auf diese Aufgabe beschränken: ihr Bildschirm fragt nach mehr Zugriff, als der taf nutzt. Der taf kann trotzdem nur die Werkzeuge auf seiner Card nutzen, und tafs lehnt jeden anderen Aufruf ab. Der Code, der das tut, ist öffentlich, du kannst ihn also prüfen.`,
+  card_wider: (vendor, route) => wider({ managed: "Composio verbindet dein Konto bei {app}.", own: "tafs verbindet dein Konto bei {app}.", key: "Du verbindest {app} mit einem Schlüssel.", managed_x: "Composio verbindet dieses Konto.", own_x: "tafs verbindet dieses Konto.", key_x: "Du verbindest diese App mit einem Schlüssel.", may: "{app} fragt eventuell nach mehr Zugriff, als diese Aufgabe braucht,", may_x: "Die App fragt eventuell nach mehr Zugriff, als diese Aufgabe braucht,", key_may: "Der Schlüssel erlaubt eventuell mehr, als diese Aufgabe braucht,", rest: "aber dein taf kann nur die Werkzeuge nutzen, die auf seiner Card erlaubt sind. tafs setzt diese Grenzen durch und blockiert jeden anderen Werkzeugaufruf." }, vendor, route),
   brief_check_meanwhile: (taf) => `${taf} findet keine neue Arbeit, bis die Prüfung wieder lesen kann.`,
   mission_log_delivered: (done, held, refused) => [`${done} erledigt`, held ? `${held} zurückgehalten` : "", refused ? `${refused} abgelehnt` : ""].filter(Boolean).join(" · "),
   business_title: "Was tafs über dein Unternehmen wissen",

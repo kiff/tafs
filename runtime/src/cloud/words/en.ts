@@ -325,7 +325,7 @@ export const en = {
   brief_sign_in_again: "Sign in again",
   brief_connection_meanwhile: (taf: string, vendor: string) => `${taf} can't reach ${vendor} until then.`,
   brief_open_taf: "Open the taf",
-  card_wider: (vendor?: string) => `${vendor ? `The sign-in for ${vendor}` : "This sign-in"} can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it.`,
+  card_wider: (vendor?: string, route?: ConnectRoute) => wider({ managed: "Composio connects your {app} account.", own: "tafs connects your {app} account.", key: "You connect {app} with a key.", managed_x: "Composio connects this account.", own_x: "tafs connects this account.", key_x: "You connect this app with a key.", may: "{app} may ask for broader access than this job needs,", may_x: "The app may ask for broader access than this job needs,", key_may: "The key may allow more than this job needs,", rest: "but your taf can only use the tools allowed on its Card. tafs enforces those limits and blocks every other tool call." }, vendor, route),
   brief_check_meanwhile: (taf: string) => `${taf} finds no new work until its check can read again.`,
   mission_log_delivered: (done: number, held: number, refused: number) => [`${done} done`, held ? `${held} held for you` : "", refused ? `${refused} refused` : ""].filter(Boolean).join(" · "),
   business_title: "What tafs know about your business",
@@ -962,5 +962,32 @@ export const en = {
   // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
   watch_ask: { accepted: "Sent", working: "Working", done: "Done", no_taf: "No taf took it", failed: "That didn't work" },
 };
+
+/** How a connection is made, as planque's grant says: Composio's managed sign-in, tafs's own app at the vendor, or a key. */
+export type ConnectRoute = "managed" | "own" | "key";
+
+/**
+ * The parts of a card's "broader access" line, in a language: who connects (by route, `_x` with no app name), what the app or
+ * the key may allow, and what tafs still enforces. `{app}` is the app's name.
+ */
+export interface WiderParts {
+  managed: string; own: string; key: string; managed_x: string; own_x: string; key_x: string;
+  may: string; may_x: string; key_may: string; rest: string;
+}
+
+/** The routes a line names someone for: any other value, as data on a card's path, is no route. */
+const ROUTES: ReadonlySet<string> = new Set<ConnectRoute>(["managed", "own", "key"]);
+
+/**
+ * The line, joined from its parts: who connects is left out when the route isn't known, since it's never guessed. A route
+ * that isn't one of the three is no route, never a failed card read.
+ */
+export function wider(p: WiderParts, vendor?: string, given?: string): string {
+  const route = given !== undefined && ROUTES.has(given) ? (given as ConnectRoute) : undefined;
+  const app = (s: string) => s.split("{app}").join(vendor ?? "");
+  const who = route ? (vendor ? app(p[route]) : p[`${route}_x`]) : "";
+  const may = route === "key" ? p.key_may : vendor ? app(p.may) : p.may_x;
+  return [who, may, p.rest].filter(Boolean).join(" ");
+}
 
 export type Words = typeof en;

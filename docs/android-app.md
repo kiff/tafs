@@ -1171,8 +1171,8 @@ card left the screen and came back (`ProfileWordsCardsTest`).
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
 
 **A sign-in wider than the job** (`wider: {words}`, docs/chat.md): when planque couldn't narrow an app's sign-in to
-what the taf uses, tafs cloud marks the waiting approval or sign-in card, and its words ("The sign-in for Google Sheets
-can't be narrowed to this job: …") are drawn above the card's buttons, in amber (`SetupComponent.wider`,
+what the taf uses, tafs cloud marks the waiting approval or sign-in card, and its words ("Composio connects your Google
+Sheets account. Google Sheets may ask for broader access than this job needs, …") are drawn above the card's buttons, in amber (`SetupComponent.wider`,
 `WiderLine`). Read leniently: a mark of another shape is no mark.
 The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
 it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step

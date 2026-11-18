@@ -468,9 +468,12 @@ Card's limits as being signed now: they go under `words`.
 
 **A sign-in wider than the job is said on the card.** When planque couldn't narrow an app's sign-in to what the
 taf uses (`request.connector.usual_access` on its grant: the app's sign-in offers no narrower scope, such as Google Sheets with no
-read-only one), each waiting approval or sign-in card for it carries `wider: {words}`: "The sign-in for Google
-Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own
-tools.", in the reader's language. Every app that can approve a card draws it above the card's buttons
+read-only one), each waiting approval or sign-in card for it carries `wider: {words}`, in the reader's language: who
+connects, by the grant's route (Composio for a managed sign-in, tafs for its own app at the vendor, the owner for a key;
+named by nobody when the grant says neither), then what the app may ask for, then what tafs enforces: "Composio
+connects your Google Sheets account. Google Sheets may ask for broader access than this job needs, but your taf can
+only use the tools allowed on its Card. tafs enforces those limits and blocks every other tool call." (`card_wider`,
+`connectRoute`). Every app that can approve a card draws it above the card's buttons
 (`contracts/coach-wider.json`). It's read with the same grants as `signs`, so only with the phone's proof
 (`markWider`). It's planque's data, the same for every app: Coach is told nothing about it, and never describes a
 sign-in's access itself (`connect-an-app@29`).

@@ -1,4 +1,4 @@
-import type { When, Words } from "./en.js";
+import { type When, type Words, wider } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `${t.day}, às ${t.hm}` : `às ${t.hm}`);
@@ -306,7 +306,7 @@ export const pt: Words = {
   brief_sign_in_again: "Iniciar sessão novamente",
   brief_connection_meanwhile: (taf, vendor) => `${taf} não consegue aceder a ${vendor} até lá.`,
   brief_open_taf: "Abrir o taf",
-  card_wider: (vendor) => `${vendor ? `O início de sessão em ${vendor}` : "Este início de sessão"} não pode ser limitado a esta tarefa: o ecrã pedirá mais acesso do que o taf usa. Ainda assim, o taf só pode usar as ferramentas do seu Card, e o tafs recusa qualquer outra chamada. O código que o faz é público, por isso pode verificá-lo.`,
+  card_wider: (vendor, route) => wider({ managed: "O Composio liga a sua conta {app}.", own: "O tafs liga a sua conta {app}.", key: "Liga {app} com uma chave.", managed_x: "O Composio liga esta conta.", own_x: "O tafs liga esta conta.", key_x: "Liga esta app com uma chave.", may: "{app} pode pedir mais acesso do que esta tarefa precisa,", may_x: "A app pode pedir mais acesso do que esta tarefa precisa,", key_may: "A chave pode permitir mais do que esta tarefa precisa,", rest: "mas o seu taf só pode usar as ferramentas permitidas no seu Card. O tafs aplica esses limites e bloqueia qualquer outra chamada de ferramenta." }, vendor, route),
   brief_check_meanwhile: (taf) => `${taf} não encontra trabalho novo até a verificação voltar a conseguir ler.`,
   mission_log_delivered: (done, held, refused) => [`${done} feito${done === 1 ? "" : "s"}`, held ? `${held} retida${held === 1 ? "" : "s"}` : "", refused ? `${refused} recusado${refused === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · "),
   business_title: "O que os tafs sabem do seu negócio",

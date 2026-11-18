@@ -1,4 +1,4 @@
-import type { When, Words } from "./en.js";
+import { type When, type Words, wider } from "./en.js";
 
 /** "at" a time, as the language says it with and without a weekday (docs/languages.md). */
 const at = (t: When) => (t.day ? `${t.day} om ${t.hm}` : `om ${t.hm}`);
@@ -306,7 +306,7 @@ export const nl: Words = {
   brief_sign_in_again: "Opnieuw inloggen",
   brief_connection_meanwhile: (taf, vendor) => `${taf} kan ${vendor} tot dan niet bereiken.`,
   brief_open_taf: "Het taf openen",
-  card_wider: (vendor) => `${vendor ? `De aanmelding bij ${vendor}` : "Deze aanmelding"} kan niet tot deze taak worden beperkt: het scherm vraagt meer toegang dan het taf gebruikt. Het taf kan toch alleen de tools op zijn Card gebruiken, en tafs weigert elke andere aanroep. De code die dit doet is openbaar, dus je kunt het nagaan.`,
+  card_wider: (vendor, route) => wider({ managed: "Composio koppelt je {app}-account.", own: "tafs koppelt je {app}-account.", key: "Je koppelt {app} met een sleutel.", managed_x: "Composio koppelt dit account.", own_x: "tafs koppelt dit account.", key_x: "Je koppelt deze app met een sleutel.", may: "{app} vraagt mogelijk om meer toegang dan deze taak nodig heeft,", may_x: "De app vraagt mogelijk om meer toegang dan deze taak nodig heeft,", key_may: "De sleutel geeft mogelijk meer toegang dan deze taak nodig heeft,", rest: "maar je taf kan alleen de tools gebruiken die op zijn Card zijn toegestaan. tafs handhaaft die grenzen en blokkeert elke andere toolaanroep." }, vendor, route),
   brief_check_meanwhile: (taf) => `${taf} vindt geen nieuw werk tot de controle weer kan lezen.`,
   mission_log_delivered: (done, held, refused) => [`${done} gedaan`, held ? `${held} vastgehouden` : "", refused ? `${refused} geweigerd` : ""].filter(Boolean).join(" · "),
   business_title: "Wat tafs over je bedrijf weten",
