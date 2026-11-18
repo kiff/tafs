@@ -1,0 +1,1 @@
+- **A card whose sign-in can't be narrowed says it plainly.** It now says who connects the account (Composio, tafs, or you with a key), that the app may ask for broader access than the job needs, and that the taf can only use the tools on its Card, which tafs enforces. In all 8 languages, with no "the code is public" line ([chat.md](docs/chat.md)).
