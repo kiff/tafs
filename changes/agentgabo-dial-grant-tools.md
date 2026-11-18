@@ -1,0 +1,4 @@
+- **Coach's dial reads and writes with the connection it names.** A taf switched to a new connection of the same app kept its old connection's tools, and its check went on reading the old connection. `taf_dial`'s check now carries `grant`.
+  - A check or result place naming a tool that ends in another connection's suffix is refused, even when the taf keeps none of the named connection's tools.
+  - From Coach, a check with no `grant` is refused while the app has two connections, or while the same change names another connection.
+  - kiff/agents never gets the grant (docs/api.md, the knob).

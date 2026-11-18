@@ -1,5 +1,5 @@
 import { checkMisfitSeen } from "./checkseen.js";
-import { rulesAgreement } from "./rules.js";
+import { anotherConnectionsTool, connectionsOfJob, connectionTail, grantSuffix, rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -5176,6 +5176,20 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
     // results named them. A taf from before, with neither, is left to kiff/agents, whose check then fails in words.
     const known = event ? await cardTools(event, taf, deps) : taf.tools;
     try { check = checkOf(body.check, known); } catch (err) { throw new HTTPError(400, (err as Error).message); }
+    // Its read is the named connection's: a taf switched to a new connection of the same app has both connections'
+    // tools, and the old one's read would go on reading the old connection. Coach names the connection when the app
+    // has two; the dial from the app sends back the check it was given, so it isn't asked to.
+    if (check.grant) {
+      const own = anotherConnectionsTool(check.tool, check.grant, known ?? []);
+      if (own) throw new HTTPError(400, `check.tool names ${check.tool}, which isn't a tool of the connection ${check.grant} (its tools end ${grantSuffix(check.grant)}): ` +
+        (own.length ? `its tools among the taf's are ${own.join(", ")}. Name its read` : `the taf has none of its tools yet: add its read with tools {grant, tools}, then name it`));
+    } else if (!event) {
+      const two = connectionsOfJob(check.tool, known ?? []);
+      if (two.size > 1) {
+        const each = [...two].map(([four, tools]) => `the connection whose tools end _${four} (${tools.join(", ")})`).join("; ");
+        throw new HTTPError(400, `${taf.name} has this app on more than one connection: ${each}. Name the one it reads on as check.grant, with that connection's read as check.tool`);
+      }
+    }
   }
   const nearest = (err: unknown) => {
     if (err instanceof TriggerError) return new HTTPError(400, err.nearest ? `${err.message}: the nearest is ${err.nearest}` : err.message);
@@ -5191,7 +5205,25 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   else {
     const all = Array.isArray(body.results) ? body.results : [];
     const vendor = await vendorPlaces(all.filter((p) => typeof p !== "string"), me, taf, deps, event);
+    // Coach's place writes with its own connection's tool, as a check reads with its own (above). The dial from the
+    // app sends back the places it was given.
+    for (const p of event ? [] : vendor) {
+      if (p.place !== "action") continue;
+      const own = anotherConnectionsTool(p.action, p.grant, taf.tools ?? []);
+      if (own) throw new HTTPError(400, `${p.name} names ${p.action}, which isn't a tool of the connection ${p.grant} (its tools end ${grantSuffix(p.grant)}): ` +
+        (own.length ? `its tools among the taf's are ${own.join(", ")}. Name its write` : `the taf has none of its tools yet: add the write with tools {grant, tools}, then name it`));
+    }
     results = [...resultPlaces(all.filter((p) => typeof p === "string")), ...vendor];
+  }
+  // Coach's check with no connection, beside a place or an app's event on a connection its read doesn't end in: the
+  // taf may have just moved to that connection, with only the old one's tools kept, so the check says which it reads.
+  const tail = body.check !== undefined && check && !check.grant && !event ? connectionTail(check.tool) : undefined;
+  if (tail) {
+    const named = [...wakes.filter((t) => t.kind === "app_event").map((t) => t.grant),
+      ...results.filter((p): p is VendorPlace => typeof p !== "string" && p.place === "action").map((p) => (p as { grant: string }).grant)];
+    const others = [...new Set(named.filter((g): g is string => typeof g === "string" && !!grantSuffix(g) && grantSuffix(g) !== tail))];
+    if (others.length) throw new HTTPError(400, `check.tool names ${check!.tool}, a tool of the connection whose tools end ${tail}, and this change also names ${others.join(", ")}: ` +
+      "name the connection the read is on as check.grant, with that connection's own read as check.tool");
   }
   let what: KnobSetting["what"];
   try { what = body.what === undefined ? latest?.what : recipeOf(body.what); } catch (err) { throw new HTTPError(400, (err as Error).message); }

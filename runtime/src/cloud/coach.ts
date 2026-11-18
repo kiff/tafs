@@ -123,7 +123,8 @@ export const TOOLS: ToolDef[] = [
         type: "object",
         description: "The read every schedule of the taf makes first, without the AI: {tool: the read tool that lists its open work, arguments: {…}, " +
           "items: where the list is in its result (\"\" when the result is the list), cursor: a field that only grows (created time, an increasing id), id?, " +
-          "first?: \"all\" to hand the queue already there, \"new\" (the default) to start from now}. Omitted, the taf's check stays as it is.",
+          "first?: \"all\" to hand the queue already there, \"new\" (the default) to start from now, grant?: the connection it reads on, " +
+          "needed when the taf has that app on two connections, with that connection's own read}. Omitted, the taf's check stays as it is.",
       },
       results: {
         type: "array",
