@@ -40,6 +40,7 @@ object TafTemplates {
     script = listOf(
       ProposedAction("reply_ticket", Words.Sample.Support.reply7781, null, Words.Sample.Support.reply7781Why),
       ProposedAction("reply_ticket", Words.Sample.Support.reply7790, null, Words.Sample.Support.reply7790Why),
+      // Third: the sample's morning chat is this taf's, and a held call's card counts down every second, so the chat stays still.
       ProposedAction("promise", Words.Sample.Support.promise7802, null, Words.Sample.Support.promise7802Why),
       ProposedAction("share_customer_data", Words.Sample.Support.shareHistory, null, Words.Sample.Support.shareHistoryWhy),
     ),
@@ -58,8 +59,9 @@ object TafTemplates {
     ),
     script = listOf(
       ProposedAction("delay_message", Words.Sample.Parcels.tell5120, null, Words.Sample.Parcels.tell5120Why),
-      ProposedAction("delay_message", Words.Sample.Parcels.tell5134, null, Words.Sample.Parcels.tell5134Why),
+      // Second, so it waits in Needs you once the sample's two opening rounds are played (as on iOS).
       ProposedAction("reship", Words.Sample.Parcels.reship5098, null, Words.Sample.Parcels.reship5098Why),
+      ProposedAction("delay_message", Words.Sample.Parcels.tell5134, null, Words.Sample.Parcels.tell5134Why),
       ProposedAction("change_address", Words.Sample.Parcels.changeAddress, null, Words.Sample.Parcels.changeAddressWhy),
     ),
   )

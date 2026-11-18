@@ -41,7 +41,7 @@ class CardCheckTest {
     }
     assertEquals(listOf("within", "within", "waits", "never"), decided("support"))
     assertEquals(listOf("within", "within", "waits"), decided("leads"))
-    assertEquals(listOf("within", "within", "waits", "never"), decided("parcels"))
+    assertEquals(listOf("within", "waits", "within", "never"), decided("parcels"))
   }
 
   @Test fun withinTheCardIsAllowed() {

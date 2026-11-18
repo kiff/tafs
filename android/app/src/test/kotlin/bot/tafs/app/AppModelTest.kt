@@ -26,6 +26,8 @@ class AppModelTest {
     assertEquals(setOf("Lead follow-up", "Deploys", "Access", "Late parcels", "Support replies"), s.tafs.map { it.name }.toSet())
     assertTrue(s.record.any { it.kind == RecordEntry.Kind.done })
     assertTrue(s.held.isNotEmpty())
+    // Late parcels' reship waits for the owner after the opening rounds, beside Deploys' migration.
+    assertEquals(setOf("Late parcels", "Deploys"), s.held.map { h -> s.taf(h.tafId)!!.name }.toSet())
   }
 
   @Test fun aTafWithAHeldCallIsWaitingOnTheOwner() {
