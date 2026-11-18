@@ -1793,7 +1793,7 @@
     <string name="sample_brief_pay_answer">Envoyer les 3</string>
     <string name="sample_brief_pay_deadline">d\'ici ven. 12:00</string>
     <string name="sample_brief_pay_meanwhile">les autres messages continuent ; ces trois-là attendent.</string>
-    <string name="sample_brief_pay_note">« Envoyer les 3 » ouvre trois approbations, l\'une après l\'autre.</string>
+    <string name="sample_brief_pay_note">« Envoyer les 3 » ouvre trois approbations, l\'une après l\'autre.</string>
     <string name="sample_brief_pay_question">Envoyer 3 messages de retard pour des colis attendus vendredi ?</string>
     <string name="sample_brief_pay_why">Le transporteur confirme le retard des trois, et %1$s les a vérifiés.</string>
     <string name="sample_brief_remind_decline">Ne pas proposer</string>
@@ -1881,7 +1881,7 @@
     <string name="sample_log_s4_evidence">colis 5098</string>
     <string name="sample_log_s4_line">Colis 5098, pour une réponse à son client. Une référence, pas ses données.</string>
     <string name="sample_log_s4_title">Colis en retard → Réponses au support</string>
-    <string name="sample_log_s5_line">« Colis en retard » ne s\'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous.</string>
+    <string name="sample_log_s5_line">« Colis en retard » ne s\'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous.</string>
     <string name="sample_look_up_charge">Rechercher un paiement</string>
     <string name="sample_memory_ask_first">Demander avant toute chose inhabituelle, même si cela entre dans la Card.</string>
     <string name="sample_memory_explain">Vous préférez que j\'explique une décision en une ligne plutôt qu\'en un paragraphe.</string>
