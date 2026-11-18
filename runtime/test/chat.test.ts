@@ -4,6 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, chatTitle, handle, HELD_FULL_WORDS, type HTTPEvent, MEMORY, NOT_SENT_WORDS, oldFormCard, RESUMED_SINCE, type Taf } from "../src/cloud/handler.js";
 import { stepWhyKey } from "../src/cloud/steps.js";
 import { wordsIn } from "../src/cloud/words/index.js";
+import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -1176,6 +1177,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const en = await thread();
     expect(en.working).toBeNull();
     expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
+    contract("conversation-failed", "GET /v1/tafs/{id}/conversation once the run a card's answer resumed was refused by the AI provider: `failed` with its code and words, neither at work nor waiting.", en);
     expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
     // A run that ends ERROR uses no credits, whatever it did before the card (KIFF's meter: a failed run is free).
     // But one that already sent a write did act, so it gets the partway words, which say it stopped partway and
