@@ -124,7 +124,7 @@ final class KIFFAnswerTests: XCTestCase {
 
     func testSampleAnswersStillWork() async throws {
         let model = AppModel(signer: StubSigner())
-        let t = TafTemplates.refunds
+        let t = TestTemplates.refunds
         let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
         let started = await model.start(draft, confirm: false)
         let taf = try XCTUnwrap(started)

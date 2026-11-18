@@ -4052,13 +4052,13 @@ final class AppModel: ObservableObject {
     static func sampleCredits(now: Date, previous: Bool = false) -> TafsCloud.Credits {
         if previous {
             return TafsCloud.Credits(period: nil, credits: 2310, runs: 126, words: Words.Sample.Credits.lastPeriod,
-                                     tafs: [.init(taf: "sample-refunds", credits: 1480, runs: 74, words: Words.Sample.Credits.refundsLast),
-                                            .init(taf: "sample-invoices", credits: 830, runs: 52, words: Words.Sample.Credits.invoicesLast)],
+                                     tafs: [.init(taf: "sample-support", credits: 1480, runs: 74, words: Words.Sample.Credits.refundsLast),
+                                            .init(taf: "sample-parcels", credits: 830, runs: 52, words: Words.Sample.Credits.invoicesLast)],
                                      note: Self.sampleCreditsNote)
         }
         return TafsCloud.Credits(period: nil, credits: 1240, runs: 69, words: Words.Sample.Credits.thisPeriod,
-                                 tafs: [.init(taf: "sample-refunds", credits: 820, runs: 41, words: Words.Sample.Credits.refundsThis),
-                                        .init(taf: "sample-invoices", credits: 420, runs: 28, words: Words.Sample.Credits.invoicesThis)],
+                                 tafs: [.init(taf: "sample-support", credits: 820, runs: 41, words: Words.Sample.Credits.refundsThis),
+                                        .init(taf: "sample-parcels", credits: 420, runs: 28, words: Words.Sample.Credits.invoicesThis)],
                                  notCounted: .init(runs: 9, words: Words.Sample.Credits.notCounted,
                                                    lines: [.init(why: "coach", runs: 6, words: Words.Sample.Credits.notCountedCoach),
                                                            .init(why: "trial", runs: 2, words: Words.Sample.Credits.notCountedTrials),
@@ -6292,7 +6292,7 @@ final class AppModel: ObservableObject {
     /// Fills the app with sample tafs and a morning of work. Labelled as sample in the UI.
     func loadSample() async {
         guard tafs.isEmpty else { return }
-        for key in ["chargebacks", "deploys", "access", "billpay", "refunds"] {
+        for key in ["leads", "deploys", "access", "parcels", "support"] {
             guard let t = TafTemplates.template(key) else { continue }
             let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
             await start(draft, confirm: false)
@@ -6301,17 +6301,27 @@ final class AppModel: ObservableObject {
         // Pulling to refresh plays the next round.
         playNextDemoActions()
         playNextDemoActions()
-        if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == TafTemplates.refunds.name }) {
+        // Support replies has answered tickets since the morning, not only the one the Record shows:
+        // 12 of its 40 today, so its bar, the list and its Card all say 28 left, as the Card screen does.
+        if let i = tafs.firstIndex(where: { $0.name == TafTemplates.support.name }) {
+            tafs[i].counted["reply_ticket"] = Self.sampleRepliesToday
+            save()
+        }
+        if Screenshots.enabled, Screenshots.screen == "card", let i = tafs.firstIndex(where: { $0.name == TafTemplates.support.name }) {
             tafs[i].kiffCards = Screenshots.cards(tafs[i])
         }
-        if let refunds = tafs.first(where: { $0.name == TafTemplates.refunds.name }) {
-            chats[refunds.id] = [
-                sampleMessage(.taf, Self.sampleHello(refunds)),
+        if let support = tafs.first(where: { $0.name == TafTemplates.support.name }) {
+            chats[support.id] = [
+                sampleMessage(.taf, Self.sampleHello(support)),
                 sampleMessage(.owner, Words.Sample.Chat.question),
-                sampleMessage(.taf, sampleReply(to: Words.Sample.Chat.question, tafID: refunds.id)),
+                sampleMessage(.taf, sampleReply(to: Words.Sample.Chat.question, tafID: support.id)),
             ]
         }
     }
+
+    /// The replies Support replies has sent today in the sample: as many as the Card screen's
+    /// live Card counts (`Screenshots.cards`), so every screen says the same 28 left of 40.
+    static let sampleRepliesToday = 12
 
     // MARK: Saving the sample
 
@@ -9926,21 +9936,12 @@ enum Screenshots {
     static func euros(_ amount: Decimal) -> String {
         amount.formatted(.currency(code: "EUR").locale(Words.locale))
     }
-    /// `-screen card`: the Refunds taf's Cards as KIFF would list them (kiff/tafs#211), a live
-    /// one with its total, a read-only one with its calls, and a test one.
+    /// `-screen card`: the Support replies taf's Card as KIFF would list it (kiff/tafs#211): a live one
+    /// with its replies counted against the day's limit. No money moves in the new samples, so no amount.
     static func cards(_ taf: Taf) -> [TafCard] {
-        let refunds = TafCard(id: "sample-refunds", title: Words.Sample.Card.refundsStripe, rules: Array(taf.card.rules.prefix(2)),
-                              total: CardTotal(limit: .eur(2_000), used: .eur(480), window: .day))
-        let reads = TafCard(id: "sample-reads", title: Words.Sample.Card.readStripe,
-                            rules: [CardRule(action: "list_charges", label: Words.Sample.listCharges, countPerWindow: 200),
-                                    CardRule(action: "get_charge", label: Words.Sample.lookUpCharge)],
-                            calls: CardTotal(limit: 200, used: 20, window: .day))
-        var test = refunds
-        test.id = "sample-test"
-        test.title = Words.Sample.refundsStripeTest
-        test.environment = "test"
-        test.live = false
-        return [refunds, reads, test]
+        let support = TafCard(id: "sample-support", title: Words.Sample.Card.refundsStripe, rules: taf.card.rules,
+                              calls: CardTotal(limit: 40, used: 12, window: .day))
+        return [support]
     }
 
     /// Whether this run's screenshot is a purchase screen.
