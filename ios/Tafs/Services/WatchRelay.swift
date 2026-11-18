@@ -243,7 +243,8 @@ struct KeptWatchReading: WatchReading {
         if let day {
             shown = day
         } else {
-            let zone = (try? await kiff.me())?.timeZone.flatMap(TimeZone.init(identifier:)) ?? TimeZone(identifier: "UTC")!
+            // The account's zone, else the phone's own (as Android's): closer to the person's day than UTC.
+            let zone = (try? await kiff.me())?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
             shown = Self.day(Date(), in: zone)
         }
         let read = try await cloud.calendar(from: shown, to: shown)

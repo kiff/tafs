@@ -93,5 +93,8 @@
   },
   "KIFF/PasskeyRegistration.swift": {
     "kiff.passkey.register.v1\\n\\(tenant)\\n\\(subject)\\n\\(issuedAt)": "the message a passkey's registration challenge is the hash of (KIFF's pairing contract), never shown"
+  },
+  "Services/WatchRelay.swift": {
+    "yyyy-MM-dd": "a date format for the calendar's day key, never shown"
   }
 }

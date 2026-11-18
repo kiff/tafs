@@ -43,7 +43,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - `taf`, by tafs cloud's id: its state (Halted when it or the account is), its job, each Card as the Card tab
     draws it (title, the face's figure and line, a line per rule) and how many of KIFF's held calls are its agent's.
     A taf tafs cloud doesn't list says "Open tafs on your phone".
-  - `calendar`, `day` as `YYYY-MM-DD`, or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day
+  - `calendar`, `day` as `YYYY-MM-DD`, or today in the account's zone (the phone's when it can't be read): tafs cloud's `GET /v1/calendar` for that day
     alone, its line and that day's events in time order with each taf's name.
   - `account`: who is signed in, the account's name (else its slug) and the plan's line, as Account shows it.
 - **Live only:** each request goes with WatchConnectivity's message data and a reply, never
