@@ -3,6 +3,7 @@ import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, keepAccount } from "./accounts.js";
+import { agentKeys } from "./agentkeys.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
 import { type Deletion, type Deletions, httpPeer } from "./deletion.js";
@@ -55,7 +56,7 @@ async function putSecret(name: string, value: string, description: string): Prom
   }
 }
 
-const keys: Keys = {
+const secretKeys: Keys = {
   put: (tenant, tafID, key) => putSecret(`${KEYS_PREFIX}${tenant}/kiff/${tafID}`, key, "A taf's KIFF agent key, for kiff/agents"),
   async remove(tenant, tafID) {
     try {
@@ -66,6 +67,12 @@ const keys: Keys = {
     }
   },
 };
+
+/** The tafs' keys go through kiff/agents once it keeps them; until then, a secret each (secretKeys). */
+const keys: Keys = agentKeys({
+  putKey: (tenant, tafID, key) => agents().putKey(tenant, tafID, key),
+  removeKey: (tenant, tafID) => agents().removeKey(tenant, tafID),
+}, secretKeys);
 
 /** Each account's alert secret for kiff/agents, with the hash of what was written (account#id) beside it in the table. */
 const accountStore: AccountStore = {

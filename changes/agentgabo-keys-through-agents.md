@@ -1,0 +1,1 @@
+- **A taf's KIFF key is kept by kiff/agents.** tafs cloud now writes and removes it through kiff/agents' signed key routes, which keep it sealed and delete its old secret. Until kiff/agents keeps keys (the routes answer 404), it is kept as a secret, as before. A failure is never written past.

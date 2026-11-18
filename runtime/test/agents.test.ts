@@ -219,6 +219,29 @@ describe("kiff/agents client", () => {
     expect(JSON.parse(sent[0]!.body!)).toEqual({ why: "installed", calls: 2, held: 1, refused: 0 });
   });
 
+  it("keeps a taf's key with kiff/agents: the key alone in the body, the tenant signed, and 404 means it keeps none yet", async () => {
+    const { agents, sent } = server(() => new Response(null, { status: 204 }));
+    expect(await agents.putKey("t1", "taf_1", "kiff_key_x")).toBe(true);
+    expect(await agents.removeKey("t1", "taf_1")).toBe(true);
+    expect(sent.map((s) => `${s.method} ${s.url.pathname}`)).toEqual(["PUT /tenant/keys/kiff/taf_1", "DELETE /tenant/keys/kiff/taf_1"]);
+    expect(JSON.parse(sent[0].body ?? "")).toEqual({ key: "kiff_key_x" });
+    expect(sent[1].body).toBeUndefined();
+    for (const s of sent) {
+      expect(s.headers["kiff-tenant"]).toBe("t1");
+      expect((/SignedHeaders=([^,]+)/.exec(s.headers.authorization ?? "")?.[1] ?? "").split(";")).toContain("kiff-tenant");
+    }
+
+    const off = server(() => new Response(JSON.stringify({ code: "not_found", message: "not found" }), { status: 404 }));
+    expect(await off.agents.putKey("t1", "taf_1", "kiff_key_x")).toBe(false);
+    expect(await off.agents.removeKey("t1", "taf_1")).toBe(false);
+
+    const down = server(() => new Response(JSON.stringify({ code: "internal", message: "internal error" }), { status: 500 }));
+    const err = await down.agents.putKey("t1", "taf_1", "kiff_key_secret").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(AgentsError);
+    expect(String((err as Error).message)).not.toContain("kiff_key_secret");
+    await expect(down.agents.removeKey("t1", "taf_1")).rejects.toBeInstanceOf(AgentsError);
+  });
+
   it("is only ever called over https", () => {
     expect(() => new Agents({ url: "http://abc123.lambda-url.eu-west-1.on.aws", region: "eu-west-1", credentials: async () => CREDS })).toThrow(/https/);
   });
