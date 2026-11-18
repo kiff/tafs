@@ -24,7 +24,7 @@ on:
         type: string
         default: ""
       owner_override:
-        description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <reason>\" (blank: none)"
+        description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <touched run id, or -> <reason>\" (blank: none)"
         type: string
         default: ""
 permissions:
@@ -74,38 +74,44 @@ jobs:
           fi
           # The definition sources: what an Eval measures and the Upgrade rolls out.
           sources="runtime/src/jobs.ts runtime/src/kiff-skill.ts runtime/skills runtime/src/cloud/tafdef.ts runtime/src/cloud/setupdef.ts"
-          # The owner's override (.github/upgrade-override.sh, tested on saved runs in upgrade-gate.yml): a full
-          # Eval red in exactly one step, and the latest run, of that step's suite alone at repeat 3, green on it.
-          # Only with a named owner decision on the thread; both runs, their tafs refs and the reason are this run's record.
-          # The check run is the latest, so the definitions this rolls out are its ref's (the sources check below).
+          # The owner's override (.github/upgrade-override.sh, tested on saved runs in upgrade-gate.yml): a full Eval red
+          # in exactly one step; a later run of that step's suite at repeat 3 that passed it; and every suite the definitions
+          # changed since touch, passed in that run or in a later run of them at the repeat the owner chose. Only with a named
+          # owner decision on the thread; the runs, their tafs refs, each suite's repeat and the reason are this run's record.
+          # One of the later runs is the latest Eval, and both are at its agents commit, so the definitions this rolls out
+          # are their ref's (the sources check below).
           if [ -n "$OWNER_OVERRIDE" ]; then
             [ -z "$RULE_B_RUN" ] || { echo "::error::owner_override and rule_b_run are one or the other"; exit 1; }
-            read -r base check reason <<<"$OWNER_OVERRIDE"
-            [[ "$base" =~ ^[0-9]+$ && "$check" =~ ^[0-9]+$ && -n "$reason" && ${#reason} -le 200 ]] \
-              || { echo "::error::owner_override is \"<base run id> <check run id> <reason>\""; exit 1; }
-            [ "$check" = "$run_id" ] || { echo "::error::the check run $check isn't the latest completed Eval on main ($run_id)"; exit 1; }
-            [ "$check" != "$base" ] || { echo "::error::the check run must be a later run than the base"; exit 1; }
-            info=$(gh api "repos/kiff/agents/actions/runs/$base" --jq '"\(.path) \(.head_branch) \(.status) \(.created_at) \(.head_sha)"')
-            read -r path branch status created base_sha <<<"$info"
-            [ "$path" = .github/workflows/eval.yml ] && [ "$branch" = main ] && [ "$status" = completed ] \
-              || { echo "::error::the base run $base isn't a completed Eval on main"; exit 1; }
-            [[ "$created" < "$(gh api "repos/kiff/agents/actions/runs/$check" --jq .created_at)" ]] \
-              || { echo "::error::the base run $base isn't older than the check run $check"; exit 1; }
-            for r in base check; do
+            read -r base check touched reason <<<"$OWNER_OVERRIDE"
+            [[ "$base" =~ ^[0-9]+$ && "$check" =~ ^[0-9]+$ && ( "$touched" = - || "$touched" =~ ^[0-9]+$ ) && -n "$reason" && ${#reason} -le 200 ]] \
+              || { echo "::error::owner_override is \"<base run id> <check run id> <touched run id, or -> <reason>\""; exit 1; }
+            [ "$check" = "$run_id" ] || [ "$touched" = "$run_id" ] \
+              || { echo "::error::neither later run is the latest completed Eval on main ($run_id)"; exit 1; }
+            : > runs; : > touched.steps; : > touched.log
+            for r in base check touched; do
               id=${!r}
+              [ "$id" != - ] || continue
+              info=$(gh api "repos/kiff/agents/actions/runs/$id" --jq '"\(.path) \(.head_branch) \(.status) \(.created_at) \(.head_sha)"')
+              read -r path branch status created sha <<<"$info"
+              [ "$path" = .github/workflows/eval.yml ] && [ "$branch" = main ] && [ "$status" = completed ] \
+                || { echo "::error::the $r run $id isn't a completed Eval on main"; exit 1; }
+              echo "$r $id $created $sha" >> runs
+              [ "$r" != base ] || base_sha=$sha
               job=$(gh api "repos/kiff/agents/actions/runs/$id/jobs" --jq '.jobs | if length == 1 then .[0] else error("not one job") end')
               jq -r '.steps[] | "\(.number) \(.conclusion) \(.name)"' <<<"$job" > "$r.steps"
               gh api "repos/kiff/agents/actions/jobs/$(jq .id <<<"$job")/logs" > "$r.log"
             done
-            # The definitions changed between the two runs (a move lists both paths), and the suites they touch, as kiff/agents
-            # maps them at the check's commit.
+            echo "shipped - - $agents_sha" >> runs
+            # The definitions changed between the base and the check (a move lists both paths), and the suites they touch,
+            # as kiff/agents maps them at the commit shipped.
             base_ref=$(gh api "repos/kiff/agents/contents/eval/tafs.ref?ref=$base_sha" --jq .content | base64 -d | tr -d '[:space:]')
             git cat-file -e "$base_ref^{commit}"
             git diff --no-renames --name-only "$base_ref" "$ref" -- $sources > changed.paths
             gh api "repos/kiff/agents/contents/eval/suites.json?ref=$agents_sha" --jq .content | base64 -d > suites.json
-            step=$(bash .github/upgrade-override.sh base.steps base.log check.log check.steps suites.json changed.paths)
+            out=$(bash .github/upgrade-override.sh runs base.steps base.log check.log check.steps touched.log touched.steps suites.json changed.paths)
             conclusion=success
-            echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$step\"; Eval $check (kiff/tafs@${ref:0:12}) passed it, with every suite the $(grep -c . changed.paths || true) changed definition path(s) touch. Reason: $reason" | tee -a "$GITHUB_STEP_SUMMARY"
+            { echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$(head -1 <<<"$out")\"; later runs at kiff/tafs@${ref:0:12}: $(sed -n 2p <<<"$out")."
+              echo "Reason: $reason"; } | tee -a "$GITHUB_STEP_SUMMARY"
           fi
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then
             echo "evaluated=true" >> "$GITHUB_OUTPUT"
