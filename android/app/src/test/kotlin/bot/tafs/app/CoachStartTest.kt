@@ -15,6 +15,7 @@ import bot.tafs.app.model.CoachWords
 import java.time.Instant
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
@@ -1009,6 +1010,41 @@ class CoachStartTest {
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
     assertTrue(m.state.value.cardsNotRead.isEmpty())
+  }
+
+  // The quiet check's own read: Coach's run went quiet on a phone (its stream's lines through `flowOn`), and the stream's 30 s
+  // check reads the chat, which now holds the connect card. That read closes the stream, after the card's grant is read:
+  // closing it first ended the read too, and the card stayed on "Reading what it asks for…".
+  @Test fun theQuietChecksReadReadsTheCardBeforeItClosesTheStream() = runTest {
+    reads()
+    transport.answer("GET /v1/setup", 200, """{"setup":{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"working":{"session":"s1","run":"r1"}}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.openStream = { request ->
+      if (!request.url.contains("/runs/r1/stream")) null
+      else {
+        transport.send(request)
+        bot.tafs.app.kiff.StreamedResponse(200, kotlinx.coroutines.flow.flow {
+          emit("event: activity")
+          emit("data: {\"tool\":\"show\",\"call_id\":\"c1\"}")
+          kotlinx.coroutines.awaitCancellation()
+        }.buffer())
+      }
+    }
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    advanceTimeBy(1_000)
+    runCurrent()
+    // The run is over; the chat holds its card, and planque lists the card's grant.
+    transport.answer(
+      "GET /v1/tafs/setup_1/conversation", 200,
+      """{"messages":[],"components":[{"at":"2026-10-28T08:00:00Z","session":"s1","run":"r1","component":{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}}]}""",
+    )
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(AppModel.STREAM_CHECK_MS + 1)
+    runCurrent()
+    assertTrue("the card's grant was read by the check's read", m.state.value.grants.any { it.id == "g1" })
   }
 
   // A grant planque never lists: read for ten minutes at most, never for as long as the chat stays open.
