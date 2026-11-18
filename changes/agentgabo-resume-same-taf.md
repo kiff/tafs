@@ -1,0 +1,1 @@
+- **A half-made connection from an earlier chat is resumed only for its own taf** (tafs cloud's approval route): with this chat's Card draft for that taf, asked under seven days ago, every tool it asks for on this chat's Card, and a fresh tap. Otherwise Coach asks for the app again, as a new connection for the taf.

@@ -93,6 +93,7 @@ export const pl: Words = {
   approval_no_grant: "Nie ma połączenia o tym identyfikatorze.",
   approval_removed_tafs_connection: (app: string) => `To połączenie z ${app} należy do usuniętego tafa, więc nie jest używane dla tego. Coach połączy ${app} dla tego tafa.`,
   approval_other_tafs_connection: (app: string) => `Ta karta jest dla innego tafa niż to połączenie z ${app}. Coach pokaże zatwierdzenie ponownie z własnym połączeniem tego tafa.`,
+  approval_earlier_connection: (app: string) => `To połączenie z ${app} rozpoczęto we wcześniejszym czacie, więc nie jest tu wznawiane. Coach poprosi o ${app} ponownie dla tego tafa.`,
   approval_cards_not_issued: (why: string) => `KIFF nie wydał Card tafa: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} jest połączony. Teraz Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} wciąż czeka na własne zatwierdzenie. Najpierw zatwierdź ${vendor}; ta Card przyjdzie z ostatnią aplikacją.`,

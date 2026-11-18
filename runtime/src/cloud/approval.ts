@@ -691,6 +691,7 @@ export function approvalWords(lang: Lang = "en") {
     noGrant: w.approval_no_grant,
     removedTafsConnection: w.approval_removed_tafs_connection,
     otherTafsConnection: w.approval_other_tafs_connection,
+    earlierConnection: w.approval_earlier_connection,
     cardsNotIssued: w.approval_cards_not_issued,
     connectedCardNext: w.approval_connected_card_next,
     otherAppFirst: w.approval_other_app_first,
@@ -949,6 +950,17 @@ export interface DecideContext {
    */
   session?: string;
   /**
+   * When the conversation the card is in began (its session's start, from kiff/agents): a grant asked before it is a
+   * half-made connection from an earlier conversation, resumed here only as `resumedRefusal` allows. Unset, no grant is
+   * read as resumed (a caller with no conversation); a read that fails is read again, never trusted.
+   */
+  sessionStarted?: () => Promise<string | undefined>;
+  /**
+   * Whether this conversation's own connection request answered with the grant (`askedInSession`): within the clocks'
+   * margin, a grant this conversation asked for is its own, not an earlier one. Unset, none is.
+   */
+  askedHere?: (grant: string) => Promise<boolean>;
+  /**
    * The rules the owner agreed in the conversation the card is in (rules.ts), read when a draft is checked. Unset, the
    * draft isn't checked against rules (a caller that draws no card); a read that fails is read again, never trusted.
    */
@@ -998,6 +1010,84 @@ async function agentRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: stri
         answer: `failed: the Card draft is for another taf than this ${vendor} connection's; show an approval with this taf's own grant and its draft` };
     }
   }
+  return undefined;
+}
+
+/** How long a half-made connection from an earlier conversation can be resumed: planque ends one after this anyway. */
+export const RESUME_WITHIN_MS = 7 * 24 * 3600_000;
+
+/**
+ * planque's and kiff/agents' clocks differ: a grant asked up to this long after the conversation began is still read as
+ * an earlier one, unless this conversation's own connection request answered with it (`askedHere`).
+ */
+export const RESUME_CLOCK_MARGIN_MS = 10_000;
+
+/**
+ * Whether a conversation's events hold its own connection request (Coach's `planque` call with `action: "request"`)
+ * answered with the grant: the request's result names its id, as a whole token (`g_1` never matches `g_12`).
+ */
+export function askedInSession(events: ReadonlyArray<{ kind: string; body: unknown }>, grant: string): boolean {
+  if (!grant) return false;
+  const named = new RegExp(`(^|[^A-Za-z0-9_.:-])${grant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z0-9_.:-])`);
+  const requests = new Set<string>();
+  for (const e of events) {
+    const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; text?: unknown; is_error?: unknown };
+    if (typeof b.call_id !== "string") continue;
+    if (e.kind === "tool_call" && b.tool === "planque" && (b.input as { action?: unknown } | null)?.action === "request") requests.add(b.call_id);
+    else if (e.kind === "tool_result" && requests.has(b.call_id) && b.is_error !== true && typeof b.text === "string" && named.test(b.text)) return true;
+  }
+  return false;
+}
+
+/**
+ * A half-made connection from an earlier conversation (asked before this one began, still pending or approved and never
+ * signed in to) is resumed here only when every one of these holds; otherwise Coach asks for the app again, as a new
+ * connection for this taf:
+ * - it's this conversation's taf: the card carries this conversation's Card draft, and the draft is for the grant's agent;
+ * - it's inside its deadline: asked under seven days ago (planque ends it then);
+ * - its tools are this conversation's Card's: every tool it asks for (what the phone signs) is on the draft's Cards;
+ * - a fresh tap signs it, as every approval here does: nothing approved earlier is reused.
+ * Each refusal tells Coach to ask for the app again for this taf, never naming another taf or the grant. A grant of this
+ * conversation, or one connected already (a new version's Card over it), isn't resumed and isn't touched.
+ */
+async function resumedRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | undefined> {
+  if (!ctx.sessionStarted || (grant.status !== "pending" && grant.status !== "approved")) return undefined;
+  const asked = (grant.request as { created_at?: unknown }).created_at;
+  const askedAt = typeof asked === "string" ? Date.parse(asked) : NaN;
+  if (Number.isNaN(askedAt)) return undefined;
+  let started: string | undefined;
+  try {
+    started = await ctx.sessionStarted();
+  } catch {
+    return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
+  }
+  const startedAt = started ? Date.parse(started) : NaN;
+  // A conversation with no start it can read is read again, never taken as this one's.
+  if (Number.isNaN(startedAt)) return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
+  if (askedAt >= startedAt + RESUME_CLOCK_MARGIN_MS) return undefined;
+  // Within the margin after it began, this conversation's own request is its own.
+  if (askedAt >= startedAt && ctx.askedHere) {
+    let own: boolean;
+    try {
+      own = await ctx.askedHere(grant.id);
+    } catch {
+      return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
+    }
+    if (own) return undefined;
+  }
+  const W = approvalWords(ctx.lang);
+  const again = `request ${vendor} again for this taf as a new connection, never this grant`;
+  const refuse = (code: string, why: string): Decision =>
+    ({ outcome: "answered", note: W.earlierConnection(vendor), code, answer: `failed: this ${vendor} connection was started in an earlier conversation, and ${why}, so it isn't resumed here; ${again}` });
+  if (ctx.now.getTime() - askedAt > RESUME_WITHIN_MS) return refuse("resumed_expired", "it was asked over seven days ago");
+  if (!ask.draft) return refuse("resumed_without_card", "it comes back only with this conversation's Card draft over it");
+  const draft = await draftInfo(ctx.token, ask.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now).catch(() => undefined);
+  const agent = typeof grant.request.agent === "string" ? grant.request.agent : "";
+  if (!draft?.agent || !agent || draft.agent !== agent) return refuse("resumed_other_taf", "this conversation's Card draft isn't for its taf");
+  if (!draft.cards) return { outcome: "read_again", note: W.cardsUnread, code: "cards_unread" };
+  // This conversation's Card alone, not Cards in force from before: what the owner agrees to here is what resumes it.
+  const left = uncoveredTool(grant, draft.cards, new Set());
+  if (left) return refuse("resumed_beyond_card", `it asks for "${left}", which this conversation's Card doesn't cover`);
   return undefined;
 }
 
@@ -1079,6 +1169,8 @@ export async function checkDraft(ask: { grant: string; draft: string; shown_draf
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant, code: "no_grant" };
   const vendor = vendorOf(grant);
   const coded = (d: Decision, fallback: string): DraftCheck => (d.outcome === "sign" ? { outcome: "read_again", note: W.outOfDate, code: fallback } : { ...d, code: d.code ?? fallback });
+  const resumed = await resumedRefusal(ask, grant, vendor, ctx);
+  if (resumed) return coded(resumed, "refused");
   const refused = await agentRefusal(ask, grant, vendor, ctx);
   if (refused) return coded(refused, "refused");
   const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTafOf(grant, grants));
@@ -1101,6 +1193,9 @@ export async function decideCoded(ask: ApprovalAsk, ctx: DecideContext): Promise
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant, code: "no_grant" };
   const vendor = vendorOf(grant);
+  // A half-made connection from an earlier conversation first: its refusals ask for the app again, never another taf's.
+  const resumed = await resumedRefusal(ask, grant, vendor, ctx);
+  if (resumed) return resumed;
   const refused = await agentRefusal(ask, grant, vendor, ctx);
   if (refused) return refused;
   // The waiting app's approval tapped with no draft, though its connection and the Card go under one approval

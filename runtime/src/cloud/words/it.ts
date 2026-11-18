@@ -93,6 +93,7 @@ export const it: Words = {
   approval_no_grant: "Non c'è nessun collegamento con quell'id.",
   approval_removed_tafs_connection: (app: string) => `Questo collegamento a ${app} appartiene a un taf rimosso, quindi non viene usato per questo. Coach collega ${app} per questo taf.`,
   approval_other_tafs_connection: (app: string) => `Questa scheda è per un altro taf rispetto a questo collegamento a ${app}. Coach mostra di nuovo l'approvazione con il collegamento di questo taf.`,
+  approval_earlier_connection: (app: string) => `Questo collegamento a ${app} è stato iniziato in una chat precedente, quindi non viene ripreso qui. Coach richiede di nuovo ${app} per questo taf.`,
   approval_cards_not_issued: (why: string) => `KIFF non ha emesso le Card del taf: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} è connesso. Ora, la Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} attende ancora la sua approvazione. Approva prima ${vendor}; questa Card arriva con l'ultima app.`,

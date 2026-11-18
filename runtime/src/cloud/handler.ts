@@ -55,7 +55,7 @@ import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -4107,11 +4107,16 @@ function checkContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps): import(".
  * rules carry them).
  */
 function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity, session: string, deps: Deps): import("./approval.js").DecideContext {
+  // The conversation, read once for whichever of these the decision asks.
+  let read: ReturnType<Deps["agents"]["session"]> | undefined;
+  const conversation = () => (read ??= deps.agents.session(me.tenantID, session, ownerKey(me)));
   return {
     ...ctx,
     rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
     rulesPerToTheLetter: process.env.TAFS_RULES_PER === "on",
-    rulesAgreement: async () => rulesAgreement((await deps.agents.session(me.tenantID, session, ownerKey(me))).events),
+    rulesAgreement: async () => rulesAgreement((await conversation()).events),
+    sessionStarted: async () => (await conversation()).session.started,
+    askedHere: async (grant) => askedInSession((await conversation()).events, grant),
   };
 }
 
