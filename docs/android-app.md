@@ -1525,7 +1525,9 @@ Support replies, Late parcels, Lead follow-up, Access and Deploys (app/strings' 
 `sample.leads.*`, since 18 Nov in place of Refunds, Bill pay and Chargebacks): their Cards count calls, ask the owner first
 (a promised replacement, a reship, a discount) or never let a call through (a customer's details, an address change), with no
 money limit, and `CardCheckTest` plays each script. After its two opening rounds Needs you holds Late parcels' reship and
-Deploys' migration (`AppModelTest`). Support replies' promise plays third on purpose: the sample's morning chat is that taf's,
+Deploys' migration (`AppModelTest`). Support replies opens with 12 of its 40 replies used today, 28 left: ten counted
+before the sample opens (`TafTemplate.countedEarlier`) and its two opening replies, so its Card, its Activity bar and the
+Overview show one number, the one the Store's frames show. Support replies' promise plays third on purpose: the sample's morning chat is that taf's,
 and a held call's card counts down every second, which a chat on a tablet's tests can't wait out. iOS plays the promise second,
 so its sample loads with three waiting. Account's Alerts examples speak of the same samples (`alert.*_example`). The
 images are written only when asked:
@@ -1603,7 +1605,13 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     them from being read at all.
   - **A minute in, a card still not drawable says so**: "Couldn't read what to approve", with planque's last reason or
     "we're on it", and **Try again**, which reads the thread at once (`AppState.cardsNotRead`, `AppModel.retryCards`). The
-    reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`).
+    reads go on behind it, and the line goes once the card can be drawn (`CoachStartTest`). Try again starts a new minute (the
+    follower that said it ends), a sign-in card that names no grant says the same under its button, and an account change ends
+    the follower at once.
+  - **The approval sheet over Connect apps** reads planque again the same way while its connection isn't listed
+    (`AppModel.followListApproval`), from Connect, a sign-in again or a card's key sheet: it read planque once and could stay on
+    "Reading…". A minute in it says it couldn't be read, with Try again (`AppState.listApprovalNotRead`,
+    `retryListApproval`); closing the sheet ends the reads (`ConnectAppsTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
