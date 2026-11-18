@@ -1721,14 +1721,6 @@ enum Words {
         static func keptConnection(count: Int, vendor: String, names: String) -> String { Words.count("connect.kept_connection", count, vendor, names) }
         /// The key
         static var key: String { Words.line("connect.key") }
-        /// Your {vendor} login
-        static func loginTitle(vendor: String) -> String { Words.line("connect.login_title", vendor) }
-        /// The email address you sign in to {vendor} with. The key acts as this person in {vendor}, so use your own.
-        static func loginWhat(vendor: String) -> String { Words.line("connect.login_what", vendor) }
-        /// name@company.com
-        static var loginPlaceholder: String { Words.line("connect.login_placeholder") }
-        /// Enter one email address, with no spaces.
-        static var loginInvalid: String { Words.line("connect.login_invalid") }
         /// The clipboard is cleared after you paste.
         static var keyClipboard: String { Words.line("connect.key_clipboard") }
         /// The key goes from this phone to the connection server, which sends it only to {host}. It never goes to Coach.
@@ -1739,6 +1731,14 @@ enum Words {
         static var kiffWordsConnectionCouldNot: String { Words.line("connect.kiff_words_connection_could_not") }
         /// Last failed: {title} · {detail}
         static func lastFailed(title: String, detail: String) -> String { Words.line("connect.last_failed", title, detail) }
+        /// Enter one email address, with no spaces.
+        static var loginInvalid: String { Words.line("connect.login_invalid") }
+        /// name@company.com
+        static var loginPlaceholder: String { Words.line("connect.login_placeholder") }
+        /// Your {vendor} login
+        static func loginTitle(vendor: String) -> String { Words.line("connect.login_title", vendor) }
+        /// The email address you sign in to {vendor} with. The key acts as this person in {vendor}, so use your own.
+        static func loginWhat(vendor: String) -> String { Words.line("connect.login_what", vendor) }
         /// Made for {taf}, which doesn't use {app}.
         static func misplaced(taf: String, app: String) -> String { Words.line("connect.misplaced", taf, app) }
         /// More apps

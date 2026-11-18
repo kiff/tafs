@@ -916,6 +916,10 @@
     <string name="connect_key_not_given">No se dio la clave. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">No se pudieron leer las palabras de KIFF para esta conexión. No se aprobó nada.</string>
     <string name="connect_last_failed">Último fallo: %1$s · %2$s</string>
+    <string name="connect_login_invalid">Escribe una sola dirección de correo, sin espacios.</string>
+    <string name="connect_login_placeholder">nombre@empresa.com</string>
+    <string name="connect_login_title">Tu inicio de sesión en %1$s</string>
+    <string name="connect_login_what">La dirección de correo con la que inicias sesión en %1$s. La clave actúa como esa persona en %1$s, así que usa la tuya.</string>
     <string name="connect_misplaced">Hecha para %1$s, que no usa %2$s.</string>
     <string name="connect_more_apps">Más apps</string>
     <string name="connect_more_apps_could_not_listed">No se pudieron listar más apps: %1$s</string>
