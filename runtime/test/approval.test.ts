@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
+import { AGREE_FIRST, askedInSession, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS , type ApprovalGrant } from "../src/cloud/approval.js";
 import { unpinnedConnection } from "../src/cloud/rules.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, settledApprovalAnswer, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -888,11 +888,30 @@ describe("a half-made connection from an earlier conversation: resumed only for 
     expect((await (await world(c, { draft: "drf_1" })).call("POST", ASK, ask(connected, "drf_1"))).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
   });
 
-  it("asked a few seconds after this conversation began is still read as earlier: the two services' clocks differ", async () => {
+  it("asked a few seconds after this conversation began is still read as earlier, unless this conversation's own request answered with it", async () => {
     const s = services();
     const g = resumed({}, { created_at: "2026-10-16T12:00:05Z" });
     s.grants = [g];
     refusedAsResumed((await (await world(s)).call("POST", ASK, ask(g))).body, "only with this conversation's Card draft");
+
+    // Coach's own planque request in this conversation answered with g_1: it's this conversation's, not resumed.
+    const w = await world(s);
+    const list = w.agents.events.get(w.stored.session) ?? [];
+    const at = { session: w.stored.session, run: w.stored.id, time: "2026-10-16T12:00:04Z" };
+    list.push({ ...at, seq: list.length + 1, kind: "tool_call", body: { call_id: "c_req", tool: "planque", input: { action: "request", entry: "stripe@3" } } });
+    list.push({ ...at, seq: list.length + 1, kind: "tool_result", body: { call_id: "c_req", text: JSON.stringify({ grant: "g_1", status: "pending" }) } });
+    w.agents.events.set(w.stored.session, list);
+    expect((await w.call("POST", ASK, ask(g))).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+  });
+
+  it("a request's answer names the grant only when it's this conversation's own request that answered: never a read, never a failure", () => {
+    const call = (id: string, action: string) => ({ kind: "tool_call", body: { call_id: id, tool: "planque", input: { action } } });
+    const result = (id: string, text: string, is_error = false) => ({ kind: "tool_result", body: { call_id: id, text, is_error } });
+    expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_1"}`)], "g_1")).toBe(true);
+    expect(askedInSession([call("c1", "status"), result("c1", `{"grant":"g_1"}`)], "g_1")).toBe(false);
+    expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_1"}`, true)], "g_1")).toBe(false);
+    expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_2"}`)], "g_1")).toBe(false);
+    expect(askedInSession([call("c1", "request"), result("c1", `{"grant":"g_1"}`)], "")).toBe(false);
   });
 });
 

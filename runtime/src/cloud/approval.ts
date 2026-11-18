@@ -956,6 +956,11 @@ export interface DecideContext {
    */
   sessionStarted?: () => Promise<string | undefined>;
   /**
+   * Whether this conversation's own connection request answered with the grant (`askedInSession`): within the clocks'
+   * margin, a grant this conversation asked for is its own, not an earlier one. Unset, none is.
+   */
+  askedHere?: (grant: string) => Promise<boolean>;
+  /**
    * The rules the owner agreed in the conversation the card is in (rules.ts), read when a draft is checked. Unset, the
    * draft isn't checked against rules (a caller that draws no card); a read that fails is read again, never trusted.
    */
@@ -1013,9 +1018,25 @@ export const RESUME_WITHIN_MS = 7 * 24 * 3600_000;
 
 /**
  * planque's and kiff/agents' clocks differ: a grant asked up to this long after the conversation began is still read as
- * an earlier one. None of this conversation's own is asked that soon: its first ask comes after a model turn at least.
+ * an earlier one, unless this conversation's own connection request answered with it (`askedHere`).
  */
 export const RESUME_CLOCK_MARGIN_MS = 10_000;
+
+/**
+ * Whether a conversation's events hold its own connection request (Coach's `planque` call with `action: "request"`)
+ * answered with the grant: the request's result names its id.
+ */
+export function askedInSession(events: ReadonlyArray<{ kind: string; body: unknown }>, grant: string): boolean {
+  if (!grant) return false;
+  const requests = new Set<string>();
+  for (const e of events) {
+    const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; text?: unknown; is_error?: unknown };
+    if (typeof b.call_id !== "string") continue;
+    if (e.kind === "tool_call" && b.tool === "planque" && (b.input as { action?: unknown } | null)?.action === "request") requests.add(b.call_id);
+    else if (e.kind === "tool_result" && requests.has(b.call_id) && b.is_error !== true && typeof b.text === "string" && b.text.includes(grant)) return true;
+  }
+  return false;
+}
 
 /**
  * A half-made connection from an earlier conversation (asked before this one began, still pending or approved and never
@@ -1041,6 +1062,16 @@ async function resumedRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: st
   }
   const startedAt = started ? Date.parse(started) : NaN;
   if (Number.isNaN(startedAt) || askedAt >= startedAt + RESUME_CLOCK_MARGIN_MS) return undefined;
+  // Within the margin after it began, this conversation's own request is its own.
+  if (askedAt >= startedAt && ctx.askedHere) {
+    let own: boolean;
+    try {
+      own = await ctx.askedHere(grant.id);
+    } catch {
+      return { outcome: "read_again", note: approvalWords(ctx.lang).outOfDate, code: "session_unread" };
+    }
+    if (own) return undefined;
+  }
   const W = approvalWords(ctx.lang);
   const again = `request ${vendor} again for this taf as a new connection, never this grant`;
   const refuse = (code: string, why: string): Decision =>
