@@ -1177,6 +1177,15 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(en.working).toBeNull();
     expect(en.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable });
     expect((await thread("fr")).failed.words).toBe(wordsIn("fr").code_ai_unavailable);
+    // "…used none of your credits" holds only when the run counted nothing. Credits are a taf's calls that went
+    // through and aren't reads (kiff-cloud apps/api/internal/meter); AI turns never count. A run that sent a write
+    // before the card had used credits, so it gets the partway words instead, and never the "none" claim.
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { refund: { sent: 1 } } });
+    const partway = await thread();
+    expect(partway.failed).toEqual({ run: run.id, code: "ai_unavailable", words: wordsIn("en").code_ai_unavailable_partway });
+    expect(partway.failed.words).not.toBe(wordsIn("en").code_ai_unavailable);
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { tally: { lookup: { refused: 2 } } });
+    expect((await thread()).failed.words).toBe(wordsIn("en").code_ai_unavailable);
     // An ERROR with no code still ends with words, never silence; and never kiff/agents' English in a French thread.
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { code: undefined, error: "the run failed" });
     const plain = await thread("fr");
