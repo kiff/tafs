@@ -1,0 +1,1 @@
+- Gdy klucz aplikacji działa w niej jako Ty, „Połącz” najpierw pyta o adres e-mail, którym się do niej logujesz, aby jej wywołania działały jako Ty, a nie ktoś inny.

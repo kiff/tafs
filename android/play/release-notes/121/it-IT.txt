@@ -1,0 +1,1 @@
+- Quando la chiave di un'app agisce come te in quell'app, Collega chiede prima l'indirizzo email con cui accedi, così le sue chiamate agiscono come te e non come qualcun altro.

@@ -1,0 +1,1 @@
+- **Android 121 (1.39.3):** Connect asks an app's login first when its key acts as you in that app (#1362). Internal track first, then production when promoted ([android-app.md](docs/android-app.md)).

@@ -1,0 +1,1 @@
+- Quand la clé d'une app agit en votre nom dans cette app, Connecter demande d'abord l'adresse e-mail avec laquelle vous vous y connectez, pour que ses appels agissent en votre nom et pas en celui d'un autre.
