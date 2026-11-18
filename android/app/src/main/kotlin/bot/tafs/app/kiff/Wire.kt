@@ -347,6 +347,10 @@ data class WireWorking(val session: String, val run: String? = null)
 @Serializable
 data class WireCapped(val run: String, val stop: String)
 
+/** A run that ended without an answer, as the thread says it (`failed`). */
+@Serializable
+data class WireRunFailed(val run: String = "", val code: String? = null, val words: String = "")
+
 @Serializable
 data class WireThread(
   val messages: List<WireChatMessage> = emptyList(),
@@ -357,6 +361,11 @@ data class WireThread(
    * `refused`); `capped` carries the two caps alone, for older apps.
    */
   val stopped: WireCapped? = null,
+  /**
+   * The latest run ended without an answer (`ERROR`, its model unreachable or out of funds, `ai_unavailable`, or uncoded):
+   * `{run, code?, words}`, `words` tafs cloud's, in the person's language. Read apart: one the app can't read is no line.
+   */
+  val failed: JsonElement? = null,
   /** Coach's cards, each read apart: one the app can't read is left out. */
   val components: List<JsonElement>? = null,
   /** News of the tasks Coach handed tafs (kiff/tafs#206), each read apart: one the app can't read is left out. */

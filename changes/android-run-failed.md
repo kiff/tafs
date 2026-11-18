@@ -1,0 +1,1 @@
+- **Android: a chat says when a run ended without an answer.** Tafs cloud's words for it (`failed` on the thread) are the chat's last line, so a turn the AI provider refused no longer reads as waiting or as nothing ([android-app.md](docs/android-app.md)).

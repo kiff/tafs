@@ -328,6 +328,11 @@ data class AppState(
   /** The tafs a message is on its way to, so one is sent at a time. */
   val chatSending: Set<String> = emptySet(),
   val chatErrors: Map<String, String> = emptyMap(),
+  /**
+   * A chat whose latest run ended without an answer, in tafs cloud's words (the thread's `failed`): its last line, until a read
+   * carries none. The owner reads that the turn didn't happen, never a chat that seems to be working or waiting on them.
+   */
+  val chatFailed: Map<String, bot.tafs.app.kiff.TafsCloud.RunFailed> = emptyMap(),
   /** The files picked for each chat's next message, as they go up (docs/attachments.md): by the chat's id. Sent with the message, then cleared. */
   val chatFiles: Map<String, List<PendingFile>> = emptyMap(),
   /** Why a file wasn't added, or couldn't be opened, by chat. */
@@ -993,7 +998,12 @@ data class AppState(
    * A chat's items, each once: the list keys its rows by id, and a repeated key crashes it, so an exact repeat (the same
    * message twice in a thread) shows once.
    */
-  fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }
+  fun chatItems(tafId: String): List<ChatItem> = chatItemsAsRead(tafId).distinctBy { it.id }.let { items ->
+    // A run that ended without an answer: tafs cloud's words, as the taf's (or Coach's) last line, after everything else.
+    val failed = chatFailed[tafId] ?: return@let items
+    val after = (items.maxOfOrNull { it.at } ?: java.time.Instant.EPOCH).plusMillis(1)
+    items + ChatItem.Message(ChatMessage(after, ChatMessage.From.taf, failed.words, "", serverId = "failed|" + failed.run))
+  }
 
   /** The digest of [grant]'s profile as planque sends it now, or null for a grant with none. */
   fun profileDigest(grant: bot.tafs.app.kiff.Grant): String? = grant.request.profile?.let(bot.tafs.app.kiff.ProfileWords::digest)
@@ -2805,6 +2815,7 @@ class AppModel(
         chats = s.chats + (tafId to messages),
         chatSent = if (waiting.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to waiting),
         chatErrors = s.chatErrors - tafId,
+        chatFailed = thread.failed?.let { s.chatFailed + (tafId to it) } ?: (s.chatFailed - tafId),
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
         chatAwaiting = if (settled || handedOver || quiet) s.chatAwaiting - tafId else s.chatAwaiting,
         chatSteering = thread.steering?.takeIf { it.held != null }?.let { s.chatSteering + (tafId to it) } ?: (s.chatSteering - tafId),
