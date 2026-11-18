@@ -2310,6 +2310,74 @@ enum Words {
         /// Sign in with KIFF to export your chats.
         static var signInFirst: String { Words.line("export.sign_in_first") }
     }
+    enum Files {
+        /// {count} files · kept 30 days
+        static func accountRow(count: Int) -> String { Words.count("files.account_row", count) }
+        /// All
+        static var all: String { Words.line("files.all") }
+        /// All tafs
+        static var allTafs: String { Words.line("files.all_tafs") }
+        /// Also sent to
+        static var alsoSentTo: String { Words.line("files.also_sent_to") }
+        /// By run
+        static var byRun: String { Words.line("files.by_run") }
+        /// By taf
+        static var byTaf: String { Words.line("files.by_taf") }
+        /// It goes from Files for everyone on this account, right away. This can't be undone.
+        static var deleteBody: String { Words.line("files.delete_body") }
+        /// The copy the taf sent to {place} stays there.
+        static func deleteCopyStays(place: String) -> String { Words.line("files.delete_copy_stays", place) }
+        /// Delete now
+        static var deleteNow: String { Words.line("files.delete_now") }
+        /// Delete “{name}” now?
+        static func deleteQuestion(name: String) -> String { Words.line("files.delete_question", name) }
+        /// Deleted for everyone
+        static var deleted: String { Words.line("files.deleted") }
+        /// Download
+        static var download: String { Words.line("files.download") }
+        /// Nothing yet. When a taf makes a report, a sheet or a document in a run, it's kept here for 30 days, for everyone on this account to open, save or share.
+        static var empty: String { Words.line("files.empty") }
+        /// Everyone on this account
+        static var everyone: String { Words.line("files.everyone") }
+        /// Goes away
+        static var goesAway: String { Words.line("files.goes_away") }
+        /// goes in {count} days
+        static func goesInDays(count: Int) -> String { Words.count("files.goes_in_days", count) }
+        /// {date} (30 days after its run)
+        static func goesOn(date: String) -> String { Words.line("files.goes_on", date) }
+        /// goes today
+        static var goesToday: String { Words.line("files.goes_today") }
+        /// goes tomorrow
+        static var goesTomorrow: String { Words.line("files.goes_tomorrow") }
+        /// In the run
+        static var inRun: String { Words.line("files.in_run") }
+        /// Each file is kept 30 days from its run, then goes away on its own. Everyone on this account sees these files. Your own chat attachments stay with their messages.
+        static var keptLine: String { Words.line("files.kept_line") }
+        /// Its files are kept until {date}
+        static func keptUntil(date: String) -> String { Words.line("files.kept_until", date) }
+        /// Made by
+        static var madeBy: String { Words.line("files.made_by") }
+        /// None yet · kept 30 days
+        static var noneYet: String { Words.line("files.none_yet") }
+        /// Pick a file to see it here.
+        static var pickOne: String { Words.line("files.pick_one") }
+        /// Saved to this device
+        static var saved: String { Words.line("files.saved") }
+        /// See it in the chat
+        static var seeInChat: String { Words.line("files.see_in_chat") }
+        /// Share
+        static var share: String { Words.line("files.share") }
+        /// Size
+        static var size: String { Words.line("files.size") }
+        /// {count} files from its runs
+        static func tafRow(count: Int) -> String { Words.count("files.taf_row", count) }
+        /// Files
+        static var title: String { Words.line("files.title") }
+        /// Type
+        static var type: String { Words.line("files.type") }
+        /// Who sees it
+        static var whoSees: String { Words.line("files.who_sees") }
+    }
     enum Halt {
         /// Halt again
         static var again: String { Words.line("halt.again") }

@@ -1,0 +1,44 @@
+{
+  "files.account_row": {
+    "one": "{count} file · kept 30 days",
+    "other": "{count} files · kept 30 days"
+  },
+  "files.all": "All",
+  "files.all_tafs": "All tafs",
+  "files.also_sent_to": "Also sent to",
+  "files.by_run": "By run",
+  "files.by_taf": "By taf",
+  "files.delete_body": "It goes from Files for everyone on this account, right away. This can't be undone.",
+  "files.delete_copy_stays": "The copy the taf sent to {place} stays there.",
+  "files.delete_now": "Delete now",
+  "files.delete_question": "Delete “{name}” now?",
+  "files.deleted": "Deleted for everyone",
+  "files.download": "Download",
+  "files.empty": "Nothing yet. When a taf makes a report, a sheet or a document in a run, it's kept here for 30 days, for everyone on this account to open, save or share.",
+  "files.everyone": "Everyone on this account",
+  "files.goes_away": "Goes away",
+  "files.goes_in_days": {
+    "one": "goes in {count} day",
+    "other": "goes in {count} days"
+  },
+  "files.goes_on": "{date} (30 days after its run)",
+  "files.goes_today": "goes today",
+  "files.goes_tomorrow": "goes tomorrow",
+  "files.in_run": "In the run",
+  "files.kept_line": "Each file is kept 30 days from its run, then goes away on its own. Everyone on this account sees these files. Your own chat attachments stay with their messages.",
+  "files.kept_until": "Its files are kept until {date}",
+  "files.made_by": "Made by",
+  "files.none_yet": "None yet · kept 30 days",
+  "files.pick_one": "Pick a file to see it here.",
+  "files.saved": "Saved to this device",
+  "files.see_in_chat": "See it in the chat",
+  "files.share": "Share",
+  "files.size": "Size",
+  "files.taf_row": {
+    "one": "{count} file from its runs",
+    "other": "{count} files from its runs"
+  },
+  "files.title": "Files",
+  "files.type": "Type",
+  "files.who_sees": "Who sees it"
+}

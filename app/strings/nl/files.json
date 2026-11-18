@@ -1,0 +1,44 @@
+{
+  "files.account_row": {
+    "one": "{count} bestand · 30 dagen bewaard",
+    "other": "{count} bestanden · 30 dagen bewaard"
+  },
+  "files.all": "Alle",
+  "files.all_tafs": "Alle tafs",
+  "files.also_sent_to": "Ook verstuurd naar",
+  "files.by_run": "Per run",
+  "files.by_taf": "Per taf",
+  "files.delete_body": "Het verdwijnt meteen uit Bestanden voor iedereen in dit account. Dit kan niet ongedaan worden gemaakt.",
+  "files.delete_copy_stays": "De kopie die de taf naar {place} stuurde, blijft daar.",
+  "files.delete_now": "Nu verwijderen",
+  "files.delete_question": "‘{name}’ nu verwijderen?",
+  "files.deleted": "Verwijderd voor iedereen",
+  "files.download": "Downloaden",
+  "files.empty": "Nog niets. Als een taf in een run een rapport, een sheet of een document maakt, wordt het hier 30 dagen bewaard, zodat iedereen in dit account het kan openen, bewaren of delen.",
+  "files.everyone": "Iedereen in dit account",
+  "files.goes_away": "Verdwijnt",
+  "files.goes_in_days": {
+    "one": "verdwijnt over {count} dag",
+    "other": "verdwijnt over {count} dagen"
+  },
+  "files.goes_on": "{date} (30 dagen na zijn run)",
+  "files.goes_today": "verdwijnt vandaag",
+  "files.goes_tomorrow": "verdwijnt morgen",
+  "files.in_run": "In de run",
+  "files.kept_line": "Elk bestand wordt 30 dagen na zijn run bewaard en verdwijnt daarna vanzelf. Iedereen in dit account ziet deze bestanden. Je eigen chatbijlagen blijven bij hun berichten.",
+  "files.kept_until": "Zijn bestanden worden bewaard tot {date}",
+  "files.made_by": "Gemaakt door",
+  "files.none_yet": "Nog geen · 30 dagen bewaard",
+  "files.pick_one": "Kies een bestand om het hier te zien.",
+  "files.saved": "Bewaard op dit apparaat",
+  "files.see_in_chat": "Bekijken in de chat",
+  "files.share": "Delen",
+  "files.size": "Grootte",
+  "files.taf_row": {
+    "one": "{count} bestand uit zijn runs",
+    "other": "{count} bestanden uit zijn runs"
+  },
+  "files.title": "Bestanden",
+  "files.type": "Type",
+  "files.who_sees": "Wie het ziet"
+}

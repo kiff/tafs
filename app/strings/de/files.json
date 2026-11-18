@@ -1,0 +1,44 @@
+{
+  "files.account_row": {
+    "one": "{count} Datei · 30 Tage aufbewahrt",
+    "other": "{count} Dateien · 30 Tage aufbewahrt"
+  },
+  "files.all": "Alle",
+  "files.all_tafs": "Alle tafs",
+  "files.also_sent_to": "Auch gesendet an",
+  "files.by_run": "Nach Lauf",
+  "files.by_taf": "Nach taf",
+  "files.delete_body": "Sie verschwindet sofort für alle in diesem Konto aus Dateien. Das lässt sich nicht rückgängig machen.",
+  "files.delete_copy_stays": "Die Kopie, die der taf an {place} gesendet hat, bleibt dort.",
+  "files.delete_now": "Jetzt löschen",
+  "files.delete_question": "„{name}“ jetzt löschen?",
+  "files.deleted": "Für alle gelöscht",
+  "files.download": "Herunterladen",
+  "files.empty": "Noch nichts. Wenn ein taf in einem Lauf einen Bericht, eine Tabelle oder ein Dokument erstellt, wird es hier 30 Tage aufbewahrt, damit alle in diesem Konto es öffnen, speichern oder teilen können.",
+  "files.everyone": "Alle in diesem Konto",
+  "files.goes_away": "Verschwindet",
+  "files.goes_in_days": {
+    "one": "verschwindet in {count} Tag",
+    "other": "verschwindet in {count} Tagen"
+  },
+  "files.goes_on": "{date} (30 Tage nach seinem Lauf)",
+  "files.goes_today": "verschwindet heute",
+  "files.goes_tomorrow": "verschwindet morgen",
+  "files.in_run": "Im Lauf",
+  "files.kept_line": "Jede Datei wird 30 Tage ab ihrem Lauf aufbewahrt und verschwindet dann von selbst. Alle in diesem Konto sehen diese Dateien. Deine eigenen Chat-Anhänge bleiben bei ihren Nachrichten.",
+  "files.kept_until": "Seine Dateien werden bis {date} aufbewahrt",
+  "files.made_by": "Erstellt von",
+  "files.none_yet": "Noch keine · 30 Tage aufbewahrt",
+  "files.pick_one": "Wähle eine Datei, um sie hier zu sehen.",
+  "files.saved": "Auf diesem Gerät gespeichert",
+  "files.see_in_chat": "Im Chat ansehen",
+  "files.share": "Teilen",
+  "files.size": "Größe",
+  "files.taf_row": {
+    "one": "{count} Datei aus seinen Läufen",
+    "other": "{count} Dateien aus seinen Läufen"
+  },
+  "files.title": "Dateien",
+  "files.type": "Typ",
+  "files.who_sees": "Wer sie sieht"
+}

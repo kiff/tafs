@@ -1,0 +1,44 @@
+{
+  "files.account_row": {
+    "one": "{count} fichier · conservé 30 jours",
+    "other": "{count} fichiers · conservés 30 jours"
+  },
+  "files.all": "Tous",
+  "files.all_tafs": "Tous les tafs",
+  "files.also_sent_to": "Aussi envoyé à",
+  "files.by_run": "Par exécution",
+  "files.by_taf": "Par taf",
+  "files.delete_body": "Il disparaît de Fichiers pour tout le monde sur ce compte, tout de suite. C'est définitif.",
+  "files.delete_copy_stays": "La copie que le taf a envoyée à {place} y reste.",
+  "files.delete_now": "Supprimer maintenant",
+  "files.delete_question": "Supprimer « {name} » maintenant ?",
+  "files.deleted": "Supprimé pour tout le monde",
+  "files.download": "Télécharger",
+  "files.empty": "Rien pour l'instant. Quand un taf crée un rapport, une feuille ou un document pendant une exécution, il est conservé ici 30 jours, pour que tout le monde sur ce compte puisse l'ouvrir, l'enregistrer ou le partager.",
+  "files.everyone": "Tout le monde sur ce compte",
+  "files.goes_away": "Disparaît",
+  "files.goes_in_days": {
+    "one": "disparaît dans {count} jour",
+    "other": "disparaît dans {count} jours"
+  },
+  "files.goes_on": "{date} (30 jours après son exécution)",
+  "files.goes_today": "disparaît aujourd'hui",
+  "files.goes_tomorrow": "disparaît demain",
+  "files.in_run": "Dans l'exécution",
+  "files.kept_line": "Chaque fichier est conservé 30 jours après son exécution, puis disparaît de lui-même. Tout le monde sur ce compte voit ces fichiers. Vos propres pièces jointes de chat restent avec leurs messages.",
+  "files.kept_until": "Ses fichiers sont conservés jusqu'au {date}",
+  "files.made_by": "Créé par",
+  "files.none_yet": "Aucun pour l'instant · conservés 30 jours",
+  "files.pick_one": "Choisissez un fichier pour le voir ici.",
+  "files.saved": "Enregistré sur cet appareil",
+  "files.see_in_chat": "Voir dans le chat",
+  "files.share": "Partager",
+  "files.size": "Taille",
+  "files.taf_row": {
+    "one": "{count} fichier de ses exécutions",
+    "other": "{count} fichiers de ses exécutions"
+  },
+  "files.title": "Fichiers",
+  "files.type": "Type",
+  "files.who_sees": "Qui le voit"
+}
