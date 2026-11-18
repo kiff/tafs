@@ -23,7 +23,8 @@ iPad's).
 **A run that ended without an answer** (the thread's `failed: {run, code?, words}`: the model unreachable or out of funds,
 `ai_unavailable`, or an uncoded `ERROR`) is the chat's last line, in tafs cloud's words, as Coach's or the taf's
 (`AppState.chatFailed`, `RunFailedTest`). A later read with none clears it. A `failed` of another shape, or with no words, is no
-line. Before it, a turn refused after an approval read as "Waiting for you", then as nothing. One refused line per run: a run
+line. Before it, a turn refused after an approval read as "Waiting for you", then as nothing. A new chat, with nothing in it yet,
+shows none. One refused line per run: a run
 followed live already ends with its own line, with Retry (`ChatEnd.Failed`, which keeps the stream's run), so the thread's line
 for that same run isn't added; another run's still is. `contracts/conversation-failed.json`, tafs cloud's own answer, is read in
 the same test. iOS follows: it doesn't draw `failed` yet.

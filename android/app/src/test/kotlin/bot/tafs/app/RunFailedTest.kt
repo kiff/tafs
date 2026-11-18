@@ -96,6 +96,12 @@ class RunFailedTest {
     assertEquals(words, (other.chatItems("refunds-1").last() as ChatItem.Message).message.text)
   }
 
+  /** A new chat, with nothing in it yet, shows no refused line: on 18 Nov one read "1 Jan 1970" over the old chat's words. */
+  @Test fun aNewChatWithNothingInItShowsNoRefusedLine() {
+    val state = bot.tafs.app.app.AppState(chatFailed = mapOf("refunds-1" to bot.tafs.app.kiff.TafsCloud.RunFailed("r9", words)))
+    assertTrue(state.chatItems("refunds-1").isEmpty())
+  }
+
   /** tafs cloud's own answer for a refused run (contracts/conversation-failed.json), read as the app reads it. */
   @Test fun theContractsRefusedRunIsTheLastLineInItsWords() = runTest {
     reads()
