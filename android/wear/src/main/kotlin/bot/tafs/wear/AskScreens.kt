@@ -236,11 +236,11 @@ private fun QuietButton(label: String, onClick: () -> Unit) {
 
 /** Home's top: the microphone owns the face, with one small status block under it. */
 @Composable
-internal fun AskHome(status: List<Pair<String, Color?>>, listen: () -> Unit, open: List<() -> Unit> = emptyList()) {
+internal fun AskHome(status: List<Pair<String, Color?>>, listen: () -> Unit, open: List<() -> Unit> = emptyList(), label: String = Words.Watch.ask) {
   Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
     BigMic(listen)
     Spacer(Modifier.height(5.dp))
-    T(Words.Watch.ask, 14.sp, Look.text, FontWeight.Medium, lines = 1)
+    T(label, 14.sp, Look.text, FontWeight.Medium, lines = 1)
     Spacer(Modifier.height(6.dp))
     Column(Modifier.width(150.dp), horizontalAlignment = Alignment.CenterHorizontally) {
       status.forEachIndexed { i, (line, dot) -> StatusLine(line, dot, onClick = open.getOrNull(i)) }

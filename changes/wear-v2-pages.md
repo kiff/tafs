@@ -1,0 +1,1 @@
+- **Wear OS v2, step 2: the watch's pages and Coach's home,** built behind a switch that stays off until every v2 step is in ([watch-wear.md](docs/watch-wear.md)).

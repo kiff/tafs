@@ -2746,6 +2746,7 @@ object Words {
     val whatYouSaidStaysMessage: String get() = Res.s(R.string.voice_what_you_said_stays_message)
   }
   object Watch {
+    val allChats: String get() = Res.s(R.string.watch_all_chats)
     val alreadyAnswered: String get() = Res.s(R.string.watch_already_answered)
     val approveOnPhone: String get() = Res.s(R.string.watch_approve_on_phone)
     fun asOf(time: String): String = Res.s(R.string.watch_as_of, time)
@@ -2762,14 +2763,22 @@ object Words {
     val haltingAll: String get() = Res.s(R.string.watch_halting_all)
     val hear: String get() = Res.s(R.string.watch_hear)
     fun heldCalls(count: Int): String = Res.p(R.plurals.watch_held_calls, count, Res.number(count))
+    val inboxEmpty: String get() = Res.s(R.string.watch_inbox_empty)
+    fun inboxUnread(count: Int): String = Res.p(R.plurals.watch_inbox_unread, count, Res.number(count))
+    val menu: String get() = Res.s(R.string.watch_menu)
     val micNeeded: String get() = Res.s(R.string.watch_mic_needed)
     val moreOnPhone: String get() = Res.s(R.string.watch_more_on_phone)
     val needsLock: String get() = Res.s(R.string.watch_needs_lock)
     fun needsYouCount(count: Int): String = Res.p(R.plurals.watch_needs_you_count, count, Res.number(count))
     val notSure: String get() = Res.s(R.string.watch_not_sure)
     val openOnPhone: String get() = Res.s(R.string.watch_open_on_phone)
+    object Page {
+      val brief: String get() = Res.s(R.string.watch_page_brief)
+      val inbox: String get() = Res.s(R.string.watch_page_inbox)
+    }
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
     fun readyCount(count: Int): String = Res.p(R.plurals.watch_ready_count, count, Res.number(count))
+    val recentChats: String get() = Res.s(R.string.watch_recent_chats)
     val refused: String get() = Res.s(R.string.watch_refused)
     val reply: String get() = Res.s(R.string.watch_reply)
     val resultReady: String get() = Res.s(R.string.watch_result_ready)
@@ -2779,6 +2788,7 @@ object Words {
     val sent: String get() = Res.s(R.string.watch_sent)
     val signInOnPhone: String get() = Res.s(R.string.watch_sign_in_on_phone)
     fun timing(listen: String, receipt: String, result: String): String = Res.s(R.string.watch_timing, listen, receipt, result)
+    val trust: String get() = Res.s(R.string.watch_trust)
     val updatePhone: String get() = Res.s(R.string.watch_update_phone)
     val voiceTextOnly: String get() = Res.s(R.string.watch_voice_text_only)
     fun workingCount(count: Int): String = Res.p(R.plurals.watch_working_count, count, Res.number(count))
