@@ -1,0 +1,1 @@
+- **A taf's view names its kept tools for those who manage Cards.** `GET /v1/tafs` (and every route answering a taf's view) gives each taf that keeps tools a `tools` list, by name only, to a session with `cards.manage`, and to no one else. A check can then see that a connection approved for the taf added its tools (docs/api.md).

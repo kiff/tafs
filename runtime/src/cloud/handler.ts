@@ -7164,6 +7164,11 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     job: taf.job,
     /** The KIFF agent the taf acts as: the holder of its Cards. */
     kiff_agent: taf.kiffAgent || null,
+    /**
+     * Its tools in KIFF as tafs cloud keeps them (Taf.tools: Coach's results, then each connection approved for it), by
+     * name only: for those who manage the account's Cards, as its Cards are; left out for anyone else, and when it has none.
+     */
+    ...(taf.tools?.length && me.capabilities.includes("cards.manage") ? { tools: [...taf.tools] } : {}),
     status: s && !s.enabled && !taf.unscheduled ? "paused" : "active",
     /** Paused for consent to AI use with no person in the moment (consent.ts): why, and the words. Only said when so. */
     ...(await consentPausedView(taf, me, deps, lang)),

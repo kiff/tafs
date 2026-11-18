@@ -1395,6 +1395,23 @@ describe("the home list", () => {
     expect(Date.parse(home.last_change)).not.toBeNaN();
   });
 
+  // A taf's kept tools (Taf.tools) are read with its view, by name, by those who manage the account's Cards alone: the
+  // check that a connection approved for the taf added its tools (kiff/agents' weekly proof) reads them here.
+  it("shows a taf's kept tools to those who manage Cards, by name, and to no one else", async () => {
+    const w = world();
+    const tafs = async (token: string) => ((await call(w, "GET", "/v1/tafs", { token })).body.tafs as Array<Record<string, unknown>>).find((t) => t.id === RAE)!;
+    // None kept: no field.
+    expect(await tafs("ana")).not.toHaveProperty("tools");
+    const rae = (await w.tafs.get("t_acme", RAE))!;
+    await w.tafs.put("t_acme", { ...rae, tools: ["list_invoices_3ojw", "list_invoices_iyjq"] });
+    expect((await tafs("ana")).tools).toEqual(["list_invoices_3ojw", "list_invoices_iyjq"]);
+    // Someone who may see the taf but not manage its Cards gets no tools.
+    const seen = await call(w, "GET", "/v1/tafs", { token: "viewer" });
+    expect(seen.status).toBe(200);
+    expect((seen.body.tafs as Array<{ id: string }>).map((t) => t.id)).toContain(RAE);
+    expect(JSON.stringify(seen.body)).not.toContain("list_invoices");
+  });
+
   it("gives each taf its state, colour and Card summary, so the app combines nothing", async () => {
     const w = world();
     w.account.mandates = [raeCard];
