@@ -51,6 +51,8 @@ interface Services {
   mandates: unknown[] | number;
   /** The account's agents, as KIFF lists them (GET /v1/me/agents); none, as a test that doesn't say. */
   agents?: Array<{ id: string; archived_at?: string }>;
+  /** KIFF's draft read failing (a status), as when it's slow past the chat's read. */
+  draftDown?: number;
 }
 
 function services(): Services {
@@ -81,6 +83,7 @@ function net(s: Services) {
     }
     const draft = /\/v1\/me\/agent-drafts\/([^/?]+)$/.exec(url);
     if (draft) {
+      if (s.draftDown) return new Response("{}", { status: s.draftDown });
       const d = s.drafts[decodeURIComponent(draft[1]!)];
       return d ? new Response(JSON.stringify({ id: draft[1], ...d }), { status: 200 }) : new Response("{}", { status: 404 });
     }
@@ -2682,6 +2685,30 @@ describe("two approval cards in one read: each card's mark is what its tap asks 
     expect(card(r, "a2")?.component.signs).toBeUndefined();
     // Its tap finds it waits no more: the books' key is never approved apart from its Card.
     expect((await w.call("POST", `/v1/tafs/${COACH}/components/a2/approval`, { grant: "g_2", shown_digest: books().digest })).status).toBe(409);
+  });
+
+  it("with the draft unread in time, still never marks the Card while another app's approval waits (tafs#1355's follow-up)", async () => {
+    const { s, w } = await twoCards();
+    s.draftDown = 503;
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(card(r, "a1")?.component.signs?.card).toBe(false);
+    // Once the draft reads again, the mark is the same, and the tap asks what the mark says.
+    delete s.draftDown;
+    const again = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(card(again, "a1")?.component.signs?.card).toBe(false);
+    const tap = await w.call("POST", ASK, { grant: "g_1", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3", can: ["key_and_cards", "tools_and_cards"] });
+    expect(tap.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+  });
+
+  it("with the draft unread in time and no other app waiting, marks the combined step as before", async () => {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [mailbox(), { ...books(), status: "connected" }];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    s.draftDown = 503;
+    const w = await world(s, { grant: "g_1", draft: "drf_1" });
+    const r = await w.call("GET", CHAT, undefined, {}, CAN);
+    expect(card(r, "a1")?.component.signs?.card).toBe(true);
   });
 
   it("marks the combined step as before once no other app waits", async () => {

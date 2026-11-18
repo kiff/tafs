@@ -3347,7 +3347,16 @@ async function markSteps(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     // Another app the Cards cover still waiting: the tap asks for this app's step alone (decide's waitsFor), so it's marked
     // so. The precheck below still runs on the draft: it keeps the waiting app's note (other_app_first), so that app's
     // approval shown without the draft is answered (splitApproval).
-    const step = stepWithWaiting(asked, grant, grants, info?.cards ?? undefined, { draft });
+    // The draft unread in time (KIFF slow), the Cards can't say whether another app still waits: while another app's
+    // approval of the same taf waits in this read, the card is marked with its own app's step, never the Card. A mark
+    // narrower than the tap is refused by the phone and read again; one wider says it signs a Card it doesn't.
+    const othersWait = signsCard && !info && waiting.some((o) => {
+      const other = grants.find((g) => g.id === (o.component as { grant: string }).grant);
+      return other !== undefined && other.id !== grant.id && other.status === "pending" && !!other.request.agent && other.request.agent === grant.request.agent;
+    });
+    const step = othersWait && (asked === "tools_and_cards" || asked === "key_and_cards")
+      ? stepFor(grant, { draft, can: [] }, {})
+      : stepWithWaiting(asked, grant, grants, info?.cards ?? undefined, { draft });
     if (!step) continue;
     const confirmKey = step === "cards" && draft ? (info ? info.confirmKey ?? null : undefined) : null;
     // Its Cards checked before the card is drawn: a draft Approve would refuse is never shown with Approve. On the
