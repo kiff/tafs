@@ -88925,49 +88925,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 Rechnungen sortiert, 2 passten nicht zu ihrer Bestellung: Mercier 0412, Lumio 0415"
+            "value": "12 Pakete verfolgt, 2 verspätet: 5120, 5134"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 bills sorted, 2 didn't match their order: Mercier 0412, Lumio 0415"
+            "value": "12 parcels tracked, 2 running late: 5120, 5134"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 facturas ordenadas, 2 no coincidían con su pedido: Mercier 0412, Lumio 0415"
+            "value": "12 paquetes seguidos, 2 con retraso: 5120, 5134"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 factures triées, 2 ne correspondaient pas à leur commande : Mercier 0412, Lumio 0415"
+            "value": "12 colis suivis, 2 en retard : 5120, 5134"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 fatture ordinate, 2 non corrispondevano al loro ordine: Mercier 0412, Lumio 0415"
+            "value": "12 pacchi seguiti, 2 in ritardo: 5120, 5134"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 facturen gesorteerd, 2 kwamen niet overeen met hun bestelling: Mercier 0412, Lumio 0415"
+            "value": "12 pakketten gevolgd, 2 vertraagd: 5120, 5134"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 faktur uporządkowanych, 2 nie zgadzały się z zamówieniem: Mercier 0412, Lumio 0415"
+            "value": "12 paczek śledzonych, 2 spóźnione: 5120, 5134"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "12 faturas organizadas, 2 não correspondiam à encomenda: Mercier 0412, Lumio 0415"
+            "value": "12 encomendas seguidas, 2 atrasadas: 5120, 5134"
           }
         }
       }
@@ -88978,49 +88978,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, Rechnung 0139"
+            "value": "Nord Atelier, Gespräch gebucht"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, invoice 0139"
+            "value": "Nord Atelier, call booked"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, factura 0139"
+            "value": "Nord Atelier, llamada reservada"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, facture 0139"
+            "value": "Nord Atelier, appel prévu"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, fattura 0139"
+            "value": "Nord Atelier, chiamata fissata"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, factuur 0139"
+            "value": "Nord Atelier, gesprek gepland"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, faktura 0139"
+            "value": "Nord Atelier, rozmowa umówiona"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brio Bikes, fatura 0139"
+            "value": "Nord Atelier, chamada marcada"
           }
         }
       }
@@ -89031,49 +89031,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "am Donnerstag bezahlt · abgeschlossen"
+            "value": "Donnerstag bestätigt · erledigt"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "paid Thursday · closed"
+            "value": "confirmed Thursday · closed"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "pagada el jueves · cerrada"
+            "value": "confirmada el jueves · cerrado"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "payée jeudi · clôturée"
+            "value": "confirmé jeudi · terminé"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "pagata giovedì · chiusa"
+            "value": "confermata giovedì · chiuso"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "donderdag betaald · gesloten"
+            "value": "donderdag bevestigd · afgerond"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "zapłacona w czwartek · zamknięta"
+            "value": "potwierdzona w czwartek · zamknięte"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "paga quinta-feira · fechada"
+            "value": "confirmada na quinta · concluído"
           }
         }
       }
@@ -89084,49 +89084,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, Rechnung 0142"
+            "value": "Studio Kaya, Angebotsanfrage"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, invoice 0142"
+            "value": "Studio Kaya, quote request"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, factura 0142"
+            "value": "Studio Kaya, petición de presupuesto"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, facture 0142"
+            "value": "Studio Kaya, demande de devis"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, fattura 0142"
+            "value": "Studio Kaya, richiesta di preventivo"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, factuur 0142"
+            "value": "Studio Kaya, offerteaanvraag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, faktura 0142"
+            "value": "Studio Kaya, prośba o wycenę"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Atelier Dubois, fatura 0142"
+            "value": "Studio Kaya, pedido de orçamento"
           }
         }
       }
@@ -89137,49 +89137,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erinnerung am Dienstag gesendet · wartet auf Zahlung · nächste Prüfung Freitag"
+            "value": "Dienstag geantwortet · wartet auf ihre Antwort · nächste Prüfung Freitag"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "reminder sent Tuesday · waiting for payment · next check Friday"
+            "value": "replied Tuesday · waiting for their answer · next check Friday"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "recordatorio enviado el martes · esperando el pago · próxima revisión el viernes"
+            "value": "respondido el martes · espera su respuesta · próxima revisión el viernes"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "relance envoyée mardi · en attente du paiement · prochaine vérification vendredi"
+            "value": "répondu mardi · attend leur réponse · prochaine vérification vendredi"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "sollecito inviato martedì · in attesa del pagamento · prossimo controllo venerdì"
+            "value": "risposto martedì · aspetta la loro risposta · prossimo controllo venerdì"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "herinnering dinsdag verstuurd · wacht op betaling · volgende controle vrijdag"
+            "value": "dinsdag beantwoord · wacht op hun antwoord · volgende controle vrijdag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "przypomnienie wysłane we wtorek · czeka na płatność · następne sprawdzenie w piątek"
+            "value": "odpowiedź we wtorek · czeka na ich odpowiedź · następne sprawdzenie w piątek"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "lembrete enviado terça-feira · a aguardar pagamento · próxima verificação sexta-feira"
+            "value": "respondido na terça · aguarda a resposta deles · próxima verificação na sexta"
           }
         }
       }
@@ -89232,7 +89232,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "sexta-feira"
+            "value": "sexta"
           }
         }
       }
@@ -89243,49 +89243,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, Rechnung 0137"
+            "value": "Lumen & Co, Rabatt angefragt"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, invoice 0137"
+            "value": "Lumen & Co, discount asked"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, factura 0137"
+            "value": "Lumen & Co, descuento pedido"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, facture 0137"
+            "value": "Lumen & Co, remise demandée"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, fattura 0137"
+            "value": "Lumen & Co, sconto richiesto"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, factuur 0137"
+            "value": "Lumen & Co, korting gevraagd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, faktura 0137"
+            "value": "Lumen & Co, prośba o rabat"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fern & Co, fatura 0137"
+            "value": "Lumen & Co, desconto pedido"
           }
         }
       }
@@ -89296,49 +89296,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "für Freitag zugesagt · wartet auf Zahlung · zuletzt geprüft Montag 14:00"
+            "value": "wartet auf dein Ja · zuletzt geprüft Montag 14:00"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "promised Friday · waiting for payment · last checked Monday 14:00"
+            "value": "waits for your yes · last checked Monday 14:00"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "prometida para el viernes · esperando el pago · última revisión el lunes a las 14:00"
+            "value": "espera tu sí · última revisión el lunes a las 14:00"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "promise pour vendredi · en attente du paiement · vérifiée lundi à 14:00"
+            "value": "attend votre oui · dernière vérification lundi à 14:00"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "promessa per venerdì · in attesa del pagamento · ultimo controllo lunedì alle 14:00"
+            "value": "aspetta il tuo sì · ultimo controllo lunedì alle 14:00"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "toegezegd voor vrijdag · wacht op betaling · laatst gecontroleerd maandag 14:00"
+            "value": "wacht op jouw ja · laatst gecontroleerd maandag 14:00"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "obiecana na piątek · czeka na płatność · ostatnio sprawdzona w poniedziałek o 14:00"
+            "value": "czeka na Twoje „tak” · ostatnio sprawdzone w poniedziałek o 14:00"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "prometida para sexta-feira · a aguardar pagamento · última verificação segunda-feira às 14:00"
+            "value": "aguarda o seu sim · última verificação segunda às 14:00"
           }
         }
       }
@@ -89402,49 +89402,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 Tickets beantwortet · 1 wartet auf eine Erstattungsprüfung · nächste Prüfung 13:00"
+            "value": "9 Tickets beantwortet · 1 wartet auf ein Ersatzversprechen · nächste Prüfung 13:00"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 tickets answered · 1 waits for a refund check · next check 13:00"
+            "value": "9 tickets answered · 1 waits for a replacement promise · next check 13:00"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 tickets respondidos · 1 espera una revisión de reembolso · próxima revisión a las 13:00"
+            "value": "9 tickets respondidos · 1 espera una promesa de cambio · próxima revisión a las 13:00"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 tickets traités · 1 attend une vérification de remboursement · prochaine vérification à 13:00"
+            "value": "9 tickets traités · 1 attend une promesse de remplacement · prochaine vérification à 13:00"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 ticket risolti · 1 attende un controllo del rimborso · prossimo controllo alle 13:00"
+            "value": "9 ticket risposti · 1 aspetta una promessa di sostituzione · prossimo controllo alle 13:00"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 tickets beantwoord · 1 wacht op een terugbetalingscontrole · volgende controle 13:00"
+            "value": "9 tickets beantwoord · 1 wacht op een vervangingsbelofte · volgende controle 13:00"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 zgłoszeń z odpowiedzią · 1 czeka na sprawdzenie zwrotu · następne sprawdzenie o 13:00"
+            "value": "9 zgłoszeń z odpowiedzią · 1 czeka na obietnicę wymiany · następne sprawdzenie o 13:00"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "9 pedidos respondidos · 1 aguarda verificação de reembolso · próxima verificação às 13:00"
+            "value": "9 pedidos respondidos · 1 aguarda uma promessa de substituição · próxima verificação às 13:00"
           }
         }
       }
@@ -89508,49 +89508,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "2.100 € bezahlen"
+            "value": "Senden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pay €2,100"
+            "value": "Send it"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar 2100 €"
+            "value": "Enviarlo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payer 2 100 €"
+            "value": "L'envoyer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paga 2.100 €"
+            "value": "Spediscilo"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Betaal € 2.100"
+            "value": "Versturen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapłać 2100 €"
+            "value": "Wyślij"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar 2100 €"
+            "value": "Enviar"
           }
         }
       }
@@ -89561,7 +89561,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das kann nicht warten: Sie verfällt um 12:00, vor dem nächsten Briefing."
+            "value": "Das kann nicht warten: Die Frist endet um 12:00, vor dem nächsten Briefing."
           }
         },
         "en": {
@@ -89573,37 +89573,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esto no puede esperar: caduca a las 12:00, antes del próximo resumen."
+            "value": "Esto no puede esperar: el plazo vence a las 12:00, antes del próximo resumen."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ça ne peut pas attendre : il expire à 12:00, avant le prochain briefing."
+            "value": "Ça ne peut pas attendre : le délai expire à 12:00, avant le prochain briefing."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non può aspettare: scade alle 12:00, prima del prossimo riepilogo."
+            "value": "Non può aspettare: il termine scade alle 12:00, prima del prossimo riepilogo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dit kan niet wachten: het verloopt om 12:00, vóór de volgende briefing."
+            "value": "Dit kan niet wachten: de termijn sluit om 12:00, voor het volgende overzicht."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "To nie może czekać: wygasa o 12:00, przed następnym przeglądem."
+            "value": "To nie może czekać: termin mija o 12:00, przed następnym przeglądem."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Isto não pode esperar: expira às 12:00, antes do próximo resumo."
+            "value": "Isto não pode esperar: o prazo fecha às 12:00, antes do próximo resumo."
           }
         }
       }
@@ -89614,49 +89614,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht bezahlen"
+            "value": "Nicht senden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Don't pay"
+            "value": "Don't send"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No pagar"
+            "value": "No enviar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne pas payer"
+            "value": "Ne pas envoyer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non pagare"
+            "value": "Non spedire"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niet betalen"
+            "value": "Niet versturen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie płać"
+            "value": "Nie wysyłaj"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não pagar"
+            "value": "Não enviar"
           }
         }
       }
@@ -89667,49 +89667,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "die Zahlung bleibt zurückgehalten; nichts wird gesendet."
+            "value": "der Neuversand wird zurückgehalten; nichts wird gesendet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "the payment stays held; nothing is sent."
+            "value": "the reship stays held; nothing is sent."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "el pago sigue retenido; no se envía nada."
+            "value": "el reenvío queda retenido; no se envía nada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "le paiement reste retenu ; rien n'est envoyé."
+            "value": "le renvoi est retenu ; rien n'est envoyé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "il pagamento resta trattenuto; non viene inviato nulla."
+            "value": "la rispedizione resta in attesa; non viene inviato nulla."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "de betaling blijft vastgehouden; er wordt niets verzonden."
+            "value": "de herzending wordt vastgehouden; er wordt niets verstuurd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "płatność pozostaje wstrzymana; nic nie jest wysyłane."
+            "value": "ponowna wysyłka jest wstrzymana; nic nie jest wysyłane."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "o pagamento continua retido; nada é enviado."
+            "value": "o reenvio fica retido; nada é enviado."
           }
         }
       }
@@ -89720,49 +89720,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mercier Textiles 2.100 € bezahlen, bevor die Zahlung um 12:00 verfällt?"
+            "value": "Ein neues Paket für Bestellung #5098 senden, bevor die Reklamationsfrist des Versanddienstes um 12:00 endet?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pay Mercier Textiles €2,100 before the payment expires at 12:00?"
+            "value": "Send a new parcel for order #5098 before the carrier's claim window closes at 12:00?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Pagar 2100 € a Mercier Textiles antes de que el pago caduque a las 12:00?"
+            "value": "¿Enviar un paquete nuevo para el pedido #5098 antes de que cierre el plazo de reclamación del transportista a las 12:00?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payer 2 100 € à Mercier Textiles avant que le paiement expire à 12:00 ?"
+            "value": "Envoyer un nouveau colis pour la commande #5098 avant la fin du délai de réclamation du transporteur à 12:00 ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagare 2.100 € a Mercier Textiles prima che il pagamento scada alle 12:00?"
+            "value": "Spedire un nuovo pacco per l'ordine #5098 prima che il termine di reclamo del corriere scada alle 12:00?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mercier Textiles € 2.100 betalen voordat de betaling om 12:00 verloopt?"
+            "value": "Een nieuw pakket sturen voor bestelling #5098 voordat de claimtermijn van de vervoerder om 12:00 sluit?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapłacić Mercier Textiles 2100 €, zanim płatność wygaśnie o 12:00?"
+            "value": "Wysłać nową paczkę do zamówienia #5098, zanim termin reklamacji u przewoźnika minie o 12:00?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar 2100 € à Mercier Textiles antes de o pagamento expirar às 12:00?"
+            "value": "Enviar uma nova encomenda para o pedido #5098 antes de o prazo de reclamação da transportadora fechar às 12:00?"
           }
         }
       }
@@ -89773,49 +89773,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sie passt zu Bestellung 0388, und %1$@ hat sie heute Morgen geprüft."
+            "value": "Unterwegs verloren, seit 10 Tagen kein Scan; %1$@ hat heute Morgen beim Versanddienst nachgesehen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It matches order 0388, and %1$@ checked it this morning."
+            "value": "Lost in transit, 10 days without a scan; %1$@ checked the carrier this morning."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coincide con el pedido 0388, y %1$@ lo revisó esta mañana."
+            "value": "Perdido en tránsito, 10 días sin escaneo; %1$@ consultó al transportista esta mañana."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il correspond à la commande 0388, et %1$@ l'a vérifié ce matin."
+            "value": "Perdu en transit, 10 jours sans scan ; %1$@ a vérifié auprès du transporteur ce matin."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Corrisponde all'ordine 0388, e %1$@ l'ha verificato stamattina."
+            "value": "Perso in transito, 10 giorni senza scansione; %1$@ ha controllato con il corriere stamattina."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het komt overeen met bestelling 0388, en %1$@ heeft het vanochtend gecontroleerd."
+            "value": "Onderweg kwijt, 10 dagen geen scan; %1$@ heeft vanochtend bij de vervoerder gekeken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zgadza się z zamówieniem 0388, a %1$@ sprawdził ją dziś rano."
+            "value": "Zaginęła w drodze, 10 dni bez skanu; %1$@ sprawdził u przewoźnika dziś rano."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Corresponde à encomenda 0388, e o %1$@ verificou-o esta manhã."
+            "value": "Perdida em trânsito, 10 dias sem leitura; o %1$@ consultou a transportadora esta manhã."
           }
         }
       }
@@ -89826,49 +89826,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kunden"
+            "value": "Leads"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clients"
+            "value": "Leads"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clientes"
+            "value": "Contactos"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clients"
+            "value": "Prospects"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clienti"
+            "value": "Contatti"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klanten"
+            "value": "Leads"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klienci"
+            "value": "Leady"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clientes"
+            "value": "Contactos"
           }
         }
       }
@@ -89879,49 +89879,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finanzen"
+            "value": "Pakete"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Money"
+            "value": "Parcels"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finanzas"
+            "value": "Paquetes"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finances"
+            "value": "Colis"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finanze"
+            "value": "Pacchi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Financiën"
+            "value": "Pakketten"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finanse"
+            "value": "Paczki"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finanças"
+            "value": "Encomendas"
           }
         }
       }
@@ -90038,49 +90038,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "3.400 € ausstehend"
+            "value": "2 verspätet"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "€3,400 due back"
+            "value": "2 running late"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "3400 € por cobrar"
+            "value": "2 con retraso"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 400 € à recevoir"
+            "value": "2 en retard"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "3.400 € da incassare"
+            "value": "2 in ritardo"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "€ 3.400 te ontvangen"
+            "value": "2 vertraagd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "3400 € do odzyskania"
+            "value": "2 spóźnione"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "3400 € a receber"
+            "value": "2 atrasadas"
           }
         }
       }
@@ -90091,49 +90091,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Eskalationsübersicht für diese 3 Rechnungen erstellen, die über 30 Tage offen sind?"
+            "value": "Ein zweites Nachfassen für diese 3 Leads entwerfen, die nach 7 Tagen nicht geantwortet haben?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prepare an escalation summary for these 3 invoices past 30 days?"
+            "value": "Draft a second follow-up for these 3 leads with no reply after 7 days?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Preparar un resumen de escalado para estas 3 facturas con más de 30 días?"
+            "value": "¿Redactar un segundo seguimiento para estos 3 contactos sin respuesta tras 7 días?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Préparer un résumé d'escalade pour ces 3 factures de plus de 30 jours ?"
+            "value": "Rédiger une deuxième relance pour ces 3 prospects sans réponse après 7 jours ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparare un riepilogo di escalation per queste 3 fatture scadute da oltre 30 giorni?"
+            "value": "Preparare un secondo ricontatto per questi 3 contatti senza risposta dopo 7 giorni?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Een escalatieoverzicht maken voor deze 3 facturen die meer dan 30 dagen openstaan?"
+            "value": "Een tweede opvolging opstellen voor deze 3 leads zonder antwoord na 7 dagen?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Przygotować podsumowanie eskalacji dla tych 3 faktur zaległych ponad 30 dni?"
+            "value": "Przygotować drugą wiadomość do tych 3 leadów bez odpowiedzi od 7 dni?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparar um resumo de escalonamento para estas 3 faturas com mais de 30 dias?"
+            "value": "Preparar um segundo seguimento para estes 3 contactos sem resposta há 7 dias?"
           }
         }
       }
@@ -90197,49 +90197,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die 3 bezahlen"
+            "value": "Die 3 senden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pay the 3"
+            "value": "Send the 3"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar las 3"
+            "value": "Enviar los 3"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payer les 3"
+            "value": "Envoyer les 3"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paga le 3"
+            "value": "Invia i 3"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Betaal de 3"
+            "value": "Stuur de 3"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapłać 3"
+            "value": "Wyślij 3"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar as 3"
+            "value": "Enviar as 3"
           }
         }
       }
@@ -90303,49 +90303,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "andere Auszahlungen laufen weiter; diese drei warten."
+            "value": "andere Nachrichten laufen weiter; diese drei warten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "other payouts carry on; these three wait."
+            "value": "other messages carry on; these three wait."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "los demás pagos siguen; estas tres esperan."
+            "value": "los demás mensajes siguen; estos tres esperan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "les autres paiements continuent ; ces trois attendent."
+            "value": "les autres messages continuent ; ces trois-là attendent."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "gli altri pagamenti proseguono; queste tre aspettano."
+            "value": "gli altri messaggi proseguono; questi tre aspettano."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "andere betalingen gaan door; deze drie wachten."
+            "value": "andere berichten gaan door; deze drie wachten."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "inne wypłaty trwają dalej; te trzy czekają."
+            "value": "inne wiadomości idą dalej; te trzy czekają."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "os outros pagamentos continuam; estas três aguardam."
+            "value": "as outras mensagens continuam; estas três esperam."
           }
         }
       }
@@ -90356,49 +90356,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Die 3 bezahlen“ öffnet drei Genehmigungen, eine nach der anderen."
+            "value": "„Die 3 senden“ öffnet drei Genehmigungen, eine nach der anderen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pay the 3 opens three approvals, one after the other."
+            "value": "Send the 3 opens three approvals, one after the other."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "«Pagar las 3» abre tres aprobaciones, una tras otra."
+            "value": "«Enviar los 3» abre tres aprobaciones, una tras otra."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "« Payer les 3 » ouvre trois approbations, l'une après l'autre."
+            "value": "« Envoyer les 3 » ouvre trois approbations, l'une après l'autre."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "«Paga le 3» apre tre approvazioni, una dopo l'altra."
+            "value": "«Invia i 3» apre tre approvazioni, una dopo l'altra."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "‘Betaal de 3’ opent drie goedkeuringen, de een na de ander."
+            "value": "‘Stuur de 3’ opent drie goedkeuringen, de een na de ander."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "„Zapłać 3” otwiera trzy zatwierdzenia, jedno po drugim."
+            "value": "„Wyślij 3” otwiera trzy zatwierdzenia, jedno po drugim."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "«Pagar as 3» abre três aprovações, uma após a outra."
+            "value": "«Enviar as 3» abre três aprovações, uma após a outra."
           }
         }
       }
@@ -90409,49 +90409,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 Lieferantenrechnungen bezahlen, fällig Freitag, 1.240 €?"
+            "value": "3 Verspätungsnachrichten für Pakete senden, die Freitag fällig sind?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pay 3 supplier bills due Friday, €1,240?"
+            "value": "Send 3 delay messages for parcels due Friday?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Pagar 3 facturas de proveedores que vencen el viernes, 1240 €?"
+            "value": "¿Enviar 3 avisos de retraso para paquetes que vencen el viernes?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Payer 3 factures fournisseurs dues vendredi, 1 240 € ?"
+            "value": "Envoyer 3 messages de retard pour des colis attendus vendredi ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagare 3 fatture fornitori in scadenza venerdì, 1.240 €?"
+            "value": "Inviare 3 avvisi di ritardo per pacchi attesi venerdì?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "3 leveranciersfacturen betalen die vrijdag vervallen, € 1.240?"
+            "value": "3 vertragingsberichten sturen voor pakketten die vrijdag verwacht worden?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zapłacić 3 faktury dostawców z terminem w piątek, 1240 €?"
+            "value": "Wysłać 3 wiadomości o opóźnieniu dla paczek na piątek?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar 3 faturas de fornecedores que vencem sexta-feira, 1240 €?"
+            "value": "Enviar 3 avisos de atraso para encomendas previstas para sexta?"
           }
         }
       }
@@ -90462,49 +90462,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle drei passen zu ihren Bestellungen und wurden von %1$@ geprüft."
+            "value": "Bei allen dreien bestätigt der Versanddienst die Verspätung, und %1$@ hat sie geprüft."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All three match their orders and were checked by %1$@."
+            "value": "All three are confirmed late by the carrier and were checked by %1$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las tres coinciden con sus pedidos y %1$@ las revisó."
+            "value": "El transportista confirma el retraso de los tres y %1$@ los revisó."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les trois correspondent à leurs commandes et ont été vérifiées par %1$@."
+            "value": "Le transporteur confirme le retard des trois, et %1$@ les a vérifiés."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutte e tre corrispondono ai loro ordini e sono state verificate da %1$@."
+            "value": "Il corriere conferma il ritardo di tutti e tre e %1$@ li ha controllati."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle drie komen overeen met hun bestelling en zijn gecontroleerd door %1$@."
+            "value": "De vervoerder bevestigt de vertraging van alle drie, en %1$@ heeft ze gecontroleerd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wszystkie trzy zgadzają się z zamówieniami i sprawdził je %1$@."
+            "value": "Przewoźnik potwierdza opóźnienie wszystkich trzech, a %1$@ je sprawdził."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "As três correspondem às respetivas encomendas e foram verificadas pelo %1$@."
+            "value": "A transportadora confirma o atraso das três e o %1$@ verificou-as."
           }
         }
       }
@@ -90515,49 +90515,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht senden"
+            "value": "Nicht anbieten"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Don't send"
+            "value": "Don't offer"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No enviar"
+            "value": "No ofrecer"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ne pas envoyer"
+            "value": "Ne pas proposer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non inviare"
+            "value": "Non offrire"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niet sturen"
+            "value": "Niet aanbieden"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie wysyłaj"
+            "value": "Nie proponuj"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não enviar"
+            "value": "Não oferecer"
           }
         }
       }
@@ -90568,49 +90568,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "die Erinnerung wird zurückgehalten; nichts wird gesendet."
+            "value": "das Angebot wird zurückgehalten; nichts wird gesendet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "the reminder is held; nothing is sent."
+            "value": "the offer is held; nothing is sent."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "el recordatorio queda retenido; no se envía nada."
+            "value": "la oferta queda retenida; no se envía nada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "la relance est retenue ; rien n'est envoyé."
+            "value": "l'offre est retenue ; rien n'est envoyé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "il sollecito è trattenuto; non viene inviato nulla."
+            "value": "l'offerta resta in attesa; non viene inviato nulla."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "de herinnering wordt vastgehouden; er wordt niets verzonden."
+            "value": "het aanbod wordt vastgehouden; er wordt niets verstuurd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "przypomnienie jest wstrzymane; nic nie jest wysyłane."
+            "value": "oferta jest wstrzymana; nic nie jest wysyłane."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "o lembrete fica retido; nada é enviado."
+            "value": "a oferta fica retida; nada é enviado."
           }
         }
       }
@@ -90621,49 +90621,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die erste Zahlungserinnerung an Atelier Dubois senden (Rechnung 0142, 860 €, 21 Tage überfällig)?"
+            "value": "Lumen & Co 15 % Rabatt auf ihr Angebot anbieten?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Send the first reminder to Atelier Dubois (invoice 0142, €860, 21 days late)?"
+            "value": "Offer Lumen & Co 15% off their quote?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Enviar el primer recordatorio a Atelier Dubois (factura 0142, 860 €, 21 días de retraso)?"
+            "value": "¿Ofrecer a Lumen & Co un 15 % de descuento en su presupuesto?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Envoyer la première relance à Atelier Dubois (facture 0142, 860 €, 21 jours de retard) ?"
+            "value": "Proposer 15 % de remise à Lumen & Co sur leur devis ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inviare il primo sollecito ad Atelier Dubois (fattura 0142, 860 €, 21 giorni di ritardo)?"
+            "value": "Offrire a Lumen & Co il 15% di sconto sul preventivo?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De eerste herinnering sturen naar Atelier Dubois (factuur 0142, € 860, 21 dagen te laat)?"
+            "value": "Lumen & Co 15% korting op hun offerte aanbieden?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wysłać pierwsze przypomnienie do Atelier Dubois (faktura 0142, 860 €, 21 dni po terminie)?"
+            "value": "Zaproponować Lumen & Co 15% rabatu na ich wycenę?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enviar o primeiro lembrete à Atelier Dubois (fatura 0142, 860 €, 21 dias em atraso)?"
+            "value": "Oferecer à Lumen & Co 15% de desconto no orçamento?"
           }
         }
       }
@@ -90674,49 +90674,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Antwort auf die Rechnung und kein Einspruch im Protokoll."
+            "value": "Sie haben nach einem besseren Preis gefragt, und das Angebot ist 9 Tage alt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No reply to the invoice, and no dispute in the log."
+            "value": "They asked for a better price, and the quote is 9 days old."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sin respuesta a la factura y sin disputas en el registro."
+            "value": "Pidieron un precio mejor y el presupuesto tiene 9 días."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucune réponse à la facture, et aucun litige dans le journal."
+            "value": "Ils ont demandé un meilleur prix, et le devis date de 9 jours."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nessuna risposta alla fattura e nessuna contestazione nel registro."
+            "value": "Hanno chiesto un prezzo migliore e il preventivo ha 9 giorni."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geen reactie op de factuur en geen geschil in het logboek."
+            "value": "Ze vroegen om een betere prijs, en de offerte is 9 dagen oud."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Brak odpowiedzi na fakturę i brak sporu w dzienniku."
+            "value": "Prosili o lepszą cenę, a wycena ma 9 dni."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sem resposta à fatura e sem contestação no registo."
+            "value": "Pediram um preço melhor e o orçamento tem 9 dias."
           }
         }
       }
@@ -90961,49 +90961,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Support-Antworten · Zendesk"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Support replies · Zendesk"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Respuestas de soporte · Zendesk"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Réponses au support · Zendesk"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Risposte al supporto · Zendesk"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Supportantwoorden · Zendesk"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Odpowiedzi wsparcia · Zendesk"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · Stripe"
+            "value": "Respostas de suporte · Zendesk"
           }
         }
       }
@@ -91650,49 +91650,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Richte Erstattungen für meinen Onlineshop ein"
+            "value": "Richte Support-Antworten für meinen Onlineshop ein"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Set up refunds for my online shop"
+            "value": "Set up support replies for my online shop"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quiero gestionar los reembolsos de mi tienda online"
+            "value": "Quiero gestionar las respuestas de soporte de mi tienda online"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je veux gérer les remboursements de ma boutique en ligne"
+            "value": "Je veux gérer les réponses du support de ma boutique en ligne"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voglio gestire i rimborsi del mio negozio online"
+            "value": "Voglio gestire le risposte al supporto del mio negozio online"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ik wil terugbetalingen voor mijn webshop regelen"
+            "value": "Ik wil supportantwoorden voor mijn webshop regelen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chcę obsługiwać zwroty w moim sklepie internetowym"
+            "value": "Chcę obsługiwać odpowiedzi wsparcia w moim sklepie internetowym"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quero gerir os reembolsos da minha loja online"
+            "value": "Quero gerir as respostas de suporte da minha loja online"
           }
         }
       }
@@ -91756,49 +91756,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ich verbinde zuerst deine Zahlungen."
+            "value": "Ich verbinde zuerst deinen Helpdesk."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "I'll connect your payments first."
+            "value": "I'll connect your helpdesk first."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Primero conecto tus pagos."
+            "value": "Primero conecto tu servicio de atención."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je connecte d'abord vos paiements."
+            "value": "Je connecte d'abord votre service d'assistance."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prima collego i tuoi pagamenti."
+            "value": "Prima collego il tuo helpdesk."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eerst koppel ik je betalingen."
+            "value": "Eerst koppel ik je helpdesk."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Najpierw połączę Twoje płatności."
+            "value": "Najpierw połączę Twój helpdesk."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Primeiro ligo os seus pagamentos."
+            "value": "Primeiro ligo o seu serviço de apoio."
           }
         }
       }
@@ -91862,49 +91862,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Zahlungen lesen und eine erstatten."
+            "value": "Deine Tickets lesen und beantworten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read your payments and refund one."
+            "value": "Read your tickets and reply to them."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leer tus pagos y reembolsar uno."
+            "value": "Leer tus tickets y responderlos."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lire vos paiements et en rembourser un."
+            "value": "Lire vos tickets et y répondre."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leggere i tuoi pagamenti e rimborsarne uno."
+            "value": "Leggere i tuoi ticket e rispondere."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je betalingen lezen en er één terugbetalen."
+            "value": "Je tickets lezen en beantwoorden."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Odczytywać Twoje płatności i zwrócić jedną."
+            "value": "Odczytywać Twoje zgłoszenia i na nie odpowiadać."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ler os seus pagamentos e reembolsar um."
+            "value": "Ler os seus pedidos de suporte e responder-lhes."
           }
         }
       }
@@ -91968,49 +91968,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erstattungen bis 50 € pro Stück, 200 € pro Tag. Alles darüber wartet auf dich."
+            "value": "Bis zu 40 Tickets am Tag beantworten. Jedes Versprechen einer Erstattung, eines Rabatts oder eines Ersatzes wartet auf dich."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refund up to €50 each, €200 a day. Anything over waits for you."
+            "value": "Answer up to 40 tickets a day. Any promise of a refund, a discount or a replacement waits for you."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reembolsar hasta 50 € cada uno, 200 € al día. Lo que pase de ahí te espera."
+            "value": "Responder hasta 40 tickets al día. Cualquier promesa de reembolso, descuento o cambio te espera."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rembourser jusqu'à 50 € chacun, 200 € par jour. Au-delà, ça vous attend."
+            "value": "Répondre jusqu'à 40 tickets par jour. Toute promesse de remboursement, de remise ou de remplacement vous attend."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rimborsi fino a 50 € ciascuno, 200 € al giorno. Oltre, aspetta te."
+            "value": "Rispondere fino a 40 ticket al giorno. Ogni promessa di rimborso, sconto o sostituzione aspetta te."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terugbetalen tot € 50 per keer, € 200 per dag. Alles daarboven wacht op jou."
+            "value": "Tot 40 tickets per dag beantwoorden. Elke belofte van een terugbetaling, korting of vervanging wacht op jou."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zwroty do 50 € każdy, 200 € dziennie. Wszystko powyżej czeka na Ciebie."
+            "value": "Odpowiadać na maksymalnie 40 zgłoszeń dziennie. Każda obietnica zwrotu, rabatu lub wymiany czeka na Ciebie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reembolsar até 50 € cada, 200 € por dia. O que passar disso aguarda por si."
+            "value": "Responder a até 40 pedidos por dia. Qualquer promessa de reembolso, desconto ou substituição aguarda por si."
           }
         }
       }
@@ -92127,49 +92127,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zahlungen verbinden"
+            "value": "Helpdesk verbinden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect your payments"
+            "value": "Connect your helpdesk"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectar tus pagos"
+            "value": "Conectar tu servicio de atención"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecter vos paiements"
+            "value": "Connecter votre service d'assistance"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collega i tuoi pagamenti"
+            "value": "Collega il tuo helpdesk"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Betalingen koppelen"
+            "value": "Helpdesk koppelen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Połącz płatności"
+            "value": "Połącz helpdesk"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ligar os seus pagamentos"
+            "value": "Ligar o seu serviço de apoio"
           }
         }
       }
@@ -92180,49 +92180,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Zahlungen lesen"
+            "value": "Deine Tickets lesen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read your payments"
+            "value": "Read your tickets"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leer tus pagos"
+            "value": "Leer tus tickets"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lire vos paiements"
+            "value": "Lire vos tickets"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Leggi i tuoi pagamenti"
+            "value": "Leggi i tuoi ticket"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je betalingen lezen"
+            "value": "Je tickets lezen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Odczytaj Twoje płatności"
+            "value": "Odczytaj Twoje zgłoszenia"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ler os seus pagamentos"
+            "value": "Ler os seus pedidos de suporte"
           }
         }
       }
@@ -92286,49 +92286,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds starten"
+            "value": "Support-Antworten starten"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Start Refunds"
+            "value": "Start Support replies"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar Refunds"
+            "value": "Iniciar Respuestas de soporte"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Démarrer Refunds"
+            "value": "Démarrer Réponses au support"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avvia Refunds"
+            "value": "Avvia Risposte al supporto"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds starten"
+            "value": "Supportantwoorden starten"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uruchom Refunds"
+            "value": "Uruchom Odpowiedzi wsparcia"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar Refunds"
+            "value": "Iniciar Respostas de suporte"
           }
         }
       }
@@ -92445,49 +92445,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Überfällige Rechnungen · 830 Credits · 52 Läufe"
+            "value": "Verspätete Pakete · 830 Credits · 52 Läufe"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 830 credits · 52 runs"
+            "value": "Late parcels · 830 credits · 52 runs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Facturas vencidas · 830 créditos · 52 ejecuciones"
+            "value": "Paquetes con retraso · 830 créditos · 52 ejecuciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 830 crédits · 52 exécutions"
+            "value": "Colis en retard · 830 crédits · 52 exécutions"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 830 crediti · 52 esecuzioni"
+            "value": "Pacchi in ritardo · 830 crediti · 52 esecuzioni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 830 credits · 52 runs"
+            "value": "Vertraagde pakketten · 830 credits · 52 runs"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaległe faktury · 830 kredytów · 52 uruchomienia"
+            "value": "Spóźnione paczki · 830 kredytów · 52 uruchomienia"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faturas em atraso · 830 créditos · 52 execuções"
+            "value": "Encomendas atrasadas · 830 créditos · 52 execuções"
           }
         }
       }
@@ -92498,49 +92498,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Überfällige Rechnungen · 420 Credits · 28 Läufe"
+            "value": "Verspätete Pakete · 420 Credits · 28 Läufe"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 420 credits · 28 runs"
+            "value": "Late parcels · 420 credits · 28 runs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Facturas vencidas · 420 créditos · 28 ejecuciones"
+            "value": "Paquetes con retraso · 420 créditos · 28 ejecuciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 420 crédits · 28 exécutions"
+            "value": "Colis en retard · 420 crédits · 28 exécutions"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 420 crediti · 28 esecuzioni"
+            "value": "Pacchi in ritardo · 420 crediti · 28 esecuzioni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Overdue invoices · 420 credits · 28 runs"
+            "value": "Vertraagde pakketten · 420 credits · 28 runs"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zaległe faktury · 420 kredytów · 28 uruchomień"
+            "value": "Spóźnione paczki · 420 kredytów · 28 uruchomień"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Faturas em atraso · 420 créditos · 28 execuções"
+            "value": "Encomendas atrasadas · 420 créditos · 28 execuções"
           }
         }
       }
@@ -92922,49 +92922,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1.480 Credits · 74 Läufe"
+            "value": "Support-Antworten · 1.480 Credits · 74 Läufe"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1,480 credits · 74 runs"
+            "value": "Support replies · 1,480 credits · 74 runs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1480 créditos · 74 ejecuciones"
+            "value": "Respuestas de soporte · 1480 créditos · 74 ejecuciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1 480 crédits · 74 exécutions"
+            "value": "Réponses au support · 1 480 crédits · 74 exécutions"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1.480 crediti · 74 esecuzioni"
+            "value": "Risposte al supporto · 1.480 crediti · 74 esecuzioni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1.480 credits · 74 runs"
+            "value": "Supportantwoorden · 1.480 credits · 74 runs"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1480 kredytów · 74 uruchomienia"
+            "value": "Odpowiedzi wsparcia · 1480 kredytów · 74 uruchomienia"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 1480 créditos · 74 execuções"
+            "value": "Respostas de suporte · 1480 créditos · 74 execuções"
           }
         }
       }
@@ -92975,49 +92975,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 Credits · 41 Läufe"
+            "value": "Support-Antworten · 820 Credits · 41 Läufe"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 credits · 41 runs"
+            "value": "Support replies · 820 credits · 41 runs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 créditos · 41 ejecuciones"
+            "value": "Respuestas de soporte · 820 créditos · 41 ejecuciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 crédits · 41 exécutions"
+            "value": "Réponses au support · 820 crédits · 41 exécutions"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 crediti · 41 esecuzioni"
+            "value": "Risposte al supporto · 820 crediti · 41 esecuzioni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 credits · 41 runs"
+            "value": "Supportantwoorden · 820 credits · 41 runs"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 kredytów · 41 uruchomień"
+            "value": "Odpowiedzi wsparcia · 820 kredytów · 41 uruchomień"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Refunds · 820 créditos · 41 execuções"
+            "value": "Respostas de suporte · 820 créditos · 41 execuções"
           }
         }
       }
@@ -93764,6 +93764,536 @@
         }
       }
     },
+    "sample.leads.confirm_nord": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gespräch mit Nord Atelier bestätigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm the call with Nord Atelier"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar la llamada con Nord Atelier"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmer l'appel avec Nord Atelier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confermare la chiamata con Nord Atelier"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het gesprek met Nord Atelier bevestigen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Potwierdź rozmowę z Nord Atelier"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar a chamada com a Nord Atelier"
+          }
+        }
+      }
+    },
+    "sample.leads.confirm_nord_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Donnerstag gebucht, noch keine Bestätigung gesendet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Booked for Thursday, no confirmation sent yet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reservada para el jueves, sin confirmación enviada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévu jeudi, aucune confirmation envoyée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prenotata per giovedì, nessuna conferma inviata"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gepland voor donderdag, nog geen bevestiging verstuurd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umówiona na czwartek, bez wysłanego potwierdzenia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marcada para quinta, sem confirmação enviada"
+          }
+        }
+      }
+    },
+    "sample.leads.discount_lumen": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lumen & Co 15 % Rabatt anbieten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offer Lumen & Co 15% off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ofrecer a Lumen & Co un 15 % de descuento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proposer 15 % de remise à Lumen & Co"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offrire a Lumen & Co il 15% di sconto"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lumen & Co 15% korting aanbieden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaproponuj Lumen & Co 15% rabatu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oferecer 15% de desconto à Lumen & Co"
+          }
+        }
+      }
+    },
+    "sample.leads.discount_lumen_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat nach einem besseren Preis gefragt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked for a better price"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pidió un precio mejor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A demandé un meilleur prix"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha chiesto un prezzo migliore"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroeg om een betere prijs"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prosili o lepszą cenę"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pediu um preço melhor"
+          }
+        }
+      }
+    },
+    "sample.leads.job": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antworte neuen Leads innerhalb einer Stunde und vereinbare ein Gespräch. Rabatte warten auf dich. Versprich nie einen Preis, der nicht in der Preisliste steht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to new leads within the hour and book a call. Discounts wait for you. Never promise a price that isn't on the price list."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a los nuevos contactos en menos de una hora y reservar una llamada. Los descuentos esperan tu aprobación. Nunca prometer un precio que no esté en la lista de precios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre aux nouveaux prospects dans l'heure et fixer un appel. Les remises vous attendent. Ne jamais promettre un prix absent de la grille tarifaire."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondere ai nuovi contatti entro un'ora e fissare una chiamata. Gli sconti aspettano te. Non promettere mai un prezzo che non è nel listino."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beantwoord nieuwe leads binnen een uur en plan een gesprek. Kortingen wachten op jou. Beloof nooit een prijs die niet in de prijslijst staat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiadaj nowym leadom w ciągu godziny i umawiaj rozmowę. Rabaty czekają na Ciebie. Nigdy nie obiecuj ceny spoza cennika."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a novos contactos em menos de uma hora e marcar uma chamada. Os descontos esperam por si. Nunca prometer um preço que não esteja na tabela."
+          }
+        }
+      }
+    },
+    "sample.leads.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead-Nachfassen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead follow-up"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguimiento de contactos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relance des prospects"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ricontatto dei contatti"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leads opvolgen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontakt z leadami"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguimento de contactos"
+          }
+        }
+      }
+    },
+    "sample.leads.reply_kaya": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Studio Kaya antworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to Studio Kaya"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder a Studio Kaya"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre à Studio Kaya"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondere a Studio Kaya"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Studio Kaya antwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedz Studio Kaya"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder ao Studio Kaya"
+          }
+        }
+      }
+    },
+    "sample.leads.reply_kaya_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hat vor 20 Minuten auf der Website ein Angebot angefragt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked for a quote on the website, 20 minutes ago"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pidió un presupuesto en la web hace 20 minutos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A demandé un devis sur le site il y a 20 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha chiesto un preventivo sul sito 20 minuti fa"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vroeg 20 minuten geleden een offerte aan op de website"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prosiło o wycenę na stronie 20 minut temu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pediu um orçamento no site há 20 minutos"
+          }
+        }
+      }
+    },
+    "sample.leads.rule.discounts": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rabatte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discounts"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descuentos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remises"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sconti"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kortingen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rabaty"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descontos"
+          }
+        }
+      }
+    },
+    "sample.leads.rule.replies": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erste Antworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First replies"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primeras respuestas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premières réponses"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prime risposte"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eerste antwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pierwsze odpowiedzi"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primeiras respostas"
+          }
+        }
+      }
+    },
     "sample.list_charges": {
       "extractionState": "manual",
       "localizations": {
@@ -93813,6 +94343,642 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listar cobranças"
+          }
+        }
+      }
+    },
+    "sample.log.s1_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 Angebote für neue Kunden entworfen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 quotes drafted for new clients."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 presupuestos redactados para clientes nuevos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 devis rédigés pour de nouveaux clients."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 preventivi preparati per nuovi clienti."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 offertes opgesteld voor nieuwe klanten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 wyceny przygotowane dla nowych klientów."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 orçamentos preparados para novos clientes."
+          }
+        }
+      }
+    },
+    "sample.log.s1_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angebote"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quotes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presupuestos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devis"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preventivi"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offertes"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyceny"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orçamentos"
+          }
+        }
+      }
+    },
+    "sample.log.s2_evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead Studio Kaya"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lead Studio Kaya"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "contacto Studio Kaya"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prospect Studio Kaya"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "contatto Studio Kaya"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lead Studio Kaya"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lead Studio Kaya"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "contacto Studio Kaya"
+          }
+        }
+      }
+    },
+    "sample.log.s2_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Nachfassen an Studio Kaya gesendet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent the follow-up to Studio Kaya."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado el seguimiento a Studio Kaya."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relance envoyée à Studio Kaya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inviato il ricontatto a Studio Kaya."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De opvolging naar Studio Kaya gestuurd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysłano drugą wiadomość do Studio Kaya."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado o seguimento à Studio Kaya."
+          }
+        }
+      }
+    },
+    "sample.log.s3_by": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verspätete Pakete"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late parcels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes con retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colis en retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacchi in ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertraagde pakketten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spóźnione paczki"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encomendas atrasadas"
+          }
+        }
+      }
+    },
+    "sample.log.s3_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 Pakete verfolgt, 2 verspätet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 parcels tracked, 2 running late."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 paquetes seguidos, 2 con retraso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 colis suivis, 2 en retard."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 pacchi seguiti, 2 in ritardo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 pakketten gevolgd, 2 vertraagd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 paczek śledzonych, 2 spóźnione."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 encomendas seguidas, 2 atrasadas."
+          }
+        }
+      }
+    },
+    "sample.log.s3_value": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 verspätet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 running late"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 con retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 en retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 in ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 vertraagd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 spóźnione"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 atrasadas"
+          }
+        }
+      }
+    },
+    "sample.log.s4_by": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verspätete Pakete"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late parcels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes con retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colis en retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacchi in ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertraagde pakketten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spóźnione paczki"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encomendas atrasadas"
+          }
+        }
+      }
+    },
+    "sample.log.s4_evidence": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paket 5098"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "parcel 5098"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paquete 5098"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "colis 5098"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pacco 5098"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pakket 5098"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "paczka 5098"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "encomenda 5098"
+          }
+        }
+      }
+    },
+    "sample.log.s4_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paket 5098, für eine Antwort an den Kunden. Ein Verweis, nicht seine Daten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcel 5098, for a reply to its customer. A reference, not its data."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquete 5098, para responder a su cliente. Una referencia, no sus datos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colis 5098, pour une réponse à son client. Une référence, pas ses données."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacco 5098, per una risposta al suo cliente. Un riferimento, non i suoi dati."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pakket 5098, voor een antwoord aan de klant. Een verwijzing, niet de gegevens."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paczka 5098, do odpowiedzi dla klienta. Odwołanie, nie jej dane."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encomenda 5098, para uma resposta ao cliente. Uma referência, não os seus dados."
+          }
+        }
+      }
+    },
+    "sample.log.s4_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verspätete Pakete → Support-Antworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late parcels → Support replies"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes con retraso → Respuestas de soporte"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colis en retard → Réponses au support"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacchi in ritardo → Risposte al supporto"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertraagde pakketten → Supportantwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spóźnione paczki → Odpowiedzi wsparcia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encomendas atrasadas → Respostas de suporte"
+          }
+        }
+      }
+    },
+    "sample.log.s5_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Verspätete Pakete“ lief um 07:00 nicht: Die Anmeldung beim Versanddienst braucht dich."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late parcels didn't run at 07:00: its carrier sign-in needs you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Paquetes con retraso» no se ejecutó a las 07:00: su inicio de sesión con el transportista te necesita."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "« Colis en retard » ne s'est pas lancé à 07:00 : sa connexion au transporteur a besoin de vous."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Pacchi in ritardo» non è partito alle 07:00: l'accesso al corriere ha bisogno di te."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‘Vertraagde pakketten’ draaide om 07:00 niet: de aanmelding bij de vervoerder heeft jou nodig."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„Spóźnione paczki” nie uruchomił się o 07:00: logowanie u przewoźnika czeka na Ciebie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "«Encomendas atrasadas» não correu às 07:00: o início de sessão na transportadora precisa de si."
           }
         }
       }
@@ -94025,6 +95191,801 @@
           "stringUnit": {
             "state": "translated",
             "value": "Os clientes que escrevem todas as semanas recebem resposta na mesma manhã."
+          }
+        }
+      }
+    },
+    "sample.parcels.change_address": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Lieferadresse von Bestellung #5141 ändern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change the delivery address on order #5141"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar la dirección de entrega del pedido #5141"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer l'adresse de livraison de la commande #5141"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiare l'indirizzo di consegna dell'ordine #5141"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het afleveradres van bestelling #5141 wijzigen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmień adres dostawy zamówienia #5141"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mudar a morada de entrega da encomenda #5141"
+          }
+        }
+      }
+    },
+    "sample.parcels.change_address_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine E-Mail von einer neuen Adresse hat darum gebeten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An email from a new address asked for it"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo pidió un correo desde una dirección nueva"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un e-mail d'une nouvelle adresse l'a demandé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'ha chiesto un'email da un indirizzo nuovo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een e-mail van een nieuw adres vroeg erom"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poprosił o to e-mail z nowego adresu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um email de um novo endereço pediu-o"
+          }
+        }
+      }
+    },
+    "sample.parcels.job": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag Kunden Bescheid, wenn ein Paket sich verspätet, bevor sie fragen. Neuversand wartet auf dich. Ändere nie eine Lieferadresse aufgrund einer E-Mail."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell customers when a parcel runs late, before they ask. Reships wait for you. Never change a delivery address from an email."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar a los clientes cuando un paquete se retrasa, antes de que pregunten. Los reenvíos esperan tu aprobación. Nunca cambiar una dirección de entrega por un correo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévenir les clients quand un colis prend du retard, avant qu'ils ne demandent. Les renvois vous attendent. Ne jamais changer une adresse de livraison à partir d'un e-mail."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisare i clienti quando un pacco è in ritardo, prima che chiedano. Le rispedizioni aspettano te. Non cambiare mai un indirizzo di consegna per un'email."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laat klanten weten dat een pakket vertraagd is, voordat ze het vragen. Herzendingen wachten op jou. Wijzig nooit een afleveradres op basis van een e-mail."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informuj klientów o spóźnionej paczce, zanim zapytają. Ponowne wysyłki czekają na Ciebie. Nigdy nie zmieniaj adresu dostawy na podstawie e-maila."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar os clientes quando uma encomenda se atrasa, antes de perguntarem. Os reenvios esperam por si. Nunca mudar uma morada de entrega a partir de um email."
+          }
+        }
+      }
+    },
+    "sample.parcels.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verspätete Pakete"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late parcels"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paquetes con retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colis en retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pacchi in ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertraagde pakketten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spóźnione paczki"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encomendas atrasadas"
+          }
+        }
+      }
+    },
+    "sample.parcels.next_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch einen Tag warten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait one more day"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperar un día más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attendre encore un jour"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aspettare ancora un giorno"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog een dag wachten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poczekaj jeszcze dzień"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperar mais um dia"
+          }
+        }
+      }
+    },
+    "sample.parcels.reship_5098": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein neues Paket für Bestellung #5098 senden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a new parcel for order #5098"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar un paquete nuevo para el pedido #5098"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer un nouveau colis pour la commande #5098"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spedire un nuovo pacco per l'ordine #5098"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een nieuw pakket sturen voor bestelling #5098"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyślij nową paczkę do zamówienia #5098"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar uma nova encomenda para o pedido #5098"
+          }
+        }
+      }
+    },
+    "sample.parcels.reship_5098_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unterwegs verloren, seit 10 Tagen kein Scan"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lost in transit, 10 days without a scan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perdido en tránsito, 10 días sin escaneo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perdu en transit, 10 jours sans scan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perso in transito, 10 giorni senza scansione"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onderweg kwijt, 10 dagen geen scan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaginęła w drodze, 10 dni bez skanu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perdida em trânsito, 10 dias sem leitura"
+          }
+        }
+      }
+    },
+    "sample.parcels.rule.address_changes": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adressänderungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Address changes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambios de dirección"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changements d'adresse"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambi di indirizzo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adreswijzigingen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmiany adresu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mudanças de morada"
+          }
+        }
+      }
+    },
+    "sample.parcels.rule.delay_messages": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verspätungsnachrichten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delay messages"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos de retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages de retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisi di ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertragingsberichten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiadomości o opóźnieniu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos de atraso"
+          }
+        }
+      }
+    },
+    "sample.parcels.rule.refunds": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erstattungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refunds"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reembolsos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remboursements"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimborsi"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terugbetalingen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwroty"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reembolsos"
+          }
+        }
+      }
+    },
+    "sample.parcels.rule.reships": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuversand"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reships"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenvíos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvois"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispedizioni"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herzendingen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponowne wysyłki"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenvios"
+          }
+        }
+      }
+    },
+    "sample.parcels.tell_5120": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestellung #5120 über die Verspätung informieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell order #5120 it's running late"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar del retraso al pedido #5120"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévenir la commande #5120 du retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisare l'ordine #5120 del ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestelling #5120 laten weten dat ze vertraagd is"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poinformuj zamówienie #5120 o opóźnieniu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar a encomenda #5120 do atraso"
+          }
+        }
+      }
+    },
+    "sample.parcels.tell_5120_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Versanddienst zeigt 2 Tage Verspätung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The carrier shows a 2-day delay"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El transportista indica 2 días de retraso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le transporteur indique 2 jours de retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il corriere indica 2 giorni di ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De vervoerder meldt 2 dagen vertraging"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przewoźnik pokazuje 2 dni opóźnienia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A transportadora indica 2 dias de atraso"
+          }
+        }
+      }
+    },
+    "sample.parcels.tell_5134": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestellung #5134 über die Verspätung informieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell order #5134 it's running late"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar del retraso al pedido #5134"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévenir la commande #5134 du retard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisare l'ordine #5134 del ritardo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestelling #5134 laten weten dat ze vertraagd is"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poinformuj zamówienie #5134 o opóźnieniu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisar a encomenda #5134 do atraso"
+          }
+        }
+      }
+    },
+    "sample.parcels.tell_5134_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seit Montag im Depot"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At the depot since Monday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el almacén desde el lunes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au dépôt depuis lundi"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In deposito da lunedì"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinds maandag in het depot"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W magazynie od poniedziałku"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No armazém desde segunda"
           }
         }
       }
@@ -95425,6 +97386,748 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ coisas aguardam por si em Precisa de si."
+          }
+        }
+      }
+    },
+    "sample.support.job": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beantworte Support-Tickets am selben Tag. Versprechen einer Erstattung, eines Rabatts oder eines Ersatzes warten auf dich. Gib die Daten eines Kunden nie an andere weiter."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer support tickets the same day. Promises of a refund, a discount or a replacement wait for you. Never send a customer's details to anyone else."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder los tickets de soporte el mismo día. Las promesas de reembolso, descuento o cambio esperan tu aprobación. Nunca enviar los datos de un cliente a otra persona."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre aux tickets du support dans la journée. Les promesses de remboursement, de remise ou de remplacement vous attendent. Ne jamais transmettre les données d'un client à quelqu'un d'autre."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondere ai ticket di supporto in giornata. Le promesse di rimborso, sconto o sostituzione aspettano te. Non inviare mai i dati di un cliente a qualcun altro."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beantwoord supporttickets op dezelfde dag. Beloftes van een terugbetaling, korting of vervanging wachten op jou. Stuur de gegevens van een klant nooit naar iemand anders."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiadaj na zgłoszenia tego samego dnia. Obietnice zwrotu, rabatu lub wymiany czekają na Ciebie. Nigdy nie przekazuj danych klienta nikomu innemu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder aos pedidos de suporte no próprio dia. Promessas de reembolso, desconto ou substituição esperam por si. Nunca enviar os dados de um cliente a outra pessoa."
+          }
+        }
+      }
+    },
+    "sample.support.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support-Antworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support replies"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuestas de soporte"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponses au support"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposte al supporto"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supportantwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedzi wsparcia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respostas de suporte"
+          }
+        }
+      }
+    },
+    "sample.support.next_step": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst um ein Foto bitten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask for a photo first"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedir antes una foto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D'abord demander une photo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima chiedere una foto"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eerst om een foto vragen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw poproś o zdjęcie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedir primeiro uma fotografia"
+          }
+        }
+      }
+    },
+    "sample.support.promise_7802": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersatz für Ticket #7802 versprechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promise a replacement on ticket #7802"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prometer un cambio en el ticket #7802"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promettre un remplacement sur le ticket #7802"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promettere una sostituzione sul ticket #7802"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vervanging beloven op ticket #7802"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiecaj wymianę w zgłoszeniu #7802"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prometer uma substituição no pedido #7802"
+          }
+        }
+      }
+    },
+    "sample.support.promise_7802_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaputt angekommen, Foto angehängt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrived broken, photo attached"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llegó roto, foto adjunta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrivé cassé, photo jointe"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrivato rotto, foto allegata"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapot aangekomen, foto bijgevoegd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dotarło uszkodzone, zdjęcie w załączniku"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chegou partido, fotografia em anexo"
+          }
+        }
+      }
+    },
+    "sample.support.reply_7781": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #7781 beantworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to ticket #7781"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder al ticket #7781"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre au ticket #7781"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondere al ticket #7781"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #7781 beantwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedz na zgłoszenie #7781"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder ao pedido #7781"
+          }
+        }
+      }
+    },
+    "sample.support.reply_7781_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragt, wo die Bestellung ist; Sendungsverfolgung angehängt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked where the order is; tracking attached"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pregunta dónde está el pedido; seguimiento adjunto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande où en est la commande ; suivi joint"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiede dov'è l'ordine; tracciamento allegato"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraagt waar de bestelling is; track-and-trace bijgevoegd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pyta, gdzie jest zamówienie; numer przesyłki w załączniku"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pergunta onde está a encomenda; seguimento em anexo"
+          }
+        }
+      }
+    },
+    "sample.support.reply_7790": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #7790 beantworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply to ticket #7790"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder al ticket #7790"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Répondre au ticket #7790"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rispondere al ticket #7790"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ticket #7790 beantwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedz na zgłoszenie #7790"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Responder ao pedido #7790"
+          }
+        }
+      }
+    },
+    "sample.support.reply_7790_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Möchte den Liefertermin ändern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wants to change the delivery date"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiere cambiar la fecha de entrega"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veut changer la date de livraison"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuole cambiare la data di consegna"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wil de leverdatum wijzigen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chce zmienić datę dostawy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quer mudar a data de entrega"
+          }
+        }
+      }
+    },
+    "sample.support.rule.customer_data": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kundendaten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customer data"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos de clientes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données clients"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dati dei clienti"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klantgegevens"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dane klientów"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dados de clientes"
+          }
+        }
+      }
+    },
+    "sample.support.rule.promises": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versprechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promises"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promesas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promesses"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promesse"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beloftes"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obietnice"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Promessas"
+          }
+        }
+      }
+    },
+    "sample.support.rule.replies": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replies"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respuestas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réponses"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Risposte"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedzi"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respostas"
+          }
+        }
+      }
+    },
+    "sample.support.share_history": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Bestellhistorie eines Kunden an eine andere Adresse senden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a customer's order history to another address"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar el historial de pedidos de un cliente a otra dirección"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer l'historique de commandes d'un client à une autre adresse"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inviare lo storico ordini di un cliente a un altro indirizzo"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De bestelgeschiedenis van een klant naar een ander adres sturen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyślij historię zamówień klienta na inny adres"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar o histórico de encomendas de um cliente para outro endereço"
+          }
+        }
+      }
+    },
+    "sample.support.share_history_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angefragt von einer Adresse, die nicht zum Konto gehört"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked from an address not on the account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo pidió una dirección que no es de la cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demandé depuis une adresse qui n'est pas celle du compte"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiesto da un indirizzo non legato all'account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gevraagd vanaf een adres dat niet bij het account hoort"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prośba z adresu spoza konta"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pedido de um endereço que não é da conta"
           }
         }
       }

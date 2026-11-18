@@ -3,6 +3,7 @@ package bot.tafs.app
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.CardRule
 import bot.tafs.app.model.Money
+import bot.tafs.app.model.Outside
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.TafCard
@@ -20,7 +21,21 @@ class TafDetailTest {
   private val t0 = Instant.parse("2026-10-28T09:00:00Z")
   private fun model() = testModel(clock = { t0 })
 
-  private val refunds = TafTemplates.refunds
+  /** A Card with money limits (the sample's jobs count calls since 18 Nov; a real Card can still limit money). */
+  private object refunds {
+    val rules = listOf(
+      CardRule(action = "refund", label = "Refunds", perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day),
+      CardRule(action = "credit", label = "Credits", perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
+      CardRule(action = "payout", label = "Payouts", never = true, outside = Outside.refuse),
+    )
+  }
+
+  /** A Card with no limit at all: only what always asks and what never goes through. */
+  private val noLimits = listOf(
+    CardRule(action = "wire", label = "Wires", alwaysAsk = true),
+    CardRule(action = "bank_details", label = "Bank detail changes", never = true, outside = Outside.refuse),
+    CardRule(action = "new_payee", label = "New payees", never = true, outside = Outside.refuse),
+  )
 
   // MARK: The Card's face
 
@@ -59,7 +74,7 @@ class TafDetailTest {
   }
 
   @Test fun aCardWithNoLimitsShowsItsFirstLinesInsteadOfAFigure() {
-    val rules = TafTemplates.billPay.rules.filter { it.never || it.alwaysAsk }
+    val rules = noLimits
     val card = TafCard.merged("c", "Bill pay", rules, null)
     assertNull(card.hero)
     assertEquals(listOf("wires always asks you", "bank detail changes never", "1 more"), card.facts)

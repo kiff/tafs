@@ -3461,81 +3461,81 @@ enum Words {
         }
         enum Brief {
             enum Case {
-                /// 12 bills sorted, 2 didn't match their order: Mercier 0412, Lumio 0415
+                /// 12 parcels tracked, 2 running late: 5120, 5134
                 static var billsLine: String { Words.line("sample.brief.case.bills_line") }
-                /// Brio Bikes, invoice 0139
+                /// Nord Atelier, call booked
                 static var brio: String { Words.line("sample.brief.case.brio") }
-                /// paid Thursday · closed
+                /// confirmed Thursday · closed
                 static var brioLine: String { Words.line("sample.brief.case.brio_line") }
-                /// Atelier Dubois, invoice 0142
+                /// Studio Kaya, quote request
                 static var dubois: String { Words.line("sample.brief.case.dubois") }
-                /// reminder sent Tuesday · waiting for payment · next check Friday
+                /// replied Tuesday · waiting for their answer · next check Friday
                 static var duboisLine: String { Words.line("sample.brief.case.dubois_line") }
                 /// Friday
                 static var duboisNext: String { Words.line("sample.brief.case.dubois_next") }
-                /// Fern & Co, invoice 0137
+                /// Lumen & Co, discount asked
                 static var fern: String { Words.line("sample.brief.case.fern") }
-                /// promised Friday · waiting for payment · last checked Monday 14:00
+                /// waits for your yes · last checked Monday 14:00
                 static var fernLine: String { Words.line("sample.brief.case.fern_line") }
                 /// Support replies
                 static var support: String { Words.line("sample.brief.case.support") }
-                /// 9 tickets answered · 1 waits for a refund check · next check 13:00
+                /// 9 tickets answered · 1 waits for a replacement promise · next check 13:00
                 static var supportLine: String { Words.line("sample.brief.case.support_line") }
             }
             /// Today: 38 credits, the lead's runs included.
             static var credits: String { Words.line("sample.brief.credits") }
             enum Expires {
-                /// Pay €2,100
+                /// Send it
                 static var answer: String { Words.line("sample.brief.expires.answer") }
                 /// This can't wait: it expires at 12:00, before the next brief.
                 static var cantWait: String { Words.line("sample.brief.expires.cant_wait") }
-                /// Don't pay
+                /// Don't send
                 static var decline: String { Words.line("sample.brief.expires.decline") }
-                /// the payment stays held; nothing is sent.
+                /// the reship stays held; nothing is sent.
                 static var meanwhile: String { Words.line("sample.brief.expires.meanwhile") }
-                /// Pay Mercier Textiles €2,100 before the payment expires at 12:00?
+                /// Send a new parcel for order #5098 before the carrier's claim window closes at 12:00?
                 static var question: String { Words.line("sample.brief.expires.question") }
-                /// It matches order 0388, and {taf} checked it this morning.
+                /// Lost in transit, 10 days without a scan; {taf} checked the carrier this morning.
                 static func why(taf: String) -> String { Words.line("sample.brief.expires.why", taf) }
             }
             enum Label {
-                /// Clients
+                /// Leads
                 static var clients: String { Words.line("sample.brief.label.clients") }
-                /// Money
+                /// Parcels
                 static var money: String { Words.line("sample.brief.label.money") }
                 /// Support
                 static var support: String { Words.line("sample.brief.label.support") }
             }
             /// Later
             static var later: String { Words.line("sample.brief.later") }
-            /// €3,400 due back
+            /// 2 running late
             static var moneyValue: String { Words.line("sample.brief.money_value") }
-            /// Prepare an escalation summary for these 3 invoices past 30 days?
+            /// Draft a second follow-up for these 3 leads with no reply after 7 days?
             static var nextMove: String { Words.line("sample.brief.next_move") }
             /// Dismiss
             static var nextMoveDismiss: String { Words.line("sample.brief.next_move_dismiss") }
             enum Pay {
-                /// Pay the 3
+                /// Send the 3
                 static var answer: String { Words.line("sample.brief.pay.answer") }
                 /// by Fri 12:00
                 static var deadline: String { Words.line("sample.brief.pay.deadline") }
-                /// other payouts carry on; these three wait.
+                /// other messages carry on; these three wait.
                 static var meanwhile: String { Words.line("sample.brief.pay.meanwhile") }
-                /// Pay the 3 opens three approvals, one after the other.
+                /// Send the 3 opens three approvals, one after the other.
                 static var note: String { Words.line("sample.brief.pay.note") }
-                /// Pay 3 supplier bills due Friday, €1,240?
+                /// Send 3 delay messages for parcels due Friday?
                 static var question: String { Words.line("sample.brief.pay.question") }
-                /// All three match their orders and were checked by {taf}.
+                /// All three are confirmed late by the carrier and were checked by {taf}.
                 static func why(taf: String) -> String { Words.line("sample.brief.pay.why", taf) }
             }
             enum Remind {
-                /// Don't send
+                /// Don't offer
                 static var decline: String { Words.line("sample.brief.remind.decline") }
-                /// the reminder is held; nothing is sent.
+                /// the offer is held; nothing is sent.
                 static var meanwhile: String { Words.line("sample.brief.remind.meanwhile") }
-                /// Send the first reminder to Atelier Dubois (invoice 0142, €860, 21 days late)?
+                /// Offer Lumen & Co 15% off their quote?
                 static var question: String { Words.line("sample.brief.remind.question") }
-                /// No reply to the invoice, and no dispute in the log.
+                /// They asked for a better price, and the quote is 9 days old.
                 static var why: String { Words.line("sample.brief.remind.why") }
             }
             /// {count} things wait that need nothing from you now
@@ -3546,7 +3546,7 @@ enum Words {
         enum Card {
             /// Read Stripe
             static var readStripe: String { Words.line("sample.card.read_stripe") }
-            /// Refunds · Stripe
+            /// Support replies · Zendesk
             static var refundsStripe: String { Words.line("sample.card.refunds_stripe") }
         }
         enum Chargebacks {
@@ -3580,32 +3580,32 @@ enum Words {
         enum Coach {
             /// Agree
             static var agree: String { Words.line("sample.coach.agree") }
-            /// Set up refunds for my online shop
+            /// Set up support replies for my online shop
             static var ask: String { Words.line("sample.coach.ask") }
             /// Change them
             static var change: String { Words.line("sample.coach.change") }
-            /// I'll connect your payments first.
+            /// I'll connect your helpdesk first.
             static var connectFirst: String { Words.line("sample.coach.connect_first") }
             /// Connected. Here are the rules I'd use.
             static var connected: String { Words.line("sample.coach.connected") }
-            /// Read your payments and refund one.
+            /// Read your tickets and reply to them.
             static var grant: String { Words.line("sample.coach.grant") }
             /// Step 3 of 6 · Your rules
             static var planLine: String { Words.line("sample.coach.plan_line") }
-            /// Refund up to €50 each, €200 a day. Anything over waits for you.
+            /// Answer up to 40 tickets a day. Any promise of a refund, a discount or a replacement waits for you.
             static var rules: String { Words.line("sample.coach.rules") }
             /// Use these rules?
             static var rulesTitle: String { Words.line("sample.coach.rules_title") }
             enum Step {
                 /// Your Card
                 static var card: String { Words.line("sample.coach.step.card") }
-                /// Connect your payments
+                /// Connect your helpdesk
                 static var connect: String { Words.line("sample.coach.step.connect") }
-                /// Read your payments
+                /// Read your tickets
                 static var read: String { Words.line("sample.coach.step.read") }
                 /// Your rules
                 static var rules: String { Words.line("sample.coach.step.rules") }
-                /// Start Refunds
+                /// Start Support replies
                 static var start: String { Words.line("sample.coach.step.start") }
             }
         }
@@ -3614,9 +3614,9 @@ enum Words {
             static var balanceDetail: String { Words.line("sample.credits.balance_detail") }
             /// Solo · 260 of 500 credits left this period
             static var balanceWords: String { Words.line("sample.credits.balance_words") }
-            /// Overdue invoices · 830 credits · 52 runs
+            /// Late parcels · 830 credits · 52 runs
             static var invoicesLast: String { Words.line("sample.credits.invoices_last") }
-            /// Overdue invoices · 420 credits · 28 runs
+            /// Late parcels · 420 credits · 28 runs
             static var invoicesThis: String { Words.line("sample.credits.invoices_this") }
             /// Last period: 2,310 credits used · 1 Oct to 31 Oct
             static var lastPeriod: String { Words.line("sample.credits.last_period") }
@@ -3632,9 +3632,9 @@ enum Words {
             static var note: String { Words.line("sample.credits.note") }
             /// Solo · 260 credits left
             static var planLine: String { Words.line("sample.credits.plan_line") }
-            /// Refunds · 1,480 credits · 74 runs
+            /// Support replies · 1,480 credits · 74 runs
             static var refundsLast: String { Words.line("sample.credits.refunds_last") }
-            /// Refunds · 820 credits · 41 runs
+            /// Support replies · 820 credits · 41 runs
             static var refundsThis: String { Words.line("sample.credits.refunds_this") }
             /// This period: 1,240 credits used · ends on 30 Nov
             static var thisPeriod: String { Words.line("sample.credits.this_period") }
@@ -3669,8 +3669,58 @@ enum Words {
         }
         /// Hi, I'm {name}. I'm on it: {now}. Ask me what I did, or tell me what to do differently. I stay inside my Card either way.
         static func hello(name: String, now: String) -> String { Words.line("sample.hello", name, now) }
+        enum Leads {
+            /// Confirm the call with Nord Atelier
+            static var confirmNord: String { Words.line("sample.leads.confirm_nord") }
+            /// Booked for Thursday, no confirmation sent yet
+            static var confirmNordWhy: String { Words.line("sample.leads.confirm_nord_why") }
+            /// Offer Lumen & Co 15% off
+            static var discountLumen: String { Words.line("sample.leads.discount_lumen") }
+            /// Asked for a better price
+            static var discountLumenWhy: String { Words.line("sample.leads.discount_lumen_why") }
+            /// Reply to new leads within the hour and book a call. Discounts wait for you. Never promise a price that isn't on the price list.
+            static var job: String { Words.line("sample.leads.job") }
+            /// Lead follow-up
+            static var name: String { Words.line("sample.leads.name") }
+            /// Reply to Studio Kaya
+            static var replyKaya: String { Words.line("sample.leads.reply_kaya") }
+            /// Asked for a quote on the website, 20 minutes ago
+            static var replyKayaWhy: String { Words.line("sample.leads.reply_kaya_why") }
+            enum Rule {
+                /// Discounts
+                static var discounts: String { Words.line("sample.leads.rule.discounts") }
+                /// First replies
+                static var replies: String { Words.line("sample.leads.rule.replies") }
+            }
+        }
         /// List charges
         static var listCharges: String { Words.line("sample.list_charges") }
+        enum Log {
+            /// 3 quotes drafted for new clients.
+            static var s1Line: String { Words.line("sample.log.s1_line") }
+            /// Quotes
+            static var s1Title: String { Words.line("sample.log.s1_title") }
+            /// lead Studio Kaya
+            static var s2Evidence: String { Words.line("sample.log.s2_evidence") }
+            /// Sent the follow-up to Studio Kaya.
+            static var s2Line: String { Words.line("sample.log.s2_line") }
+            /// Late parcels
+            static var s3By: String { Words.line("sample.log.s3_by") }
+            /// 12 parcels tracked, 2 running late.
+            static var s3Line: String { Words.line("sample.log.s3_line") }
+            /// 2 running late
+            static var s3Value: String { Words.line("sample.log.s3_value") }
+            /// Late parcels
+            static var s4By: String { Words.line("sample.log.s4_by") }
+            /// parcel 5098
+            static var s4Evidence: String { Words.line("sample.log.s4_evidence") }
+            /// Parcel 5098, for a reply to its customer. A reference, not its data.
+            static var s4Line: String { Words.line("sample.log.s4_line") }
+            /// Late parcels → Support replies
+            static var s4Title: String { Words.line("sample.log.s4_title") }
+            /// Late parcels didn't run at 07:00: its carrier sign-in needs you.
+            static var s5Line: String { Words.line("sample.log.s5_line") }
+        }
         /// Look up a charge
         static var lookUpCharge: String { Words.line("sample.look_up_charge") }
         enum Memory {
@@ -3680,6 +3730,40 @@ enum Words {
             static var explain: String { Words.line("sample.memory.explain") }
             /// Customers who write every week get a reply the same morning.
             static var regulars: String { Words.line("sample.memory.regulars") }
+        }
+        enum Parcels {
+            /// Change the delivery address on order #5141
+            static var changeAddress: String { Words.line("sample.parcels.change_address") }
+            /// An email from a new address asked for it
+            static var changeAddressWhy: String { Words.line("sample.parcels.change_address_why") }
+            /// Tell customers when a parcel runs late, before they ask. Reships wait for you. Never change a delivery address from an email.
+            static var job: String { Words.line("sample.parcels.job") }
+            /// Late parcels
+            static var name: String { Words.line("sample.parcels.name") }
+            /// Wait one more day
+            static var nextStep: String { Words.line("sample.parcels.next_step") }
+            /// Send a new parcel for order #5098
+            static var reship5098: String { Words.line("sample.parcels.reship_5098") }
+            /// Lost in transit, 10 days without a scan
+            static var reship5098Why: String { Words.line("sample.parcels.reship_5098_why") }
+            enum Rule {
+                /// Address changes
+                static var addressChanges: String { Words.line("sample.parcels.rule.address_changes") }
+                /// Delay messages
+                static var delayMessages: String { Words.line("sample.parcels.rule.delay_messages") }
+                /// Refunds
+                static var refunds: String { Words.line("sample.parcels.rule.refunds") }
+                /// Reships
+                static var reships: String { Words.line("sample.parcels.rule.reships") }
+            }
+            /// Tell order #5120 it's running late
+            static var tell5120: String { Words.line("sample.parcels.tell_5120") }
+            /// The carrier shows a 2-day delay
+            static var tell5120Why: String { Words.line("sample.parcels.tell_5120_why") }
+            /// Tell order #5134 it's running late
+            static var tell5134: String { Words.line("sample.parcels.tell_5134") }
+            /// At the depot since Monday
+            static var tell5134Why: String { Words.line("sample.parcels.tell_5134_why") }
         }
         /// Play the next sample actions
         static var playNext: String { Words.line("sample.play_next") }
@@ -3736,6 +3820,38 @@ enum Words {
             static var paused: String { Words.line("sample.reply.paused") }
             /// {count} things wait on you in Needs you.
             static func waiting(count: Int) -> String { Words.count("sample.reply.waiting", count) }
+        }
+        enum Support {
+            /// Answer support tickets the same day. Promises of a refund, a discount or a replacement wait for you. Never send a customer's details to anyone else.
+            static var job: String { Words.line("sample.support.job") }
+            /// Support replies
+            static var name: String { Words.line("sample.support.name") }
+            /// Ask for a photo first
+            static var nextStep: String { Words.line("sample.support.next_step") }
+            /// Promise a replacement on ticket #7802
+            static var promise7802: String { Words.line("sample.support.promise_7802") }
+            /// Arrived broken, photo attached
+            static var promise7802Why: String { Words.line("sample.support.promise_7802_why") }
+            /// Reply to ticket #7781
+            static var reply7781: String { Words.line("sample.support.reply_7781") }
+            /// Asked where the order is; tracking attached
+            static var reply7781Why: String { Words.line("sample.support.reply_7781_why") }
+            /// Reply to ticket #7790
+            static var reply7790: String { Words.line("sample.support.reply_7790") }
+            /// Wants to change the delivery date
+            static var reply7790Why: String { Words.line("sample.support.reply_7790_why") }
+            enum Rule {
+                /// Customer data
+                static var customerData: String { Words.line("sample.support.rule.customer_data") }
+                /// Promises
+                static var promises: String { Words.line("sample.support.rule.promises") }
+                /// Replies
+                static var replies: String { Words.line("sample.support.rule.replies") }
+            }
+            /// Send a customer's order history to another address
+            static var shareHistory: String { Words.line("sample.support.share_history") }
+            /// Asked from an address not on the account
+            static var shareHistoryWhy: String { Words.line("sample.support.share_history_why") }
         }
         enum Tool {
             /// Accounting

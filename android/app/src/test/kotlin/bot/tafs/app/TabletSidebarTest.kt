@@ -77,11 +77,11 @@ class TabletSidebarTest {
 
   @Test fun aTafChosenInTheSidebarOpensBesideItHighlighted() {
     show("w1366dp-h1024dp-land-xhdpi")
-    compose.onNode(hasText("Refunds") and inSidebar).performClick()
+    compose.onNode(hasText("Support replies") and inSidebar).performClick()
     compose.waitForIdle()
     // Its page beside the sidebar (its tabs), and its row the one selected.
     compose.onNode(hasText("Activity")).assertIsDisplayed()
-    compose.onNode(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Selected, true) and inSidebar and hasText("Refunds")).assertIsDisplayed()
+    compose.onNode(SemanticsMatcher.expectValue(androidx.compose.ui.semantics.SemanticsProperties.Selected, true) and inSidebar and hasText("Support replies")).assertIsDisplayed()
     // The mark takes it back to the Overview.
     compose.onNode(hasContentDescription(Words.App.name) and inSidebar).performClick()
     compose.waitForIdle()

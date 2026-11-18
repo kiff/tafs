@@ -1922,17 +1922,17 @@ class AppModel(
 
   private fun loadSample() {
     if (_state.value.tafs.isNotEmpty()) return
-    for (key in listOf("chargebacks", "deploys", "access", "billpay", "refunds")) {
+    for (key in listOf("leads", "deploys", "access", "parcels", "support")) {
       TafTemplates.template(key)?.let { t -> create(TafDraft(t.name, t.job, t.tools, t.rules, t.key)) }
     }
     // Two rounds: a few actions within the Cards, and two held for the owner.
     playNextDemoActions()
     playNextDemoActions()
-    _state.value.let { s -> s.tafs.firstOrNull { s.templateOf[it.id] == "refunds" } }?.let { refunds ->
+    _state.value.let { s -> s.tafs.firstOrNull { s.templateOf[it.id] == "support" } }?.let { support ->
       val question = Words.Sample.Chat.question
-      say(refunds.id, ChatMessage.From.taf, Chat.hello(refunds))
-      say(refunds.id, ChatMessage.From.owner, question)
-      say(refunds.id, ChatMessage.From.taf, sampleReply(question, refunds.id))
+      say(support.id, ChatMessage.From.taf, Chat.hello(support))
+      say(support.id, ChatMessage.From.owner, question)
+      say(support.id, ChatMessage.From.taf, sampleReply(question, support.id))
     }
   }
 
