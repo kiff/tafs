@@ -24,14 +24,32 @@
 #     prefix, and one that matches none touches every suite);
 #   - in each later run, every other step passed or was skipped, but for its
 #     own "A run of some suites counts only on earlier passes", which a run of
-#     some suites ends red when nothing carries or below the bar's repeat.
+#     some suites ends red when nothing carries or below the bar's repeat, and
+#     for a step another later run passed (a case one run couldn't grade, run
+#     again alone).
+#
+# There may be more than one touched run: TOUCHED_LOG and TOUCHED_STEPS then
+# list their files, comma-separated, in the order of RUNS' "touched" lines.
 #
 # STEPS files are the jobs' steps from the API, one "number conclusion name"
 # per line; the LOGs are the jobs' logs as GitHub serves them. Exits 0 when
 # the override holds, printing the failed step's name, then the record's line
 # on the touched suites; 1 with the reason.
 set -euo pipefail
-runs=$1 base=$2 baselog=$3 log=$4 check=$5 tlog=$6 touched=$7 suites=$8 changed=$9
+runs=$1 base=$2 baselog=$3 log=$4 check=$5 tlogs=$6 tsteps=$7 suites=$8 changed=$9
+# The touched runs given: those whose steps file isn't empty, in order.
+tlog_a=() tstep_a=()
+IFS=, read -ra _l <<<"$tlogs"; IFS=, read -ra _s <<<"$tsteps"
+for i in "${!_s[@]}"; do
+  [ -s "${_s[$i]}" ] || continue
+  tstep_a+=("${_s[$i]}"); tlog_a+=("${_l[$i]:-}")
+done
+# Each touched run in RUNS has its steps: tfield's i-th "touched" line is tstep_a's i-th file. A touched run with an
+# empty steps file would shift every one after it, so it's refused, never skipped: with touched runs, the files given
+# and the non-empty ones are as many as the touched lines; with none, no steps file holds anything.
+nt=$(grep -c '^touched ' "$runs" || true)
+{ [ "$nt" = 0 ] && [ "${#tstep_a[@]}" = 0 ]; } || { [ "$nt" != 0 ] && [ "${#_s[@]}" = "$nt" ] && [ "${#tstep_a[@]}" = "$nt" ]; } \
+  || { echo "::error::The owner's override doesn't hold: the touched runs and their steps don't line up"; exit 1; }
 carry="A run of some suites counts only on earlier passes"
 over="An override doesn't count for the Upgrade gate"
 
@@ -40,22 +58,36 @@ own() { grep -vE '^[0-9]+ [a-z_]+ (Set up job|Post .*|Complete job)$' "$1" || tr
 named() { cut -d' ' -f3- <<<"$1"; }
 passed() { grep -qxF "success $2" <(cut -d' ' -f2- "$1"); }
 repeats() { sed -E 's/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z //' "$1" | grep -E '^##\[group\]Run go run \./cmd/(e2e|eval) ' | grep -oE -- '-repeat "[^"]*"' | sort -u || true; }
-# A later run: on the shipped model, no job failure, nothing red but its own carry step.
+# The later runs' steps files: the check, then each touched run.
+later_files() { echo "$check"; for f in "${tstep_a[@]}"; do echo "$f"; done; }
+# A later run: on the shipped model, no job failure, nothing red but its own carry step, or a step another later run
+# passed.
 later() {
-  local steps=$1 what=$2 others
+  local steps=$1 what=$2 others name f ok left=""
   grep -E '^[0-9]+ failure (Set up job|Post .*|Complete job)$' "$steps" >/dev/null && refuse "the $what run failed outside its steps"
   grep -qxF "skipped $over" <(cut -d' ' -f2- "$steps") || refuse "the $what run overrode the model or effort"
   others=$(own "$steps" | grep -vE '^[0-9]+ (success|skipped) ' | grep -vE "^[0-9]+ [a-z_]+ ${carry}\$" || true)
-  [ -z "$others" ] || refuse "the $what run failed: $(named "$others" | paste -sd ';' -)"
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    name=$(named "$line") ok=""
+    while IFS= read -r f; do [ "$f" != "$steps" ] && passed "$f" "$name" && ok=1; done < <(later_files)
+    [ -n "$ok" ] || left="$left${left:+;}$name"
+  done <<<"$others"
+  [ -z "$left" ] || refuse "the $what run failed: $left"
 }
 
 # The runs: the later ones newer than the base, at the commit the Upgrade ships from.
 field() { awk -v r="$1" -v n="$2" '$1 == r { print $n }' "$runs"; }
-for role in check $( [ -s "$touched" ] && echo touched ); do
-  [ -n "$(field "$role" 2)" ] || refuse "the $role run isn't named"
-  [[ "$(field base 3)" < "$(field "$role" 3)" ]] || refuse "the $role run isn't newer than the base"
-  [ "$(field "$role" 4)" = "$(field shipped 4)" ] || refuse "the $role run isn't at the agents commit the Upgrade ships from ($(field shipped 4 | cut -c1-12))"
-done
+# The i-th touched run's field n (RUNS may hold several "touched" lines, in order).
+tfield() { awk -v i="$1" -v n="$2" '$1 == "touched" { k++; if (k == i) print $n }' "$runs"; }
+newer() {
+  local role=$1 id=$2 created=$3 sha=$4
+  [ -n "$id" ] || refuse "the $role run isn't named"
+  [[ "$(field base 3)" < "$created" ]] || refuse "the $role run isn't newer than the base"
+  [ "$sha" = "$(field shipped 4)" ] || refuse "the $role run isn't at the agents commit the Upgrade ships from ($(field shipped 4 | cut -c1-12))"
+}
+newer check "$(field check 2)" "$(field check 3)" "$(field check 4)"
+for i in "${!tstep_a[@]}"; do newer touched "$(tfield $((i + 1)) 2)" "$(tfield $((i + 1)) 3)" "$(tfield $((i + 1)) 4)"; done
 
 # The base.
 grep -E '^[0-9]+ failure (Set up job|Post .*|Complete job)$' "$base" >/dev/null && refuse "the base run failed outside its steps"
@@ -79,13 +111,14 @@ while IFS= read -r name; do
   passed "$check" "$name" || refuse "\"$name\" (suite $suite) didn't pass in the check run"
 done < <(jq -r --arg s "$suite" '.suites[$s].steps[]' "$suites")
 
-# The touched run, when there is one.
+# The touched runs, when there are any: the record's repeat is the lowest of them.
 trep=3
-if [ -s "$touched" ]; then
-  later "$touched" touched
-  trep=$(repeats "$tlog" | grep -oE '[0-9]+' | sort -n | head -1)
-  [ -n "$trep" ] || refuse "the touched run's log shows no suite run"
-fi
+for i in "${!tstep_a[@]}"; do
+  later "${tstep_a[$i]}" touched
+  r=$(repeats "${tlog_a[$i]}" | grep -oE '[0-9]+' | sort -n | head -1)
+  [ -n "$r" ] || refuse "the touched run's log shows no suite run"
+  [ "$r" -lt "$trep" ] && trep=$r
+done
 
 # Every suite the changed definitions touch passed every step, in one run or the other.
 touched_suites=$(jq -r --rawfile ch "$changed" '(.paths["kiff/tafs"] // []) as $rules
@@ -98,13 +131,15 @@ for t in $touched_suites; do
   others="$others $t"
   while IFS= read -r name; do
     [ -n "$name" ] || continue
-    passed "$check" "$name" || { [ -s "$touched" ] && passed "$touched" "$name"; } \
+    ok=""
+    while IFS= read -r f; do passed "$f" "$name" && ok=1; done < <(later_files)
+    [ -n "$ok" ] \
       || refuse "the definitions changed since the base touch suite $t, and no later run passed \"$name\""
   done < <(jq -r --arg s "$t" '.suites[$s].steps[]?' "$suites")
 done
 echo "$step"
 if [ -n "$others" ]; then
-  echo "suite $suite at repeat 3 (Eval $(field check 2)); touched suites${others} at repeat ${trep} (Eval $(field touched 2 || true)), the owner's choice: touched suites at repeat 1"
+  echo "suite $suite at repeat 3 (Eval $(field check 2)); touched suites${others} at repeat ${trep} (Eval $(awk '$1 == "touched" { print $2 }' "$runs" | paste -sd, -)), the owner's choice: touched suites at repeat 1"
 else
   echo "suite $suite at repeat 3 (Eval $(field check 2)); no other suite touched"
 fi

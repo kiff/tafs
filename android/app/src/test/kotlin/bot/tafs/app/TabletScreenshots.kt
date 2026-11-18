@@ -66,7 +66,7 @@ class TabletScreenshots {
   @Test fun overview() { show(); shot("overview") }
 
   /** A taf's chat at the largest text Android offers (200 %): its Card beside it grows rather than cut off its last line. */
-  @Test fun tafChatLargestText() { show("Refunds", textSize = 2f); shot("taf-chat-largest-text") }
+  @Test fun tafChatLargestText() { show("Support replies", textSize = 2f); shot("taf-chat-largest-text") }
 
   /** Beside the iPad's `Record-overview.PNG`: the Record's days, each heading with what its money came to (`record.day_spent`). */
   @Test fun recordDay() {
@@ -95,7 +95,7 @@ class TabletScreenshots {
   @Test fun accountBeside() { show("Account"); shot("account-beside") }
 
   /** Beside the iPad's `Taf-card-tab.PNG` and `Taf-chat-tab-finished.PNG`: a taf chosen in the sidebar, highlighted there. */
-  @Test fun taf() { show("Refunds"); shot("taf") }
+  @Test fun taf() { show("Support replies"); shot("taf") }
 
   private fun kiffTablet() {
     RuntimeEnvironment.setQualifiers("en-w1366dp-h1024dp-land-xhdpi")

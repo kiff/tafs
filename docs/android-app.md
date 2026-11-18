@@ -215,7 +215,8 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **The sample's brief** (`SampleBrief`, stand-ins for tafs cloud's words, in each language from app/strings' `sample.brief.*`
   and the brief's own headings) shows only for the store's screenshots: a debug
   build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`), with its
-  mission's log as one page (`SampleBrief.log`, `AppModel.missionLog`). The sample walk keeps Needs you, and has no log.
+  mission's log as one page (`SampleBrief.log`, `AppModel.missionLog`). Its missions are Parcels (the label `money`), Leads
+  (`clients`) and Support. The sample walk keeps Needs you, and has no log.
 
 ## Building and testing
 
@@ -1171,8 +1172,8 @@ card left the screen and came back (`ProfileWordsCardsTest`).
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
 
 **A sign-in wider than the job** (`wider: {words}`, docs/chat.md): when planque couldn't narrow an app's sign-in to
-what the taf uses, tafs cloud marks the waiting approval or sign-in card, and its words ("The sign-in for Google Sheets
-can't be narrowed to this job: …") are drawn above the card's buttons, in amber (`SetupComponent.wider`,
+what the taf uses, tafs cloud marks the waiting approval or sign-in card, and its words ("Composio connects your Google
+Sheets account. Google Sheets may ask for broader access than this job needs, …") are drawn above the card's buttons, in amber (`SetupComponent.wider`,
 `WiderLine`). Read leniently: a mark of another shape is no mark.
 The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
 it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step
@@ -1519,7 +1520,11 @@ since Play refuses a phone screenshot whose long side is more than twice its sho
 6. **You're connected.**
 
 The sample runs on the phone's own clock, so its held calls are waiting rather than expired, and the phone's fingerprint is set
-up for approvals and named in its language (`LocalBiometry`, as `MainActivity` provides it). The sample's templates (`TafTemplates`) read their words each time, so each language draws its own. The
+up for approvals and named in its language (`LocalBiometry`, as `MainActivity` provides it). The sample's templates (`TafTemplates`) read their words each time, so each language draws its own. Its five jobs are
+Support replies, Late parcels, Lead follow-up, Access and Deploys (app/strings' `sample.support.*`, `sample.parcels.*`,
+`sample.leads.*`, since 18 Nov in place of Refunds, Bill pay and Chargebacks): their Cards count calls, ask the owner first
+(a promised replacement, a reship, a discount) or never let a call through (a customer's details, an address change), with no
+money limit, and `CardCheckTest` plays each script. The
 images are written only when asked:
 
 ```bash

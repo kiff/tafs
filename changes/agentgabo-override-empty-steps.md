@@ -1,0 +1,1 @@
+- **The owner's override refuses a touched run without its steps** (`.github/upgrade-override.sh`): each touched run named must have its steps, one file each, in order, so a missing one can never shift which run is checked against which steps.

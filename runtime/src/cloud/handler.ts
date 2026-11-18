@@ -19,7 +19,7 @@ import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
+import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { handedByOf, requestDetail } from "./request.js";
@@ -3386,8 +3386,21 @@ function markWider(cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang
     // planque keeps it on the connector's request, never at the grant's top level (grantView).
     if (grant?.request.connector?.usual_access !== true) continue;
     const vendor = grant.vendor || vendorName(grant.request.server) || "";
-    c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined) } };
+    c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined, connectRoute(grant)) } };
   }
+}
+
+/**
+ * How the grant's connection is made, as planque's request says: a key, tafs's own app at the vendor (`application`), or
+ * Composio's managed sign-in. None when it says neither: the card's line then names nobody as connecting.
+ */
+export function connectRoute(grant: ApprovalGrant): ConnectRoute | undefined {
+  const r = grant.request;
+  if (r.kind === "api_key" || r.kind === "key") return "key";
+  // planque sends its own app at the vendor as an object ({id, client_id, …}); a name alone counts too.
+  if ((typeof r.application === "string" && r.application !== "") || (typeof r.application === "object" && r.application !== null)) return "own";
+  if (r.connector?.provider === "composio") return "managed";
+  return undefined;
 }
 
 /** An answered card is drawn with no Approve: the step marked on it before it was answered goes. */

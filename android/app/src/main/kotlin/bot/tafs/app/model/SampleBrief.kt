@@ -26,15 +26,16 @@ object SampleBrief {
    */
   fun brief(label: String? = null, urgent: Boolean = false): Brief {
     val money = label == MONEY
-    val billPay = Words.Sample.BillPay.name
+    val parcels = Words.Sample.Parcels.name
+    val leads = Words.Sample.Leads.name
     val pay = Brief.Decision(
       id = "d-pay", question = Lines.Pay.question,
       answers = listOf(Brief.Answer(Lines.Pay.answer, "approve", recommended = true), Brief.Answer(Words.Common.notNow, "reject", decline = true)),
-      why = Lines.Pay.why(billPay),
+      why = Lines.Pay.why(parcels),
       meanwhile = Lines.Pay.meanwhile,
       deadline = Lines.Pay.deadline, later = Lines.later,
       note = Lines.Pay.note,
-      ref = Brief.Ref("hold", "sample-hold-pay", billPay),
+      ref = Brief.Ref("hold", "sample-hold-pay", parcels),
     )
     val remind = Brief.Decision(
       id = "d-remind", question = Lines.Remind.question,
@@ -42,23 +43,28 @@ object SampleBrief {
       why = Lines.Remind.why,
       meanwhile = Lines.Remind.meanwhile,
       later = Lines.later,
-      ref = Brief.Ref("hold", "sample-hold-remind", Words.Sample.Refunds.name),
+      ref = Brief.Ref("hold", "sample-hold-remind", leads),
     )
     val expires = Brief.Decision(
       id = "d-urgent", question = Lines.Expires.question,
       answers = listOf(Brief.Answer(Lines.Expires.answer, "approve", recommended = true), Brief.Answer(Lines.Expires.decline, "reject", decline = true)),
-      why = Lines.Expires.why(billPay),
+      why = Lines.Expires.why(parcels),
       meanwhile = Lines.Expires.meanwhile,
       cantWait = Lines.Expires.cantWait,
       urgent = true,
-      ref = Brief.Ref("hold", "sample-hold-urgent", billPay),
+      ref = Brief.Ref("hold", "sample-hold-urgent", parcels),
     )
+    // The parcels' mission (the label `money` keeps its id): its taf's line, with the value its brief leads with.
     val moneyDone = Brief.Done(
       mission = Lines.Label.money, value = Lines.moneyValue, log = MONEY,
+      cases = listOf(Brief.Case(parcels, Lines.Case.billsLine, "open")),
+    )
+    // The leads' mission (the label `clients`): one case per lead.
+    val leadsDone = Brief.Done(
+      mission = Lines.Label.clients,
       cases = listOf(
         Brief.Case(Lines.Case.dubois, Lines.Case.duboisLine, "waiting", Lines.Case.duboisNext),
         Brief.Case(Lines.Case.brio, Lines.Case.brioLine, "closed"),
-        Brief.Case(billPay, Lines.Case.billsLine, "open"),
         Brief.Case(Lines.Case.fern, Lines.Case.fernLine, "waiting"),
       ),
     )
@@ -85,7 +91,7 @@ object SampleBrief {
       ),
       decisions = decisions,
       nextMove = Brief.NextMove(Lines.nextMove, Words.Coach.start, Lines.nextMoveDismiss, listOf("0142", "0137", "0129")),
-      done = if (money) listOf(moneyDone) else listOf(moneyDone, support),
+      done = if (money) listOf(moneyDone) else listOf(moneyDone, leadsDone, support),
       rest = Brief.Counted(rest, Lines.rest(rest)),
       credits = Lines.credits,
     )
@@ -95,23 +101,23 @@ object SampleBrief {
   fun log(): MissionLogPage = MissionLogPage(
     listOf(
       MissionLogItem(
-        "s5", "2026-11-14T06:10:00Z", MissionLogBy("lead"), "Coach", "stuck", "stuck", "Bill pay didn't run at 07:00: its bank sign-in needs you.",
+        "s5", "2026-11-14T06:10:00Z", MissionLogBy("lead"), "Coach", "stuck", "stuck", Words.Sample.Log.s5Line,
         listOf(MissionLogEvidence("run", "r1", "run"), MissionLogEvidence("hold", "h1", "hold")),
       ),
       MissionLogItem(
-        "s4", "2026-11-14T06:03:00Z", MissionLogBy("taf", "Bill pay"), "Bill pay → Refunds", "handed", "handed", "Bill 0412, for payment. A reference, not its data.",
-        listOf(MissionLogEvidence("item", "0412", "bill 0412")),
+        "s4", "2026-11-14T06:03:00Z", MissionLogBy("taf", Words.Sample.Log.s4By), Words.Sample.Log.s4Title, "handed", "handed", Words.Sample.Log.s4Line,
+        listOf(MissionLogEvidence("item", "5098", Words.Sample.Log.s4Evidence)),
       ),
       MissionLogItem(
-        "s3", "2026-11-14T06:02:00Z", MissionLogBy("taf", "Bill pay"), null, "delivered", "delivered", "12 bills sorted, 2 didn't match their order.",
-        listOf(MissionLogEvidence("run", "r2", "run"), MissionLogEvidence("record", "rec", "12 record lines")), value = "€4,120 sorted",
+        "s3", "2026-11-14T06:02:00Z", MissionLogBy("taf", Words.Sample.Log.s3By), null, "delivered", "delivered", Words.Sample.Log.s3Line,
+        listOf(MissionLogEvidence("run", "r2", "run"), MissionLogEvidence("record", "rec", "12 record lines")), value = Words.Sample.Log.s3Value,
       ),
       MissionLogItem(
-        "s2", "2026-11-13T17:28:00Z", MissionLogBy("person"), "You", "decided", "decided", "Sent the reminder to Atelier Dubois.",
-        listOf(MissionLogEvidence("item", "0142", "invoice 0142"), MissionLogEvidence("hold", "h2", "hold")),
+        "s2", "2026-11-13T17:28:00Z", MissionLogBy("person"), "You", "decided", "decided", Words.Sample.Log.s2Line,
+        listOf(MissionLogEvidence("item", "kaya", Words.Sample.Log.s2Evidence), MissionLogEvidence("hold", "h2", "hold")),
       ),
       MissionLogItem(
-        "s1", "2026-11-13T08:12:00Z", MissionLogBy("taf"), "Quotes", "delivered", "delivered", "3 quotes drafted for new clients.",
+        "s1", "2026-11-13T08:12:00Z", MissionLogBy("taf"), Words.Sample.Log.s1Title, "delivered", "delivered", Words.Sample.Log.s1Line,
         listOf(MissionLogEvidence("run", "r3", "run")), removed = true,
       ),
     ),

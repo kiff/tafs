@@ -2266,14 +2266,14 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
   it("marks a waiting card wider from planque's usual_access, in the reader's language, and tells Coach nothing", async () => {
     const s = services();
     // Where planque's grantView carries it: on the connector's request, not at the grant's top level.
-    s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true } })];
+    s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true, provider: "composio" } })];
     const w = await world(s, {});
     const first = await w.call("GET", CHAT, undefined);
-    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: its screen will ask for more access than the taf uses. The taf can still use only the tools on its Card, and tafs refuses any other call. The code that does this is public, so you can check it." });
+    expect(comp(first)?.wider).toEqual({ words: "Composio connects your Google Sheets account. Google Sheets may ask for broader access than this job needs, but your taf can only use the tools allowed on its Card. tafs enforces those limits and blocks every other tool call." });
     // Every app that can approve a card draws this line (contracts/README.md): it reads the same answer.
     contract("coach-wider", "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons.", first.body);
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
-    expect(comp(fr)?.wider?.words).toMatch(/^La connexion à Google Sheets ne peut pas être limitée/);
+    expect(comp(fr)?.wider?.words).toMatch(/^Composio connecte votre compte Google Sheets\. Google Sheets peut demander un accès plus large/);
     // The card says it, from planque's data: Coach gets no line about the sign-in's access (connect-an-app@29).
     const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string }> | undefined;
     expect((notes ?? []).some((n) => n.text.startsWith("[connection"))).toBe(false);

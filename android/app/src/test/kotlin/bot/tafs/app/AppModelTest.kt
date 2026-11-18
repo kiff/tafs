@@ -23,9 +23,11 @@ class AppModelTest {
   @Test fun theSampleStartsFiveTafsWithAMorningOfWork() {
     val s = model().state.value
     assertEquals(5, s.tafs.size)
-    assertEquals(setOf("Chargebacks", "Deploys", "Access", "Bill pay", "Refunds"), s.tafs.map { it.name }.toSet())
+    assertEquals(setOf("Lead follow-up", "Deploys", "Access", "Late parcels", "Support replies"), s.tafs.map { it.name }.toSet())
     assertTrue(s.record.any { it.kind == RecordEntry.Kind.done })
     assertTrue(s.held.isNotEmpty())
+    // Late parcels' reship waits for the owner after the opening rounds, beside Deploys' migration.
+    assertEquals(setOf("Late parcels", "Deploys"), s.held.map { h -> s.taf(h.tafId)!!.name }.toSet())
   }
 
   @Test fun aTafWithAHeldCallIsWaitingOnTheOwner() {

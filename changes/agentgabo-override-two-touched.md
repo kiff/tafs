@@ -1,0 +1,1 @@
+- **The owner's override for an Upgrade can name more than one touched run** (`.github/upgrade-override.sh`): a case one Eval run couldn't grade, run again alone, counts when that run passed it.

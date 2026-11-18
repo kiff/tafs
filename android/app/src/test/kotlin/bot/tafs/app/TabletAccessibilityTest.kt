@@ -123,7 +123,7 @@ class TabletAccessibilityTest {
     val found = mutableListOf<String>()
     found += unnamed("overview")
     open(Words.Record.title); found += unnamed("record")
-    open("Refunds"); found += unnamed("taf")
+    open("Support replies"); found += unnamed("taf")
     listOf("Activity", "Card", "Setup").forEach { tab ->
       compose.onAllNodes(hasText(tab) and hasClickAction() and !inSidebar)[0].performClick(); found += unnamed("taf $tab")
     }
@@ -135,7 +135,7 @@ class TabletAccessibilityTest {
   /** A taf's tabs read as tabs, the one shown selected ("Card, tab, selected"). */
   @Test fun aTafsTabsAreTabsWithTheOneShownSelected() {
     showApp()
-    open("Refunds")
+    open("Support replies")
     fun tab(name: String) = compose.onNode(hasText(name) and hasClickAction() and !inSidebar)
     compose.onNode(hasText("Card") and hasClickAction() and !inSidebar).performClick()
     compose.waitForIdle()
@@ -199,7 +199,7 @@ class TabletAccessibilityTest {
   /** A sent message's menu: on a long press, and TalkBack's long press, with no tap offered that would do nothing. */
   @Test fun aSentMessagesMenuOpensOnALongPressWithNoEmptyTap() {
     showApp()
-    open("Refunds")
+    open("Support replies")
     val bubble = compose.onNode(hasText("How did this morning go?"))
     val node = bubble.fetchSemanticsNode()
     assertFalse(node.config.contains(SemanticsActions.OnClick))
