@@ -5099,6 +5099,8 @@ enum Words {
         static var checkPhone: String { Words.line("watch.check_phone") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
+        /// Deleted. Nothing was sent.
+        static var deletedNothingSent: String { Words.line("watch.deleted_nothing_sent") }
         /// Didn't catch that. Tap to try again.
         static var didntCatch: String { Words.line("watch.didnt_catch") }
         /// How many need you, never what or who.
@@ -5115,6 +5117,10 @@ enum Words {
         static var inboxEmpty: String { Words.line("watch.inbox_empty") }
         /// {count} unread in Inbox
         static func inboxUnread(count: Int) -> String { Words.count("watch.inbox_unread", count) }
+        /// 30 s at most
+        static var limit: String { Words.line("watch.limit") }
+        /// Listening
+        static var listening: String { Words.line("watch.listening") }
         /// Menu
         static var menu: String { Words.line("watch.menu") }
         /// To ask by voice, allow the microphone for tafs on this watch.
@@ -5137,30 +5143,56 @@ enum Words {
         }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        enum Qr {
+            /// What needs me today?
+            static var needsMeToday: String { Words.line("watch.qr.needs_me_today") }
+            /// Not now
+            static var notNow: String { Words.line("watch.qr.not_now") }
+            /// Tell me more
+            static var tellMeMore: String { Words.line("watch.qr.tell_me_more") }
+            /// Thanks
+            static var thanks: String { Words.line("watch.qr.thanks") }
+        }
+        /// Quick reply
+        static var quickReply: String { Words.line("watch.quick_reply") }
+        /// Ready
+        static var ready: String { Words.line("watch.ready") }
         /// {count} ready
         static func readyCount(count: Int) -> String { Words.count("watch.ready_count", count) }
         /// Recent chats
         static var recentChats: String { Words.line("watch.recent_chats") }
+        /// Recording
+        static var recording: String { Words.line("watch.recording") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
         static var reply: String { Words.line("watch.reply") }
+        /// Re-record
+        static var rerecord: String { Words.line("watch.rerecord") }
         /// A result is ready
         static var resultReady: String { Words.line("watch.result_ready") }
         /// Results
         static var resultsChannel: String { Words.line("watch.results_channel") }
         /// Retry
         static var retry: String { Words.line("watch.retry") }
+        /// Check before sending
+        static var review: String { Words.line("watch.review") }
         /// Sending…
         static var sending: String { Words.line("watch.sending") }
         /// Sent
         static var sent: String { Words.line("watch.sent") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Tap Start, then speak. Your words show here as you talk.
+        static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
         /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
         static var trust: String { Words.line("watch.trust") }
+        /// Type
+        static var type: String { Words.line("watch.type") }
+        /// Write to Coach…
+        static var typeHint: String { Words.line("watch.type_hint") }
         /// Update tafs on your phone, then try again.
         static var updatePhone: String { Words.line("watch.update_phone") }
         /// Coach gets your words as text, never your voice.

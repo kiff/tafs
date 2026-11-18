@@ -61,6 +61,19 @@ class WatchActivity : ComponentActivity() {
     pendingListen = false
   }
 
+  /** v2's Type: the watch's keyboard; what's typed goes to the review. */
+  private val typed = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+    val text = result.data?.let { android.app.RemoteInput.getResultsFromIntent(it) }?.getCharSequence(TYPED)?.toString()
+    if (text != null) model.review(text)
+  }
+
+  private fun type() {
+    // The system's text input (what androidx.wear.input's RemoteInputIntentHelper builds): keyboard, handwriting or voice typing.
+    val input = android.app.RemoteInput.Builder(TYPED).setLabel(Words.Watch.typeHint).build()
+    val intent = Intent(ACTION_REMOTE_INPUT).putExtra(EXTRA_REMOTE_INPUTS, arrayOf(input))
+    runCatching { typed.launch(intent) }
+  }
+
   /** The system's speech input, where the watch has no recognizer for apps: its text comes back here, and is sent at once. */
   private val speechInput = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
     val heard = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
@@ -106,6 +119,14 @@ class WatchActivity : ComponentActivity() {
             if (model.voice.value is WatchModel.Voice.Sent) model.closeVoice()
           }
         }
+        // v2: past 30 s, listening stops by itself and the words go to the review.
+        val listeningSince = (voice as? WatchModel.Voice.Listening)?.since
+        androidx.compose.runtime.LaunchedEffect(listeningSince) {
+          if (WATCH_V2 && listeningSince != null) {
+            kotlinx.coroutines.delay(LISTEN_LIMIT_MS)
+            listener.stop()
+          }
+        }
         val actions = Actions(
           openOnPhone = ::openOnPhone,
           tryAgain = { lifecycleScope.launch { model.refresh() } },
@@ -114,14 +135,22 @@ class WatchActivity : ComponentActivity() {
           askHaltAll = model::askHaltAll,
           confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
           cancelHaltAll = model::cancelHaltAll,
-          listen = { listen() },
+          // v2 opens the microphone's screen first, and listens on Start.
+          listen = { if (WATCH_V2) model.readyToRecord() else listen() },
           closeVoice = { listener.cancel(); model.closeVoice() },
           retry = { lifecycleScope.launch { model.retry() } },
           open = model::open,
           hear = { ask -> speaker().say(ask.line ?: ask.words) },
-          reply = { ask -> listen(ask.id) },
+          reply = { ask -> if (WATCH_V2) model.readyToRecord(ask.id) else listen(ask.id) },
           closeResult = model::closeResult,
           dismiss = model::dismissOutcome,
+          start = { replyTo -> listen(replyTo) },
+          stop = listener::stop,
+          send = { lifecycleScope.launch { model.sendReviewed() } },
+          rerecord = model::rerecord,
+          delete = model::deleteReviewed,
+          type = ::type,
+          quick = { model.review(it) },
         )
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
@@ -186,6 +215,10 @@ class WatchActivity : ComponentActivity() {
     /** The tile's "Ask tafs": open listening. */
     const val EXTRA_LISTEN = "bot.tafs.wear.LISTEN"
 
+    private const val TYPED = "typed"
+    private const val ACTION_REMOTE_INPUT = "android.support.wearable.input.action.REMOTE_INPUT"
+    private const val EXTRA_REMOTE_INPUTS = "android.support.wearable.input.extra.REMOTE_INPUTS"
+
     /** How long "Sent" stays before the microphone comes back. */
     const val SENT_SHOWN_MS = 2_500L
 
@@ -220,6 +253,18 @@ internal class Actions(
   val reply: (AskLine) -> Unit,
   val closeResult: () -> Unit,
   val dismiss: () -> Unit,
+  // v2's microphone (ReviewScreens.kt): v1 never calls these.
+  /** Start, on the microphone's screen. */
+  val start: (String?) -> Unit = {},
+  /** Stop: listening ends and the words go to the review. */
+  val stop: () -> Unit = {},
+  val send: () -> Unit = {},
+  val rerecord: () -> Unit = {},
+  val delete: () -> Unit = {},
+  /** Type: the watch's keyboard, then the review. */
+  val type: () -> Unit = {},
+  /** A quick reply picked: to the review. */
+  val quick: (String) -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

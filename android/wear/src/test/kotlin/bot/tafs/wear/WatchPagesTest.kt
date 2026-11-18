@@ -47,16 +47,26 @@ class WatchPagesTest {
   private val haltAllAsked = mutableListOf<Unit>()
   private val haltAllConfirmed = mutableListOf<Unit>()
   private val opened = mutableListOf<AskLine>()
+  private val did = mutableListOf<String>()
   private val actions = Actions(
     openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = { haltAllAsked += Unit }, confirmHaltAll = { haltAllConfirmed += Unit },
-    cancelHaltAll = {}, listen = {}, closeVoice = {}, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
+    cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
+    start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
+    delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
   )
 
-  private fun show(shown: WatchModel.Shown, page: Page = Page.Coach, ready: List<AskLine> = emptyList(), confirmingHaltAll: Boolean = false, pages: List<Page> = pages(false)) =
+  private fun show(
+    shown: WatchModel.Shown,
+    page: Page = Page.Coach,
+    ready: List<AskLine> = emptyList(),
+    confirmingHaltAll: Boolean = false,
+    pages: List<Page> = pages(false),
+    voice: WatchModel.Voice? = null,
+  ) =
     compose.setContent {
       MaterialTheme {
         WatchPages(
-          shown, outcome = null, confirmingHaltAll = confirmingHaltAll, voice = null, result = null, working = emptyList(), ready = ready, act = actions,
+          shown, outcome = null, confirmingHaltAll = confirmingHaltAll, voice = voice, result = null, working = emptyList(), ready = ready, act = actions,
           pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size },
         )
       }
@@ -156,5 +166,53 @@ class WatchPagesTest {
   @Test fun beforeThePhoneAnswersAPageSaysSoAsV1() {
     show(WatchModel.Shown.SignedOut, page = Page.Tafs)
     compose.onNodeWithText(Words.Watch.signInOnPhone).assertExists()
+  }
+
+  // MARK: Step (iii): record, check, send. Nothing leaves the watch before Send.
+
+  @Test fun theMicrophoneOpensReadyAndStartsOnStart() {
+    show(read, voice = WatchModel.Voice.Ready("ask_1"))
+    compose.onNodeWithText("${Words.Watch.ready} · ${Words.Watch.limit}").assertExists()
+    compose.onNodeWithText(Words.Watch.tapStart).assertExists()
+    compose.onNodeWithText("0:00 / 0:30").assertExists()
+    compose.onNodeWithText(Words.Coach.start).performClick()
+    assertEquals(listOf("start ask_1"), did)
+  }
+
+  @Test fun listeningShowsTheWordsAsHeardAndStop() {
+    show(read, voice = WatchModel.Voice.Listening("Move my call", null, since = System.currentTimeMillis()))
+    compose.onNodeWithText(Words.Watch.recording).assertExists()
+    compose.onNodeWithText("Move my call").assertExists()
+    compose.onNodeWithText(Words.Chat.stop).performClick()
+    compose.onNodeWithText(Words.Common.cancel).performClick()
+    assertEquals(listOf("stop", "close"), did)
+  }
+
+  @Test fun theReviewShowsTheWordsInFullWithReRecordDeleteAndSend() {
+    val long = "Ask Late parcels to tell me before it sends any new parcel today, and keep the customer posted. For order 5098, wait until " +
+      "tomorrow morning: the carrier said the scan may come late. If it still hasn't moved by then, send the new parcel and tell the customer."
+    show(read, voice = WatchModel.Voice.Review(long, null))
+    compose.onNodeWithText(Words.Watch.review).assertExists()
+    compose.onNodeWithText(long).assertExists()
+    compose.onNodeWithText(Words.Watch.rerecord).performClick()
+    compose.onNodeWithText(Words.Chat.delete).performClick()
+    compose.onNodeWithText(Words.Common.send).performClick()
+    assertEquals(listOf("rerecord", "delete", "send"), did)
+  }
+
+  @Test fun deletedSaysNothingWasSent() {
+    show(read, voice = WatchModel.Voice.Deleted)
+    compose.onNodeWithText(Words.Watch.deletedNothingSent).assertExists()
+  }
+
+  @Test fun typeAndQuickReplyAreOnCoachsHome() {
+    show(read)
+    compose.onNodeWithText(Words.Watch.type).performClick()
+    compose.onNodeWithText(Words.Watch.quickReply).performClick()
+    for (line in quickReplies()) compose.onNodeWithText(line).assertExists()
+    compose.onNodeWithText(Words.Watch.Qr.needsMeToday).performClick()
+    assertEquals(listOf("type", "quick ${Words.Watch.Qr.needsMeToday}"), did)
+    // Picked: back to the pages, the review shown by the model.
+    compose.onNodeWithText(Words.Coach.ask).assertExists()
   }
 }

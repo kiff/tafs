@@ -4,7 +4,10 @@
     <string name="words_language" translatable="false">nl</string>
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_not_refused">Niet geweigerd</string>
+    <string name="chat_delete">Verwijderen</string>
+    <string name="chat_stop">Stoppen</string>
     <string name="coach_ask">Coach vragen</string>
+    <string name="coach_start">Starten</string>
     <string name="coach_title">Coach</string>
     <string name="common_cancel">Annuleren</string>
     <string name="common_close">Sluiten</string>
@@ -34,6 +37,7 @@
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
+    <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <string name="watch_halting">%1$s wordt stilgezet…</string>
@@ -48,6 +52,8 @@
         <item quantity="one">%1$s ongelezen in je Inbox</item>
         <item quantity="other">%1$s ongelezen in je Inbox</item>
     </plurals>
+    <string name="watch_limit">Maximaal 30 s</string>
+    <string name="watch_listening">Luistert</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
@@ -61,21 +67,33 @@
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
+    <string name="watch_qr_not_now">Nu niet</string>
+    <string name="watch_qr_tell_me_more">Vertel meer</string>
+    <string name="watch_qr_thanks">Bedankt</string>
+    <string name="watch_quick_reply">Snel antwoord</string>
+    <string name="watch_ready">Klaar</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s klaar</item>
         <item quantity="other">%1$s klaar</item>
     </plurals>
     <string name="watch_recent_chats">Recente chats</string>
+    <string name="watch_recording">Opnemen</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
+    <string name="watch_rerecord">Opnieuw opnemen</string>
     <string name="watch_result_ready">Er is een resultaat</string>
     <string name="watch_results_channel">Resultaten</string>
     <string name="watch_retry">Opnieuw</string>
+    <string name="watch_review">Controleer voor je verstuurt</string>
     <string name="watch_sending">Versturen…</string>
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
     <string name="watch_trust">Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.</string>
+    <string name="watch_type">Typen</string>
+    <string name="watch_type_hint">Schrijf aan Coach…</string>
     <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
     <plurals name="watch_working_count">

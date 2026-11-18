@@ -81,11 +81,18 @@ internal fun WatchPages(
   timing: String? = null,
 ) {
   when {
-    voice != null -> return VoiceScreen(voice, act)
+    voice != null -> return VoiceScreenV2(voice, act)
     result != null -> return ResultScreen(result, act, timing)
     outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
   }
   var menu by remember { mutableStateOf(false) }
+  var quick by remember { mutableStateOf(false) }
+  if (quick) {
+    return QuickReplyScreen(pick = {
+      quick = false
+      act.quick(it)
+    }, close = { quick = false })
+  }
   val scope = rememberCoroutineScope()
   fun goTo(page: Page) {
     menu = false
@@ -109,7 +116,7 @@ internal fun WatchPages(
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
-          coachHome(shown, working, ready, act, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true })
+          coachHome(shown, working, ready, act, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
         }
@@ -133,9 +140,9 @@ internal fun WatchPages(
 }
 
 /**
- * Coach's home: the microphone first, named for Coach, with the asks at work under it; then how many wait in the Inbox (a tap goes
- * there), the line that Coach gets words and never a voice, and the menu at the foot. Type and Quick reply come with the review
- * (step iii), and the last chats with tafs cloud's chats read.
+ * Coach's home: the microphone first, named for Coach, with the asks at work under it; Type and Quick reply, which open the review
+ * as words heard do (step iii); how many wait in the Inbox (a tap goes there); the line that Coach gets words and never a voice;
+ * and the menu at the foot. The last chats come with tafs cloud's chats read.
  */
 private fun ScalingLazyListScope.coachHome(
   shown: WatchModel.Shown,
@@ -144,8 +151,16 @@ private fun ScalingLazyListScope.coachHome(
   act: Actions,
   openInbox: () -> Unit,
   openMenu: () -> Unit,
+  openQuick: () -> Unit,
 ) {
   item { AskHome(working.map { stateLine(it) to Look.brand[2] }, act.listen, label = Words.Coach.ask) }
+  // Typed words and quick replies go to the same review as words heard.
+  item {
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      Button(onClick = act.type, modifier = Modifier.weight(1f)) { Text(Words.Watch.type, maxLines = 1) }
+      Button(onClick = openQuick, modifier = Modifier.weight(1f)) { Text(Words.Watch.quickReply, maxLines = 2) }
+    }
+  }
   if (shown !is WatchModel.Shown.Read) {
     notRead(shown, act)
   } else {

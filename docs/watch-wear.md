@@ -175,6 +175,26 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
   `taf.halt.title`). Nothing new is asked of the phone, and nothing is stored on the watch.
 
+**Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
+`WatchPagesTest`). Nothing leaves the watch before Send:
+- **The microphone** opens its screen ready (`Voice.Ready`): Start, "Ready · 30 s at most", and what to do. Start listens; the
+  screen shows "Recording", the timer against 0:30, a ring that fills to the limit, the words as they're heard, and **Stop**. At
+  30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for the same ask.
+- **Stopped, or the recognizer heard the end:** the words go to **Check before sending** (`Voice.Review`), never to the phone.
+  It shows them in full, scrolled with the crown, with **Re-record** (the words dropped, ready again for the same ask),
+  **Delete** ("Deleted. Nothing was sent.", which closes by itself after 2 s) and **Send**.
+- **Type** opens the system's text input (`RemoteInput`: keyboard, handwriting or voice typing) and **Quick reply** four
+  ready-made lines; each goes to the same review. Blank is nothing; the words are cut at 2,000 characters, as an ask is.
+- **Send** sends what v1 sends (`ask`, a new id), checked against the watch's lock again, since it may have locked while the
+  words were read; from there Sending, Sent, Not sure it arrived (Retry, the same id) and Not sent are v1's.
+- **Still to come in step (iii):** keeping the recording for Play and Pause, and Keep for later. Both store something on the
+  watch, so they come with legal-i18n's facts confirmed against the build. Until then no audio is kept: the recognizer gives
+  the app text only.
+- **v1 is unchanged** with the switch off: what's heard is sent the moment the person stops (`whatsHeardGoesAtOnceWithNothingToConfirm`).
+- **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
+  `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
+  all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and

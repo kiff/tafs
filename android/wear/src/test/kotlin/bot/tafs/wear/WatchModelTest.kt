@@ -156,7 +156,7 @@ class WatchModelTest {
     val model = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_00000001" })
     assertTrue(model.listen())
     model.partial("Move my four o'clock")
-    assertEquals(WatchModel.Voice.Listening("Move my four o'clock", null), model.voice.value)
+    assertEquals(WatchModel.Voice.Listening("Move my four o'clock", null, since = t), model.voice.value)
     assertTrue("nothing sent while listening", phone.asked.isEmpty())
     model.heard("  Move my four o'clock call to six ")
     assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my four o'clock call to six")), phone.asked)
@@ -369,5 +369,99 @@ class WatchModelTest {
     model.refuse((model.shown.value as WatchModel.Shown.Read).refusable(payDecision)!!)
     assertEquals(WatchModel.Outcome.Done("Refused"), model.outcome.value)
     assertEquals(listOf(WatchRequest.Refuse(t, "hold_1"), WatchRequest.NeedsYou(t), WatchRequest.Brief(t), WatchRequest.Tafs(t)), phone.asked)
+  }
+
+  // MARK: v2's microphone (docs/watch-wear.md, Version 2): nothing leaves the watch before Send.
+
+  private fun v2(phone: PhoneLink, unlocked: () -> Boolean = { true }, ids: () -> String = { "w_00000001" }) =
+    WatchModel(phone, now = { t }, unlocked = unlocked, newClientId = ids, reviewFirst = true)
+
+  @Test fun v2sMicrophoneOpensReadyThenListensOnStart() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.readyToRecord()
+    assertEquals(WatchModel.Voice.Ready(null), model.voice.value)
+    assertTrue(model.listen())
+    assertEquals(WatchModel.Voice.Listening("", null, since = t), model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sWordsHeardGoToTheReviewAndOnlySendOnSend() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("  Move my four o'clock call to six ")
+    assertEquals(WatchModel.Voice.Review("Move my four o'clock call to six", null), model.voice.value)
+    assertTrue("nothing sent on stop", phone.asked.isEmpty())
+    model.sendReviewed()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my four o'clock call to six")), phone.asked)
+    assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
+  }
+
+  @Test fun v2sDeleteSendsNothing() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("Move my call")
+    model.deleteReviewed()
+    assertEquals(WatchModel.Voice.Deleted, model.voice.value)
+    model.sendReviewed()
+    model.closeVoice()
+    assertNull(model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sReRecordDropsTheWordsAndKeepsTheChat() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.readyToRecord(replyTo = "ask_1")
+    model.listen("ask_1")
+    model.heard("Move my call")
+    model.rerecord()
+    assertEquals(WatchModel.Voice.Ready("ask_1"), model.voice.value)
+    model.listen("ask_1")
+    model.heard("Move it to six")
+    model.sendReviewed()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move it to six", "ask_1")), phone.asked)
+  }
+
+  @Test fun v2sTypedWordsAndQuickRepliesGoToTheSameReview() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.review("   ")
+    assertNull("blank is nothing", model.voice.value)
+    model.review(" What needs me today? ")
+    assertEquals(WatchModel.Voice.Review("What needs me today?", null), model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+    model.review("x".repeat(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT + 50))
+    assertEquals(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT, (model.voice.value as WatchModel.Voice.Review).text.length)
+  }
+
+  /** As v1: nothing is asked from a watch with no lock, or a locked one, and it's checked again at Send. */
+  @Test fun v2AsksNothingFromALockedWatch() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    var unlocked = false
+    val model = v2(phone, unlocked = { unlocked })
+    model.readyToRecord()
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    model.review("Thanks")
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    unlocked = true
+    model.review("Thanks")
+    unlocked = false
+    model.sendReviewed()
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sReviewGoesOnlyToTheWordsBeingChecked() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    // No review open: Send, Re-record and Delete do nothing.
+    model.sendReviewed()
+    model.rerecord()
+    model.deleteReviewed()
+    assertNull(model.voice.value)
+    assertTrue(phone.asked.isEmpty())
   }
 }

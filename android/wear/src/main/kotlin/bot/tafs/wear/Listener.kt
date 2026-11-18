@@ -43,6 +43,11 @@ internal class Listener(private val context: Context, private val model: WatchMo
     return runCatching { r.startListening(intent) }.isSuccess
   }
 
+  /** v2's Stop, or its 30 s limit: listening ends, and what was heard comes back as the result, to the review. */
+  fun stop() {
+    runCatching { recognizer?.stopListening() }
+  }
+
   /** Stops listening; nothing heard is sent. */
   fun cancel() {
     runCatching { recognizer?.cancel() }
