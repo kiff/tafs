@@ -44,6 +44,10 @@ for i in "${!_s[@]}"; do
   [ -s "${_s[$i]}" ] || continue
   tstep_a+=("${_s[$i]}"); tlog_a+=("${_l[$i]:-}")
 done
+# Each touched run in RUNS has its steps: tfield's i-th "touched" line is tstep_a's i-th file. A touched run with an
+# empty steps file would shift every one after it, so it's refused, never skipped.
+[ "$(grep -c '^touched ' "$runs" || true)" = "${#tstep_a[@]}" ] \
+  || { echo "::error::The owner's override doesn't hold: the touched runs and their steps don't line up"; exit 1; }
 carry="A run of some suites counts only on earlier passes"
 over="An override doesn't count for the Upgrade gate"
 
