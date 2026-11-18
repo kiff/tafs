@@ -1209,11 +1209,9 @@
     </plurals>
     <string name="files_all">All</string>
     <string name="files_all_tafs">All tafs</string>
-    <string name="files_also_sent_to">Also sent to</string>
     <string name="files_by_run">By run</string>
     <string name="files_by_taf">By taf</string>
     <string name="files_delete_body">It goes from Files for everyone on this account, right away. This can\'t be undone.</string>
-    <string name="files_delete_copy_stays">The copy the taf sent to %1$s stays there.</string>
     <string name="files_delete_now">Delete now</string>
     <string name="files_delete_question">Delete “%1$s” now?</string>
     <string name="files_deleted">Deleted for everyone</string>

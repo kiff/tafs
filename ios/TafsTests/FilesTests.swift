@@ -11,7 +11,7 @@ final class FilesTests: XCTestCase {
                       goesInDays: Double = 30) -> DeliveredFile {
         let at = now.addingTimeInterval(-hoursAgo * 3_600)
         return DeliveredFile(id: id, name: name ?? "\(id).csv", type: "CSV", bytes: 1_000, tafID: taf, tafName: taf, runID: run,
-                             runAt: at, chat: "s_" + run, sentTo: nil, goesAt: now.addingTimeInterval(goesInDays * 86_400))
+                             runAt: at, chat: "s_" + run, goesAt: now.addingTimeInterval(goesInDays * 86_400))
     }
 
     private final class Store: FilesStore, @unchecked Sendable {

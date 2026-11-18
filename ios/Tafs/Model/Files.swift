@@ -24,8 +24,6 @@ struct DeliveredFile: Identifiable, Hashable, Codable, Sendable {
     var runAt: Date
     /// The chat the run answered in (its session), for the files under that chat; nil for a run with no chat.
     var chat: String? = nil
-    /// Where else the run sent it, in tafs cloud's words ("Google Drive · Support"); nil when nowhere else.
-    var sentTo: String?
     /// When it goes away, as tafs cloud says: the app counts the days to it and never decides it.
     var goesAt: Date
 }
@@ -149,20 +147,19 @@ struct StubFilesStore: FilesStore {
     }
 
     func files() async throws -> [DeliveredFile] {
-        func file(_ id: String, _ name: String, _ type: String, _ kb: Int, taf: (String, String), run: String, daysAgo: Double,
-                  sentTo: String? = nil) -> DeliveredFile {
+        func file(_ id: String, _ name: String, _ type: String, _ kb: Int, taf: (String, String), run: String, daysAgo: Double) -> DeliveredFile {
             let at = now.addingTimeInterval(-daysAgo * 86_400)
             return DeliveredFile(id: id, name: name, type: type, bytes: kb * 1_000, tafID: taf.0, tafName: taf.1, runID: run,
-                                 runAt: at, chat: "s_" + run, sentTo: sentTo,
+                                 runAt: at, chat: "s_" + run,
                                  goesAt: at.addingTimeInterval(Double(FilesFeature.keptDays) * 86_400))
         }
         let support = ("depl_support", "Support replies"), parcels = ("depl_parcels", "Late parcels"),
             leads = ("depl_leads", "Lead follow-up"), access = ("depl_access", "Access")
         return [
-            file("f1", "Tickets answered.csv", "CSV", 14, taf: support, run: "r1", daysAgo: 0.1, sentTo: "Google Drive · Support"),
+            file("f1", "Tickets answered.csv", "CSV", 14, taf: support, run: "r1", daysAgo: 0.1),
             file("f2", "Late parcels.pdf", "PDF", 86, taf: parcels, run: "r2", daysAgo: 0.2),
             file("f3", "Parcels without a scan.csv", "CSV", 6, taf: parcels, run: "r2", daysAgo: 0.2),
-            file("f4", "New leads this week.xlsx", "XLSX", 22, taf: leads, run: "r3", daysAgo: 1.2, sentTo: "Email"),
+            file("f4", "New leads this week.xlsx", "XLSX", 22, taf: leads, run: "r3", daysAgo: 1.2),
             file("f5", "Call notes.docx", "DOCX", 31, taf: leads, run: "r3", daysAgo: 1.2),
             file("f7", "Access review.csv", "CSV", 9, taf: access, run: "r5", daysAgo: 26),
         ]

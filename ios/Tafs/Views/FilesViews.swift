@@ -250,7 +250,6 @@ struct FileDetailView: View {
                 LabeledContent(Words.Files.inRun, value: file.runAt.formatted(date: .abbreviated, time: .shortened))
                 LabeledContent(Words.Files.type, value: file.type)
                 LabeledContent(Words.Files.size, value: FileSize.words(file.bytes))
-                if let sentTo = file.sentTo { LabeledContent(Words.Files.alsoSentTo, value: sentTo) }
                 LabeledContent(Words.Files.whoSees, value: Words.Files.everyone)
                 LabeledContent(Words.Files.goesAway, value: Words.Files.goesOn(date: file.goesAt.formatted(date: .abbreviated, time: .omitted)))
             }
@@ -276,7 +275,7 @@ struct FileDetailView: View {
                 }
             }
         } message: {
-            Text([Words.Files.deleteBody, file.sentTo.map { Words.Files.deleteCopyStays(place: $0) }].compactMap { $0 }.joined(separator: " "))
+            Text(Words.Files.deleteBody)
         }
     }
 

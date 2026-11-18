@@ -1209,11 +1209,9 @@
     </plurals>
     <string name="files_all">Alle</string>
     <string name="files_all_tafs">Alle tafs</string>
-    <string name="files_also_sent_to">Ook verstuurd naar</string>
     <string name="files_by_run">Per run</string>
     <string name="files_by_taf">Per taf</string>
     <string name="files_delete_body">Het verdwijnt meteen uit Bestanden voor iedereen in dit account. Dit kan niet ongedaan worden gemaakt.</string>
-    <string name="files_delete_copy_stays">De kopie die de taf naar %1$s stuurde, blijft daar.</string>
     <string name="files_delete_now">Nu verwijderen</string>
     <string name="files_delete_question">‘%1$s’ nu verwijderen?</string>
     <string name="files_deleted">Verwijderd voor iedereen</string>

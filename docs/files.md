@@ -10,15 +10,15 @@ cloud's store and reads land; until then the iPhone and iPad read `StubFilesStor
   it (`goesAt`); the app only counts the days to that date (`FilesGrouping.daysLeft`), never below none.
 - **Share sends the file itself** through the device's share sheet. There's no public link.
 - **Everyone on the account** sees the account's files.
-- **Delete now**, behind a confirm, deletes for everyone on the account; a copy the taf sent elsewhere stays there. The file
-  leaves the list only once the store has deleted it (`FilesModel.delete`).
+- **Delete now**, behind a confirm, deletes for everyone on the account, at once. The file leaves the list only once the
+  store has deleted it (`FilesModel.delete`).
 - **No tab of its own:** a Files row in Account, a Files row on each taf's page, and under the chat the files a run
   delivered, with a Files entry at the chat's top.
 
 ## The model (`ios/Tafs/Model/Files.swift`)
 
-- `DeliveredFile`: the file (name, type, size), the taf that made it, the run it came from and when, where else the run sent
-  it, and when it goes, all as tafs cloud lists them.
+- `DeliveredFile`: the file (name, type, size), the taf that made it (by id, and its name as it was when the file was
+  delivered), the run and chat it came from and when, and when it goes, all as tafs cloud lists them.
 - `FilesStore`: the reads the screens need: every file, a file's bytes (for its preview, Download and Share) and Delete now.
   `StubFilesStore` holds the mockup's samples, none of them about money, until tafs cloud's store lands.
 - `FilesGrouping`: the lists' order, in tafs cloud's facts: by day of the run in the account's zone, by taf and by run, the
@@ -36,8 +36,8 @@ Tests: `FilesTests`.
   under the run's day in the account's zone. With none, what lands there; a failed read says so.
 - **A file** (`FileDetailView`): the system's preview of the file on the device (QuickLook; nothing goes to a viewer
   service), **Download** (saved where the person picks), **Share** (the share sheet, with the file itself), the taf, the
-  run, the type and size, where else it went, "Everyone on this account", and when it goes; **Delete now** apart, behind
-  a confirm that says it's gone for everyone and that a copy sent elsewhere stays.
+  run, the type and size, "Everyone on this account", and when it goes; **Delete now** apart, behind a confirm that says
+  it's gone for everyone, right away.
 - **iPad, full width:** the list and the open file side by side; a file deleted there clears the side.
 - **Under the chat** (`ChatFileChips`): a run's files as chips under its message, each opening the same file screen, with
   the date they're kept until. Drawn once tafs cloud says which run a chat message is: today's chat messages don't carry
@@ -52,4 +52,4 @@ Words: `files.*`, in the 8 languages.
   `GET /v1/files/{id}/download` (a URL that lasts 60 seconds, for Download and the share sheet's file; never handed out
   as a link) and `DELETE /v1/files/{id}`.
 - The counts on Account's and the taf's rows, from the same read.
-- "Also sent to", once tafs cloud says where else a run sent a file; until then the line doesn't show.
+- "Also sent to" is not in v1 (the contract has no field for it); it can come later as an optional `sent_to`.

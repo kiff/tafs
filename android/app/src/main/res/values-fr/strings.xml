@@ -1209,11 +1209,9 @@
     </plurals>
     <string name="files_all">Tous</string>
     <string name="files_all_tafs">Tous les tafs</string>
-    <string name="files_also_sent_to">Aussi envoyé à</string>
     <string name="files_by_run">Par exécution</string>
     <string name="files_by_taf">Par taf</string>
     <string name="files_delete_body">Il disparaît de Fichiers pour tout le monde sur ce compte, tout de suite. C\'est définitif.</string>
-    <string name="files_delete_copy_stays">La copie que le taf a envoyée à %1$s y reste.</string>
     <string name="files_delete_now">Supprimer maintenant</string>
     <string name="files_delete_question">Supprimer « %1$s » maintenant ?</string>
     <string name="files_deleted">Supprimé pour tout le monde</string>

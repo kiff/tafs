@@ -2317,16 +2317,12 @@ enum Words {
         static var all: String { Words.line("files.all") }
         /// All tafs
         static var allTafs: String { Words.line("files.all_tafs") }
-        /// Also sent to
-        static var alsoSentTo: String { Words.line("files.also_sent_to") }
         /// By run
         static var byRun: String { Words.line("files.by_run") }
         /// By taf
         static var byTaf: String { Words.line("files.by_taf") }
         /// It goes from Files for everyone on this account, right away. This can't be undone.
         static var deleteBody: String { Words.line("files.delete_body") }
-        /// The copy the taf sent to {place} stays there.
-        static func deleteCopyStays(place: String) -> String { Words.line("files.delete_copy_stays", place) }
         /// Delete now
         static var deleteNow: String { Words.line("files.delete_now") }
         /// Delete “{name}” now?

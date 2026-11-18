@@ -60322,59 +60322,6 @@
         }
       }
     },
-    "files.also_sent_to": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auch gesendet an"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Also sent to"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "También enviado a"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aussi envoyé à"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inviato anche a"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ook verstuurd naar"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysłano też do"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Também enviado para"
-          }
-        }
-      }
-    },
     "files.by_run": {
       "extractionState": "manual",
       "localizations": {
@@ -60530,59 +60477,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desaparece de Ficheiros para toda a gente nesta conta, de imediato. Não pode ser desfeito."
-          }
-        }
-      }
-    },
-    "files.delete_copy_stays": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Kopie, die der taf an %1$@ gesendet hat, bleibt dort."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The copy the taf sent to %1$@ stays there."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copia que el taf envió a %1$@ se queda allí."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copie que le taf a envoyée à %1$@ y reste."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La copia che il taf ha inviato a %1$@ resta lì."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De kopie die de taf naar %1$@ stuurde, blijft daar."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kopia, którą taf wysłał do %1$@, tam zostaje."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A cópia que o taf enviou para %1$@ fica lá."
           }
         }
       }

@@ -1301,11 +1301,9 @@
     </plurals>
     <string name="files_all">Wszystkie</string>
     <string name="files_all_tafs">Wszystkie tafs</string>
-    <string name="files_also_sent_to">Wysłano też do</string>
     <string name="files_by_run">Według uruchomienia</string>
     <string name="files_by_taf">Według tafa</string>
     <string name="files_delete_body">Znika z Plików od razu dla wszystkich na tym koncie. Tego nie da się cofnąć.</string>
-    <string name="files_delete_copy_stays">Kopia, którą taf wysłał do %1$s, tam zostaje.</string>
     <string name="files_delete_now">Usuń teraz</string>
     <string name="files_delete_question">Usunąć „%1$s” teraz?</string>
     <string name="files_deleted">Usunięto dla wszystkich</string>
