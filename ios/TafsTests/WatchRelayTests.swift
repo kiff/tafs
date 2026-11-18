@@ -53,6 +53,26 @@ final class WatchRelayTests: XCTestCase {
             if fails { throw URLError(.notConnectedToInternet) }
             return briefRead
         }
+        var pages: [String: WatchTafPage] = [:]
+        var askedTaf: [String] = []
+        func tafPage(_ id: String) async throws -> WatchTafPage? {
+            reads += 1
+            askedTaf.append(id)
+            if fails { throw URLError(.notConnectedToInternet) }
+            return pages[id]
+        }
+        var askedDay: [String?] = []
+        func calendar(day: String?) async throws -> WatchCalendarDay {
+            reads += 1
+            askedDay.append(day)
+            if fails { throw URLError(.notConnectedToInternet) }
+            return WatchCalendarDay(day: day ?? "2026-10-14", words: "2 to come", events: [], halted: false)
+        }
+        func account() async throws -> WatchAccount {
+            reads += 1
+            if fails { throw URLError(.notConnectedToInternet) }
+            return WatchAccount(email: "owner@example.com", account: "Shop", plan: "Starter")
+        }
         /// Nothing was read, refused, halted or sent to Coach.
         var untouched: Bool { reads == 0 && refused.isEmpty && halted.isEmpty && coached.isEmpty }
     }
@@ -252,6 +272,126 @@ final class WatchRelayTests: XCTestCase {
         let reply = await send(WatchRequest(.tafs, made: now), reading: reading)
         XCTAssertEqual(reply.outcome, .ok)
         XCTAssertEqual(reply.tafs?.map(\.id), ["depl_1"])
+    }
+
+    // MARK: Watch v2: a taf's page, a calendar day, the account (reads only)
+
+    /// A taf's page names its taf; one the phone doesn't list says to open the phone. A read: nothing is answered,
+    /// halted or signed. With no taf, or an id longer than 128, nothing is read.
+    func testATafsPageIsReadByItsTaf() async {
+        let reading = Reading(at: now)
+        let page = WatchTafPage(id: "depl_1", name: "Rae", state: "Ready", halted: false, job: "Answers refunds",
+                                cards: [.init(title: "Create refund", figure: "8", words: "calls left today", rules: ["Create refund: up to 20 a day"])],
+                                waiting: 1)
+        reading.pages["depl_1"] = page
+        let reply = await send(WatchRequest(.taf, made: now, taf: "depl_1"), reading: reading)
+        XCTAssertEqual(reply, WatchReply(.ok, tafPage: page))
+        XCTAssertEqual(WatchMessage.decode(WatchReply.self, from: WatchMessage.encode(reply)), reply, "it survives the wire")
+        let unknown = await send(WatchRequest(.taf, made: now, taf: "depl_9"), reading: reading)
+        XCTAssertEqual(unknown, WatchReply(.failed, line: Words.Watch.openOnPhone))
+        XCTAssertTrue(reading.refused.isEmpty && reading.halted.isEmpty && reading.coached.isEmpty, "a read: nothing answered")
+        let before = reading.reads
+        for bad in [WatchRequest(.taf, made: now), WatchRequest(.taf, made: now, taf: "  "),
+                    WatchRequest(.taf, made: now, taf: String(repeating: "a", count: 129))] {
+            let refused = await send(bad, reading: reading)
+            XCTAssertEqual(refused, WatchReply(.refused))
+        }
+        XCTAssertEqual(reading.reads, before, "nothing read for an incomplete page")
+        XCTAssertEqual(reading.askedTaf, ["depl_1", "depl_9"])
+    }
+
+    /// A calendar day is `YYYY-MM-DD` or none (today); anything else is refused before any read.
+    func testACalendarDayIsADayOrToday() async {
+        let reading = Reading(at: now)
+        let day = await send(WatchRequest(.calendar, made: now, day: "2026-10-15"), reading: reading)
+        XCTAssertEqual(day.outcome, .ok)
+        XCTAssertEqual(day.calendar?.day, "2026-10-15")
+        let today = await send(WatchRequest(.calendar, made: now), reading: reading)
+        XCTAssertEqual(today.outcome, .ok)
+        XCTAssertEqual(reading.askedDay, ["2026-10-15", nil])
+        for bad in ["15/10/2026", "2026-10-15T00:00", "tomorrow", ""] {
+            let refused = await send(WatchRequest(.calendar, made: now, day: bad), reading: reading)
+            XCTAssertEqual(refused, WatchReply(.refused), bad)
+        }
+        XCTAssertEqual(reading.askedDay.count, 2)
+    }
+
+    /// The account page: read, and failed in the phone's words when it can't be; signed out answers nothing.
+    func testTheAccountIsRead() async {
+        let reading = Reading(at: now)
+        let reply = await send(WatchRequest(.account, made: now), reading: reading)
+        XCTAssertEqual(reply, WatchReply(.ok, account: WatchAccount(email: "owner@example.com", account: "Shop", plan: "Starter")))
+        reading.fails = true
+        let failed = await send(WatchRequest(.account, made: now), reading: reading)
+        XCTAssertEqual(failed, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        reading.signedIn = false
+        let out = await send(WatchRequest(.account, made: now), reading: reading)
+        XCTAssertEqual(out, WatchReply(.signedOut))
+    }
+
+    /// A watch v2 kind, as bytes any watch could send: a kind the contract has decodes, one it lacks is refused.
+    func testTheNewKindsDecodeAndNothingElse() async {
+        let reading = Reading(at: now)
+        let ok = await raw(#"{"kind":"calendar","made":\#(made),"day":"2026-10-15"}"#, reading: reading)
+        XCTAssertEqual(ok.outcome, .ok)
+        let unknown = await raw(#"{"kind":"calendar_write","made":\#(made)}"#, reading: reading)
+        XCTAssertEqual(unknown, WatchReply(.refused))
+    }
+
+    /// A taf's page as the phone's Card tab draws it, from tafs cloud's own home answer (contracts/home.json): its job,
+    /// each Card's title and rules, how many of its calls wait, and Halted over its state when it's halted.
+    func testATafsPageIsTheCardTabsWords() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().appendingPathComponent("contracts/home.json")
+        let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let home = try JSONDecoder().decode(TafsCloud.Home.self, from: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])))
+        let listed = try XCTUnwrap(home.tafs.first)
+        let page = try XCTUnwrap(KeptWatchReading.tafPage(listed, halted: false, waiting: 2))
+        let taf = KIFFMapping.taf(listed, id: UUID(), owner: "")
+        XCTAssertEqual(page.id, listed.id)
+        XCTAssertEqual(page.name, "Rae")
+        XCTAssertEqual(page.job, taf.job)
+        XCTAssertEqual(page.state, taf.now)
+        XCTAssertEqual(page.cards.map(\.title), ["Create refund"])
+        XCTAssertEqual(page.cards.first?.rules.count, 1)
+        XCTAssertEqual(page.cards.first?.figure, taf.shownCards.first?.hero?.figure)
+        XCTAssertEqual(page.waiting, 2)
+        XCTAssertFalse(page.halted)
+        let halted = try XCTUnwrap(KeptWatchReading.tafPage(listed, halted: true, waiting: 0))
+        XCTAssertTrue(halted.halted)
+        XCTAssertEqual(halted.state, Words.Taf.State.halted)
+    }
+
+    /// A calendar day is that day's events alone, in time order, each with its taf's name, in tafs cloud's words.
+    func testACalendarDayIsThatDayInTimeOrder() throws {
+        let json = #"""
+        {"time_zone":"Europe/Paris","from":"2026-10-15","to":"2026-10-15","words":"2 to come","halted":false,
+         "events":[{"taf":"depl_1","name":"Rae","at":"2026-10-15T15:00:00Z","day":"2026-10-15","time":"17:00","minute":1020,"words":"Refund check"},
+                   {"taf":"depl_2","name":"Ivo","at":"2026-10-15T07:00:00Z","day":"2026-10-15","time":"09:00","minute":540,"words":"Morning sweep","count":3},
+                   {"taf":"depl_1","name":"Rae","at":"2026-10-16T07:00:00Z","day":"2026-10-16","time":"09:00","minute":540,"words":"Next day"}]}
+        """#
+        let read = try JSONDecoder().decode(TafsCloud.CalendarRead.self, from: Data(json.utf8))
+        let day = KeptWatchReading.calendarDay("2026-10-15", read)
+        XCTAssertEqual(day.words, "2 to come")
+        XCTAssertEqual(day.events, [WatchCalendarDay.Event(time: "09:00", taf: "Ivo", words: "Morning sweep", count: 3),
+                                    WatchCalendarDay.Event(time: "17:00", taf: "Rae", words: "Refund check", count: 1)])
+        XCTAssertFalse(day.halted)
+    }
+
+    /// Today is the account's day, not the phone's: late evening UTC is already tomorrow in Tokyo.
+    func testTodayIsTheAccountsDay() throws {
+        let late = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-10-14T22:30:00Z"))
+        XCTAssertEqual(KeptWatchReading.day(late, in: try XCTUnwrap(TimeZone(identifier: "UTC"))), "2026-10-14")
+        XCTAssertEqual(KeptWatchReading.day(late, in: try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))), "2026-10-15")
+        XCTAssertTrue(WatchRequest.isDay(KeptWatchReading.day(late, in: try XCTUnwrap(TimeZone(identifier: "UTC")))))
+    }
+
+    /// The account as the wrist names it: its name, else its slug; a blank line is none.
+    func testTheAccountIsNamedByItsNameElseItsSlug() {
+        XCTAssertEqual(KeptWatchReading.watchAccount(email: "a@example.com", displayName: "Shop", slug: "shop-1", plan: "Starter"),
+                       WatchAccount(email: "a@example.com", account: "Shop", plan: "Starter"))
+        XCTAssertEqual(KeptWatchReading.watchAccount(email: nil, displayName: " ", slug: "shop-1", plan: ""),
+                       WatchAccount(email: nil, account: "shop-1", plan: nil))
     }
 
     // MARK: The reads, with the session the app keeps
