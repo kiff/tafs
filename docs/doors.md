@@ -124,7 +124,7 @@ tasks do). tafs cloud reads the run back and sends its answer through the door.
 (`testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther`, `anAPIDoorReadsAndOneUnreadableDoorHidesNoOther`). A door kind a build
 doesn't know yet, such as "From another application" (`api`: a company's own software handing a taf work), still carries
 every field today's builds require, so older builds show it as a plain door. Both apps also read an `api` door's own
-fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows tafs cloud's `words` (`LastRequest.shown`), falling back to `status` only until they're sent), and each key's `last4`, `made_at`
+fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows only tafs cloud's `words` (`APIDoorText.lastRequestWords`), and no line until they're sent, never the raw `status`), and each key's `last4`, `made_at`
 and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 
 **An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
@@ -203,9 +203,19 @@ outcomes to end with. Its answer's last line, `Outcome: <one of the door's>`, is
 mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
 in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
 (asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
-the door's own when left blank; at most two); the key shown once (Copy key, where to send work, and an example that
+the door's own when left blank; at most two); the key shown once (Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
+
+**Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
+state and its switch (off pauses it at once; on is signed), today against its cap, the last request in
+tafs cloud's words (no line without them), its keys by name with when each was made and last used and its last four, Revoke
+asked once more and then signed, and New key while it holds fewer than two: named (trimmed; a blank name is the door's
+own, as on iPhone; never while the door is busy), signed, then shown once with Copy, where to send requests, an example and
+Done. Copy marks the clip sensitive (Android 13 and later) and clears it a minute later if it's still tafs's own clip,
+while tafs runs; Done forgets the key. API instructions show where to send requests (the door's `address` on tafs cloud's
+host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
+one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
 **Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, behind `APIDoorFeature`, off). Coach's `taf_door_api`
 shows a `door` card (`{taf_id, draft_id}`, no words of Coach's); the app reads the draft from tafs cloud

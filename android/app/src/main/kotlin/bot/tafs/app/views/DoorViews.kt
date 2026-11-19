@@ -105,6 +105,8 @@ class DoorActions(
   val removeFollowUp: suspend (String, String) -> Unit = { _, _ -> },
   /** Opens the request the dial's rim points at. */
   val openRimRequest: suspend (String) -> Unit = {},
+  /** A door "From another application" (`api`): its keys, opening it again and removing it, each signed. */
+  val api: ApiDoorActions = ApiDoorActions(),
 )
 
 /**
@@ -158,7 +160,8 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
         Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 12.dp).padding(bottom = 16.dp).navigationBarsPadding(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
-        DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
+        if (door.kind == "api" && bot.tafs.app.kiff.ApiDoorFeature.on) ApiDoorPanels(taf, door, doors, actions.api, onRemove = { removing = door })
+        else DoorPanels(taf, door, doors, myEmail, actions, onPair = { pairing = door }, onRemove = { removing = door })
         Text(DoorWords.footer(taf.name), style = scaled(13, color = Theme.dim))
       }
     }
@@ -187,12 +190,13 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
     DriveAlert(
       onDismissRequest = { removing = null },
       title = { Text(DoorWords.removeTitle(d)) },
-      text = { Text(DoorWords.removeBody(taf.name)) },
+      // An `api` door's keys stop working with it, and it goes only signed.
+      text = { Text(if (d.kind == "api") Words.Door.Api.removeBody(app = d.label, taf = taf.name) else DoorWords.removeBody(taf.name)) },
       confirmButton = {
         TextButton({
           removing = null
           editing = null
-          scope.launch { actions.remove(taf.id, d) }
+          scope.launch { if (d.kind == "api") actions.api.remove(taf.id, d, DoorWords.removeTitle(d)) else actions.remove(taf.id, d) }
         }, Modifier.confirms()) { Text(Words.Door.remove, color = Theme.no) }
       },
       dismissButton = { TextButton({ removing = null }) { Text(Words.Common.cancel, color = Theme.soft) } },

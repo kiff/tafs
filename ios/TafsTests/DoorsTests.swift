@@ -185,6 +185,15 @@ final class DoorsTests: XCTestCase {
         let line = APIDoorText.keyLine(.init(id: "key_1", name: "ERP", last4: "iXrW", madeAt: "2026-11-19T08:00:00Z"))
         XCTAssertTrue(line.contains("iXrW"))
         XCTAssertEqual(APIDoorText.maxKeys, 2)
+        XCTAssertEqual(APIDoorText.keyName(String(repeating: "k", count: 90), door: door).count, 60, "under tafs cloud's 80")
+        XCTAssertNil(APIDoorText.lastRequestWords(.init(status: "done", at: "2026-11-19T09:42:15Z")), "never the raw status")
+        XCTAssertNil(APIDoorText.lastRequestWords(.init(status: "done", at: "2026-11-19T09:42:15Z", words: "  ")))
+        XCTAssertEqual(APIDoorText.lastRequestWords(.init(status: "done", at: "2026-11-19T09:42:15Z", words: "Erledigt")), "Erledigt")
+        // The key is copied to this device only, and expires a minute later.
+        let now = Date(timeIntervalSince1970: 1_000)
+        let options = Clipboard.secretOptions(now: now)
+        XCTAssertEqual(options[.localOnly] as? Bool, true)
+        XCTAssertEqual(options[.expirationDate] as? Date, now.addingTimeInterval(60))
     }
 
     /// Coach's drafted door (`contracts/doors-api-draft.json`): what's drawn is read from `body`, the bytes signed and sent;
