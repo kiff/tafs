@@ -181,7 +181,10 @@ private fun BriefScreen(state: AppState, brief: Brief, actions: BriefActions, on
       BoxWithConstraints(Modifier.fillMaxWidth()) {
         if (maxWidth >= WIDE_BRIEF) {
           Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(14.dp)) { Decisions(state, brief, actions) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+              Decisions(state, brief, actions)
+              CoachWaiting(brief, actions)
+            }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(14.dp)) {
               DoneCases(brief, onOpenLog)
               // Under Done, so it stays in view beside the decisions.
@@ -192,6 +195,7 @@ private fun BriefScreen(state: AppState, brief: Brief, actions: BriefActions, on
         } else {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Decisions(state, brief, actions)
+            CoachWaiting(brief, actions)
             NextMove(state, brief, actions)
             DoneCases(brief, onOpenLog)
             Rest(state, brief, actions)
@@ -356,6 +360,21 @@ private fun CaseRow(item: Brief.Case) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       if (item.name.isNotEmpty()) Text(item.name, style = scaled(14, FontWeight.SemiBold, Theme.ink))
       if (item.words.isNotEmpty()) Text(item.words, style = scaled(13, color = if (item.closed) Theme.ok else Theme.soft))
+    }
+  }
+}
+
+/**
+ * Coach's chats that wait on the person's answer, in tafs cloud's words, under the decisions: Needs you's `coach` part, so the
+ * brief accounts for the badge. It opens Needs you, where each waits with Open and Set aside. Only when tafs cloud sends it.
+ */
+@Composable
+private fun CoachWaiting(brief: Brief, actions: BriefActions) {
+  val waiting = brief.coachWaiting ?: return
+  Panel(Modifier.tapping(onClick = actions.openNeedsYou).testTag("brief.coach_waiting")) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text(waiting.words, style = scaled(14, color = Theme.ink), modifier = Modifier.weight(1f))
+      Text("›", style = scaled(18, FontWeight.SemiBold, Theme.dim))
     }
   }
 }

@@ -1,0 +1,1 @@
+- **Android: your brief says how many of Coach's chats wait for your answer**, in tafs cloud's words, under the decisions, opening Needs you. So the brief's numbers add up to the badge ([android-app.md](docs/android-app.md)).
