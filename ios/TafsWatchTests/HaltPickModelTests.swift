@@ -10,21 +10,29 @@ final class HaltPickModelTests: XCTestCase {
     private let ivo = WatchTaf(id: "depl_2", name: "Ivo", line: "Ready", halted: false)
     private let lea = WatchTaf(id: "depl_3", name: "Lea", line: "Halted", halted: true)
 
-    /// The phone: Your tafs as listed, and each Halt's answer by the taf it names (Halt all under "").
+    /// The phone: Your tafs as listed, and each Halt's answer by the taf it names (Halt all under ""); a taf in `unreachable`
+    /// gets no answer.
     private final class Phone: PhoneAsking {
         var listed: [WatchTaf]
-        var halts: [String: WatchReply?]
+        var halts: [String: WatchReply]
+        var unreachable: Set<String>
         var asked: [WatchRequest] = []
-        init(listed: [WatchTaf], halts: [String: WatchReply?] = [:]) {
+        init(listed: [WatchTaf], halts: [String: WatchReply] = [:], unreachable: Set<String> = []) {
             self.listed = listed
             self.halts = halts
+            self.unreachable = unreachable
         }
         func ask(_ request: WatchRequest) async -> WatchReply? {
             asked.append(request)
             switch request.kind {
-            case .tafs: return WatchReply(.ok, tafs: listed)
-            case .halt, .haltAll: return halts[request.taf ?? ""] ?? WatchReply(.ok, line: "Halted.")
-            default: return nil
+            case .tafs:
+                return WatchReply(.ok, tafs: listed)
+            case .halt, .haltAll:
+                let key = request.taf ?? ""
+                if unreachable.contains(key) { return nil }
+                return halts[key] ?? WatchReply(.ok, line: "Halted.")
+            default:
+                return nil
             }
         }
     }
@@ -58,7 +66,8 @@ final class HaltPickModelTests: XCTestCase {
         XCTAssertEqual(model.explain, Words.Halt.Explain.runningAll)
         await model.haltNow()
         XCTAssertEqual(phone.asked.filter { $0.kind != .tafs }.map(\.kind), [.haltAll])
-        XCTAssertEqual(model.outcome, .done([.init(name: Words.Watch.allYourTafs, answer: .done("Your tafs are halted."))]))
+        let all = HaltPickModel.Result(name: Words.Watch.allYourTafs, answer: WatchAnswer.done("Your tafs are halted."))
+        XCTAssertEqual(model.outcome, HaltPickModel.Outcome.done([all]))
         model.toggleAll()
         XCTAssertEqual(model.picked, [], "All your tafs again: none")
     }
@@ -67,7 +76,7 @@ final class HaltPickModelTests: XCTestCase {
     /// halting, and each shows what came of it by name.
     func testAFewAreHaltedOneByOneEachToTheEnd() async {
         let three = WatchTaf(id: "depl_4", name: "Ola", line: "Ready", halted: false)
-        let phone = Phone(listed: [rae, ivo, three], halts: ["depl_1": .some(nil), "depl_4": WatchReply(.ok, line: "Ola is halted.")])
+        let phone = Phone(listed: [rae, ivo, three], halts: ["depl_4": WatchReply(.ok, line: "Ola is halted.")], unreachable: ["depl_1"])
         let model = await pick(phone)
         model.toggle("depl_4")
         XCTAssertEqual(model.question, "Ola")
@@ -77,11 +86,13 @@ final class HaltPickModelTests: XCTestCase {
         XCTAssertEqual(model.question, "Rae, Ola")
         XCTAssertEqual(model.explain, Words.Halt.haltingStopsNoRunStarts(who: "Rae, Ola"))
         await model.haltNow()
-        XCTAssertEqual(phone.asked.filter { $0.kind == .halt }.map(\.taf), ["depl_1", "depl_4"])
-        XCTAssertEqual(model.outcome, .done([
-            .init(name: "Rae", answer: .failed(Words.Watch.phoneNotReachable)),
-            .init(name: "Ola", answer: .done("Ola is halted.")),
-        ]))
+        let halted: [String?] = phone.asked.filter { $0.kind == WatchRequest.Kind.halt }.map { $0.taf }
+        XCTAssertEqual(halted, ["depl_1", "depl_4"])
+        let expected: [HaltPickModel.Result] = [
+            HaltPickModel.Result(name: "Rae", answer: WatchAnswer.failed(Words.Watch.phoneNotReachable)),
+            HaltPickModel.Result(name: "Ola", answer: WatchAnswer.done("Ola is halted.")),
+        ]
+        XCTAssertEqual(model.outcome, HaltPickModel.Outcome.done(expected))
     }
 
     /// With no passcode, nothing is sent.
