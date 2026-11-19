@@ -82,7 +82,10 @@ final class WatchDaysTests: XCTestCase {
         XCTAssertEqual(reading.dayReads, ["2026-11-19"])
         reading.fails = true
         await model.open("2026-11-18")
-        XCTAssertEqual(model.day, .failed(Words.Alert.tafsCouldNotReachKiff))
+        // The Coach's own "couldn't be loaded" line with the error's words, never the refuse-from-a-notification one.
+        let down = TafsCloud.CloudError(status: 500, message: "down").localizedDescription
+        XCTAssertEqual(model.day, .failed(Words.Coach.conversationNotLoaded(why: down)))
+        XCTAssertNotEqual(model.day, .failed(Words.Alert.tafsCouldNotReachKiff))
         model.close()
         XCTAssertEqual(model.day, .reading, "nothing of a day is kept once it's left")
     }

@@ -58,7 +58,8 @@ final class WatchDaysModel: ObservableObject {
             day = .loaded(turns)
         } catch {
             guard this == asked else { return }
-            day = .failed(Words.Alert.tafsCouldNotReachKiff)
+            // The conversation couldn't be loaded, with the error's own words (dev-android's read).
+            day = .failed(Words.Coach.conversationNotLoaded(why: error.localizedDescription))
         }
     }
 
