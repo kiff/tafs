@@ -1,0 +1,1 @@
+- **The brief's "rest" line says those tafs need nothing from you**, in all 8 languages ("3 other tafs need nothing from you."), so it no longer reads "nothing waits for you" beside the Needs you count.

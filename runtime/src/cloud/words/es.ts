@@ -298,7 +298,7 @@ export const es: Words = {
   brief_approve: "Aprobar",
   brief_refuse: "Rechazar",
   brief_more: (n) => `${n} más`,
-  brief_rest_line: (n, form) => (n === 0 ? "Nada más." : form === "one" ? `${n} taf más: nada te espera.` : `${n} tafs más: nada te espera.`),
+  brief_rest_line: (n, form) => (n === 0 ? "Nada más." : form === "one" ? `Otro taf no necesita nada de ti.` : `Otros ${n} tafs no necesitan nada de ti.`),
   brief_hold_question: (taf) => `${taf} espera tu aprobación`,
   brief_hold_meanwhile: "No se hace nada hasta que respondas.",
   brief_step_meanwhile: "Su ejecución espera este paso.",

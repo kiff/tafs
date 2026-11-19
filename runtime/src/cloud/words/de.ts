@@ -298,7 +298,7 @@ export const de: Words = {
   brief_approve: "Genehmigen",
   brief_refuse: "Ablehnen",
   brief_more: (n) => `${n} weitere`,
-  brief_rest_line: (n, form) => (n === 0 ? "Sonst nichts." : form === "one" ? `${n} weiterer taf: nichts wartet auf dich.` : `${n} weitere tafs: nichts wartet auf dich.`),
+  brief_rest_line: (n, form) => (n === 0 ? "Sonst nichts." : form === "one" ? `${n} weiterer taf braucht nichts von dir.` : `${n} weitere tafs brauchen nichts von dir.`),
   brief_hold_question: (taf) => `${taf} wartet auf deine Genehmigung`,
   brief_hold_meanwhile: "Bis du antwortest, passiert nichts.",
   brief_step_meanwhile: "Sein Lauf wartet auf diesen Schritt.",
