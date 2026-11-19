@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Tutte le chat",
   "watch.already_answered": "Ha già una risposta, o è terminata.",
   "watch.approve_on_phone": "Approva sul telefono",
   "watch.as_of": "Aggiornato alle {time}",
@@ -18,6 +19,12 @@
     "one": "{count} chiamata trattenuta ti aspetta",
     "other": "{count} chiamate trattenute ti aspettano"
   },
+  "watch.inbox_empty": "Niente di nuovo. Qui arrivano le risposte di Coach e gli avvisi dei tuoi tafs.",
+  "watch.inbox_unread": {
+    "one": "{count} da leggere in In arrivo",
+    "other": "{count} da leggere in In arrivo"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "Per chiedere a voce, consenti il microfono a tafs su questo orologio.",
   "watch.more_on_phone": "Il resto è sul telefono.",
   "watch.needs_lock": "Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Arrivo non confermato",
   "watch.open_on_phone": "Apri sul telefono",
+  "watch.page.brief": "Riepilogo",
+  "watch.page.inbox": "In arrivo",
   "watch.phone_not_reachable": "Il telefono non è raggiungibile. Avvicinalo, poi riprova.",
   "watch.ready_count": {
     "one": "{count} pronto",
     "other": "{count} pronti"
   },
+  "watch.recent_chats": "Chat recenti",
   "watch.refused": "Rifiutata. Non è stato inviato nulla.",
   "watch.reply": "Rispondi",
   "watch.result_ready": "C'è un risultato",
@@ -41,6 +51,7 @@
   "watch.sent": "Inviato",
   "watch.sign_in_on_phone": "Prima accedi a tafs sul telefono.",
   "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",
+  "watch.trust": "Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.",
   "watch.update_phone": "Aggiorna tafs sul telefono, poi riprova.",
   "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce.",
   "watch.working_count": {

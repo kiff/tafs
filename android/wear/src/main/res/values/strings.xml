@@ -5,6 +5,7 @@
     <string name="alert_needs_you">A taf needs you</string>
     <string name="alert_not_refused">Not refused</string>
     <string name="coach_ask">Ask Coach</string>
+    <string name="coach_title">Coach</string>
     <string name="common_cancel">Cancel</string>
     <string name="common_close">Close</string>
     <string name="common_done">Done</string>
@@ -14,11 +15,15 @@
     <string name="halt_all_now">Halt all now</string>
     <string name="halt_now">Halt now</string>
     <string name="halt_all_title">Halt all tafs</string>
+    <string name="home_title">Tafs</string>
     <string name="home_your_tafs">Your tafs</string>
     <string name="needs_you_nothing">Nothing needs you.</string>
     <string name="needs_you_refuse">Refuse</string>
     <string name="needs_you_title">Needs you</string>
+    <string name="settings_title">Account</string>
+    <string name="taf_halt_title">Halt</string>
     <string name="taf_state_halted">Halted</string>
+    <string name="watch_all_chats">All chats</string>
     <string name="watch_already_answered">Already answered, or it ended.</string>
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_as_of">As of %1$s</string>
@@ -38,6 +43,12 @@
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>
     </plurals>
+    <string name="watch_inbox_empty">Nothing new. Coach\'s replies and your tafs\' alerts land here.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s unread in Inbox</item>
+        <item quantity="other">%1$s unread in Inbox</item>
+    </plurals>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>
     <string name="watch_more_on_phone">The rest is on your phone.</string>
     <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
@@ -47,11 +58,14 @@
     </plurals>
     <string name="watch_not_sure">Not sure it arrived</string>
     <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_page_brief">Brief</string>
+    <string name="watch_page_inbox">Inbox</string>
     <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s ready</item>
         <item quantity="other">%1$s ready</item>
     </plurals>
+    <string name="watch_recent_chats">Recent chats</string>
     <string name="watch_refused">Refused. Nothing was sent.</string>
     <string name="watch_reply">Reply</string>
     <string name="watch_result_ready">A result is ready</string>
@@ -61,6 +75,7 @@
     <string name="watch_sent">Sent</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
+    <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
     <plurals name="watch_working_count">

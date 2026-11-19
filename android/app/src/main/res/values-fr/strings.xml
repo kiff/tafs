@@ -2537,6 +2537,7 @@
     <string name="voice_title">Dictée</string>
     <string name="voice_voice_becomes_text_device_not">Votre voix devient du texte sur cet appareil. Elle n\'est envoyée que lorsque vous l\'envoyez.</string>
     <string name="voice_what_you_said_stays_message">Ce que vous avez dit reste dans le champ de message, non envoyé.</string>
+    <string name="watch_all_chats">Tous les chats</string>
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
@@ -2556,6 +2557,12 @@
         <item quantity="one">%1$s appel retenu vous attend</item>
         <item quantity="other">%1$s appels retenus vous attendent</item>
     </plurals>
+    <string name="watch_inbox_empty">Rien de nouveau. Les réponses de Coach et les alertes de vos tafs arrivent ici.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">Non lus dans la boîte de réception : %1$s</item>
+        <item quantity="other">Non lus dans la boîte de réception : %1$s</item>
+    </plurals>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
     <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
@@ -2565,11 +2572,14 @@
     </plurals>
     <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
+    <string name="watch_page_brief">Résumé</string>
+    <string name="watch_page_inbox">Boîte de réception</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s prêt</item>
         <item quantity="other">%1$s prêts</item>
     </plurals>
+    <string name="watch_recent_chats">Chats récents</string>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
     <string name="watch_reply">Répondre</string>
     <string name="watch_result_ready">Un résultat est prêt</string>
@@ -2579,6 +2589,7 @@
     <string name="watch_sent">Envoyé</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
     <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
     <plurals name="watch_working_count">

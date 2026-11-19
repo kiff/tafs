@@ -4972,7 +4972,9 @@ class AppModel(
       // A connected one signs in again in place (gap 13): planque keeps the sign-in in use until this phone confirms the new one.
       if (grant.status !in setOf("pending", "approved", "signed_in", "needs_reconnect") && !(again && grant.connected)) {
         return Connected.Failed(
-          grant.status.replace('_', ' ').let { status -> grant.reason?.let { Words.Connect.connectionIsBecause(status = status, reason = it) } ?: Words.Connect.connectionIs(status = status) },
+          // What the person reads: planque's words for the grant's state, in their language, else the app's own "Not connected".
+          // Never planque's `reason` or its status code: those are English, for the log and for Coach (`told`).
+          grant.statusWords?.takeIf { it.isNotBlank() } ?: Words.Coach.Shape.notConnected,
           told = "This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."),
           notApprovable = true,
         )

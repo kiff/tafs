@@ -106,27 +106,29 @@ class WatchActivity : ComponentActivity() {
             if (model.voice.value is WatchModel.Voice.Sent) model.closeVoice()
           }
         }
-        WatchScreen(
-          shown, outcome, confirmingHaltAll, voice, result, asks.values.let { model.working() }, asks.values.let { model.ready() },
-          Actions(
-            openOnPhone = ::openOnPhone,
-            tryAgain = { lifecycleScope.launch { model.refresh() } },
-            refuse = { hold -> lifecycleScope.launch { model.refuse(hold) } },
-            halt = { taf -> lifecycleScope.launch { model.halt(taf) } },
-            askHaltAll = model::askHaltAll,
-            confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
-            cancelHaltAll = model::cancelHaltAll,
-            listen = { listen() },
-            closeVoice = { listener.cancel(); model.closeVoice() },
-            retry = { lifecycleScope.launch { model.retry() } },
-            open = model::open,
-            hear = { ask -> speaker().say(ask.line ?: ask.words) },
-            reply = { ask -> listen(ask.id) },
-            closeResult = model::closeResult,
-            dismiss = model::dismissOutcome,
-          ),
-          timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null },
+        val actions = Actions(
+          openOnPhone = ::openOnPhone,
+          tryAgain = { lifecycleScope.launch { model.refresh() } },
+          refuse = { hold -> lifecycleScope.launch { model.refuse(hold) } },
+          halt = { taf -> lifecycleScope.launch { model.halt(taf) } },
+          askHaltAll = model::askHaltAll,
+          confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
+          cancelHaltAll = model::cancelHaltAll,
+          listen = { listen() },
+          closeVoice = { listener.cancel(); model.closeVoice() },
+          retry = { lifecycleScope.launch { model.retry() } },
+          open = model::open,
+          hear = { ask -> speaker().say(ask.line ?: ask.words) },
+          reply = { ask -> listen(ask.id) },
+          closeResult = model::closeResult,
+          dismiss = model::dismissOutcome,
         )
+        val working = asks.values.let { model.working() }
+        val ready = asks.values.let { model.ready() }
+        val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
+        // v2's pages once every step is in (WatchPages.kt); v1 until then.
+        if (WATCH_V2) WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
+        else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
     }
     handle(intent)
@@ -326,7 +328,7 @@ private fun opens(working: List<AskLine>, ready: List<AskLine>, act: Actions): L
  * Your brief, in tafs cloud's words, where Needs you would be: its title and `when` line, each decision on its own card (answered on
  * the phone, so Open on phone; Refuse only where Needs you offers it), its line for more, what got done, and the rest.
  */
-private fun ScalingLazyListScope.briefItems(brief: WatchReply.Brief, shown: WatchModel.Shown.Read, act: Actions) {
+internal fun ScalingLazyListScope.briefItems(brief: WatchReply.Brief, shown: WatchModel.Shown.Read, act: Actions) {
   item { ListHeader { Text(brief.title) } }
   brief.whenLine?.let { line(it) }
   for (decision in brief.decisions) item { DecisionCard(decision, brief.urgent, shown.refusable(decision), act) }
@@ -371,13 +373,13 @@ private fun DecisionCard(decision: DecisionLine, urgentWord: String?, refuseHold
   }
 }
 
-private fun ScalingLazyListScope.line(words: String) = item {
+internal fun ScalingLazyListScope.line(words: String) = item {
   Text(words, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
 }
 
 /** What came of a Refuse or a Halt, in the phone's words; anything that didn't go through offers Open on phone. */
 @Composable
-private fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
+internal fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
   Card(onClick = act.dismiss, modifier = Modifier.fillMaxWidth()) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       when (outcome) {
@@ -400,7 +402,7 @@ private fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
  * can answer it; approving is always the phone's.
  */
 @Composable
-private fun HeldCallCard(call: HeldLine, act: Actions) {
+internal fun HeldCallCard(call: HeldLine, act: Actions) {
   Card(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(call.taf, style = MaterialTheme.typography.titleSmall)

@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "All chats",
   "watch.already_answered": "Already answered, or it ended.",
   "watch.approve_on_phone": "Approve on your phone",
   "watch.as_of": "As of {time}",
@@ -18,6 +19,12 @@
     "one": "{count} held call needs you",
     "other": "{count} held calls need you"
   },
+  "watch.inbox_empty": "Nothing new. Coach's replies and your tafs' alerts land here.",
+  "watch.inbox_unread": {
+    "one": "{count} unread in Inbox",
+    "other": "{count} unread in Inbox"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "To ask by voice, allow the microphone for tafs on this watch.",
   "watch.more_on_phone": "The rest is on your phone.",
   "watch.needs_lock": "To refuse or halt from this watch, set a screen lock on it and unlock it.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Not sure it arrived",
   "watch.open_on_phone": "Open on phone",
+  "watch.page.brief": "Brief",
+  "watch.page.inbox": "Inbox",
   "watch.phone_not_reachable": "Your phone isn't in reach. Bring it closer, then try again.",
   "watch.ready_count": {
     "one": "{count} ready",
     "other": "{count} ready"
   },
+  "watch.recent_chats": "Recent chats",
   "watch.refused": "Refused. Nothing was sent.",
   "watch.reply": "Reply",
   "watch.result_ready": "A result is ready",
@@ -41,6 +51,7 @@
   "watch.sent": "Sent",
   "watch.sign_in_on_phone": "Sign in to tafs on your phone first.",
   "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",
+  "watch.trust": "This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.",
   "watch.update_phone": "Update tafs on your phone, then try again.",
   "watch.voice_text_only": "Coach gets your words as text, never your voice.",
   "watch.working_count": {

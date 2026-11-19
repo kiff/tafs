@@ -5077,6 +5077,8 @@ enum Words {
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
     }
     enum Watch {
+        /// All chats
+        static var allChats: String { Words.line("watch.all_chats") }
         /// Already answered, or it ended.
         static var alreadyAnswered: String { Words.line("watch.already_answered") }
         /// Approve on your phone
@@ -5109,6 +5111,12 @@ enum Words {
         static var hear: String { Words.line("watch.hear") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// Nothing new. Coach's replies and your tafs' alerts land here.
+        static var inboxEmpty: String { Words.line("watch.inbox_empty") }
+        /// {count} unread in Inbox
+        static func inboxUnread(count: Int) -> String { Words.count("watch.inbox_unread", count) }
+        /// Menu
+        static var menu: String { Words.line("watch.menu") }
         /// To ask by voice, allow the microphone for tafs on this watch.
         static var micNeeded: String { Words.line("watch.mic_needed") }
         /// The rest is on your phone.
@@ -5121,10 +5129,18 @@ enum Words {
         static var notSure: String { Words.line("watch.not_sure") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        enum Page {
+            /// Brief
+            static var brief: String { Words.line("watch.page.brief") }
+            /// Inbox
+            static var inbox: String { Words.line("watch.page.inbox") }
+        }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
         /// {count} ready
         static func readyCount(count: Int) -> String { Words.count("watch.ready_count", count) }
+        /// Recent chats
+        static var recentChats: String { Words.line("watch.recent_chats") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
@@ -5143,6 +5159,8 @@ enum Words {
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
+        static var trust: String { Words.line("watch.trust") }
         /// Update tafs on your phone, then try again.
         static var updatePhone: String { Words.line("watch.update_phone") }
         /// Coach gets your words as text, never your voice.

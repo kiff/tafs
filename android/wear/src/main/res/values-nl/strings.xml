@@ -5,6 +5,7 @@
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_not_refused">Niet geweigerd</string>
     <string name="coach_ask">Coach vragen</string>
+    <string name="coach_title">Coach</string>
     <string name="common_cancel">Annuleren</string>
     <string name="common_close">Sluiten</string>
     <string name="common_done">Klaar</string>
@@ -14,11 +15,15 @@
     <string name="halt_all_now">Alles nu stilzetten</string>
     <string name="halt_now">Nu stilzetten</string>
     <string name="halt_all_title">Alle tafs stilzetten</string>
+    <string name="home_title">Tafs</string>
     <string name="home_your_tafs">Je tafs</string>
     <string name="needs_you_nothing">Niets wacht op jou.</string>
     <string name="needs_you_refuse">Weigeren</string>
     <string name="needs_you_title">Wacht op jou</string>
+    <string name="settings_title">Account</string>
+    <string name="taf_halt_title">Stilzetten</string>
     <string name="taf_state_halted">Stilgezet</string>
+    <string name="watch_all_chats">Alle chats</string>
     <string name="watch_already_answered">Al beantwoord, of beëindigd.</string>
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
     <string name="watch_as_of">Bijgewerkt om %1$s</string>
@@ -38,6 +43,12 @@
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_inbox_empty">Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s ongelezen in je Inbox</item>
+        <item quantity="other">%1$s ongelezen in je Inbox</item>
+    </plurals>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
     <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
@@ -47,11 +58,14 @@
     </plurals>
     <string name="watch_not_sure">Onzeker of het aankwam</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
+    <string name="watch_page_brief">Overzicht</string>
+    <string name="watch_page_inbox">Inbox</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s klaar</item>
         <item quantity="other">%1$s klaar</item>
     </plurals>
+    <string name="watch_recent_chats">Recente chats</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
     <string name="watch_result_ready">Er is een resultaat</string>
@@ -61,6 +75,7 @@
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
+    <string name="watch_trust">Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.</string>
     <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
     <plurals name="watch_working_count">

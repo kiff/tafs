@@ -35,10 +35,10 @@ class SetupShapeTest {
 
   private val request = """{"server":"mcp.stripe.com","agent":"refunds-x","tools":[{"tool":"refund_payment","name":"refund_payment_k1"},{"tool":"list_payments","read_only":true}]}"""
 
-  private fun grant(status: String, signedIn: Boolean = false, reason: String? = null): Grant =
+  private fun grant(status: String, signedIn: Boolean = false, reason: String? = null, statusWords: String? = null): Grant =
     KiffClient.json.decodeFromString(
       """{"id":"g_01","status":"$status","vendor":"Stripe","text":"Connect Stripe.","digest":"d","request":$request,"signed_in":$signedIn""" +
-        (reason?.let { ""","reason":"$it"""" } ?: "") + "}",
+        (reason?.let { ""","reason":"$it"""" } ?: "") + (statusWords?.let { ""","status_words":"$it"""" } ?: "") + "}",
     )
 
   private fun draft(status: String, id: String = "drf_1", noTools: Boolean = false, label: String? = null): AgentDraft =
@@ -138,7 +138,9 @@ class SetupShapeTest {
     assertEquals(Tool.State.SignedIn, tools(grant("listed", signedIn = true)).first().state)
     assertEquals(Tool.State.SignedIn, tools(grant("pending", signedIn = true)).first().state)
     assertEquals(Tool.State.Failed(null), tools(grant("failed")).first().state)
-    assertEquals(Tool.State.Failed("The vendor refused it"), tools(grant("disconnected", reason = "The vendor refused it")).first().state)
+    // planque's words for its state, in the person's language; never its English `reason`, which is for the log.
+    assertEquals(Tool.State.Failed("Getrennt"), tools(grant("disconnected", reason = "KIFF answered 403: approval_refused (profile_not_approved)", statusWords = "Getrennt")).first().state)
+    assertEquals(Tool.State.Failed(null), tools(grant("disconnected", reason = "KIFF answered 403: approval_refused")).first().state)
     val connected = tools(grant("connected")).first()
     assertEquals(Tool.State.Connected, connected.state)
     assertEquals(listOf("refund_payment", "list_payments"), connected.actions)
@@ -184,7 +186,9 @@ class SetupShapeTest {
     assertEquals(CardState.Done, state("Approved"))
     assertEquals(CardState.Declined, state("Declined"))
     assertEquals(CardState.Failed("planque is down"), state("Approve · it didn't go through: planque is down"))
-    assertEquals(CardState.Failed("vendor said no"), state(null, grant("failed", reason = "vendor said no")))
+    // A failed grant's card says planque's words for its state, never planque's English `reason`.
+    assertEquals(CardState.Failed("Échec"), state(null, grant("failed", reason = "vendor said no", statusWords = "Échec")))
+    assertEquals(CardState.Failed(null), state(null, grant("failed", reason = "vendor said no")))
 
     // A sign-in is done once answered, or once planque holds it.
     val signIn = shown("""{"type":"sign_in","id":"in","grant":"g_01"}""", 1)

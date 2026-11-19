@@ -46,7 +46,7 @@ has made so far, read only from what the app already holds. The taf's name once 
 else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
 (with no plan, what Coach asked of the person and where each stands); the tools its cards connect,
 each connected (with what the taf calls through it), signed in, waiting for you, or not connected
-with planque's reason; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
+in planque's words for its state (`status_words`), never planque's `reason`, which is English, for the log; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
 line says what will show there. Nothing is fetched, signed or sent from it, and the cards to answer
 stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
 shows it (`SetupShapeTest`).
@@ -665,7 +665,10 @@ shown as planque says it is a vendor refusing planque's client (`vendor_refused_
 whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
-so it can say what went wrong and ask again.
+so it can say what went wrong and ask again. The person never reads it: a connection planque has
+failed or disconnected says planque's words for its state, in their language, else "Not connected",
+on the card, in Taking shape and in the line under the card (`SetupShapeTest`, `CoachStartTest`).
+iPhone and iPad say the same; there the card's answer carries those words.
 
 ## The bar
 

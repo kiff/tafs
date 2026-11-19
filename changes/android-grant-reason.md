@@ -1,0 +1,1 @@
+- **A connection planque failed or disconnected no longer shows planque's English reason** on Coach's card, in Taking shape or under the card, on Android, iPhone and iPad: it says planque's words for its state in the person's language, else "Not connected" ([android-app.md](docs/android-app.md)).

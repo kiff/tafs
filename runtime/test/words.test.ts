@@ -136,10 +136,10 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   });
 
   it("tells Coach the language before the owner's words, after tafs' own opening, and the thread still shows only theirs", () => {
-    expect(withLanguage("hello", "en")).toBe("hello");
-    // English is said when the account's language was another: its notes and earlier chats are in that one.
-    expect(withLanguage("hello", "en", "fr")).toContain("[tafs language] The person writing reads English (en)");
-    expect(withLanguage("hello", "en", "en")).toBe("hello");
+    // English is said too, every time (PM 18 Nov 23:35): the reply follows the message, else the app, never a data source.
+    expect(withLanguage("hello", "en")).toContain("[tafs language] The person writing reads English (en), from their app. Answer them in the language of their message");
+    expect(withLanguage("hello", "en", "fr")).toBe(withLanguage("hello", "en"));
+    expect(ownerWords(withLanguage("hello", "en"))).toBe("hello");
     const plain = withLanguage("Hallo", "de");
     expect(plain.startsWith("[tafs language] The person writing reads German (de)")).toBe(true);
     expect(plain.endsWith("\nThe owner says: Hallo")).toBe(true);

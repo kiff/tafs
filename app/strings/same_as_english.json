@@ -125,6 +125,7 @@
     "version.number",
     "version.title",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -225,6 +226,7 @@
     "taf.section.setup",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -269,6 +271,7 @@
     "taf.section.chat",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -348,6 +351,8 @@
     "usage.solo",
     "usage.week",
     "version.trial.chat_name",
+    "watch.menu",
+    "watch.page.inbox",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -395,6 +400,7 @@
     "taf.section.card",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ]

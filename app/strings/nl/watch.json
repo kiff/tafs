@@ -1,4 +1,5 @@
 {
+  "watch.all_chats": "Alle chats",
   "watch.already_answered": "Al beantwoord, of beëindigd.",
   "watch.approve_on_phone": "Keur goed op je telefoon",
   "watch.as_of": "Bijgewerkt om {time}",
@@ -18,6 +19,12 @@
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"
   },
+  "watch.inbox_empty": "Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.",
+  "watch.inbox_unread": {
+    "one": "{count} ongelezen in je Inbox",
+    "other": "{count} ongelezen in je Inbox"
+  },
+  "watch.menu": "Menu",
   "watch.mic_needed": "Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.",
   "watch.more_on_phone": "De rest staat op je telefoon.",
   "watch.needs_lock": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.",
@@ -27,11 +34,14 @@
   },
   "watch.not_sure": "Onzeker of het aankwam",
   "watch.open_on_phone": "Openen op telefoon",
+  "watch.page.brief": "Overzicht",
+  "watch.page.inbox": "Inbox",
   "watch.phone_not_reachable": "Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.",
   "watch.ready_count": {
     "one": "{count} klaar",
     "other": "{count} klaar"
   },
+  "watch.recent_chats": "Recente chats",
   "watch.refused": "Geweigerd. Er is niets verstuurd.",
   "watch.reply": "Antwoorden",
   "watch.result_ready": "Er is een resultaat",
@@ -41,6 +51,7 @@
   "watch.sent": "Verstuurd",
   "watch.sign_in_on_phone": "Log eerst in bij tafs op je telefoon.",
   "watch.timing": "Luisteren {listen} ms · ontvangst {receipt} ms · resultaat {result} ms",
+  "watch.trust": "Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.",
   "watch.update_phone": "Werk tafs bij op je telefoon en probeer het opnieuw.",
   "watch.voice_text_only": "Coach krijgt je woorden als tekst, nooit je stem.",
   "watch.working_count": {
