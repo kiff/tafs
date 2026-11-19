@@ -31,11 +31,21 @@ What the watch asks and the phone answers is `ios/WatchShared/WatchMessage.swift
 apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the watch's is
 `ios/TafsWatch/PhoneLink.swift`.
 
-- **Seven requests:** Needs you, your tafs, Refuse (naming its held call), Halt (naming its
-  taf), Halt all, Coach (the words dictated on the watch, never audio), and Your brief (a read,
-  behind the watch's switch). Nothing else decodes, so an approval can't even be asked for.
+- **Ten requests:** Needs you, your tafs, Refuse (naming its held call), Halt (naming its
+  taf), Halt all, Coach (the words dictated on the watch, never audio), Your brief (a read,
+  behind the watch's switch), and the watch v2 pages below (reads). Nothing else decodes, so an
+  approval can't even be asked for.
 - **Refused before anything is read:** an unknown or malformed request, or one missing what
-  it names. Nothing on this path signs.
+  it names: a taf's page with no taf or an id over 128 characters, a calendar day that isn't
+  `YYYY-MM-DD`. Nothing on this path signs.
+- **The watch v2 pages** (reads only, the same as Wear OS's, `docs/watch-wear.md`), answered with the session the
+  phone keeps (`KeptWatchReading`):
+  - `taf`, by tafs cloud's id: its state (Halted when it or the account is), its job, each Card as the Card tab
+    draws it (title, the face's figure and line, a line per rule) and how many of KIFF's held calls are its agent's.
+    A taf tafs cloud doesn't list says "Open tafs on your phone".
+  - `calendar`, `day` as `YYYY-MM-DD`, or today in the account's zone (the phone's when it can't be read): tafs cloud's `GET /v1/calendar` for that day
+    alone, its line and that day's events in time order with each taf's name.
+  - `account`: who is signed in, the account's name (else its slug) and the plan's line, as Account shows it.
 - **Live only:** each request goes with WatchConnectivity's message data and a reply, never
   queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
   either way.
