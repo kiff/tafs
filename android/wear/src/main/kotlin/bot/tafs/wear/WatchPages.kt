@@ -158,6 +158,8 @@ internal fun WatchPages(
         Modifier.fillMaxWidth(),
         state = rememberScalingLazyListState(initialCenterItemIndex = 0),
         verticalArrangement = Arrangement.spacedBy(4.dp),
+        // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
       ) {
         val page = pages[i]
         if (page == Page.Coach) {

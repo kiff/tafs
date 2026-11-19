@@ -161,7 +161,8 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
   ScalingLazyColumn(Modifier.fillMaxSize().background(Color.Black), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
     verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.review) } }
-    item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)) }
+    // Inset from the round edge, so no line of a long transcript is cut where the face curves (qa-kiff's device read, #1409).
+    item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
     // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
     val playback = act.playback
     if (audio != null && playback != null) item { PlayRow(audio, playback) }
