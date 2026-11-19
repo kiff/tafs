@@ -162,5 +162,8 @@
   },
   "views/WatchDaysViews.kt": {
     "EEEEdMMMM": "a date skeleton for the platform's getBestDateTimePattern (weekday, day, month), not words"
+  },
+  "views/ApiDoorViews.kt": {
+    "curl -X POST $endpoint \\\\\\n  -H \\\"Authorization: Bearer \\$TAFS_API_KEY\\\" \\\\\\n  -H \\\"Idempotency-Key: <your request id>\\\" \\\\\\n  -H \\\"Content-Type: application/json\\\" \\\\\\n  -d '{\\\"input\\\": {}}'": "a shell command for a developer, as they type it: code, not words (curl, HTTP headers, JSON), as iOS keeps it"
   }
 }

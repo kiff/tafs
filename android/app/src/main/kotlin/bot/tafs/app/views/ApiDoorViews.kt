@@ -112,12 +112,7 @@ internal fun ApiDoorPanels(taf: Taf, door: Door, doors: TafDoors, actions: ApiDo
       Text(Words.Door.Api.today, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
       Text(Words.Door.Api.ofLimit(count = door.today, limit = bot.tafs.app.model.Res.number(door.limit)), style = scaled(14, FontWeight.SemiBold, Theme.ink))
     }
-    door.counts?.waiting?.let { waiting ->
-      Row(Modifier.fillMaxWidth()) {
-        Text(Words.Door.Api.waiting, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
-        Text(bot.tafs.app.model.Res.number(waiting), style = scaled(14, FontWeight.SemiBold, Theme.ink))
-      }
-    }
+    // No "waiting" row yet: `door.api.waiting` is the cap's "At once", not a word for requests waiting (as iOS, which shows none).
     // tafs cloud's word for the last request's state, as given: the app never words a state itself.
     door.lastRequest?.let { last ->
       val words = last.words?.takeIf { it.isNotBlank() }

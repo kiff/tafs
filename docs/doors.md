@@ -148,7 +148,7 @@ state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors
 caller's routes come in the next steps, behind `TAFS_API_DOORS` (off).
 
 **Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
-state and its switch (off pauses it at once; on is signed), today against its cap and how many wait, the last request in
+state and its switch (off pauses it at once; on is signed), today against its cap, the last request in
 tafs cloud's words (no line without them), its keys by name with when each was made and last used and its last four, Revoke
 asked once more and then signed, and New key while it holds fewer than two: named (trimmed; a blank name is the door's
 own, as on iPhone; never while the door is busy), signed, then shown once with Copy, where to send requests, an example and
