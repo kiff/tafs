@@ -299,7 +299,8 @@ in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved 
 - **In Coach's Previous conversations,** a section "From your watch": the days the person asked from a watch, newest first,
   each with how many (`GET /v1/watch/days`), apart from the chats started on the phone. One a day, as the owner chose.
   "Today" is the account's today as tafs cloud gives it (`today`), so someone on another time zone than the account's sees
-  it on the right day; a tafs cloud that doesn't give it leaves the phone's own day (agentgabo's read).
+  it on the right day; a tafs cloud that doesn't give it leaves the account's zone's day, else the phone's (agentgabo's read).
+  A turn's time is in the account's zone too, as the day is and as Android shows it (qa-kiff's read).
 - **A day** (`GET /v1/watch/days/{date}`) lists its turns oldest first: "⌚ Sent from your watch" and when, the person's
   words, then the taf that took it and its line, or tafs cloud's words for where it is. A reply sits under what it replies
   to. Read only: a reply from the phone goes on in a Coach chat, as any other.

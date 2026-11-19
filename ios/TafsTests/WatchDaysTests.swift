@@ -48,6 +48,11 @@ final class WatchDaysTests: XCTestCase {
         XCTAssertNotNil(WatchTurnRow.time(turns[0].saidAt))
         XCTAssertNotNil(WatchTurnRow.time(turns[1].saidAt), "with fractional seconds too")
         XCTAssertNil(WatchTurnRow.time(""))
+        // In the account's zone, as the day is: 23:30 UTC is the next morning's 00:30 in Paris (qa-kiff's read).
+        let paris = TimeZone(identifier: "Europe/Paris")!, utc = TimeZone(identifier: "UTC")!, en = Locale(identifier: "en_GB")
+        let late = "2026-11-18T23:30:00Z"
+        XCTAssertEqual(WatchTurnRow.time(late, zone: paris, locale: en), "00:30")
+        XCTAssertEqual(WatchTurnRow.time(late, zone: utc, locale: en), "23:30")
     }
 
     func testWithTheSwitchOffNothingIsRead() async {

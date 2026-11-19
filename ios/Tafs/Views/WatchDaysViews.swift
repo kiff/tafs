@@ -44,7 +44,7 @@ struct WatchDayView: View {
                 Button(Words.Common.tryAgain) { Task { await model.open(date) } }.listRowBackground(Theme.panel)
             case .loaded(let turns):
                 ForEach(turns) { turn in
-                    WatchTurnRow(turn: turn)
+                    WatchTurnRow(turn: turn, zone: model.zone)
                         .padding(.leading, turn.replyTo == nil ? 0 : 16)
                         .listRowBackground(Theme.panel)
                 }
@@ -63,12 +63,13 @@ struct WatchDayView: View {
 /// cloud's words for where it is.
 struct WatchTurnRow: View {
     let turn: TafsCloud.WatchTurn
+    var zone: TimeZone = .current
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text(Words.Coach.Chats.sentFromYourWatch)
-                if let at = WatchTurnRow.time(turn.saidAt) { Text(verbatim: "· " + at) }
+                if let at = WatchTurnRow.time(turn.saidAt, zone: zone) { Text(verbatim: "· " + at) }
             }
             .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
             Text(verbatim: turn.said).scaledFont(15).foregroundColor(Theme.ink)
@@ -81,11 +82,12 @@ struct WatchTurnRow: View {
         .accessibilityElement(children: .combine)
     }
 
-    /// The time it was said, in the phone's own short form; nil for one tafs cloud didn't give.
-    static func time(_ at: String) -> String? {
+    /// The time it was said, in the phone's own short form, in `zone` (the account's, as the day is); nil for one tafs
+    /// cloud didn't give.
+    static func time(_ at: String, zone: TimeZone = .current, locale: Locale = .current) -> String? {
         let parse = ISO8601DateFormatter()
         parse.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         guard let date = parse.date(from: at) ?? ISO8601DateFormatter().date(from: at) else { return nil }
-        return date.formatted(date: .omitted, time: .shortened)
+        return date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: locale, timeZone: zone))
     }
 }
