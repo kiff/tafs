@@ -19,6 +19,24 @@ final class CoachModel: ObservableObject {
         case deleted
     }
 
+    /// v2's conversation (W4): one thing said from this watch, and where Coach's answer to it is.
+    struct Turn: Identifiable, Equatable {
+        enum Answer: Equatable {
+            /// tafs cloud has the words; Coach hasn't started.
+            case sent
+            /// Coach's chat says it's at them.
+            case answering
+            /// Coach's answer, or none: the rest is on the phone.
+            case answered(WatchCoachAnswer?)
+        }
+
+        /// The message's id.
+        let id: String
+        let said: String
+        let at: Date
+        var answer: Answer
+    }
+
     /// v2's Quick reply (docs/watch-app.md, "Step (iii)"): four ready-made lines, each to Check before sending, in Wear OS's
     /// order.
     static var quickReplies: [String] {
@@ -31,6 +49,9 @@ final class CoachModel: ObservableObject {
     @Published private(set) var state: State = .writing
     /// v2 (W2): the words that left, shown above "Sent" and Coach's answer.
     @Published private(set) var asked: String?
+    /// v2 (W4): Ask Coach as one conversation, oldest first: what was said from this watch since the app was opened, each with
+    /// Coach's answer. In memory only, forgotten when the app is put away or signed out here: nothing new is kept on the watch.
+    @Published private(set) var turns: [Turn] = []
     private let phone: PhoneAsking
     private let clock: () -> Date
     /// Sending needs a passcode on this watch (`WristLock`).
@@ -130,14 +151,16 @@ final class CoachModel: ObservableObject {
             reviewing = false
             asked = text
             state = .sent
+            turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .sent))
             await read(ticket, message: id.uuidString.lowercased())
         case .notYet, .refused:
             // A phone from before W2 doesn't know the two steps: v1's send, the same words under the same id.
             state = .writing
             await send()
-            if case .answered = state {
+            if case .answered(let answer) = state {
                 asked = text
                 reviewing = false
+                turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .answered(answer)))
             }
         case .signedOut:
             state = .failed(Words.Watch.signInOnPhone)
@@ -163,6 +186,7 @@ final class CoachModel: ObservableObject {
             if let coach = reply.coach { last = coach }
             if reply.answering == true {
                 state = .answering
+                setTurn(message, .answering)
             } else if let coach = reply.coach {
                 finish(coach, message: message)
                 return
@@ -173,8 +197,29 @@ final class CoachModel: ObservableObject {
     }
 
     private func finish(_ answer: WatchCoachAnswer?, message: String) {
-        state = .answered(answer)
+        // The ask may have been closed meanwhile: the conversation still gets its answer.
+        if inFlight { state = .answered(answer) }
+        setTurn(message, .answered(answer))
         onAnswer?(answer, message)
+    }
+
+    private func setTurn(_ id: String, _ answer: Turn.Answer) {
+        guard let i = turns.firstIndex(where: { $0.id == id }) else { return }
+        turns[i].answer = answer
+    }
+
+    /// v2: the ask closed with the app still open. Words not sent go; a Send on its way carries on, and its answer lands in
+    /// the conversation (W4).
+    func closeAsk() {
+        // Still on its way to the phone: what comes back decides. Sent goes on in the conversation; a failure keeps the words
+        // in the review, to send again under the same id.
+        if state == .sending { return }
+        draft = ""
+        sending = nil
+        reviewing = false
+        guard !inFlight else { return }
+        asked = nil
+        state = .writing
     }
 
     /// v2's Delete, in Check before sending: the words go, and nothing was sent. Not while they're in flight, since then
@@ -191,6 +236,7 @@ final class CoachModel: ObservableObject {
     func leave() {
         visit += 1
         asked = nil
+        turns = []
         draft = ""
         sending = nil
         reviewing = false

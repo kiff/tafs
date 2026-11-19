@@ -113,6 +113,10 @@ struct CoachHome: View {
     var body: some View {
         NavigationStack {
             List {
+                // W4: Ask Coach as one conversation, oldest first, so the newest turn sits just over the microphone.
+                ForEach(coach.turns) { turn in
+                    CoachTurnRow(turn: turn)
+                }
                 Button { asking = true } label: {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
@@ -127,11 +131,101 @@ struct CoachHome: View {
                 Button(Words.Watch.menu, action: openMenu)
             }
             .navigationTitle(Words.Coach.title)
+            // The page opens on the microphone, with the conversation above it.
+            .defaultScrollAnchor(.bottom)
         }
         .sheet(isPresented: $asking) {
             CoachAsk(model: coach)
         }
         .task { await needsYou.load() }
+    }
+}
+
+/// One turn of the conversation (W4): when it was said, the person's words on the right, and Coach's side on the left: "Sent"
+/// until Coach starts, "Coach is answering" while it's at them, then its answer, which opens whole. VoiceOver hears whose
+/// words each side is.
+struct CoachTurnRow: View {
+    let turn: CoachModel.Turn
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(turn.at, style: .time)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(verbatim: turn.said)
+                .font(.footnote)
+                .lineLimit(4)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(.tint.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            coachSide
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder private var coachSide: some View {
+        switch turn.answer {
+        case .sent:
+            Label(Words.Watch.sent, systemImage: "checkmark")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        case .answering:
+            HStack(spacing: 4) {
+                ProgressView().frame(width: 14, height: 14)
+                Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title)).font(.caption2)
+            }
+            .accessibilityElement(children: .combine)
+        case .answered(let answer):
+            NavigationLink {
+                CoachTurnScreen(turn: turn, answer: answer)
+            } label: {
+                Text(CoachTurnRow.line(answer))
+                    .font(.footnote)
+                    .lineLimit(5)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Words.Coach.title + ": " + CoachTurnRow.line(answer))
+        }
+    }
+
+    /// Coach's side once answered: its words, or, with none, where the rest is.
+    static func line(_ answer: WatchCoachAnswer?) -> String {
+        guard let answer else { return Words.Watch.moreOnPhone }
+        if !answer.text.isEmpty { return answer.text }
+        return answer.approveOnPhone ? Words.Watch.approveOnPhone : Words.Watch.moreOnPhone
+    }
+}
+
+/// A turn's answer whole, as the ask's own answer view draws it.
+struct CoachTurnScreen: View {
+    let turn: CoachModel.Turn
+    let answer: WatchCoachAnswer?
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(verbatim: turn.said)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                if let answer, !answer.text.isEmpty {
+                    Text(answer.text)
+                }
+                if answer?.approveOnPhone == true {
+                    Label(Words.Watch.approveOnPhone, systemImage: "iphone").font(.footnote)
+                }
+                if answer == nil || answer?.more == true {
+                    Text(Words.Watch.moreOnPhone).font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .navigationTitle(Words.Coach.title)
     }
 }
 
