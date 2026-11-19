@@ -43,7 +43,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are thirteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@29", "did-this-happen@1", "draft-the-card@39", "drive-the-app@3", "halting@1", "improve-a-taf@2", "name-the-tools@17", "set-up-a-taf@13", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@29", "did-this-happen@1", "draft-the-card@40", "drive-the-app@3", "halting@1", "improve-a-taf@2", "name-the-tools@17", "set-up-a-taf@13", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -111,6 +111,15 @@ describe("Coach's core", () => {
     expect(body).not.toContain("but one that would go past a day's total can't");
   });
 
+  // The rules notice reached the confirm with no text twice on 19 Nov (Eval 44583392323, billing and replay): kiff/agents
+  // refused the notice ("text is required"), then refused the confirm agreeing to it ("show the rules notice first").
+  // The owner's setup showed a failed step. The notice's text is always written out (draft-the-card@40).
+  it("writes the rules notice's text out in full, never an empty notice", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("its text is the notice, always written out, never empty, never lines or lang;");
+    expect(body).not.toContain("its text is the notice, never lines or lang;");
+  });
+
   // Coach finds a vendor's published API description itself, with web_read, never one it makes up.
   // Go-to-market job 3, 13 Nov: "What time is it now", typed while the rules card waited, was taken as its answer and
   // Coach only repeated that it waited. A question is answered, and the card shown again.
@@ -158,7 +167,7 @@ describe("Coach's core", () => {
     expect(body).toContain("two options only, Agree (value agree) and Change something");
     // The rules and the figures go on the notice as data, and the confirm names it, so Approve holds the Card to
     // what the owner agreed: what happens past each limit, and each call's and the day's figures (rules.ts).
-    expect(body).toContain("with rules: per tool, its over (or each figure's) and only the owner's figures, as on the Card; its text is the notice, never lines or lang; then a confirm with agrees: its id");
+    expect(body).toContain("with rules: per tool, its over (or each figure's) and only the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang; then a confirm with agrees: its id");
     expect(body).toContain("never another rule as an option: ask it as its own question first, and put the answer in the rules.");
     // The Card follows the rule's over, and the line says it, so words, rule and Card agree (19 Nov, a Pipedrive check:
     // a read's line said nothing past its count, its rule asked, and the first Card refused) (draft-the-card@39).
@@ -367,7 +376,7 @@ describe("Coach's core", () => {
     const card = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(card).toContain("one short line per rule, and where it's kept if not on the Card: \"the connection keeps it\", \"KIFF adds it\", \"in its instructions\")");
     // A notice sent with lines on a definition without kept_words was refused, unshown, and its Agree never made (draft-the-card@39).
-    expect(card).toContain("its text is the notice, never lines or lang");
+    expect(card).toContain("its text is the notice, always written out, never empty, never lines or lang");
     // Evals 44005248914 and 44023858161, Replay: a column-only line without where it's kept, once in three runs,
     // while the clause sat inside a parenthetical. It's a sentence of its own.
     expect(card).toContain("A rule that keeps a write to one column ends \"(that column is in its instructions)\", unless the request fixes that column: never the column alone.");
@@ -474,15 +483,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@39", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@39", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "improve-a-taf@2", "name-the-tools@17"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@39", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@39", "halting@1", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "improve-a-taf@2", "name-the-tools@17"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
