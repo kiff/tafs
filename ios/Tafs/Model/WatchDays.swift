@@ -1,9 +1,9 @@
 import Foundation
 
-/// W11, "From your watch" on the iPhone and iPad (docs/watch-app.md, "W11"): off until tafs cloud's watch-day routes are
-/// live and the owner says yes.
+/// W11, "From your watch" on the iPhone and iPad (docs/watch-app.md, "W11"): on since tafs cloud's watch-day routes went
+/// live (tafs#1463). A tafs cloud whose own switch is off answers 404, and the section isn't drawn.
 enum WatchDaysFeature {
-    static let on = false
+    static let on = true
 }
 
 /// tafs cloud's watch-day reads (`GET /v1/watch/days`, `GET /v1/watch/days/{date}`): the person's own, read only.
