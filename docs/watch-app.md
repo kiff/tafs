@@ -110,6 +110,27 @@ With it on (`NeedsYouModel(briefOn: true)` in the tests):
 - **Unchanged:** no keys and nothing signed on the watch; kept in memory and forgotten when the app leaves the
   screen; no new words (the brief's are tafs cloud's, the rest the watch's own).
 
+## Version 2 (behind a switch, off)
+
+Watch v2 follows the owner-approved mockup v2.1, as Wear OS's does (`docs/watch-wear.md`), one step at a time behind
+`WatchV2.on` (`ios/TafsWatch/WatchPages.swift`), which is `false`: a watch shows v1 whole until every step is in. It
+turns on, as that one line, once the last step lands and the owner has tried the build.
+
+**Step (ii), the pages and Coach's home** (`WatchPagesView`, tested in `WatchPagesTests`):
+- **The pages,** one under the other, moved between with the crown or a swipe: Coach (home), Inbox, Your tafs and
+  Account; Brief after Your tafs only with `NeedsYouModel.briefOnWatch` on, which still waits for the owner's yes. Each
+  is named with the phone's own word where the phone has the page.
+- **Coach's home:** "Ask Coach" first, which opens v1's Coach screen; then "N unread in Inbox", only once the phone has
+  answered and only while something waits (never "0 unread"), a tap going to the Inbox; the line that Coach gets words, never a
+  voice; and **Menu** at the foot.
+- **The menu:** every page by name, and Halt at the very bottom, apart from the rest, offered only while a taf the phone
+  listed runs. Until step (v), Halt is v1's Halt all, asked once more; the menu then closes on Your tafs, where the
+  answer shows.
+- **Until their own steps:** the Inbox is Needs you as v1 reads it (with the brief in its place when that switch is on);
+  Your tafs is each taf with its state and no Halt; Account is the trust line.
+- **Nothing new** reaches the phone, and nothing is stored on the watch. Type and Quick reply come with the review
+  (step iii), and the last chats with tafs cloud's chats read.
+
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
 The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in
