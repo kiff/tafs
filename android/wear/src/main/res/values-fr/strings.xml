@@ -133,7 +133,7 @@
     <string name="watch_sign_out_q">Se déconnecter sur cette montre ?</string>
     <string name="watch_sign_out_sub">Votre téléphone reste connecté. Cette montre oublie vos tafs, vos chats et votre boîte de réception.</string>
     <string name="watch_signed_in">Connecté</string>
-    <string name="watch_signed_out_here">Session fermée sur cette montre. Votre téléphone reste connecté.</string>
+    <string name="watch_signed_out_here">Déconnecté de cette montre. Votre téléphone reste connecté.</string>
     <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>

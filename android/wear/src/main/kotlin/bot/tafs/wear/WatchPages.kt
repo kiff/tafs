@@ -59,8 +59,8 @@ internal val Page.title: String
   }
 
 /**
- * What waits in the Inbox, for the count on Coach's home: the calls Needs you holds and the results not opened yet. The inbox kept
- * on the watch, with read and dismissed, is step (iv); until then it's what the phone answered now, as v1 shows it.
+ * What waits in the Inbox, for the count on Coach's home, when the Inbox can't be kept on this watch (locked, or no screen lock):
+ * the calls Needs you holds and the results not opened yet, as the phone answered now. When it's kept, its unread lines count.
  */
 internal fun unread(shown: WatchModel.Shown, ready: List<AskLine>): Int =
   ((shown as? WatchModel.Shown.Read)?.needsYou?.count ?: 0) + ready.size
@@ -86,7 +86,7 @@ internal fun WatchPages(
   timing: String? = null,
   /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
   probe: String? = null,
-  /** The Inbox kept on the watch (step iv); null draws what the phone answered now, as before it. */
+  /** The Inbox kept on the watch (step iv); null when it can't be kept now (locked, no screen lock): what the phone answered now. */
   inbox: List<InboxItem>? = null,
   /** Step (v): the taf whose page is open, and Choose which to halt, from the menu (TafScreens.kt). */
   taf: WatchModel.OpenTaf? = null,
@@ -149,7 +149,7 @@ internal fun WatchPages(
   androidx.compose.runtime.LaunchedEffect(pager.currentPage) { if (pages.getOrNull(pager.currentPage) == Page.Account) act.readAccount() }
   if (menu) {
     BackHandler { menu = false }
-    return MenuScreen(shown, pages, act, open = ::goTo, close = { menu = false })
+    return MenuScreen(shown, pages, act, outcome, open = ::goTo, close = { menu = false })
   }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
@@ -228,7 +228,7 @@ private fun ScalingLazyListScope.coachHome(
   if (shown !is WatchModel.Shown.Read) {
     notRead(shown, act)
   } else {
-    // Read means opened, on this watch (step iv); before it, what waits now.
+    // Read means opened, on this watch (step iv); when the Inbox can't be kept, what waits now.
     val count = inbox?.count { !it.read } ?: unread(shown, ready)
     if (count > 0) item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.inboxUnread(count)) } }
   }
@@ -256,8 +256,8 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
 }
 
 /**
- * The Inbox, until it's kept on the watch (step iv): Needs you's held calls, each opening on its own screen (step vi), then each
- * result ready to open. With nothing, the Inbox says what lands there.
+ * The Inbox when it can't be kept on this watch (locked, or no screen lock): what the phone answered now, stored nowhere. Needs
+ * you's held calls, each opening on its own screen (step vi), then each result ready to open. With nothing, what lands there.
  */
 private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
   for (call in shown.needsYou.calls) item { HeldCallRow(call) { openCall(call) } }
@@ -335,10 +335,12 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
  * Halt opens Choose which to halt (step v), which asks once more before anything is sent.
  */
 @Composable
-private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, open: (Page) -> Unit, close: () -> Unit) {
+private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, outcome: WatchModel.Outcome?, open: (Page) -> Unit, close: () -> Unit) {
   val tafs = (shown as? WatchModel.Shown.Read)?.tafs
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.menu) } }
+    // A Halt confirmed from here comes back here: what came of it, "set a screen lock" included, is said where it was asked.
+    outcome?.let { item { OutcomeCard(it, act) } }
     for (page in pages) item { Button(onClick = { open(page) }, modifier = Modifier.fillMaxWidth()) { Text(page.title) } }
     if (tafs != null && !tafs.allHalted && tafs.tafs.any { !it.halted }) {
       item { Spacer(Modifier.height(16.dp)) }

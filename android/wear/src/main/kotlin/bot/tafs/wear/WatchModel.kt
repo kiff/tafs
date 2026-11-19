@@ -168,7 +168,10 @@ class WatchModel(
       val name = request.tafId?.let { id -> ((_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == id })?.name }
       _outcome.value = Outcome.Halting(if (request.tafId == null) null else name ?: "")
     }
-    _outcome.value = outcomeOf(phone.ask(request))
+    val asked = phone.ask(request)
+    // Signed out on this watch meanwhile: its answer is dropped, never shown after Sign in.
+    if (_signedOutHere.value) return
+    _outcome.value = outcomeOf(asked)
     // The lists as they stand now, and the taf's page open.
     refresh()
     rereadTaf()
@@ -226,6 +229,7 @@ class WatchModel(
 
   /** A taf tapped on the Tafs page: its page, read from the phone. */
   suspend fun openTaf(tafId: String) {
+    if (_signedOutHere.value) return
     val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
     _taf.value = OpenTaf(tafId, listed, TafRead.Asking)
     readTaf(tafId)
@@ -313,6 +317,7 @@ class WatchModel(
    * from a watch without its lock, or locked.
    */
   suspend fun haltPicked() {
+    if (_signedOutHere.value) return
     val pick = _haltPick.value?.takeIf { it.confirming } ?: return
     val chosen = pick.chosen
     _haltPick.value = null
@@ -327,7 +332,9 @@ class WatchModel(
     }
     _outcome.value = Outcome.Halting(chosen.joinToString(", ") { it.name })
     // Each to the end, one after the other: one that doesn't go through never keeps the next from halting.
-    _outcome.value = Outcome.Several(chosen.map { taf -> taf.name to outcomeOf(phone.ask(WatchRequest.Halt(now(), taf.tafId))) })
+    val each = chosen.map { taf -> taf.name to outcomeOf(phone.ask(WatchRequest.Halt(now(), taf.tafId))) }
+    if (_signedOutHere.value) return
+    _outcome.value = Outcome.Several(each)
     refresh()
     rereadTaf()
   }
@@ -595,6 +602,15 @@ class WatchModel(
   /** The Inbox, newest first. */
   val inbox: StateFlow<List<InboxItem>> = _inbox.asStateFlow()
 
+  private val _inboxKept = MutableStateFlow(false)
+
+  /**
+   * Whether the Inbox can be kept on this watch now: v2, unlocked, with a screen lock. When it can't, nothing is stored and the
+   * screen shows what the phone answered now (Needs you's calls, the results ready), so a call that needs the person is never
+   * hidden behind "Nothing new".
+   */
+  val inboxKept: StateFlow<Boolean> = _inboxKept.asStateFlow()
+
   /** How many lines of the Inbox aren't read yet: Coach's home says so. */
   fun unreadCount(): Int = _inbox.value.count { !it.read }
 
@@ -603,7 +619,8 @@ class WatchModel(
 
   /** A new line, unread; one already there keeps its place and whether it was read, with the newest words. */
   private fun inboxPut(item: InboxItem) {
-    // A locked watch, or one with no screen lock, keeps no Inbox: nothing is added to it.
+    // v1 keeps no Inbox; a locked watch, or one with no screen lock, adds nothing to it.
+    if (inboxStore == null && !reviewFirst) return
     if (!unlocked()) return
     if (item.id in dismissed) return
     val before = _inbox.value.firstOrNull { it.id == item.id }
@@ -644,16 +661,25 @@ class WatchModel(
     inboxStore?.writeDismissed(ids)
   }
 
-  /** The watch locked, or the phone signed out: nothing of the Inbox stays on the watch. */
+  /** Signed out (on the phone, or on this watch): nothing of the Inbox stays on the watch, the ids taken away included. */
   fun clearInbox() {
     inboxStore?.clear()
     dismissed = emptySet()
     _inbox.value = emptyList()
   }
 
-  /** Put away while locked (or with no screen lock): the Inbox is cleared now, not at the next start. */
+  /**
+   * Locked, or no screen lock: the lines go (no taf, words or time stays), but the ids taken away stay, bare, so a line dismissed
+   * before the lock doesn't come back unread after it.
+   */
+  private fun clearInboxLines() {
+    inboxStore?.write(emptyList())
+    _inbox.value = emptyList()
+  }
+
+  /** Put away while locked (or with no screen lock): the Inbox's lines are cleared now, not at the next start. */
   fun clearInboxIfLocked() {
-    if (!unlocked()) clearInbox()
+    if (!unlocked()) clearInboxLines()
   }
 
   private fun saveInbox(items: List<InboxItem>) {
@@ -691,7 +717,9 @@ class WatchModel(
     // Signed out on this watch: nothing is read until the person signs in on it again, and an answer that lands after is dropped.
     if (_signedOutHere.value) return
     // A locked watch, or one with no screen lock, keeps no Inbox: as the tile's count, nothing shows off the wrist.
-    if (!unlocked()) clearInbox()
+    val kept = unlocked()
+    if (!kept) clearInboxLines()
+    _inboxKept.value = kept && (inboxStore != null || reviewFirst)
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
     val asked = phone.ask(WatchRequest.NeedsYou(now()))
     if (_signedOutHere.value) return
@@ -709,6 +737,11 @@ class WatchModel(
           deleteKept()
           clearInbox()
           if (_voice.value is Voice.Review) voiceNow = null
+          // Nor what an open screen read: a taf's page, the halt pick, the calendar, Account.
+          _taf.value = null
+          _haltPick.value = null
+          closeCalendar()
+          _account.value = null
           return show(Shown.SignedOut)
         }
         else -> return show(Shown.OpenOnPhone)
