@@ -1,4 +1,3 @@
-import { entryApp } from "../src/cloud/steps.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
@@ -456,6 +455,8 @@ describe("a message streamed (kiff/tafs#60)", () => {
   it("keys a refused connect of an app from search by its entry, named by its app, so the same entry going through clears it", async () => {
     const w = world();
     w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c0", tool: "planque", input: { action: "catalog" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c0", result: { text: "{\"entries\":[{\"entry\":\"connector:composio:gmail@1\",\"vendor\":\"gmail\",\"title\":\"Gmail\"}]}" } } },
       { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", name: "replies", taf_name: "Replies", setup_reads: ["GMAIL_LIST"] } } },
       { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 400: the body must be a JSON object with the documented fields: unknown field \"setup_reads\"", is_error: true } } },
       { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", name: "replies", taf_name: "Replies", uses: ["GMAIL_LIST"] } } },
@@ -466,7 +467,6 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; why?: string; resolved?: true; refused?: { vendor: string; key?: string } }>;
     expect(kept.map((k) => [k.call, k.why, k.refused?.vendor, k.refused?.key, k.resolved ?? false]))
       .toEqual([["c1", "Coach couldn't connect Gmail yet", "Gmail", "connector:composio:gmail", true]]);
-    expect(entryApp("connector:composio:google_sheets@2")).toBe("Google sheets");
   });
 
   it("names a refused reuse by the reused grant's app, when this run's answers named it", async () => {

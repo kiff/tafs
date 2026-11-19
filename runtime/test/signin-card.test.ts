@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { withLine } from "../src/cloud/handler.js";
 import { appNamed, Steps } from "../src/cloud/steps.js";
+import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 
 describe("a sign-in card's buttons", () => {
   const card = { type: "sign_in", id: "si", grant: "grt_abcdef", service: "Stripe", title: "Połącz Stripe", text: "Zaloguj się w Stripe, aby taf mógł zwracać płatności.", yes: "Zaloguj się", no: "Nie teraz", waits: "owner" };
@@ -56,5 +57,71 @@ describe("the app a sign-in card names", () => {
     steps.call("taf_results", {}, "c3");
     steps.result("c3", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets" }));
     expect(steps.appOf("grt_sheets1")).toBeUndefined();
+  });
+});
+
+describe("a person reads the app's published name, never its slug", () => {
+  const catalog = JSON.stringify({ entries: [{ entry: "connector:composio:googlesheets@1", vendor: "googlesheets", title: "Google Sheets", how: "oauth" }] });
+
+  it("says Google Sheets once a catalog answer named the entry, in the request's and the grant's later steps, in every language", () => {
+    for (const lang of LANGUAGES) {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "catalog" }, "c0");
+      steps.result("c0", catalog);
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      steps.result("c1", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets", status: "pending" }));
+      steps.call("planque", { action: "approve", grant: "grt_sheets1" }, "c2");
+      for (const id of ["c1", "c2"]) {
+        const why = steps.connectionWhy(id) ?? "";
+        expect(why, `${lang} ${id}`).toBe(wordsIn(lang).step_connection_not_yet("Google Sheets"));
+        expect(why, `${lang} ${id}`).not.toMatch(/Googlesheets/i);
+      }
+    }
+  });
+
+  it("names no app, rather than one made from the slug, when nothing has named the entry, in every language", () => {
+    for (const lang of LANGUAGES) {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      expect(steps.connectionWhy("c1"), lang).toBe(wordsIn(lang).step_connection_not_yet(""));
+      expect(steps.connectionWhy("c1"), lang).not.toMatch(/Googlesheets/i);
+    }
+  });
+
+  it("takes planque's name for a grant over the host-derived name of a request by server", () => {
+    const steps = new Steps();
+    steps.call("planque", { action: "request", server: "https://mcp.acme.example/v1" }, "c1");
+    steps.result("c1", JSON.stringify({ id: "grt_acme001", vendor: "Acme CRM", status: "pending" }));
+    steps.call("planque", { action: "approve", grant: "grt_acme001" }, "c2");
+    for (const id of ["c1", "c2"]) {
+      expect(steps.connectionWhy(id), id).toContain("Acme CRM");
+      expect(steps.connectionWhy(id), id).not.toContain("Acme crm");
+    }
+    expect(steps.appOf("grt_acme001")).toBe("Acme CRM");
+  });
+
+  it("gives an entry no name from a catalog title that is a host or a path, and cuts a long one", () => {
+    const named = (title: string, lang: "en" = "en") => {
+      const steps = new Steps(new Map(), lang);
+      steps.call("planque", { action: "catalog" }, "c0");
+      steps.result("c0", JSON.stringify({ entries: [{ entry: "connector:composio:googlesheets@1", title }] }));
+      steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+      return steps.connectionWhy("c1") ?? "";
+    };
+    for (const bad of ["googlesheets.com", "Sheets / Drive", "https://sheets.example"]) {
+      expect(named(bad), bad).toBe(wordsIn("en").step_connection_not_yet(""));
+    }
+    expect(named("Google Sheets")).toBe(wordsIn("en").step_connection_not_yet("Google Sheets"));
+    const long = "A".repeat(80);
+    expect(named(long)).toBe(wordsIn("en").step_connection_not_yet("A".repeat(60)));
+  });
+
+  it("takes planque's name over a catalog's when the grant is named", () => {
+    const steps = new Steps();
+    steps.call("planque", { action: "catalog" }, "c0");
+    steps.result("c0", catalog);
+    steps.call("planque", { action: "request", entry: "connector:composio:googlesheets" }, "c1");
+    steps.result("c1", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets (work)", status: "pending" }));
+    expect(steps.connectionWhy("c1")).toContain("Google Sheets (work)");
   });
 });
