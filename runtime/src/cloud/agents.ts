@@ -131,6 +131,8 @@ export interface AgentDefinition {
   show?: boolean;
   /** The cards the agent shows instead of Coach's: a taf's own, ask_coach (kiff/agents' show_types, kiff/tafs#476 gap 15). */
   show_types?: string[];
+  /** kiff/agents' deliver_file: a file the run made, kept 30 days in Files for everyone on the account. Off unless set. */
+  files?: boolean;
   /** kiff/agents' your_step tool: the agent hands its owner a step it may never take ("Your step"). Off unless set. */
   your_step?: boolean;
   /** The planque the agent asks for vendor access through (kiff/agents#91). Off unless set. */
