@@ -39,6 +39,9 @@ Tests: `FilesTests`.
   run, the type and size, "Everyone on this account", and when it goes; **Delete now** apart, behind a confirm that says
   it's gone for everyone, right away.
 - **iPad, full width:** the list and the open file side by side; a file deleted there clears the side.
+- **The copy on the device** (`FileCopy`): the bytes are written for the preview and the share sheet in their own folder
+  under the app's temporary directory, with complete file protection, under a name kept to one path component, and
+  removed when the file's screen closes. So nothing is kept on the device past it, and Delete now and the 30 days hold.
 - **Under the chat** (`ChatFileChips`): a run's files as chips under its message, each opening the same file screen, with
   the date they're kept until. Drawn once tafs cloud says which run a chat message is: today's chat messages don't carry
   their run.

@@ -150,6 +150,20 @@ final class FilesTests: XCTestCase {
         try await store.delete("fil_a")
     }
 
+    /// A file's name stays one path component on the device whatever tafs cloud sends, and its copy goes when removed.
+    func testAFilesCopyIsOneComponentAndGoes() throws {
+        XCTAssertEqual(FileCopy.safeName("week.csv", id: "fil_1"), "week.csv")
+        XCTAssertEqual(FileCopy.safeName("../../etc/passwd", id: "fil_1"), "passwd")
+        XCTAssertEqual(FileCopy.safeName("..", id: "fil_1"), "fil_1")
+        XCTAssertEqual(FileCopy.safeName("  ", id: "fil_1"), "fil_1")
+        XCTAssertEqual(FileCopy.folder("../x").lastPathComponent, "x", "an id can't climb out either")
+        let folder = FileCopy.folder("fil_test")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("a".utf8).write(to: folder.appendingPathComponent("a.csv"))
+        FileCopy.remove("fil_test")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path), "gone with its screen")
+    }
+
     /// The stub moves no money and keeps every file 30 days from its run.
     func testTheStubKeepsEachFileThirtyDaysFromItsRun() async throws {
         let files = try await StubFilesStore(now: now).files()

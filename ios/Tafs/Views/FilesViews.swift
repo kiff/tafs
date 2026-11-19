@@ -261,6 +261,8 @@ struct FileDetailView: View {
         .screenBackground()
         .navigationTitle(file.name)
         .task { await fetch() }
+        // The copy goes with the screen: never kept on the device past it.
+        .onDisappear { FileCopy.remove(file.id) }
         .fileExporter(isPresented: $saving, document: local.map(FileForSaving.init), contentType: .data, defaultFilename: file.name) { result in
             if case .success = result { note = Words.Files.saved }
         }
@@ -282,10 +284,32 @@ struct FileDetailView: View {
     /// The file's bytes, written where only this app reads them, under its own name, for the preview and the share sheet.
     private func fetch() async {
         guard local == nil, let data = try? await files.store.contents(of: file.id) else { return }
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(file.id, isDirectory: true)
+        let folder = FileCopy.folder(file.id)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let url = folder.appendingPathComponent(file.name)
+        let url = folder.appendingPathComponent(FileCopy.safeName(file.name, id: file.id))
         if (try? data.write(to: url, options: .completeFileProtection)) != nil { local = url }
+    }
+}
+
+/// The copy of a file this device holds while it's open: in its own folder under the app's temporary directory, named
+/// as the file is, and gone when the file's screen closes. A file is never kept on the device past its screen, so
+/// Delete now and the 30 days hold here too.
+enum FileCopy {
+    static func folder(_ id: String) -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent("files", isDirectory: true)
+            .appendingPathComponent(safeName(id, id: "file"), isDirectory: true)
+    }
+
+    /// A name that stays one path component whatever tafs cloud sends: its last component, never "." or "..", else
+    /// the file's id.
+    static func safeName(_ name: String, id: String) -> String {
+        let last = (name as NSString).lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        return last.isEmpty || last == "." || last == ".." || last.contains("/") ? id : last
+    }
+
+    /// Removes a file's copy (its screen closed).
+    static func remove(_ id: String) {
+        try? FileManager.default.removeItem(at: folder(id))
     }
 }
 
