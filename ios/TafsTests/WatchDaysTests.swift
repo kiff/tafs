@@ -5,7 +5,7 @@ import XCTest
 /// and one day's turns, oldest first. Read only, nothing kept on the phone, and nothing at all while the switch is off.
 @MainActor
 final class WatchDaysTests: XCTestCase {
-    private let daysJSON = #"{"days":[{"date":"2026-11-19","count":3},{"date":"2026-11-18","count":8},{"count":1}]}"#
+    private let daysJSON = #"{"today":"2026-11-19","days":[{"date":"2026-11-19","count":3},{"date":"2026-11-18","count":8},{"count":1}]}"#
     private let dayJSON = #"""
     {"date":"2026-11-19","turns":[
      {"id":"wa_1","said":"Move my call to six","said_at":"2026-11-19T08:40:00Z","taf":{"id":"taf-cal","name":"Calendar"},
@@ -17,13 +17,13 @@ final class WatchDaysTests: XCTestCase {
 
     /// The reads, held or answered as told.
     private final class Reading: WatchDaysReading {
-        var days: [TafsCloud.WatchDay] = []
+        var days = TafsCloud.WatchDayList()
         var turns: [TafsCloud.WatchTurn] = []
         var fails = false
         var dayReads: [String] = []
         var held: CheckedContinuation<[TafsCloud.WatchTurn], Error>?
         var holds = false
-        func watchDays() async throws -> [TafsCloud.WatchDay] {
+        func watchDays() async throws -> TafsCloud.WatchDayList {
             if fails { throw TafsCloud.CloudError(status: 500, message: "down") }
             return days
         }
@@ -37,7 +37,8 @@ final class WatchDaysTests: XCTestCase {
 
     func testTheDaysAndTurnsAreTheDesignsJSON() {
         XCTAssertEqual(TafsCloud.watchDays(decoding: Data(daysJSON.utf8)),
-                       [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)], "one without a date is left out")
+                       .init(days: [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)], today: "2026-11-19"),
+                       "one without a date is left out; today is the account's")
         let turns = TafsCloud.watchTurns(decoding: Data(dayJSON.utf8))
         XCTAssertEqual(turns.map(\.id), ["wa_1", "wa_2"], "oldest first, as sent; one without an id is left out")
         XCTAssertEqual(turns[0].taf, .init(id: "taf-cal", name: "Calendar"))
@@ -51,7 +52,7 @@ final class WatchDaysTests: XCTestCase {
 
     func testWithTheSwitchOffNothingIsRead() async {
         let reading = Reading()
-        reading.days = [.init(date: "2026-11-19", count: 1)]
+        reading.days = .init(days: [.init(date: "2026-11-19", count: 1)], today: "2026-11-19")
         let model = WatchDaysModel(reading: reading, on: false)
         await model.load()
         XCTAssertTrue(model.days.isEmpty)
@@ -60,10 +61,13 @@ final class WatchDaysTests: XCTestCase {
     /// A read that fails shows no section, as with the switch off: never an error in Previous conversations.
     func testTheDaysOrNoneWhenTheReadFails() async {
         let reading = Reading()
-        reading.days = [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)]
+        reading.days = .init(days: [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)], today: "2026-11-18")
         let model = WatchDaysModel(reading: reading, on: true)
         await model.load()
         XCTAssertEqual(model.days.map(\.date), ["2026-11-19", "2026-11-18"], "newest first, as tafs cloud sends them")
+        // The account's today, not the phone's: on an account a day behind the phone, "Today" is the 18th (agentgabo's read).
+        XCTAssertEqual(model.title("2026-11-18"), Words.Calendar.today)
+        XCTAssertNotEqual(model.title("2026-11-19"), Words.Calendar.today)
         reading.fails = true
         await model.load()
         XCTAssertTrue(model.days.isEmpty)
@@ -103,6 +107,9 @@ final class WatchDaysTests: XCTestCase {
         let yesterday = WatchDaysModel.title("2026-11-18", now: now, zone: zone, locale: Locale(identifier: "en_GB"))
         XCTAssertTrue(yesterday.contains("18") && yesterday.contains("November"), yesterday)
         XCTAssertEqual(WatchDaysModel.title("not a day", now: now, zone: zone), "not a day")
+        // tafs cloud's today wins over the phone's when it gives one.
+        XCTAssertEqual(WatchDaysModel.title("2026-11-18", today: "2026-11-18", now: now, zone: zone), Words.Calendar.today)
+        XCTAssertNotEqual(WatchDaysModel.title("2026-11-19", today: "2026-11-18", now: now, zone: zone), Words.Calendar.today)
     }
 
     /// tafs cloud without the routes, or with the watch switch off (404 `watch_off`), is no days, never an error.
@@ -114,9 +121,10 @@ final class WatchDaysTests: XCTestCase {
         config.protocolClasses = [StubProtocol.self]
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "dev_token", session: URLSession(configuration: config))
         let days = try await cloud.watchDays()
-        XCTAssertTrue(days.isEmpty)
+        XCTAssertEqual(days, TafsCloud.WatchDayList())
         StubProtocol.responses["GET /v1/watch/days"] = (200, daysJSON)
         let read = try await cloud.watchDays()
-        XCTAssertEqual(read.count, 2)
+        XCTAssertEqual(read.days.count, 2)
+        XCTAssertEqual(read.today, "2026-11-19")
     }
 }

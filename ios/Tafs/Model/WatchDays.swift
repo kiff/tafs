@@ -9,7 +9,7 @@ enum WatchDaysFeature {
 /// tafs cloud's watch-day reads (`GET /v1/watch/days`, `GET /v1/watch/days/{date}`): the person's own, read only.
 @MainActor
 protocol WatchDaysReading {
-    func watchDays() async throws -> [TafsCloud.WatchDay]
+    func watchDays() async throws -> TafsCloud.WatchDayList
     func watchDay(_ date: String) async throws -> [TafsCloud.WatchTurn]
 }
 
@@ -27,6 +27,8 @@ final class WatchDaysModel: ObservableObject {
 
     /// The days, newest first; none while the switch is off, or when tafs cloud has none (or doesn't serve them yet).
     @Published private(set) var days: [TafsCloud.WatchDay] = []
+    /// Today in the account's time zone, as tafs cloud says it; nil from one that doesn't, and then the phone's day.
+    @Published private(set) var today: String?
     @Published private(set) var day: DayState = .reading
     private let reading: WatchDaysReading
     private let on: Bool
@@ -39,8 +41,10 @@ final class WatchDaysModel: ObservableObject {
 
     /// The days. A read that fails shows none: the section is simply not there, as with the switch off.
     func load() async {
-        guard on else { days = []; return }
-        days = (try? await reading.watchDays()) ?? []
+        guard on else { days = []; today = nil; return }
+        let read = (try? await reading.watchDays()) ?? TafsCloud.WatchDayList()
+        days = read.days
+        today = read.today
     }
 
     /// One day's turns, oldest first.
@@ -64,15 +68,19 @@ final class WatchDaysModel: ObservableObject {
         day = .reading
     }
 
-    /// A day's title: Today for today in `zone`, else its date in the person's language.
-    static func title(_ date: String, now: Date = Date(), zone: TimeZone = .current, locale: Locale = .current) -> String {
+    /// A day's title: Today for the account's today when tafs cloud gives it (else the phone's), else its date in the
+    /// person's language.
+    func title(_ date: String) -> String { Self.title(date, today: today) }
+
+    static func title(_ date: String, today: String? = nil, now: Date = Date(), zone: TimeZone = .current,
+                      locale: Locale = .current) -> String {
         let parse = DateFormatter()
         parse.calendar = Calendar(identifier: .gregorian)
         parse.locale = Locale(identifier: "en_US_POSIX")
         parse.timeZone = zone
         parse.dateFormat = "yyyy-MM-dd"
         guard let day = parse.date(from: date) else { return date }
-        if parse.string(from: now) == date { return Words.Calendar.today }
+        if date == (today ?? parse.string(from: now)) { return Words.Calendar.today }
         let shown = DateFormatter()
         shown.locale = locale
         shown.timeZone = zone

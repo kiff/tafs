@@ -12,6 +12,13 @@ extension TafsCloud {
         init(date: String, count: Int) { self.date = date; self.count = count }
     }
 
+    /// The days, and which is today in the account's time zone (`today`), so a person on another zone than the account's
+    /// sees "Today" on the right day.
+    struct WatchDayList: Equatable {
+        var days: [WatchDay] = []
+        var today: String?
+    }
+
     /// One request said from a watch that day, and where it went (`GET /v1/watch/days/{date}`), oldest first.
     struct WatchTurn: Decodable, Equatable, Identifiable, Hashable {
         struct Taf: Decodable, Equatable, Hashable {
@@ -62,12 +69,12 @@ extension TafsCloud {
     }
 
     /// The person's watch days, newest first. A switch that's off (404 `watch_off`) is no days, never an error.
-    func watchDays() async throws -> [WatchDay] {
+    func watchDays() async throws -> WatchDayList {
         do {
             let data = try await sendData("GET", "/v1/watch/days", body: Optional<[String: String]>.none)
             return Self.watchDays(decoding: data)
         } catch let e as CloudError where e.status == 404 {
-            return []
+            return WatchDayList()
         }
     }
 
@@ -77,10 +84,11 @@ extension TafsCloud {
         return Self.watchTurns(decoding: data)
     }
 
-    /// The days from tafs cloud's answer; one this app can't read is left out, never the list.
-    static func watchDays(decoding data: Data) -> [WatchDay] {
-        struct Response: Decodable { let days: [LenientItem<WatchDay>]? }
-        return ((try? JSONDecoder().decode(Response.self, from: data))?.days ?? []).compactMap(\.value)
+    /// The days from tafs cloud's answer, and its today; a day this app can't read is left out, never the list.
+    static func watchDays(decoding data: Data) -> WatchDayList {
+        struct Response: Decodable { let days: [LenientItem<WatchDay>]?; let today: String? }
+        let read = try? JSONDecoder().decode(Response.self, from: data)
+        return WatchDayList(days: (read?.days ?? []).compactMap(\.value), today: read?.today)
     }
 
     /// The turns from tafs cloud's answer, oldest first as it sends them; one this app can't read is left out.

@@ -13,7 +13,7 @@ struct WatchDaysSection: View {
                         WatchDayView(model: model, date: day.date)
                     } label: {
                         HStack {
-                            Label(WatchDaysModel.title(day.date), systemImage: "applewatch")
+                            Label(model.title(day.date), systemImage: "applewatch")
                                 .scaledFont(15).foregroundColor(Theme.ink)
                             Spacer()
                             Text(verbatim: "\(day.count)").scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
@@ -52,7 +52,7 @@ struct WatchDayView: View {
         }
         .hiddenScrollBackground()
         .screenBackground()
-        .navigationTitle(WatchDaysModel.title(date))
+        .navigationTitle(model.title(date))
         .inlineTitle()
         .task { await model.open(date) }
         .onDisappear { model.close() }
