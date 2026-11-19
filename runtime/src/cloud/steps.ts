@@ -460,6 +460,9 @@ export function coachGuard(text: unknown): boolean {
     || /\btools names the entry's own tools\b|\bisn't one;/i.test(line)
     || /\bsecurity schemes?\b[^.;]*\bkey sent as asked\b/i.test(line)
     || /\bsearch is incomplete\b|\bnot known to be absent\b/i.test(line)
+    // Reads asked outside the request that sets the taf's tools ("go with the taf's tools: add these reads in the request that
+    // sets the taf's tools"): Coach asks again in that request (the Moneybird turn of 19 Nov kept this one red).
+    || /\bin the request that sets the taf's tools\b/i.test(line)
     // A call on something that waits for the person (rules to agree, a key to give): the person is already being asked, so the
     // step is not made, never "Coach couldn't connect" in red over a card that is waiting for them (Android 120, 19 Nov, Pipedrive).
     || /\bwaits[_ ]for[_ ]the[_ ]owner'?s?[_ ]approval\b|\bwaits_for_approval\b/i.test(line);

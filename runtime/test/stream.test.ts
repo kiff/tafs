@@ -426,7 +426,8 @@ describe("a message streamed (kiff/tafs#60)", () => {
 
   it("marks a refused tools call past once Coach's corrected tools call on the same grant goes through, pending the owner's approval (14 Nov, 13:13)", async () => {
     const w = world();
-    const refused = { text: "planque answered 400: setup_reads go with the taf's tools: add these reads in the request that sets the taf's tools", is_error: true };
+    // A refusal that isn't about how Coach asked (those end not made at once, never red): the vendor's own refusal.
+    const refused = { text: "planque answered 400: the vendor refused the request for this grant", is_error: true };
     w.agents.streamed.push(
       { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST", setup_reads: true }] } } },
       { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },

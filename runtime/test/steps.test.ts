@@ -288,6 +288,7 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     expect(coachGuard("tools names the entry's own tools, each once: PIPEDRIVE_GET_ALL_LEADS isn't one; it has getPersons, getPerson, getDeals")).toBe(true);
     expect(coachGuard("the API description can't be used: none of its security schemes is a key sent as asked; it offers (header x-api-token), (http basic), oauth2 (oauth2, not read)")).toBe(true);
     expect(coachGuard('{"grant":it,"server":"it match so far; the search is incomplete, so a tool is not known to be absent.","skipped":6}')).toBe(true);
+    expect(coachGuard("go with the taf's tools: add these reads in the request that sets the taf's tools, so the owner approves them once with its Card")).toBe(true);
     // A real failure of the app stays one.
     expect(coachGuard("the vendor answered 401: the key was revoked")).toBe(false);
     expect(coachGuard("the sign-in to Pipedrive didn't finish")).toBe(false);
