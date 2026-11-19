@@ -57,6 +57,20 @@ enum Clipboard {
     static func copy(_ text: String) {
         UIPasteboard.general.string = text
     }
+
+    /// A secret shown once (an `api` door's key): kept on this device only, never on the person's other devices through
+    /// Universal Clipboard, and gone from the pasteboard after a minute, whether or not tafs is still open.
+    static let secretLifetime: TimeInterval = 60
+
+    static func copySecret(_ text: String, now: Date = Date()) {
+        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: text]],
+                                      options: secretOptions(now: now))
+    }
+
+    /// The options a secret is copied with: this device only, and an expiry a minute from now.
+    static func secretOptions(now: Date) -> [UIPasteboard.OptionsKey: Any] {
+        [.localOnly: true, .expirationDate: now.addingTimeInterval(secretLifetime)]
+    }
 }
 
 /// Buttons in rows that wrap (FlowRow).

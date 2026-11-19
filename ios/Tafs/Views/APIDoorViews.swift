@@ -43,8 +43,9 @@ struct APIDoorPanel: View {
                 Meter(fraction: Double(today) / Double(max(door.limit, 1)), color: Theme.tafColor(taf.colorIndex))
                 Text(Words.Door.Api.ofLimit(count: today, limit: Words.number(door.limit)))
                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
-                if let last = door.lastRequest {
-                    Text(Words.Door.Api.lastRequest(time: APIDoorText.when(last.at) ?? last.at, status: last.shown))
+                // Only in tafs cloud's words: the app never words a state itself, so none is drawn until they're sent.
+                if let last = door.lastRequest, let words = APIDoorText.lastRequestWords(last) {
+                    Text(Words.Door.Api.lastRequest(time: APIDoorText.when(last.at) ?? last.at, status: words))
                         .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("door.api.last_request")
                 }
@@ -130,6 +131,10 @@ struct NewKeySheet: View {
             Text(Words.Door.Api.twoKeys).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             Text(Words.Door.Api.keyName).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
             DriveField(Words.Door.Api.keyNameHint, text: $name).textFieldStyle(.roundedBorder).disableAutocorrection(true)
+                // tafs cloud takes at most 80; 60, as Android, so a name never comes back refused.
+                .onChange(of: name) { typed in
+                    if typed.count > APIDoorText.maxKeyName { name = String(typed.prefix(APIDoorText.maxKeyName)) }
+                }
             Button(Words.Door.Api.newKey) {
                 Task {
                     let made = await doors.newKey(door, name: APIDoorText.keyName(name, door: door),
@@ -174,7 +179,8 @@ struct IssuedKeyView: View {
                     .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                     .accessibilityIdentifier("door.api.key")
                 Button(copied ? Words.Door.Api.copied : Words.Door.Api.copyKey) {
-                    Clipboard.copy(key.key)
+                    // This device only, and off the pasteboard after a minute.
+                    Clipboard.copySecret(key.key)
                     copied = true
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -232,6 +238,26 @@ enum APIDoorText {
     /// A door holds at most two live keys, so one can be replaced without stopping the other.
     static let maxKeys = 2
 
+    /// A field the application sends, as a developer reads it: its name, then its choices or its type.
+    static func field(_ field: TafsCloud.DoorDraft.Field) -> String {
+        if let values = field.values, !values.isEmpty { return field.name + " · " + values.joined(separator: " | ") }
+        return field.name + " · " + field.type
+    }
+
+    /// A door's address on tafs cloud, whole.
+    static func endpoint(_ door: TafsCloud.Door, base: URL) -> String {
+        URL(string: door.address, relativeTo: base)?.absoluteString ?? door.address
+    }
+
+    /// The longest key name the field takes (tafs cloud takes 80; 60, as Android).
+    static let maxKeyName = 60
+
+    /// The last request's state in tafs cloud's words, trimmed; none until it sends them, never the raw `status`.
+    static func lastRequestWords(_ last: TafsCloud.Door.LastRequest) -> String? {
+        let words = last.words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return words.isEmpty ? nil : words
+    }
+
     /// An ISO time from tafs cloud, shown in the account's zone; nil when it isn't one.
     static func when(_ iso: String?) -> String? {
         guard let iso else { return nil }
@@ -254,12 +280,106 @@ enum APIDoorText {
 
     /// A new key's name: what the owner typed, else the door's own name.
     static func keyName(_ typed: String, door: TafsCloud.Door) -> String {
-        let name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? door.label : name
+        let name = String(typed.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxKeyName))
+        return name.isEmpty ? String(door.label.prefix(maxKeyName)) : name
     }
 
     /// An example request. It reads the key from the caller's own secret, `$TAFS_API_KEY`: the key is never written in it.
     static func example(endpoint: String) -> String {
         "curl -X POST \(endpoint) \\\n  -H \"Authorization: Bearer $TAFS_API_KEY\" \\\n  -H \"Idempotency-Key: <your request id>\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"input\": {}}'"
+    }
+}
+
+/// Coach's drafted door "From another application" (`show {type: "door", taf_id, draft_id}`, the owner's mockup screen 1),
+/// drawn from tafs cloud's draft, never from Coach's words: the application's name, what it may do, what the taf does,
+/// the fields it sends and what it gets back, its own words' risk when it's on, and the boundary. Approve signs the draft's
+/// exact `body` (Face ID or Touch ID) and opens the door; its first key is then shown once.
+struct DoorDraftCard: View {
+    @EnvironmentObject private var model: AppModel
+    let component: SetupComponent
+    @State private var draft: TafsCloud.DoorDraft?
+    @State private var failed: String?
+    @State private var busy = false
+    /// The door the approval opened and its first key, held only until its screen closes.
+    @State private var added: TafsCloud.AddedAPIDoor?
+    @State private var approved = false
+
+    private var tafID: UUID? { component.tafID.flatMap { model.tafID(cloud: $0) } }
+    private var tafName: String { tafID.flatMap { model.taf($0)?.name } ?? "" }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Eyebrow(text: Words.Door.Api.draftKind)
+            if let draft {
+                let d = draft.draft
+                Text(d.name).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
+                Text(Words.Door.Api.draftScope(app: d.name, taf: tafName)).scaledFont(14).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(Words.Door.Api.draftWill(taf: tafName, job: d.job)).scaledFont(15).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                if !d.fields.isEmpty {
+                    Eyebrow(text: Words.Door.Api.draftSends)
+                    ForEach(d.fields, id: \.name) { field in
+                        Text(APIDoorText.field(field)).scaledFont(13, design: .monospaced).foregroundColor(Theme.ink)
+                    }
+                }
+                if !d.outcomes.isEmpty {
+                    Text(Words.Door.Api.draftBack(outcomes: Words.list(d.outcomes))).scaledFont(14).foregroundColor(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if d.text {
+                    Text(Words.Door.Api.draftWords(taf: tafName)).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    Text(Words.Door.Api.draftWordsRisk(taf: tafName, app: d.name)).scaledFont(13).foregroundColor(Theme.amber)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(Words.Door.Api.boundary(taf: tafName)).scaledFont(13).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                if approved {
+                    Text(Words.Door.Status.`open`).scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
+                } else if let tafID, model.manages(tafID) {
+                    Button(busy ? Words.Common.confirming : Words.Approval.approve) { approve(draft) }
+                        .buttonStyle(PrimaryButtonStyle()).disabled(busy).confirming()
+                        .accessibilityIdentifier("door.draft.approve")
+                }
+            }
+            if let failed {
+                Text(failed).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+            }
+        }
+        .task(id: component.draftID) { await read() }
+        .sheet(item: Binding(get: { added.map { IssuedKeyBox(key: $0.key) } }, set: { if $0 == nil { added = nil } })) { box in
+            if let door = added?.door {
+                IssuedKeyView(key: box.key, door: door, endpoint: APIDoorText.endpoint(door, base: model.cloud.baseURL)) { added = nil }
+                    .interactiveDismissDisabled()
+            }
+        }
+    }
+
+    private func read() async {
+        guard let taf = component.tafID, let id = component.draftID else { return }
+        do {
+            draft = try await model.cloud.doorDraft(taf, draft: id)
+            failed = nil
+        } catch {
+            failed = (error as? TafsCloud.CloudError)?.words ?? error.localizedDescription
+        }
+    }
+
+    private func approve(_ draft: TafsCloud.DoorDraft) {
+        guard let taf = component.tafID else { return }
+        busy = true
+        Task {
+            defer { busy = false }
+            do {
+                added = try await model.approveDoorDraft(cloudTaf: taf, draft: draft,
+                                                         reason: Words.Door.Api.faceidBody(app: draft.draft.name, taf: tafName))
+                approved = true
+                failed = nil
+            } catch is CancellationError {
+                // The owner cancelled Face ID: nothing was sent.
+            } catch {
+                failed = (error as? TafsCloud.CloudError)?.words ?? error.localizedDescription
+            }
+        }
     }
 }

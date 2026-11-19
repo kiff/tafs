@@ -1,0 +1,1 @@
+- **Android 127 (1.41.2): a taf's files open from the top of its page**, first on the line with its version ("Files · Version 5 · live"), with how many it has; the row on its Card tab is gone ([files.md](docs/files.md)).

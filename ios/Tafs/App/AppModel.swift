@@ -6462,6 +6462,15 @@ final class AppModel: ObservableObject {
     /// A change to a door "From another application", signed as a taf's removal is: the approval key signs
     /// `kiff.request.v1` over the method, path and raw body, behind Face ID or Touch ID each time. The answer is the
     /// `KIFF-Device-Signature` header's value; tafs cloud asks KIFF whether this phone signed it.
+    /// Approves Coach's drafted door for a taf tafs cloud runs, signed over exactly the draft's `body` (Face ID or Touch ID),
+    /// Answers the door it opened and its first key, shown once by the card.
+    func approveDoorDraft(cloudTaf: String, draft: TafsCloud.DoorDraft, reason: String) async throws -> TafsCloud.AddedAPIDoor {
+        try await cloud.approveDoorDraft(cloudTaf, draft: draft) { [weak self] method, path, body in
+            guard let self else { throw CancellationError() }
+            return try await self.signDoorRequest(method: method, path: path, body: body, reason: reason)
+        }
+    }
+
     func signDoorRequest(method: String, path: String, body: Data, reason: String) async throws -> String {
         guard mode == .kiff, let tenant = kiffTenant else { throw TafsCloud.CloudError(status: 0, message: Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
         let signedAt = SigningTime.next()
