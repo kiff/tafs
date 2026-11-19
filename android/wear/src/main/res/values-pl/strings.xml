@@ -56,6 +56,8 @@
         <item quantity="many">Nieprzeczytane w Skrzynce: %1$s</item>
         <item quantity="other">Nieprzeczytane w Skrzynce: %1$s</item>
     </plurals>
+    <string name="watch_keep_for_later">Zachowaj na później</string>
+    <string name="watch_kept_to_send">Zapisano na tym zegarku. Zostanie wysłane, gdy telefon znów będzie w zasięgu.</string>
     <string name="watch_limit">Maksymalnie 30 s</string>
     <string name="watch_listening">Słucham</string>
     <string name="watch_menu">Menu</string>

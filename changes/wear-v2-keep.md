@@ -1,0 +1,1 @@
+- **Wear OS v2: Keep for later.** A message that may not have reached the phone can be kept on the watch, as text only, and is sent under its own id once the phone is in reach, behind the v2 switch ([watch-wear.md](docs/watch-wear.md)).

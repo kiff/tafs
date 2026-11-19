@@ -563,4 +563,14 @@ class WatchModelTest {
     assertNull(drafts.kept)
     assertEquals(WatchModel.Voice.Review("Thanks", null), model.voice.value)
   }
+
+  /** qa-kiff's case: two reads that reach the phone give one ask, since the draft is gone once it's taken. */
+  @Test fun aKeptMessageIsAskedOnceAcrossTwoReads() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.refresh()
+    model.refresh()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000009", "Thanks")), phone.asked.filterIsInstance<WatchRequest.Ask>())
+  }
 }

@@ -5117,6 +5117,10 @@ enum Words {
         static var inboxEmpty: String { Words.line("watch.inbox_empty") }
         /// {count} unread in Inbox
         static func inboxUnread(count: Int) -> String { Words.count("watch.inbox_unread", count) }
+        /// Keep for later
+        static var keepForLater: String { Words.line("watch.keep_for_later") }
+        /// Kept on this watch. It's sent when your phone is in reach again.
+        static var keptToSend: String { Words.line("watch.kept_to_send") }
         /// 30 s at most
         static var limit: String { Words.line("watch.limit") }
         /// Listening

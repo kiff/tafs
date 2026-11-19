@@ -78,6 +78,8 @@ internal fun WatchPages(
   act: Actions,
   pages: List<Page> = pages(),
   pager: PagerState = rememberPagerState { pages.size },
+  /** The message kept for later, shown on Coach's home with Delete. */
+  kept: WatchModel.Draft? = null,
   timing: String? = null,
 ) {
   when {
@@ -116,7 +118,7 @@ internal fun WatchPages(
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
-          coachHome(shown, working, ready, act, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
+          coachHome(shown, working, ready, act, kept, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
         }
@@ -149,6 +151,7 @@ private fun ScalingLazyListScope.coachHome(
   working: List<AskLine>,
   ready: List<AskLine>,
   act: Actions,
+  kept: WatchModel.Draft?,
   openInbox: () -> Unit,
   openMenu: () -> Unit,
   openQuick: () -> Unit,
@@ -159,6 +162,18 @@ private fun ScalingLazyListScope.coachHome(
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
       Button(onClick = act.type, modifier = Modifier.weight(1f)) { Text(Words.Watch.type, maxLines = 1) }
       Button(onClick = openQuick, modifier = Modifier.weight(1f)) { Text(Words.Watch.quickReply, maxLines = 2) }
+    }
+  }
+  // A message kept for later: its words, that it's sent once the phone is in reach, and Delete.
+  kept?.let { draft ->
+    item {
+      Card(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          Text(draft.text, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+          Text(Words.Watch.keptToSend, style = MaterialTheme.typography.bodySmall)
+          Button(onClick = act.deleteKept, modifier = Modifier.fillMaxWidth()) { Text(Words.Chat.delete) }
+        }
+      }
     }
   }
   if (shown !is WatchModel.Shown.Read) {

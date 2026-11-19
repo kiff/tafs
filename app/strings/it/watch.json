@@ -25,6 +25,8 @@
     "one": "{count} da leggere in In arrivo",
     "other": "{count} da leggere in In arrivo"
   },
+  "watch.keep_for_later": "Tieni per dopo",
+  "watch.kept_to_send": "Tenuto su questo orologio. Viene inviato quando il telefono torna raggiungibile.",
   "watch.limit": "Al massimo 30 s",
   "watch.listening": "In ascolto",
   "watch.menu": "Menu",

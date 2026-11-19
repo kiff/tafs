@@ -52,6 +52,8 @@
         <item quantity="one">%1$s ungelesen im Eingang</item>
         <item quantity="other">%1$s ungelesen im Eingang</item>
     </plurals>
+    <string name="watch_keep_for_later">Für später behalten</string>
+    <string name="watch_kept_to_send">Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.</string>
     <string name="watch_limit">Höchstens 30 s</string>
     <string name="watch_listening">Hört zu</string>
     <string name="watch_menu">Menü</string>

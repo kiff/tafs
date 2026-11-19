@@ -56,6 +56,7 @@ class WatchPagesTest {
     cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
     start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
     delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
+    keep = { did += "keep" }, deleteKept = { did += "delete kept" },
   )
 
   private fun show(
@@ -65,12 +66,13 @@ class WatchPagesTest {
     confirmingHaltAll: Boolean = false,
     pages: List<Page> = pages(false),
     voice: WatchModel.Voice? = null,
+    kept: WatchModel.Draft? = null,
   ) =
     compose.setContent {
       MaterialTheme {
         WatchPages(
           shown, outcome = null, confirmingHaltAll = confirmingHaltAll, voice = voice, result = null, working = emptyList(), ready = ready, act = actions,
-          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size },
+          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size }, kept = kept,
         )
       }
     }
@@ -221,5 +223,33 @@ class WatchPagesTest {
     assertEquals(listOf("type", "quick ${Words.Watch.Qr.needsMeToday}"), did)
     // Picked: back to the pages, the review shown by the model.
     compose.onNodeWithText(Words.Coach.ask).assertExists()
+  }
+
+  // MARK: Keep for later
+
+  @Test fun notSureItArrivedOffersKeepForLater() {
+    show(read, voice = WatchModel.Voice.Unsure("Move my call", "w_00000001", null))
+    compose.onNodeWithText(Words.Watch.retry).assertExists()
+    compose.onNodeWithText(Words.Watch.keepForLater).performClick()
+    assertEquals(listOf("keep"), did)
+  }
+
+  @Test fun aKeptMessageShowsOnCoachsHomeWithDelete() {
+    show(read, kept = WatchModel.Draft("Move my call to six", "w_00000001", null))
+    compose.onNodeWithText("Move my call to six").assertExists()
+    compose.onNodeWithText(Words.Watch.keptToSend).assertExists()
+    compose.onNodeWithText(Words.Chat.delete).performClick()
+    assertEquals(listOf("delete kept"), did)
+  }
+
+  @Test fun withNothingKeptHomeSaysNothingOfIt() {
+    show(read)
+    compose.onAllNodesWithText(Words.Watch.keptToSend).assertCountEquals(0)
+  }
+
+  @Test fun v1OffersNoKeepForLater() {
+    compose.setContent { MaterialTheme { VoiceScreen(WatchModel.Voice.Unsure("Move my call", "w_00000001", null), Actions.none) } }
+    compose.onNodeWithText(Words.Watch.retry).assertExists()
+    compose.onAllNodesWithText(Words.Watch.keepForLater).assertCountEquals(0)
   }
 }

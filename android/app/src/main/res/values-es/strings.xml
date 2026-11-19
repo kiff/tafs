@@ -2563,6 +2563,8 @@
         <item quantity="one">%1$s sin leer en la Bandeja</item>
         <item quantity="other">%1$s sin leer en la Bandeja</item>
     </plurals>
+    <string name="watch_keep_for_later">Guardar para luego</string>
+    <string name="watch_kept_to_send">Guardado en este reloj. Se envía cuando tu teléfono vuelva a estar al alcance.</string>
     <string name="watch_limit">30 s como máximo</string>
     <string name="watch_listening">Escuchando</string>
     <string name="watch_menu">Menú</string>

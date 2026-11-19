@@ -25,6 +25,8 @@
     "one": "Non lus dans la boîte de réception : {count}",
     "other": "Non lus dans la boîte de réception : {count}"
   },
+  "watch.keep_for_later": "Garder pour plus tard",
+  "watch.kept_to_send": "Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.",
   "watch.limit": "30 s maximum",
   "watch.listening": "À l'écoute",
   "watch.menu": "Menu",

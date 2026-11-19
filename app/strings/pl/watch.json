@@ -29,6 +29,8 @@
     "one": "Nieprzeczytane w Skrzynce: {count}",
     "other": "Nieprzeczytane w Skrzynce: {count}"
   },
+  "watch.keep_for_later": "Zachowaj na później",
+  "watch.kept_to_send": "Zapisano na tym zegarku. Zostanie wysłane, gdy telefon znów będzie w zasięgu.",
   "watch.limit": "Maksymalnie 30 s",
   "watch.listening": "Słucham",
   "watch.menu": "Menu",

@@ -2563,6 +2563,8 @@
         <item quantity="one">Non lus dans la boîte de réception : %1$s</item>
         <item quantity="other">Non lus dans la boîte de réception : %1$s</item>
     </plurals>
+    <string name="watch_keep_for_later">Garder pour plus tard</string>
+    <string name="watch_kept_to_send">Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.</string>
     <string name="watch_limit">30 s maximum</string>
     <string name="watch_listening">À l\'écoute</string>
     <string name="watch_menu">Menu</string>
