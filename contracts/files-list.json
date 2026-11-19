@@ -1,0 +1,30 @@
+{
+  "about": "GET /v1/files: the account's delivered files, newest first, each with its taf's name as tafs has it. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "files": [
+      {
+        "id": "fil_00000000000000000000000000000002",
+        "taf": "taf-0bde5000000000000000",
+        "run": "run-2",
+        "name": "notes.md",
+        "media_type": "text/markdown",
+        "size": 8,
+        "created": "2026-11-19T08:00:00.000Z",
+        "expires": "2026-12-19T08:00:00.000Z",
+        "taf_name": "Order rows"
+      },
+      {
+        "id": "fil_00000000000000000000000000000001",
+        "taf": "taf-0bde5000000000000000",
+        "run": "run-1",
+        "chat": "chat-1",
+        "name": "week.csv",
+        "media_type": "text/csv",
+        "size": 22,
+        "created": "2026-11-19T08:00:00.000Z",
+        "expires": "2026-12-19T08:00:00.000Z",
+        "taf_name": "Order rows"
+      }
+    ]
+  }
+}

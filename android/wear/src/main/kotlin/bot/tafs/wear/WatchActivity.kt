@@ -43,10 +43,15 @@ class WatchActivity : ComponentActivity() {
   private val model by lazy {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
-    WatchModel(DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)))
+    WatchModel(
+      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)),
+      // Only v2 keeps a message for later.
+      drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
+    )
   }
 
-  private val listener by lazy { Listener(this, model, lifecycleScope) }
+  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2) }
+  private val playback by lazy { FilePlayback() }
   private var speaker: Speaker? = null
 
   /** The ask a Reply continues, kept while the microphone permission is asked. */
@@ -61,7 +66,23 @@ class WatchActivity : ComponentActivity() {
     pendingListen = false
   }
 
-  /** The system's speech input, where the watch has no recognizer for apps: its text comes back here, and is sent at once. */
+  /** v2's Type: the watch's keyboard; what's typed goes to the review. */
+  private val typed = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+    val text = result.data?.let { android.app.RemoteInput.getResultsFromIntent(it) }?.getCharSequence(TYPED)?.toString()
+    if (text != null) model.review(text)
+  }
+
+  private fun type() {
+    // The system's text input (what androidx.wear.input's RemoteInputIntentHelper builds): keyboard, handwriting or voice typing.
+    val input = android.app.RemoteInput.Builder(TYPED).setLabel(Words.Watch.typeHint).build()
+    val intent = Intent(ACTION_REMOTE_INPUT).putExtra(EXTRA_REMOTE_INPUTS, arrayOf(input))
+    runCatching { typed.launch(intent) }
+  }
+
+  /**
+   * The system's speech input, where the watch has no recognizer for apps: its text comes back here, through [WatchModel.heard], so
+   * v1 sends it at once and v2 shows it to check first.
+   */
   private val speechInput = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
     val heard = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
     lifecycleScope.launch { if (heard != null) model.heard(heard) else model.heardNothing() }
@@ -99,6 +120,7 @@ class WatchActivity : ComponentActivity() {
         val voice by model.voice.collectAsState()
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
+        val kept by model.kept.collectAsState()
         // "Sent": the wrist can drop; the microphone comes back by itself.
         androidx.compose.runtime.LaunchedEffect(voice) {
           if (voice is WatchModel.Voice.Sent) {
@@ -106,30 +128,61 @@ class WatchActivity : ComponentActivity() {
             if (model.voice.value is WatchModel.Voice.Sent) model.closeVoice()
           }
         }
-        WatchScreen(
-          shown, outcome, confirmingHaltAll, voice, result, asks.values.let { model.working() }, asks.values.let { model.ready() },
-          Actions(
-            openOnPhone = ::openOnPhone,
-            tryAgain = { lifecycleScope.launch { model.refresh() } },
-            refuse = { hold -> lifecycleScope.launch { model.refuse(hold) } },
-            halt = { taf -> lifecycleScope.launch { model.halt(taf) } },
-            askHaltAll = model::askHaltAll,
-            confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
-            cancelHaltAll = model::cancelHaltAll,
-            listen = { listen() },
-            closeVoice = { listener.cancel(); model.closeVoice() },
-            retry = { lifecycleScope.launch { model.retry() } },
-            open = model::open,
-            hear = { ask -> speaker().say(ask.line ?: ask.words) },
-            reply = { ask -> listen(ask.id) },
-            closeResult = model::closeResult,
-            dismiss = model::dismissOutcome,
-          ),
-          timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null },
+        // v2: past 30 s, listening stops by itself and the words go to the review.
+        val listeningSince = (voice as? WatchModel.Voice.Listening)?.since
+        androidx.compose.runtime.LaunchedEffect(listeningSince) {
+          if (WATCH_V2 && listeningSince != null) {
+            kotlinx.coroutines.delay(LISTEN_LIMIT_MS)
+            listener.stop()
+          }
+        }
+        val actions = Actions(
+          openOnPhone = ::openOnPhone,
+          tryAgain = { lifecycleScope.launch { model.refresh() } },
+          refuse = { hold -> lifecycleScope.launch { model.refuse(hold) } },
+          halt = { taf -> lifecycleScope.launch { model.halt(taf) } },
+          askHaltAll = model::askHaltAll,
+          confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
+          cancelHaltAll = model::cancelHaltAll,
+          // v2 opens the microphone's screen first, and listens on Start.
+          listen = { if (WATCH_V2) model.readyToRecord() else listen() },
+          closeVoice = { listener.cancel(); model.closeVoice() },
+          retry = { lifecycleScope.launch { model.retry() } },
+          open = model::open,
+          hear = { ask -> speaker().say(ask.line ?: ask.words) },
+          reply = { ask -> if (WATCH_V2) model.readyToRecord(ask.id) else listen(ask.id) },
+          closeResult = model::closeResult,
+          dismiss = model::dismissOutcome,
+          start = { replyTo -> listen(replyTo) },
+          stop = listener::stop,
+          send = { lifecycleScope.launch { model.sendReviewed() } },
+          rerecord = model::rerecord,
+          delete = model::deleteReviewed,
+          type = ::type,
+          quick = { model.review(it) },
+          keep = if (WATCH_V2) model::keepForLater else null,
+          deleteKept = model::deleteKept,
+          playback = if (WATCH_V2) playback else null,
         )
+        // Play stops the moment the review is left: its recording is erased then (WatchModel).
+        androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
+          if (voice !is WatchModel.Voice.Review) playback.release()
+        }
+        val probe by listener.probe.collectAsState()
+        val working = asks.values.let { model.working() }
+        val ready = asks.values.let { model.ready() }
+        val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
+        // v2's pages once every step is in (WatchPages.kt); v1 until then.
+        if (WATCH_V2) {
+          WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
+            probe = if (BuildConfig.TIMING) probe else null)
+        }
+        else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
     }
     handle(intent)
+    // A recording left by a crash or a kill: nothing holds it.
+    VoiceFiles.sweep(VoiceFiles.dir(this))
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -164,7 +217,10 @@ class WatchActivity : ComponentActivity() {
     listener.cancel()
     speaker?.close()
     speaker = null
+    playback.release()
+    // Put away: the review and its recording are gone, and any recording left over is swept.
     model.forget()
+    VoiceFiles.sweep(VoiceFiles.dir(this))
   }
 
   override fun onDestroy() {
@@ -183,6 +239,10 @@ class WatchActivity : ComponentActivity() {
   companion object {
     /** The tile's "Ask tafs": open listening. */
     const val EXTRA_LISTEN = "bot.tafs.wear.LISTEN"
+
+    private const val TYPED = "typed"
+    private const val ACTION_REMOTE_INPUT = "android.support.wearable.input.action.REMOTE_INPUT"
+    private const val EXTRA_REMOTE_INPUTS = "android.support.wearable.input.extra.REMOTE_INPUTS"
 
     /** How long "Sent" stays before the microphone comes back. */
     const val SENT_SHOWN_MS = 2_500L
@@ -218,6 +278,24 @@ internal class Actions(
   val reply: (AskLine) -> Unit,
   val closeResult: () -> Unit,
   val dismiss: () -> Unit,
+  // v2's microphone (ReviewScreens.kt): v1 never calls these.
+  /** Start, on the microphone's screen. */
+  val start: (String?) -> Unit = {},
+  /** Stop: listening ends and the words go to the review. */
+  val stop: () -> Unit = {},
+  val send: () -> Unit = {},
+  val rerecord: () -> Unit = {},
+  val delete: () -> Unit = {},
+  /** Type: the watch's keyboard, then the review. */
+  val type: () -> Unit = {},
+  /** A quick reply picked: to the review. */
+  val quick: (String) -> Unit = {},
+  /** v2's Keep for later, on "Not sure it arrived"; none in v1, which doesn't offer it. */
+  val keep: (() -> Unit)? = null,
+  /** Deletes the message kept for later. */
+  val deleteKept: () -> Unit = {},
+  /** v2's Play and Pause for the review's recording, on the watch. */
+  val playback: Playback? = null,
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */
@@ -326,7 +404,7 @@ private fun opens(working: List<AskLine>, ready: List<AskLine>, act: Actions): L
  * Your brief, in tafs cloud's words, where Needs you would be: its title and `when` line, each decision on its own card (answered on
  * the phone, so Open on phone; Refuse only where Needs you offers it), its line for more, what got done, and the rest.
  */
-private fun ScalingLazyListScope.briefItems(brief: WatchReply.Brief, shown: WatchModel.Shown.Read, act: Actions) {
+internal fun ScalingLazyListScope.briefItems(brief: WatchReply.Brief, shown: WatchModel.Shown.Read, act: Actions) {
   item { ListHeader { Text(brief.title) } }
   brief.whenLine?.let { line(it) }
   for (decision in brief.decisions) item { DecisionCard(decision, brief.urgent, shown.refusable(decision), act) }
@@ -371,13 +449,13 @@ private fun DecisionCard(decision: DecisionLine, urgentWord: String?, refuseHold
   }
 }
 
-private fun ScalingLazyListScope.line(words: String) = item {
+internal fun ScalingLazyListScope.line(words: String) = item {
   Text(words, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
 }
 
 /** What came of a Refuse or a Halt, in the phone's words; anything that didn't go through offers Open on phone. */
 @Composable
-private fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
+internal fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
   Card(onClick = act.dismiss, modifier = Modifier.fillMaxWidth()) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       when (outcome) {
@@ -400,7 +478,7 @@ private fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
  * can answer it; approving is always the phone's.
  */
 @Composable
-private fun HeldCallCard(call: HeldLine, act: Actions) {
+internal fun HeldCallCard(call: HeldLine, act: Actions) {
   Card(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(call.taf, style = MaterialTheme.typography.titleSmall)

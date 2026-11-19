@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Prêt : %1$s. Partager à nouveau</string>
     <string name="export_row">Exporter mes chats</string>
     <string name="export_sign_in_first">Connectez-vous avec KIFF pour exporter vos chats.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s fichier · conservé 30 jours</item>
+        <item quantity="other">%1$s fichiers · conservés 30 jours</item>
+    </plurals>
+    <string name="files_all">Tous</string>
+    <string name="files_all_tafs">Tous les tafs</string>
+    <string name="files_by_run">Par exécution</string>
+    <string name="files_by_taf">Par taf</string>
+    <string name="files_delete_body">Il disparaît de Fichiers pour tout le monde sur ce compte, tout de suite. C\'est définitif.</string>
+    <string name="files_delete_now">Supprimer maintenant</string>
+    <string name="files_delete_question">Supprimer « %1$s » maintenant ?</string>
+    <string name="files_deleted">Supprimé pour tout le monde</string>
+    <string name="files_download">Télécharger</string>
+    <string name="files_empty">Rien pour l\'instant. Quand un taf crée un rapport, une feuille ou un document pendant une exécution, il est conservé ici 30 jours, pour que tout le monde sur ce compte puisse l\'ouvrir, l\'enregistrer ou le partager.</string>
+    <string name="files_everyone">Tout le monde sur ce compte</string>
+    <string name="files_goes_away">Disparaît</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">disparaît dans %1$s jour</item>
+        <item quantity="other">disparaît dans %1$s jours</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 jours après son exécution)</string>
+    <string name="files_goes_today">disparaît aujourd\'hui</string>
+    <string name="files_goes_tomorrow">disparaît demain</string>
+    <string name="files_in_run">Dans l\'exécution</string>
+    <string name="files_kept_line">Chaque fichier est conservé 30 jours après son exécution, puis disparaît de lui-même. Tout le monde sur ce compte voit ces fichiers. Vos propres pièces jointes de chat restent avec leurs messages.</string>
+    <string name="files_kept_until">Ses fichiers sont conservés jusqu\'au %1$s</string>
+    <string name="files_made_by">Créé par</string>
+    <string name="files_none_yet">Aucun pour l\'instant · conservés 30 jours</string>
+    <string name="files_pick_one">Choisissez un fichier pour le voir ici.</string>
+    <string name="files_saved">Enregistré sur cet appareil</string>
+    <string name="files_see_in_chat">Voir dans le chat</string>
+    <string name="files_share">Partager</string>
+    <string name="files_size">Taille</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s fichier de ses exécutions</item>
+        <item quantity="other">%1$s fichiers de ses exécutions</item>
+    </plurals>
+    <string name="files_title">Fichiers</string>
+    <string name="files_type">Type</string>
+    <string name="files_who_sees">Qui le voit</string>
     <string name="halt_again">Bloquer à nouveau</string>
     <string name="halt_all_now">Tout bloquer maintenant</string>
     <string name="halt_explain_halted">Bloqué. La reprise ne lance que du nouveau travail.</string>
@@ -2537,6 +2577,7 @@
     <string name="voice_title">Dictée</string>
     <string name="voice_voice_becomes_text_device_not">Votre voix devient du texte sur cet appareil. Elle n\'est envoyée que lorsque vous l\'envoyez.</string>
     <string name="voice_what_you_said_stays_message">Ce que vous avez dit reste dans le champ de message, non envoyé.</string>
+    <string name="watch_all_chats">Tous les chats</string>
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
@@ -2547,6 +2588,7 @@
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
     <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_deleted_nothing_sent">Supprimé. Rien n\'a été envoyé.</string>
     <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
     <string name="watch_halting">Blocage de %1$s…</string>
@@ -2556,6 +2598,16 @@
         <item quantity="one">%1$s appel retenu vous attend</item>
         <item quantity="other">%1$s appels retenus vous attendent</item>
     </plurals>
+    <string name="watch_inbox_empty">Rien de nouveau. Les réponses de Coach et les alertes de vos tafs arrivent ici.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">Non lus dans la boîte de réception : %1$s</item>
+        <item quantity="other">Non lus dans la boîte de réception : %1$s</item>
+    </plurals>
+    <string name="watch_keep_for_later">Garder pour plus tard</string>
+    <string name="watch_kept_to_send">Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.</string>
+    <string name="watch_limit">30 s maximum</string>
+    <string name="watch_listening">À l\'écoute</string>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
     <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
@@ -2565,20 +2617,37 @@
     </plurals>
     <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
+    <string name="watch_page_brief">Résumé</string>
+    <string name="watch_page_inbox">Boîte de réception</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_play">Lire</string>
+    <string name="watch_qr_needs_me_today">Qu\'est-ce qui m\'attend aujourd\'hui ?</string>
+    <string name="watch_qr_not_now">Pas maintenant</string>
+    <string name="watch_qr_tell_me_more">Dites-m\'en plus</string>
+    <string name="watch_qr_thanks">Merci</string>
+    <string name="watch_quick_reply">Réponse rapide</string>
+    <string name="watch_ready">Prêt</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s prêt</item>
         <item quantity="other">%1$s prêts</item>
     </plurals>
+    <string name="watch_recent_chats">Chats récents</string>
+    <string name="watch_recording">Enregistrement</string>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
     <string name="watch_reply">Répondre</string>
+    <string name="watch_rerecord">Réenregistrer</string>
     <string name="watch_result_ready">Un résultat est prêt</string>
     <string name="watch_results_channel">Résultats</string>
     <string name="watch_retry">Réessayer</string>
+    <string name="watch_review">Vérifiez avant d\'envoyer</string>
     <string name="watch_sending">Envoi…</string>
     <string name="watch_sent">Envoyé</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
+    <string name="watch_type">Écrire</string>
+    <string name="watch_type_hint">Écrire à Coach…</string>
     <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
     <plurals name="watch_working_count">

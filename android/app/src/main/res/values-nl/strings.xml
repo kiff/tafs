@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Klaar: %1$s. Opnieuw delen</string>
     <string name="export_row">Mijn chats exporteren</string>
     <string name="export_sign_in_first">Log in met KIFF om je chats te exporteren.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s bestand · 30 dagen bewaard</item>
+        <item quantity="other">%1$s bestanden · 30 dagen bewaard</item>
+    </plurals>
+    <string name="files_all">Alle</string>
+    <string name="files_all_tafs">Alle tafs</string>
+    <string name="files_by_run">Per run</string>
+    <string name="files_by_taf">Per taf</string>
+    <string name="files_delete_body">Het verdwijnt meteen uit Bestanden voor iedereen in dit account. Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="files_delete_now">Nu verwijderen</string>
+    <string name="files_delete_question">‘%1$s’ nu verwijderen?</string>
+    <string name="files_deleted">Verwijderd voor iedereen</string>
+    <string name="files_download">Downloaden</string>
+    <string name="files_empty">Nog niets. Als een taf in een run een rapport, een sheet of een document maakt, wordt het hier 30 dagen bewaard, zodat iedereen in dit account het kan openen, bewaren of delen.</string>
+    <string name="files_everyone">Iedereen in dit account</string>
+    <string name="files_goes_away">Verdwijnt</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">verdwijnt over %1$s dag</item>
+        <item quantity="other">verdwijnt over %1$s dagen</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 dagen na zijn run)</string>
+    <string name="files_goes_today">verdwijnt vandaag</string>
+    <string name="files_goes_tomorrow">verdwijnt morgen</string>
+    <string name="files_in_run">In de run</string>
+    <string name="files_kept_line">Elk bestand wordt 30 dagen na zijn run bewaard en verdwijnt daarna vanzelf. Iedereen in dit account ziet deze bestanden. Je eigen chatbijlagen blijven bij hun berichten.</string>
+    <string name="files_kept_until">Zijn bestanden worden bewaard tot %1$s</string>
+    <string name="files_made_by">Gemaakt door</string>
+    <string name="files_none_yet">Nog geen · 30 dagen bewaard</string>
+    <string name="files_pick_one">Kies een bestand om het hier te zien.</string>
+    <string name="files_saved">Bewaard op dit apparaat</string>
+    <string name="files_see_in_chat">Bekijken in de chat</string>
+    <string name="files_share">Delen</string>
+    <string name="files_size">Grootte</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s bestand uit zijn runs</item>
+        <item quantity="other">%1$s bestanden uit zijn runs</item>
+    </plurals>
+    <string name="files_title">Bestanden</string>
+    <string name="files_type">Type</string>
+    <string name="files_who_sees">Wie het ziet</string>
     <string name="halt_again">Opnieuw stilzetten</string>
     <string name="halt_all_now">Alles nu stilzetten</string>
     <string name="halt_explain_halted">Stilgezet. Hervatten start alleen nieuw werk.</string>
@@ -2537,6 +2577,7 @@
     <string name="voice_title">Dicteren</string>
     <string name="voice_voice_becomes_text_device_not">Je stem wordt op dit apparaat tekst. Er wordt niets verzonden tot je het verzendt.</string>
     <string name="voice_what_you_said_stays_message">Wat je zei, blijft onverzonden in het berichtvak.</string>
+    <string name="watch_all_chats">Alle chats</string>
     <string name="watch_already_answered">Al beantwoord, of beëindigd.</string>
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
     <string name="watch_as_of">Bijgewerkt om %1$s</string>
@@ -2547,6 +2588,7 @@
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
+    <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <string name="watch_halting">%1$s wordt stilgezet…</string>
@@ -2556,6 +2598,16 @@
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_inbox_empty">Niets nieuws. Hier komen de antwoorden van Coach en de meldingen van je tafs.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s ongelezen in je Inbox</item>
+        <item quantity="other">%1$s ongelezen in je Inbox</item>
+    </plurals>
+    <string name="watch_keep_for_later">Bewaren voor later</string>
+    <string name="watch_kept_to_send">Bewaard op dit horloge. Het gaat zodra je telefoon weer binnen bereik is.</string>
+    <string name="watch_limit">Maximaal 30 s</string>
+    <string name="watch_listening">Luistert</string>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
     <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
@@ -2565,20 +2617,37 @@
     </plurals>
     <string name="watch_not_sure">Onzeker of het aankwam</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
+    <string name="watch_page_brief">Overzicht</string>
+    <string name="watch_page_inbox">Inbox</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <string name="watch_play">Afspelen</string>
+    <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
+    <string name="watch_qr_not_now">Nu niet</string>
+    <string name="watch_qr_tell_me_more">Vertel meer</string>
+    <string name="watch_qr_thanks">Bedankt</string>
+    <string name="watch_quick_reply">Snel antwoord</string>
+    <string name="watch_ready">Klaar</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s klaar</item>
         <item quantity="other">%1$s klaar</item>
     </plurals>
+    <string name="watch_recent_chats">Recente chats</string>
+    <string name="watch_recording">Opnemen</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
+    <string name="watch_rerecord">Opnieuw opnemen</string>
     <string name="watch_result_ready">Er is een resultaat</string>
     <string name="watch_results_channel">Resultaten</string>
     <string name="watch_retry">Opnieuw</string>
+    <string name="watch_review">Controleer voor je verstuurt</string>
     <string name="watch_sending">Versturen…</string>
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
+    <string name="watch_trust">Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.</string>
+    <string name="watch_type">Typen</string>
+    <string name="watch_type_hint">Schrijf aan Coach…</string>
     <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
     <plurals name="watch_working_count">

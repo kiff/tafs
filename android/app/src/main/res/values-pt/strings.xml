@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Pronto: %1$s. Partilhar novamente</string>
     <string name="export_row">Exportar os meus chats</string>
     <string name="export_sign_in_first">Inicie sessão com o KIFF para exportar os seus chats.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s ficheiro · guardado 30 dias</item>
+        <item quantity="other">%1$s ficheiros · guardados 30 dias</item>
+    </plurals>
+    <string name="files_all">Todos</string>
+    <string name="files_all_tafs">Todos os tafs</string>
+    <string name="files_by_run">Por execução</string>
+    <string name="files_by_taf">Por taf</string>
+    <string name="files_delete_body">Desaparece de Ficheiros para toda a gente nesta conta, de imediato. Não pode ser desfeito.</string>
+    <string name="files_delete_now">Eliminar agora</string>
+    <string name="files_delete_question">Eliminar «%1$s» agora?</string>
+    <string name="files_deleted">Eliminado para todos</string>
+    <string name="files_download">Transferir</string>
+    <string name="files_empty">Ainda nada. Quando um taf cria um relatório, uma folha ou um documento numa execução, fica aqui guardado 30 dias, para toda a gente nesta conta o abrir, guardar ou partilhar.</string>
+    <string name="files_everyone">Toda a gente nesta conta</string>
+    <string name="files_goes_away">Desaparece</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">desaparece dentro de %1$s dia</item>
+        <item quantity="other">desaparece dentro de %1$s dias</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 dias após a sua execução)</string>
+    <string name="files_goes_today">desaparece hoje</string>
+    <string name="files_goes_tomorrow">desaparece amanhã</string>
+    <string name="files_in_run">Na execução</string>
+    <string name="files_kept_line">Cada ficheiro é guardado 30 dias a partir da sua execução e depois desaparece sozinho. Toda a gente nesta conta vê estes ficheiros. Os seus próprios anexos de chat ficam com as suas mensagens.</string>
+    <string name="files_kept_until">Os seus ficheiros são guardados até %1$s</string>
+    <string name="files_made_by">Feito por</string>
+    <string name="files_none_yet">Ainda nenhum · guardados 30 dias</string>
+    <string name="files_pick_one">Escolha um ficheiro para o ver aqui.</string>
+    <string name="files_saved">Guardado neste dispositivo</string>
+    <string name="files_see_in_chat">Ver no chat</string>
+    <string name="files_share">Partilhar</string>
+    <string name="files_size">Tamanho</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s ficheiro das suas execuções</item>
+        <item quantity="other">%1$s ficheiros das suas execuções</item>
+    </plurals>
+    <string name="files_title">Ficheiros</string>
+    <string name="files_type">Tipo</string>
+    <string name="files_who_sees">Quem o vê</string>
     <string name="halt_again">Bloquear novamente</string>
     <string name="halt_all_now">Bloquear tudo agora</string>
     <string name="halt_explain_halted">Bloqueado. Ao retomar, só começa trabalho novo.</string>
@@ -2537,6 +2577,7 @@
     <string name="voice_title">Ditado</string>
     <string name="voice_voice_becomes_text_device_not">A sua voz torna-se texto neste dispositivo. Não é enviada até a enviar.</string>
     <string name="voice_what_you_said_stays_message">O que disse fica na caixa de mensagem, por enviar.</string>
+    <string name="watch_all_chats">Todos os chats</string>
     <string name="watch_already_answered">Já respondido, ou terminado.</string>
     <string name="watch_approve_on_phone">Aprove no telemóvel</string>
     <string name="watch_as_of">Atualizado às %1$s</string>
@@ -2547,6 +2588,7 @@
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
     <string name="watch_check_phone">Verifique a ligação do telemóvel</string>
     <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_deleted_nothing_sent">Eliminado. Nada foi enviado.</string>
     <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
     <string name="watch_halting">A bloquear %1$s…</string>
@@ -2556,6 +2598,16 @@
         <item quantity="one">%1$s chamada retida precisa de si</item>
         <item quantity="other">%1$s chamadas retidas precisam de si</item>
     </plurals>
+    <string name="watch_inbox_empty">Nada de novo. As respostas do Coach e os alertas dos seus tafs chegam aqui.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s por ler na Caixa de entrada</item>
+        <item quantity="other">%1$s por ler na Caixa de entrada</item>
+    </plurals>
+    <string name="watch_keep_for_later">Guardar para mais tarde</string>
+    <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.</string>
+    <string name="watch_limit">No máximo 30 s</string>
+    <string name="watch_listening">A ouvir</string>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
     <string name="watch_more_on_phone">O resto está no telemóvel.</string>
     <string name="watch_needs_lock">Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
@@ -2565,20 +2617,37 @@
     </plurals>
     <string name="watch_not_sure">Não se sabe se chegou</string>
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
+    <string name="watch_page_brief">Resumo</string>
+    <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
+    <string name="watch_play">Reproduzir</string>
+    <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
+    <string name="watch_qr_not_now">Agora não</string>
+    <string name="watch_qr_tell_me_more">Diga-me mais</string>
+    <string name="watch_qr_thanks">Obrigado</string>
+    <string name="watch_quick_reply">Resposta rápida</string>
+    <string name="watch_ready">Pronta</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s pronto</item>
         <item quantity="other">%1$s prontos</item>
     </plurals>
+    <string name="watch_recent_chats">Chats recentes</string>
+    <string name="watch_recording">A gravar</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
+    <string name="watch_rerecord">Gravar de novo</string>
     <string name="watch_result_ready">Há um resultado pronto</string>
     <string name="watch_results_channel">Resultados</string>
     <string name="watch_retry">Repetir</string>
+    <string name="watch_review">Verifique antes de enviar</string>
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
+    <string name="watch_trust">Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.</string>
+    <string name="watch_type">Escrever</string>
+    <string name="watch_type_hint">Escrever ao Coach…</string>
     <string name="watch_update_phone">Atualize o tafs no telemóvel e tente novamente.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
     <plurals name="watch_working_count">

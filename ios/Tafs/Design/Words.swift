@@ -2310,6 +2310,70 @@ enum Words {
         /// Sign in with KIFF to export your chats.
         static var signInFirst: String { Words.line("export.sign_in_first") }
     }
+    enum Files {
+        /// {count} files · kept 30 days
+        static func accountRow(count: Int) -> String { Words.count("files.account_row", count) }
+        /// All
+        static var all: String { Words.line("files.all") }
+        /// All tafs
+        static var allTafs: String { Words.line("files.all_tafs") }
+        /// By run
+        static var byRun: String { Words.line("files.by_run") }
+        /// By taf
+        static var byTaf: String { Words.line("files.by_taf") }
+        /// It goes from Files for everyone on this account, right away. This can't be undone.
+        static var deleteBody: String { Words.line("files.delete_body") }
+        /// Delete now
+        static var deleteNow: String { Words.line("files.delete_now") }
+        /// Delete “{name}” now?
+        static func deleteQuestion(name: String) -> String { Words.line("files.delete_question", name) }
+        /// Deleted for everyone
+        static var deleted: String { Words.line("files.deleted") }
+        /// Download
+        static var download: String { Words.line("files.download") }
+        /// Nothing yet. When a taf makes a report, a sheet or a document in a run, it's kept here for 30 days, for everyone on this account to open, save or share.
+        static var empty: String { Words.line("files.empty") }
+        /// Everyone on this account
+        static var everyone: String { Words.line("files.everyone") }
+        /// Goes away
+        static var goesAway: String { Words.line("files.goes_away") }
+        /// goes in {count} days
+        static func goesInDays(count: Int) -> String { Words.count("files.goes_in_days", count) }
+        /// {date} (30 days after its run)
+        static func goesOn(date: String) -> String { Words.line("files.goes_on", date) }
+        /// goes today
+        static var goesToday: String { Words.line("files.goes_today") }
+        /// goes tomorrow
+        static var goesTomorrow: String { Words.line("files.goes_tomorrow") }
+        /// In the run
+        static var inRun: String { Words.line("files.in_run") }
+        /// Each file is kept 30 days from its run, then goes away on its own. Everyone on this account sees these files. Your own chat attachments stay with their messages.
+        static var keptLine: String { Words.line("files.kept_line") }
+        /// Its files are kept until {date}
+        static func keptUntil(date: String) -> String { Words.line("files.kept_until", date) }
+        /// Made by
+        static var madeBy: String { Words.line("files.made_by") }
+        /// None yet · kept 30 days
+        static var noneYet: String { Words.line("files.none_yet") }
+        /// Pick a file to see it here.
+        static var pickOne: String { Words.line("files.pick_one") }
+        /// Saved to this device
+        static var saved: String { Words.line("files.saved") }
+        /// See it in the chat
+        static var seeInChat: String { Words.line("files.see_in_chat") }
+        /// Share
+        static var share: String { Words.line("files.share") }
+        /// Size
+        static var size: String { Words.line("files.size") }
+        /// {count} files from its runs
+        static func tafRow(count: Int) -> String { Words.count("files.taf_row", count) }
+        /// Files
+        static var title: String { Words.line("files.title") }
+        /// Type
+        static var type: String { Words.line("files.type") }
+        /// Who sees it
+        static var whoSees: String { Words.line("files.who_sees") }
+    }
     enum Halt {
         /// Halt again
         static var again: String { Words.line("halt.again") }
@@ -5077,6 +5141,8 @@ enum Words {
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
     }
     enum Watch {
+        /// All chats
+        static var allChats: String { Words.line("watch.all_chats") }
         /// Already answered, or it ended.
         static var alreadyAnswered: String { Words.line("watch.already_answered") }
         /// Approve on your phone
@@ -5097,6 +5163,8 @@ enum Words {
         static var checkPhone: String { Words.line("watch.check_phone") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
+        /// Deleted. Nothing was sent.
+        static var deletedNothingSent: String { Words.line("watch.deleted_nothing_sent") }
         /// Didn't catch that. Tap to try again.
         static var didntCatch: String { Words.line("watch.didnt_catch") }
         /// How many need you, never what or who.
@@ -5109,6 +5177,20 @@ enum Words {
         static var hear: String { Words.line("watch.hear") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// Nothing new. Coach's replies and your tafs' alerts land here.
+        static var inboxEmpty: String { Words.line("watch.inbox_empty") }
+        /// {count} unread in Inbox
+        static func inboxUnread(count: Int) -> String { Words.count("watch.inbox_unread", count) }
+        /// Keep for later
+        static var keepForLater: String { Words.line("watch.keep_for_later") }
+        /// Kept on this watch. It's sent when your phone is in reach again.
+        static var keptToSend: String { Words.line("watch.kept_to_send") }
+        /// 30 s at most
+        static var limit: String { Words.line("watch.limit") }
+        /// Listening
+        static var listening: String { Words.line("watch.listening") }
+        /// Menu
+        static var menu: String { Words.line("watch.menu") }
         /// To ask by voice, allow the microphone for tafs on this watch.
         static var micNeeded: String { Words.line("watch.mic_needed") }
         /// The rest is on your phone.
@@ -5121,28 +5203,66 @@ enum Words {
         static var notSure: String { Words.line("watch.not_sure") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        enum Page {
+            /// Brief
+            static var brief: String { Words.line("watch.page.brief") }
+            /// Inbox
+            static var inbox: String { Words.line("watch.page.inbox") }
+        }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Play
+        static var play: String { Words.line("watch.play") }
+        enum Qr {
+            /// What needs me today?
+            static var needsMeToday: String { Words.line("watch.qr.needs_me_today") }
+            /// Not now
+            static var notNow: String { Words.line("watch.qr.not_now") }
+            /// Tell me more
+            static var tellMeMore: String { Words.line("watch.qr.tell_me_more") }
+            /// Thanks
+            static var thanks: String { Words.line("watch.qr.thanks") }
+        }
+        /// Quick reply
+        static var quickReply: String { Words.line("watch.quick_reply") }
+        /// Ready
+        static var ready: String { Words.line("watch.ready") }
         /// {count} ready
         static func readyCount(count: Int) -> String { Words.count("watch.ready_count", count) }
+        /// Recent chats
+        static var recentChats: String { Words.line("watch.recent_chats") }
+        /// Recording
+        static var recording: String { Words.line("watch.recording") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
         static var reply: String { Words.line("watch.reply") }
+        /// Re-record
+        static var rerecord: String { Words.line("watch.rerecord") }
         /// A result is ready
         static var resultReady: String { Words.line("watch.result_ready") }
         /// Results
         static var resultsChannel: String { Words.line("watch.results_channel") }
         /// Retry
         static var retry: String { Words.line("watch.retry") }
+        /// Check before sending
+        static var review: String { Words.line("watch.review") }
         /// Sending…
         static var sending: String { Words.line("watch.sending") }
         /// Sent
         static var sent: String { Words.line("watch.sent") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Tap Start, then speak. Your words show here as you talk.
+        static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
+        static var trust: String { Words.line("watch.trust") }
+        /// Type
+        static var type: String { Words.line("watch.type") }
+        /// Write to Coach…
+        static var typeHint: String { Words.line("watch.type_hint") }
         /// Update tafs on your phone, then try again.
         static var updatePhone: String { Words.line("watch.update_phone") }
         /// Coach gets your words as text, never your voice.

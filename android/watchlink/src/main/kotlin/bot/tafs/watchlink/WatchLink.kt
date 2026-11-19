@@ -45,6 +45,15 @@ sealed interface WatchRequest {
    * on (docs/watch-wear.md, Your brief); a phone answers it either way, as answering a read is harmless.
    */
   data class Brief(override val madeAt: Long) : WatchRequest
+
+  /** One taf's page (Wear v2): its job, its Cards with today's use, and what of it waits on the person, by its id on the phone. */
+  data class Taf(override val madeAt: Long, val tafId: String) : WatchRequest
+
+  /** The calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today there with [day] null: what the tafs will do then. */
+  data class Calendar(override val madeAt: Long, val day: String? = null) : WatchRequest
+
+  /** Who is signed in, and the plan's line: the watch's Account page. */
+  data class Account(override val madeAt: Long) : WatchRequest
 }
 
 /** Why the phone refused a message before reading or signing anything. */
@@ -140,7 +149,52 @@ sealed interface WatchReply {
   /** The account has no brief now: the watch shows Needs you, as without one. */
   @Serializable @SerialName("no_brief")
   data object NoBrief : WatchReply
+
+  /**
+   * One taf's page, in the phone's words: its state, its job, each of its Cards with today's use, as the phone's Card tab shows it,
+   * and how many of its calls wait on the person ([waiting]). Nothing on it is changed from the wrist but Halt.
+   */
+  @Serializable @SerialName("taf")
+  data class TafPage(
+    @SerialName("taf_id") val tafId: String,
+    val name: String,
+    val state: String,
+    val halted: Boolean,
+    val job: String,
+    val cards: List<CardLine> = emptyList(),
+    val waiting: Int = 0,
+  ) : WatchReply
+
+  /** A calendar day, in tafs cloud's words: its line, and each event to come with its time and taf. */
+  @Serializable @SerialName("calendar")
+  data class CalendarDay(
+    val day: String,
+    val words: String,
+    val events: List<EventLine> = emptyList(),
+    val halted: Boolean = false,
+  ) : WatchReply
+
+  /** Who is signed in, the account's name, and the plan's line in tafs cloud's words, when the phone has read it. */
+  @Serializable @SerialName("account")
+  data class AccountPage(
+    val email: String? = null,
+    val account: String? = null,
+    val plan: String? = null,
+  ) : WatchReply
 }
+
+/** One of a taf's Cards, as the phone's Card tab draws it: its title, the face's figure and line, and its rules in one line each. */
+@Serializable
+data class CardLine(
+  val title: String,
+  val figure: String? = null,
+  val words: String? = null,
+  val rules: List<String> = emptyList(),
+)
+
+/** One event of a calendar day: its time in the account's zone, its taf, and what it is in tafs cloud's words. */
+@Serializable
+data class EventLine(val time: String, val taf: String, val words: String, val count: Int = 1)
 
 /**
  * An ask as tafs cloud has it, in its words: its state, the taf it went to once there's one, and its result in one checked line.
@@ -228,6 +282,9 @@ object WatchLink {
    */
   const val ASK_RESULT = PREFIX + "ask-result"
   const val BRIEF = PREFIX + "brief"
+  const val TAF = PREFIX + "taf"
+  const val CALENDAR = PREFIX + "calendar"
+  const val ACCOUNT = PREFIX + "account"
 
   /** What the phone app declares (its `android_wear_capabilities`), so the watch finds the phone that can answer it. */
   const val PHONE_CAPABILITY = "tafs_phone_relay"
@@ -256,6 +313,9 @@ object WatchLink {
   /** An ask's id in tafs cloud, and a time the watch read: short and plain. */
   private val ID = Regex("^[A-Za-z0-9_:.+-]{1,64}$")
 
+  /** A calendar day, `YYYY-MM-DD`, and nothing else. */
+  private val DAY = Regex("^\\d{4}-\\d{2}-\\d{2}$")
+
   /** Strict: a field the path doesn't take is refused, not ignored. */
   private val json = Json { ignoreUnknownKeys = false; explicitNulls = false; encodeDefaults = false }
 
@@ -282,6 +342,10 @@ object WatchLink {
 
   @Serializable private data class AsksBody(@SerialName("made_at") val madeAt: Long, val since: String? = null)
 
+  @Serializable private data class TafBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String)
+
+  @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
+
   /** The watch's side: the path and body for [request]. */
   fun encode(request: WatchRequest): Pair<String, ByteArray> {
     val (path, body) = when (request) {
@@ -297,6 +361,9 @@ object WatchLink {
       is WatchRequest.Ask -> ASK to json.encodeToString(AskBody.serializer(), AskBody(request.madeAt, request.clientId, request.text, request.replyTo))
       is WatchRequest.Asks -> ASKS to json.encodeToString(AsksBody.serializer(), AsksBody(request.madeAt, request.since))
       is WatchRequest.Brief -> BRIEF to json.encodeToString(Read.serializer(), Read(request.madeAt))
+      is WatchRequest.Taf -> TAF to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
+      is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
+      is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
     }
     return path to body.encodeToByteArray()
   }
@@ -329,6 +396,9 @@ object WatchLink {
         ASK -> json.decodeFromString(AskBody.serializer(), text).let { WatchRequest.Ask(it.madeAt, it.clientId, it.text, it.replyTo) }
         ASKS -> json.decodeFromString(AsksBody.serializer(), text).let { WatchRequest.Asks(it.madeAt, it.since) }
         BRIEF -> WatchRequest.Brief(json.decodeFromString(Read.serializer(), text).madeAt)
+        TAF -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.Taf(it.madeAt, it.tafId) }
+        CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
+        ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         else -> return Accepted.No(NotAccepted.UNKNOWN_PATH)
       }
     } catch (_: IllegalArgumentException) {
@@ -348,7 +418,9 @@ object WatchLink {
     is WatchRequest.Ask -> CLIENT_ID.matches(request.clientId) && request.text.isNotBlank() && request.text.length <= MAX_ASK_TEXT &&
       (request.replyTo == null || ID.matches(request.replyTo))
     is WatchRequest.Asks -> request.since == null || ID.matches(request.since)
-    is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> true
+    is WatchRequest.Taf -> request.tafId.isNotBlank() && request.tafId.length <= 128
+    is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
+    is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account -> true
   }
 
   /** The phone's answer, as bytes for the Data Layer. */

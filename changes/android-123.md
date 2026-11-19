@@ -1,0 +1,1 @@
+- **Android 123 (1.39.5):** the phone answers the Wear OS v2 test build's reads, and a failed connection says why in the person's language.

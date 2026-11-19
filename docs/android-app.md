@@ -46,7 +46,7 @@ has made so far, read only from what the app already holds. The taf's name once 
 else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
 (with no plan, what Coach asked of the person and where each stands); the tools its cards connect,
 each connected (with what the taf calls through it), signed in, waiting for you, or not connected
-with planque's reason; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
+in planque's words for its state (`status_words`), never planque's `reason`, which is English, for the log; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
 line says what will show there. Nothing is fetched, signed or sent from it, and the cards to answer
 stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
 shows it (`SetupShapeTest`).
@@ -665,7 +665,10 @@ shown as planque says it is a vendor refusing planque's client (`vendor_refused_
 whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
-so it can say what went wrong and ask again.
+so it can say what went wrong and ask again. The person never reads it: a connection planque has
+failed or disconnected says planque's words for its state, in their language, else "Not connected",
+on the card, in Taking shape and in the line under the card (`SetupShapeTest`, `CoachStartTest`).
+iPhone and iPad say the same; there the card's answer carries those words.
 
 ## The bar
 
@@ -1477,6 +1480,51 @@ cloud's (`TafsCloud.calendar`, `GET /v1/calendar`); the app converts no zone. Wh
 it shows is kept in `AppState`, so a rotation keeps it, and a new account starts
 afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 `CalendarTest.kt`.
+
+## Files (behind a switch)
+
+What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
+account, as mockup v2.1 draws it (kiff/work `files-v2/`). It's built against a stub and stays off: `FilesFeature.on` is
+`false` (`files/FilesStore.kt`), so no model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw
+nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
+
+- **The store** (`FilesStore`) is tafs cloud's four routes and nothing else: `list` (`GET /v1/files?taf=&run=&chat=`, paged,
+  newest first), `file` (`GET /v1/files/{id}`, with its preview: a text file's first 4 KB, or a 60 s link for an image or PDF),
+  `download` (`GET /v1/files/{id}/download`, a 60 s link this phone fetches with `fetch`, never gives out) and `delete`
+  (`DELETE /v1/files/{id}`, for anyone on the account, gone for everyone). A file (`KeptFile`) carries its name, media type,
+  size, when it was made and when it goes, its taf (by id, and `taf_name` as named at delivery), its run and its chat.
+  `StubFilesStore` holds four sample files of the sample tafs (Late parcels, Support replies, Lead follow-up: CSV, Markdown and
+  plain text) in memory. `TafsCloudFilesStore` isn't written: it comes with tafs cloud's routes and their contract test, in
+  `StubFilesStore`'s place in `MainActivity`.
+- **The model** (`FilesModel`) reads every page, keeps the list, the view (All, By taf, By run), the taf chip, the file open,
+  and Delete's question. A failed read keeps what was shown, with `ErrorWords`' line.
+- **Shown cleaned** (`FileNames`): a name without its path (what follows the last `/` or `\`) and without control or
+  direction characters (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C), its id where nothing's left; a preview the same,
+  keeping its lines and tabs. The preview is drawn as plain text only, never Markdown or HTML. A file's type is its name's
+  extension, else its media type ("CSV").
+- **The entries:** Account's "Files" row under People & apps (a KIFF account), "4 files · kept 30 days" or "None yet · kept 30 days"
+  (`files.account_row`, `files.none_yet`); a taf's Card section, "2 files from its runs" (`files.taf_row`) and "Its files are kept
+  until {date}" (the latest of them), opening its files By run; and in a taf's chat, under the last answer of each chat
+  session, a chip per file of that chat (its name, type and size) and the date they're kept until. A chip opens the file on its
+  own: closing it goes back to the chat.
+- **The list:** All (newest first, by day, in the account's zone), By taf (each taf and its count) and By run (each run, its taf
+  and time); "All tafs" and a chip per taf narrow it. Each row: the file, its taf, its size as the phone writes one, and when it
+  goes, counted to the account's midnight: "goes today" (or past), "goes tomorrow", "goes in N days" (`Goes`). Then
+  `files.kept_line`; with no file, `files.empty`.
+- **A file:** its preview, **Download** and **Share**, then Made by (`taf_name`), In the run, Type, Size, Who sees it
+  (Everyone on this account) and Goes away ("{date} (30 days after its run)"), See it in the chat (its taf's page) and **Delete
+  now** apart at the end. Download writes the bytes into the phone's Downloads through MediaStore (no permission from Android
+  10), then "Saved to this device". Share writes the bytes as a file into the app's cache (`kept-files/`) and offers it through
+  the share sheet by the app's FileProvider: the file itself, never a link. Delete now is asked first ("Delete "{name}" now?"
+  and what it means), then sent, and the file is off the list with "Deleted for everyone".
+- **A tablet** (600 dp or more for Files, beside the sidebar from `WIDE_DP`): the list and the file side by side, "Pick a file
+  to see it here." until one is. On a phone it's a sheet, and the file takes the list's place, with Back.
+- **Left out:** the mockup's counts over the list (files, total size, going this week) and the run's result line on By run,
+  which have no words or data yet; "Also sent to", which v1 drops; drawing a PDF or an image preview (the 60 s link isn't
+  fetched yet).
+- Tests: `FilesModelTest` (the stub's filters and pages, the groups, the days left at the account's midnight, names and
+  previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
+  views, a file, Delete's question, the tablet's two panes).
 
 ## Illustrations
 

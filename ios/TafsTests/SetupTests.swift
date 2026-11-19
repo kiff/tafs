@@ -1895,18 +1895,22 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.setupWaiting?.id, "read", "its Approve button shows")
 
         // Approved, then planque failed the grant at connect: the card says it didn't go
-        // through, with planque's reason, though the answer reads approved.
+        // through, in planque's words for its state, though the answer reads approved; never planque's
+        // `reason`, which is English, for the log.
         let answered = #"""
         [{"at":"2026-10-17T10:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1"},
          {"at":"2026-10-17T10:00:05.000Z","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"},
          {"at":"2026-10-17T10:02:00.000Z","from":"owner","kind":"message","text":"[approval read] approved, signed in","session":"s1"}]
         """#
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":\#(answered),"components":[\#(connect),\#(read)]}"#)
-        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a read-only tool isn't read-only at the vendor"))]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a read-only tool isn't read-only at the vendor", statusWords: "Échec"))]}"#)
         await model.loadSetupThread()
         await model.refreshConnections()
-        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)),
-                       .failed("a read-only tool isn't read-only at the vendor"))
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), .failed("Échec"))
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: "a read-only tool isn't read-only at the vendor"))]}"#)
+        await model.refreshConnections()
+        XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), .failed(nil),
+                       "with no words from planque, the card says its own line, never the reason")
         Keychain.delete(AppModel.planqueAccount)
     }
 
@@ -2002,6 +2006,54 @@ final class SetupTests: XCTestCase {
             .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
         XCTAssertTrue(file.contains("if setupLive != nil && !cardWaitsOnItsGrant { continue }"))
         XCTAssertFalse(file.contains("if setupLive != nil { continue }"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The behavioural half of #1391's poll line (the iOS side of #1390): a live stream reads the thread at the
+    /// card's component and then stays open, quiet, with no end. planque lists the card's grant only after that
+    /// read. With the stream still open, the poll reads on, and the card fills in by itself: no navigation, no
+    /// Try again.
+    func testACardFillsInByItselfWhenItsGrantIsListedAfterAQuietStreamsLastRead() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        model.setupPollInterval = 10_000_000
+        model.setupWorkingPollInterval = 10_000_000
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func at(_ ago: TimeInterval) -> String { iso.string(from: Date().addingTimeInterval(-ago)) }
+        func waitFor(_ condition: () -> Bool) async throws {
+            for _ in 0..<300 where !condition() { try await Task.sleep(nanoseconds: 10_000_000) }
+        }
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[{"at":"\#(at(20))","from":"owner","kind":"message","text":"Connect my Stripe","session":"s1"}],"components":[{"at":"\#(at(5))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect","grant":"g_01"}}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        let streams = OpenStreams()
+        model.streamOpener = { _, _ in streams.open() }
+        let follow = Task { await model.followSetup() }
+        try await waitFor { model.setupTaf != nil }
+
+        // The stream reads the thread at the card, before planque lists its grant, and then says nothing more.
+        let sent = await model.sendSetup("Connect my Stripe")
+        XCTAssertTrue(sent)
+        streams.continuations.first?.yield(.session("s1", newSession: false))
+        streams.continuations.first?.yield(.component)
+        try await waitFor { model.cardWaitsOnItsGrant }
+        XCTAssertTrue(model.cardWaitsOnItsGrant, "the card is shown and waits on its grant")
+        XCTAssertNotNil(model.setupLive, "the stream is open")
+        XCTAssertFalse(model.grants.contains { $0.id == "g_01" })
+
+        // planque lists the grant now. The stream stays quiet and open; the poll alone reads it.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        try await waitFor { model.grants.contains { $0.id == "g_01" } }
+        XCTAssertTrue(model.grants.contains { $0.id == "g_01" }, "the card's grant is read with the stream still open")
+        XCTAssertNotNil(model.setupLive, "no end came: the stream didn't read it")
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "the card filled in by itself")
+        XCTAssertFalse(model.cardNotRead("connect"))
+
+        streams.close()
+        await model.setupStream?.value
+        follow.cancel()
+        await follow.value
         Keychain.delete(AppModel.planqueAccount)
     }
 

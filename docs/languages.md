@@ -153,10 +153,16 @@ that tell a message's language, in tafs and kiff/agents together.
   own choice. **Without one** (a push alert, a door's alert, a delivery note), each phone's: the language
   its app sent when it signed up for alerts (`POST /v1/push`), kept with it. An alert is worded once per
   language and each phone gets its own.
-- **Coach** is told the person's language with each message from an app in another language than
-  English: a `[tafs language]` line before the owner's words, after tafs' own opening lines, so the
-  thread still shows only the owner's words. Coach answers in it. English is said too when the account's language,
-  as tafs cloud keeps it, was another until then: its notes and earlier chats are in that one. For an account outside UTC, a
+- **Coach and every taf** are told the reply rule with each message, English included: a
+  `[tafs language]` line before the owner's words, after tafs' own opening lines, so the thread
+  still shows only the owner's words. **The rule:** answer in the language of the person's message;
+  if that isn't clear (a short line, a number, a name), in the app's language; never in a data
+  source's (a sheet, an email, a page, an account's locale: 18 Nov, an English message to a taf on a
+  French Google account came back in French). A message a taf sends a customer keeps the customer's
+  language. Coach also writes what the app shows (questions, cards, a version's note, a taf's
+  summary) in the app's language. A line the person types that starts as one of tafs' own (`[tafs language]`, `[tafs time zone]`) is
+  dropped from their message, so only tafs cloud's rule reaches the taf. A taf's message sent again under its `client_message_id` matches
+  kiff/agents' digest with the line or without it (one sent before the line). For an account outside UTC, a
   `[tafs time zone]` line beside it says the account's zone and the time there now, and that every
   time Coach writes (a cron, an at, a time in a message) is in it, as the owner says it: kiff/agents'
   own date line is in UTC, and a cron converted to it ran an hour early.

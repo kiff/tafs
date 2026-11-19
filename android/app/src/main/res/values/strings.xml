@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Ready: %1$s. Share again</string>
     <string name="export_row">Export my chats</string>
     <string name="export_sign_in_first">Sign in with KIFF to export your chats.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s file · kept 30 days</item>
+        <item quantity="other">%1$s files · kept 30 days</item>
+    </plurals>
+    <string name="files_all">All</string>
+    <string name="files_all_tafs">All tafs</string>
+    <string name="files_by_run">By run</string>
+    <string name="files_by_taf">By taf</string>
+    <string name="files_delete_body">It goes from Files for everyone on this account, right away. This can\'t be undone.</string>
+    <string name="files_delete_now">Delete now</string>
+    <string name="files_delete_question">Delete “%1$s” now?</string>
+    <string name="files_deleted">Deleted for everyone</string>
+    <string name="files_download">Download</string>
+    <string name="files_empty">Nothing yet. When a taf makes a report, a sheet or a document in a run, it\'s kept here for 30 days, for everyone on this account to open, save or share.</string>
+    <string name="files_everyone">Everyone on this account</string>
+    <string name="files_goes_away">Goes away</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">goes in %1$s day</item>
+        <item quantity="other">goes in %1$s days</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 days after its run)</string>
+    <string name="files_goes_today">goes today</string>
+    <string name="files_goes_tomorrow">goes tomorrow</string>
+    <string name="files_in_run">In the run</string>
+    <string name="files_kept_line">Each file is kept 30 days from its run, then goes away on its own. Everyone on this account sees these files. Your own chat attachments stay with their messages.</string>
+    <string name="files_kept_until">Its files are kept until %1$s</string>
+    <string name="files_made_by">Made by</string>
+    <string name="files_none_yet">None yet · kept 30 days</string>
+    <string name="files_pick_one">Pick a file to see it here.</string>
+    <string name="files_saved">Saved to this device</string>
+    <string name="files_see_in_chat">See it in the chat</string>
+    <string name="files_share">Share</string>
+    <string name="files_size">Size</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s file from its runs</item>
+        <item quantity="other">%1$s files from its runs</item>
+    </plurals>
+    <string name="files_title">Files</string>
+    <string name="files_type">Type</string>
+    <string name="files_who_sees">Who sees it</string>
     <string name="halt_again">Halt again</string>
     <string name="halt_all_now">Halt all now</string>
     <string name="halt_explain_halted">Halted. Resuming starts only new work.</string>
@@ -2537,6 +2577,7 @@
     <string name="voice_title">Dictation</string>
     <string name="voice_voice_becomes_text_device_not">Your voice becomes text on this device. It isn\'t sent until you send it.</string>
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
+    <string name="watch_all_chats">All chats</string>
     <string name="watch_already_answered">Already answered, or it ended.</string>
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_as_of">As of %1$s</string>
@@ -2547,6 +2588,7 @@
     <string name="watch_asking_phone">Asking your phone…</string>
     <string name="watch_check_phone">Check your phone\'s connection</string>
     <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
+    <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
     <string name="watch_halting">Halting %1$s…</string>
@@ -2556,6 +2598,16 @@
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>
     </plurals>
+    <string name="watch_inbox_empty">Nothing new. Coach\'s replies and your tafs\' alerts land here.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s unread in Inbox</item>
+        <item quantity="other">%1$s unread in Inbox</item>
+    </plurals>
+    <string name="watch_keep_for_later">Keep for later</string>
+    <string name="watch_kept_to_send">Kept on this watch. It\'s sent when your phone is in reach again.</string>
+    <string name="watch_limit">30 s at most</string>
+    <string name="watch_listening">Listening</string>
+    <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">To ask by voice, allow the microphone for tafs on this watch.</string>
     <string name="watch_more_on_phone">The rest is on your phone.</string>
     <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
@@ -2565,20 +2617,37 @@
     </plurals>
     <string name="watch_not_sure">Not sure it arrived</string>
     <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_page_brief">Brief</string>
+    <string name="watch_page_inbox">Inbox</string>
     <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
+    <string name="watch_play">Play</string>
+    <string name="watch_qr_needs_me_today">What needs me today?</string>
+    <string name="watch_qr_not_now">Not now</string>
+    <string name="watch_qr_tell_me_more">Tell me more</string>
+    <string name="watch_qr_thanks">Thanks</string>
+    <string name="watch_quick_reply">Quick reply</string>
+    <string name="watch_ready">Ready</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s ready</item>
         <item quantity="other">%1$s ready</item>
     </plurals>
+    <string name="watch_recent_chats">Recent chats</string>
+    <string name="watch_recording">Recording</string>
     <string name="watch_refused">Refused. Nothing was sent.</string>
     <string name="watch_reply">Reply</string>
+    <string name="watch_rerecord">Re-record</string>
     <string name="watch_result_ready">A result is ready</string>
     <string name="watch_results_channel">Results</string>
     <string name="watch_retry">Retry</string>
+    <string name="watch_review">Check before sending</string>
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
+    <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
+    <string name="watch_type">Type</string>
+    <string name="watch_type_hint">Write to Coach…</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
     <plurals name="watch_working_count">

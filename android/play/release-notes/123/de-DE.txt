@@ -1,0 +1,2 @@
+• Deine Uhr: Das Handy beantwortet die neuen Seiten der Wear-OS-Testversion: die Seite eines tafs, den heutigen Kalender und dein Konto.
+• Kommt eine Verbindung nicht zustande, sagt sie jetzt in deiner Sprache, warum, nie mit einer technischen Meldung.

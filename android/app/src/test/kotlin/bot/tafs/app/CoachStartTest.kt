@@ -861,6 +861,22 @@ class CoachStartTest {
     assertTrue(answered("s1").startsWith("failed: This connection is listed"))
   }
 
+  // A grant planque ended reads, to the person, in planque's words for its state, never planque's English `reason`, which is for
+  // the log (and for Coach, as `told`): on 18 Nov planque began adding a code in brackets to it.
+  @Test fun aFailedGrantsReasonNeverReachesThePerson() = runTest {
+    reads()
+    coachThread(signInCard)
+    val failed = grant("failed").removeSuffix("}") + ""","reason":"KIFF answered 403: approval_refused (profile_not_approved)","status_words":"Fehlgeschlagen"}"""
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[$failed]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/approval", 503, """{"error":"down"}""")
+    val m = model(FakeSignIn(back = null))
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    val shown = listOfNotNull(m.state.value.coachNotes["s1"], m.state.value.lastError).joinToString(" | ")
+    assertTrue(shown, "approval_refused" !in shown && "403" !in shown && "KIFF answered" !in shown)
+  }
+
   @Test fun aSignInClosedAtTheVendorIsToldToCoachAsFailed() = runTest {
     reads()
     coachThread(signInCard)

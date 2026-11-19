@@ -1,4 +1,5 @@
-import { wordsIn } from "../src/cloud/words/index.js";
+import { ownerWords } from "../src/cloud/improve.js";
+import { withReplyLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
 import { handleStream, heldLine, type HTTPEvent, MAX_NOTE, noteWords, preToolLines, SETUP_JOB, type Taf, waitsOf, withLine } from "../src/cloud/handler.js";
@@ -780,7 +781,9 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.status).toBe(200);
     const session = String(r.events[0]!.data.session);
     const read = await w.agents.api.session("t_acme", session, "member:u_ana");
-    expect(read.events[0]!.body).toEqual({ text: "", attachments: [{ id: attachment.id, kind: "pdf", media_type: "application/pdf", name: "policy.pdf", size: 900 }] });
+    // A file alone still says the reply-language rule; the person's own words are none.
+    expect(read.events[0]!.body).toEqual({ text: withReplyLanguage("", "en"), attachments: [{ id: attachment.id, kind: "pdf", media_type: "application/pdf", name: "policy.pdf", size: 900 }] });
+    expect(ownerWords((read.events[0]!.body as { text: string }).text)).toBe("");
     // Luis can't send Ana's file: kiff/agents takes only the requester's own.
     const theirs = await w.agents.api.createAttachment("t_acme", RAE, "member:u_ana", { media_type: "text/plain", name: "a.txt", size: 5, sha256: "c".repeat(64) });
     expect((await stream(w, PATH, { token: "luis", body: { text: "hi", attachments: [theirs.attachment.id] } })).status).toBe(404);

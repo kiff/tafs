@@ -1,0 +1,1 @@
+- **Wear OS v2, step 1: the phone answers three new reads from the watch,** a taf's page (its job and its Cards with today's use), a calendar day and the account, for the v2 screens ([watch-wear.md](docs/watch-wear.md)).

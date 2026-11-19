@@ -100,6 +100,7 @@
     "common.ok",
     "connect.apps.column_app",
     "device.mac",
+    "files.type",
     "home.overview.column_card",
     "home.overview.column_taf",
     "home.tagline",
@@ -125,6 +126,7 @@
     "version.number",
     "version.title",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -225,6 +227,7 @@
     "taf.section.setup",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -269,6 +272,7 @@
     "taf.section.chat",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -311,6 +315,7 @@
     "device.mac",
     "device.tablet",
     "door.status.open",
+    "files.type",
     "home.overview.column_card",
     "home.overview.column_taf",
     "home.status",
@@ -348,6 +353,8 @@
     "usage.solo",
     "usage.week",
     "version.trial.chat_name",
+    "watch.menu",
+    "watch.page.inbox",
     "work.duration.minutes",
     "work.duration.seconds"
   ],
@@ -395,6 +402,7 @@
     "taf.section.card",
     "usage.solo",
     "version.trial.chat_name",
+    "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
   ]

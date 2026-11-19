@@ -1,0 +1,1 @@
+- **Wear OS v2: Play and Pause for a recording before it's sent.** The recording stays on the watch and is erased on Send, Delete, Re-record, sign-out or when the app is put away; only the words leave. Behind the v2 switch, with a probe line on internal builds ([watch-wear.md](docs/watch-wear.md)).

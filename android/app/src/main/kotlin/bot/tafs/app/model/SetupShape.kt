@@ -109,7 +109,8 @@ data class SetupShape(
       if (answer?.text == "declined" || answer?.text == "not now") return CardState.Declined
       if (answer != null && answer.failed) return CardState.Failed(answer.why)
       if (c.type == "sign_in" && (answer != null || grant?.connected == true || grant?.listed == true)) return CardState.Done
-      if (grant != null && (grant.status == "failed" || grant.status == "disconnected")) return CardState.Failed(grant.reason)
+      // planque's words for its state, in the person's language; never its `reason`, which is English for the log.
+      if (grant != null && (grant.status == "failed" || grant.status == "disconnected")) return CardState.Failed(grant.statusWords?.takeIf { it.isNotBlank() })
       return CardState.NeedsYou
     }
 
@@ -260,7 +261,8 @@ data class SetupShape(
         seen += id
         val state = when {
           grant.connected -> Tool.State.Connected
-          grant.status == "failed" || grant.status == "disconnected" -> Tool.State.Failed(grant.reason)
+          // planque's words for its state, never its `reason` (English, for the log): the panel draws `why` as it is.
+          grant.status == "failed" || grant.status == "disconnected" -> Tool.State.Failed(grant.statusWords?.takeIf { it.isNotBlank() })
           grant.holdsSignIn -> Tool.State.SignedIn
           else -> Tool.State.Waiting
         }

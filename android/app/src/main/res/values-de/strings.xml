@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Bereit: %1$s. Erneut teilen</string>
     <string name="export_row">Meine Chats exportieren</string>
     <string name="export_sign_in_first">Melde dich mit KIFF an, um deine Chats zu exportieren.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s Datei · 30 Tage aufbewahrt</item>
+        <item quantity="other">%1$s Dateien · 30 Tage aufbewahrt</item>
+    </plurals>
+    <string name="files_all">Alle</string>
+    <string name="files_all_tafs">Alle tafs</string>
+    <string name="files_by_run">Nach Lauf</string>
+    <string name="files_by_taf">Nach taf</string>
+    <string name="files_delete_body">Sie verschwindet sofort für alle in diesem Konto aus Dateien. Das lässt sich nicht rückgängig machen.</string>
+    <string name="files_delete_now">Jetzt löschen</string>
+    <string name="files_delete_question">„%1$s“ jetzt löschen?</string>
+    <string name="files_deleted">Für alle gelöscht</string>
+    <string name="files_download">Herunterladen</string>
+    <string name="files_empty">Noch nichts. Wenn ein taf in einem Lauf einen Bericht, eine Tabelle oder ein Dokument erstellt, wird es hier 30 Tage aufbewahrt, damit alle in diesem Konto es öffnen, speichern oder teilen können.</string>
+    <string name="files_everyone">Alle in diesem Konto</string>
+    <string name="files_goes_away">Verschwindet</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">verschwindet in %1$s Tag</item>
+        <item quantity="other">verschwindet in %1$s Tagen</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 Tage nach seinem Lauf)</string>
+    <string name="files_goes_today">verschwindet heute</string>
+    <string name="files_goes_tomorrow">verschwindet morgen</string>
+    <string name="files_in_run">Im Lauf</string>
+    <string name="files_kept_line">Jede Datei wird 30 Tage ab ihrem Lauf aufbewahrt und verschwindet dann von selbst. Alle in diesem Konto sehen diese Dateien. Deine eigenen Chat-Anhänge bleiben bei ihren Nachrichten.</string>
+    <string name="files_kept_until">Seine Dateien werden bis %1$s aufbewahrt</string>
+    <string name="files_made_by">Erstellt von</string>
+    <string name="files_none_yet">Noch keine · 30 Tage aufbewahrt</string>
+    <string name="files_pick_one">Wähle eine Datei, um sie hier zu sehen.</string>
+    <string name="files_saved">Auf diesem Gerät gespeichert</string>
+    <string name="files_see_in_chat">Im Chat ansehen</string>
+    <string name="files_share">Teilen</string>
+    <string name="files_size">Größe</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s Datei aus seinen Läufen</item>
+        <item quantity="other">%1$s Dateien aus seinen Läufen</item>
+    </plurals>
+    <string name="files_title">Dateien</string>
+    <string name="files_type">Typ</string>
+    <string name="files_who_sees">Wer sie sieht</string>
     <string name="halt_again">Erneut anhalten</string>
     <string name="halt_all_now">Alle jetzt anhalten</string>
     <string name="halt_explain_halted">Angehalten. Fortsetzen startet nur neue Arbeit.</string>
@@ -2537,6 +2577,7 @@
     <string name="voice_title">Diktieren</string>
     <string name="voice_voice_becomes_text_device_not">Deine Stimme wird auf diesem Gerät zu Text. Sie wird erst gesendet, wenn du sendest.</string>
     <string name="voice_what_you_said_stays_message">Was du gesagt hast, bleibt ungesendet im Nachrichtenfeld.</string>
+    <string name="watch_all_chats">Alle Chats</string>
     <string name="watch_already_answered">Schon beantwortet oder beendet.</string>
     <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
     <string name="watch_as_of">Stand: %1$s</string>
@@ -2547,6 +2588,7 @@
     <string name="watch_asking_phone">Fragt dein Handy…</string>
     <string name="watch_check_phone">Prüf die Verbindung deines Handys</string>
     <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
+    <string name="watch_deleted_nothing_sent">Gelöscht. Nichts wurde gesendet.</string>
     <string name="watch_didnt_catch">Nicht verstanden. Tippe, um es erneut zu versuchen.</string>
     <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
     <string name="watch_halting">%1$s wird angehalten…</string>
@@ -2556,6 +2598,16 @@
         <item quantity="one">%1$s zurückgehaltener Aufruf braucht dich</item>
         <item quantity="other">%1$s zurückgehaltene Aufrufe brauchen dich</item>
     </plurals>
+    <string name="watch_inbox_empty">Nichts Neues. Hier landen die Antworten von Coach und die Hinweise deiner tafs.</string>
+    <plurals name="watch_inbox_unread">
+        <item quantity="one">%1$s ungelesen im Eingang</item>
+        <item quantity="other">%1$s ungelesen im Eingang</item>
+    </plurals>
+    <string name="watch_keep_for_later">Für später behalten</string>
+    <string name="watch_kept_to_send">Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.</string>
+    <string name="watch_limit">Höchstens 30 s</string>
+    <string name="watch_listening">Hört zu</string>
+    <string name="watch_menu">Menü</string>
     <string name="watch_mic_needed">Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.</string>
     <string name="watch_more_on_phone">Der Rest ist auf deinem Handy.</string>
     <string name="watch_needs_lock">Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
@@ -2565,20 +2617,37 @@
     </plurals>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
+    <string name="watch_page_brief">Briefing</string>
+    <string name="watch_page_inbox">Eingang</string>
     <string name="watch_phone_not_reachable">Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.</string>
+    <string name="watch_play">Abspielen</string>
+    <string name="watch_qr_needs_me_today">Was braucht mich heute?</string>
+    <string name="watch_qr_not_now">Nicht jetzt</string>
+    <string name="watch_qr_tell_me_more">Erzähl mir mehr</string>
+    <string name="watch_qr_thanks">Danke</string>
+    <string name="watch_quick_reply">Schnellantwort</string>
+    <string name="watch_ready">Fertig</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s fertig</item>
         <item quantity="other">%1$s fertig</item>
     </plurals>
+    <string name="watch_recent_chats">Letzte Chats</string>
+    <string name="watch_recording">Aufnahme läuft</string>
     <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
     <string name="watch_reply">Antworten</string>
+    <string name="watch_rerecord">Neu aufnehmen</string>
     <string name="watch_result_ready">Ein Ergebnis ist da</string>
     <string name="watch_results_channel">Ergebnisse</string>
     <string name="watch_retry">Erneut senden</string>
+    <string name="watch_review">Vor dem Senden prüfen</string>
     <string name="watch_sending">Wird gesendet…</string>
     <string name="watch_sent">Gesendet</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>
+    <string name="watch_trust">Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.</string>
+    <string name="watch_type">Tippen</string>
+    <string name="watch_type_hint">Schreib an Coach…</string>
     <string name="watch_update_phone">Aktualisiere tafs auf deinem Handy und versuch es dann erneut.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
     <plurals name="watch_working_count">

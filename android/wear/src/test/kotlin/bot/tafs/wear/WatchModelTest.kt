@@ -156,7 +156,7 @@ class WatchModelTest {
     val model = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_00000001" })
     assertTrue(model.listen())
     model.partial("Move my four o'clock")
-    assertEquals(WatchModel.Voice.Listening("Move my four o'clock", null), model.voice.value)
+    assertEquals(WatchModel.Voice.Listening("Move my four o'clock", null, since = t), model.voice.value)
     assertTrue("nothing sent while listening", phone.asked.isEmpty())
     model.heard("  Move my four o'clock call to six ")
     assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my four o'clock call to six")), phone.asked)
@@ -369,5 +369,313 @@ class WatchModelTest {
     model.refuse((model.shown.value as WatchModel.Shown.Read).refusable(payDecision)!!)
     assertEquals(WatchModel.Outcome.Done("Refused"), model.outcome.value)
     assertEquals(listOf(WatchRequest.Refuse(t, "hold_1"), WatchRequest.NeedsYou(t), WatchRequest.Brief(t), WatchRequest.Tafs(t)), phone.asked)
+  }
+
+  // MARK: v2's microphone (docs/watch-wear.md, Version 2): nothing leaves the watch before Send.
+
+  private fun v2(phone: PhoneLink, unlocked: () -> Boolean = { true }, ids: () -> String = { "w_00000001" }) =
+    WatchModel(phone, now = { t }, unlocked = unlocked, newClientId = ids, reviewFirst = true)
+
+  @Test fun v2sMicrophoneOpensReadyThenListensOnStart() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.readyToRecord()
+    assertEquals(WatchModel.Voice.Ready(null), model.voice.value)
+    assertTrue(model.listen())
+    assertEquals(WatchModel.Voice.Listening("", null, since = t), model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sWordsHeardGoToTheReviewAndOnlySendOnSend() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("  Move my four o'clock call to six ")
+    assertEquals(WatchModel.Voice.Review("Move my four o'clock call to six", null), model.voice.value)
+    assertTrue("nothing sent on stop", phone.asked.isEmpty())
+    model.sendReviewed()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my four o'clock call to six")), phone.asked)
+    assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
+  }
+
+  @Test fun v2sDeleteSendsNothing() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("Move my call")
+    model.deleteReviewed()
+    assertEquals(WatchModel.Voice.Deleted, model.voice.value)
+    model.sendReviewed()
+    model.closeVoice()
+    assertNull(model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sReRecordDropsTheWordsAndKeepsTheChat() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.readyToRecord(replyTo = "ask_1")
+    model.listen("ask_1")
+    model.heard("Move my call")
+    model.rerecord()
+    assertEquals(WatchModel.Voice.Ready("ask_1"), model.voice.value)
+    model.listen("ask_1")
+    model.heard("Move it to six")
+    model.sendReviewed()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move it to six", "ask_1")), phone.asked)
+  }
+
+  @Test fun v2sTypedWordsAndQuickRepliesGoToTheSameReview() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.review("   ")
+    assertNull("blank is nothing", model.voice.value)
+    model.review(" What needs me today? ")
+    assertEquals(WatchModel.Voice.Review("What needs me today?", null), model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+    model.review("x".repeat(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT + 50))
+    assertEquals(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT, (model.voice.value as WatchModel.Voice.Review).text.length)
+  }
+
+  /** As v1: nothing is asked from a watch with no lock, or a locked one, and it's checked again at Send. */
+  @Test fun v2AsksNothingFromALockedWatch() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    var unlocked = false
+    val model = v2(phone, unlocked = { unlocked })
+    model.readyToRecord()
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    model.review("Thanks")
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    unlocked = true
+    model.review("Thanks")
+    unlocked = false
+    model.sendReviewed()
+    assertEquals(WatchModel.Voice.NeedsLock, model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v2sReviewGoesOnlyToTheWordsBeingChecked() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    // No review open: Send, Re-record and Delete do nothing.
+    model.sendReviewed()
+    model.rerecord()
+    model.deleteReviewed()
+    assertNull(model.voice.value)
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  // MARK: Keep for later (v2): one message, text only, sent under its own id once the phone is back.
+
+  private class Drafts : DraftStore {
+    var kept: WatchModel.Draft? = null
+    override fun read() = kept
+    override fun write(draft: WatchModel.Draft) { kept = draft }
+    override fun clear() { kept = null }
+  }
+
+  private suspend fun unsureThenKept(phone: PhoneLink, drafts: Drafts, unlocked: () -> Boolean = { true }) {
+    val model = WatchModel(phone, now = { t }, unlocked = unlocked, newClientId = { "w_00000001" }, reviewFirst = true, drafts = drafts)
+    model.listen()
+    model.heard("Move my call to six")
+    model.sendReviewed()
+    assertEquals(WatchModel.Voice.Unsure("Move my call to six", "w_00000001", null), model.voice.value)
+    model.keepForLater()
+    assertNull(model.voice.value)
+    assertEquals(WatchModel.Draft("Move my call to six", "w_00000001", null), model.kept.value)
+  }
+
+  @Test fun keptForLaterIsTextOnlyOnTheWatchAndGoesUnderItsOwnIdOnceThePhoneIsBack() = runTest {
+    var reachable = false
+    val phone = Phone {
+      when {
+        !reachable -> Asked.Unreachable
+        it is WatchRequest.Ask -> Asked.Answered(WatchReply.AskTaken(taken))
+        else -> reads(it)
+      }
+    }
+    val drafts = Drafts()
+    unsureThenKept(phone, drafts)
+    assertEquals("on disk: the words, the id and the chat, nothing else", WatchModel.Draft("Move my call to six", "w_00000001", null), drafts.kept)
+    // A new model, as after the app was put away: the draft is still there.
+    val later = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    assertEquals(drafts.kept, later.kept.value)
+    later.refresh()
+    assertEquals("not while the phone is out of reach", drafts.kept, later.kept.value)
+    reachable = true
+    phone.asked.clear()
+    later.refresh()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my call to six")), phone.asked.filterIsInstance<WatchRequest.Ask>())
+    assertNull(later.kept.value)
+    assertNull(drafts.kept)
+    assertEquals(taken, later.asks.value[taken.id])
+  }
+
+  @Test fun aKeptMessageStaysWhenItsSendIsntTaken() = runTest {
+    var answer: Asked = Asked.Unreachable
+    val phone = Phone { if (it is WatchRequest.Ask) answer else reads(it) }
+    val drafts = Drafts()
+    unsureThenKept(phone, drafts)
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    for (a in listOf<Asked>(Asked.Answered(WatchReply.Unsure), Asked.Answered(WatchReply.Failed("Not now")), Asked.NotUnderstood)) {
+      answer = a
+      model.refresh()
+      assertEquals(a.toString(), "w_00000001", model.kept.value?.clientId)
+    }
+    // Every try under the one id.
+    assertEquals(setOf("w_00000001"), phone.asked.filterIsInstance<WatchRequest.Ask>().map { it.clientId }.toSet())
+  }
+
+  @Test fun aKeptMessageGoesOnlyFromAnUnlockedWatch() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", "ask_1") }
+    val model = WatchModel(phone, now = { t }, unlocked = { false }, reviewFirst = true, drafts = drafts)
+    model.refresh()
+    assertTrue(phone.asked.filterIsInstance<WatchRequest.Ask>().isEmpty())
+    assertEquals(drafts.kept, model.kept.value)
+  }
+
+  @Test fun aKeptMessageIsDeletedOnDeleteAndOnSignOut() = runTest {
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.deleteKept()
+    assertNull(model.kept.value)
+    assertNull(drafts.kept)
+    drafts.kept = WatchModel.Draft("Thanks", "w_00000009", null)
+    val signedOut = WatchModel(Phone { Asked.Answered(WatchReply.SignedOut) }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    signedOut.refresh()
+    assertNull(signedOut.kept.value)
+    assertNull("signed out: nothing of the account stays on the watch", drafts.kept)
+  }
+
+  @Test fun putAwayKeepsTheKeptMessage() = runTest {
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.forget()
+    assertEquals(drafts.kept, model.kept.value)
+  }
+
+  @Test fun keepForLaterIsOnlyForAMessageThatMayNotHaveArrived() = runTest {
+    val drafts = Drafts()
+    val model = WatchModel(asker { Asked.Answered(WatchReply.AskTaken(taken)) }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.review("Thanks")
+    model.keepForLater()
+    assertNull(drafts.kept)
+    assertEquals(WatchModel.Voice.Review("Thanks", null), model.voice.value)
+  }
+
+  /** qa-kiff's case: two reads that reach the phone give one ask, since the draft is gone once it's taken. */
+  @Test fun aKeptMessageIsAskedOnceAcrossTwoReads() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.refresh()
+    model.refresh()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000009", "Thanks")), phone.asked.filterIsInstance<WatchRequest.Ask>())
+  }
+
+  // MARK: The recording (v2): on the watch only, erased the moment the review is left (qa-kiff's rules, PM 19 Nov 01:19).
+
+  private class Recording : VoiceAudio {
+    var deleted = 0
+    override val durationMs = 12_000L
+    override fun delete() { deleted++ }
+  }
+
+  private suspend fun reviewed(model: WatchModel, audio: VoiceAudio, replyTo: String? = null) {
+    model.listen(replyTo)
+    model.heard("Move my call to six", audio)
+    assertEquals(WatchModel.Voice.Review("Move my call to six", replyTo, audio), model.voice.value)
+  }
+
+  @Test fun theRecordingIsErasedOnSendAndNeverSent() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    val audio = Recording()
+    reviewed(model, audio)
+    assertEquals("kept while the words are checked", 0, audio.deleted)
+    model.sendReviewed()
+    assertEquals(1, audio.deleted)
+    // Only the words left the watch.
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my call to six")), phone.asked)
+  }
+
+  @Test fun theRecordingIsErasedOnDelete() = runTest {
+    val model = v2(asker { Asked.Answered(WatchReply.AskTaken(taken)) })
+    val audio = Recording()
+    reviewed(model, audio)
+    model.deleteReviewed()
+    assertEquals(1, audio.deleted)
+  }
+
+  @Test fun theRecordingIsErasedOnSignOut() = runTest {
+    var signedIn = true
+    val phone = Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else reads(it) }
+    val model = v2(phone)
+    val audio = Recording()
+    reviewed(model, audio)
+    signedIn = false
+    model.refresh()
+    assertEquals(1, audio.deleted)
+    assertNull(model.voice.value)
+  }
+
+  @Test fun theRecordingIsErasedOnReRecordCancelPutAwayAndALockAtSend() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    var unlocked = true
+    val model = v2(phone, unlocked = { unlocked })
+    for (leave in listOf<suspend () -> Unit>({ model.rerecord() }, { model.closeVoice() }, { model.forget() }, { unlocked = false; model.sendReviewed() })) {
+      unlocked = true
+      model.closeVoice()
+      val audio = Recording()
+      reviewed(model, audio)
+      leave()
+      assertEquals(1, audio.deleted)
+    }
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v1KeepsNoRecording() = runTest {
+    val model = WatchModel(asker { Asked.Answered(WatchReply.AskTaken(taken)) }, now = { t }, unlocked = { true }, newClientId = { "w_00000001" })
+    model.listen()
+    val audio = Recording()
+    model.heard("Move my call", audio)
+    assertEquals(1, audio.deleted)
+    assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
+  }
+
+  @Test fun aRecordingWithNothingToCheckIsErased() = runTest {
+    val model = v2(asker { Asked.Answered(WatchReply.AskTaken(taken)) })
+    val unheard = Recording()
+    model.listen()
+    model.heard("  ", unheard)
+    assertEquals(1, unheard.deleted)
+    val late = Recording()
+    model.closeVoice()
+    model.heard("Too late", late)
+    assertEquals(1, late.deleted)
+  }
+
+  @Test fun aWavHeaderSaysItsFormatAndLength() {
+    val h = VoiceFormat.wavHeader(32_000)
+    val b = java.nio.ByteBuffer.wrap(h).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+    assertEquals(44, h.size)
+    assertEquals("RIFF", String(h, 0, 4))
+    assertEquals(36 + 32_000, b.getInt(4))
+    assertEquals("WAVE", String(h, 8, 4))
+    assertEquals(16_000, b.getInt(24))
+    assertEquals(32_000, b.getInt(28))
+    assertEquals(32_000, b.getInt(40))
+    assertEquals(1_000L, VoiceFormat.durationMs(32_000))
+  }
+
+  @Test fun theSweepLeavesOnlyWhatsHeld() {
+    val dir = kotlin.io.path.createTempDirectory("voice").toFile()
+    val held = java.io.File(dir, "a.wav").apply { writeText("x") }
+    java.io.File(dir, "b.wav").writeText("x")
+    VoiceFiles.sweep(dir, keep = held)
+    assertEquals(listOf("a.wav"), dir.list()!!.toList())
+    VoiceFiles.sweep(dir)
+    assertTrue(dir.list()!!.isEmpty())
   }
 }

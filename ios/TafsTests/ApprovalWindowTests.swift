@@ -394,6 +394,26 @@ final class ApprovalWindowTests: XCTestCase {
         await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
     }
 
+    /// A connection planque failed can't be approved: the line under the card is planque's words for its state, or the app's
+    /// own "Not connected", never planque's English `reason` (as Android's `aFailedGrantsReasonNeverReachesThePerson`).
+    func testAFailedGrantsReasonNeverReachesThePerson() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        let reason = "KIFF answered 403: approval_refused (profile_not_approved)"
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: reason, statusWords: "Échec"))]}"#)
+        let failed = await directConnect(model)
+        XCTAssertNil(failed)
+        XCTAssertEqual(model.lastError, "Échec")
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "failed", reason: reason))]}"#)
+        let again = await directConnect(model)
+        XCTAssertNil(again)
+        XCTAssertEqual(model.lastError, Words.Coach.Shape.notConnected)
+        for word in ["KIFF", "403", "approval_refused", "profile_not_approved"] {
+            XCTAssertFalse(model.lastError?.contains(word) ?? false, word)
+        }
+        XCTAssertTrue(signer.currentPrompted.isEmpty, "nothing to sign for a connection that can't be approved")
+    }
+
     /// As Android's (tafs#1272): the connection's own Face ID opens KIFF's window with the approval key, and planque's
     /// approve goes as a tap in it, never as a windowless v1. The window is closed once the connection is done.
     func testTheDirectConnectApprovesInItsOwnWindow() async throws {

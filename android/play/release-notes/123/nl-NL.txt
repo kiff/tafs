@@ -1,0 +1,2 @@
+• Je horloge: de telefoon beantwoordt de nieuwe pagina's van de Wear OS-testversie: de pagina van een taf, de agenda van vandaag en je account.
+• Als een koppeling niet lukt, zegt die nu waarom in jouw taal, nooit met een technische melding.

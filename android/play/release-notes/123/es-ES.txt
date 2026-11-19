@@ -1,0 +1,2 @@
+• Tu reloj: el teléfono responde a las nuevas páginas de la versión de prueba de Wear OS: la página de un taf, el calendario de hoy y tu cuenta.
+• Cuando una conexión no se completa, ahora dice por qué en tu idioma, nunca con un mensaje técnico.

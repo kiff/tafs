@@ -104,6 +104,8 @@ fun SettingsSheet(
   /** The section a route asked for (AppModel.open), scrolled to once; then [onFocused]. */
   focus: AppRoute? = null,
   onFocused: () -> Unit = {},
+  /** Files, where it's on (`LocalFiles`): its row opens the account's files. */
+  onFiles: () -> Unit = {},
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
@@ -147,6 +149,8 @@ fun SettingsSheet(
             Action(Words.People.title, Theme.ink, onPeople)
             Action(Words.Settings.Devices.title, Theme.ink, onDevices)
             Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
+            // Files, behind its switch: nothing here while it's off.
+            FilesAccountRow(onFiles)
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.plan) { PlanRow(state, onUsage) }
           if (state.mode == Mode.sample) Section(Words.Usage.label) { Action(UsageWords.TITLE, Theme.ink, onUsage) }

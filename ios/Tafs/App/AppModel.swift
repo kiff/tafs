@@ -6893,8 +6893,9 @@ final class AppModel: ObservableObject {
         guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
             notApprovable = true
-            lastError = grant.reason.map { Words.Connect.connectionIsBecause(status: grant.status.replacingOccurrences(of: "_", with: " "), reason: $0) }
-                ?? Words.Connect.connectionIs(status: grant.status.replacingOccurrences(of: "_", with: " "))
+            // planque's words for the grant's state, in the person's language, else the app's own "Not connected": never its
+            // `reason` or status code, which are English, for the log.
+            lastError = grant.statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Coach.Shape.notConnected
             return nil
         }
         guard grant.digestMatches else {
@@ -8914,7 +8915,8 @@ final class AppModel: ObservableObject {
         if answer?.text == "declined" || answer?.text == "not now" { return .declined }
         if let answer, answer.failed { return .failed(answer.why) }
         if c.type == .signIn, answer != nil || grant?.connected == true || grant?.listed == true { return .done }
-        if let grant, grant.status == "failed" || grant.status == "disconnected" { return .failed(grant.reason) }
+        // planque's words for its state, never its `reason` (English, for the log).
+        if let grant, grant.status == "failed" || grant.status == "disconnected" { return .failed(grant.statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }) }
         return .needsYou
     }
 

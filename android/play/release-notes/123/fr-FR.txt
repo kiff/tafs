@@ -1,0 +1,2 @@
+• Votre montre : le téléphone répond aux nouvelles pages de la version de test Wear OS : la page d'un taf, l'agenda du jour et votre compte.
+• Quand une connexion n'aboutit pas, elle dit désormais pourquoi dans votre langue, jamais avec un message technique.

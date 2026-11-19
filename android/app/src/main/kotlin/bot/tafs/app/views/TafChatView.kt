@@ -157,6 +157,12 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
   val shown = remember(tafId) { Chat.Shown() }
   val read = state.chatItems(tafId)
   val items = remember(read) { shown.order(read) }
+  // Files, behind its switch: a chat's files go under its last answer, by the chat's session.
+  val filesOn = LocalFiles.current != null
+  val lastAnswer = remember(items, filesOn) {
+    if (!filesOn) emptyMap() else items.withIndex().filter { (it.value as? ChatItem.Message)?.message?.from == bot.tafs.app.model.ChatMessage.From.taf }
+      .associate { (it.value as ChatItem.Message).message.session to it.index }
+  }
   val thinking = state.thinking(tafId)
   // Someone without a key wrote through a door (docs/doors.md): the owner decides here.
   val showKnocks = state.mode == Mode.kiff && state.doorsOffered.isNotEmpty() && !isTrialChat(tafId) && tafId != COACH_CHAT && taf?.cloudId != null
@@ -361,6 +367,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
                     // An answer of Coach's or the taf's, reported by tafs cloud's id for it; none in the sample.
                     onReport = if (state.mode == Mode.kiff) ({ reason, note -> actions.report(tafId, item.message, reason, note) }) else null,
                   )
+                  if (lastAnswer[item.message.session] == i) ChatFiles(item.message.session)
                   // Not sent: why, and Retry or Edit, under the words as written (kiff/tafs#476).
                   state.chatUnsent[tafId]?.firstOrNull { it.message == item.message }?.let { unsent ->
                     // Refused for a halt that still holds: Resume, behind the owner's confirmation, in Retry's place.

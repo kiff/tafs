@@ -150,6 +150,69 @@ With it on (`WatchModel(briefOn = true)` in the tests):
   drawn only inside the app's screen today, so only on an unlocked watch; a tile or complication for the brief would follow the
   tile's rule: nothing but a count, and only while the watch is unlocked.
 
+## Version 2 (behind a switch, being built)
+
+Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built one step at a time behind `WATCH_V2`
+(`wear/…/WatchPages.kt`), which is `false`, so a watch shows v1 whole until every step is in; it turns on, as that one line,
+once the last step lands and the owner has tried the build. Steps: (i) the phone's three new reads (`taf`, `calendar`,
+`account`, above); (ii) the pages and Coach's home; (iii) record, review and send, with Type and Quick reply; (iv) the inbox
+kept on the watch; (v) Tafs, a taf's page, its settings and choosing which to halt; (vi) the held call, the calendar day and
+Account; (vii) the switches for what needs a new server piece (a watch ask as a Coach chat, the chats read, the inbox's read and
+dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
+
+**Step (ii), what's built** (`WatchPages`, `WatchPagesTest`):
+- **The pages,** side by side, moved between with a swipe, with the page dots at the foot: Coach (home), Inbox, Tafs, Brief and
+  Account. Brief is there only with Your brief on (`BRIEF_ON_WATCH`). The microphone's screens, a result's card and Halting take
+  the whole face, as in v1.
+- **Coach's home:** the microphone, named "Ask Coach", with the asks at work under it; how many wait in the Inbox ("2 unread in
+  Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
+- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest. Until step (v) Halt is Halt all, asked
+  once more, as v1's; it's offered only while a taf runs.
+- **Until their steps:** the Inbox is what the phone answered now (Needs you's held calls, Refuse where allowed and Approve on
+  your phone, then each result ready to open; with nothing, what lands there); Tafs is each taf with its state, no Halt;
+  Account is the trust line and Open on phone. Before the phone answers, or when it can't, each page says so in v1's words.
+- **Words:** `watch.page.*`, `watch.inbox_unread`, `watch.inbox_empty`, `watch.menu` and `watch.trust` are new, in all 8
+  languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
+  `taf.halt.title`). Nothing new is asked of the phone, and nothing is stored on the watch.
+
+**Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
+`WatchPagesTest`). Nothing leaves the watch before Send:
+- **The microphone** opens its screen ready (`Voice.Ready`): **Start**, a round button in the brand's colours with the
+  microphone, "Ready · 30 s at most", and what to do. Start listens; the screen shows "● Recording" in red, the timer against
+  0:30, a ring that fills to the limit, the words as they're heard, and **Stop**: another control, not Start relabelled, a solid
+  red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`, `RECORD_STOP`). At
+  30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for the same ask.
+- **Stopped, or the recognizer heard the end:** the words go to **Check before sending** (`Voice.Review`), never to the phone.
+  It shows them in full, scrolled with the crown, with **Re-record** (the words dropped, ready again for the same ask),
+  **Delete** ("Deleted. Nothing was sent.", which closes by itself after 2 s) and **Send**.
+- **Type** opens the system's text input (`RemoteInput`: keyboard, handwriting or voice typing) and **Quick reply** four
+  ready-made lines; each goes to the same review. Blank is nothing; the words are cut at 2,000 characters, as an ask is.
+- **Send** sends what v1 sends (`ask`, a new id), checked against the watch's lock again, since it may have locked while the
+  words were read; from there Sending, Sent, Not sure it arrived (Retry, the same id) and Not sent are v1's.
+- **Keep for later** (`WatchModel.keepForLater`, `PreferencesDraftStore`), on "Not sure it arrived", where the phone may not
+  have got it. One message, **text only**: its words, its ask id and the ask it continues, in the watch's private preferences
+  (`tafs.draft`). Coach's home shows it with "Kept on this watch. It's sent when your phone is in reach again." and **Delete**.
+  It's sent at the next read that reaches the phone, from an unlocked watch only, under its **own id**, so tafs cloud starts it at
+  most once; once taken it's gone from the watch and shows as an ask at work, and anything else leaves it for the next read. It's
+  deleted on Delete and when the phone says it's signed out. Putting the app away keeps it, and so does the watch locking, since
+  the person asked for it to be sent. v1 offers none (`v1OffersNoKeepForLater`).
+- **Play and Pause** (`VoiceAudio.kt`, `Listener(keepAudio = true)`). In v2 the app opens the microphone itself (`AudioTap`,
+  16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
+  OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
+  (`files/voice/`), kept beside the review only: **Play** and **Pause** go on from where it was, with "0:03 / 0:12". It never
+  leaves the watch, only the words do. It's erased the moment the review is left, by whatever leaves it (`WatchModel.voiceNow`):
+  Send, Delete, Re-record, Cancel, a lock at Send, put away, and signed out; v1 keeps none, and Keep for later is text only. Any
+  recording no screen holds is swept when the app starts and when it's put away (`VoiceFiles.sweep`).
+- **The probe** (internal builds only, a small line on the review): what the recognizer did with the app's audio, as "audio:
+  kept 7200 ms · peak 9100", "audio: recognizer refused it (error 5)" or "audio: microphone not opened". A recognizer that
+  refuses it before it's ready to listen is noted for the app's life, and the next Start listens with the watch's own microphone
+  as v1 does, with no recording and no Play. Whether the Galaxy Watch 5's recognizer takes it is checked on the owner's watch; if
+  it doesn't, the choice is the owner's (PM 19 Nov 01:19).
+- **v1 is unchanged** with the switch off: what's heard is sent the moment the person stops (`whatsHeardGoesAtOnceWithNothingToConfirm`).
+- **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
+  `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
+  all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
@@ -202,7 +265,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask eight things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -214,6 +277,9 @@ The watch may ask eight things (`WatchRequest`), each a path under `/tafs/watch/
 | `ask` | Ask tafs: `client_id`, `text`, `reply_to`; signed with the device key and sent to tafs cloud, which answers its receipt |
 | `asks` | Reads the watch's asks as tafs cloud has them, updated after `since` (or in the last day) |
 | `brief` | Reads Your brief as the phone shows it, or says there's none (`no_brief`); asked only with the watch's switch on (below) |
+| `taf` | One taf's page (Wear v2), by `taf_id`: its state and job, each Card's title, face (figure and line) and rules as the phone's Card tab draws them, and how many of its calls wait on the person (`taf`); read again within the same floor as Needs you |
+| `calendar` | A calendar day (Wear v2), `day` as `YYYY-MM-DD` or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day alone, its line and that day's events in time order with each taf's name (`calendar`); the phone's own calendar screen keeps its read |
+| `account` | Who is signed in, the account's name and the plan's line as Account shows it (`account`) |
 
 And the phone sends the watch one message, never a request it answers: **`ask-result`**, an ask's new state, when tafs
 cloud's push says it changed.
@@ -223,10 +289,10 @@ the phone's approval key behind its fingerprint, so on the watch each says **App
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the eight (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
+- a path that isn't one of the eleven (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message or an ask that's empty or over 2,000 characters, or an ask whose id isn't 8 to 64 letters, digits, `_`
-  or `-`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
+  or `-`, a taf's page with no `taf_id`, or a calendar day that isn't `YYYY-MM-DD`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
 - a request made more than 30 seconds ago: `TOO_OLD`. Requests are live messages (`MessageClient.sendRequest`), never
   `DataItem`s, so nothing queued while the phone was away lands later;
 - a request dated more than 5 seconds ahead of the phone's clock: `FROM_THE_FUTURE`.
