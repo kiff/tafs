@@ -236,9 +236,9 @@ Nothing leaves the watch before Send:
 **W2, Sent and Coach is answering** (`CoachModel.sendReviewed`, `CoachAsk`; tested in `CoachModelTests` and
 `WatchRelayTests`), the owner's Watch 5 test, as Wear OS's 0.4.1:
 - **Sent:** the moment tafs cloud has the words, they leave the review and show above "✓ Sent".
-- **Coach is answering:** the watch reads Coach's answer every 1.5 s; while Coach's chat says it's working, "Coach is
-  answering" with a progress mark. Coach's answer shows once it's written and the chat no longer says working.
-- **About 30 s at most** (`answerReads`, 20 reads): then what Coach wrote so far, with "The rest is on your phone.". A read
+- **Coach is answering:** the watch reads Coach's answer every 1.5 s for the first 6 s, then every 3 s; while Coach's
+  chat says it's working, "Coach is answering" with a progress mark. Coach's answer shows once it's written and the chat no longer says working.
+- **About 30 s at most** (`answerReads`, 12 reads): then what Coach wrote so far, with "The rest is on your phone.". A read
   the phone can't answer is read again: the words were sent, so the watch never says they weren't.
 - **Leaving the screen stops the reads,** and nothing from them is kept. The Inbox keeps the answer once, as before.
 - **Not sure it arrived:** a Send the phone doesn't answer stays in the review with "the phone isn't in reach" and the same
@@ -252,8 +252,8 @@ option A (19 Nov):
 - **With the app open,** the answer shows in place (W2).
 - **Once the watch app is put away,** watchOS stops its reads within seconds, and the watch posts no notifications of its
   own (the privacy text: its only notifications are the iPhone's). So after a watch Send, the iPhone follows Coach's answer
-  itself, inside the background time iOS gives it: 16 reads, 1.5 s apart (24 s). Once Coach has answered, if the watch
-  hasn't read for 4 s (it reads every 1.5 s while open), the iPhone posts a local notification: "Coach", then the answer
+  itself, inside the background time iOS gives it: 10 reads, stepped as the watch's (24 s). Once Coach has answered, if
+  the watch hasn't read for 5 s (it reads at most 3 s apart while open), the iPhone posts a local notification: "Coach", then the answer
   as the wrist shows it ("Approve on your phone" or "The rest is on your phone" where it applies). watchOS shows it on the
   wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
 - **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing.

@@ -12,10 +12,14 @@ import UserNotifications
 /// If the watch read the answer itself, nothing is posted. An answer past the follow shows only in Coach's chat.
 @MainActor
 enum CoachFollow {
-    /// How many times the iPhone reads, 1.5 s apart: 24 s, inside the ~30 s iOS gives a background task.
-    static let reads = 16
-    /// The watch reads every 1.5 s while Coach's screen is open: none for this long means it was put away.
-    static let watchAway: TimeInterval = 4
+    /// How many times the iPhone reads: the first `quickReads` 1.5 s apart, then 3 s apart, as the watch does: 4 × 1.5 s +
+    /// 6 × 3 s = 24 s, inside the ~30 s iOS gives a background task.
+    static let reads = 10
+    static let quickReads = 4
+    /// The follow's length, in seconds.
+    static var length: Double { Double(quickReads) * 1.5 + Double(reads - quickReads) * 3 }
+    /// The watch reads at most 3 s apart while Coach's screen is open: none for this long means it was put away.
+    static let watchAway: TimeInterval = 5
 
     /// When the watch last read each ticket, and the tickets whose answer it read itself.
     private(set) static var watchLastRead: [String: Date] = [:]
@@ -50,8 +54,9 @@ enum CoachFollow {
             watchLastRead[key] = nil
             watchHad.remove(key)
         }
-        for _ in 0..<reads {
+        for read in 0..<reads {
             await wait()
+            if read >= quickReads { await wait() }
             if watchHad.contains(key) { return false }
             let reply = await read(ticket)
             guard reply.outcome == .ok, reply.answering == false, let answer = reply.coach else { continue }

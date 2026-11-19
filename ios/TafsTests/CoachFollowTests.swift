@@ -29,12 +29,12 @@ final class CoachFollowTests: XCTestCase {
     }
 
     func testAWatchPutAwayGetsCoachsAnswerFromTheIPhone() async {
-        let thread = Thread([WatchReply(.ok, answering: true), WatchReply(.ok, answering: true),
+        let thread = Thread([WatchReply(.ok, answering: true), WatchReply(.ok, answering: true), WatchReply(.ok, answering: true),
                              WatchReply(.ok, coach: rae, answering: false)])
         let (posted, did) = await follow(thread)
-        XCTAssertTrue(did)
+        XCTAssertTrue(did, "6 s with no read from the watch")
         XCTAssertEqual(posted, [rae])
-        XCTAssertEqual(thread.reads, 3, "no read after the answer")
+        XCTAssertEqual(thread.reads, 4, "no read after the answer")
         XCTAssertTrue(CoachFollow.watchLastRead.isEmpty, "nothing kept once it's done")
     }
 
@@ -65,7 +65,8 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertFalse(did)
         XCTAssertTrue(posted.isEmpty)
         XCTAssertEqual(thread.reads, CoachFollow.reads)
-        XCTAssertLessThanOrEqual(Double(CoachFollow.reads) * 1.5, 25, "inside the background time iOS gives")
+        XCTAssertEqual(CoachFollow.length, 24)
+        XCTAssertLessThanOrEqual(CoachFollow.length, 25, "inside the background time iOS gives")
     }
 
     /// "Coach" and its answer as the wrist shows it; a tap opens Coach's chat.

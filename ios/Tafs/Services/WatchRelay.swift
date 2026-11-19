@@ -440,7 +440,10 @@ struct KeptWatchReading: WatchReading {
     /// isn't Coach's is never read.
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply {
         if !Self.coachChats.contains(ticket.chat) {
-            guard let setup = try? await cloud.setup(), setup.id == ticket.chat else { return WatchReply(.refused) }
+            // Not reached is said as such; only a chat that is someone else's is refused.
+            let setup: TafsCloud.CloudTaf?
+            do { setup = try await cloud.setup() } catch { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
+            guard let setup, setup.id == ticket.chat else { return WatchReply(.refused) }
             Self.coachChats.insert(setup.id)
         }
         CoachFollow.watchReading(ticket)

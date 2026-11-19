@@ -48,9 +48,11 @@ final class CoachModel: ObservableObject {
     /// Counts each leave, so a read loop started before it stops.
     private var visit = 0
 
-    /// v2 (W2): how many times the watch reads Coach's answer before the rest is on the phone: 20 reads, 1.5 s apart, so
-    /// about 30 s.
-    static let answerReads = 20
+    /// v2 (W2): how many times the watch reads Coach's answer before the rest is on the phone: the first `quickReads`
+    /// 1.5 s apart, then 3 s apart (two pauses), so 4 × 1.5 s + 8 × 3 s = 30 s. Coach's turns take seconds, so the slower
+    /// reads show no lag, and an ask is 12 reads of the chat rather than 20.
+    static let answerReads = 12
+    static let quickReads = 4
 
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
          newID: @escaping () -> UUID = UUID.init,
@@ -151,8 +153,9 @@ final class CoachModel: ObservableObject {
     private func read(_ ticket: WatchCoachTicket, message: String) async {
         let visit = self.visit
         var last: WatchCoachAnswer?
-        for _ in 0..<Self.answerReads {
+        for read in 0..<Self.answerReads {
             await pause()
+            if read >= Self.quickReads { await pause() }
             guard visit == self.visit else { return }
             let reply = await phone.ask(WatchRequest(.coachRead, made: clock(), ticket: ticket))
             guard visit == self.visit else { return }
