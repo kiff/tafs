@@ -262,11 +262,18 @@ fun TafDetailView(
 
     Header(taf, if (showBack) onBack else null)
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      // Its live version, opening Versions, for whoever manages it on KIFF (as the iPad's head). It folds with the page.
-      if (state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)) {
-        LaunchedEffect(taf.id) { actions.loadVersions(taf.id) }
+      // One line: Files first (its one way into its files, for anyone with Files), then its live version, opening Versions, for
+      // whoever manages it on KIFF (as the iPad's head): "Files · Version 5 · live". It folds with the page.
+      val manages = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
+      val withFiles = LocalFiles.current != null && taf.cloudId != null
+      if (manages) LaunchedEffect(taf.id) { actions.loadVersions(taf.id) }
+      if (manages || withFiles) {
         androidx.compose.animation.AnimatedVisibility(visible = !folded) {
-          VersionLine(state.versions[taf.id]?.firstOrNull { it.live }?.n) { onVersions(taf.id) }
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TafFilesEntry(taf.cloudId)
+            if (manages && withFiles) Text("\u00b7", style = scaled(13, FontWeight.SemiBold, Theme.dim))
+            if (manages) VersionLine(state.versions[taf.id]?.firstOrNull { it.live }?.n) { onVersions(taf.id) }
+          }
         }
       }
       // Who it's shared with, and Share: the taf's manager's to see. It folds with the page.
@@ -314,8 +321,6 @@ fun TafDetailView(
               VersionsRow({ onVersions(taf.id) }, title = version?.title ?: Words.Version.changesRow, summary = version?.summary)
             }
             if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
-            // Files, behind its switch: its runs' files, and until when they're kept.
-            TafFilesRow(taf.cloudId)
             RevokeRow(taf, managesHere, onRevoke = { confirmRevoke = true })
           }
           Section.Setup -> {
@@ -428,7 +433,7 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
 private fun VersionLine(live: Int?, onOpen: () -> Unit) {
   val words = live?.let { Words.Version.liveNumber("$it") } ?: Words.Version.title
   Row(
-    Modifier.heightIn(min = 32.dp).tapping(onClickLabel = words, onClick = onOpen)
+    Modifier.heightIn(min = 48.dp).tapping(onClickLabel = words, onClick = onOpen)
       .semantics { contentDescription = words },
     horizontalArrangement = Arrangement.spacedBy(6.dp),
     verticalAlignment = Alignment.CenterVertically,

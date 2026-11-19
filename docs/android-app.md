@@ -1515,8 +1515,10 @@ model is made and `LocalFiles` is null, and Account, a taf's page and its chat d
   keeping its lines and tabs. The preview is drawn as plain text only, never Markdown or HTML. A file's type is its name's
   extension, else its media type ("CSV").
 - **The entries:** Account's "Files" row under People & apps (a KIFF account), "4 files · kept 30 days" or "None yet · kept 30 days"
-  (`files.account_row`, `files.none_yet`); a taf's Card section, "2 files from its runs" (`files.taf_row`) and "Its files are kept
-  until {date}" (the latest of them), opening its files By run; and in a taf's chat, under the last answer of each chat
+  (`files.account_row`, `files.none_yet`); **a taf's one way into its files, first on its header's line, "Files · Version 5 ·
+  live"** (`TafFilesEntry`: the owner's test of 125, 19 Nov, and the mockup's option A, as iOS's): "Files" in the page's ink with
+  its count when it has files kept now, at least 48 dp like the version beside it (now 48 dp too), said to TalkBack as "Files, 2
+  files from its runs", and there with none yet too, opening its files By run (the Card tab's Files row is gone); and in a taf's chat, under the last answer of each chat
   session, a chip per file of that chat (its name, type and size) and the date they're kept until. A chip opens the file on its
   own: closing it goes back to the chat.
 - **The list:** All (newest first, by day, in the account's zone), By taf (each taf and its count) and By run (each run, its taf

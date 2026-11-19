@@ -1,0 +1,1 @@
+- **Android: a taf's files open from its header, first on the version's line ("Files · Version 5 · live")**, with their count, a bigger target, and the same place on iPhone and iPad; the Card tab's Files row is gone ([android-app.md](docs/android-app.md#files)).

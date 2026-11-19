@@ -33,7 +33,7 @@ import bot.tafs.app.views.FilesActions
 import bot.tafs.app.views.FilesPane
 import bot.tafs.app.views.FilesScreen
 import bot.tafs.app.views.LocalFiles
-import bot.tafs.app.views.TafFilesRow
+import bot.tafs.app.views.TafFilesEntry
 import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
@@ -41,6 +41,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
+import androidx.compose.ui.test.assertContentDescriptionEquals
+import androidx.compose.ui.unit.dp
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -86,7 +88,7 @@ class FilesScreensTest {
     withFiles(null) {
       Column {
         FilesAccountRow {}
-        TafFilesRow("taf_parcels")
+        TafFilesEntry("taf_parcels")
         ChatFiles("chat_p1")
       }
     }
@@ -105,6 +107,15 @@ class FilesScreensTest {
     assertEquals(1, opened)
   }
 
+  /** With none yet, the entry is still there, "Files" with no count, so a taf's files are always found in the same place. */
+  @Test fun aTafWithNoFilesStillHasItsEntryWithNoCount() {
+    val store = StubFilesStore()
+    runBlocking { for (id in listOf("f_1", "f_2", "f_3", "f_4")) store.delete(id) }
+    withFiles(FilesModel(store)) { TafFilesEntry("taf_parcels") }
+    compose.waitForIdle()
+    compose.onNodeWithTag(bot.tafs.app.views.FILES_TAF_ENTRY).assertContentDescriptionEquals(Words.Files.title)
+  }
+
   @Test fun withNoFilesTheAccountRowSaysNoneYet() {
     val store = StubFilesStore()
     runBlocking { for (id in listOf("f_1", "f_2", "f_3", "f_4")) store.delete(id) }
@@ -112,13 +123,15 @@ class FilesScreensTest {
     compose.onNodeWithText(Words.Files.noneYet).assertExists()
   }
 
-  @Test fun aTafsRowCountsItsFilesAndOpensThemByRun() {
+  /** A taf's Files entry on its header: "Files" with its count, said in full to TalkBack, at least 48 dp; it opens them by run. */
+  @Test fun aTafsHeaderEntryCountsItsFilesAndOpensThemByRun() {
     val model = FilesModel(StubFilesStore())
-    withFiles(model) { TafFilesRow("taf_parcels") }
-    compose.onNodeWithText(Words.Files.tafRow(2)).assertExists()
-    val until = model.state.value.files!!.filter { it.tafId == "taf_parcels" }.maxOf { it.expires }
-    compose.onNodeWithText(Words.Files.keptUntil(shownDate(until))).assertExists()
-    compose.onNodeWithText("${Words.Files.title} ›").performClick()
+    withFiles(model) { TafFilesEntry("taf_parcels") }
+    compose.waitForIdle()
+    val entry = compose.onNodeWithTag(bot.tafs.app.views.FILES_TAF_ENTRY)
+    entry.assertContentDescriptionEquals("${Words.Files.title}, ${Words.Files.tafRow(2)}")
+    assertTrue(entry.fetchSemanticsNode().size.height >= with(compose.density) { 48.dp.roundToPx() })
+    entry.performClick()
     assertTrue(model.state.value.showing)
     assertEquals("taf_parcels", model.state.value.taf)
     assertEquals(FilesView.ByRun, model.state.value.view)
