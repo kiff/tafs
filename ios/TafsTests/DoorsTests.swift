@@ -145,6 +145,8 @@ final class DoorsTests: XCTestCase {
 
         await model.remove(door)
         XCTAssertTrue(StubProtocol.sent.isEmpty, "the unsigned remove sends nothing for an api door")
+        await model.setOpen(door, true)
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "nor does opening it again unsigned")
         XCTAssertEqual(model.doors.map(\.id), ["door_ord7"])
 
         await DoorsModel(cloud: cloud, tafID: "taf_r").removeAPI(door, reason: "Remove")

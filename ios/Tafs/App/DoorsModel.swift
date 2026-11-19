@@ -99,6 +99,8 @@ final class DoorsModel: ObservableObject {
     }
 
     func setOpen(_ door: TafsCloud.Door, _ open: Bool) async {
+        // An `api` door opens again only signed (`reopen`): pausing it is always safe.
+        guard !(door.isAPI && open) else { return }
         let cloud = cloud, tafID = tafID
         _ = await work { try await cloud.setDoorOpen(tafID, door: door.id, open: open) }
     }
