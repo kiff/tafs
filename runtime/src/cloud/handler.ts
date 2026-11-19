@@ -10676,7 +10676,8 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   const body = parseBody(event);
   const extra = Object.keys(body).filter((k) => !["client_id", "text", "reply_to"].includes(k));
   const client = str(body.client_id);
-  const text = str(body.text).trim();
+  // A typed ask can't carry a line of tafs' own either: only tafs cloud says those (docs/languages.md).
+  const text = withoutTafsLines(str(body.text)).trim();
   const replyTo = body.reply_to === undefined ? "" : str(body.reply_to);
   if (extra.length || !CLIENT_ID.test(client) || !text || text.length > MAX_ASK_TEXT || (body.reply_to !== undefined && !replyTo)) {
     throw new HTTPError(400, "a watch request is {client_id, text, reply_to?}");
