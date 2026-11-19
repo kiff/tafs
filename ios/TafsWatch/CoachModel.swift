@@ -74,8 +74,10 @@ final class CoachModel: ObservableObject {
 
     /// v2: words from the system's input (dictation, Scribble or the keyboard) or a Quick reply, to Check before sending.
     /// Blank is nothing, and the words are cut at what Coach takes, as on Wear OS. Re-record lands here too: the new
-    /// words take the old ones' place.
+    /// words take the old ones' place, never while a Send is in flight.
     func review(_ words: String) {
+        // Words in flight stay the words shown until the phone answers: new words now would show what wasn't sent.
+        guard state != .sending else { return }
         let text = String(words.trimmingCharacters(in: .whitespacesAndNewlines).prefix(WatchRequest.coachLimit))
         guard !text.isEmpty else { return }
         draft = text
@@ -91,8 +93,10 @@ final class CoachModel: ObservableObject {
         if case .answered = state { reviewing = false }
     }
 
-    /// v2's Delete, in Check before sending: the words go, and nothing was sent.
+    /// v2's Delete, in Check before sending: the words go, and nothing was sent. Not while they're in flight, since then
+    /// they may already have reached Coach.
     func delete() {
+        guard state != .sending else { return }
         draft = ""
         sending = nil
         reviewing = false

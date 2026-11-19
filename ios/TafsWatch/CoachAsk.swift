@@ -60,10 +60,13 @@ struct CoachAsk: View {
             if case .failed(let why) = model.state {
                 Text(why).font(.footnote)
             }
-            // The system's input again; new words take these words' place, and nothing is sent until Send.
+            // The system's input again; new words take these words' place, and nothing is sent until Send. Neither it nor
+            // Delete acts while the words are in flight: they may already have reached Coach.
             TextField(Words.Watch.rerecord, text: $input)
                 .onSubmit { take() }
+                .disabled(model.state == .sending)
             Button(Words.Chat.delete, role: .destructive) { model.delete() }
+                .disabled(model.state == .sending)
         }
         .navigationTitle(Words.Watch.review)
     }

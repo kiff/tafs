@@ -16,6 +16,20 @@ final class CoachModelTests: XCTestCase {
         }
     }
 
+    /// A phone that holds its reply until told: a Send in flight.
+    private final class HeldPhone: PhoneAsking {
+        var asked: [WatchRequest] = []
+        var held: CheckedContinuation<WatchReply?, Never>?
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            asked.append(request)
+            return await withCheckedContinuation { held = $0 }
+        }
+        func answer(_ reply: WatchReply?) {
+            held?.resume(returning: reply)
+            held = nil
+        }
+    }
+
     nonisolated private static let firstID = UUID(uuidString: "6F1C2A4E-0B8D-4E57-9A3C-2D5E8F7B1C90")!
 
     /// Ids in turn: the first, then new ones.
@@ -164,6 +178,27 @@ final class CoachModelTests: XCTestCase {
         XCTAssertTrue(phone.asked.isEmpty)
         model.leave()
         XCTAssertEqual(model.state, .writing)
+    }
+
+    /// While a Send is in flight, Delete and Re-record do nothing: the words shown are the words on their way, never
+    /// "Deleted. Nothing was sent." (agentgabo's read).
+    func testDeleteAndReRecordWaitWhileASendIsInFlight() async {
+        let phone = HeldPhone()
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        model.review("Pause Rae")
+        let sending = Task { await model.sendReviewed() }
+        while phone.held == nil { await Task.yield() }
+        XCTAssertEqual(model.state, .sending)
+        model.delete()
+        XCTAssertNotEqual(model.state, .deleted, "the words may already have reached Coach")
+        model.review("Pause Ivo")
+        XCTAssertEqual(model.draft, "Pause Rae", "the words shown are the words sent")
+        XCTAssertTrue(model.reviewing)
+        phone.answer(WatchReply(.ok, line: "The rest is on your phone."))
+        await sending.value
+        XCTAssertEqual(phone.asked.map(\.text), ["Pause Rae"])
+        XCTAssertEqual(model.state, .answered(nil))
+        XCTAssertFalse(model.reviewing)
     }
 
     /// Quick reply: four lines, in Wear OS's order, each its own words.

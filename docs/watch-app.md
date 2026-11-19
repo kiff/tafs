@@ -141,7 +141,8 @@ Nothing leaves the watch before Send:
   Nothing was sent.", which closes by itself after 2 s). Blank is nothing; the words are cut at 2,000 characters, as a
   message to Coach is.
 - **Send** is v1's: the same request (`coach`), the same id when the same words go again after no answer, and the lock
-  checked at Send. A Send that fails keeps the words in the review, with the reason under Send; an answer shows as v1's.
+  checked at Send. While it's in flight, Re-record and Delete do nothing (in the model as on the screen): the words
+  shown are the words on their way, so the watch never says "Nothing was sent." about words that may have reached Coach. A Send that fails keeps the words in the review, with the reason under Send; an answer shows as v1's.
 - **Not in this step:** Keep for later (it stores the words on the watch, which v2 doesn't yet), and Ask tafs
   (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's iPhone push.
 - **v1 is unchanged:** with the switch off, Coach is v1's screen, its words shown before Send.
