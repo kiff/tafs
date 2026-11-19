@@ -573,6 +573,11 @@ final class WatchRelayTests: XCTestCase {
         let refused = await reading.coachRead(WatchCoachTicket(chat: "depl_1", session: "s1", sent: nil))
         XCTAssertEqual(refused, WatchReply(.refused))
         XCTAssertTrue(sent("GET", "/v1/tafs/depl_1/conversation/s1").isEmpty, "Rae's conversation is never read")
+        // tafs cloud out of reach is said as such, not refused, and nothing is read.
+        StubProtocol.responses["GET /v1/setup"] = (503, #"{"error":"unavailable"}"#)
+        let unreached = await reading.coachRead(WatchCoachTicket(chat: "taf-setup", session: "s1", sent: nil))
+        XCTAssertEqual(unreached, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
+        XCTAssertTrue(sent("GET", "/v1/tafs/taf-setup/conversation/s1").isEmpty)
     }
 
     /// W2's kinds decode, and a read with no ticket, or an empty one, is refused before anything is read.
