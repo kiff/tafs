@@ -341,6 +341,9 @@ class DoorsTest {
     assertNull("a body that isn't an api door's draws nothing", bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"kind\":\"api\"", "\"kind\":\"email\"")))
     assertNull("nor one with no job", bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"job\":\"Check the return and refund it if the Card allows\",", "")))
     assertNull(bot.tafs.app.kiff.DoorDraft.read("not json"))
+    // tafs cloud's draft_id inside body (so POST …/doors takes only the stored draft) is signed with the rest, never dropped.
+    val withId = bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"body\":{\"kind\":\"api\",", "\"body\":{\"kind\":\"api\",\"draft_id\":\"draft-0123456789abcdef\","))!!
+    assertTrue(String(withId.body), String(withId.body).endsWith(""","draft_id":"draft-0123456789abcdef","kind":"api"}"""))
   }
 
   @Test fun approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes() = runTest {
