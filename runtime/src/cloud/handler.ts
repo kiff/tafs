@@ -46,6 +46,7 @@ import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, 
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addAPIDoor, addDoor, answerKnock, DoorError, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
+import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
@@ -193,6 +194,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   DELETE /v1/tafs/{id}/doors/{door}/keys/{key}
  *   POST /v1/tafs/{id}/doors/knocks/{knock}  {action: do | pair | ignore, say?}
  *   POST /v1/doors/email | /v1/doors/whatsapp  the doors' webhooks (no sign-in: each provider's signature is the check)
+ *   POST /v1/doors/api/{door}/requests  another application hands a taf work with the door's key (no sign-in: the key is the check; TAFS_API_DOORS)
+ *   GET  /v1/doors/api/{door}/requests/{request}  how it went: its state and, once done, its outcome and the record's count
  *   GET  /doors/whatsapp/connect        the page WhatsApp's signup runs in
  */
 
@@ -615,6 +618,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   try {
     if (event.rawPath === "/v1/mcp") return await mcpRoute(event, deps);
     if (isDoorPath(event.rawPath)) return await doorWebhook(event, deps);
+    // A door from another application: its key is the check, never a sign-in (doors/api.ts).
+    if (isAPIDoorPath(event.rawPath)) return await apiDoorRoute(event, deps);
     const value = await route(event, deps);
     return value instanceof PageResponse ? value.response : json(200, value);
   } catch (err) {
@@ -630,7 +635,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 
 /** The fixed words of tafs cloud's routes: every other part of a path is the caller's (an id, an address, a name). */
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
-  "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
+  "activity api delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "logos gallery recipes memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
   "unarchive usage versions work webhooks record cases receipts brief decisions later files download").split(" "));
 
@@ -9098,6 +9103,7 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const note = parseNote(rawBody(event));
   // A run that paused waiting for a vendor's event whose event already came (a fast vendor) is answered now.
   if (note && deps.doors) await answerKeptEvents(note, doorContext(deps));
+  if (note && deps.doors && await apiRunEnded(note, doorContext(deps), (await deps.doors.config()).publicURL)) return { taken: true };
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
@@ -10295,6 +10301,7 @@ function doorContext(deps: Deps): DoorsContext {
       await requireUnattended(deps, tenant, rest[0]);
       return deps.agents.answerWait(tenant, ...rest);
     },
+    halted: (...a) => deps.agents.halted(...a),
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
       // A door's message, an app's event, a held one released: no person in the moment (consent.ts).
@@ -10303,6 +10310,23 @@ function doorContext(deps: Deps): DoorsContext {
     },
   };
   return { doors: deps.doors, tafs: deps.tafs, agents, push: deps.push, apns: deps.apns, now: deps.now?.() ?? new Date() };
+}
+
+/**
+ * A door from another application's two routes (doors/api.ts): the door's key is the check. No CORS header, so a
+ * browser's code is never invited to hold a key.
+ */
+async function apiDoorRoute(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
+  if (!deps.doors) return json(404, { error: "not found", code: "not_found" });
+  const cfg = await deps.doors.config();
+  const r = await apiDoorRequest({
+    method: event.requestContext.http.method.toUpperCase(),
+    path: event.rawPath,
+    query: new URLSearchParams(event.rawQueryString ?? ""),
+    header: (name) => header(event, name),
+    body: rawBody(event),
+  }, doorContext(deps), cfg.publicURL);
+  return { statusCode: r.status, headers: { "content-type": "application/json", "cache-control": "no-store", ...(r.headers ?? {}) }, body: JSON.stringify(r.body) };
 }
 
 /** A door's webhook or page: no sign-in, its provider's signature is the check (doors/inbound.ts). */
@@ -10348,7 +10372,13 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   }
   if (kind === "api") {
     if (parts.length === 5 && method === "PATCH" && body.open === false) return setOpen(ctx, owner, taf, a!, false);
-    if (parts.length === 5 && method === "PATCH" && body.open === true) { await doorSigned(event, me, deps); return setOpen(ctx, owner, taf, a!, true); }
+    if (parts.length === 5 && method === "PATCH" && body.open === true) {
+      await doorSigned(event, me, deps);
+      const opened = await setOpen(ctx, owner, taf, a!, true);
+      // What waited while it was paused starts now, oldest first.
+      await startNext(ctx, me.tenantID, taf.id, a!, (await deps.doors!.config()).publicURL).catch((err) => console.error("api door not started:", err instanceof Error ? err.message : "error"));
+      return opened;
+    }
     if (parts.length === 5 && method === "DELETE") { await doorSigned(event, me, deps); return removeDoor(ctx, owner, taf, a!); }
     if (parts.length === 6 && method === "POST" && b === "keys") { await doorSigned(event, me, deps); return newAPIDoorKey(ctx, owner, taf, a!, body); }
     if (parts.length === 7 && method === "DELETE" && b === "keys" && c) { await doorSigned(event, me, deps); return revokeAPIDoorKey(ctx, owner, taf, a!, decodeURIComponent(c)); }

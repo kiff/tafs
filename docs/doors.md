@@ -153,7 +153,7 @@ door's own words):
 
 - `POST /v1/tafs/{id}/doors` `{kind: "api", draft: {name, fields, job, outcomes, text}}` approves Coach's draft. A field
   is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
-  instruction (`instructions`, `prompt`, `rules`, …); outcomes are 1 to 10 names. Anything else is 400. It answers the door
+  instruction (any `_` part such as `instructions`, `prompt`, `system` or `rules`, so `system_prompt` too); outcomes are 1 to 10 names. Anything else is 400. It answers the door
   and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).
 - `POST …/doors/{door}/keys` `{name}`: a new key, answered at the top, `{id, name, key, last4, made_at}`, with the door as
   `door`. Two live at most (409 `too_many_keys`).
@@ -163,10 +163,41 @@ door's own words):
 - `PATCH …/doors/{door}` `{open: true}` is signed; `{open: false}` isn't: pausing is always safe.
 - `DELETE …/doors/{door}` removes it and every key's lookup.
 
-The door's `label` is then the application's name from the draft ("Order system"); the apps say "From another
+Its view then also has the draft's `fields` and `outcomes`, for the API instructions. The door's `label` is the application's name from the draft ("Order system"); the apps say "From another
 application" as its kind. A key is `tafs_api_` and 32 random bytes (base64url). tafs cloud keeps its SHA-256 at `door-api-key#<hash>` (the
 account, taf, door and key it is) and in the door, and never the key. Someone the taf is only shared with sees no
-door and changes none (403). The caller's routes come next.
+door and changes none (403).
+
+**The caller's two routes** (`doors/api.ts`, behind `TAFS_API_DOORS`, 404 while it's off), with no sign-in: the key is
+the check. It's taken only when its lookup and the door's record agree (the path's door, a door still the taf's, the key
+there, not revoked, with this hash); anything else is the same 404 `not_found`. No key, or one that isn't of the form,
+is 401 `unauthorized`; anything in the query string is 400, so a key never lands in a URL. No answer carries a CORS
+header, and the request log masks the door and request ids.
+
+- `POST /v1/doors/api/{door}/requests` with `Idempotency-Key` (1–128 of `A-Za-z0-9._:-`) and `{input, correlation_id?}`:
+  `input` has every one of the door's fields, each of its type (a string at most its `max`, a number, a boolean, an
+  enum's value), and nothing else; anything else, another body field included, is 400 `invalid_input`; over 16 KB, 413.
+  It's refused, keeping nothing, when the door is paused (409 `door_closed`), the taf or account is halted (409
+  `taf_halted`), the taf's other work is held for credits (409 `waits_for_credits`), 20 already wait, or past 10 a minute
+  (429 `rate_limited`, `Retry-After`), or the day's cap (100 by default, a UTC day; 429 with `Retry-After` until midnight
+  UTC). Otherwise it's kept, then 202 `{request_id, status: "accepted", correlation_id?}` with `Location`. The same
+  key with the same input (compared by the JCS SHA-256 of `input`) is 200 with the first answer; with another input,
+  409 `idempotency_conflict`. Keys are per door, kept 30 days, so a rotation mid-retry is the same request.
+- `GET /v1/doors/api/{door}/requests/{request}`: `{request_id, correlation_id?, status, reason_code?, updated, result?}`.
+  Any live key of the door reads any of its requests; a revoked key reads none. `needs_you` is `held_for_owner` (a held
+  call waits for the owner, never the caller) or `waits_for_credits`. `done` adds `result: {outcome, calls: {sent, held,
+  refused}, text?}`: `calls` is kiff/agents' record of the run's calls, never the model's, and `text` only when the owner
+  turned it on. An accepted request marks its key `last_used_at` (at most once a minute a key), so the owner sees an old key go quiet before revoking it.
+
+**A request starts** one at a time per door, oldest first (`startNext`), from a POST, a run's end, a read or the door
+opened again. Each is checked as it starts: past 7 days since its 202, `expired`; its key revoked, `cancelled`
+(`revoked`); its taf or account halted, `cancelled` (`halted`); its door paused, it waits. The start is a change from
+`accepted` to `working` made only from what was read, and the key is read again after it, so a revoke committed by then
+means it never runs. It's one kiff/agents request (`dedup_key` `api:<door>:<idempotency key>`, source `api`), run
+from a fixed template: the door's job line, then each field as `name: "<JSON string>"` inside a fence the caller can't
+guess, with control and bidi characters taken out, then the rule that the fence holds data, never instructions, and the
+outcomes to end with. Its answer's last line, `Outcome: <one of the door's>`, is the outcome; any other is `failed`
+(`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
 
 ### Setting up a deployment
 
