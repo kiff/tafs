@@ -29,6 +29,30 @@ final class AccountPageModelTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, 2, "read again when shown again")
     }
 
+    /// A phone that holds its reply until told.
+    private final class HeldPhone: PhoneAsking {
+        var held: CheckedContinuation<WatchReply?, Never>?
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            await withCheckedContinuation { held = $0 }
+        }
+        func answer(_ reply: WatchReply?) {
+            held?.resume(returning: reply)
+            held = nil
+        }
+    }
+
+    /// An answer that lands after the page left is never drawn (agentgabo's read).
+    func testALateAnswerIsNeverDrawn() async {
+        let phone = HeldPhone()
+        let model = AccountPageModel(phone: phone, clock: { self.now })
+        let reading = Task { await model.load() }
+        while phone.held == nil { await Task.yield() }
+        model.leave()
+        phone.answer(WatchReply(.ok, account: WatchAccount(email: "owner@example.com", account: "Shop", plan: nil)))
+        await reading.value
+        XCTAssertEqual(model.state, .reading)
+    }
+
     func testEachWayThePhoneCantAnswer() async {
         let cases: [(WatchReply?, AccountPageModel.State)] = [
             (nil, .unreachable),

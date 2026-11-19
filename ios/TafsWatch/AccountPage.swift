@@ -18,6 +18,8 @@ final class AccountPageModel: ObservableObject {
     @Published private(set) var state: State = .reading
     private let phone: PhoneAsking
     private let clock: () -> Date
+    /// Counts the reads asked: an answer for one asked before the last, or after the page left, is never drawn.
+    private var asked = 0
 
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
         self.phone = phone
@@ -25,8 +27,12 @@ final class AccountPageModel: ObservableObject {
     }
 
     func load() async {
+        asked += 1
+        let this = asked
         if case .loaded = state {} else { state = .reading }
-        guard let reply = await phone.ask(WatchRequest(.account, made: clock())) else { state = .unreachable; return }
+        let reply = await phone.ask(WatchRequest(.account, made: clock()))
+        guard this == asked else { return }
+        guard let reply else { state = .unreachable; return }
         switch reply.outcome {
         case .ok:
             guard let account = reply.account else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
@@ -44,6 +50,7 @@ final class AccountPageModel: ObservableObject {
 
     /// The page left the screen: nothing of it is kept.
     func leave() {
+        asked += 1
         state = .reading
     }
 
