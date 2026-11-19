@@ -128,8 +128,26 @@ turns on, as that one line, once the last step lands and the owner has tried the
   answer shows.
 - **Until their own steps:** the Inbox is Needs you as v1 reads it (with the brief in its place when that switch is on);
   Your tafs is each taf with its state and no Halt; Account is the trust line.
-- **Nothing new** reaches the phone, and nothing is stored on the watch. Type and Quick reply come with the review
-  (step iii), and the last chats with tafs cloud's chats read.
+- **Nothing new** reaches the phone, and nothing is stored on the watch. The last chats come with tafs cloud's chats read.
+
+**Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
+Nothing leaves the watch before Send:
+- **Ask Coach** on the home opens the ask: the system's input (Type: dictation, Scribble or the keyboard, which watchOS
+  offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
+  app can drive, so the system's input is the microphone: there's no Start, Stop, timer or recording of the app's own, and
+  no Play. Only the words leave, as text ("tafs gets your words as text, never your voice.").
+- **Check before sending** shows the words in full, scrolled with the crown, with **Send**, **Re-record** (the system's
+  input again; the new words take the old ones' place, and a cancelled input keeps them) and **Delete** ("Deleted.
+  Nothing was sent.", which closes by itself after 2 s). Blank is nothing; the words are cut at 2,000 characters, as a
+  message to Coach is.
+- **Send** is v1's: the same request (`coach`), the same id when the same words go again after no answer, and the lock
+  checked at Send. While it's in flight, Re-record and Delete do nothing (in the model as on the screen): the words
+  shown are the words on their way, so the watch never says "Nothing was sent." about words that may have reached Coach. A Send that fails keeps the words in the review, with the reason under Send; an answer shows as v1's.
+- **Not in this step:** Keep for later (it stores the words on the watch, which v2 doesn't yet), and Ask tafs
+  (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's iPhone push.
+- **v1 is unchanged:** with the switch off, Coach is v1's screen, its words shown before Send.
+- **Words:** all already shared (`watch.type`, `watch.type_hint`, `watch.quick_reply`, `watch.qr.*`, `watch.review`,
+  `watch.rerecord`, `watch.deleted_nothing_sent`, `watch.ask_text_only`; Send and Delete are the phone's).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
