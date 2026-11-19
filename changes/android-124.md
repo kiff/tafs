@@ -1,0 +1,1 @@
+- **Android 124 (1.40.0): "From your watch" is on.** Coach's previous conversations list what you asked from your watch, one day at a time, read only, with what came of each request ([android-app.md](docs/android-app.md#from-your-watch-w11)). The phone takes any amount out of what it sends to the watch.
