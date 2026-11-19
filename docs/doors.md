@@ -124,7 +124,7 @@ tasks do). tafs cloud reads the run back and sends its answer through the door.
 (`testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther`, `anAPIDoorReadsAndOneUnreadableDoorHidesNoOther`). A door kind a build
 doesn't know yet, such as "From another application" (`api`: a company's own software handing a taf work), still carries
 every field today's builds require, so older builds show it as a plain door. Both apps also read an `api` door's own
-fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows tafs cloud's `words` (`LastRequest.shown`), falling back to `status` only until they're sent), and each key's `last4`, `made_at`
+fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows only tafs cloud's `words` (`APIDoorText.lastRequestWords`), and no line until they're sent, never the raw `status`), and each key's `last4`, `made_at`
 and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 
 **An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
@@ -203,7 +203,7 @@ outcomes to end with. Its answer's last line, `Outcome: <one of the door's>`, is
 mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
 in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
 (asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
-the door's own when left blank; at most two); the key shown once (Copy key, where to send work, and an example that
+the door's own when left blank; at most two); the key shown once (Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
