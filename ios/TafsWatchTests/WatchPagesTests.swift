@@ -43,6 +43,16 @@ final class WatchPagesTests: XCTestCase {
         XCTAssertNil(WatchPage.unread(.failed("Couldn't reach KIFF")))
     }
 
+    /// With the Inbox kept (step iv), Coach's home counts its unread lines, and no line with none; with no passcode, the calls
+    /// the phone read now, as before.
+    func testTheCountIsTheInboxsUnreadWhenItsKept() {
+        let call = WatchNeedsYou.Call(id: "ce_1", taf: "Rae", what: "Refund order 4502", reason: "Over the limit", answerBy: "10:51")
+        let state = NeedsYouModel.State.loaded(WatchNeedsYou(count: 1, calls: [call], at: now))
+        XCTAssertEqual(WatchPage.unread(state, inboxKept: true, unreadLines: 3), 3)
+        XCTAssertNil(WatchPage.unread(state, inboxKept: true, unreadLines: 0), "all read: no line")
+        XCTAssertEqual(WatchPage.unread(state, inboxKept: false, unreadLines: 3), 1, "not kept: what the phone answered now")
+    }
+
     /// Halt is in the menu only while a taf the phone listed still runs; before the read, or with all halted, it isn't.
     func testTheMenuOffersHaltOnlyWhileATafRuns() {
         let running = WatchTaf(id: "depl_1", name: "Rae", line: "Ready", halted: false)

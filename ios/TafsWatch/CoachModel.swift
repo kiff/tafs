@@ -35,6 +35,8 @@ final class CoachModel: ObservableObject {
     /// the same id, so Coach acts on them once (docs/chat.md, "One message, one id"). Other words are
     /// another message.
     private var sending: (words: String, id: UUID)?
+    /// v2: told of each answer Coach gave, with its message's id, for the Inbox (`InboxModel.answered`). v1 sets none.
+    var onAnswer: (@MainActor (WatchCoachAnswer?, String) -> Void)?
 
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
          newID: @escaping () -> UUID = UUID.init) {
@@ -63,6 +65,7 @@ final class CoachModel: ObservableObject {
             draft = ""
             sending = nil
             state = .answered(reply.coach)
+            onAnswer?(reply.coach, id.uuidString.lowercased())
         case .signedOut:
             state = .failed(Words.Watch.signInOnPhone)
         case .failed:

@@ -32,7 +32,7 @@ struct CoachAsk: View {
         List {
             TextField(Words.Watch.type, text: $input, prompt: Text(Words.Watch.typeHint))
                 .onSubmit { take() }
-            Text(Words.Watch.askTextOnly)
+            Text(Words.Watch.voiceTextOnly)
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .listRowBackground(Color.clear)

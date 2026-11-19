@@ -39,6 +39,13 @@ enum WatchPage: String, CaseIterable, Identifiable {
         return nil
     }
 
+    /// The count on Coach's home with the Inbox kept on the watch (step iv): its unread lines, and no line with none. With no
+    /// passcode nothing is kept, and the count is the calls the phone read now, as above.
+    static func unread(_ state: NeedsYouModel.State, inboxKept: Bool, unreadLines: Int) -> Int? {
+        guard inboxKept else { return unread(state) }
+        return unreadLines > 0 ? unreadLines : nil
+    }
+
     /// Whether the menu offers Halt: only while a taf the phone listed still runs.
     static func offersHalt(_ state: TafsModel.State) -> Bool {
         if case .loaded(let tafs) = state { return tafs.contains { !$0.halted } }
@@ -51,6 +58,7 @@ struct WatchPagesView: View {
     @ObservedObject var needsYou: NeedsYouModel
     @ObservedObject var tafs: TafsModel
     @ObservedObject var coach: CoachModel
+    @ObservedObject var inbox: InboxModel
     @State private var page: WatchPage = .coach
     @State private var menu = false
 
@@ -61,6 +69,9 @@ struct WatchPagesView: View {
             }
         }
         .tabViewStyle(.verticalPage)
+        // What Needs you reads, and each answer Coach gives this watch, are lines of the Inbox (step iv).
+        .onChange(of: needsYou.state, initial: true) { _, state in inbox.heard(state) }
+        .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in
                 menu = false
@@ -72,10 +83,11 @@ struct WatchPagesView: View {
     @ViewBuilder private func pageView(_ shown: WatchPage) -> some View {
         switch shown {
         case .coach:
-            CoachHome(needsYou: needsYou, coach: coach, openInbox: { page = .inbox }, openMenu: { menu = true })
-        case .inbox, .brief:
-            // Until the inbox is kept on the watch (step iv), the Inbox is Needs you as v1 reads it, and the brief is drawn
-            // in its place there when the brief's switch is on.
+            CoachHome(needsYou: needsYou, coach: coach, inbox: inbox, openInbox: { page = .inbox }, openMenu: { menu = true })
+        case .inbox:
+            InboxScreen(inbox: inbox, needsYou: needsYou)
+        case .brief:
+            // Your brief as v1 draws it, in Needs you's place, while the brief's switch is on.
             NeedsYouScreen(model: needsYou)
         case .tafs:
             TafsScreen(model: tafs, offersHalt: false)
@@ -91,6 +103,7 @@ struct WatchPagesView: View {
 struct CoachHome: View {
     @ObservedObject var needsYou: NeedsYouModel
     @ObservedObject var coach: CoachModel
+    @ObservedObject var inbox: InboxModel
     let openInbox: () -> Void
     let openMenu: () -> Void
     @State private var asking = false
@@ -102,7 +115,7 @@ struct CoachHome: View {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
                 }
-                if let count = WatchPage.unread(needsYou.state) {
+                if let count = WatchPage.unread(needsYou.state, inboxKept: inbox.kept, unreadLines: inbox.unread) {
                     Button(Words.Watch.inboxUnread(count: count), action: openInbox)
                 }
                 Text(Words.Watch.voiceTextOnly)
