@@ -573,4 +573,109 @@ class WatchModelTest {
     model.refresh()
     assertEquals(listOf(WatchRequest.Ask(t, "w_00000009", "Thanks")), phone.asked.filterIsInstance<WatchRequest.Ask>())
   }
+
+  // MARK: The recording (v2): on the watch only, erased the moment the review is left (qa-kiff's rules, PM 19 Nov 01:19).
+
+  private class Recording : VoiceAudio {
+    var deleted = 0
+    override val durationMs = 12_000L
+    override fun delete() { deleted++ }
+  }
+
+  private suspend fun reviewed(model: WatchModel, audio: VoiceAudio, replyTo: String? = null) {
+    model.listen(replyTo)
+    model.heard("Move my call to six", audio)
+    assertEquals(WatchModel.Voice.Review("Move my call to six", replyTo, audio), model.voice.value)
+  }
+
+  @Test fun theRecordingIsErasedOnSendAndNeverSent() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    val audio = Recording()
+    reviewed(model, audio)
+    assertEquals("kept while the words are checked", 0, audio.deleted)
+    model.sendReviewed()
+    assertEquals(1, audio.deleted)
+    // Only the words left the watch.
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my call to six")), phone.asked)
+  }
+
+  @Test fun theRecordingIsErasedOnDelete() = runTest {
+    val model = v2(asker { Asked.Answered(WatchReply.AskTaken(taken)) })
+    val audio = Recording()
+    reviewed(model, audio)
+    model.deleteReviewed()
+    assertEquals(1, audio.deleted)
+  }
+
+  @Test fun theRecordingIsErasedOnSignOut() = runTest {
+    var signedIn = true
+    val phone = Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else reads(it) }
+    val model = v2(phone)
+    val audio = Recording()
+    reviewed(model, audio)
+    signedIn = false
+    model.refresh()
+    assertEquals(1, audio.deleted)
+    assertNull(model.voice.value)
+  }
+
+  @Test fun theRecordingIsErasedOnReRecordCancelPutAwayAndALockAtSend() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    var unlocked = true
+    val model = v2(phone, unlocked = { unlocked })
+    for (leave in listOf<suspend () -> Unit>({ model.rerecord() }, { model.closeVoice() }, { model.forget() }, { unlocked = false; model.sendReviewed() })) {
+      unlocked = true
+      model.closeVoice()
+      val audio = Recording()
+      reviewed(model, audio)
+      leave()
+      assertEquals(1, audio.deleted)
+    }
+    assertTrue(phone.asked.isEmpty())
+  }
+
+  @Test fun v1KeepsNoRecording() = runTest {
+    val model = WatchModel(asker { Asked.Answered(WatchReply.AskTaken(taken)) }, now = { t }, unlocked = { true }, newClientId = { "w_00000001" })
+    model.listen()
+    val audio = Recording()
+    model.heard("Move my call", audio)
+    assertEquals(1, audio.deleted)
+    assertEquals(WatchModel.Voice.Sent(taken), model.voice.value)
+  }
+
+  @Test fun aRecordingWithNothingToCheckIsErased() = runTest {
+    val model = v2(asker { Asked.Answered(WatchReply.AskTaken(taken)) })
+    val unheard = Recording()
+    model.listen()
+    model.heard("  ", unheard)
+    assertEquals(1, unheard.deleted)
+    val late = Recording()
+    model.closeVoice()
+    model.heard("Too late", late)
+    assertEquals(1, late.deleted)
+  }
+
+  @Test fun aWavHeaderSaysItsFormatAndLength() {
+    val h = VoiceFormat.wavHeader(32_000)
+    val b = java.nio.ByteBuffer.wrap(h).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+    assertEquals(44, h.size)
+    assertEquals("RIFF", String(h, 0, 4))
+    assertEquals(36 + 32_000, b.getInt(4))
+    assertEquals("WAVE", String(h, 8, 4))
+    assertEquals(16_000, b.getInt(24))
+    assertEquals(32_000, b.getInt(28))
+    assertEquals(32_000, b.getInt(40))
+    assertEquals(1_000L, VoiceFormat.durationMs(32_000))
+  }
+
+  @Test fun theSweepLeavesOnlyWhatsHeld() {
+    val dir = kotlin.io.path.createTempDirectory("voice").toFile()
+    val held = java.io.File(dir, "a.wav").apply { writeText("x") }
+    java.io.File(dir, "b.wav").writeText("x")
+    VoiceFiles.sweep(dir, keep = held)
+    assertEquals(listOf("a.wav"), dir.list()!!.toList())
+    VoiceFiles.sweep(dir)
+    assertTrue(dir.list()!!.isEmpty())
+  }
 }

@@ -25,6 +25,7 @@
     <string name="needs_you_title">Precisa de si</string>
     <string name="settings_title">Conta</string>
     <string name="taf_halt_title">Bloquear</string>
+    <string name="taf_pause">Pausar</string>
     <string name="taf_state_halted">Bloqueado</string>
     <string name="watch_all_chats">Todos os chats</string>
     <string name="watch_already_answered">Já respondido, ou terminado.</string>
@@ -69,6 +70,7 @@
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
+    <string name="watch_play">Reproduzir</string>
     <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
     <string name="watch_qr_not_now">Agora não</string>
     <string name="watch_qr_tell_me_more">Diga-me mais</string>

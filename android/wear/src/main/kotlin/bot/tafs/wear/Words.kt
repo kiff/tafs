@@ -51,6 +51,7 @@ object Words {
     object Halt {
       val title: String get() = Res.s(R.string.taf_halt_title)
     }
+    val pause: String get() = Res.s(R.string.taf_pause)
     object State {
       val halted: String get() = Res.s(R.string.taf_state_halted)
     }
@@ -92,6 +93,7 @@ object Words {
       val inbox: String get() = Res.s(R.string.watch_page_inbox)
     }
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
+    val play: String get() = Res.s(R.string.watch_play)
     object Qr {
       val needsMeToday: String get() = Res.s(R.string.watch_qr_needs_me_today)
       val notNow: String get() = Res.s(R.string.watch_qr_not_now)

@@ -191,7 +191,7 @@ class WatchModel(
     data class Listening(val heard: String, val replyTo: String?, val since: Long? = null) : Voice
 
     /** v2: the words heard, typed or picked, to check before Send. Nothing has left the watch. */
-    data class Review(val text: String, val replyTo: String?) : Voice
+    data class Review(val text: String, val replyTo: String?, val audio: VoiceAudio? = null) : Voice
 
     /** v2: deleted from the review; nothing was sent. */
     data object Deleted : Voice
@@ -217,6 +217,18 @@ class WatchModel(
 
   private val _voice = MutableStateFlow<Voice?>(null)
   val voice: StateFlow<Voice?> = _voice.asStateFlow()
+
+  /**
+   * Every change of the microphone's screen: a review's recording is erased the moment the screen leaves it, whatever it goes
+   * to (Send, Delete, Re-record, Cancel, a lock, put away, signed out). It never outlives the words it was kept beside.
+   */
+  private var voiceNow: Voice?
+    get() = _voice.value
+    set(value) {
+      val kept = (_voice.value as? Voice.Review)?.audio
+      _voice.value = value
+      if (kept != null && (value as? Voice.Review)?.audio !== kept) kept.delete()
+    }
 
   private val _asks = MutableStateFlow<Map<String, AskLine>>(emptyMap())
 
@@ -245,7 +257,7 @@ class WatchModel(
    */
   fun listen(replyTo: String? = null): Boolean {
     if (!unlocked()) {
-      _voice.value = Voice.NeedsLock
+      voiceNow = Voice.NeedsLock
       return false
     }
     _result.value = null
@@ -253,7 +265,7 @@ class WatchModel(
     tapAt[replyTo] = now()
     listenMs = null
     heardAt = null
-    _voice.value = Voice.Listening("", replyTo, since = now())
+    voiceNow = Voice.Listening("", replyTo, since = now())
     return true
   }
 
@@ -263,11 +275,11 @@ class WatchModel(
    */
   fun readyToRecord(replyTo: String? = null) {
     if (!unlocked()) {
-      _voice.value = Voice.NeedsLock
+      voiceNow = Voice.NeedsLock
       return
     }
     _result.value = null
-    _voice.value = Voice.Ready(replyTo)
+    voiceNow = Voice.Ready(replyTo)
   }
 
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
@@ -275,18 +287,18 @@ class WatchModel(
     val words = text.trim()
     if (words.isEmpty()) return
     if (!unlocked()) {
-      _voice.value = Voice.NeedsLock
+      voiceNow = Voice.NeedsLock
       return
     }
     _result.value = null
-    _voice.value = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo)
+    voiceNow = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo)
   }
 
   /** v2: Send, from the review. The watch is checked again: it may have locked while the words were read. */
   suspend fun sendReviewed() {
     val review = _voice.value as? Voice.Review ?: return
     if (!unlocked()) {
-      _voice.value = Voice.NeedsLock
+      voiceNow = Voice.NeedsLock
       return
     }
     send(Voice.Sending(review.text, newClientId(), review.replyTo))
@@ -300,7 +312,7 @@ class WatchModel(
 
   /** v2: Delete, from the review: the words are dropped, and nothing was sent. */
   fun deleteReviewed() {
-    if (_voice.value is Voice.Review) _voice.value = Voice.Deleted
+    if (_voice.value is Voice.Review) voiceNow = Voice.Deleted
   }
 
   /** The speech input is ready for words: the listen time ends here. */
@@ -312,27 +324,32 @@ class WatchModel(
   /** What's been heard so far, shown as it comes. */
   fun partial(text: String) {
     val listening = _voice.value as? Voice.Listening ?: return
-    _voice.value = listening.copy(heard = text)
+    voiceNow = listening.copy(heard = text)
   }
 
   /** Listening can't start (the microphone not allowed): why, in the watch's words. */
   fun notListening(words: String) {
-    if (_voice.value is Voice.Listening) _voice.value = Voice.NotSent(words)
+    if (_voice.value is Voice.Listening) voiceNow = Voice.NotSent(words)
   }
 
   /** The speech input ended with nothing, or failed. */
   fun heardNothing() {
-    if (_voice.value is Voice.Listening) _voice.value = Voice.HeardNothing
+    if (_voice.value is Voice.Listening) voiceNow = Voice.HeardNothing
   }
 
   /** The person spoke and stopped: in v1 what was heard goes at once, with nothing to confirm; in v2, to the review first. */
-  suspend fun heard(text: String) {
-    val listening = _voice.value as? Voice.Listening ?: return
+  suspend fun heard(text: String, audio: VoiceAudio? = null) {
+    val listening = _voice.value as? Voice.Listening
     val words = text.trim()
+    if (listening == null || words.isEmpty() || !reviewFirst) {
+      // Nothing to keep it beside, or v1, which keeps no recording.
+      audio?.delete()
+    }
+    if (listening == null) return
     if (words.isEmpty()) return heardNothing()
     heardAt = now()
     if (reviewFirst) {
-      _voice.value = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), listening.replyTo)
+      voiceNow = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), listening.replyTo, audio)
       return
     }
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))
@@ -342,18 +359,18 @@ class WatchModel(
   suspend fun retry() {
     val unsure = _voice.value as? Voice.Unsure ?: return
     if (!unlocked()) {
-      _voice.value = Voice.NeedsLock
+      voiceNow = Voice.NeedsLock
       return
     }
     send(Voice.Sending(unsure.text, unsure.clientId, unsure.replyTo))
   }
 
   private suspend fun send(sending: Voice.Sending) {
-    _voice.value = sending
+    voiceNow = sending
     val asked = phone.ask(WatchRequest.Ask(now(), sending.clientId, sending.text, sending.replyTo))
     // Only while this ask is still the one shown: a cancel meanwhile isn't undone by its answer.
     if (_voice.value != sending) return
-    _voice.value = when (asked) {
+    voiceNow = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.AskTaken -> {
           val at = now()
@@ -377,7 +394,7 @@ class WatchModel(
 
   /** Done with the microphone's screen: back to the microphone. Nothing heard is kept. */
   fun closeVoice() {
-    _voice.value = null
+    voiceNow = null
   }
 
   /**
@@ -394,9 +411,9 @@ class WatchModel(
     when (val v = _voice.value) {
       is Voice.Sent -> if (v.ask.id == ask.id) {
         if (ask.ended) {
-          _voice.value = null
+          voiceNow = null
           open(ask)
-        } else _voice.value = Voice.Sent(ask)
+        } else voiceNow = Voice.Sent(ask)
       }
       else -> Unit
     }
@@ -436,8 +453,9 @@ class WatchModel(
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also { tile?.saw(reply.count, now()) }
         is WatchReply.SignedOut -> {
           tile?.signedOut()
-          // Signed out: nothing of the account stays on the watch, a kept message included.
+          // Signed out: nothing of the account stays on the watch, a kept message and a recording included.
           deleteKept()
+          if (_voice.value is Voice.Review) voiceNow = null
           return show(Shown.SignedOut)
         }
         else -> return show(Shown.OpenOnPhone)
@@ -472,7 +490,7 @@ class WatchModel(
     val draft = Draft(unsure.text, unsure.clientId, unsure.replyTo)
     drafts?.write(draft)
     _kept.value = draft
-    _voice.value = null
+    voiceNow = null
   }
 
   /** Delete what was kept: nothing is sent. */
@@ -500,7 +518,7 @@ class WatchModel(
     _shown.value = Shown.Asking
     _outcome.value = null
     _confirmingHaltAll.value = false
-    _voice.value = null
+    voiceNow = null
     _asks.value = emptyMap()
     _result.value = null
   }
