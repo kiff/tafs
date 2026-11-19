@@ -20,11 +20,19 @@ final class DoorsModel: ObservableObject {
     /// tafs cloud's id for the taf.
     private let tafID: String
     private let signIn: VendorSigningIn
+    /// Signs a change to a door "From another application" (`APIDoorFeature`): the method, path and raw body, after Face ID
+    /// or the fingerprint, with the words the prompt shows. Answers the `KIFF-Device-Signature` header's value.
+    typealias SignRequest = @MainActor (_ method: String, _ path: String, _ body: Data, _ reason: String) async throws -> String
+    private let sign: SignRequest?
 
-    init(cloud: TafsCloud, tafID: String, signIn: VendorSigningIn? = nil) {
+    /// A key made on this phone, shown once: the key screen reads it, and `keyShown()` forgets it.
+    @Published private(set) var issued: TafsCloud.IssuedKey?
+
+    init(cloud: TafsCloud, tafID: String, signIn: VendorSigningIn? = nil, sign: SignRequest? = nil) {
         self.cloud = cloud
         self.tafID = tafID
         self.signIn = signIn ?? VendorSignIn()
+        self.sign = sign
     }
 
     var openKnocks: [TafsCloud.Knock] { knocks.filter { $0.state == "open" } }
@@ -114,6 +122,73 @@ final class DoorsModel: ObservableObject {
     func unpair(_ door: TafsCloud.Door, _ key: TafsCloud.Door.Key) async {
         let cloud = cloud, tafID = tafID
         _ = await work { try await cloud.unpair(tafID, door: door.id, sender: key.id) }
+    }
+
+    // MARK: A door "From another application" (`api`)
+
+    /// A new key for an `api` door, signed: shown once (`issued`), then only its last four. Nil when the owner didn't
+    /// confirm it, or tafs cloud refused; `error` says why.
+    @discardableResult
+    func newKey(_ door: TafsCloud.Door, name: String, reason: String) async -> TafsCloud.IssuedKey? {
+        guard let sign else { return nil }
+        let cloud = cloud, tafID = tafID
+        let body = TafsCloud.newKeyBody(name: name)
+        let path = cloud.doorKeysPath(tafID, door: door.id)
+        busy = true
+        defer { busy = false }
+        do {
+            let signature = try await sign("POST", path, body, reason)
+            let key = try await cloud.newKey(tafID, door: door.id, body: body, signature: signature)
+            issued = key
+            error = nil
+            await load()
+            return key
+        } catch {
+            self.error = Self.words(error)
+            return nil
+        }
+    }
+
+    /// The key screen was left: the key is never shown again.
+    func keyShown() { issued = nil }
+
+    /// Revokes an `api` door's key, signed: requests it sent that haven't started are cancelled; one that's running finishes.
+    func revoke(_ door: TafsCloud.Door, _ key: TafsCloud.Door.Key, reason: String) async {
+        guard let sign else { return }
+        let cloud = cloud, tafID = tafID
+        let path = cloud.doorKeyPath(tafID, door: door.id, key: key.id)
+        busy = true
+        defer { busy = false }
+        do {
+            let signature = try await sign("DELETE", path, Data(), reason)
+            try await cloud.revokeKey(tafID, door: door.id, key: key.id, signature: signature)
+            error = nil
+            await load()
+        } catch {
+            self.error = Self.words(error)
+        }
+    }
+
+    /// Opens a paused `api` door again, signed. Pausing it (`setOpen(door, false)`) needs no signature.
+    func reopen(_ door: TafsCloud.Door, reason: String) async {
+        guard let sign else { return }
+        let cloud = cloud, tafID = tafID
+        let path = cloud.doorPath(tafID, door: door.id)
+        busy = true
+        defer { busy = false }
+        do {
+            let signature = try await sign("PATCH", path, TafsCloud.reopenBody, reason)
+            let opened = try await cloud.reopenDoor(tafID, door: door.id, signature: signature)
+            if let i = doors.firstIndex(where: { $0.id == opened.id }) { doors[i] = opened }
+            error = nil
+        } catch {
+            self.error = Self.words(error)
+        }
+    }
+
+    /// A refusal in plain words: tafs cloud's own when it gives them, else the system's.
+    private static func words(_ error: Error) -> String {
+        (error as? TafsCloud.CloudError)?.words ?? error.localizedDescription
     }
 
     /// The owner's answer to a knock. "do" starts the taf's run from their words.

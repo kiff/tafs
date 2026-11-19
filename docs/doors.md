@@ -105,11 +105,6 @@ it: no raw headers, no HTML, no attachments. [data.md](data.md) lists every item
 
 ## How it's built
 
-**The Android app reads the list one door at a time** (`GET /v1/tafs/{id}/doors`, `DoorsRead` in `kiff/Doors.kt`): a door, an
-app or a knock it can't read is left out, and never hides the others (`anAPIDoorReadsAndOneUnreadableDoorHidesNoOther`). It
-also reads a door "From another application" (`api`)'s own fields when they're present: `counts` (today, waiting),
-`last_request` (`{status, at}`), and each key's `last4`, `made_at` and `last_used_at` (its id as `id` or `key_id`), never the key.
-
 `runtime/src/cloud/doors/`:
 
 | File | What it does |
@@ -124,11 +119,20 @@ also reads a door "From another application" (`api`)'s own fields when they're p
 A door's run asks kiff/agents to announce when it ends (`/v1/runs/ended`, as Coach's
 tasks do). tafs cloud reads the run back and sends its answer through the door.
 
-**The apps read the list one door at a time** (`GET /v1/tafs/{id}/doors`): a door, an app or a knock that a build can't
-read is left out, and never hides the others (iOS `TafsCloud.Doors`, 19 Nov). A door kind a build doesn't know yet, such as
-"From another application" (`api`: a company's own software handing a taf work), still carries every field today's builds require, so older builds
-show it as a plain door. The iPhone and iPad also read an `api` door's own fields: `counts` (today, waiting),
-`last_request` (`{status, at}`), and each key's `last4`, `made_at` and `last_used_at`, never the key.
+**Both apps read the list one door at a time** (`GET /v1/tafs/{id}/doors`; iOS `TafsCloud.Doors`, Android `DoorsRead` in
+`kiff/Doors.kt`): a door, an app or a knock that a build can't read is left out, and never hides the others
+(`testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther`, `anAPIDoorReadsAndOneUnreadableDoorHidesNoOther`). A door kind a build
+doesn't know yet, such as "From another application" (`api`: a company's own software handing a taf work), still carries
+every field today's builds require, so older builds show it as a plain door. Both apps also read an `api` door's own
+fields when they're present: `counts` (today, waiting), `last_request` (`{status, at}`), and each key's `last4`, `made_at`
+and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
+
+**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke` and `reopen`, behind `APIDoorFeature`,
+off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`) and opening a paused door again
+(`PATCH …/{door}` `{open: true}`) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
+over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
+removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
+closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.
 
 ### Setting up a deployment
 
