@@ -96,5 +96,17 @@
   },
   "Services/WatchRelay.swift": {
     "yyyy-MM-dd": "a date format for the calendar's day key, never shown"
+  },
+  "Model/Files.swift": {
+    "Late parcels": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Support replies": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Access": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Lead follow-up": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Tickets answered.csv": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Late parcels.pdf": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Parcels without a scan.csv": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "New leads this week.xlsx": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Call notes.docx": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
+    "Access review.csv": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown"
   }
 }

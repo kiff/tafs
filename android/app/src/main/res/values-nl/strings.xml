@@ -1232,6 +1232,7 @@
     <string name="files_made_by">Gemaakt door</string>
     <string name="files_none_yet">Nog geen · 30 dagen bewaard</string>
     <string name="files_pick_one">Kies een bestand om het hier te zien.</string>
+    <string name="files_preview_start">Alleen het begin wordt getoond. Download het bestand om alles te lezen.</string>
     <string name="files_saved">Bewaard op dit apparaat</string>
     <string name="files_see_in_chat">Bekijken in de chat</string>
     <string name="files_share">Delen</string>
