@@ -47,7 +47,7 @@ export interface DoorsDeps {
 export interface DoorsContext {
   doors: DoorsDeps;
   tafs: Tafs;
-  agents: Pick<AgentsAPI, "startRun" | "getRun" | "runs" | "answerWait">;
+  agents: Pick<AgentsAPI, "startRun" | "getRun" | "runs" | "answerWait"> & Partial<Pick<AgentsAPI, "halted">>;
   push: PushStore;
   apns: Sender;
   now: Date;
@@ -87,7 +87,7 @@ async function update<T>(store: DoorStore, key: string, change: (read: T | undef
   throw new DoorError(409, "this changed at the same time; try again");
 }
 
-async function changeDoors(store: DoorStore, tenant: string, taf: string, change: (doors: Door[]) => Door[]): Promise<Door[]> {
+export async function changeDoors(store: DoorStore, tenant: string, taf: string, change: (doors: Door[]) => Door[]): Promise<Door[]> {
   const out = await update<{ doors: Door[] }>(store, doorKeys.doors(tenant, taf), (read) => {
     const next = change(Array.isArray(read?.doors) ? read.doors : []);
     return next.length ? { doors: next } : undefined;
@@ -1124,8 +1124,14 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
   }));
 }
 
-/** Field names a draft can't have: a field is data, and a request never carries the job or a rule (design 3.6). */
-const NOT_A_FIELD = /^(instructions?|prompt|system|rules?|job|task|command|tools?|scope|url|secret|token|key|password)$/;
+/**
+ * Field names a draft can't have: a field is data, and a request never carries the job or a rule (design 3.6). Any
+ * part of the name, split at "_", that says instructions refuses it (`system_prompt`, `extra_rules`), and so do a few
+ * whole names that would carry a secret or a place to act on.
+ */
+const NOT_A_FIELD_PART = new Set(["instruction", "instructions", "prompt", "prompts", "system", "rule", "rules", "command", "commands", "tool", "tools", "directive", "directives"]);
+const NOT_A_FIELD_NAME = new Set(["job", "task", "scope", "url", "secret", "token", "password", "key"]);
+const notAField = (name: string) => NOT_A_FIELD_NAME.has(name) || name.split("_").some((p) => NOT_A_FIELD_PART.has(p));
 const FIELD_NAME = /^[a-z][a-z0-9_]{0,39}$/;
 
 /**
@@ -1146,7 +1152,7 @@ export function apiDraftOf(raw: unknown): APIDraft {
     const x = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
     const fname = typeof x.name === "string" ? x.name : "";
     if (!FIELD_NAME.test(fname)) bad("a field's name is lowercase letters, digits and _, up to 40");
-    if (NOT_A_FIELD.test(fname)) bad(`"${fname}" can't be a field: a request sends data, never instructions`);
+    if (notAField(fname)) bad(`"${fname}" can't be a field: a request sends data, never instructions`);
     if (fields.some((g) => g.name === fname)) bad(`"${fname}" is there twice`);
     if (x.type === "string") {
       const max = x.max;
