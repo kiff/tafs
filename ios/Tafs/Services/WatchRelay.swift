@@ -485,6 +485,9 @@ struct KeptWatchReading: WatchReading {
         } catch let e as TafsCloud.CloudError where e.status == 409 && e.code == "reply_too_soon" && replyTo != nil {
             // The request it replies to hasn't ended: the words go as a request of their own.
             return await ask(text: text, clientID: clientID, replyTo: nil)
+        } catch let e as TafsCloud.CloudError where e.status == 403 && e.code == "view_only" {
+            // This phone's session can only view (KIFF's `view_only`): it signs nothing, so the watch can't ask through it.
+            return WatchReply(.failed, line: Words.Watch.viewOnlyPhone)
         } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
             return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
         } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {

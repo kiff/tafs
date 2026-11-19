@@ -584,6 +584,16 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertFalse(String(decoding: sent("POST", "/v1/watch/asks").last?.httpBody ?? Data(), as: UTF8.self).contains("reply_to"))
     }
 
+    /// A phone whose session can only view (KIFF's 403 `view_only`, the simulator's on 19 Nov): the watch says so in its own
+    /// words, never "a reply wasn't sent", and Coach's chat isn't written to.
+    func testAViewOnlyPhoneSaysSoOnTheWatch() async {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["POST /v1/watch/asks"] = (403, #"{"error":"this device can only view","code":"view_only"}"#)
+        let reply = await reading.coachSend(text: "What needs me today?", messageID: UUID(), after: nil)
+        XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.viewOnlyPhone))
+        XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty)
+    }
+
     /// Where tafs cloud's switch for watch requests is off (404 `watch_off`), the words go to Coach's chat, as before.
     func testASendWithTheSwitchOffGoesToCoachsChat() async {
         let reading = coachReading()

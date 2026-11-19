@@ -141,6 +141,7 @@
     <string name="watch_type">Scrivi</string>
     <string name="watch_type_hint">Scrivi a Coach…</string>
     <string name="watch_update_phone">Aggiorna tafs sul telefono, poi riprova.</string>
+    <string name="watch_view_only_phone">Questo telefono può solo visualizzare, quindi non puoi chiedere dall\'orologio. Accedi da un telefono che può approvare.</string>
     <string name="watch_voice_text_only">Coach riceve le tue parole come testo, mai la tua voce.</string>
     <string name="watch_what_it_does">Cosa fa</string>
     <plurals name="watch_working_count">

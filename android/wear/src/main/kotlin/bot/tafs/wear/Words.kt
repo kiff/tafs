@@ -165,6 +165,7 @@ object Words {
     val type: String get() = Res.s(R.string.watch_type)
     val typeHint: String get() = Res.s(R.string.watch_type_hint)
     val updatePhone: String get() = Res.s(R.string.watch_update_phone)
+    val viewOnlyPhone: String get() = Res.s(R.string.watch_view_only_phone)
     val voiceTextOnly: String get() = Res.s(R.string.watch_voice_text_only)
     val whatItDoes: String get() = Res.s(R.string.watch_what_it_does)
     fun workingCount(count: Int): String = Res.p(R.plurals.watch_working_count, count, Res.number(count))

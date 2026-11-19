@@ -265,6 +265,9 @@ Nothing leaves the watch before Send:
   fail (seen in the simulator on 19 Nov, its `wcd` dropping the message), and without a limit the watch stayed on its send
   screen with no words. Past it, the phone counts as not in reach; a Send tried again goes under the same id, which tafs
   cloud takes once.
+- **A phone that can only view** (KIFF's `view_only`: signed in with no approval key, as the simulator is) can't sign a watch
+  request, and tafs cloud refuses it (403 `view_only`). The watch says so, `watch.view_only_phone` ("This phone can only view,
+  so you can't ask from the watch. Sign in on a phone that can approve."), never "a reply wasn't sent".
 - **The words are the app's own, not `watch_ask`'s:** Apple Watch's Coach is the iPhone's Coach chat, never tafs cloud's
   watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
   new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
