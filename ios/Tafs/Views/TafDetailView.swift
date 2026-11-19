@@ -210,14 +210,16 @@ struct TafDetailView: View {
     @ViewBuilder
     private func headerLine(_ taf: Taf) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            versionLine(taf)
-            // Files (docs/files.md): what its runs delivered, behind its switch.
-            if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
-                NavigationLink { FilesView(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud)) } label: {
-                    Label(Words.Files.title, systemImage: "doc.on.doc")
-                        .scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
+            // One line, Files first: "Files · Version 5 · live" (docs/files.md, the owner's 19 Nov test).
+            HStack(spacing: 2) {
+                if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
+                    TafFilesEntry(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud))
+                    if showsVersions(taf) {
+                        Text(verbatim: "·").scaledFont(15, weight: .bold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                            .padding(.horizontal, 4)
+                    }
                 }
-                .buttonStyle(.drivablePlain)
+                versionLine(taf)
             }
             // Who it's shared with, and Share: the taf's manager's to see (the 870 test).
             if model.manages(taf.id) { ShareLine(tafID: taf.id) }
@@ -231,11 +233,16 @@ struct TafDetailView: View {
         withMotion(.easeOut(duration: 0.2)) { folded = down }
     }
 
+    /// Its versions are shown to whoever manages a taf tafs cloud runs.
+    private func showsVersions(_ taf: Taf) -> Bool {
+        model.mode == .kiff && model.cloudTaf(for: taf.id) != nil && model.manages(taf.id)
+    }
+
     /// The ways into its versions (kiff/tafs#173): the live one, which opens Versions, and an
     /// open trial, to resume.
     @ViewBuilder
     private func versionLine(_ taf: Taf) -> some View {
-        if model.mode == .kiff, model.cloudTaf(for: taf.id) != nil, model.manages(taf.id) {
+        if showsVersions(taf) {
             HStack(spacing: 10) {
                 // A row that says what it opens, with its mark and caret, in the line's quiet
                 // colour: never a lone orange "Versions".
@@ -250,6 +257,8 @@ struct TafDetailView: View {
                             .accessibilityHidden(true)
                     }
                     .foregroundColor(Theme.soft)
+                    // A target as tall as Files' beside it.
+                    .frame(minHeight: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(.drivablePlain)
                 if let trial = model.openTrials[taf.id], let chat = model.trialChat(of: taf.id) {

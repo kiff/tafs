@@ -77,14 +77,6 @@ struct TafChatView: View {
                     // landed short until the run ended, and coming back from another app the rows
                     // went blank. Every row is laid out, so a scroll lands where it says.
                     VStack(alignment: .leading, spacing: 12) {
-                        // Files (docs/files.md): the taf's files from its chat, at the chat's top, behind its switch.
-                        if FilesFeature.on, let cloud = model.cloudTaf(for: tafID) {
-                            NavigationLink { FilesView(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud)) } label: {
-                                Label(Words.Files.title, systemImage: "doc.on.doc")
-                                    .scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                        }
                         if items.isEmpty && state.unsent.isEmpty {
                             Text(Words.Chat.emptyNamed(taf: taf?.name ?? Words.Chat.itLower))
                                 .scaledFont(14).foregroundColor(Theme.dim)
