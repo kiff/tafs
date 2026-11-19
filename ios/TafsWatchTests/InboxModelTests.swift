@@ -20,8 +20,8 @@ final class InboxModelTests: XCTestCase {
 
     /// A passcode that can be taken away mid-test.
     private final class Passcode: WristLock {
-        var set = true
-        var isSecure: Bool { set }
+        var on = true
+        var isSecure: Bool { on }
     }
 
     private func call(_ id: String, what: String = "Refund order 4502, €150.00") -> WatchNeedsYou.Call {
@@ -97,7 +97,7 @@ final class InboxModelTests: XCTestCase {
         let inbox = model(store, lock: passcode)
         inbox.heard(heard([call("h_1"), call("h_2")]))
         inbox.dismiss("held:h_1")
-        passcode.set = false
+        passcode.on = false
         inbox.checkLock()
         XCTAssertFalse(inbox.kept)
         XCTAssertEqual(inbox.lines, [])
@@ -105,7 +105,7 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(store.gone, ["held:h_1"])
         inbox.heard(heard([call("h_1"), call("h_2")]))
         XCTAssertEqual(store.kept, [], "nothing added")
-        passcode.set = true
+        passcode.on = true
         inbox.checkLock()
         inbox.heard(heard([call("h_1"), call("h_2")]))
         XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2"])
