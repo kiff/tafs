@@ -97,6 +97,12 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
   it("reads a step Coach wrote wrong and sent again as not made on every read, never failed", () => {
     const whys = [{ call: "c1", tool: "planque", why: "Coach couldn't connect Gmail yet", not_made: true as const }];
     expect(attachWhys([{ tool: "planque", error: true as const }], whys)).toEqual([{ tool: "planque", not_made: true }]);
+    // A run kept before the pattern joined coachGuard has no not_made, but its kept refusal reads the same on every read.
+    const old19Nov = [{ call: "c1", tool: "planque", why: "Coach couldn't connect the app yet", refusal: "tools names the entry's own tools, each once: PIPEDRIVE_GET_ALL_LEADS isn't one; it has getPersons, getPerson" }];
+    expect(attachWhys([{ tool: "planque", error: true as const }], old19Nov)).toEqual([{ tool: "planque", not_made: true }]);
+    // A real failure kept the same way stays one.
+    const real = [{ call: "c1", tool: "planque", why: "Coach couldn't connect the app yet", refusal: "the vendor answered 401: the key was revoked" }];
+    expect(attachWhys([{ tool: "planque", error: true as const }], real)).toEqual([{ tool: "planque", error: true, failed: true, why: "Coach couldn't connect the app yet" }]);
   });
 
   it("gives the thread's failed steps their reasons, each to the first failed step of its tool, in order", () => {

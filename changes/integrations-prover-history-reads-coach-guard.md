@@ -1,0 +1,1 @@
+- **tafs cloud: a chat read again shows Coach's mis-asked connection steps as not made, as the live stream does.** A step kept before a refusal pattern was recognised, and still red in a chat's history, is read again against its kept reason, so older turns no longer show "Coach couldn't connect the app yet" under a card that waited for the person.
