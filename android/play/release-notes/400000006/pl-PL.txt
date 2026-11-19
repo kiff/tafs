@@ -1,0 +1,6 @@
+tafs na zegarku, łatwiejszy do śledzenia.
+- Pytanie Coacha to jedna rozmowa: Twoje słowa po prawej, odpowiedzi Coacha po lewej.
+- Po wysłaniu zegarek pokazuje, że Coach to ma i odpowiada, aż otworzy się odpowiedź.
+- Odpowiedź otwiera się sama, z powiadomieniem, gdy aplikacja jest zamknięta, i zostaje, dopóki jej nie zamkniesz.
+- Kolory ze znaczeniem, Wyślij jako strzałka bez przewijania i wiersze dopasowane do okrągłych ekranów.
+- Przewijaj wiadomość i odpowiedź gestem lub pierścieniem.

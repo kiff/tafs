@@ -1,0 +1,6 @@
+tafs en tu reloj, más fácil de seguir.
+- Preguntar a Coach es una conversación: tus palabras a la derecha, las respuestas de Coach a la izquierda.
+- Tras enviar, el reloj muestra que Coach lo tiene y está respondiendo, hasta que se abre la respuesta.
+- La respuesta se abre sola, con un aviso si la app está cerrada, y se queda hasta que la cierres.
+- Colores con significado, Enviar como flecha a la vista y líneas para pantallas redondas.
+- Desplaza mensaje y respuesta deslizando o con el bisel.

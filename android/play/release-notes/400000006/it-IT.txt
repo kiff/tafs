@@ -1,0 +1,6 @@
+tafs sul tuo orologio, più facile da seguire.
+- Chiedi a Coach diventa una conversazione: le tue parole a destra, le risposte di Coach a sinistra.
+- Dopo l'invio, l'orologio mostra che Coach l'ha ricevuto e sta rispondendo, finché si apre la risposta.
+- La risposta si apre da sola, con un avviso se l'app è chiusa, e resta finché non la chiudi.
+- Colori con significato, Invia come freccia visibile e righe per schermi rotondi.
+- Scorri messaggio e risposta con un gesto o con la ghiera.

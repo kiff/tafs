@@ -1,0 +1,6 @@
+tafs on your watch, easier to follow.
+- Ask Coach reads as one conversation: your words on the right, Coach's answers on the left.
+- After you send, the watch shows that Coach has it and is answering, until the answer opens.
+- The answer opens by itself, with an alert if the app is closed, and stays until you close it.
+- Colour by meaning, Send as an arrow you don't have to scroll to, and lines that fit round screens.
+- Scroll your message and the answer with a swipe or the bezel.

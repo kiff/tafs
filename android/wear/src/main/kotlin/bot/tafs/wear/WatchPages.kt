@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -159,7 +160,10 @@ internal fun WatchPages(
       ScalingLazyColumn(
         Modifier.fillMaxWidth(),
         // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
-        state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) thread.size else 0),
+        state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) thread.size else 0).also { list ->
+          // A new turn (a send) brings the page back to the microphone, with that turn just above it (mac12's W4 note).
+          if (pages[i] == Page.Coach) LaunchedEffect(thread.size) { if (thread.isNotEmpty()) list.scrollToItem(thread.size) }
+        },
         verticalArrangement = Arrangement.spacedBy(4.dp),
         // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),

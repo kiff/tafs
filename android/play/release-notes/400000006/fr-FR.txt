@@ -1,0 +1,6 @@
+tafs sur votre montre, plus facile à suivre.
+- Demander à Coach devient une conversation : vos mots à droite, les réponses de Coach à gauche.
+- Après l'envoi, la montre indique que Coach l'a reçu et répond, jusqu'à la réponse.
+- La réponse s'ouvre seule, avec une alerte si l'app est fermée, et reste jusqu'à ce que vous la fermiez.
+- Couleurs selon le sens, Envoyer en flèche visible, lignes adaptées aux écrans ronds.
+- Faites défiler message et réponse d'un geste ou avec la lunette.

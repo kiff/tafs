@@ -1,0 +1,1 @@
+- **Wear OS 0.4.1 (400,000,006), for the owner's test on internal:** Ask Coach as one conversation, Sent until the answer, an answer you can't miss, colour by meaning, Send at the foot and lines that fit round screens; TalkBack hears "Coach: …", and the page comes back to the microphone after a send ([watch-wear.md](docs/watch-wear.md)).

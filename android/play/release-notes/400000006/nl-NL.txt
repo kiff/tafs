@@ -1,0 +1,6 @@
+tafs op je horloge, makkelijker te volgen.
+- Coach vragen leest als één gesprek: jouw woorden rechts, de antwoorden van Coach links.
+- Na het versturen toont het horloge dat Coach het heeft en antwoordt, tot het antwoord opent.
+- Het antwoord opent vanzelf, met een melding als de app dicht is, en blijft tot je het sluit.
+- Kleur met betekenis, Versturen als pijl zonder scrollen, en regels die passen op ronde schermen.
+- Scroll je bericht en het antwoord met een veeg of de draaiende rand.
