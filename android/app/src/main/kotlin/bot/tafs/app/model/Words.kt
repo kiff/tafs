@@ -642,10 +642,12 @@ object Words {
       val archiveTitle: String get() = Res.s(R.string.coach_chats_archive_title)
       val archived: String get() = Res.s(R.string.coach_chats_archived)
       val back: String get() = Res.s(R.string.coach_chats_back)
+      val fromYourWatch: String get() = Res.s(R.string.coach_chats_from_your_watch)
       val none: String get() = Res.s(R.string.coach_chats_none)
       val nothingArchived: String get() = Res.s(R.string.coach_chats_nothing_archived)
       val previous: String get() = Res.s(R.string.coach_chats_previous)
       val putBack: String get() = Res.s(R.string.coach_chats_put_back)
+      val sentFromYourWatch: String get() = Res.s(R.string.coach_chats_sent_from_your_watch)
       val untitled: String get() = Res.s(R.string.coach_chats_untitled)
     }
     val checkingSignIn: String get() = Res.s(R.string.coach_checking_sign_in)

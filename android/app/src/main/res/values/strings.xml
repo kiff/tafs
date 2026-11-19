@@ -639,10 +639,12 @@
     <string name="coach_chats_archive_title">Archive this conversation?</string>
     <string name="coach_chats_archived">Archived</string>
     <string name="coach_chats_back">‹ Back</string>
+    <string name="coach_chats_from_your_watch">From your watch</string>
     <string name="coach_chats_none">No conversations yet.</string>
     <string name="coach_chats_nothing_archived">Nothing archived.</string>
     <string name="coach_chats_previous">Previous conversations</string>
     <string name="coach_chats_put_back">Put back</string>
+    <string name="coach_chats_sent_from_your_watch">⌚ Sent from your watch</string>
     <string name="coach_chats_untitled">Conversation</string>
     <string name="coach_checking_sign_in">Checking the sign-in…</string>
     <string name="coach_close_coach_mode">Close Coach mode</string>

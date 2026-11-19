@@ -639,10 +639,12 @@
     <string name="coach_chats_archive_title">Dit gesprek archiveren?</string>
     <string name="coach_chats_archived">Gearchiveerd</string>
     <string name="coach_chats_back">‹ Terug</string>
+    <string name="coach_chats_from_your_watch">Vanaf je horloge</string>
     <string name="coach_chats_none">Nog geen gesprekken.</string>
     <string name="coach_chats_nothing_archived">Niets gearchiveerd.</string>
     <string name="coach_chats_previous">Eerdere gesprekken</string>
     <string name="coach_chats_put_back">Terugzetten</string>
+    <string name="coach_chats_sent_from_your_watch">⌚ Verstuurd vanaf je horloge</string>
     <string name="coach_chats_untitled">Gesprek</string>
     <string name="coach_checking_sign_in">Login controleren…</string>
     <string name="coach_close_coach_mode">Coach-modus sluiten</string>
