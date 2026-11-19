@@ -29,6 +29,7 @@ import org.junit.Assert.assertNull
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.performRotaryScrollInput
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -411,6 +412,22 @@ class WatchPagesTest {
     compose.onNodeWithTag(RESULT_SCREEN).performScrollToNode(hasText(Words.Common.close))
     compose.onNodeWithText(Words.Common.close).assertIsDisplayed().performClick()
     assertEquals(listOf("close result"), did)
+  }
+
+  /** The crown scrolls the answer, as a swipe does: a long one reads to Close with the crown alone. */
+  @OptIn(androidx.compose.ui.test.ExperimentalTestApi::class)
+  @Test fun theCrownScrollsTheAnswer() {
+    val long = answered.copy(line = "Your refund for order A-1039 is paused until noon; Rae asks first for anything over the limit, and Ivo stays paused until Monday 08:00.")
+    compose.setContent { MaterialTheme { ResultScreen(long, actions, timing = "listen 1.2 s · receipt 0.4 s · result 6.1 s") } }
+    compose.onNodeWithTag(RESULT_SCREEN).performRotaryScrollInput { rotateToScrollVertically(2000f) }
+    compose.onNodeWithText(Words.Common.close).assertIsDisplayed()
+  }
+
+  /** The alert's words keep no amount, as the Inbox doesn't; when one was taken out, the rest is on the phone. */
+  @Test fun theAnswersAlertKeepsNoAmount() {
+    assertEquals("Refunded for order A-1039.\n" + Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "Refunded €84 for order A-1039.")))
+    assertEquals("Paused until Monday 08:00.", AskResults.alertText(answered.copy(line = "Paused until Monday 08:00.")))
+    assertEquals(Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "€84")))
   }
 
   /** The answer's alert is on a high-importance channel, so it peeks and stays; the old default one is gone. */
