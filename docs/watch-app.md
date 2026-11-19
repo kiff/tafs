@@ -260,7 +260,10 @@ Nothing leaves the watch before Send:
   the phone can't answer is read again: the words were sent, so the watch never says they weren't.
 - **Leaving the screen stops the reads,** and nothing from them is kept. The Inbox keeps the answer once, as before.
 - **Not sure it arrived:** a Send the phone doesn't answer stays in the review with "the phone isn't in reach" and the same
-  id, as before.
+  id, as before. **Every ask to the phone ends within 20 s** (`PhoneWait.first`): WatchConnectivity can neither reply nor
+  fail (seen in the simulator on 19 Nov, its `wcd` dropping the message), and without a limit the watch stayed on its send
+  screen with no words. Past it, the phone counts as not in reach; a Send tried again goes under the same id, which tafs
+  cloud takes once.
 - **The words are the app's own, not `watch_ask`'s:** Apple Watch's Coach is the iPhone's Coach chat, never tafs cloud's
   watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
   new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
