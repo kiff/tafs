@@ -649,6 +649,14 @@ final class WatchRelayTests: XCTestCase {
             ("Refund 1234.5 now", Money(minor: 123_450, currency: "EUR", scale: 2), "Refund now"),
             ("Refund 150.5 to Ana", Money(minor: 15_000, currency: "EUR", scale: 2), "Refund 150.5 to Ana"),
             ("Refund 150, then more", .bare(150), "Refund, then more"),
+            // A unit right after its figure, and more words (qa-kiff's 07:36); a code inside a word stays.
+            ("Zwrot 150zł", nil, "Zwrot"),
+            ("Refund 150EUR", nil, "Refund"),
+            ("Rückerstattung 80 Franken", nil, "Rückerstattung"),
+            ("Zwrot 50 dolarów", nil, "Zwrot"),
+            ("Zwrot 150 złotych", nil, "Zwrot"),
+            ("Order EUROPE 4 items", nil, "Order EUROPE 4 items"),
+            ("Skrzynka 3 krzesła", nil, "Skrzynka 3 krzesła"),
         ]
         for (summary, amount, kept) in cases {
             XCTAssertEqual(WatchRelay.withoutAmount(summary, amount: amount), kept, summary)
