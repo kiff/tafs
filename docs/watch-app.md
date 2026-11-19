@@ -70,6 +70,11 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   as `client_message_id`, so words sent again after no answer came are acted on once. The watch keeps the id while
   the same words are sent again, and makes a new one for other words or once Coach has answered. If a watch from
   before sends none, or one that isn't a UUID, the phone gives the message an id of its own.
+- **v2's Send in two steps (W2):** `coach_send` sends the words as `coach` does and is answered as soon as tafs cloud has
+  them, with a ticket: Coach's chat, the conversation and tafs cloud's id for the message. `coach_read` names that ticket
+  and is answered with Coach's answer so far and whether its chat says it's still working, read once, never sending. The
+  phone reads only Coach's own chat by a ticket: one it sent the watch's words to, or the one tafs cloud gives as
+  Coach's now; any other is refused unread.
 
 ## Coach
 
@@ -140,8 +145,9 @@ Nothing leaves the watch before Send:
   the old ones' place, and a cancelled input keeps them) and **Send** →, so Send is never below the words however long
   they are. Delete shows "Deleted. Nothing was sent.", which closes by itself after 2 s. Blank is nothing; the words are cut at 2,000 characters, as a
   message to Coach is.
-- **Send** is v1's: the same request (`coach`), the same id when the same words go again after no answer, and the lock
-  checked at Send. While it's in flight, Re-record and Delete do nothing (in the model as on the screen): the words
+- **Send** sends the words as v1's does: the same id when the same words go again after no answer, and the lock
+  checked at Send. Since W2 it's two steps (`coach_send`, then `coach_read`, below); a phone from before them refuses
+  `coach_send`, and the same words then go v1's way (`coach`) under the same id. While it's in flight, Re-record and Delete do nothing (in the model as on the screen): the words
   shown are the words on their way, so the watch never says "Nothing was sent." about words that may have reached Coach. A Send that fails keeps the words in the review, with the reason under them; an answer shows as v1's.
 - **Not in this step:** Keep for later (it stores the words on the watch, which v2 doesn't yet), and Ask tafs
   (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's iPhone push.
@@ -226,6 +232,20 @@ Nothing leaves the watch before Send:
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
   phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
   `settings.plan`, `settings.language_title`, `settings.version`).
+
+**W2, Sent and Coach is answering** (`CoachModel.sendReviewed`, `CoachAsk`; tested in `CoachModelTests` and
+`WatchRelayTests`), the owner's Watch 5 test, as Wear OS's 0.4.1:
+- **Sent:** the moment tafs cloud has the words, they leave the review and show above "✓ Sent".
+- **Coach is answering:** the watch reads Coach's answer every 1.5 s; while Coach's chat says it's working, "Coach is
+  answering" with a progress mark. Coach's answer shows once it's written and the chat no longer says working.
+- **About 30 s at most** (`answerReads`, 20 reads): then what Coach wrote so far, with "The rest is on your phone.". A read
+  the phone can't answer is read again: the words were sent, so the watch never says they weren't.
+- **Leaving the screen stops the reads,** and nothing from them is kept. The Inbox keeps the answer once, as before.
+- **Not sure it arrived:** a Send the phone doesn't answer stays in the review with "the phone isn't in reach" and the same
+  id, as before.
+- **The words are the app's own, not `watch_ask`'s:** Apple Watch's Coach is the iPhone's Coach chat, never tafs cloud's
+  watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
+  new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
