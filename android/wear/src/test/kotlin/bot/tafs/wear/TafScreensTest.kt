@@ -457,7 +457,7 @@ class TafScreensTest {
     assertEquals(listOf("halt taf_1"), did)
   }
 
-  @Test fun aTafsPageIsDrawnOverThePagesAndHaltingOverIt() {
+  @Test fun aTafsPageIsDrawnOverThePages() {
     showPages(Page.Tafs, taf = open(page))
     compose.onNodeWithText(page.job).assertExists()
     compose.onAllNodesWithText("Next run 14:00").assertCountEquals(0)
