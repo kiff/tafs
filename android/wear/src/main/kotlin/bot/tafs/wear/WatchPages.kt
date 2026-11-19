@@ -98,6 +98,8 @@ internal fun WatchPages(
   calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
   /** Account's read from the phone (step vi). */
   account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
+  /** Today's conversation with Coach from this watch, oldest first (W4). */
+  thread: List<Pair<WatchModel.Said, AskLine>> = emptyList(),
 ) {
   if (signedOutHere) return SignedOutHereScreen(act)
   // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
@@ -156,13 +158,15 @@ internal fun WatchPages(
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
       ScalingLazyColumn(
         Modifier.fillMaxWidth(),
-        state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+        // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
+        state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) thread.size else 0),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
+          coachThread(thread, act)
           coachHome(shown, working, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }

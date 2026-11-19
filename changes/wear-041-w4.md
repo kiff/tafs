@@ -1,0 +1,1 @@
+- **Wear OS: Ask Coach is one conversation.** Above the microphone, today's turns from this watch: what you said and Coach's answer, newest just over the microphone; a tap on an answer opens it. Nothing new is kept on the watch ([watch-wear.md](docs/watch-wear.md)).
