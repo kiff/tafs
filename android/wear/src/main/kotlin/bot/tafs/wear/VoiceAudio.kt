@@ -69,7 +69,11 @@ object VoiceFormat {
  * recording and the words are the same speech. [peak] is the loudest sample, for the internal build's probe line: a recording
  * that stays silent means the microphone was given to someone else.
  */
-internal class AudioTap(private val dir: File) {
+internal class AudioTap(
+  private val dir: File,
+  /** The recognizer's side of the pipe, as the app writes to it; a test can stand in a recognizer that has stopped reading. */
+  private val feedOf: (ParcelFileDescriptor) -> java.io.OutputStream = { ParcelFileDescriptor.AutoCloseOutputStream(it) },
+) {
   private var record: AudioRecord? = null
   private var file: File? = null
   private var out: RandomAccessFile? = null
@@ -102,7 +106,7 @@ internal class AudioTap(private val dir: File) {
     r.startRecording()
     thread = Thread({
       val buf = ByteArray(min)
-      var toRecognizer: java.io.OutputStream? = ParcelFileDescriptor.AutoCloseOutputStream(write)
+      var toRecognizer: java.io.OutputStream? = feedOf(write)
       // At most the limit, whatever happens to Stop.
       val most = VoiceFormat.BYTES_PER_SECOND.toLong() * (LISTEN_LIMIT_MS / 1000 + 1)
       while (running && bytes < most) {
@@ -117,6 +121,25 @@ internal class AudioTap(private val dir: File) {
       runCatching { toRecognizer?.close() }
     }, "tafs-voice").apply { isDaemon = true; start() }
     return read
+  }
+
+  /** What has been recorded so far, in bytes of audio. */
+  internal val recorded: Long get() = bytes
+
+  /** Whether the app is still feeding the recognizer: its thread is alive. */
+  internal val feeding: Boolean get() = thread?.isAlive == true
+
+  /**
+   * Stop: the microphone stops and the recognizer's pipe closes, so the recognizer reaches the end of the audio and returns the
+   * words. The recording stays, for [finish]. Without it the recognizer waits on a pipe the app goes on filling to the 30 s limit,
+   * and Stop ends in "Didn't catch that" (the owner's Galaxy Watch 5, 0.4.0-test).
+   */
+  fun endFeed() {
+    running = false
+    // A write blocked on a recognizer that no longer reads ends when its pipe closes.
+    runCatching { pipe?.close() }
+    runCatching { thread?.join(500) }
+    runCatching { record?.stop() }
   }
 
   /** Stops the microphone and keeps the recording; null when nothing was recorded. */

@@ -179,7 +179,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 - **Ask Coach as one conversation** (W4, the owner-approved Watch Coach mockup; `CoachThread.kt`, `WatchModel.thread`): above the
   microphone, today's turns from this watch, oldest first, so the page opens on the microphone with the newest turn just above
   it. Each turn is the person's words on the right, with when they were sent, and Coach's answer on the left: its line once the
-  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. **Memory
+  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. TalkBack
+  hears an answer as "Coach: …"; a turn at work is heard as its state line alone, which already names Coach. **Memory
   only:** what was said is held with the asks and forgotten with them, when the app is put away and on sign-out, so the watch
   keeps nothing new ("What the watch keeps"). Until tafs cloud keeps the watch's conversation (for the phone's "From your
   watch", W11), it's what this watch said since the app was opened.
@@ -195,7 +196,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 `WatchPagesTest`). Nothing leaves the watch before Send:
 - **The microphone** opens its screen ready (`Voice.Ready`): **Start**, a round button in the brand's colours with the
   microphone, "Ready · 30 s", and what to do. Start listens; the screen shows "● Recording · 30 s" in red, the timer against
-  0:30, a ring that fills to the limit, the words as they're heard (two lines; the review has them all), and **Stop**: another
+  0:30, a ring that fills to the limit, the words as they're heard (two lines, 68% of the face's width up to 150 dp, so on the 40 mm Watch 5 they stay clear of
+  the curve, `theHeardWordsStayInsideTheFaceAt40mm`; the review has them all), and **Stop**: another
   control, not Start relabelled, a solid red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`,
   `RECORD_STOP`). The top line is kept short for the top of a round face, and TalkBack reads it in full ("Ready · 30 s at
   most", `watch.limit`); it sits 12 % of the face down (`TOP_INSET_SHARE`), where the face is wide enough for it (the Galaxy
@@ -224,7 +226,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   watch took, so the probe never ran (#1716, W1), and a production build keeps no recording: its review is the words alone.
   In a test version the app opens the microphone itself (`AudioTap`,
   16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
-  OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
+  OS 4 and later), so the recording and the words are one capture. **Stop** (or the 30 s limit) ends that sound first
+  (`AudioTap.endFeed`): the microphone stops and the pipe closes, so the recognizer reaches the end of the audio and returns the
+  words, and the recording stays for Play. Before, Stop only asked the recognizer to stop while the app went on filling the
+  pipe, and the owner's Galaxy Watch 5 (0.4.0-test) answered "Didn't catch that" (`AudioTapTest`). The recording is a WAV in the app's private files
   (`files/voice/`), kept beside the review only, under its title and above the words: **Play** (▶) and **Pause** (‖), a round
   icon button named for TalkBack (`watch.play`, `taf.pause`), go on from where it was, with "0:03 / 0:12". It never
   leaves the watch, only the words do. It's erased the moment the review is left, by whatever leaves it (`WatchModel.voiceNow`):
