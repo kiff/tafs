@@ -272,6 +272,7 @@ struct FileDetailView: View {
             }
             Section {
                 Button(Words.Files.deleteNow, role: .destructive) { confirming = true }
+                    .confirming()
             }
         }
         .scrollContentBackground(.hidden)
