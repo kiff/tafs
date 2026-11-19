@@ -206,9 +206,10 @@ final class FilesTests: XCTestCase {
         XCTAssertTrue(store.contentsRead.isEmpty, "no bytes read on a failed preview")
     }
 
-    /// tafs cloud's start is drawn with no bytes read; with none, or for a type with no text start, the system draws the
-    /// device's copy.
-    func testThePreviewIsTheStartAndTheCopyOnlyWithoutOne() async throws {
+    /// tafs cloud's start is drawn with no bytes read. A text type answered with no start reads no bytes either: its raw file
+    /// is never drawn in the cleaned start's place (agentgabo's read). Only a type with no text start is drawn by the system
+    /// from the device's copy, whether tafs cloud answered or not.
+    func testThePreviewIsTheStartAndTheCopyOnlyForATypeWithoutOne() async throws {
         let store = Store([])
         let model = FilesModel(store: store)
         let csv = file("fil_text", hoursAgo: 1, name: "week.csv")
@@ -217,16 +218,20 @@ final class FilesTests: XCTestCase {
         XCTAssertTrue(store.contentsRead.isEmpty)
 
         store.start = nil
-        guard case .copy(let copy) = await model.readPreview(of: csv) else { return XCTFail("no start: the copy") }
-        XCTAssertEqual(store.contentsRead, ["fil_text"])
-        FileCopy.remove("fil_text")
+        let noStart = await model.readPreview(of: csv)
+        XCTAssertEqual(noStart, .noPreview, "tafs cloud was reached: no preview, and no couldn't-reach line")
+        XCTAssertTrue(store.contentsRead.isEmpty, "a text type with no start reads no bytes")
+
+        var pdf = file("fil_pdf", hoursAgo: 1, name: "plan.pdf")
+        pdf.type = "PDF"
+        guard case .copy(let copy) = await model.readPreview(of: pdf) else { return XCTFail("a type with no text start: the copy") }
+        XCTAssertEqual(store.contentsRead, ["fil_pdf"])
+        FileCopy.remove("fil_pdf")
         XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path))
 
         store.previewFails = true
-        var pdf = file("fil_pdf", hoursAgo: 1, name: "plan.pdf")
-        pdf.type = "PDF"
-        guard case .copy = await model.readPreview(of: pdf) else { return XCTFail("a type with no text start: the copy") }
-        XCTAssertEqual(store.contentsRead, ["fil_text", "fil_pdf"])
+        guard case .copy = await model.readPreview(of: pdf) else { return XCTFail("a failed read, no text start: the copy") }
+        XCTAssertEqual(store.contentsRead, ["fil_pdf", "fil_pdf"])
         FileCopy.remove("fil_pdf")
     }
 
