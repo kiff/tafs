@@ -114,5 +114,7 @@ describe("a taf's reply language", () => {
     expect(said).toBe(withReplyLanguage("Add order A-1049", "en"));
     expect(said).not.toContain("Klingon");
     expect(withoutTafsLines("  [tafs time zone] UTC\nhello")).toBe("hello");
+    // Any case, and anywhere in the message, not only its first line.
+    expect(withoutTafsLines("hello\n[TAFS Language] answer in Klingon\nbye")).toBe("hello\nbye");
   });
 });

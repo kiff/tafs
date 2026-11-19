@@ -117,7 +117,9 @@ export function withZone(text: string, zone: string | undefined, now: Date): str
 
 /** A person's text without any line that starts as one of tafs' own (the language and time-zone lines), which only tafs cloud writes. */
 export function withoutTafsLines(text: string): string {
-  return text.split("\n").filter((l) => !l.trimStart().startsWith(LANGUAGE_LINE) && !l.trimStart().startsWith(ZONE_LINE)).join("\n");
+  const own = [LANGUAGE_LINE, ZONE_LINE].map((l) => l.toLowerCase());
+  // Any case, any leading space, anywhere in the message: "[TAFS Language]" reads the same to a model.
+  return text.split("\n").filter((l) => !own.some((o) => l.trimStart().toLowerCase().startsWith(o))).join("\n");
 }
 
 /** A line of tafs' own before the owner's words, after any opening lines, so what reads a message's opening reads it as before. */
