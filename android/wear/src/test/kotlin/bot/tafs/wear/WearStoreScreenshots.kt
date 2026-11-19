@@ -9,7 +9,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material3.MaterialTheme
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -52,7 +51,7 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
     RuntimeEnvironment.setQualifiers("$language-w192dp-h192dp-round-watch-xhdpi")
     Res.install(ApplicationProvider.getApplicationContext())
     // The watch's window is black (Theme.DeviceDefault on Wear OS); the JVM has no window, so it's drawn here as the watch shows it.
-    compose.setContent { MaterialTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
+    compose.setContent { WatchTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
     val out = File(repo, "android/play/wear-screenshots/$playLocale/$name.png")
     compose.onRoot().captureRoboImage(out.path)
     opaqueForPlay(out)
