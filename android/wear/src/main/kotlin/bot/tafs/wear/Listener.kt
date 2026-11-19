@@ -22,7 +22,7 @@ internal class Listener(
   private val keepAudio: Boolean = false,
 ) {
   private var recognizer: SpeechRecognizer? = null
-  private var tap: AudioTap? = null
+  @androidx.annotation.VisibleForTesting internal var tap: AudioTap? = null
   private var source: android.os.ParcelFileDescriptor? = null
   private var ready = false
 
