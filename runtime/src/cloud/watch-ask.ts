@@ -87,6 +87,11 @@ export const ASK_KEPT_MS = 7 * 24 * 3600_000;
  * conversation is (a run's chat, 30 days: tafdef's RETENTION_NS), so its watch day goes when the conversation does (W11).
  */
 export const ASK_DAYS_KEPT_MS = RETENTION_NS / 1_000_000;
+/**
+ * How long a request may be choosing its taf (Coach's routing turn) and still hold back a hand-over that names no chat:
+ * a routing turn takes seconds, so one left over from a run that never ended stops holding anything back after this.
+ */
+export const ROUTING_MS = 15 * 60_000;
 /** The recent requests a person's watch reads back: the newest, at most this many. */
 export const RECENT_MAX = 20;
 /** The requests a person's list keeps, newest first, for their watch days: past it the oldest go first. */

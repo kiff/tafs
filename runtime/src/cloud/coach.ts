@@ -369,15 +369,26 @@ export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean } 
   };
 }
 
-/** A connection in KIFF's gateway, as tafs cloud reads it. */
-export interface GatewayConnection { name: string; url?: string; control?: boolean }
+/** A connection in KIFF's gateway, as tafs cloud reads it: `input_schema` is the tool's schema as KIFF kept it when connected. */
+export interface GatewayConnection { name: string; url?: string; control?: boolean; input_schema?: unknown }
+
+/**
+ * Whether KIFF kept a tool's schema from before it asked for its chat (SESSION_ARG): kiff/agents then never says the chat,
+ * so a watch conversation's hand-over can't find its request (the 17:33 ask). Unknown (no schema listed) counts as kept.
+ */
+function keptWithoutChat(t: ToolDef, c: GatewayConnection): boolean {
+  if (!t.session || !c.input_schema || typeof c.input_schema !== "object") return false;
+  const props = (c.input_schema as { properties?: unknown }).properties;
+  return !props || typeof props !== "object" || !(SESSION_ARG in props);
+}
 
 /**
  * What giving Coach its tools still needs, from the account's connections: the tools to connect, or
  * the first of Coach's names another connection holds. One there counts as Coach's only when it's
  * this server (`mcp`) as the control server: Coach's Cards grant by name, so any other would put a
  * vendor's tool on them. One that's the control server at another address (connected before tafs
- * cloud moved) is connected again here, replacing it: `replace` names those.
+ * cloud moved), or one KIFF keeps without the chat argument it now asks for, is connected again
+ * here, replacing it: `replace` names those.
  */
 export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missing: ToolDef[]; replace: string[]; taken?: string } {
   const byName = new Map(there.map((c) => [c.name, c]));
@@ -387,7 +398,7 @@ export function coachToolsPlan(there: GatewayConnection[], mcp: string): { missi
     const c = byName.get(t.name);
     if (!c) { missing.push(t); continue; }
     if (c.control !== true) return { missing: [], replace: [], taken: t.name };
-    if (c.url !== mcp) { missing.push(t); replace.push(t.name); }
+    if (c.url !== mcp || keptWithoutChat(t, c)) { missing.push(t); replace.push(t.name); }
   }
   return { missing, replace };
 }

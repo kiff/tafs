@@ -56,7 +56,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, fullAnswer, tafLine, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
+import { type Ask, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, askDay, askOfSession, type AskState, checkedLine, CLIENT_ID, dayTurns, fullAnswer, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, ROUTING_MS, shownAsk, SINCE_DEFAULT_MS, tafLine, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -11289,6 +11289,15 @@ async function watchChanged(tenant: string, ask: Ask, deps: Deps): Promise<void>
  */
 async function watchHandOver(call: CoachCall, args: Record<string, unknown>, deps: Deps): Promise<Ask | undefined> {
   if (!deps.coach) return undefined;
+  if (!call.session) {
+    // No chat named: KIFF keeps a tool's schema from when it was connected, so a connection made before taf_task asked
+    // for its chat never says one. While the person's watch request chooses its taf, the call may be its routing turn's:
+    // refused, never sent the ordinary way into the taf's own chat, where the watch would never hear its answer.
+    if (call.person && (await choosing(deps.coach, call.tenant, call.person.subject, deps))) {
+      throw new ToolRefusal("tafs can't tell which chat this comes from while their watch request chooses its taf: Coach's tools need connecting again, so nothing was handed over");
+    }
+    return undefined;
+  }
   const ask = await askOfSession(deps.coach, call.tenant, call.session);
   if (!ask) return undefined;
   if (!call.person || call.person.subject !== ask.person) throw new ToolRefusal("this watch request isn't this person's");
@@ -11299,6 +11308,13 @@ async function watchHandOver(call: CoachCall, args: Record<string, unknown>, dep
     throw new ToolRefusal("this watch request went to a taf already: one taf per request");
   }
   return ask;
+}
+
+/** Whether one of the person's watch requests is choosing its taf now: Coach's routing turn at work, no taf yet. */
+async function choosing(store: CoachStore, tenant: string, person: string, deps: Deps): Promise<boolean> {
+  const now = deps.now?.() ?? new Date();
+  const asks = await recentAsks(store, tenant, person, new Date(now.getTime() - ROUTING_MS));
+  return asks.some((a) => a.turn === "route" && !a.taf && !ASK_FINAL.includes(a.state));
 }
 
 /** The watch request's taf took it: it's working, and the watch hears which taf. */
@@ -11335,8 +11351,10 @@ async function watchCoachEnded(tenant: string, id: string, note: { run: string; 
     Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line } : {}) });
   } else if (!ask.taf) {
     // Coach answered itself (W5, the owner's Watch 5 test: every ask Coach answered read "No taf took it"): done, with its
-    // line. No taf took it only when Coach's turn ends with nothing to show.
-    Object.assign(ask, r.status !== "COMPLETED" ? { state: "failed" } : line ? { state: "done", line } : { state: "no_taf" });
+    // line. No taf took it only when Coach's turn ends with nothing to show. A turn that sent a taf_task this request never
+    // took (the 17:33 ask) handed work over elsewhere: its sentence ("…: working.") is no answer, so the request failed.
+    const handedElsewhere = (r.tally?.taf_task?.sent ?? 0) > 0 || (r.done ?? []).some((d) => d.tool === "taf_task");
+    Object.assign(ask, r.status !== "COMPLETED" || handedElsewhere ? { state: "failed" } : line ? { state: "done", line } : { state: "no_taf" });
   } else {
     return true; // routed: the taf's run tells how it went
   }
