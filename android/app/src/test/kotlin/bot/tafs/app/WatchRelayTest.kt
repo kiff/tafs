@@ -6,6 +6,7 @@ import bot.tafs.app.push.AlertPayload
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.watch.RefreshFloor
 import bot.tafs.app.watch.WatchRelay
+import bot.tafs.app.model.Money
 import bot.tafs.watchlink.NotAccepted
 import bot.tafs.watchlink.WatchLink
 import bot.tafs.watchlink.WatchReply
@@ -60,11 +61,71 @@ class WatchRelayTest {
     assertEquals(state.held.map { it.id }, reply.calls.map { it.holdId })
     for ((call, line) in state.held.zip(reply.calls)) {
       assertEquals(state.taf(call.tafId)!!.name, line.taf)
-      assertEquals(call.proposed.summary, line.wants)
+      assertEquals(WatchRelay.withoutAmount(call.proposed.summary, call.proposed.amount), line.wants)
       assertEquals(call.proposed.amount?.formatted, line.amount)
       assertEquals(call.reason, line.reason)
       assertEquals(call.kiffId != null && state.canAnswer(call), line.refusable)
     }
+  }
+
+  /**
+   * What a held call wants reaches the watch with no amount, even where KIFF's title writes one in: v2's Inbox keeps it, and
+   * "never an amount" is what the watch promises (docs/watch-wear.md). The amount goes on its own, for Needs you while it's held.
+   */
+  @Test fun whatACallWantsReachesTheWatchWithNoAmount() {
+    for ((title, kept) in listOf(
+      "Refund order 1042, €150.00" to "Refund order 1042",
+      "Refund €1.234,56 to Ana" to "Refund to Ana",
+      "Refund order 1042 EUR 150.00" to "Refund order 1042",
+      "Pay 99 usd – invoice 7781" to "Pay – invoice 7781",
+      "Charge \$12 now" to "Charge now",
+      "Refund order 4502: 150 €" to "Refund order 4502",
+      "Refund order 4502" to "Refund order 4502",
+      "Add 50 rows" to "Add 50 rows",
+      // qa-kiff's rows (#1427): tafs' languages' own currencies, a currency as a word, and a number before the amount.
+      "Zwrot zamówienia 1042, 150 zł" to "Zwrot zamówienia 1042",
+      "Zwrot 150 PLN" to "Zwrot",
+      "Refund 150 euros to Ana" to "Refund to Ana",
+      "Rembourser 150 euros" to "Rembourser",
+      "Refund 20 dollars" to "Refund",
+      "Återbetala 200 kr" to "Återbetala",
+      "Refund order 4502 150 €" to "Refund order 4502",
+      "Rückerstattung CHF 1'234.50 an Ana" to "Rückerstattung an Ana",
+      "Remboursement de 1 250,50 € à Ana" to "Remboursement de à Ana",
+      "Ship 3 items to Lyon" to "Ship 3 items to Lyon",
+      "Krakow order 77" to "Krakow order 77",
+    )) {
+      assertEquals(title, kept, WatchRelay.withoutAmount(title))
+    }
+    val state = testModel().state.value.copy(mode = Mode.kiff)
+    val call = state.held.first().let { it.copy(proposed = it.proposed.copy(summary = "Refund order 1042, €150.00")) }
+    val line = WatchRelay.needsYou(state.copy(held = listOf(call))).calls.single()
+    assertEquals("Refund order 1042", line.wants)
+    assertEquals(call.proposed.amount?.formatted, line.amount)
+  }
+
+  /**
+   * The call's own amount goes first, however the title writes it and whatever stands beside it: with no currency at all, in a
+   * currency the patterns don't know, grouped any way. A number that isn't the amount stays.
+   */
+  @Test fun theCallsOwnAmountGoesHoweverItsWritten() {
+    val amount = Money.eur(1234.56)
+    for ((title, kept) in listOf(
+      "Refund 1234.56 to Ana" to "Refund to Ana",
+      "Refund 1.234,56 to Ana, order 4502" to "Refund to Ana, order 4502",
+      "Refund 1 234,56 to Ana" to "Refund to Ana",
+      "Refund 1,234.56 HUF-ish to Ana" to "Refund HUF-ish to Ana",
+      "Refund ${amount.figure} to Ana" to "Refund to Ana",
+      "Refund 1234.567 to Ana" to "Refund 1234.567 to Ana",
+      "Order 51234.56 refunded" to "Order 51234.56 refunded",
+    )) {
+      assertEquals(title, kept, WatchRelay.withoutAmount(title, amount))
+    }
+    assertEquals("Pay invoice 7781", WatchRelay.withoutAmount("Pay 150 invoice 7781", Money.usd(150.0)))
+    assertEquals("Pay 30000 rows", WatchRelay.withoutAmount("Pay 30000 rows", Money.usd(150.0)))
+    val state = testModel().state.value.copy(mode = Mode.kiff)
+    val call = state.held.first().let { it.copy(proposed = it.proposed.copy(summary = "Refund 1 234,56 for order 4502", amount = amount)) }
+    assertEquals("Refund for order 4502", WatchRelay.needsYou(state.copy(held = listOf(call))).calls.single().wants)
   }
 
   /**

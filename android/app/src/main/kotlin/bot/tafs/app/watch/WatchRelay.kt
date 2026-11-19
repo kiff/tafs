@@ -5,6 +5,7 @@ import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
+import bot.tafs.app.model.Money
 import bot.tafs.app.model.Words
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.CardLine
@@ -246,6 +247,60 @@ class WatchRelay(
     fun refusableFromWrist(state: AppState, call: HeldCall): Boolean = call.kiffId != null && state.canAnswer(call)
 
     /**
+     * A held call's words as the watch may keep them (v2's Inbox keeps `wants`, docs/watch-wear.md, "What the watch keeps"):
+     * with no amount, even where KIFF's title writes one in.
+     * - First the call's own [amount], in the ways a figure is written (150, 150.00, 150,00, 1,234.56, 1.234,56, 1 234,56,
+     *   1'234.56, and as the app formats it), with a currency beside it or none.
+     * - Then any other figure with a currency beside it: a sign, a code or a word (€, zł, kr, Fr., PLN, euros, dollars…), before
+     *   it first and then after it, so in "order 1042 EUR 150.00" the order's number stays. A figure never starts inside a
+     *   number, and a space groups thousands only after 1 to 3 digits, so "order 4502 150 €" keeps 4502.
+     *
+     * A figure with no currency that isn't the call's amount is never cut. The amount goes to the watch on its own
+     * ([HeldLine.amount]), drawn while Needs you holds the call and never kept. As the iPhone's `WatchRelay.withoutAmount`.
+     */
+    fun withoutAmount(summary: String, amount: Money? = null): String {
+      var words = summary
+      ownAmount(amount)?.let { words = words.replace(it, " ") }
+      return words.replace(CURRENCY_FIRST, " ").replace(CURRENCY_AFTER, " ")
+        .replace(SPACES, " ")
+        .replace(SPACE_BEFORE_MARK, "$1")
+        .trim { it.isWhitespace() || it in ",;:-–—·" }
+    }
+
+    /** The call's own amount as a pattern: each way its figure is written, longest first, with a currency beside it or none. */
+    private fun ownAmount(amount: Money?): Regex? {
+      if (amount == null || amount.minor == 0L) return null
+      val value = amount.value.abs()
+      val numbers = linkedSetOf(value.toPlainString(), value.stripTrailingZeros().toPlainString())
+      val spellings = mutableSetOf(amount.figure.trim())
+      for (n in numbers) {
+        val whole = n.substringBefore('.')
+        val fraction = n.substringAfter('.', "")
+        for (group in GROUPS) {
+          val grouped = whole.reversed().chunked(3).joinToString(group).reversed()
+          if (group.isNotEmpty() && grouped == whole) continue
+          for (point in listOf(".", ",")) {
+            if (point == group) continue
+            spellings += if (fraction.isEmpty()) grouped else grouped + point + fraction
+          }
+        }
+      }
+      val any = spellings.filter { it.isNotEmpty() }.sortedByDescending { it.length }.joinToString("|") { Regex.escape(it) }
+      return Regex("""(?<![\d.,])(?:$CURRENCY\s?)?(?:$any)(?:\s?$CURRENCY)?(?![.,]?\d)""", RegexOption.IGNORE_CASE)
+    }
+
+    /** How thousands are grouped: none, a comma, a point, a space (plain, no-break or narrow) or an apostrophe. */
+    private val GROUPS = listOf("", ",", ".", " ", " ", " ", "'", "’")
+    private const val FIGURE =
+      """(?<![\d.,'’])(?:\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?|\d+(?:[.,'’]\d{3})*(?:[.,]\d+)?)"""
+    private const val CURRENCY =
+      """(?:[€$£¥₹]|(?<![\p{L}\d])(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK|zł|złotych|złote|kr|Fr\.|euros?|dollars?|pounds?|francs?)(?![\p{L}]))"""
+    private val CURRENCY_FIRST = Regex("""$CURRENCY\s?$FIGURE""", RegexOption.IGNORE_CASE)
+    private val CURRENCY_AFTER = Regex("""$FIGURE\s?$CURRENCY""", RegexOption.IGNORE_CASE)
+    private val SPACES = Regex("""\s+""")
+    private val SPACE_BEFORE_MARK = Regex("""\s+([,.;:])""")
+
+    /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
      * amount and the reason. One this phone can't answer from here (KIFF doesn't hold its key) isn't refusable from the wrist.
      */
@@ -256,7 +311,7 @@ class WatchRelay(
         HeldLine(
           holdId = call.id,
           taf = state.taf(call.tafId)?.name ?: Words.NeedsYou.aTaf,
-          wants = call.proposed.summary,
+          wants = withoutAmount(call.proposed.summary, call.proposed.amount),
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() },
           refusable = refusableFromWrist(state, call),
