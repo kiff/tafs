@@ -61,8 +61,16 @@ final class ReportAnswerUITests: TafsUITestCase {
             let field = app.descendants(matching: .any)["report-note"]
             typeInto(field, text: note)
         }
-        XCTAssertTrue(send.isEnabled, "a reason is enough to send")
+        // The tap on a reason lands before Send updates on a slow simulator: wait for it, as for the sheet.
+        XCTAssertTrue(waitUntilEnabled(send, timeout: 5), "a reason is enough to send")
         send.tap()
+    }
+
+    /// Whether `element` is enabled within `timeout` seconds.
+    @MainActor
+    private func waitUntilEnabled(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: element)
+        return XCTWaiter().wait(for: [enabled], timeout: timeout) == .completed
     }
 
     @MainActor
