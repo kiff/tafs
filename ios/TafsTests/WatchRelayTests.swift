@@ -613,4 +613,21 @@ final class WatchRelayTests: XCTestCase {
         let (_, cloud) = clients()
         XCTAssertFalse(KeptWatchReading(kiff: KIFFClient(), cloud: cloud, signer: CurrentKeyOnly(), tenant: nil, keyed: false).signedIn)
     }
+
+    /// The summary the watch may keep holds no amount, even where KIFF's words write one in; an order's own number stays.
+    func testTheSummaryForTheWatchHoldsNoAmount() {
+        let cases = [
+            ("Refund order 4502", "Refund order 4502"),
+            ("Refund €150.00 to order 4502", "Refund to order 4502"),
+            ("Refund order 4502, €150.00", "Refund order 4502"),
+            ("Pay 150.00 EUR to the supplier", "Pay to the supplier"),
+            ("Refund 150,00 € on order 4502", "Refund on order 4502"),
+            ("Refund 1 250,50 € now", "Refund now"),
+            ("Ship 3 items to Lyon", "Ship 3 items to Lyon"),
+            ("Refund order 1042 EUR 150.00", "Refund order 1042"),
+        ]
+        for (summary, kept) in cases {
+            XCTAssertEqual(WatchRelay.withoutAmount(summary), kept, summary)
+        }
+    }
 }

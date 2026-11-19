@@ -7,6 +7,9 @@ struct TafsScreen: View {
     /// v1 offers Halt on each taf and Halt all; v2's Tafs page doesn't: halting is in the menu, and with step (v) in a
     /// taf's settings (docs/watch-app.md, "Version 2").
     var offersHalt = true
+    /// v2 (step v): each taf opens its page, and its Waiting for you goes to the Inbox.
+    var opensPages = false
+    var openInbox: () -> Void = {}
     @State private var confirmingAll = false
 
     var body: some View {
@@ -24,8 +27,16 @@ struct TafsScreen: View {
         case .loaded(let tafs):
             List {
                 ForEach(tafs) { taf in
-                    TafRow(taf: taf, answer: model.halts[taf.id], offersHalt: offersHalt) {
-                        Task { await model.halt(taf.id) }
+                    if opensPages {
+                        NavigationLink {
+                            TafPageScreen(model: model.page(taf), openInbox: openInbox)
+                        } label: {
+                            TafRow(taf: taf, answer: nil, offersHalt: false) {}
+                        }
+                    } else {
+                        TafRow(taf: taf, answer: model.halts[taf.id], offersHalt: offersHalt) {
+                            Task { await model.halt(taf.id) }
+                        }
                     }
                 }
                 if offersHalt && !tafs.isEmpty {
