@@ -51,6 +51,25 @@ final class StubVendor: VendorSigningIn {
 final class PlanqueTests: XCTestCase {
     // MARK: What planque checks
 
+    /// A paused connection says planque's words for it, in the person's language, and never the pause's English `why`, which
+    /// carries the vendor and the raw tool name and is for the log and Coach: the app has no field for it, so whatever
+    /// planque puts there can't reach a screen (the paused-grant leak, before wave 1a).
+    func testAPausedGrantsWhyNeverReachesThePerson() throws {
+        let why = "Google Sheets changed GOOGLESHEETS_BATCH_UPDATE since you approved it"
+        let json = Self.grantJSONFor(status: "paused")
+            .replacingOccurrences(of: #""status":"paused","#,
+                                  with: #""status":"paused","status_words":"Pausiert · Werkzeug geändert · erneut verbinden, um es zu genehmigen","paused":{"kind":"changed","why":"\#(why)"},"why":"\#(why)","#)
+        let grant = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+        XCTAssertEqual(grant.statusWords, "Pausiert · Werkzeug geändert · erneut verbinden, um es zu genehmigen")
+        XCTAssertEqual(grant.signedOutWords, grant.statusWords, "the status line is planque's words")
+        // Nothing the app reads from the grant carries a word of the English why.
+        for shown in [grant.statusWords, grant.signedOutWords, grant.reason, grant.health?.words].compactMap({ $0 }) {
+            for word in ["changed", "GOOGLESHEETS", "approved", "Google Sheets"] {
+                XCTAssertFalse(shown.contains(word), "\(word) in \(shown)")
+            }
+        }
+    }
+
     /// planque's device.Message for the same inputs, byte for byte.
     func testMessageIsPlanques() {
         let base = URL(string: "https://planque.kiff.dev/")!
