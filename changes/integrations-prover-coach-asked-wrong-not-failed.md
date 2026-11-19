@@ -1,0 +1,1 @@
+- **tafs cloud: planque's refusals of how Coach asked never read as the app failing.** A tool Coach named that the app doesn't hold, a key placed the way the API doesn't take it, and a tool named before the search was complete now end the step "not made", never the red "Coach couldn't connect the app yet" over a card that is waiting for the person.
