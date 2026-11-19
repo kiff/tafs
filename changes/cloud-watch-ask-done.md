@@ -1,0 +1,1 @@
+- **tafs cloud: a watch question Coach answers itself ends as Done, not "No taf took it"**, and a watch request's words name who has it, in all eight languages: "Sent · Coach has it", then "Coach is answering" (or the taf's name once one takes it) ([watch-ask.md](docs/watch-ask.md)).

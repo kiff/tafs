@@ -10858,8 +10858,9 @@ async function watchHandedOver(tenant: string, ask: Ask, taf: Taf, run: Run, dep
 }
 
 /**
- * A watch conversation's Coach run ended or paused. After routing: no taf took it, and Coach's sentence says why
- * (none can, or which could). After a result: Coach's line, checked, ends the request as the taf's run did.
+ * A watch conversation's Coach run ended or paused. After routing with no taf taking it: done, with Coach's own sentence
+ * (its answer, or why none can, or which could), or no taf took it when Coach said nothing. After a result: Coach's line,
+ * checked, ends the request as the taf's run did.
  */
 async function watchCoachEnded(tenant: string, id: string, note: { run: string; agent: string; status: string }, deps: Deps): Promise<boolean> {
   if (!deps.coach) return false;
@@ -10871,7 +10872,9 @@ async function watchCoachEnded(tenant: string, id: string, note: { run: string; 
   if (ask.turn === "result") {
     Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line } : {}) });
   } else if (!ask.taf) {
-    Object.assign(ask, r.status === "COMPLETED" ? { state: "no_taf", ...(line ? { line } : {}) } : { state: "failed" });
+    // Coach answered itself (W5, the owner's Watch 5 test: every ask Coach answered read "No taf took it"): done, with its
+    // line. No taf took it only when Coach's turn ends with nothing to show.
+    Object.assign(ask, r.status !== "COMPLETED" ? { state: "failed" } : line ? { state: "done", line } : { state: "no_taf" });
   } else {
     return true; // routed: the taf's run tells how it went
   }

@@ -889,5 +889,5 @@ export const nl: Words = {
   ai_consent_paused_not_given: "Gepauzeerd: AI-gebruik voor de runs van dit taf is ingetrokken. Het gaat verder zodra het weer is toegestaan of iemand die tafs beheert het overneemt.",
   ai_consent_paused_left: "Gepauzeerd: de persoon wiens AI-toestemming de runs gebruikten, hoort niet meer bij het account. Het gaat verder zodra iemand die tafs beheert het overneemt.",
   // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
-  watch_ask: { accepted: "Verstuurd", working: "Bezig", done: "Klaar", no_taf: "Geen taf heeft het opgepakt", failed: "Dat is niet gelukt" },
+  watch_ask: { accepted: "Verstuurd · {name} heeft het", working: "{name} antwoordt", done: "Klaar", no_taf: "Geen taf heeft het opgepakt", failed: "Dat is niet gelukt" },
 };

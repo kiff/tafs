@@ -48,7 +48,8 @@ message carries.
   run is under its own Cards. Nothing on this path creates a grant, approves a Card, widens one or signs anything. A
   call the taf's Cards hold waits for the owner on the phone, and the watch's line says so.
 - **Only the tafs the person may use.** `tafs_state` in a watch conversation lists only those KIFF says they may use.
-- **No guessing.** A request no taf can do, or more than one could, ends as `no_taf`, with Coach's sentence.
+- **No guessing.** A request no taf can do, or more than one could, is never handed to a taf: it ends `done`, with Coach's
+  sentence saying so (`no_taf` only when Coach said nothing).
 - **Once.** A request is claimed once per person and `client_id`: a retry gets the same request back and starts nothing.
 - **A reply waits for its request's end.** `reply_to` goes on in that request's conversation only once it's `done`, `no_taf` or
   `failed`, with no turn of Coach's pending; before that it's 409 `reply_too_soon`, so a hand-over made for the earlier
@@ -70,14 +71,17 @@ requests:
 
 | State | Means | `words` (en) |
 | --- | --- | --- |
-| `accepted` | tafs cloud has it; Coach is choosing the taf | Sent |
-| `working` | the one taf has it; `taf` names it. A call held for the owner keeps it here, with a line | Working |
-| `done` | the taf finished; `line` says what it did | Done |
-| `no_taf` | no taf took it; `line` is Coach's sentence: none can, or which could | No taf took it |
+| `accepted` | tafs cloud has it, and Coach's turn has started | Sent · {name} has it |
+| `working` | the one taf has it; `taf` names it. A call held for the owner keeps it here, with a line | {name} is answering |
+| `done` | the taf finished, `line` saying what it did; or Coach answered it itself, `line` being Coach's sentence (its answer, why none can, or which could) | Done |
+| `no_taf` | no taf took it, and Coach's turn ended with nothing to show (no `line`) | No taf took it |
 | `failed` | the taf's run failed or was stopped, or Coach couldn't route it | That didn't work |
 
-`words` is in the request's language, in all eight (`runtime/src/cloud/words`). The watch shows `line` when there is one,
-else `words`.
+`words` is in the request's language, in all eight (`runtime/src/cloud/words`). `{name}` is who holds the request: its taf
+once `taf` names one, else Coach (one word in every language). The watch shows `line` when there is one, else `words`.
+
+Until 19 Nov, a request Coach answered itself ended as `no_taf` with Coach's sentence, so the watch read "No taf took it"
+over a full answer (W5, the owner's Galaxy Watch 5 test). Requests kept from before keep their state.
 
 **The line** is at most 140 characters of plain text on one line: markdown marks, links' targets and control characters
 go, and a longer line is cut at a word with an ellipsis (`checkedLine`). With no line from Coach, the state's words stand

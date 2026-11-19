@@ -3,7 +3,7 @@ import { type CoachCall, newRef } from "../src/cloud/coach.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { watchAskOn } from "../src/cloud/watch-ask.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
-import { type Ask, checkedLine, LINE_MAX, watchKeys } from "../src/cloud/watch-ask.js";
+import { type Ask, checkedLine, LINE_MAX, shownAsk, watchKeys } from "../src/cloud/watch-ask.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 /**
@@ -119,7 +119,7 @@ describe("a request from the watch", () => {
     const w = world();
     const r = await w.call("POST", "/v1/watch/asks", ASK);
     expect(r.status).toBe(200);
-    expect(r.body.ask).toMatchObject({ client_id: ASK.client_id, state: "accepted", words: "Sent" });
+    expect(r.body.ask).toMatchObject({ client_id: ASK.client_id, state: "accepted", words: "Sent · Coach has it" });
     expect(JSON.stringify(r.body)).not.toMatch(/session|coach_run|person/);
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([
       `startRun ${COACH} new skills=ask-a-taf@1 only={"skills":true,"tools":["tafs_state","taf_task","read_skill"]}`,
@@ -235,13 +235,24 @@ describe("the watch's conversation", () => {
     await expect(w.tool("taf_task", { taf: CAL, text: ASK.text }, session, BO)).rejects.toThrow(/isn't this person's/);
   });
 
-  it("ends as no taf took it when Coach hands over nothing, with Coach's own sentence, checked", async () => {
+  it("ends as done with Coach's own sentence, checked, when Coach answers without handing it to a taf", async () => {
     const { w, id, coachRun } = await asked();
     const run = w.agents.runs.find((r) => r.id === coachRun)!;
     Object.assign(run, { status: "COMPLETED", output: "**Calendar** and **Inbox** could both do that: say which one." });
     const ref = [...w.agents.notified.entries()].find(([r]) => r === coachRun)![1].ref;
     await w.ended(ref, coachRun, COACH, "COMPLETED");
-    expect(await w.askOf(id)).toMatchObject({ state: "no_taf", line: "Calendar and Inbox could both do that: say which one." });
+    expect(await w.askOf(id)).toMatchObject({ state: "done", line: "Calendar and Inbox could both do that: say which one." });
+  });
+
+  it("ends as no taf took it only when Coach's turn ends with nothing to show", async () => {
+    const { w, id, coachRun } = await asked();
+    const run = w.agents.runs.find((r) => r.id === coachRun)!;
+    Object.assign(run, { status: "COMPLETED", output: "" });
+    const ref = [...w.agents.notified.entries()].find(([r]) => r === coachRun)![1].ref;
+    await w.ended(ref, coachRun, COACH, "COMPLETED");
+    const ask = await w.askOf(id);
+    expect(ask).toMatchObject({ state: "no_taf" });
+    expect(ask).not.toHaveProperty("line");
   });
 
   it("turns the taf's result into Coach's one line, and never into the phone's Coach chat or its alerts", async () => {
@@ -274,5 +285,16 @@ describe("the line the watch shows and says", () => {
     expect(checkedLine("   ")).toBeUndefined();
     expect(checkedLine(undefined)).toBeUndefined();
     expect(checkedLine("a‮bc\u0007d")).toBe("a bc d");
+  });
+});
+
+describe("a watch request's words (W2, legal-i18n's 8 languages)", () => {
+  const base = { id: "wa_1", client_id: "w_1", person: "ana", at: "2026-11-19T10:00:00Z", updated: "2026-11-19T10:00:00Z" } as const;
+  it("name who holds it: Coach until a taf has it, then the taf, in the person's language", () => {
+    expect(shownAsk({ ...base, state: "accepted" } as Ask, "en").words).toBe("Sent · Coach has it");
+    expect(shownAsk({ ...base, state: "working" } as Ask, "es").words).toBe("Coach está respondiendo");
+    expect(shownAsk({ ...base, state: "working", taf: { id: "taf_1", name: "Calendar" } } as Ask, "en").words).toBe("Calendar is answering");
+    expect(shownAsk({ ...base, state: "accepted" } as Ask, "pl").words).toBe("Wysłano · dotarło do: Coach");
+    expect(shownAsk({ ...base, state: "done" } as Ask, "fr").words).toBe("Terminé");
   });
 });

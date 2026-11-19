@@ -961,7 +961,7 @@ export const en = {
   ai_consent_paused_not_given: "Paused: AI use for this taf's runs was withdrawn. It goes on once it's allowed again, or someone who manages tafs takes it over.",
   ai_consent_paused_left: "Paused: the person whose AI consent its runs used is no longer on the account. It goes on once someone who manages tafs takes it over.",
   // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
-  watch_ask: { accepted: "Sent", working: "Working", done: "Done", no_taf: "No taf took it", failed: "That didn't work" },
+  watch_ask: { accepted: "Sent · {name} has it", working: "{name} is answering", done: "Done", no_taf: "No taf took it", failed: "That didn't work" },
 };
 
 /** How a connection is made, as planque's grant says: Composio's managed sign-in, tafs's own app at the vendor, or a key. */
