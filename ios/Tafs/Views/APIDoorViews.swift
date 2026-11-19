@@ -117,7 +117,7 @@ private struct IssuedKeyBox: Identifiable {
     var id: String { key.id }
 }
 
-/// New key: an optional name (the door's own name when left blank), then Face ID or Touch ID.
+/// New key: its name (the door's own name when left blank), then Face ID or Touch ID.
 struct NewKeySheet: View {
     let door: TafsCloud.Door
     @ObservedObject var doors: DoorsModel
@@ -128,7 +128,8 @@ struct NewKeySheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(Words.Door.Api.newKey).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
             Text(Words.Door.Api.twoKeys).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            DriveField(Words.Door.nameOptional, text: $name).textFieldStyle(.roundedBorder).disableAutocorrection(true)
+            Text(Words.Door.Api.keyName).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
+            DriveField(Words.Door.Api.keyNameHint, text: $name).textFieldStyle(.roundedBorder).disableAutocorrection(true)
             Button(Words.Door.Api.newKey) {
                 Task {
                     let made = await doors.newKey(door, name: APIDoorText.keyName(name, door: door),
