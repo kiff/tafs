@@ -137,7 +137,7 @@ struct CalendarDayScreen: View {
             List {
                 Text(day.words)
                     .font(.footnote)
-                    .foregroundStyle(day.halted ? Color.red : Color.primary)
+                    .foregroundStyle(day.halted ? WatchLook.danger : Color.primary)
                 ForEach(Array(day.events.enumerated()), id: \.offset) { _, event in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(event.time).font(.headline)
