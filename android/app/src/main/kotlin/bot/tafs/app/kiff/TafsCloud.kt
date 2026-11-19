@@ -771,6 +771,15 @@ class TafsCloud(
   suspend fun watchAsks(since: String?): List<WatchAsk> =
     KiffClient.json.decodeFromString(WatchAskList.serializer(), String(send("GET", "/v1/watch/asks" + (since?.let { "?since=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: "")))).asks
 
+  /**
+   * From your watch (docs/android-app.md): the days the person asked from their watch, newest first, under the same switch and
+   * session as the asks. Null when tafs cloud's switch is off (404 `watch_off`).
+   */
+  suspend fun watchDays(): WireWatchDays? = orNone { get<WireWatchDays>("/v1/watch/days") }
+
+  /** One of those days, `yyyy-mm-dd`: its turns, oldest first. Null when tafs cloud's switch is off (404). */
+  suspend fun watchDay(date: String): WireWatchTurns? = orNone { get<WireWatchTurns>("/v1/watch/days/${escaped(date)}") }
+
   /** The path that drops a taf being set up (docs/api.md). */
   fun discardPath(agent: String) = "/v1/home/setting-up/${escaped(agent)}/discard"
 
