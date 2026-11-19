@@ -1,0 +1,1 @@
+• Files: a taf's files now open from the top of its page, first on the line with its version, with how many it has.
