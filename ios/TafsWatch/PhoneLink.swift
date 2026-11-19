@@ -34,12 +34,48 @@ extension PhoneLink: PhoneAsking {
         }
         guard session.activationState == .activated, session.isReachable else { return nil }
         let data = WatchMessage.encode(request)
-        return await withCheckedContinuation { (done: CheckedContinuation<WatchReply?, Never>) in
+        // WatchConnectivity can neither reply nor fail (seen on the simulator, possible on a watch): the watch would wait on
+        // its send screen with no words. Past the limit it's "Your phone isn't in reach", and a Send tried again goes under
+        // the same id, which tafs cloud takes once.
+        return await PhoneWait.first { (answer: @escaping @Sendable (WatchReply?) -> Void) in
             session.sendMessageData(data, replyHandler: { @Sendable reply in
-                done.resume(returning: WatchMessage.decode(WatchReply.self, from: reply))
+                answer(WatchMessage.decode(WatchReply.self, from: reply))
             }, errorHandler: { @Sendable _ in
-                done.resume(returning: nil)
+                answer(nil)
             })
+        }
+    }
+}
+
+/// The first of the phone's reply, its error and a time limit: one answer, at most `limit` seconds after asking.
+enum PhoneWait {
+    /// Longer than the phone's own reads take (tafs cloud answers an ask in seconds), short enough that the person isn't left
+    /// waiting on a screen with no words.
+    static let limit: TimeInterval = 20
+
+    @MainActor
+    static func first<T: Sendable>(within limit: TimeInterval = PhoneWait.limit,
+                                   _ start: (@escaping @Sendable (T?) -> Void) -> Void) async -> T? {
+        await withCheckedContinuation { (done: CheckedContinuation<T?, Never>) in
+            let once = Once(done)
+            start { once.resume($0) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + limit) { once.resume(nil) }
+        }
+    }
+
+    /// Resumes its continuation once, whichever of the reply, the error and the limit comes first.
+    private final class Once<T: Sendable>: @unchecked Sendable {
+        private let lock = NSLock()
+        private var done: CheckedContinuation<T?, Never>?
+
+        init(_ done: CheckedContinuation<T?, Never>) { self.done = done }
+
+        func resume(_ value: T?) {
+            lock.lock()
+            let waiting = done
+            done = nil
+            lock.unlock()
+            waiting?.resume(returning: value)
         }
     }
 }
