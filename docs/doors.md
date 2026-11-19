@@ -207,6 +207,14 @@ the door's own when left blank; at most two); the key shown once (Copy key, wher
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
+**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, behind `APIDoorFeature`, off). Coach's `taf_door_api`
+shows a `door` card (`{taf_id, draft_id}`, no words of Coach's); the app reads the draft from tafs cloud
+(`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`) and draws it **from `body`, the bytes it signs and
+sends**, never from the copy beside it: the application's name, what it can do (`draft_scope`), what the taf does with its
+requests, the fields it sends, what it gets back, the risk of the taf's own words when they're on, and the boundary. Approve
+signs `POST /v1/tafs/{id}/doors` over `body` in its canonical form (Face ID or Touch ID, `faceid_body`), sends those same bytes,
+and shows the door's first key once, as New key does. A cancelled Face ID sends nothing.
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:

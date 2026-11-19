@@ -187,6 +187,65 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(APIDoorText.maxKeys, 2)
     }
 
+    /// Coach's drafted door (`contracts/doors-api-draft.json`): what's drawn is read from `body`, the bytes signed and sent;
+    /// approving signs `POST …/doors` over exactly those bytes, sends them, and shows the first key once.
+    func testCoachsDraftedDoorIsApprovedSignedOverExactlyItsBody() async throws {
+        let answer = #"""
+        {"draft_id":"draft-0123456789abcdef",
+         "draft":{"name":"Something else","fields":[],"job":"x","outcomes":[],"text":true},
+         "made_at":"2026-10-24T09:00:00.000Z","expires_at":"2026-10-31T09:00:00.000Z",
+         "body":{"kind":"api","draft":{"name":"Order system",
+           "fields":[{"name":"order","type":"string","max":40},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]},7],
+           "job":"Check the return and refund it if the Card allows","outcomes":["refunded","refused","needs_review"],"text":false}}}
+        """#
+        let draft = try XCTUnwrap(TafsCloud.DoorDraft.read(Data(answer.utf8)))
+        XCTAssertEqual(draft.id, "draft-0123456789abcdef")
+        XCTAssertEqual(draft.draft.name, "Order system", "drawn from the body that's signed, never the copy beside it")
+        XCTAssertFalse(draft.draft.text)
+        XCTAssertEqual(draft.draft.fields.map(\.name), ["order", "reason"], "an unreadable field is left out")
+        XCTAssertEqual(APIDoorText.field(draft.draft.fields[1]), "reason · damaged | late | wrong_item")
+        XCTAssertEqual(APIDoorText.field(draft.draft.fields[0]), "order · string")
+        XCTAssertEqual(draft.draft.outcomes, ["refunded", "refused", "needs_review"])
+        let canonicalBody = try JCS.canonical(try XCTUnwrap(try JCS.parse(Data(answer.utf8))["body"]))
+        XCTAssertEqual(draft.body, canonicalBody)
+        XCTAssertNil(try TafsCloud.DoorDraft.read(Data(#"{"draft_id":"d","body":{"kind":"email","draft":{"name":"x","job":"y"}}}"#.utf8)),
+                     "only an api door's draft")
+        XCTAssertNil(try TafsCloud.DoorDraft.read(Data(#"{"draft_id":"d","body":{"kind":"api","draft":{"name":" ","job":"y"}}}"#.utf8)))
+
+        let cloud = stubbedCloud()
+        StubProtocol.responses["POST /v1/tafs/taf_r/doors"] = (200, #"{"door":{"id":"api-1","app":"api","kind":"api","label":"Order system","open":true,"address":"/v1/doors/api/api-1/requests","proof":"proven","how":"x","keys":[],"today":0,"limit":100,"resting":false},"key":{"id":"key_1","name":"Order system","key":"tafs_api_abc","last4":"_abc","made_at":"2026-11-19T22:00:00Z"}}"#)
+        var signed: (String, String, Data)?
+        let added = try await cloud.approveDoorDraft("taf_r", draft: draft) { method, path, body in
+            signed = (method, path, body)
+            return "t=1,v1=sig"
+        }
+        XCTAssertEqual(signed?.0, "POST")
+        XCTAssertEqual(signed?.1, "/v1/tafs/taf_r/doors")
+        XCTAssertEqual(signed?.2, draft.body)
+        let sent = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "POST" })
+        XCTAssertEqual(sent.httpBody, draft.body, "the same bytes as were signed")
+        XCTAssertEqual(sent.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=1,v1=sig")
+        XCTAssertEqual(added.key.key, "tafs_api_abc")
+        XCTAssertEqual(added.door.id, "api-1")
+        XCTAssertEqual(APIDoorText.endpoint(added.door, base: URL(string: "https://cloud.test")!), "https://cloud.test/v1/doors/api/api-1/requests")
+
+        // A cancelled Face ID sends nothing.
+        StubProtocol.sent = []
+        do {
+            _ = try await cloud.approveDoorDraft("taf_r", draft: draft) { _, _, _ in throw CancellationError() }
+            XCTFail("a cancelled signature approves nothing")
+        } catch {}
+        XCTAssertTrue(StubProtocol.sent.isEmpty)
+    }
+
+    /// Coach's `show {type: "door", taf_id, draft_id}` reads as a door card with its taf and draft, and no words of Coach's.
+    func testADoorCardCarriesItsTafAndDraft() throws {
+        let c = try JSONDecoder().decode(SetupComponent.self, from: Data(#"{"type":"door","id":"c1","taf_id":"taf_r","draft_id":"draft-1"}"#.utf8))
+        XCTAssertEqual(c.type, .door)
+        XCTAssertEqual(c.tafID, "taf_r")
+        XCTAssertEqual(c.draftID, "draft-1")
+    }
+
     /// A refused signature (Face ID cancelled) sends nothing and keeps no key.
     func testACancelledSignatureSendsNothing() async {
         let cloud = stubbedCloud()

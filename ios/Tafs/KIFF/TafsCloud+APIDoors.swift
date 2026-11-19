@@ -69,3 +69,83 @@ extension TafsCloud {
         return try KIFFClient.decoder.decode(Answer.self, from: data).door
     }
 }
+
+// MARK: Coach's drafted door, approved signed
+
+extension TafsCloud {
+    /// The door Coach drafted for a taf (`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`), as the
+    /// owner approves it. What's drawn is read from `body`, the bytes the phone signs and sends, never from a copy beside it,
+    /// so the owner approves exactly what they see.
+    struct DoorDraft: Equatable {
+        /// One field the application sends: its name, and for a choice, its values.
+        struct Field: Decodable, Equatable {
+            let name: String
+            let type: String
+            var values: [String]? = nil
+        }
+
+        /// The application's name, the fields it sends, what the taf does with them, what it gets back, and whether the
+        /// taf may answer in its own words.
+        struct Draft: Equatable {
+            let name: String
+            let fields: [Field]
+            let job: String
+            let outcomes: [String]
+            let text: Bool
+        }
+
+        let id: String
+        let draft: Draft
+        /// `body` in its canonical form (RFC 8785): what's signed, and the same bytes sent to `POST …/doors`.
+        let body: Data
+
+        /// Read from tafs cloud's answer; nil for one with no draft, or a draft with no name or job.
+        static func read(_ data: Data) throws -> DoorDraft? {
+            let answer = try JCS.parse(data)
+            guard let id = answer["draft_id"]?.string, let bodyValue = answer["body"],
+                  case .object = bodyValue, bodyValue["kind"]?.string == "api", let draftValue = bodyValue["draft"] else { return nil }
+            let body = try JCS.canonical(bodyValue)
+            let shown = try JCS.canonical(draftValue)
+            struct Raw: Decodable {
+                let name: String?
+                let fields: [LenientItem<Field>]?
+                let job: String?
+                let outcomes: [String]?
+                let text: Bool?
+            }
+            let raw = try JSONDecoder().decode(Raw.self, from: shown)
+            let name = raw.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let job = raw.job?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !name.isEmpty, !job.isEmpty else { return nil }
+            let draft = Draft(name: name, fields: (raw.fields ?? []).compactMap(\.value), job: job, outcomes: raw.outcomes ?? [],
+                              text: raw.text ?? false)
+            return DoorDraft(id: id, draft: draft, body: body)
+        }
+    }
+
+    /// A taf's doors, as approving a draft posts to them.
+    func doorsPath(_ taf: String) -> String { "/v1/tafs/\(escaped(taf))/doors" }
+    /// One of its drafts, as read.
+    func doorDraftPath(_ taf: String, draft: String) -> String { doorsPath(taf) + "/drafts/\(escaped(draft))" }
+
+    /// Reads a draft Coach made; nil when tafs cloud's answer holds none the app can draw.
+    func doorDraft(_ taf: String, draft: String) async throws -> DoorDraft? {
+        try DoorDraft.read(try await sendData("GET", doorDraftPath(taf, draft: draft), body: Optional<[String: String]>.none))
+    }
+
+    /// The door the approval opened, and its first key, shown in this one answer only.
+    struct AddedAPIDoor: Decodable {
+        let door: Door
+        let key: IssuedKey
+    }
+
+    /// Approves Coach's draft: `sign` makes the `KIFF-Device-Signature` over `POST`, the doors' path and the draft's exact
+    /// `body` bytes (Face ID or Touch ID), and those same bytes are sent. A cancelled signature sends nothing.
+    func approveDoorDraft(_ taf: String, draft: DoorDraft,
+                          sign: (_ method: String, _ path: String, _ body: Data) async throws -> String) async throws -> AddedAPIDoor {
+        let path = doorsPath(taf)
+        let signature = try await sign("POST", path, draft.body)
+        let data = try await sendData("POST", path, body: KIFFClient.RawJSON(data: draft.body), headers: ["KIFF-Device-Signature": signature])
+        return try KIFFClient.decoder.decode(AddedAPIDoor.self, from: data)
+    }
+}
