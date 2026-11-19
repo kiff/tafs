@@ -1,1 +1,0 @@
-- **Wear OS v2: back, and screenshots for review.** The watch's back gesture closes what's open over the pages (the menu, a taf's page, choosing which to halt, a held call, the calendar, the microphone's screens, erasing a review's recording) instead of the app; and v2's screens are drawn at both Galaxy Watch 5 sizes, behind the v2 switch ([watch-wear.md](docs/watch-wear.md)).
