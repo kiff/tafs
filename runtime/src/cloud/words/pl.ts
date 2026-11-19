@@ -298,7 +298,7 @@ export const pl: Words = {
   brief_approve: "Zatwierdź",
   brief_refuse: "Odrzuć",
   brief_more: (n) => `Jeszcze ${n}`,
-  brief_rest_line: (n) => (n === 0 ? "Nic więcej." : n === 1 ? "Jeszcze 1 taf niczego od Ciebie nie potrzebuje." : `Jeszcze ${n} tafs niczego od Ciebie nie potrzebuje.`),
+  brief_rest_line: (n) => (n === 0 ? "Nic więcej." : n === 1 ? "Jeszcze 1 taf niczego od Ciebie nie potrzebuje." : `Jeszcze ${n} tafs: żaden niczego od Ciebie nie potrzebuje.`),
   brief_hold_question: (taf) => `${taf} czeka na Twoje zatwierdzenie`,
   brief_hold_meanwhile: "Nic się nie dzieje, dopóki nie odpowiesz.",
   brief_step_meanwhile: "Jego uruchomienie czeka na ten krok.",
