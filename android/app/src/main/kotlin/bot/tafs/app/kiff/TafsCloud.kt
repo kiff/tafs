@@ -847,6 +847,44 @@ class TafsCloud(
 
   private fun door(r: DoorResponse): Door = r.door
 
+  // MARK: A door "From another application" (`api`, docs/doors.md, kiff/work#16 §2.5): its keys change only signed
+
+  fun doorPath(id: String, door: String) = "/v1/tafs/${escaped(id)}/doors/${escaped(door)}"
+  fun doorKeysPath(id: String, door: String) = doorPath(id, door) + "/keys"
+  fun doorKeyPath(id: String, door: String, key: String) = doorKeysPath(id, door) + "/" + escaped(key)
+
+  /**
+   * The person's confirmation of a change to an `api` door: `kiff.request.v1` over [method], [path] and the exact [body] sent, as
+   * `KIFF-Device-Signature` carries it, as a taf's removal is signed. [sign] asks for the fingerprint and builds the message only
+   * then, so the signed time is when the person confirmed.
+   */
+  suspend fun doorSignature(tenant: String, method: String, path: String, body: ByteArray, sign: suspend (() -> ByteArray) -> String): String {
+    var signedAt = ""
+    val signature = sign {
+      signedAt = signingTime.next()
+      KiffClient.requestMessage(tenant, method, path, body, signedAt)
+    }
+    return "t=$signedAt,v1=$signature"
+  }
+
+  /** New key: `{id, key, last4, made_at}`, the key in this one answer. A replay of the same signed request is 409, never a second key. */
+  suspend fun newApiKey(path: String, body: ByteArray, signature: String): IssuedKey =
+    KiffClient.json.decodeFromString(IssuedKey.serializer(), String(send("POST", path, body, mapOf("KIFF-Device-Signature" to signature))))
+
+  /** Revoke: requests it sent that haven't started are cancelled; one running finishes. */
+  suspend fun revokeApiKey(path: String, signature: String) {
+    send("DELETE", path, extra = mapOf("KIFF-Device-Signature" to signature))
+  }
+
+  /** Opening a paused `api` door again re-admits its caller, so it's signed, as a new key is. */
+  suspend fun reopenApiDoor(path: String, signature: String): Door =
+    door(KiffClient.json.decodeFromString<DoorResponse>(String(send("PATCH", path, REOPEN_BODY, mapOf("KIFF-Device-Signature" to signature)))))
+
+  /** Removing an `api` door: all its keys at once, as Revoke. */
+  suspend fun removeApiDoor(path: String, signature: String) {
+    send("DELETE", path, extra = mapOf("KIFF-Device-Signature" to signature))
+  }
+
   // MARK: Versions
 
   /** The taf's versions, oldest first, the live one marked, and a switch under way, which tafs cloud settles first. */
@@ -1168,3 +1206,11 @@ private data class WatchAskTaken(val ask: WatchAsk)
 
 @kotlinx.serialization.Serializable
 private data class WatchAskList(val asks: List<WatchAsk>)
+
+/** New key's body, exactly as signed and sent. */
+fun newApiKeyBody(name: String): ByteArray =
+  KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(),
+    kotlinx.serialization.json.buildJsonObject { put("name", kotlinx.serialization.json.JsonPrimitive(name)) }).toByteArray()
+
+/** Opening an `api` door again: the body, exactly as signed and sent. */
+val REOPEN_BODY: ByteArray = """{"open":true}""".toByteArray()

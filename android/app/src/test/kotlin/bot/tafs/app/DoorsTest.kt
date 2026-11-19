@@ -260,6 +260,63 @@ class DoorsTest {
     assertTrue(m.state.value.doors["refunds-1"]!!.error!!.contains("WhatsApp"))
   }
 
+  // MARK: A door "From another application" (`api`): its keys change only signed
+
+  private val apiDoorJson =
+    """{"id":"door_ord7","app":"api","kind":"api","label":"Order system","open":false,"address":"/v1/doors/api/door_ord7/requests",
+        "proof":"proven","how":"Your application's key","today":37,"limit":100,"resting":false,
+        "counts":{"today":37,"waiting":2},"last_request":{"status":"done","at":"2026-11-19T09:42:15Z","words":"Done"},
+        "keys":[{"id":"key_1","name":"ERP production","last4":"iXrW","made_at":"2026-11-19T08:00:00Z"}]}"""
+
+  private fun signedHeader(key: String) = sent(key).single().headers["KIFF-Device-Signature"]
+
+  @Test fun anApiDoorsNewKeyIsSignedOverItsBodyAndShownOnce() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody(doors = apiDoorJson, knocks = ""))
+    transport.answer("POST $base/door_ord7/keys", 201, """{"id":"key_2","key":"tafs_api_secret","last4":"ab12","made_at":"2026-11-19T21:00:00Z"}""")
+    val m = model()
+    m.loadDoors("refunds-1")
+    val door = m.state.value.doors["refunds-1"]!!.doors.single()
+    assertEquals("Done", door.lastRequest?.words)
+    val key = m.newApiKey("refunds-1", door, "  ERP staging ", "Make a new key for Order system")
+    assertEquals("tafs_api_secret", key?.key)
+    assertEquals("""{"name":"ERP staging"}""", String(sent("POST $base/door_ord7/keys").single().body!!))
+    val header = signedHeader("POST $base/door_ord7/keys")!!
+    assertTrue(header, header.startsWith("t=") && header.contains(",v1="))
+    assertEquals("ab12", m.state.value.doors["refunds-1"]!!.issued?.last4)
+    m.apiKeyShown("refunds-1")
+    assertNull("nothing of the key is kept once its screen closes", m.state.value.doors["refunds-1"]!!.issued)
+  }
+
+  @Test fun anApiDoorsRevokeReopenAndRemoveAreSignedAndNeverGoUnsigned() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody(doors = apiDoorJson, knocks = ""))
+    transport.answer("DELETE $base/door_ord7/keys/key_1", 200, "{}")
+    transport.answer("PATCH $base/door_ord7", 200, """{"door":${apiDoorJson.replace("\"open\":false", "\"open\":true")}}""")
+    transport.answer("DELETE $base/door_ord7", 200, """{"removed":"door_ord7"}""")
+    val m = model()
+    m.loadDoors("refunds-1")
+    val door = m.state.value.doors["refunds-1"]!!.doors.single()
+    // Opening it again unsigned, or removing it unsigned, sends nothing.
+    m.setDoorOpen("refunds-1", door, true)
+    m.removeDoor("refunds-1", door)
+    assertTrue(sent("PATCH $base/door_ord7").isEmpty())
+    assertTrue(sent("DELETE $base/door_ord7").isEmpty())
+
+    m.revokeApiKey("refunds-1", door, door.keys.single(), "Revoke ERP production")
+    assertTrue(signedHeader("DELETE $base/door_ord7/keys/key_1")!!.contains(",v1="))
+    assertTrue(m.state.value.doors["refunds-1"]!!.doors.single().keys.isEmpty())
+
+    m.reopenApiDoor("refunds-1", door, "Open Order system's door again")
+    assertEquals("""{"open":true}""", String(sent("PATCH $base/door_ord7").single().body!!))
+    assertTrue(signedHeader("PATCH $base/door_ord7")!!.contains(",v1="))
+    assertTrue(m.state.value.doors["refunds-1"]!!.doors.single().open)
+
+    m.removeApiDoor("refunds-1", door, "Remove the Order system door?")
+    assertTrue(signedHeader("DELETE $base/door_ord7")!!.contains(",v1="))
+    assertTrue(m.state.value.doors["refunds-1"]!!.doors.isEmpty())
+  }
+
   @Test fun aDoorIsRemovedAndLeavesTheList() = runTest {
     reads()
     transport.answer(doors, 200, doorsBody())

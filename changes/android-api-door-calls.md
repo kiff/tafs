@@ -1,0 +1,1 @@
+- **Android, behind a switch (off): an API door's keys are made, revoked and its door reopened or removed only with the fingerprint**, signed over the exact request, as on iPhone; a new key is shown once and forgotten ([doors.md](docs/doors.md)).
