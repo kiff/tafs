@@ -1,0 +1,1 @@
+- **Coach's rules notice is its own text:** draft-the-card@38 says every rule is a line of the notice's text, in the owner's language, and never lines or lang, which a rules notice doesn't take. A notice sent with lines was refused and never shown, so its Agree couldn't be made.
