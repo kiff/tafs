@@ -49,6 +49,38 @@ struct FilePreviewText: Equatable, Sendable {
     var truncated: Bool
 }
 
+/// A file's name and its preview as the app draws them (qa-kiff's musts, as Android's `FilesModel`): plain text only, never
+/// a path, and no control or direction character, even if tafs cloud's own cleaning ever let one through.
+enum FileText {
+    /// U+202A–U+202E (embeddings and overrides), U+2066–U+2069 (isolates), and the marks U+200E, U+200F and U+061C.
+    static func isDirection(_ s: Unicode.Scalar) -> Bool {
+        (0x202A...0x202E).contains(s.value) || (0x2066...0x2069).contains(s.value) || [0x200E, 0x200F, 0x061C].contains(s.value)
+    }
+
+    static func isControl(_ s: Unicode.Scalar) -> Bool {
+        s.properties.generalCategory == .control
+    }
+
+    /// The name alone: what follows the last `/` or `\`, with control and direction characters taken out; `fallback` if
+    /// nothing's left, or only "." or "..".
+    static func name(_ raw: String, fallback: String) -> String {
+        let last = raw.split(whereSeparator: { $0 == "/" || $0 == "\\" }).last.map(String.init) ?? ""
+        var kept = String.UnicodeScalarView()
+        kept.append(contentsOf: last.unicodeScalars.filter { !isDirection($0) && !isControl($0) })
+        let clean = String(kept).trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty || clean == "." || clean == ".." ? fallback : clean
+    }
+
+    /// A preview's text: lines and tabs kept, every other control or direction character taken out, Windows' line ends
+    /// made one.
+    static func preview(_ raw: String) -> String {
+        let lines = raw.replacingOccurrences(of: "\r\n", with: "\n").replacingOccurrences(of: "\r", with: "\n")
+        var kept = String.UnicodeScalarView()
+        kept.append(contentsOf: lines.unicodeScalars.filter { $0 == "\n" || $0 == "\t" || (!isDirection($0) && !isControl($0)) })
+        return String(kept)
+    }
+}
+
 /// How the lists are drawn: in tafs cloud's facts, grouped and ordered, nothing else worked out.
 enum FilesGrouping {
     struct Group: Identifiable, Equatable {

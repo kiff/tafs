@@ -71,8 +71,9 @@ extension DeliveredFile {
     init(_ read: TafsCloud.DeliveredFileRead) {
         let ext = (read.name as NSString).pathExtension
         let type = ext.isEmpty ? (read.mediaType.split(separator: "/").last.map(String.init) ?? "") : ext
-        self.init(id: read.id, name: read.name, type: type.uppercased(), bytes: read.size, tafID: read.taf,
-                  tafName: read.tafName ?? "", runID: read.run, runAt: read.created, chat: read.chat, goesAt: read.expires)
+        self.init(id: read.id, name: FileText.name(read.name, fallback: read.id), type: type.uppercased(), bytes: read.size,
+                  tafID: read.taf, tafName: read.tafName ?? "", runID: read.run, runAt: read.created, chat: read.chat,
+                  goesAt: read.expires)
     }
 }
 
@@ -99,7 +100,7 @@ struct CloudFilesStore: FilesStore {
 
     func preview(of id: String) async throws -> FilePreviewText? {
         let read = try await cloud.file(id)
-        return read.preview.map { FilePreviewText(text: $0, truncated: read.previewTruncated ?? false) }
+        return read.preview.map { FilePreviewText(text: FileText.preview($0), truncated: read.previewTruncated ?? false) }
     }
 
     func contents(of id: String) async throws -> Data {

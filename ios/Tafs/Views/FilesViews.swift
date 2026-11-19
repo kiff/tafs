@@ -337,11 +337,9 @@ enum FileCopy {
             .appendingPathComponent(safeName(id, id: "file"), isDirectory: true)
     }
 
-    /// A name that stays one path component whatever tafs cloud sends: its last component, never "." or "..", else
-    /// the file's id.
+    /// A name that stays one path component whatever tafs cloud sends (`FileText.name`), else the file's id.
     static func safeName(_ name: String, id: String) -> String {
-        let last = (name as NSString).lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
-        return last.isEmpty || last == "." || last == ".." || last.contains("/") ? id : last
+        FileText.name(name, fallback: id)
     }
 
     /// Removes a file's copy (its screen closed).

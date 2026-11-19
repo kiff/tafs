@@ -150,12 +150,25 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(files.map(\.id), ["fil_a", "fil_b"], "both pages")
         // Opening a file reads its start, never its bytes.
         let preview = try XCTUnwrap(try await store.preview(of: "fil_a"))
-        XCTAssertEqual(preview, FilePreviewText(text: "name,amount\nAna\u{202E},12.50\n", truncated: true), "drawn as tafs cloud sent it")
+        XCTAssertEqual(preview, FilePreviewText(text: "name,amount\nAna,12.50\n", truncated: true),
+                       "tafs cloud's start as text, a direction override taken out even if one got through")
         XCTAssertTrue(fetched.urls.isEmpty, "no download for the preview")
         let bytes = try await store.contents(of: "fil_a")
         XCTAssertEqual(bytes, Data("a,b".utf8))
         XCTAssertEqual(fetched.urls.map(\.absoluteString), ["https://s3.test/fil_a?signed"])
         try await store.delete("fil_a")
+    }
+
+    /// Names and previews as drawn (qa-kiff's musts, as Android's): no path, no control or direction character, lines and
+    /// tabs kept in a preview, Windows' line ends made one.
+    func testNamesAndPreviewsAreCleaned() {
+        XCTAssertEqual(FileText.name("invoice\u{202E}fdp.exe", fallback: "fil_1"), "invoicefdp.exe")
+        XCTAssertEqual(FileText.name("a\\b\\c.csv", fallback: "fil_1"), "c.csv")
+        XCTAssertEqual(FileText.name("x/\u{0007}\u{2066}", fallback: "fil_1"), "fil_1")
+        XCTAssertEqual(FileText.preview("a\tb\r\nc\u{0000}\u{200F}d\re"), "a\tb\ncd\ne")
+        let read = TafsCloud.DeliveredFileRead(id: "fil_9", taf: "t", run: "r", name: "../\u{202E}week.csv", mediaType: "text/csv",
+                                               size: 1, created: Date(), expires: Date(), tafName: "Rae")
+        XCTAssertEqual(DeliveredFile(read).name, "week.csv")
     }
 
     /// The device's copy is read only when asked for (Download, Share), under the file's own name, and goes with remove.
