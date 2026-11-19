@@ -356,7 +356,7 @@ internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
       Spacer(Modifier.height(4.dp))
       // tafs cloud's checked line; with none, its word for the state.
       // Up to 140 characters: four lines at most on a 40 mm face.
-      T(ask.line ?: ask.words, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(156.dp).clickable(onClick = act.closeResult), lines = 4, lineHeight = 18.sp)
+      T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(156.dp).clickable(onClick = act.closeResult), lines = 4, lineHeight = 18.sp)
       Spacer(Modifier.height(10.dp))
       Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         RoundAction(Words.Watch.hear, { act.hear(ask) }) { speakerGlyph(Look.amber) }

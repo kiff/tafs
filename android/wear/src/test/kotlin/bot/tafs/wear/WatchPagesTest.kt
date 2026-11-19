@@ -301,6 +301,12 @@ class WatchPagesTest {
     assertEquals(listOf("clear read", "dismiss ${heldLine.id}"), did)
   }
 
+  /** An answer that was only an amount is kept blank, since no amount is kept on the watch: its line says the rest is on the phone. */
+  @Test fun anAnswerKeptBlankSaysTheRestIsOnThePhone() {
+    showInbox(listOf(answerLine.copy(line = "")))
+    compose.onNodeWithText(Words.Watch.moreOnPhone).assertExists()
+  }
+
   /** A held call Needs you still holds opens whole (step vi), with Refuse and Approve on your phone there; the line is read. */
   @Test fun aHeldLineOpensTheCallWhole() {
     showInbox(listOf(heldLine))

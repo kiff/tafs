@@ -1,0 +1,1 @@
+- **Wear's Inbox: an answer that was only an amount reads "The rest is on your phone."**, not a blank line, as on the Apple Watch ([watch-wear.md](docs/watch-wear.md)).
