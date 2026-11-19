@@ -49256,7 +49256,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "Der Schlüssel einer Tür kann %1$@ nur Arbeit geben. Er kann nie zahlen oder kaufen."
           }
         },
         "en": {
@@ -49268,37 +49268,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "La clave de una puerta solo puede darle trabajo a %1$@. Nunca puede pagar ni comprar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "La clé d'une porte peut seulement confier du travail à %1$@. Elle ne peut jamais payer ni acheter."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "La chiave di una porta può solo affidare lavoro a %1$@. Non può mai pagare né comprare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "De sleutel van een deur kan %1$@ alleen werk geven. Hij kan nooit betalen of kopen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "Klucz do drzwi może tylko zlecać pracę dla %1$@. Nigdy nie może płacić ani kupować."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A door's key can only hand %1$@ work. It can never pay or buy."
+            "value": "A chave de uma porta só pode entregar trabalho a %1$@. Nunca pode pagar nem comprar."
           }
         }
       }
@@ -49309,7 +49309,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Kopiert. Er wird nicht noch einmal angezeigt."
           }
         },
         "en": {
@@ -49321,37 +49321,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Copiada. No se volverá a mostrar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Copiée. Elle ne sera plus affichée."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Copiata. Non verrà mostrata di nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Gekopieerd. Hij wordt niet nog eens getoond."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Skopiowano. Nie zostanie pokazany ponownie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copied. It won't be shown again."
+            "value": "Copiada. Não voltará a ser mostrada."
           }
         }
       }
@@ -49362,7 +49362,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Schlüssel kopieren"
           }
         },
         "en": {
@@ -49374,37 +49374,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Copiar clave"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Copier la clé"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Copia chiave"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Sleutel kopiëren"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Kopiuj klucz"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy key"
+            "value": "Copiar chave"
           }
         }
       }
@@ -49415,7 +49415,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Zurück kommt eines von: %1$@, und wie viele Aufrufe gemacht wurden."
           }
         },
         "en": {
@@ -49427,37 +49427,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Recibe una de estas respuestas: %1$@, y cuántas llamadas se hicieron."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Elle reçoit l'un de ces résultats : %1$@, et le nombre d'appels effectués."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Riceve uno di questi esiti: %1$@, e quante chiamate sono state fatte."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Ze krijgt een van deze terug: %1$@, en hoeveel aanroepen er zijn gedaan."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Otrzymuje jeden z wyników: %1$@ oraz liczbę wykonanych wywołań."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "It gets back one of: %1$@, and how many calls were made."
+            "value": "Recebe um destes resultados: %1$@, e quantas chamadas foram feitas."
           }
         }
       }
@@ -49468,7 +49468,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Do %1$@ żądań dziennie."
           }
         }
       }
@@ -49479,7 +49479,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Do %1$@ żądań dziennie."
           }
         }
       }
@@ -49490,7 +49490,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Bis zu %1$@ Anfrage pro Tag."
           }
         },
         "en": {
@@ -49502,37 +49502,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Hasta %1$@ solicitud al día."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Jusqu'à %1$@ requête par jour."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Fino a %1$@ richiesta al giorno."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Tot %1$@ verzoek per dag."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Do %1$@ żądania dziennie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ request a day."
+            "value": "Até %1$@ pedido por dia."
           }
         }
       }
@@ -49543,7 +49543,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Bis zu %1$@ Anfragen pro Tag."
           }
         },
         "en": {
@@ -49555,37 +49555,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Hasta %1$@ solicitudes al día."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Jusqu'à %1$@ requêtes par jour."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Fino a %1$@ richieste al giorno."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Tot %1$@ verzoeken per dag."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Do %1$@ żądania dziennie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Up to %1$@ requests a day."
+            "value": "Até %1$@ pedidos por dia."
           }
         }
       }
@@ -49596,7 +49596,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Neue Tür · von einer anderen Anwendung"
           }
         },
         "en": {
@@ -49608,37 +49608,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nueva puerta · desde otra aplicación"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nouvelle porte · depuis une autre application"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nuova porta · da un'altra applicazione"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nieuwe deur · vanuit een andere applicatie"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nowe drzwi · z innej aplikacji"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "New door · from another application"
+            "value": "Nova porta · de outra aplicação"
           }
         }
       }
@@ -49649,7 +49649,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ kann %2$@ nur Arbeit geben. Was %2$@ darf, bestimmt weiter seine Card."
           }
         },
         "en": {
@@ -49661,37 +49661,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ solo puede darle trabajo a %2$@. Lo que %2$@ puede hacer lo sigue decidiendo su Card."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ peut seulement confier du travail à %2$@. Ce que %2$@ peut faire reste décidé par sa Card."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ può solo affidare lavoro a %2$@. Cosa può fare %2$@ lo decide sempre la sua Card."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ kan %2$@ alleen werk geven. Wat %2$@ mag, blijft aan zijn Card."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "Aplikacja %1$@ może tylko zlecać pracę dla %2$@. O tym, co %2$@ może robić, nadal decyduje jego Card."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ can only hand %2$@ work. What %2$@ may do stays its Card's."
+            "value": "%1$@ só pode entregar trabalho a %2$@. O que %2$@ pode fazer continua a ser decidido pela sua Card."
           }
         }
       }
@@ -49702,7 +49702,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Sie sendet"
           }
         },
         "en": {
@@ -49714,37 +49714,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Envía"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Elle envoie"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Invia"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Ze stuurt"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Wysyła"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "It sends"
+            "value": "Envia"
           }
         }
       }
@@ -49755,7 +49755,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Was %1$@ tut: %2$@"
           }
         },
         "en": {
@@ -49767,37 +49767,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Lo que hace %1$@: %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Ce que fait %1$@ : %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Cosa fa %1$@: %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Wat %1$@ doet: %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "Co robi %1$@: %2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "What %1$@ does: %2$@"
+            "value": "O que %1$@ faz: %2$@"
           }
         }
       }
@@ -49808,7 +49808,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ own words too"
+            "value": "Auch %2$@ eigene Worte"
           }
         },
         "en": {
@@ -49820,37 +49820,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "También las palabras de %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "Aussi les propres mots de %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "Anche le parole di %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "Ook de eigen woorden van %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "Także własne słowa %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "the own words of %1$@ too"
+            "value": "Também as próprias palavras de %1$@"
           }
         }
       }
@@ -49861,7 +49861,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Eingeschaltet kann %1$@ in eigenen Worten antworten. Diese könnten zurück an %2$@ tragen, was er gelesen hat, auch Daten anderer Personen."
           }
         },
         "en": {
@@ -49873,37 +49873,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Si lo activas, %1$@ puede responder con sus propias palabras. Podrían llevar a %2$@ lo que leyó, incluidos datos de otras personas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Si c'est activé, %1$@ peut répondre avec ses propres mots. Ils pourraient renvoyer à %2$@ ce qu'il a lu, y compris des données d'autres personnes."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Se lo attivi, %1$@ può rispondere con parole sue. Potrebbero riportare a %2$@ ciò che ha letto, compresi dati di altre persone."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Als dit aan staat, kan %1$@ in eigen woorden antwoorden. Die kunnen wat hij las, ook gegevens van andere mensen, terugbrengen naar %2$@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Po włączeniu %1$@ może odpowiadać własnymi słowami. Mogą one przekazać do aplikacji %2$@ to, co przeczytał, w tym dane innych osób."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Turned on, %1$@ may answer in its own words. They could carry what it read, other people's data included, back to %2$@."
+            "value": "Se ativar, %1$@ pode responder com as suas próprias palavras. Estas podem levar para %2$@ o que leu, incluindo dados de outras pessoas."
           }
         }
       }
@@ -49914,7 +49914,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Coach bitten, das an jemanden aus der Entwicklung zu mailen"
           }
         },
         "en": {
@@ -49926,37 +49926,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Pedir a Coach que envíe esto por correo a un desarrollador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Demander à Coach d'envoyer ceci par e-mail à un développeur"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Chiedi a Coach di inviarle per email a uno sviluppatore"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Vraag Coach dit naar een ontwikkelaar te mailen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Poproś Coacha, by wysłał to e-mailem do programisty"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask Coach to email these to a developer"
+            "value": "Pedir ao Coach que envie isto por email a um programador"
           }
         }
       }
@@ -49967,7 +49967,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Beispiel"
           }
         },
         "en": {
@@ -49979,37 +49979,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Ejemplo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Exemple"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Esempio"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Voorbeeld"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Przykład"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Example"
+            "value": "Exemplo"
           }
         }
       }
@@ -50020,7 +50020,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ kann %2$@ dann Arbeit geben. Bestätige, dass du es bist."
           }
         },
         "en": {
@@ -50032,37 +50032,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ podrá darle trabajo a %2$@. Confirma que eres tú."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ pourra confier du travail à %2$@. Confirmez que c'est bien vous."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ potrà affidare lavoro a %2$@. Conferma che sei tu."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ kan %2$@ dan werk geven. Bevestig dat jij het bent."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "Aplikacja %1$@ będzie mogła zlecać pracę dla %2$@. Potwierdź, że to Ty."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ will be able to hand %2$@ work. Confirm it's you."
+            "value": "%1$@ vai poder entregar trabalho a %2$@. Confirme que é você."
           }
         }
       }
@@ -50073,7 +50073,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Eine neue Tür zu %1$@ öffnen"
           }
         },
         "en": {
@@ -50085,37 +50085,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Abrir una nueva puerta a %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Ouvrir une nouvelle porte vers %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Apri una nuova porta verso %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Een nieuwe deur naar %1$@ openen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Otwórz nowe drzwi do %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open a new door to %1$@"
+            "value": "Abrir uma nova porta para %1$@"
           }
         }
       }
@@ -50126,7 +50126,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Felder"
           }
         },
         "en": {
@@ -50138,37 +50138,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Campos"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Champs"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Campi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Velden"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Pola"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fields"
+            "value": "Campos"
           }
         }
       }
@@ -50179,7 +50179,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "API-Anleitung"
           }
         },
         "en": {
@@ -50191,37 +50191,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "Instrucciones de la API"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "Instructions de l'API"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "Istruzioni API"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "API-instructies"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "Instrukcje API"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "API instructions"
+            "value": "Instruções da API"
           }
         }
       }
@@ -50232,7 +50232,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Erstellt %1$@ · zuletzt genutzt %2$@ · endet auf …%3$@"
           }
         },
         "en": {
@@ -50244,37 +50244,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Creada %1$@ · último uso %2$@ · termina en …%3$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Créée %1$@ · dernière utilisation %2$@ · se termine par …%3$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Creata %1$@ · ultimo uso %2$@ · termina con …%3$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Gemaakt %1$@ · laatst gebruikt %2$@ · eindigt op …%3$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Utworzony %1$@ · ostatnio użyty %2$@ · kończy się na …%3$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · last used %2$@ · ends …%3$@"
+            "value": "Criada %1$@ · último uso %2$@ · termina em …%3$@"
           }
         }
       }
@@ -50285,7 +50285,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Erstellt %1$@ · noch nicht genutzt · endet auf …%2$@"
           }
         },
         "en": {
@@ -50297,37 +50297,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Creada %1$@ · sin usar aún · termina en …%2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Créée %1$@ · pas encore utilisée · se termine par …%2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Creata %1$@ · non ancora usata · termina con …%2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Gemaakt %1$@ · nog niet gebruikt · eindigt op …%2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Utworzony %1$@ · jeszcze nieużyty · kończy się na …%2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Made %1$@ · not used yet · ends …%2$@"
+            "value": "Criada %1$@ · ainda não usada · termina em …%2$@"
           }
         }
       }
@@ -50338,7 +50338,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "Der Schlüssel ist hier nicht zu sehen. Nimm den, den du beim Erstellen kopiert hast, oder erstelle einen neuen Schlüssel."
           }
         },
         "en": {
@@ -50350,37 +50350,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "La clave no está aquí. Usa la que copiaste al crearla o crea una clave nueva."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "La clé n'est pas ici. Utilisez celle que vous avez copiée en la créant, ou créez-en une nouvelle."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "La chiave non è qui. Usa quella che hai copiato quando l'hai creata, o crea una nuova chiave."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "De sleutel staat hier niet. Gebruik die je kopieerde toen je hem maakte, of maak een nieuwe sleutel."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "Klucza tu nie ma. Użyj tego, który skopiowano przy jego tworzeniu, albo utwórz nowy klucz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "The key isn't here. Use the one you copied when you made it, or make a new key."
+            "value": "A chave não está aqui. Use a que copiou quando a criou, ou crie uma nova chave."
           }
         }
       }
@@ -50391,7 +50391,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Schlüssel"
           }
         },
         "en": {
@@ -50403,37 +50403,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Claves"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Clés"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Chiavi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Sleutels"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Klucze"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys"
+            "value": "Chaves"
           }
         }
       }
@@ -50444,7 +50444,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Von einer anderen Anwendung"
           }
         },
         "en": {
@@ -50456,37 +50456,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Desde otra aplicación"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Depuis une autre application"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Da un'altra applicazione"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Vanuit een andere applicatie"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "Z innej aplikacji"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "From another application"
+            "value": "De outra aplicação"
           }
         }
       }
@@ -50497,7 +50497,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Letzte Anfrage %1$@ · %2$@"
           }
         },
         "en": {
@@ -50509,37 +50509,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Última solicitud %1$@ · %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Dernière requête %1$@ · %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Ultima richiesta %1$@ · %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Laatste verzoek %1$@ · %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Ostatnie żądanie %1$@ · %2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Last request %1$@ · %2$@"
+            "value": "Último pedido %1$@ · %2$@"
           }
         }
       }
@@ -50550,7 +50550,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Neuer Schlüssel"
           }
         },
         "en": {
@@ -50562,37 +50562,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nueva clave"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nouvelle clé"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nuova chiave"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nieuwe sleutel"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nowy klucz"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "New key"
+            "value": "Nova chave"
           }
         }
       }
@@ -50603,7 +50603,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Einen neuen Schlüssel für %1$@ erstellen"
           }
         },
         "en": {
@@ -50615,37 +50615,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Crear una nueva clave para %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Créer une nouvelle clé pour %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Crea una nuova chiave per %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Een nieuwe sleutel maken voor %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Utwórz nowy klucz dla aplikacji %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Make a new key for %1$@"
+            "value": "Criar uma nova chave para %1$@"
           }
         }
       }
@@ -50656,7 +50656,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ z %2$@"
           }
         }
       }
@@ -50667,7 +50667,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ z %2$@"
           }
         }
       }
@@ -50678,7 +50678,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ von %2$@"
           }
         },
         "en": {
@@ -50690,37 +50690,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ de %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ sur %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ su %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ van %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ z %2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ de %2$@"
           }
         }
       }
@@ -50731,7 +50731,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ von %2$@"
           }
         },
         "en": {
@@ -50743,37 +50743,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ de %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ sur %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ su %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ van %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ z %2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of %2$@"
+            "value": "%1$@ de %2$@"
           }
         }
       }
@@ -50784,7 +50784,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open %2$@ door again"
+            "value": "Die Tür für %1$@ wieder öffnen"
           }
         },
         "en": {
@@ -50796,37 +50796,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "Volver a abrir la puerta de %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "Rouvrir la porte de %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "Riapri la porta di %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "De deur van %1$@ weer openen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "Otwórz ponownie drzwi aplikacji %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open the door of %1$@ again"
+            "value": "Voltar a abrir a porta de %1$@"
           }
         }
       }
@@ -50837,7 +50837,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Anfragen werden abgelehnt, bis du sie öffnest. Was schon getan ist, wird nicht rückgängig gemacht."
           }
         },
         "en": {
@@ -50849,37 +50849,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Las solicitudes se rechazan hasta que la abras. No se deshace nada de lo ya hecho."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Les requêtes sont refusées jusqu'à ce que vous l'ouvriez. Rien de ce qui est déjà fait n'est annulé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Le richieste vengono rifiutate finché non la apri. Nulla di ciò che è già stato fatto viene annullato."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Verzoeken worden geweigerd tot je hem opent. Wat al gedaan is, wordt niet teruggedraaid."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Żądania są odrzucane, dopóki ich nie otworzysz. Nic, co już zrobiono, nie zostaje cofnięte."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests are refused until you open it. Nothing already done is undone."
+            "value": "Os pedidos são recusados até a abrir. Nada do que já foi feito é desfeito."
           }
         }
       }
@@ -50890,7 +50890,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Pro Minute"
           }
         },
         "en": {
@@ -50902,37 +50902,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Por minuto"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Par minute"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Al minuto"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Per minuut"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Na minutę"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A minute"
+            "value": "Por minuto"
           }
         }
       }
@@ -50943,7 +50943,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Nachlesen, wie es lief"
           }
         },
         "en": {
@@ -50955,37 +50955,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Ver cómo fue"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Voir comment ça s'est passé"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Leggi com'è andata"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Lees hoe het ging"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Zobacz, jak poszło"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Read how it went"
+            "value": "Ver como correu"
           }
         }
       }
@@ -50996,7 +50996,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Anfragen von ihm, die noch nicht begonnen haben, werden abgebrochen. Eine laufende wird zu Ende geführt. Um sie sofort zu stoppen, halte den taf an. Ein widerrufener Schlüssel lässt sich nicht zurückholen: Ein neuer Schlüssel ist ein neuer Schlüssel."
           }
         },
         "en": {
@@ -51008,37 +51008,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Las solicitudes que envió y que aún no han empezado se cancelan. La que está en curso termina. Para pararla ya, bloquea el taf. Una clave revocada no se puede recuperar: una clave nueva es una clave nueva."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Les requêtes qu'elle a envoyées et qui n'ont pas commencé sont annulées. Celle en cours se termine. Pour l'arrêter tout de suite, bloquez le taf. Une clé révoquée ne peut pas être récupérée : une nouvelle clé est une nouvelle clé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Le richieste che ha inviato e non ancora iniziate vengono annullate. Quella in corso finisce. Per fermarla subito, blocca il taf. Una chiave revocata non si può recuperare: una chiave nuova è una chiave nuova."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Verzoeken die hij stuurde en die nog niet begonnen zijn, worden geannuleerd. Een verzoek dat loopt, wordt afgemaakt. Om het nu te stoppen, zet je de taf stil. Een ingetrokken sleutel kan niet terug: een nieuwe sleutel is een nieuwe sleutel."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Wysłane nim żądania, które się nie zaczęły, zostają anulowane. Trwające kończy się. Aby zatrzymać je od razu, zablokuj taf. Unieważnionego klucza nie da się przywrócić: nowy klucz to nowy klucz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key."
+            "value": "Os pedidos que enviou e que ainda não começaram são cancelados. Um que esteja em curso termina. Para o parar já, bloqueie o taf. Uma chave revogada não pode ser recuperada: uma chave nova é uma chave nova."
           }
         }
       }
@@ -51049,7 +51049,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "„%1$@“ widerrufen"
           }
         },
         "en": {
@@ -51061,37 +51061,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "Revocar «%1$@»"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "Révoquer « %1$@ »"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "Revoca «%1$@»"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "‘%1$@’ intrekken"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "Unieważnij „%1$@”"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”"
+            "value": "Revogar «%1$@»"
           }
         }
       }
@@ -51102,7 +51102,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "„%1$@“ widerrufen?"
           }
         },
         "en": {
@@ -51114,37 +51114,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "¿Revocar «%1$@»?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "Révoquer « %1$@ » ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "Revocare «%1$@»?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "‘%1$@’ intrekken?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "Unieważnić „%1$@”?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Revoke “%1$@”?"
+            "value": "Revogar «%1$@»?"
           }
         }
       }
@@ -51155,7 +51155,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · dziś %1$@ z %3$@"
           }
         }
       }
@@ -51166,7 +51166,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · dziś %1$@ z %3$@"
           }
         }
       }
@@ -51177,7 +51177,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · heute %1$@ von %3$@"
           }
         },
         "en": {
@@ -51189,37 +51189,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ de %3$@ hoy"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ sur %3$@ aujourd'hui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ su %3$@ oggi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ van %3$@ vandaag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · dziś %1$@ z %3$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ de %3$@ hoje"
           }
         }
       }
@@ -51230,7 +51230,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · heute %1$@ von %3$@"
           }
         },
         "en": {
@@ -51242,37 +51242,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ de %3$@ hoy"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ sur %3$@ aujourd'hui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ su %3$@ oggi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ van %3$@ vandaag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · dziś %1$@ z %3$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%2$@ · %1$@ of %3$@ today"
+            "value": "%2$@ · %1$@ de %3$@ hoje"
           }
         }
       }
@@ -51283,7 +51283,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Markiert: Kopiere ihn mit deiner Tastatur."
           }
         },
         "en": {
@@ -51295,37 +51295,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Seleccionada: cópiala con el teclado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Sélectionnée : copiez-la avec votre clavier."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Selezionata: copiala con la tastiera."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Geselecteerd: kopieer hem met je toetsenbord."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Zaznaczono: skopiuj go klawiaturą."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Selected: copy it with your keyboard."
+            "value": "Selecionada: copie-a com o teclado."
           }
         }
       }
@@ -51336,7 +51336,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Nur jetzt angezeigt."
           }
         },
         "en": {
@@ -51348,37 +51348,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Solo se muestra ahora."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Affichée seulement maintenant."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Mostrata solo ora."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Alleen nu getoond."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Pokazany tylko teraz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Shown only now."
+            "value": "Mostrada só agora."
           }
         }
       }
@@ -51389,7 +51389,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into %2$@ secrets. tafs keeps no copy it can show again."
+            "value": "Kopiere ihn in die Secrets von %1$@. tafs behält keine Kopie, die es noch einmal zeigen kann."
           }
         },
         "en": {
@@ -51401,37 +51401,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Cópiala en los secretos de %1$@. tafs no guarda ninguna copia que pueda volver a mostrar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Copiez-la dans les secrets de %1$@. tafs n'en garde aucune copie qu'il puisse afficher à nouveau."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Copiala nei segreti di %1$@. tafs non ne tiene alcuna copia da mostrare di nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Kopieer hem naar de secrets van %1$@. tafs bewaart geen kopie die het nog eens kan tonen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Skopiuj go do sekretów aplikacji %1$@. tafs nie zachowuje kopii, którą mógłby pokazać ponownie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Copy it into the secrets of %1$@. tafs keeps no copy it can show again."
+            "value": "Copie-a para os segredos de %1$@. O tafs não guarda nenhuma cópia que possa voltar a mostrar."
           }
         }
       }
@@ -51442,7 +51442,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Heute"
           }
         },
         "en": {
@@ -51454,37 +51454,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Hoy"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Aujourd'hui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Oggi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Vandaag"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Dziś"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Today"
+            "value": "Hoje"
           }
         }
       }
@@ -51495,7 +51495,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Höchstens zwei Schlüssel, damit du einen ersetzen kannst, ohne den anderen zu stoppen."
           }
         },
         "en": {
@@ -51507,37 +51507,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Como máximo dos claves, para que puedas sustituir una sin detener la otra."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Deux clés au plus, pour pouvoir en remplacer une sans arrêter l'autre."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Al massimo due chiavi, così puoi sostituirne una senza fermare l'altra."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Hoogstens twee sleutels, zodat je er een kunt vervangen zonder de andere te stoppen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "Najwyżej dwa klucze, aby można było wymienić jeden bez zatrzymywania drugiego."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "At most two keys, so you can replace one without stopping the other."
+            "value": "No máximo duas chaves, para poder substituir uma sem parar a outra."
           }
         }
       }
@@ -51548,7 +51548,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "do %1$@"
           }
         }
       }
@@ -51559,7 +51559,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "do %1$@"
           }
         }
       }
@@ -51570,7 +51570,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "bis zu %1$@"
           }
         },
         "en": {
@@ -51582,37 +51582,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "hasta %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "jusqu'à %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "fino a %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "tot %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "do %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "até %1$@"
           }
         }
       }
@@ -51623,7 +51623,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "bis zu %1$@"
           }
         },
         "en": {
@@ -51635,37 +51635,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "hasta %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "jusqu'à %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "fino a %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "tot %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "do %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "up to %1$@"
+            "value": "até %1$@"
           }
         }
       }
@@ -51676,7 +51676,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "Gleichzeitig"
           }
         },
         "en": {
@@ -51688,37 +51688,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "A la vez"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "En même temps"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "In contemporanea"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "Tegelijk"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "Jednocześnie"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "At once"
+            "value": "Em simultâneo"
           }
         }
       }
@@ -51729,7 +51729,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Wohin die Arbeit geht"
           }
         },
         "en": {
@@ -51741,37 +51741,37 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Adónde enviar el trabajo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Où envoyer le travail"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Dove inviare il lavoro"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Waar het werk heen gaat"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Dokąd wysyłać pracę"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where to send work"
+            "value": "Para onde enviar o trabalho"
           }
         }
       }
