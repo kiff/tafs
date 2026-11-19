@@ -1,8 +1,9 @@
 # Files
 
 What the account's tafs deliver in their runs (a report, a sheet, a document), kept so the people on the account can open,
-save and share them. From the owner-approved mockup v2.1. **Built behind a switch, off** (`FilesFeature.on`), until tafs
-cloud's store and reads land; until then the iPhone and iPad read `StubFilesStore`, and nothing of it shows.
+save and share them. From the owner-approved mockup v2.1. **On for iPhone and iPad since 19 Nov** (`FilesFeature.on`), on the
+owner's yes, once the privacy lines were live in 8 languages and the phone cleared its own copies on sign-out (tafs#1467). The
+screens read tafs cloud's routes (`CloudFilesStore`), in KIFF mode only; tests read `StubFilesStore`.
 
 ## The owner's rules
 

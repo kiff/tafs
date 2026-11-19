@@ -37,9 +37,9 @@ final class FilesTests: XCTestCase {
         }
     }
 
-    /// Off until tafs cloud's store lands, and kept 30 days (the owner's pick, 1a).
-    func testFilesIsOffAndKeptThirtyDays() {
-        XCTAssertFalse(FilesFeature.on)
+    /// On since the owner's yes (19 Nov), and kept 30 days (the owner's pick, 1a).
+    func testFilesIsOnAndKeptThirtyDays() {
+        XCTAssertTrue(FilesFeature.on)
         XCTAssertEqual(FilesFeature.keptDays, 30)
     }
 
