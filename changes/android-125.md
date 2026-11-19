@@ -1,0 +1,1 @@
+- **Android 125 (1.41.0): Files is on.** What the account's tafs deliver is in Account › Files, on each taf's page and in its chat, kept 30 days; open, download, share, or Delete now for everyone ([android-app.md](docs/android-app.md#files)). On sign-out tafs removes its own copy of a file you shared; the app you shared it to keeps what it received.

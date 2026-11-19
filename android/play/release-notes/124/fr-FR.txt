@@ -1,2 +1,2 @@
 • Coach : « Depuis votre montre » liste ce que vous avez demandé depuis votre montre, jour par jour, et ce qu'il en est advenu. Ouvrez-le depuis les conversations précédentes de Coach.
-• Votre montre : le téléphone retire tout montant de ce qu'il envoie à la montre, et la montre ne garde aucun montant.
+• Votre montre : elle ne garde aucun montant. Ils sont retirés de tout ce que la montre conserve.

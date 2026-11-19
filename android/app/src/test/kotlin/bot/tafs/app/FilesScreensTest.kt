@@ -38,7 +38,6 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -78,8 +77,11 @@ class FilesScreensTest {
 
   // MARK: The switch
 
+  @Test fun filesShipsOn() {
+    assertTrue("Files is on since Android 125 (the owner's 19 Nov yes, its privacy lines live)", FilesFeature.on)
+  }
+
   @Test fun withTheSwitchOffNothingOfFilesIsDrawn() {
-    assertFalse("Files ships off until tafs cloud's routes land", FilesFeature.on)
     // No model where it's off: the Account row, a taf's row and a chat's files draw nothing.
     withFiles(null) {
       Column {

@@ -1481,12 +1481,12 @@ it shows is kept in `AppState`, so a rotation keeps it, and a new account starts
 afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 `CalendarTest.kt`.
 
-## Files (behind a switch)
+## Files
 
 What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
-account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes and stays off until the owner's
-yes: `FilesFeature.on` is `false` (`files/FilesStore.kt`), so no model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw
-nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
+account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes. **On since Android 125
+(1.41.0)**, on the owner's yes of 19 Nov: `FilesFeature.on` is `true` (`files/FilesStore.kt`, pinned by `filesShipsOn`). Turned off, no
+model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
 
 - **The store** (`FilesStore`) is tafs cloud's four routes and nothing else (docs/api.md, contracts/files-*.json): `list`
   (`GET /v1/files?taf=&run=&chat=`, paged by the last id read, `?after=`, with `next`, newest first), `file`

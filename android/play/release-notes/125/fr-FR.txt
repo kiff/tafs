@@ -1,0 +1,2 @@
+• Fichiers : ce que vos tafs produisent (un rapport, un tableau, un document) se trouve dans Compte › Fichiers, sur la page de chaque taf et dans sa conversation, pendant 30 jours. Ouvrez-le, téléchargez-le ou partagez-le, ou supprimez-le tout de suite pour tout votre compte.
+• À la déconnexion, tafs supprime sa propre copie d'un fichier que vous avez partagé ; l'app avec laquelle vous l'avez partagé garde ce qu'elle a reçu.

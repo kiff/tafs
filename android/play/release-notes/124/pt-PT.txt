@@ -1,2 +1,2 @@
 • Coach: «Do seu relógio» mostra o que pediu a partir do relógio, dia a dia, e o resultado de cada pedido. Abra-o nas conversas anteriores do Coach.
-• O seu relógio: o telemóvel retira qualquer montante do que envia ao relógio, e o relógio não guarda montantes.
+• O seu relógio: não guarda montantes. São retirados de tudo o que o relógio guarda.
