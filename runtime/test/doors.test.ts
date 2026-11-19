@@ -1982,6 +1982,8 @@ describe("an api door's keys and signed steps", () => {
       expect(done.body.result).not.toHaveProperty("text"); // the taf's words only when the owner chose them
       const list = (await c.s.call("GET", doorsPath)).body.doors[0];
       expect(list.last_request).toMatchObject({ status: "done", words: "Done" });
+      // The key that sent it was used now: the owner sees which key is live before revoking one.
+      expect(list.keys[0]).toMatchObject({ id: c.made.body.key.id, last_used_at: NOW.toISOString() });
       // The key never shows in a log line, the request logger's included.
       expect(c.logs.join("\n")).not.toContain(c.key);
     }));
@@ -2217,6 +2219,7 @@ describe("an api door's keys and signed steps", () => {
       expect(revoked).toBe(true);
       expect((await c.read(second.body.request_id, other.body.key)).body).toMatchObject({ status: "cancelled", reason_code: "revoked" });
       expect(c.w.agents.byKey.has(`t_acme#${REFUNDS}#api:${c.door}:b`)).toBe(false);
+      expect((await c.s.call("GET", doorsPath)).body.doors[0].last_request).toMatchObject({ status: "cancelled" });
     }));
 
     it("waits for credits as needs_you, and starts once they're back", () => withFlag(async () => {

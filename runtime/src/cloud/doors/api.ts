@@ -194,7 +194,7 @@ async function submit(req: { header: (name: string) => string; body: string }, c
     return refused(429, "rate_limited", limit.why, { "retry-after": limit.after });
   }
   await changeQueue(ctx, k.tenant, k.door.id, (ids) => [...ids, request.id]);
-  await noteDoor(ctx, k.tenant, k.taf, k.door.id, { status: "accepted", at: request.accepted });
+  await noteDoor(ctx, k.tenant, k.taf, k.door.id, { status: "accepted", at: request.accepted }, k.key);
   console.log(JSON.stringify({ event: "door_api_request", tenant: k.tenant, door: k.door.id, status: "accepted" }));
   // Kept: from here a failure to start never loses it; the next request, its run's end or a read starts it.
   await startNext(ctx, k.tenant, k.taf, k.door.id, publicURL).catch((err) => console.error("api door not started:", err instanceof Error ? err.message : "error"));
@@ -240,10 +240,16 @@ async function move(ctx: DoorsContext, tenant: string, prev: APIRequest, next: P
   return ok ? value : undefined;
 }
 
-/** The door's last request and how many wait, for the owner's list. Its failure never fails the request. */
-async function noteDoor(ctx: DoorsContext, tenant: string, taf: string, door: string, last: { status: APIRequestState; at: string }): Promise<void> {
+/**
+ * The door's last request and how many wait, for the owner's list, and, for an accepted request, when its key was last
+ * used (at most once a minute a key), so the owner sees an old key go quiet before revoking it. Its failure never fails
+ * the request.
+ */
+async function noteDoor(ctx: DoorsContext, tenant: string, taf: string, door: string, last: { status: APIRequestState; at: string }, usedKey?: string): Promise<void> {
   const waiting = (await queueOf(ctx, tenant, door)).length;
-  await changeDoors(ctx.doors.store, tenant, taf, (doors) => doors.map((d) => (d.id === door ? { ...d, lastRequest: last, waiting } : d)))
+  const at = ctx.now.toISOString();
+  const used = (keys: Door["apiKeys"]) => (keys ?? []).map((k) => (k.id === usedKey && !k.revoked && (!k.lastUsed || ctx.now.getTime() - Date.parse(k.lastUsed) >= 60_000) ? { ...k, lastUsed: at } : k));
+  await changeDoors(ctx.doors.store, tenant, taf, (doors) => doors.map((d) => (d.id === door ? { ...d, lastRequest: last, waiting, ...(usedKey ? { apiKeys: used(d.apiKeys) } : {}) } : d)))
     .catch((err) => console.error("api door not noted:", err instanceof Error ? err.message : "error"));
 }
 
@@ -284,9 +290,10 @@ export async function startNext(ctx: DoorsContext, tenant: string, taf: string, 
     // Read again after the start is claimed: a revoke committed before this point means it never runs.
     const now = (await doorsOf(store, tenant, taf)).find((d) => d.id === doorID);
     if (!(now?.apiKeys ?? []).some((k) => k.id === r.key && !k.revoked)) {
-      await move(ctx, tenant, working, { status: "cancelled", reason: "revoked" });
+      const cancelled = await move(ctx, tenant, working, { status: "cancelled", reason: "revoked" });
       await drop();
       await store.remove(apiKeys.running(tenant, doorID));
+      if (cancelled) await noteDoor(ctx, tenant, taf, doorID, { status: "cancelled", at: cancelled.updated });
       continue;
     }
     await drop();

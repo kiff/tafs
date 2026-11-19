@@ -187,7 +187,7 @@ header, and the request log masks the door and request ids.
   Any live key of the door reads any of its requests; a revoked key reads none. `needs_you` is `held_for_owner` (a held
   call waits for the owner, never the caller) or `waits_for_credits`. `done` adds `result: {outcome, calls: {sent, held,
   refused}, text?}`: `calls` is kiff/agents' record of the run's calls, never the model's, and `text` only when the owner
-  turned it on.
+  turned it on. An accepted request marks its key `last_used_at` (at most once a minute a key), so the owner sees an old key go quiet before revoking it.
 
 **A request starts** one at a time per door, oldest first (`startNext`), from a POST, a run's end, a read or the door
 opened again. Each is checked as it starts: past 7 days since its 202, `expired`; its key revoked, `cancelled`
