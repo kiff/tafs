@@ -300,11 +300,11 @@ export async function runGrant(token: string, agent: string, doFetch: Fetch = fe
 }
 
 /** The account's tool connections in KIFF's gateway, read with the person's session. */
-export async function gatewayConnections(token: string, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<Array<{ name: string; url?: string; control?: boolean }>> {
+export async function gatewayConnections(token: string, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<Array<{ name: string; url?: string; control?: boolean; input_schema?: unknown }>> {
   const out = await ask<unknown>(token, "GET", "/v1/connections", undefined, doFetch, base);
   const list = Array.isArray(out) ? out : (out as { connections?: unknown }).connections;
   if (!Array.isArray(list)) throw new KIFFError(502, "KIFF's gateway sent no connections");
-  return list.flatMap((c) => (c && typeof c === "object" && typeof (c as { name?: unknown }).name === "string" ? [c as { name: string; url?: string; control?: boolean }] : []));
+  return list.flatMap((c) => (c && typeof c === "object" && typeof (c as { name?: unknown }).name === "string" ? [c as { name: string; url?: string; control?: boolean; input_schema?: unknown }] : []));
 }
 
 /**

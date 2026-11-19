@@ -2439,6 +2439,16 @@ describe("Setup (kiff/agents#91)", () => {
     expect(sent.map((c) => c.name)).toEqual(TOOLS.filter((t) => t.name !== "taf_run").map((t) => t.name));
     expect(sent.every((c) => c.url === mcp && c.replace === true)).toBe(true);
     sent.forEach((c, i) => expect(moved.connect.lines[i]).toBe(`${TOOLS.find((t) => t.name === c.name)!.line} · ${REPLACES_LINE}`));
+    // Connected here, but KIFF kept a tool's schema from before it asked for its chat (the 17:33 watch ask): that tool
+    // alone is connected again, replacing it, so kiff/agents says the chat. One kept with it, or listed with no schema, stays.
+    const withChat = { type: "object", properties: { text: { type: "string" }, agent_session: { type: "string" } } };
+    const withoutChat = { type: "object", properties: { text: { type: "string" } } };
+    w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true,
+      ...(t.name === "taf_task" ? { input_schema: withoutChat } : t.name === "tafs_state" ? { input_schema: withChat } : t.name === "taf_run" ? { input_schema: withoutChat } : {}) }));
+    const stale = await tools();
+    expect(stale.state).toBe("to_give");
+    expect(stale.connect.body.connections).toEqual([expect.objectContaining({ name: "taf_task", url: mcp, replace: true })]);
+    expect(stale.connect.lines).toEqual([`${TOOLS.find((t) => t.name === "taf_task")!.line} · ${REPLACES_LINE}`]);
     // A batch with nothing to replace marks none, and no line says it replaces.
     expect(first.connect.body.connections.some((c: { replace?: boolean }) => c.replace)).toBe(false);
     expect(first.connect.lines.some((l: string) => l.includes(REPLACES_LINE))).toBe(false);

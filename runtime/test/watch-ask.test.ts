@@ -269,6 +269,13 @@ describe("the watch's conversation", () => {
     expect((await w.tool("taf_task", { taf: INBOX, text: "file the receipts" })) as { taf: string }).toMatchObject({ taf: "Inbox" });
   });
 
+  it("stops holding back a hand-over that names no chat once a routing turn is older than any routing takes", async () => {
+    // A Coach run that never ended leaves its request choosing: after ROUTING_MS it holds nothing back.
+    const { w } = await asked();
+    w.tick(16 * 60_000);
+    expect((await w.tool("taf_task", { taf: INBOX, text: "file the receipts" })) as { taf: string }).toMatchObject({ taf: "Inbox" });
+  });
+
   it("never ends a request with Coach's own sentence when its routing turn handed work to a taf the request didn't get", async () => {
     const { w, id, coachRun } = await asked();
     const run = w.agents.runs.find((r) => r.id === coachRun)!;
@@ -278,6 +285,13 @@ describe("the watch's conversation", () => {
     const ask = await w.askOf(id);
     expect(ask).toMatchObject({ state: "failed" });
     expect(ask).not.toHaveProperty("line");
+    // From kiff/agents' record of the calls that went through too, when it counts none.
+    const other = await asked();
+    const run2 = other.w.agents.runs.find((r) => r.id === other.coachRun)!;
+    Object.assign(run2, { status: "COMPLETED", output: "Inbox: working.", done: [{ call_id: "c1", tool: "taf_task" }] });
+    const ref2 = [...other.w.agents.notified.entries()].find(([r]) => r === other.coachRun)![1].ref;
+    await other.w.ended(ref2, other.coachRun, COACH, "COMPLETED");
+    expect(await other.w.askOf(other.id)).toMatchObject({ state: "failed" });
   });
 
   it("turns the taf's result into Coach's one line, and never into the phone's Coach chat or its alerts", async () => {

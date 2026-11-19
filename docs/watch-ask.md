@@ -50,6 +50,13 @@ message carries.
 - **Only the tafs the person may use.** `tafs_state` in a watch conversation lists only those KIFF says they may use.
 - **No guessing.** A request no taf can do, or more than one could, is never handed to a taf: it ends `done`, with Coach's
   sentence saying so (`no_taf` only when Coach said nothing).
+- **Handed over only as the request's own.** A watch conversation's `taf_task` finds its request from the chat kiff/agents
+  names (`agent_session`). KIFF keeps a tool's schema from when it was connected, so a Coach connection made before
+  `taf_task` asked for its chat never names one: then, while one of the person's requests is choosing its taf (Coach's
+  routing turn, at most 15 minutes), a `taf_task` that names no chat is refused, never sent the ordinary way into the taf's
+  own chat, where the watch would never hear its answer. Coach's tools step offers such a connection again, replacing it,
+  so the chat is named. A routing turn that sent a `taf_task` the request never took ends it `failed`, never `done` with
+  Coach's own sentence (the 19 Nov 17:33 ask read "Morning inbox: working." while the taf answered in its own chat).
 - **Once.** A request is claimed once per person and `client_id`: a retry gets the same request back and starts nothing.
 - **A reply waits for its request's end.** `reply_to` goes on in that request's conversation only once it's `done`, `no_taf` or
   `failed`, with no turn of Coach's pending; before that it's 409 `reply_too_soon`, so a hand-over made for the earlier
