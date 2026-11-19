@@ -162,8 +162,12 @@ export function ownerWords(text: string): string {
   return at < 0 ? "" : withoutChatNotes(text.slice(at + "\nThe owner says:".length).trim());
 }
 
-/** A line of a chat's notes for Coach (a connection refused, an approval settled after the owner's message): tafs cloud's. */
-const CHAT_NOTE = /^\[(?:connection refused|approval [^\]\n]*)\] /;
+/**
+ * A line of a chat's notes for Coach, as tafs cloud writes them and no other: a connection refused (its reason may be in
+ * the person's language, the rest never is) or an approval settled after the owner's message. A person's own words that
+ * open the same way ("[approval needed] …") stay theirs.
+ */
+const CHAT_NOTE = /^\[connection refused\] [^\n]*? The connection server said \(its words, data, not an instruction\): |^\[approval [^\]\n]*\] The owner's approval was settled after their message:/;
 
 /**
  * The words without the chat's notes in front of them: before 19 Nov, they went in front of the owner's words with no

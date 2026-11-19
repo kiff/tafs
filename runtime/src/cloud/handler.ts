@@ -4417,7 +4417,8 @@ async function withChatNotes(me: KIFFIdentity, session: string, text: string, de
   const said = notes.map((n) => n?.text).filter((t): t is string => typeof t === "string" && t.length > 0);
   if (!said.length) return text;
   // Words that already go in tafs cloud's envelope (Coach's lines taken with them) get the notes before their owner's part.
-  const at = text.lastIndexOf("\nThe owner says: ");
+  // Its owner line may end the words, trimmed of its space (an attachment alone).
+  const at = text.lastIndexOf("\nThe owner says:");
   if (text.startsWith(COACH_LINES) && at >= 0) return `${text.slice(0, at)}\n${said.join("\n")}${text.slice(at)}`;
   return `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${text}`;
 }
