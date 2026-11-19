@@ -708,6 +708,22 @@ class WatchModelTest {
     assertEquals("kept on the watch", model.inbox.value, store.items)
   }
 
+  /**
+   * An answer is kept with no amount, as "never an amount" on the watch promises (docs/watch-wear.md, "What the watch keeps"),
+   * and the person's own words the same when there's no answer line; opened while the app holds it, it shows whole.
+   */
+  @Test fun anAnswerIsKeptWithNoAmountAndShowsWholeWhileOpen() = runTest {
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    val refunded = answered.copy(line = "Refunded €84 for order A-1039")
+    model.took(refunded)
+    val kept = store.items.single { it.id == InboxItem.askId("wa_02") }
+    assertEquals("Refunded for order A-1039", kept.line)
+    assertEquals("Refunded €84 for order A-1039", model.askOf(kept).line)
+    model.took(answered.copy(id = "wa_03", line = null, words = "Refund 50 euros to Ana"))
+    assertEquals("Refund to Ana", store.items.single { it.id == InboxItem.askId("wa_03") }.line)
+  }
+
   @Test fun openingALineReadsItAndDismissAndClearReadTakeLinesAway() = runTest {
     val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = Inbox())
     model.refresh()

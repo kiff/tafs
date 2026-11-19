@@ -1,0 +1,1 @@
+- **Wear's Inbox keeps no amount in an answer either:** an answer's line, or the words sent, is kept with any amount taken out, as a held call's already is; it still shows whole while the app holds it ([watch-wear.md](docs/watch-wear.md)).
