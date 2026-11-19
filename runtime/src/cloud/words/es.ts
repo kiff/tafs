@@ -690,6 +690,7 @@ export const es: Words = {
   door_api_state_resting: (n) => `Las ${n} solicitudes de hoy están usadas: las siguientes se rechazan hasta la medianoche UTC.`,
   door_api_settings: "Sus claves y los límites de hoy están abajo.",
   door_api_request: { accepted: "Recibida", working: "Trabajando", needs_you: "Te espera", done: "Hecha", failed: "Falló", cancelled: "Cancelada", expired: "Caducada" },
+  door_api_signed: "Cambiar lo que permite a una aplicación darle trabajo a este taf necesita tu huella digital. No se cambió nada; vuelve a aprobarlo con tu huella digital.",
   door_how_email: "El correo debe pasar la comprobación del remitente",
   door_how_whatsapp: "WhatsApp conoce el número de teléfono",
   door_how_slack: "Slack sabe quién escribió, por su usuario de Slack",

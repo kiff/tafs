@@ -26,17 +26,45 @@ export interface APIKey {
   name: string;
   /** The key's last four characters. */
   last4: string;
-  /** Hex SHA-256 of the whole key: a request's key is looked up by it. */
-  hash: string;
+  /** Hex SHA-256 of the whole key: a request's key is looked up by it. Gone once it's revoked. */
+  hash?: string;
   made: string;
   lastUsed?: string;
+  /**
+   * Revoked: when, and by whom (the KIFF subject). The record stays, without its hash, so the Record can still say
+   * which key sent each request; it isn't shown among the door's keys and counts toward none of its two.
+   */
+  revoked?: string;
+  revokedBy?: string;
+}
+
+/** One field another application sends: a flat value, never an instruction (the door's input schema). */
+export interface APIField {
+  name: string;
+  type: "string" | "number" | "boolean" | "enum";
+  /** A string's most characters. */
+  max?: number;
+  /** An enum's values. */
+  values?: string[];
+}
+
+/**
+ * What the owner approved for an `api` door, as Coach drafted it: the application's name, the fields it sends,
+ * the job line its requests run with, the outcomes the taf answers with, and whether the taf's own words go back.
+ */
+export interface APIDraft {
+  name: string;
+  fields: APIField[];
+  job: string;
+  outcomes: string[];
+  text: boolean;
 }
 
 /** A request's states, as the caller and the owner read them (docs/doors.md, the `api` door). */
 export type APIRequestState = "accepted" | "working" | "needs_you" | "done" | "failed" | "cancelled" | "expired";
 
 /** An `api` door's own limits: the defaults the owner decided (19 Nov), and the most a day may be set to. */
-export const API_DOOR = { perDay: 100, perDayMax: 1000, perMinute: 10, waiting: 20 } as const;
+export const API_DOOR = { perDay: 100, perDayMax: 1000, perMinute: 10, waiting: 20, liveKeys: 2, revokedKept: 20, fields: 20, maxChars: 4000, outcomes: 10 } as const;
 
 /** A sender who may give the taf work through one door. */
 export interface Key {
@@ -76,6 +104,8 @@ export interface Door {
   trigger?: string;
   /** An `api` door's keys (two live at most), its day's cap, the requests waiting, and its last request. */
   apiKeys?: APIKey[];
+  /** An `api` door's draft, as its owner approved it. */
+  api?: APIDraft;
   perDay?: number;
   waiting?: number;
   lastRequest?: { status: APIRequestState; at: string };
@@ -225,6 +255,8 @@ export const DOOR = {
 
 export const doorKeys = {
   route: (route: string) => `door#${route}`,
+  /** An `api` door's key, by its SHA-256: the account, taf, door and key it is. Removed when the key is revoked. */
+  apiKey: (hash: string) => `door-api-key#${hash}`,
   doors: (tenant: string, taf: string) => `${tenant}#doors#${taf}`,
   seen: (tenant: string, hash: string) => `${tenant}#door-seen#${hash}`,
   day: (tenant: string, taf: string, door: string, day: string, who: "keys" | "others") => `${tenant}#door-day#${taf}#${door}#${day}#${who}`,

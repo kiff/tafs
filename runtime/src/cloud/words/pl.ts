@@ -690,6 +690,7 @@ export const pl: Words = {
   door_api_state_resting: (n) => `Dzisiejszy limit żądań (${n}) jest wykorzystany: kolejne są odrzucane do północy UTC.`,
   door_api_settings: "Klucze i dzisiejsze limity są poniżej.",
   door_api_request: { accepted: "Odebrane", working: "W toku", needs_you: "Czeka na Ciebie", done: "Gotowe", failed: "Nie powiodło się", cancelled: "Anulowane", expired: "Wygasłe" },
+  door_api_signed: "Zmiana tego, co pozwala aplikacji zlecać pracę dla tego tafa, wymaga odcisku palca. Nic się nie zmieniło; zatwierdź ponownie odciskiem palca.",
   door_how_email: "E-mail musi przejść weryfikację nadawcy",
   door_how_whatsapp: "WhatsApp zna numer telefonu",
   door_how_slack: "Slack wie, kto napisał, po użytkowniku Slacka",

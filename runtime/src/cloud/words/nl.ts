@@ -690,6 +690,7 @@ export const nl: Words = {
   door_api_state_resting: (n) => `De ${n} verzoeken van vandaag zijn op: meer worden tot middernacht UTC geweigerd.`,
   door_api_settings: "De sleutels en de limieten van vandaag staan hieronder.",
   door_api_request: { accepted: "Ontvangen", working: "Bezig", needs_you: "Wacht op jou", done: "Klaar", failed: "Mislukt", cancelled: "Geannuleerd", expired: "Verlopen" },
+  door_api_signed: "Wat een applicatie toestaat dit taf werk te geven, verander je alleen met je vingerafdruk. Er is niets veranderd; keur het opnieuw goed met je vingerafdruk.",
   door_how_email: "De e-mail moet de afzendercontrole doorstaan",
   door_how_whatsapp: "WhatsApp kent het telefoonnummer",
   door_how_slack: "Slack weet wie er schreef, via de Slack-gebruiker",
