@@ -464,4 +464,103 @@ class WatchModelTest {
     assertNull(model.voice.value)
     assertTrue(phone.asked.isEmpty())
   }
+
+  // MARK: Keep for later (v2): one message, text only, sent under its own id once the phone is back.
+
+  private class Drafts : DraftStore {
+    var kept: WatchModel.Draft? = null
+    override fun read() = kept
+    override fun write(draft: WatchModel.Draft) { kept = draft }
+    override fun clear() { kept = null }
+  }
+
+  private suspend fun unsureThenKept(phone: PhoneLink, drafts: Drafts, unlocked: () -> Boolean = { true }) {
+    val model = WatchModel(phone, now = { t }, unlocked = unlocked, newClientId = { "w_00000001" }, reviewFirst = true, drafts = drafts)
+    model.listen()
+    model.heard("Move my call to six")
+    model.sendReviewed()
+    assertEquals(WatchModel.Voice.Unsure("Move my call to six", "w_00000001", null), model.voice.value)
+    model.keepForLater()
+    assertNull(model.voice.value)
+    assertEquals(WatchModel.Draft("Move my call to six", "w_00000001", null), model.kept.value)
+  }
+
+  @Test fun keptForLaterIsTextOnlyOnTheWatchAndGoesUnderItsOwnIdOnceThePhoneIsBack() = runTest {
+    var reachable = false
+    val phone = Phone {
+      when {
+        !reachable -> Asked.Unreachable
+        it is WatchRequest.Ask -> Asked.Answered(WatchReply.AskTaken(taken))
+        else -> reads(it)
+      }
+    }
+    val drafts = Drafts()
+    unsureThenKept(phone, drafts)
+    assertEquals("on disk: the words, the id and the chat, nothing else", WatchModel.Draft("Move my call to six", "w_00000001", null), drafts.kept)
+    // A new model, as after the app was put away: the draft is still there.
+    val later = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    assertEquals(drafts.kept, later.kept.value)
+    later.refresh()
+    assertEquals("not while the phone is out of reach", drafts.kept, later.kept.value)
+    reachable = true
+    phone.asked.clear()
+    later.refresh()
+    assertEquals(listOf(WatchRequest.Ask(t, "w_00000001", "Move my call to six")), phone.asked.filterIsInstance<WatchRequest.Ask>())
+    assertNull(later.kept.value)
+    assertNull(drafts.kept)
+    assertEquals(taken, later.asks.value[taken.id])
+  }
+
+  @Test fun aKeptMessageStaysWhenItsSendIsntTaken() = runTest {
+    var answer: Asked = Asked.Unreachable
+    val phone = Phone { if (it is WatchRequest.Ask) answer else reads(it) }
+    val drafts = Drafts()
+    unsureThenKept(phone, drafts)
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    for (a in listOf<Asked>(Asked.Answered(WatchReply.Unsure), Asked.Answered(WatchReply.Failed("Not now")), Asked.NotUnderstood)) {
+      answer = a
+      model.refresh()
+      assertEquals(a.toString(), "w_00000001", model.kept.value?.clientId)
+    }
+    // Every try under the one id.
+    assertEquals(setOf("w_00000001"), phone.asked.filterIsInstance<WatchRequest.Ask>().map { it.clientId }.toSet())
+  }
+
+  @Test fun aKeptMessageGoesOnlyFromAnUnlockedWatch() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", "ask_1") }
+    val model = WatchModel(phone, now = { t }, unlocked = { false }, reviewFirst = true, drafts = drafts)
+    model.refresh()
+    assertTrue(phone.asked.filterIsInstance<WatchRequest.Ask>().isEmpty())
+    assertEquals(drafts.kept, model.kept.value)
+  }
+
+  @Test fun aKeptMessageIsDeletedOnDeleteAndOnSignOut() = runTest {
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.deleteKept()
+    assertNull(model.kept.value)
+    assertNull(drafts.kept)
+    drafts.kept = WatchModel.Draft("Thanks", "w_00000009", null)
+    val signedOut = WatchModel(Phone { Asked.Answered(WatchReply.SignedOut) }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    signedOut.refresh()
+    assertNull(signedOut.kept.value)
+    assertNull("signed out: nothing of the account stays on the watch", drafts.kept)
+  }
+
+  @Test fun putAwayKeepsTheKeptMessage() = runTest {
+    val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
+    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.forget()
+    assertEquals(drafts.kept, model.kept.value)
+  }
+
+  @Test fun keepForLaterIsOnlyForAMessageThatMayNotHaveArrived() = runTest {
+    val drafts = Drafts()
+    val model = WatchModel(asker { Asked.Answered(WatchReply.AskTaken(taken)) }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    model.review("Thanks")
+    model.keepForLater()
+    assertNull(drafts.kept)
+    assertEquals(WatchModel.Voice.Review("Thanks", null), model.voice.value)
+  }
 }
