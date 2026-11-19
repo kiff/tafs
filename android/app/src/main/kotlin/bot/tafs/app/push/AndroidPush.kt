@@ -31,8 +31,7 @@ class AlertNotifier(private val context: Context) {
         description = Words.Push.Channel.urgentDescription
       })
       // Your brief is ready sounds (19 Nov, the owner's phone: Briefs was quiet, so a brief would arrive with no sound).
-      // Android never raises a channel's
-      // importance once made, so it's a new channel, and the old quiet one goes, with the settings it had.
+      // Android never raises a channel's importance once made, so it's a new channel, and the old quiet one goes, with its settings.
       manager.deleteNotificationChannel(OLD_BRIEFS)
       manager.createNotificationChannel(NotificationChannel(BRIEFS, Words.Push.Channel.briefs, BRIEFS_IMPORTANCE).apply {
         description = Words.Push.Channel.briefsDescription
