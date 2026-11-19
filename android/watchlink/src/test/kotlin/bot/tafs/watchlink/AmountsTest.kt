@@ -1,6 +1,8 @@
 package bot.tafs.watchlink
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** The rule the phone's relay and the watch share for what a watch keeps: every amount with a currency out, numbers kept. */
@@ -20,6 +22,14 @@ class AmountsTest {
       "Paused until Monday 08:00" to "Paused until Monday 08:00",
     )) {
       assertEquals(said, kept, Amounts.strip(said))
+    }
+  }
+
+  /** An amount taken out is told apart from spacing tidied: a double space or a trailing ":" has none. */
+  @Test fun onlyAnAmountCountsAsTakenOut() {
+    assertTrue(Amounts.hasAmount("Refunded €84 for order A-1039"))
+    for (plain in listOf("Paused  until Monday", "Here's what I found:", " Ivo is paused, ", "Order 4502 is late")) {
+      assertFalse(plain, Amounts.hasAmount(plain))
     }
   }
 }
