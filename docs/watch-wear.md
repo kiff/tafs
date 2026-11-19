@@ -223,7 +223,7 @@ while Needs you still holds it, else "Already answered, or it ended.", and tappi
 dropped once the phone no longer lists it), so a read never brings it back. Coach's home counts only the unread lines. It's kept in the watch's private preferences
 (`tafs.inbox`, one JSON list), and like the tile's count it's cleared, and nothing is added to it, whenever the watch is locked or
 has no screen lock (Wear OS locks a watch taken off the wrist): checked when the app is opened and when it's put away. It's
-also cleared when the phone says it's signed out. Read and dismissed stay
+also cleared when the phone says it's signed out, and with everything else when the person signs out on this watch (step vi). Read and dismissed stay
 on this watch until tafs cloud keeps them in step with the phone (server piece c).
 
 **Step (v): Tafs, a taf's page, its settings, and choosing which to halt** (`TafScreens.kt`, `WatchModel.openTaf` and
