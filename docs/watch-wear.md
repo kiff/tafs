@@ -196,7 +196,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 `WatchPagesTest`). Nothing leaves the watch before Send:
 - **The microphone** opens its screen ready (`Voice.Ready`): **Start**, a round button in the brand's colours with the
   microphone, "Ready · 30 s", and what to do. Start listens; the screen shows "● Recording · 30 s" in red, the timer against
-  0:30, a ring that fills to the limit, the words as they're heard (two lines; the review has them all), and **Stop**: another
+  0:30, a ring that fills to the limit, the words as they're heard (two lines, 68% of the face's width up to 150 dp, so on the 40 mm Watch 5 they stay clear of
+  the curve, `theHeardWordsStayInsideTheFaceAt40mm`; the review has them all), and **Stop**: another
   control, not Start relabelled, a solid red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`,
   `RECORD_STOP`). The top line is kept short for the top of a round face, and TalkBack reads it in full ("Ready · 30 s at
   most", `watch.limit`); it sits 12 % of the face down (`TOP_INSET_SHARE`), where the face is wide enough for it (the Galaxy

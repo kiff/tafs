@@ -228,11 +228,11 @@ class WatchPagesTest {
   }
 
   /** True when every corner of [box] lies inside the round face the root draws on. */
-  private fun insideTheFace(box: androidx.compose.ui.unit.DpRect): Boolean {
+  private fun insideTheFace(box: androidx.compose.ui.unit.DpRect, margin: androidx.compose.ui.unit.Dp = androidx.compose.ui.unit.Dp(0f)): Boolean {
     val face = compose.onRoot().getBoundsInRoot()
-    val r = (face.right - face.left) / 2
-    val cx = face.left + r
-    val cy = face.top + r
+    val r = (face.right - face.left) / 2 - margin
+    val cx = face.left + (face.right - face.left) / 2
+    val cy = face.top + (face.right - face.left) / 2
     return listOf(box.left to box.top, box.right to box.top, box.left to box.bottom, box.right to box.bottom).all { (x, y) ->
       val dx = (x - cx).value
       val dy = (y - cy).value
@@ -287,6 +287,14 @@ class WatchPagesTest {
     // TalkBack reads the limit in full.
     line.assertContentDescriptionEquals("● ${Words.Watch.recording} · ${Words.Watch.limit}")
     assertTrue("the top line meets the face's curve", insideTheFace(line.getBoundsInRoot()))
+  }
+
+  /** On the 40 mm face, the heard words' two lines stay clear of the curve, with room to spare (mac12's #1439 note). */
+  @Test fun theHeardWordsStayInsideTheFaceAt40mm() {
+    roundFace()
+    show(read, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten, and tell Ivo", null, since = System.currentTimeMillis()))
+    val words = compose.onNodeWithTag(RECORD_HEARD).getBoundsInRoot()
+    assertTrue("the heard words run to the face's edge: $words", insideTheFace(words, androidx.compose.ui.unit.Dp(4f)))
   }
 
   @Test fun deletedSaysNothingWasSent() {

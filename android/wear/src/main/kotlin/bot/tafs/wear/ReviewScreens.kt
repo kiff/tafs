@@ -119,6 +119,7 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
 @Composable
 private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() -> Unit)?) {
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+    val heardWidth = (maxWidth * HEARD_WIDTH_SHARE).coerceAtMost(150.dp)
     Column(Modifier.align(Alignment.TopCenter).padding(top = maxHeight * TOP_INSET_SHARE), horizontalAlignment = Alignment.CenterHorizontally) {
       val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
       T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
@@ -140,9 +141,11 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       }
       T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
       Spacer(Modifier.height(2.dp))
-      // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides.
+      // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides. Their
+      // width follows the face: on the 40 mm Watch 5 the face is ~151 dp across at the second line, so 150 dp ran to its edge
+      // (mac12's #1439 note); 44 mm keeps 150.
       T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.send,
-        modifier = Modifier.width(150.dp), lines = 2, lineHeight = 15.sp)
+        modifier = Modifier.width(heardWidth).testTag(RECORD_HEARD), lines = 2, lineHeight = 15.sp)
     }
     Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
   }
@@ -183,6 +186,10 @@ private fun RecordButton(recording: Boolean, onClick: () -> Unit) {
 internal const val RECORD_START = "record-start"
 internal const val RECORD_STOP = "record-stop"
 internal const val RECORD_STATE = "record-state"
+internal const val RECORD_HEARD = "record-heard"
+
+/** The heard words' width on the recording screen, as a share of the face's. */
+internal const val HEARD_WIDTH_SHARE = 0.68f
 
 /** The review's foot: the height its pinned actions take, and the fade the words scroll into above them. */
 internal val REVIEW_FOOT: Dp = 68.dp
