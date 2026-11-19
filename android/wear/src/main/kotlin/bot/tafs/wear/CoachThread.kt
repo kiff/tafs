@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,7 +53,9 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
         .background(Look.coachGround, RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp))
         .then(if (ask.ended) Modifier.clickable(onClick = onOpen) else Modifier)
         .padding(horizontal = 10.dp, vertical = 6.dp)
-        .testTag(if (ask.ended) THREAD_ANSWER + ask.id else THREAD_WORKING + ask.id),
+        .testTag(if (ask.ended) THREAD_ANSWER + ask.id else THREAD_WORKING + ask.id)
+        // TalkBack hears whose words these are, as VoiceOver does on the Apple Watch (mac12's W4 note).
+        .semantics { contentDescription = Words.Coach.title + ": " + answer },
     )
   }
 }

@@ -1,0 +1,6 @@
+tafs auf deiner Uhr, leichter zu verfolgen.
+- Coach fragen liest sich als ein Gespräch: deine Worte rechts, die Antworten von Coach links.
+- Nach dem Senden zeigt die Uhr, dass Coach es hat und antwortet, bis die Antwort öffnet.
+- Die Antwort öffnet sich von selbst, mit einer Benachrichtigung, wenn die App zu ist, und bleibt, bis du sie schließt.
+- Farben nach Bedeutung, Senden als Pfeil ohne Scrollen und Zeilen für runde Displays.
+- Nachricht und Antwort per Wischen oder Lünette scrollen.

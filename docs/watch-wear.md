@@ -364,6 +364,12 @@ the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Vers
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
 
+**400,000,006 (0.4.1)** is the owner's Watch Coach build (the mockup approved 19 Nov): W2 (Sent stays until the answer), W3
+(the answer you can't miss), W4 (Ask Coach as one conversation), W7 (colour by meaning), W8 and W9 (round screens, Send at the
+foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" and the page back on the microphone after a
+send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
+to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
+
 **400,000,005 (0.4.0)** is v2 for Play's review, the owner's direction after the Galaxy Watch 5 test: v2 on, with no timing
 or probe line and no recording (`KEEP_AUDIO` off), from the same code as the test build. It needs the phone at Android 123 or
 later. It goes to `wear:internal` on merge, as every raise does; the owner sends it to review from Play's console, after the
