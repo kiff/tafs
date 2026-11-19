@@ -1,0 +1,1 @@
+- **The words for a door "From another application"** (the API trigger's screens: the door, its keys, the key shown once, revoke, the instructions, and Coach's draft), in 8 languages, for both apps. Nothing shows them yet: the screens follow behind their own switch.
