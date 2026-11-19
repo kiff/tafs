@@ -4,7 +4,7 @@ import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
-import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
+import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
@@ -138,6 +138,10 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/tafs/{id}/estimate         its likely credits a month, from its own runs, a trial's or our tests', in one line (docs/api.md, "A taf's estimate")
  *   POST /v1/tafs/{id}/attachments      {media_type, name, size, sha256}: a file the person will attach, and where to upload it (kiff/tafs#209)
  *   GET  /v1/tafs/{id}/attachments/{att}  a file the person attached, with a download URL for a minute: only their own
+ *   GET  /v1/files                      ?taf=&run=&chat=&after=: the files the account's tafs delivered, newest first, each with its taf's name
+ *   GET  /v1/files/{id}                 one, with its start as plain text (preview): for everyone on the account
+ *   GET  /v1/files/{id}/download        a URL to its bytes for a minute, served as an attachment of its checked type
+ *   DELETE /v1/files/{id}               Delete now: gone for everyone on the account, its bytes at once
  *   POST /v1/tafs/{id}/steer            {run, text}: to the run at work, read at its next step (kiff/tafs#64)
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   POST /v1/tafs/{id}/holds/{exception}/allow  {round?}: "Allow this from now on" on a held call: KIFF's draft with the narrowest Card change, checked and worded, with what it would have done (docs/allow-from-now-on.md)
@@ -212,7 +216,7 @@ export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
-  "createAttachment" | "readAttachment" |
+  "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
 
@@ -614,7 +618,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
   "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "logos gallery recipes memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
-  "unarchive usage versions work webhooks record cases receipts brief decisions later").split(" "));
+  "unarchive usage versions work webhooks record cases receipts brief decisions later files download").split(" "));
 
 /**
  * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
@@ -690,6 +694,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     return discardHalfMade(event, await person(event, deps), agent, deps);
   }
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
+  if (parts[1] === "files") return filesRoute(event, method, parts, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
@@ -6006,6 +6011,56 @@ async function attachFile(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: De
 async function readFile(me: KIFFIdentity, taf: Taf, id: string, deps: Deps): Promise<unknown> {
   if (!ATTACHMENT_ID.test(id)) throw new HTTPError(404, "not found");
   return agentsCall(() => deps.agents.readAttachment(me.tenantID, taf.id, ownerKey(me), id));
+}
+
+const DELIVERED_ID = /^fil_[0-9a-f]{32}$/;
+const FILE_FILTER = /^[A-Za-z0-9_.:-]{1,128}$/;
+
+/**
+ * The files the account's tafs delivered (kiff/agents' deliver_file), for everyone on the account: listed
+ * (?taf=, ?run= or ?chat= to narrow it, ?after= for the next page), one with its preview, a download URL for a
+ * minute, and Delete now, which removes it for everyone. kiff/agents keeps them, reads only the account's own
+ * and logs each read and delete by the member. Each file gets its taf's name as tafs has it now: a removed taf's
+ * files go with it.
+ */
+async function filesRoute(event: HTTPEvent, method: string, parts: string[], me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  const by = `member:${me.subject}`;
+  const names = async () => new Map((await deps.tafs.list(me.tenantID)).map((t) => [t.id, t.name]));
+  // kiff/agents' times carry nanoseconds: the apps read one form, to the millisecond.
+  const named = <T extends DeliveredFile>(f: T, ns: Map<string, string>) =>
+    ({ ...f, created: new Date(f.created).toISOString(), expires: new Date(f.expires).toISOString(), taf_name: ns.get(f.taf) ?? null });
+  if (parts.length === 2 && method === "GET") {
+    const q = new URLSearchParams(event.rawQueryString ?? "");
+    const query: FileQuery = {};
+    for (const key of ["taf", "run", "chat"] as const) {
+      const v = q.get(key);
+      if (v === null || v === "") continue;
+      if (!FILE_FILTER.test(v)) throw new HTTPError(400, `${key} is an id`);
+      query[key] = v;
+    }
+    const after = q.get("after");
+    if (after) {
+      if (!DELIVERED_ID.test(after)) throw new HTTPError(400, "after is a file's id");
+      query.after = after;
+    }
+    const [page, ns] = await Promise.all([agentsCall(() => deps.agents.listFiles(me.tenantID, query)), names()]);
+    return { files: page.files.map((f) => named(f, ns)), ...(page.next ? { next: page.next } : {}) };
+  }
+  const id = parts[2] ?? "";
+  if (!DELIVERED_ID.test(id)) throw new HTTPError(404, "not found");
+  if (parts.length === 3 && method === "GET") {
+    const [f, ns] = await Promise.all([agentsCall(() => deps.agents.readDeliveredFile(me.tenantID, id, by)), names()]);
+    return named(f, ns);
+  }
+  if (parts.length === 4 && parts[3] === "download" && method === "GET") {
+    const [f, ns] = await Promise.all([agentsCall(() => deps.agents.downloadDeliveredFile(me.tenantID, id, by)), names()]);
+    return named(f, ns);
+  }
+  if (parts.length === 3 && method === "DELETE") {
+    await agentsCall(() => deps.agents.deleteDeliveredFile(me.tenantID, id, by));
+    return { deleted: id };
+  }
+  throw new HTTPError(404, "not found");
 }
 
 /** The person as the requester of their runs: their chats are theirs in kiff/agents. */

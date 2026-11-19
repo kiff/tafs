@@ -1,0 +1,1 @@
+- **Files, tafs cloud's routes:** the files the account's tafs deliver, listed by taf, run or chat, each with its taf's name, one with a plain-text preview, a one-minute download, and Delete now, for everyone on the account (`GET/DELETE /v1/files…`, [api.md](docs/api.md)). No app shows them yet.

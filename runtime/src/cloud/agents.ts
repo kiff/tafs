@@ -446,6 +446,28 @@ export interface Attachment extends AttachmentRef {
   sent: boolean;
 }
 
+/** A file a taf's run delivered, as kiff/agents answers it: never its bytes. */
+export interface DeliveredFile {
+  id: string;
+  /** The taf whose run delivered it, that run, and its chat when it had one. */
+  taf: string;
+  run: string;
+  chat?: string;
+  name: string;
+  media_type: string;
+  size: number;
+  created: string;
+  expires: string;
+}
+
+/** What a files list is narrowed to, and where its page starts (the last id of the page before). */
+export interface FileQuery {
+  taf?: string;
+  run?: string;
+  chat?: string;
+  after?: string;
+}
+
 /** Where the app uploads a file's bytes: a PUT to url with headers, sent as given, until expires. */
 export interface Upload {
   url: string;
@@ -731,6 +753,30 @@ export class Agents {
   /** A file the person attached, with a download URL for a minute: only theirs; another's is 404. */
   async readAttachment(tenant: string, agent: string, owner: string, id: string): Promise<Attachment & { url: string; url_expires: string }> {
     return this.call("GET", tenant, ["agents", agent, "attachments", id], undefined, { owner });
+  }
+
+  // Files tafs' runs deliver (kiff/agents' deliver_file): the account's, kept 30 days.
+
+  /** The account's delivered files, newest first, 100 a page, narrowed to one taf, run or chat. */
+  async listFiles(tenant: string, q: FileQuery): Promise<{ files: DeliveredFile[]; next?: string }> {
+    const query: Record<string, string> = {};
+    for (const [k, v] of Object.entries(q)) if (v) query[k] = v;
+    return this.call("GET", tenant, ["files"], undefined, query);
+  }
+
+  /** One file and its preview, as plain text, for member (logged by kiff/agents); another account's is 404. */
+  async readDeliveredFile(tenant: string, id: string, member: string): Promise<DeliveredFile & { preview: string; preview_truncated: boolean }> {
+    return this.call("GET", tenant, ["files", id], undefined, { by: member });
+  }
+
+  /** A URL to one file's bytes for a minute, served as an attachment of its checked type. */
+  async downloadDeliveredFile(tenant: string, id: string, member: string): Promise<DeliveredFile & { url: string; url_expires: string }> {
+    return this.call("GET", tenant, ["files", id, "download"], undefined, { by: member });
+  }
+
+  /** Removes one file for everyone on the account, its bytes at once; kiff/agents logs who. */
+  async deleteDeliveredFile(tenant: string, id: string, member: string): Promise<void> {
+    return this.call("DELETE", tenant, ["files", id], undefined, { by: member });
   }
 
   // Runs.
