@@ -149,7 +149,8 @@ final class FilesTests: XCTestCase {
         let files = try await store.files()
         XCTAssertEqual(files.map(\.id), ["fil_a", "fil_b"], "both pages")
         // Opening a file reads its start, never its bytes.
-        let preview = try XCTUnwrap(try await store.preview(of: "fil_a"))
+        let read = try await store.preview(of: "fil_a")
+        let preview = try XCTUnwrap(read)
         XCTAssertEqual(preview, FilePreviewText(text: "name,amount\nAna,12.50\n", truncated: true),
                        "tafs cloud's start as text, a direction override taken out even if one got through")
         XCTAssertTrue(fetched.urls.isEmpty, "no download for the preview")
