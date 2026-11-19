@@ -314,7 +314,7 @@ in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved 
   `calendar.today` and tafs cloud's own.
 
 **W12, Play and Pause on Apple Watch: the plan (not built; held for the owner's yes)**, as the owner asked for the next
-version ("on the watch first", PM 19 Nov 14:40). On Apple Watch only the phone's path exists: watchOS gives an app no speech
+version ("on the watch first", 19 Nov). On Apple Watch only the phone's path exists: watchOS gives an app no speech
 recognizer (no `Speech` framework), and the system's dictation hands back text, never the sound. So words and a recording
 can't be one capture on the watch as they are on Wear OS (docs/watch-wear.md, Play and Pause).
 - **Start, on the watch:** the app records itself (`AVAudioRecorder`, AAC, 16 kHz mono) into its own container, at most
