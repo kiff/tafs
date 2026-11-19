@@ -7523,6 +7523,9 @@ class AppModel(
   }
 
   /** The key's screen closed: nothing of the key is kept. */
+  /** Where an `api` door's caller sends requests (as iOS's `endpoint`). */
+  fun apiEndpoint(door: bot.tafs.app.kiff.Door): String = endpointOn(cloud.baseUrl, door.address)
+
   fun apiKeyShown(tafId: String) {
     updateDoors(tafId) { it.copy(issued = null) }
   }
@@ -9245,3 +9248,7 @@ data class AllowSheetState(
   /** The rounded figure was asked for: the offer no longer offers to round. */
   val rounded: Boolean = false,
 )
+
+/** An address on [base] when it's a path, as given when it's already a whole https URL. */
+internal fun endpointOn(base: String, address: String): String =
+  if (address.startsWith("https://")) address else base.trimEnd('/') + "/" + address.trimStart('/')

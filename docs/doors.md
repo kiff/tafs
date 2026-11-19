@@ -207,6 +207,16 @@ the door's own when left blank; at most two); the key shown once (Copy key, wher
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
+**Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
+state and its switch (off pauses it at once; on is signed), today against its cap, the last request in
+tafs cloud's words (no line without them), its keys by name with when each was made and last used and its last four, Revoke
+asked once more and then signed, and New key while it holds fewer than two: named (trimmed; a blank name is the door's
+own, as on iPhone; never while the door is busy), signed, then shown once with Copy, where to send requests, an example and
+Done. Copy marks the clip sensitive (Android 13 and later) and clears it a minute later if it's still tafs's own clip,
+while tafs runs; Done forgets the key. API instructions show where to send requests (the door's `address` on tafs cloud's
+host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
+one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:
