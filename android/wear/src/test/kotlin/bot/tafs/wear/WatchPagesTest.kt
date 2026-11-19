@@ -428,6 +428,8 @@ class WatchPagesTest {
     assertEquals("Refunded for order A-1039.\n" + Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "Refunded €84 for order A-1039.")))
     assertEquals("Paused until Monday 08:00.", AskResults.alertText(answered.copy(line = "Paused until Monday 08:00.")))
     assertEquals(Words.Watch.moreOnPhone, AskResults.alertText(answered.copy(line = "€84")))
+    // Spacing or a trailing ":" alone takes nothing out, so nothing is added (qa-kiff, #1445).
+    assertEquals("Here's what I found:", AskResults.alertText(answered.copy(line = "Here's what I found:")))
   }
 
   /** The answer's alert is on a high-importance channel, so it peeks and stays; the old default one is gone. */
