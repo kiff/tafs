@@ -178,13 +178,20 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 **Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
 `WatchPagesTest`). Nothing leaves the watch before Send:
 - **The microphone** opens its screen ready (`Voice.Ready`): **Start**, a round button in the brand's colours with the
-  microphone, "Ready · 30 s at most", and what to do. Start listens; the screen shows "● Recording" in red, the timer against
-  0:30, a ring that fills to the limit, the words as they're heard, and **Stop**: another control, not Start relabelled, a solid
-  red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`, `RECORD_STOP`). At
-  30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for the same ask.
+  microphone, "Ready · 30 s", and what to do. Start listens; the screen shows "● Recording · 30 s" in red, the timer against
+  0:30, a ring that fills to the limit, the words as they're heard (two lines; the review has them all), and **Stop**: another
+  control, not Start relabelled, a solid red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`,
+  `RECORD_STOP`). The top line is kept short for the top of a round face, and TalkBack reads it in full ("Ready · 30 s at
+  most", `watch.limit`); it sits 12 % of the face down (`TOP_INSET_SHARE`), where the face is wide enough for it (the Galaxy
+  Watch 5 test, W8). At 30 s (`LISTEN_LIMIT_MS`) listening stops by itself (`Listener.stop`). Reply opens it the same way, for
+  the same ask.
 - **Stopped, or the recognizer heard the end:** the words go to **Check before sending** (`Voice.Review`), never to the phone.
-  It shows them in full, scrolled with the crown, with **Re-record** (the words dropped, ready again for the same ask),
-  **Delete** ("Deleted. Nothing was sent.", which closes by itself after 2 s) and **Send**.
+  It shows them in full, scrolled with the crown or a swipe, starting below the face's top curve, and fading out at the curve
+  and above the foot rather than being cut. Its three actions are pinned at the foot, always in reach without scrolling (W9):
+  round icon buttons in a row that follows the face's bottom curve, **Delete** (✕, left: "Deleted. Nothing was sent.", which
+  closes by itself after 2 s), **Send** (→, in the middle, the biggest, in amber) and **Re-record** (↻, right: the words
+  dropped, ready again for the same ask). Each is named for TalkBack in the shared words (`chat.delete`, `common.send`,
+  `watch.rerecord`). The last line of a long message rests above them (`REVIEW_FOOT`), so it's readable to its end.
 - **Type** opens the system's text input (`RemoteInput`: keyboard, handwriting or voice typing) and **Quick reply** four
   ready-made lines; each goes to the same review. Blank is nothing; the words are cut at 2,000 characters, as an ask is.
 - **Send** sends what v1 sends (`ask`, a new id), checked against the watch's lock again, since it may have locked while the
@@ -202,7 +209,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   In a test version the app opens the microphone itself (`AudioTap`,
   16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
   OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
-  (`files/voice/`), kept beside the review only: **Play** and **Pause** go on from where it was, with "0:03 / 0:12". It never
+  (`files/voice/`), kept beside the review only, under its title and above the words: **Play** (▶) and **Pause** (‖), a round
+  icon button named for TalkBack (`watch.play`, `taf.pause`), go on from where it was, with "0:03 / 0:12". It never
   leaves the watch, only the words do. It's erased the moment the review is left, by whatever leaves it (`WatchModel.voiceNow`):
   Send, Delete, Re-record, Cancel, a lock at Send, put away, and signed out; v1 keeps none, and Keep for later is text only. Any
   recording no screen holds is swept when the app starts and when it's put away (`VoiceFiles.sweep`).
@@ -310,8 +318,8 @@ comes. On the pages themselves back is the system's own, and leaves the app.
 **Screenshots** (`WearV2Screenshots`): v2's screens for review, not for Play, drawn through `WatchPages` (the switch stays off) in
 English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two sizes, 40 mm (396 ×
 396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread line, Tafs, a taf's
-page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long transcript, and
-Recording. 22 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
+page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long transcript (its
+actions pinned at the foot), and Recording. 22 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
 they are; otherwise each screen is still drawn:
 
 ```bash

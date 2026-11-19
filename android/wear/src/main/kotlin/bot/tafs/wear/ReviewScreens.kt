@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +20,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -38,14 +46,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
+import androidx.wear.compose.material3.FilledIconButton
+import androidx.wear.compose.material3.IconButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlinx.coroutines.delay
 
 /** v2's limit on one recording: listening stops by itself here, and the words go to the review (docs/watch-wear.md). */
@@ -53,6 +66,15 @@ internal const val LISTEN_LIMIT_MS = 30_000L
 
 /** How long "Deleted. Nothing was sent." stays before the microphone's screen closes by itself. */
 internal const val DELETED_SHOWN_MS = 2_000L
+
+/**
+ * How far the first line sits from the round face's top, as a share of the face: from there down the face is wide enough for a
+ * short line, so nothing is cut where it curves (the Galaxy Watch 5 test, W8). About 24 dp on the 40 mm face, 27 on the 44 mm.
+ */
+internal const val TOP_INSET_SHARE = 0.12f
+
+/** The limit on one recording, short enough for the top of a round face: "30 s". TalkBack reads it in full ("30 s at most"). */
+internal fun limitShort(): String = "${LISTEN_LIMIT_MS / 1000} s"
 
 /**
  * v2's microphone, full face (mockup v2.1, Recording and Check before sending): Start, then Stop with the timer and a ring that
@@ -88,14 +110,18 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
   }
 }
 
-/** The recording screen: one control in three states you can't mistake, Start, then Stop with its timer, then the review. */
+/**
+ * The recording screen: one control in three states you can't mistake, Start, then Stop with its timer, then the review. Its top
+ * line is short ("● Recording · 30 s") and sits below the face's top curve.
+ */
 @Composable
 private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() -> Unit)?) {
-  Box(Modifier.fillMaxSize().background(Color.Black)) {
-    Column(Modifier.align(Alignment.TopCenter).padding(top = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-      if (start != null) T("${Words.Watch.ready} · ${Words.Watch.limit}", 11.sp, Look.dim, lines = 1)
-      else T("● ${Words.Watch.recording} · ${Words.Watch.limit}", 11.sp, Look.red, lines = 1)
-      Spacer(Modifier.height(4.dp))
+  BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+    Column(Modifier.align(Alignment.TopCenter).padding(top = maxHeight * TOP_INSET_SHARE), horizontalAlignment = Alignment.CenterHorizontally) {
+      val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
+      T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.red, lines = 1,
+        modifier = Modifier.semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
+      Spacer(Modifier.height(2.dp))
       Box(Modifier.size(78.dp), contentAlignment = Alignment.Center) {
         // The ring fills to the limit.
         Canvas(Modifier.fillMaxSize()) {
@@ -103,8 +129,8 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
           drawCircle(Look.surfaceHi, radius = size.minDimension / 2 - stroke, style = Stroke(stroke))
           drawArc(
             Look.amber, startAngle = -90f, sweepAngle = 360f * seconds / (LISTEN_LIMIT_MS / 1000f), useCenter = false,
-            topLeft = androidx.compose.ui.geometry.Offset(stroke, stroke),
-            size = androidx.compose.ui.geometry.Size(size.width - 2 * stroke, size.height - 2 * stroke),
+            topLeft = Offset(stroke, stroke),
+            size = Size(size.width - 2 * stroke, size.height - 2 * stroke),
             style = Stroke(stroke, cap = StrokeCap.Round),
           )
         }
@@ -112,11 +138,11 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       }
       T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
       Spacer(Modifier.height(2.dp))
-      // The words as they're heard; before Start, what to do.
+      // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides.
       T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.text,
-        modifier = Modifier.width(150.dp), lines = 3, lineHeight = 15.sp)
+        modifier = Modifier.width(150.dp), lines = 2, lineHeight = 15.sp)
     }
-    Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
+    Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
   }
 }
 
@@ -151,33 +177,87 @@ private fun RecordButton(recording: Boolean, onClick: () -> Unit) {
   }
 }
 
-/** Test tags for the two looks of the recording control. */
+/** Test tags for the two looks of the recording control, and the line above it. */
 internal const val RECORD_START = "record-start"
 internal const val RECORD_STOP = "record-stop"
+internal const val RECORD_STATE = "record-state"
 
-/** Check before sending: the words in full, scrolled with the crown and never cut, then Re-record, Delete and Send. */
+/** The review's foot: the height its pinned actions take, and the fade the words scroll into above them. */
+internal val REVIEW_FOOT: Dp = 68.dp
+
+/** Test tags for the review's actions, pinned at its foot. */
+internal const val REVIEW_DELETE = "review-delete"
+internal const val REVIEW_SEND = "review-send"
+internal const val REVIEW_AGAIN = "review-again"
+
+/**
+ * Check before sending: the words in full, scrolled with the crown and never cut, and pinned at the foot, in reach without
+ * scrolling, Delete (✕), Send (→, the big one, at the bottom centre) and Re-record (↻), round icon buttons that follow the
+ * face's curve (the Galaxy Watch 5 test, W9). The words scroll on their own, starting below the top curve, and the last line of a
+ * long message rests above the buttons. Each button is named for TalkBack in the watch's words.
+ */
 @Composable
 private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?) {
-  ScalingLazyColumn(Modifier.fillMaxSize().background(Color.Black), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
-    verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    item { ListHeader { Text(Words.Watch.review) } }
-    // Inset from the round edge, so no line of a long transcript is cut where the face curves (qa-kiff's device read, #1409).
-    item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
-    // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
-    val playback = act.playback
-    if (audio != null && playback != null) item { PlayRow(audio, playback) }
-    probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
-    item {
-      Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)) {
-        Button(onClick = act.rerecord, modifier = Modifier.weight(1f)) { Text(Words.Watch.rerecord, maxLines = 1) }
-        Button(onClick = act.delete, modifier = Modifier.weight(1f)) { Text(Words.Chat.delete, maxLines = 1) }
-      }
+  BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+    val top = maxHeight * TOP_INSET_SHARE
+    ScalingLazyColumn(
+      Modifier.fillMaxSize(), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+      // From below the top curve to above the foot, so the end of a long message can rest clear of the buttons.
+      autoCentering = null,
+      contentPadding = PaddingValues(top = top, bottom = REVIEW_FOOT),
+      verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+      item { ListHeader { Text(Words.Watch.review) } }
+      // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
+      val playback = act.playback
+      if (audio != null && playback != null) item { PlayRow(audio, playback) }
+      // Inset from the round edge, so no line of a long transcript is cut where the face curves (qa-kiff's device read, #1409).
+      item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
+      probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
     }
-    item { Button(onClick = act.send, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.send) } }
+    // Words scrolled past the top curve, or down into the foot, fade out there rather than being cut by the face's edge.
+    Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().height(top).background(Brush.verticalGradient(listOf(Color.Black, Color.Transparent))))
+    Box(
+      Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(REVIEW_FOOT)
+        .background(Brush.verticalGradient(0f to Color.Transparent, 0.12f to Color.Black)),
+    )
+    ReviewActions(act, Modifier.align(Alignment.BottomCenter).padding(bottom = 8.dp))
   }
 }
 
-/** Play ↔ Pause, with the position against the length (0:03 / 0:12). */
+/**
+ * The review's three actions, in a row that follows the face's bottom curve: Send lowest, in the middle, the biggest and in amber;
+ * Delete and Re-record either side of it, lifted so they stay inside the round face.
+ */
+@Composable
+private fun ReviewActions(act: Actions, modifier: Modifier = Modifier) {
+  Row(modifier, verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    RoundIcon(Words.Chat.delete, act.delete, REVIEW_DELETE, Modifier.padding(bottom = 14.dp)) { crossGlyph(it) }
+    RoundIcon(Words.Common.send, act.send, REVIEW_SEND, size = 48.dp, container = Look.amber, content = Look.onAmber) { sendGlyph(it) }
+    RoundIcon(Words.Watch.rerecord, act.rerecord, REVIEW_AGAIN, Modifier.padding(bottom = 14.dp)) { againGlyph(it) }
+  }
+}
+
+/** A round icon button, named [label] for TalkBack; its glyph is drawn and carries no word. */
+@Composable
+private fun RoundIcon(
+  label: String,
+  onClick: () -> Unit,
+  tag: String,
+  modifier: Modifier = Modifier,
+  size: Dp = 40.dp,
+  container: Color = Look.surfaceHi,
+  content: Color = Look.text,
+  glyph: DrawScope.(Color) -> Unit,
+) {
+  FilledIconButton(
+    onClick = onClick,
+    modifier = modifier.size(size).semantics { contentDescription = label }.testTag(tag),
+    colors = IconButtonDefaults.filledIconButtonColors(containerColor = container, contentColor = content),
+  ) { Glyph(Modifier.size(size * 0.46f)) { glyph(content) } }
+}
+
+/** Play ↔ Pause (▶ and ‖), with the position against the length (0:03 / 0:12). */
 @Composable
 private fun PlayRow(audio: VoiceAudio, playback: Playback) {
   val playing by playback.playing.collectAsState()
@@ -190,9 +270,9 @@ private fun PlayRow(audio: VoiceAudio, playback: Playback) {
     }
   }
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
-    Button(onClick = { playback.toggle(audio) }, modifier = Modifier.testTag(if (playing) PLAYBACK_PAUSE else PLAYBACK_PLAY)) {
-      Text(if (playing) Words.Taf.pause else Words.Watch.play, maxLines = 1)
-    }
+    RoundIcon(
+      if (playing) Words.Taf.pause else Words.Watch.play, { playback.toggle(audio) }, if (playing) PLAYBACK_PAUSE else PLAYBACK_PLAY, size = 36.dp,
+    ) { if (playing) pauseGlyph(it) else playGlyph(it) }
     Text("${clock(at)} / ${clock(audio.durationMs)}", fontSize = 12.sp, color = Look.text)
   }
 }
@@ -201,6 +281,74 @@ private fun clock(ms: Long): String = (ms / 1000).let { "%d:%02d".format(it / 60
 
 internal const val PLAYBACK_PLAY = "playback-play"
 internal const val PLAYBACK_PAUSE = "playback-pause"
+
+// MARK: The review's glyphs, drawn with shapes: ✕, →, ↻, ▶ and ‖
+
+private fun DrawScope.crossGlyph(color: Color) {
+  val d = size.minDimension
+  val a = d * 0.24f
+  val c = center
+  val sw = d * 0.12f
+  drawLine(color, Offset(c.x - a, c.y - a), Offset(c.x + a, c.y + a), sw, StrokeCap.Round)
+  drawLine(color, Offset(c.x + a, c.y - a), Offset(c.x - a, c.y + a), sw, StrokeCap.Round)
+}
+
+private fun DrawScope.sendGlyph(color: Color) {
+  val d = size.minDimension
+  val c = center
+  val sw = d * 0.12f
+  val head = Path().apply {
+    moveTo(c.x + d * 0.04f, c.y - d * 0.28f)
+    lineTo(c.x + d * 0.32f, c.y)
+    lineTo(c.x + d * 0.04f, c.y + d * 0.28f)
+  }
+  drawLine(color, Offset(c.x - d * 0.32f, c.y), Offset(c.x + d * 0.28f, c.y), sw, StrokeCap.Round)
+  drawPath(head, color, style = Stroke(sw, cap = StrokeCap.Round, join = StrokeJoin.Round))
+}
+
+/** ↻: a clockwise circle, open at the top right, with its arrowhead. */
+private fun DrawScope.againGlyph(color: Color) {
+  val d = size.minDimension
+  val c = center
+  val sw = d * 0.11f
+  val r = d * 0.32f
+  val start = -40f
+  val sweep = 290f
+  drawArc(color, start, sweep, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(sw, cap = StrokeCap.Round))
+  // The arrowhead at the arc's end, pointing on, clockwise.
+  val end = Math.toRadians((start + sweep).toDouble())
+  val out = Offset(cos(end).toFloat(), sin(end).toFloat())
+  val on = Offset(-out.y, out.x)
+  val p = Offset(c.x + r * out.x, c.y + r * out.y)
+  val a = d * 0.17f
+  val head = Path().apply {
+    moveTo(p.x + on.x * a, p.y + on.y * a)
+    lineTo(p.x + out.x * a, p.y + out.y * a)
+    lineTo(p.x - out.x * a, p.y - out.y * a)
+    close()
+  }
+  drawPath(head, color)
+}
+
+private fun DrawScope.playGlyph(color: Color) {
+  val d = size.minDimension
+  val c = center
+  val tri = Path().apply {
+    moveTo(c.x - d * 0.22f, c.y - d * 0.32f)
+    lineTo(c.x + d * 0.32f, c.y)
+    lineTo(c.x - d * 0.22f, c.y + d * 0.32f)
+    close()
+  }
+  drawPath(tri, color)
+}
+
+private fun DrawScope.pauseGlyph(color: Color) {
+  val d = size.minDimension
+  val c = center
+  val w = d * 0.18f
+  val h = d * 0.62f
+  for (x in listOf(c.x - d * 0.24f, c.x + d * 0.06f)) drawRoundRect(color, Offset(x, c.y - h / 2), Size(w, h), CornerRadius(w / 3, w / 3))
+}
 
 /** Quick reply: ready-made lines, each to the review, as words heard are. */
 @Composable
