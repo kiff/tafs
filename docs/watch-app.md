@@ -293,6 +293,25 @@ OS's `Look` value for value (#1451), so both watches read alike.
 - **Delete, halt and sign out red** (`danger` #FF5A5F): the review's ✕, Halt now, Sign out, a halted taf's or day's line.
 - **Everything else** stays the system's grey. v1 is unchanged: it keeps the system's tint, and Needs you its own colours.
 
+**W11, "From your watch" on the iPhone and iPad** (`WatchDaysModel`, `WatchDaysSection`, `WatchDayView`; tafs cloud's reads
+in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved mockup, behind its own switch
+(`WatchDaysFeature.on`, off):
+- **In Coach's Previous conversations,** a section "From your watch": the days the person asked from a watch, newest first,
+  each with how many (`GET /v1/watch/days`), apart from the chats started on the phone. One a day, as the owner chose.
+  "Today" is the account's today as tafs cloud gives it (`today`), so someone on another time zone than the account's sees
+  it on the right day; a tafs cloud that doesn't give it leaves the phone's own day (agentgabo's read).
+- **A day** (`GET /v1/watch/days/{date}`) lists its turns oldest first: "⌚ Sent from your watch" and when, the person's
+  words, then the taf that took it and its line, or tafs cloud's words for where it is. A reply sits under what it replies
+  to. Read only: a reply from the phone goes on in a Coach chat, as any other.
+- **The person's own only,** as tafs cloud serves them: another member never sees them, the account's owner included.
+- **Nothing kept on the phone:** each is read when shown, a day is forgotten when it's left, and an answer for a day asked
+  before the last is never drawn. A read that fails, or a tafs cloud without the routes (404 `watch_off`), shows no section,
+  never an error.
+- **Apple Watch days** come once the iPhone sends the Apple Watch's words through `POST /v1/watch/asks`, as Android's relay
+  does; until then the section lists only what came through that route.
+- **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
+  `calendar.today` and tafs cloud's own.
+
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
 The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in

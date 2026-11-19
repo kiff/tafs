@@ -1180,6 +1180,8 @@ enum Words {
             static var archived: String { Words.line("coach.chats.archived") }
             /// ‹ Back
             static var back: String { Words.line("coach.chats.back") }
+            /// From your watch
+            static var fromYourWatch: String { Words.line("coach.chats.from_your_watch") }
             /// No conversations yet.
             static var none: String { Words.line("coach.chats.none") }
             /// Nothing archived.
@@ -1188,6 +1190,8 @@ enum Words {
             static var previous: String { Words.line("coach.chats.previous") }
             /// Put back
             static var putBack: String { Words.line("coach.chats.put_back") }
+            /// ⌚ Sent from your watch
+            static var sentFromYourWatch: String { Words.line("coach.chats.sent_from_your_watch") }
             /// Conversation
             static var untitled: String { Words.line("coach.chats.untitled") }
         }

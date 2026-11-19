@@ -848,6 +848,8 @@ struct SetupChatsList: View {
     @State private var notArchived: String?
     /// The conversation waiting for the owner's yes to archive it.
     @State private var confirming: TafsCloud.Chat?
+    /// W11: the watch's conversations, one a day (`WatchDaysFeature`, off).
+    @State private var watchDays: WatchDaysModel?
 
     var body: some View {
         NavStack {
@@ -870,6 +872,7 @@ struct SetupChatsList: View {
                             .tint(Theme.soft)
                     }
                 }
+                if let watchDays { WatchDaysSection(model: watchDays) }
                 NavigationLink {
                     ArchivedSetupChats(open: open)
                 } label: {
@@ -894,7 +897,13 @@ struct SetupChatsList: View {
             .navigationTitle(Words.Coach.Chats.previous)
             .inlineTitle()
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
-            .task { await model.loadSetupChats() }
+            .task {
+                await model.loadSetupChats()
+                guard WatchDaysFeature.on, model.mode == .kiff else { return }
+                let days = watchDays ?? WatchDaysModel(reading: model.cloud)
+                watchDays = days
+                await days.load()
+            }
         }
     }
 

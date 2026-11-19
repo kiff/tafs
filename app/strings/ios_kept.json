@@ -97,6 +97,10 @@
   "Services/WatchRelay.swift": {
     "yyyy-MM-dd": "a date format for the calendar's day key, never shown"
   },
+  "Model/WatchDays.swift": {
+    "yyyy-MM-dd": "a date format for a watch day's key, as tafs cloud names it, never shown",
+    "EEEEdMMMM": "a date template the locale turns into its own words, never shown as written"
+  },
   "Model/Files.swift": {
     "Late parcels": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
     "Support replies": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
