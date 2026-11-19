@@ -299,7 +299,7 @@ export const es: Words = {
   brief_refuse: "Rechazar",
   brief_more: (n) => `${n} más`,
   brief_rest_line: (n, form) => (n === 0 ? "Nada más." : form === "one" ? `Otro taf no necesita nada de ti.` : `Otros ${n} tafs no necesitan nada de ti.`),
-  brief_coach_line: (n, form) => (form === "one" && n === 1 ? "1 Coach chat waits for your answer." : `${n} Coach chats wait for your answer.`),
+  brief_coach_line: (n, form) => (form === "one" ? "1 chat de Coach espera tu respuesta." : `${n} chats de Coach esperan tu respuesta.`),
   brief_hold_question: (taf) => `${taf} espera tu aprobación`,
   brief_hold_meanwhile: "No se hace nada hasta que respondas.",
   brief_step_meanwhile: "Su ejecución espera este paso.",
