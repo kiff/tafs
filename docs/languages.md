@@ -160,7 +160,8 @@ that tell a message's language, in tafs and kiff/agents together.
   source's (a sheet, an email, a page, an account's locale: 18 Nov, an English message to a taf on a
   French Google account came back in French). A message a taf sends a customer keeps the customer's
   language. Coach also writes what the app shows (questions, cards, a version's note, a taf's
-  summary) in the app's language. A taf's message sent again under its `client_message_id` matches
+  summary) in the app's language. A line the person types that starts as one of tafs' own (`[tafs language]`, `[tafs time zone]`) is
+  dropped from their message, so only tafs cloud's rule reaches the taf. A taf's message sent again under its `client_message_id` matches
   kiff/agents' digest with the line or without it (one sent before the line). For an account outside UTC, a
   `[tafs time zone]` line beside it says the account's zone and the time there now, and that every
   time Coach writes (a cron, an at, a time in a message) is in it, as the owner says it: kiff/agents'
