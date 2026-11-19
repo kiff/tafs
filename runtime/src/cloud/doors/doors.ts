@@ -6,7 +6,7 @@ import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
-import { API_DOOR, type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
+import { API_DOOR, type APIDraft, type APIField, type APIKey, type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
@@ -56,7 +56,7 @@ export interface DoorsContext {
 }
 
 export class DoorError extends Error {
-  constructor(readonly status: number, message: string) {
+  constructor(readonly status: number, message: string, readonly code?: string) {
     super(message);
   }
 }
@@ -774,7 +774,8 @@ export function apiDoorView(d: Door, today = { keys: 0, others: 0 }, lang: Lang 
   return {
     id: d.id, app: "api", kind: "api" as const, label, open: d.open, address: apiRequestsPath(d.id),
     proof: "proven", how: w.door_api_how,
-    keys: (d.apiKeys ?? []).map((k) => ({ id: k.id, name: k.name, last4: k.last4, made_at: k.made, ...(k.lastUsed ? { last_used_at: k.lastUsed } : {}) })),
+    ...(d.api ? { application: d.api.name } : {}),
+    keys: (d.apiKeys ?? []).filter((k) => !k.revoked).map((k) => ({ id: k.id, name: k.name, last4: k.last4, made_at: k.made, ...(k.lastUsed ? { last_used_at: k.lastUsed } : {}) })),
     today: today.keys, limit: perDay, resting,
     others_today: 0, others_limit: 0,
     counts: { today: today.keys, waiting: d.waiting ?? 0 },
@@ -1029,6 +1030,11 @@ export async function removeDoor(ctx: DoorsContext, owner: Owner, taf: Taf, id: 
  * reaches another account. The retired route names no account.
  */
 async function closeDoor(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, door: Door, opts: { retire: boolean }): Promise<void> {
+  // An `api` door has no address to retire: its keys stop working, each at once.
+  if (door.kind === "api") {
+    for (const k of door.apiKeys ?? []) if (k.hash) await ctx.doors.store.remove(doorKeys.apiKey(k.hash));
+    return;
+  }
   if (door.kind === "whatsapp" && door.phoneNumberID) await ctx.doors.secrets.remove(whatsappSecretName(cfg.secretsPrefix, tenant, door.phoneNumberID));
   if (door.kind === "email" && opts.retire) await ctx.doors.store.put(doorKeys.route(door.route), { retired: true }, addDays(ctx.now, DOOR.retiredDays));
   else await ctx.doors.store.remove(doorKeys.route(door.route));
@@ -1117,4 +1123,140 @@ export async function doorLights(store: DoorStore, tenant: string, taf: string, 
     app: d.app, label: APPS.find((x) => x.id === d.app)?.label ?? d.app, open: d.open, resting: counts[i]!.keys >= DOOR.keysPerDay,
     knocks: knocks.filter((k) => k.door === d.id && k.state === "open" && !k.rest).length,
   }));
+}
+
+/** Field names a draft can't have: a field is data, and a request never carries the job or a rule (design 3.6). */
+const NOT_A_FIELD = /^(instructions?|prompt|system|rules?|job|task|command|tools?|scope|url|secret|token|key|password)$/;
+const FIELD_NAME = /^[a-z][a-z0-9_]{0,39}$/;
+
+/**
+ * The draft the owner approves for an `api` door, checked as tafs cloud keeps it: a name, 1 to 20 flat fields, the job
+ * line, 1 to 10 outcomes, and whether the taf's words go back. Anything else is refused, saying which part.
+ */
+export function apiDraftOf(raw: unknown): APIDraft {
+  const bad = (what: string): never => { throw new DoorError(400, `the door's draft: ${what}`); };
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return bad("send it as {name, fields, job, outcomes, text}");
+  const d = raw as Record<string, unknown>;
+  const name = typeof d.name === "string" ? d.name.trim() : "";
+  if (!name || name.length > 80) bad("name is the application's name, up to 80 characters");
+  const job = typeof d.job === "string" ? d.job.trim() : "";
+  if (!job || job.length > 1000) bad("job is what the taf does with a request, up to 1,000 characters");
+  if (!Array.isArray(d.fields) || d.fields.length === 0 || d.fields.length > API_DOOR.fields) bad(`fields are 1 to ${API_DOOR.fields}`);
+  const fields: APIField[] = [];
+  for (const f of d.fields as unknown[]) {
+    const x = (f && typeof f === "object" ? f : {}) as Record<string, unknown>;
+    const fname = typeof x.name === "string" ? x.name : "";
+    if (!FIELD_NAME.test(fname)) bad("a field's name is lowercase letters, digits and _, up to 40");
+    if (NOT_A_FIELD.test(fname)) bad(`"${fname}" can't be a field: a request sends data, never instructions`);
+    if (fields.some((g) => g.name === fname)) bad(`"${fname}" is there twice`);
+    if (x.type === "string") {
+      const max = x.max;
+      if (typeof max !== "number" || !Number.isInteger(max) || max < 1 || max > API_DOOR.maxChars) bad(`${fname}: a string has a max from 1 to ${API_DOOR.maxChars}`);
+      fields.push({ name: fname, type: "string", max: max as number });
+    } else if (x.type === "enum") {
+      const values = Array.isArray(x.values) ? x.values : [];
+      if (values.length === 0 || values.length > 50 || !values.every((v) => typeof v === "string" && v.trim() && v.length <= 80) || new Set(values).size !== values.length) {
+        bad(`${fname}: an enum has 1 to 50 different values, each up to 80 characters`);
+      }
+      fields.push({ name: fname, type: "enum", values: values as string[] });
+    } else if (x.type === "number" || x.type === "boolean") fields.push({ name: fname, type: x.type });
+    else bad(`${fname}: a type is string, number, boolean or enum`);
+  }
+  if (!Array.isArray(d.outcomes) || d.outcomes.length === 0 || d.outcomes.length > API_DOOR.outcomes) bad(`outcomes are 1 to ${API_DOOR.outcomes}`);
+  const outcomes = d.outcomes as unknown[];
+  if (!outcomes.every((o) => typeof o === "string" && FIELD_NAME.test(o)) || new Set(outcomes).size !== outcomes.length) bad("an outcome is lowercase letters, digits and _, each once");
+  if (d.text !== undefined && typeof d.text !== "boolean") bad("text is true or false");
+  const known = new Set(["name", "fields", "job", "outcomes", "text"]);
+  const extra = Object.keys(d).find((k) => !known.has(k));
+  if (extra) bad(`${extra} isn't part of it`);
+  return { name, fields, job, outcomes: outcomes as string[], text: d.text === true };
+}
+
+/** A new key: `tafs_api_` and 32 random bytes. Only its hash is kept; the key is in the one answer that made it. */
+function newAPIKey(name: string, now: string): { record: APIKey; key: string } {
+  const key = `tafs_api_${randomBytes(32).toString("base64url")}`;
+  const record: APIKey = { id: `key_${randomBytes(8).toString("hex")}`, name, last4: key.slice(-4), hash: createHash("sha256").update(key).digest("hex"), made: now };
+  return { record, key };
+}
+
+/** What the answer that made a key shows, once: the key itself, never again. */
+const keyShown = (k: APIKey, key: string) => ({ id: k.id, name: k.name, key, last4: k.last4, made_at: k.made });
+
+/**
+ * Turns on an `api` door ("From another application") with the draft its owner approved, and its first key. The
+ * caller signed this (the handler checked it). Answers the door and the key, the key this once.
+ */
+export async function addAPIDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body: Record<string, unknown>) {
+  const draft = apiDraftOf(body.draft);
+  const { store } = ctx.doors;
+  const now = ctx.now.toISOString();
+  if ((await doorsOf(store, owner.tenant, taf.id)).some((d) => d.kind === "api")) throw new DoorError(409, `${taf.name} already has a door from another application`);
+  const id = `api-${randomBytes(6).toString("hex")}`;
+  const { record, key } = newAPIKey(typeof body.key_name === "string" && body.key_name.trim() ? body.key_name.trim().slice(0, 80) : draft.name, now);
+  if (!(await store.create(doorKeys.apiKey(record.hash!), { tenant: owner.tenant, taf: taf.id, door: id, key: record.id }))) throw new DoorError(503, "try again");
+  const door: Door = { id, kind: "api", app: "api", open: true, address: apiRequestsPath(id), route: `api:${id}`, keys: [], created: now, api: draft, apiKeys: [record] };
+  try {
+    await changeDoors(store, owner.tenant, taf.id, (all) => {
+      if (all.some((d) => d.kind === "api")) throw new DoorError(409, `${taf.name} already has a door from another application`);
+      return [...all, door];
+    });
+  } catch (err) {
+    await store.remove(doorKeys.apiKey(record.hash!)).catch(() => undefined);
+    throw err;
+  }
+  return { door: apiDoorView(door, undefined, ctx.lang), key: keyShown(record, key) };
+}
+
+/** A new key for an `api` door, named by its owner: two live at most, so one replaces the other without a gap. */
+export async function newAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, body: Record<string, unknown>) {
+  const name = typeof body.name === "string" ? body.name.trim() : "";
+  if (!name || name.length > 80) throw new DoorError(400, "name the key: where it's used, up to 80 characters");
+  const { store } = ctx.doors;
+  const { record, key } = newAPIKey(name, ctx.now.toISOString());
+  const live = (d: Door) => (d.apiKeys ?? []).filter((k) => !k.revoked).length;
+  const current = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === id);
+  if (!current || current.kind !== "api") throw new DoorError(404, "no such door");
+  if (live(current) >= API_DOOR.liveKeys) throw new DoorError(409, `a door has ${API_DOOR.liveKeys} keys at most: revoke one first`, "too_many_keys");
+  if (!(await store.create(doorKeys.apiKey(record.hash!), { tenant: owner.tenant, taf: taf.id, door: id, key: record.id }))) throw new DoorError(503, "try again");
+  let d: Door | undefined;
+  try {
+    d = await withDoor(ctx, owner, taf, id, (door, doors) => {
+      if (door.kind !== "api") throw new DoorError(404, "no such door");
+      if (live(door) >= API_DOOR.liveKeys) throw new DoorError(409, `a door has ${API_DOOR.liveKeys} keys at most: revoke one first`, "too_many_keys");
+      return doors.map((x) => (x.id === id ? { ...x, apiKeys: [...(x.apiKeys ?? []), record] } : x));
+    });
+  } catch (err) {
+    await store.remove(doorKeys.apiKey(record.hash!)).catch(() => undefined);
+    throw err;
+  }
+  return { door: apiDoorView(d!, await apiToday(ctx, owner.tenant, taf.id, id), ctx.lang), key: keyShown(record, key) };
+}
+
+/**
+ * Revokes an `api` door's key: its hash goes, so its next request finds nothing. Its record stays without it, saying
+ * when and by whom. Revoking a key that's already revoked, or gone, changes nothing.
+ */
+export async function revokeAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, keyID: string) {
+  const { store } = ctx.doors;
+  let hash: string | undefined;
+  const d = await withDoor(ctx, owner, taf, id, (door, doors) => {
+    if (door.kind !== "api") throw new DoorError(404, "no such door");
+    const k = (door.apiKeys ?? []).find((x) => x.id === keyID && !x.revoked);
+    if (!k) return doors;
+    hash = k.hash;
+    const { hash: _gone, ...kept } = k;
+    const revoked: APIKey = { ...kept, revoked: ctx.now.toISOString(), ...(owner.subject ? { revokedBy: owner.subject } : {}) };
+    return doors.map((x) => (x.id === id ? { ...x, apiKeys: (x.apiKeys ?? []).map((y) => (y.id === keyID ? revoked : y)) } : x));
+  });
+  if (hash) await store.remove(doorKeys.apiKey(hash));
+  return { door: apiDoorView(d!, await apiToday(ctx, owner.tenant, taf.id, id), ctx.lang) };
+}
+
+/** The kind of the taf's door `id`, or undefined when it has none by that id: which steps need the phone's signature. */
+export async function doorKindOf(ctx: DoorsContext, tenant: string, taf: string, id: string): Promise<Door["kind"] | undefined> {
+  return (await doorsOf(ctx.doors.store, tenant, taf)).find((d) => d.id === id)?.kind;
+}
+
+async function apiToday(ctx: DoorsContext, tenant: string, taf: string, id: string) {
+  return todayOf(ctx.doors.store, tenant, taf, id, ctx.now);
 }

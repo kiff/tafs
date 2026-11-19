@@ -749,6 +749,7 @@ export const en = {
   door_api_state_resting: (n: number) => `Today's ${n} requests are used: more are refused until midnight UTC.`,
   door_api_settings: "Its keys and today's limits are below.",
   door_api_request: { accepted: "Received", working: "Working", needs_you: "Waiting for you", done: "Done", failed: "Failed", cancelled: "Cancelled", expired: "Expired" } as Record<string, string>,
+  door_api_signed: "Changing what lets an application hand this taf work takes your fingerprint. Nothing changed; approve it again with your fingerprint.",
   door_how_email: "The email must pass the sender check",
   door_how_whatsapp: "WhatsApp knows the phone number",
   door_how_slack: "Slack knows who wrote, by their Slack user",

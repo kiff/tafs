@@ -690,6 +690,7 @@ export const it: Words = {
   door_api_state_resting: (n) => `Le ${n} richieste di oggi sono esaurite: le altre vengono rifiutate fino a mezzanotte UTC.`,
   door_api_settings: "Le sue chiavi e i limiti di oggi sono qui sotto.",
   door_api_request: { accepted: "Ricevuta", working: "In corso", needs_you: "Ti aspetta", done: "Fatta", failed: "Non riuscita", cancelled: "Annullata", expired: "Scaduta" },
+  door_api_signed: "Per cambiare ciò che permette a un'applicazione di dare lavoro a questo taf serve la tua impronta. Non è cambiato nulla; approva di nuovo con la tua impronta.",
   door_how_email: "L'email deve superare il controllo del mittente",
   door_how_whatsapp: "WhatsApp conosce il numero di telefono",
   door_how_slack: "Slack sa chi ha scritto, dal suo utente Slack",

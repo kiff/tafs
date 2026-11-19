@@ -44,7 +44,7 @@ import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPa
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerKnock, DoorError, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
@@ -186,9 +186,10 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf, or a door's run, paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
  *   GET  /v1/tafs/{id}/doors            the taf's doors, the apps a door can open on here, and its open knocks
  *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?}: turn a door on (a taf has none until then)
+ *                                       or {kind: "api", draft}: a door from another application and its first key, signed (TAFS_API_DOORS)
  *   PATCH /v1/tafs/{id}/doors/{door}    {open}
  *   DELETE /v1/tafs/{id}/doors/{door}
- *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender
+ *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender; an api door's: {name}, a new key, signed (its DELETE revokes, signed)
  *   DELETE /v1/tafs/{id}/doors/{door}/keys/{key}
  *   POST /v1/tafs/{id}/doors/knocks/{knock}  {action: do | pair | ignore, say?}
  *   POST /v1/doors/email | /v1/doors/whatsapp  the doors' webhooks (no sign-in: each provider's signature is the check)
@@ -618,7 +619,8 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
     return value instanceof PageResponse ? value.response : json(200, value);
   } catch (err) {
     if (err instanceof HTTPError) return json(err.status, { error: err.message, ...(await withRefusalWords(event, err, deps)) });
-    if (err instanceof DoorError || err instanceof ActivityError) return json(err.status, { error: err.message });
+    if (err instanceof DoorError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
+    if (err instanceof ActivityError) return json(err.status, { error: err.message });
     if (err instanceof KIFFError) return json(err.status, { error: err.message, ...(err.code ? { code: err.code } : {}) });
     if (err instanceof PushError) return json(err.status, { error: err.message });
     console.error(err);
@@ -10336,6 +10338,23 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   }
   await needTaf(event, me, taf, deps);
   const body = parseBody(event);
+  // An `api` door ("From another application"): every step that makes, opens, revokes or removes what lets an
+  // application hand the taf work is signed on the phone. Pausing isn't: stopping is always safe.
+  const kind = a && a !== "knocks" ? await doorKindOf(ctx, me.tenantID, taf.id, a) : undefined;
+  if (parts.length === 4 && method === "POST" && body.kind === "api") {
+    if (process.env.TAFS_API_DOORS !== "on") throw new HTTPError(400, "that door isn't offered here");
+    await doorSigned(event, me, deps);
+    return addAPIDoor(ctx, owner, taf, body);
+  }
+  if (kind === "api") {
+    if (parts.length === 5 && method === "PATCH" && body.open === false) return setOpen(ctx, owner, taf, a!, false);
+    if (parts.length === 5 && method === "PATCH" && body.open === true) { await doorSigned(event, me, deps); return setOpen(ctx, owner, taf, a!, true); }
+    if (parts.length === 5 && method === "DELETE") { await doorSigned(event, me, deps); return removeDoor(ctx, owner, taf, a!); }
+    if (parts.length === 6 && method === "POST" && b === "keys") { await doorSigned(event, me, deps); return newAPIDoorKey(ctx, owner, taf, a!, body); }
+    if (parts.length === 7 && method === "DELETE" && b === "keys" && c) { await doorSigned(event, me, deps); return revokeAPIDoorKey(ctx, owner, taf, a!, decodeURIComponent(c)); }
+    if (parts.length === 5 && method === "PATCH") throw new HTTPError(400, "open is true or false");
+    throw new HTTPError(404, "not found");
+  }
   if (parts.length === 4 && method === "POST") return addDoor(ctx, owner, taf, body);
   if (parts.length === 6 && method === "POST" && a === "knocks") return answerKnock(ctx, owner, taf, b ?? "", body);
   if (parts.length === 5 && method === "PATCH" && a) {
@@ -10346,6 +10365,23 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 6 && method === "POST" && a && b === "keys") return pair(ctx, owner, taf, a, body);
   if (parts.length === 7 && method === "DELETE" && a && b === "keys" && c) return unpair(ctx, owner, taf, a, decodeURIComponent(c));
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * A step on an `api` door, signed by the phone with the approval key behind the screen lock, as a taf's removal is:
+ * KIFF says whether this phone signed exactly this method, path and body, and takes each signature once, so a
+ * replayed New key makes no second key (409 `signature_taken`). Unsigned is 403 `signature_missing`.
+ */
+async function doorSigned(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
+  const { signature, passkey } = signedBy(event);
+  const method = event.requestContext.http.method.toUpperCase();
+  const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+  await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
+    signed: { method, uri, body: rawBody(event), signature, passkey } }, "approval").catch((err) => {
+    if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).door_api_signed, { code: "critical_key_required" });
+    return approvalFailure(err);
+  });
+  console.log(JSON.stringify({ event: "door_api_signed", tenant: me.tenantID, method }));
 }
 
 /**

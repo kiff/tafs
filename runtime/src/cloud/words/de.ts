@@ -690,6 +690,7 @@ export const de: Words = {
   door_api_state_resting: (n) => `Die ${n} Anfragen für heute sind aufgebraucht: Weitere werden bis Mitternacht UTC abgelehnt.`,
   door_api_settings: "Ihre Schlüssel und die Limits für heute stehen unten.",
   door_api_request: { accepted: "Empfangen", working: "Wird bearbeitet", needs_you: "Wartet auf dich", done: "Erledigt", failed: "Fehlgeschlagen", cancelled: "Abgebrochen", expired: "Abgelaufen" },
+  door_api_signed: "Was einer Anwendung erlaubt, diesem taf Arbeit zu geben, änderst du nur mit deinem Fingerabdruck. Nichts wurde geändert; genehmige es erneut mit deinem Fingerabdruck.",
   door_how_email: "Die E-Mail muss die Absenderprüfung bestehen",
   door_how_whatsapp: "WhatsApp kennt die Telefonnummer",
   door_how_slack: "Slack weiß, wer geschrieben hat, über den Slack-Benutzer",

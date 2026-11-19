@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
@@ -1701,4 +1701,178 @@ describe("an app's event for a taf whose runs have no consent", () => {
     // Kept for the run's pause note, as when nothing waits yet.
     expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_9"))).toBeTruthy();
   });
+});
+
+// An `api` door ("From another application"): every step that makes, opens, revokes or removes what lets an
+// application hand the taf work is signed on the phone, with the approval key; pausing isn't (kiff/tafs design 2.5).
+describe("an api door's keys and signed steps", () => {
+  const DRAFT = { name: "Order system", fields: [{ name: "order", type: "string", max: 40 }, { name: "reason", type: "enum", values: ["damaged", "late", "wrong_item"] }],
+    job: "Check the return and refund it if the Card allows", outcomes: ["refunded", "refused", "needs_review"], text: false };
+  const SIG = { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=sig" };
+  /** KIFF's signature check: what it was asked, and what it answers (signed by the approval key unless set). */
+  function signing(w: World) {
+    const asked: Array<{ method: string; uri: string; body_sha256: string; signature?: string }> = [];
+    const taken = new Set<string>();
+    const kiffSays = { signed: true, key: "critical" as string, takeOnce: true };
+    const base = depsOf(w);
+    const deps: Deps = { ...base, fetch: (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/device-signature")) {
+        const b = JSON.parse(String(init?.body));
+        asked.push(b);
+        // KIFF takes each signature once, over exactly this method, path and body.
+        const id = `${b.signature}|${b.method}|${b.uri}|${b.body_sha256}`;
+        if (kiffSays.takeOnce && taken.has(id)) return new Response(JSON.stringify({ error: "signature_taken" }), { status: 409 });
+        taken.add(id);
+        return new Response(JSON.stringify({ signed: kiffSays.signed, key: kiffSays.key }), { status: kiffSays.signed ? 200 : 403 });
+      }
+      return (base.fetch as typeof fetch)(url, init);
+    }) as typeof fetch };
+    const call = async (method: string, path: string, opts: { token?: string; body?: unknown; headers?: Record<string, string> } = {}) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: `Bearer ${opts.token ?? "ana"}`, ...(opts.headers ?? {}) },
+        body: opts.body === undefined ? undefined : JSON.stringify(opts.body) }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, any> };
+    };
+    return { asked, kiffSays, call };
+  }
+  const withFlag = async (f: () => Promise<void>) => {
+    const was = process.env.TAFS_API_DOORS;
+    process.env.TAFS_API_DOORS = "on";
+    try { await f(); } finally { if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was; }
+  };
+  const doorsPath = `/v1/tafs/${REFUNDS}/doors`;
+  /** Every key record the store holds: hashes, never a key. */
+  const storeText = (w: World) => JSON.stringify([...w.store.held.entries()]);
+
+  it("is offered only with TAFS_API_DOORS on", async () => {
+    const w = world();
+    const s = signing(w);
+    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG })).status).toBe(400);
+    expect(s.asked).toEqual([]);
+  });
+
+  it("makes the door and its first key only signed, shows the key once, and keeps only its hash", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    // Unsigned: 403, nothing made.
+    const unsigned = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT } });
+    expect(unsigned.status).toBe(403);
+    expect(unsigned.body.code).toBe("signature_missing");
+    expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+    // Signed by the device key, not the approval key behind the fingerprint: refused in this door's words.
+    s.kiffSays.key = "device";
+    const device = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=device" } });
+    expect(device.status).toBe(403);
+    expect(device.body).toMatchObject({ code: "critical_key_required", error: expect.stringContaining("takes your fingerprint") });
+    s.kiffSays.key = "critical";
+    // Signed: KIFF was asked about exactly this POST, and the answer has the door and its key, this once.
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    expect(made.status).toBe(200);
+    expect(s.asked.at(-1)).toMatchObject({ method: "POST", uri: doorsPath, signature: SIG["kiff-device-signature"] });
+    const key = made.body.key as { id: string; key: string; last4: string; made_at: string; name: string };
+    expect(key.key).toMatch(/^tafs_api_[A-Za-z0-9_-]{43}$/);
+    expect(key.last4).toBe(key.key.slice(-4));
+    expect(made.body.door).toMatchObject({ kind: "api", open: true, application: "Order system", keys: [{ id: key.id, name: "Order system", last4: key.last4 }] });
+    // The list never has it again, nor its hash; the store has the hash only.
+    const list = await s.call("GET", doorsPath);
+    expect(JSON.stringify(list.body)).not.toContain(key.key);
+    expect(JSON.stringify(list.body)).not.toMatch(/hash|tafs_api_/);
+    expect(storeText(w)).not.toContain(key.key);
+    expect(storeText(w)).toContain(createHash("sha256").update(key.key).digest("hex"));
+    // The same signed POST again: KIFF took that signature, so no second door or key (409).
+    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG })).status).toBe(409);
+    // A second api door, freshly signed: one a taf.
+    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:01Z,v1=other" } })).status).toBe(409);
+    expect((await s.call("GET", doorsPath)).body.doors).toHaveLength(1);
+  }));
+
+  it("refuses a draft with an instruction for a field, a field it doesn't know, or no outcomes", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    for (const draft of [
+      { ...DRAFT, fields: [{ name: "instructions", type: "string", max: 400 }] },
+      { ...DRAFT, fields: [{ name: "order", type: "string" }] },
+      { ...DRAFT, fields: [{ name: "order", type: "url" }] },
+      { ...DRAFT, outcomes: [] },
+      { ...DRAFT, tools: ["refund"] },
+      { ...DRAFT, fields: Array.from({ length: 21 }, (_, i) => ({ name: `f${i}`, type: "number" })) },
+    ]) {
+      const r = await s.call("POST", doorsPath, { body: { kind: "api", draft }, headers: { "kiff-device-signature": `t=2026-10-24T09:00:00Z,v1=${JSON.stringify(draft).length}` } });
+      expect(r.status, JSON.stringify(draft)).toBe(400);
+    }
+    expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+  }));
+
+  it("makes a second key signed, refuses a third, revokes signed, and keeps a revoked key's record without its hash", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const door = made.body.door.id as string;
+    const first = made.body.key as { id: string; key: string };
+    const keysPath = `${doorsPath}/${door}/keys`;
+    // New key: unsigned 403; signed, the key once.
+    expect((await s.call("POST", keysPath, { body: { name: "ERP staging" } })).status).toBe(403);
+    const second = await s.call("POST", keysPath, { body: { name: "ERP staging" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=k2" } });
+    expect(second.status).toBe(200);
+    expect(second.body.key).toMatchObject({ name: "ERP staging", key: expect.stringMatching(/^tafs_api_/) });
+    expect(second.body.door.keys.map((k: { name: string }) => k.name)).toEqual(["Order system", "ERP staging"]);
+    // Replayed: KIFF took that signature, so no second key from it.
+    expect((await s.call("POST", keysPath, { body: { name: "ERP staging" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=k2" } })).status).toBe(409);
+    // A third, freshly signed: two live at most.
+    const third = await s.call("POST", keysPath, { body: { name: "Third" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:03Z,v1=k3" } });
+    expect(third.status).toBe(409);
+    expect(third.body.code).toBe("too_many_keys");
+    // Revoke: unsigned 403; signed, its hash goes from the door and the store, its record stays, and a new key fits.
+    const revokePath = `${keysPath}/${first.id}`;
+    expect((await s.call("DELETE", revokePath)).status).toBe(403);
+    const revoked = await s.call("DELETE", revokePath, { headers: { "kiff-device-signature": "t=2026-10-24T09:00:04Z,v1=r1" } });
+    expect(revoked.status).toBe(200);
+    expect(revoked.body.door.keys.map((k: { name: string }) => k.name)).toEqual(["ERP staging"]);
+    const hash = createHash("sha256").update(first.key).digest("hex");
+    expect(storeText(w)).not.toContain(hash);
+    const kept = (w.store.held.get(doorKeys.doors("t_acme", REFUNDS))!.value as { doors: Array<{ apiKeys: Array<Record<string, unknown>> }> }).doors[0]!.apiKeys[0]!;
+    expect(kept).toMatchObject({ id: first.id, name: "Order system", revoked: NOW.toISOString(), revokedBy: "u_ana" });
+    expect(kept).not.toHaveProperty("hash");
+    expect((await s.call("POST", keysPath, { body: { name: "ERP production 2" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:05Z,v1=k4" } })).status).toBe(200);
+  }));
+
+  it("pauses unsigned, opens again only signed, and removes the door and every key's hash only signed", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const door = made.body.door.id as string;
+    const key = made.body.key as { key: string };
+    const asks = s.asked.length;
+    const paused = await s.call("PATCH", `${doorsPath}/${door}`, { body: { open: false } });
+    expect(paused.status).toBe(200);
+    expect(paused.body.door.open).toBe(false);
+    expect(s.asked.length).toBe(asks); // pausing asks nothing
+    expect((await s.call("PATCH", `${doorsPath}/${door}`, { body: { open: true } })).status).toBe(403);
+    // A signature over another taf's path, or another body, is KIFF's to refuse: here it says not signed.
+    s.kiffSays.signed = false;
+    expect((await s.call("PATCH", `${doorsPath}/${door}`, { body: { open: true }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:06Z,v1=elsewhere" } })).status).toBe(403);
+    s.kiffSays.signed = true;
+    const opened = await s.call("PATCH", `${doorsPath}/${door}`, { body: { open: true }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:07Z,v1=o1" } });
+    expect(opened.status).toBe(200);
+    expect(opened.body.door.open).toBe(true);
+    expect(s.asked.at(-1)).toMatchObject({ method: "PATCH", uri: `${doorsPath}/${door}`, body_sha256: createHash("sha256").update(JSON.stringify({ open: true })).digest("hex") });
+    // Removing: unsigned 403; signed, the door and its key's hash go.
+    expect((await s.call("DELETE", `${doorsPath}/${door}`)).status).toBe(403);
+    expect((await s.call("DELETE", `${doorsPath}/${door}`, { headers: { "kiff-device-signature": "t=2026-10-24T09:00:08Z,v1=d1" } })).status).toBe(200);
+    expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+    expect(storeText(w)).not.toContain(createHash("sha256").update(key.key).digest("hex"));
+  }));
+
+  it("refuses every step to someone the taf is only shared with, and shows them no door", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const door = made.body.door.id as string;
+    const v = { token: "viewer", headers: { "kiff-device-signature": "t=2026-10-24T09:00:09Z,v1=v" } };
+    expect((await s.call("GET", doorsPath, { token: "viewer" })).body.doors).toEqual([]);
+    expect((await s.call("POST", doorsPath, { ...v, body: { kind: "api", draft: DRAFT } })).status).toBe(403);
+    expect((await s.call("POST", `${doorsPath}/${door}/keys`, { ...v, body: { name: "x" } })).status).toBe(403);
+    expect((await s.call("DELETE", `${doorsPath}/${door}/keys/${made.body.key.id}`, v)).status).toBe(403);
+    expect((await s.call("PATCH", `${doorsPath}/${door}`, { ...v, body: { open: false } })).status).toBe(403);
+    expect((await s.call("DELETE", `${doorsPath}/${door}`, v)).status).toBe(403);
+  }));
 });

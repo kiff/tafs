@@ -144,8 +144,27 @@ screen closes (`apiKeyShown`), and a last request's `words` are drawn as tafs cl
 it, its last four characters and its SHA-256, never the key. `GET /v1/tafs/{id}/doors` shows it through `apiDoorView`, with
 `address` the path its caller sends requests to (`/v1/doors/api/{door}/requests`), `proof: "proven"`, its day's cap as `limit`
 (100 by default, `API_DOOR`), `counts: {today, waiting}`, `last_request: {status, at, words}` (`words` tafs cloud's, one per
-state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors-api.json`). Making one, its keys and its
-caller's routes come in the next steps, behind `TAFS_API_DOORS` (off).
+state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors-api.json`).
+
+**Making one and its keys** (`TAFS_API_DOORS=on`; off, `POST …/doors` with `kind: "api"` is 400): each step is checked
+with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature
+taken once), and is 403 unsigned (`signature_missing`) or signed with the device key (`critical_key_required`, in the
+door's own words):
+
+- `POST /v1/tafs/{id}/doors` `{kind: "api", draft: {name, fields, job, outcomes, text}}` approves Coach's draft. A field
+  is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
+  instruction (`instructions`, `prompt`, `rules`, …); outcomes are 1 to 10 names. Anything else is 400. It answers the door
+  and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).
+- `POST …/doors/{door}/keys` `{name}`: a new key, answered the same way. Two live at most (409 `too_many_keys`).
+  The same signed request again is KIFF's `signature_taken` (409): no second key.
+- `DELETE …/doors/{door}/keys/{key}`: revoke. The key's hash goes from the door and from its lookup, so its next
+  request finds nothing; its record stays without it (`revoked`, `revokedBy`), and isn't listed.
+- `PATCH …/doors/{door}` `{open: true}` is signed; `{open: false}` isn't: pausing is always safe.
+- `DELETE …/doors/{door}` removes it and every key's lookup.
+
+A key is `tafs_api_` and 32 random bytes (base64url). tafs cloud keeps its SHA-256 at `door-api-key#<hash>` (the
+account, taf, door and key it is) and in the door, and never the key. Someone the taf is only shared with sees no
+door and changes none (403). The caller's routes come next.
 
 ### Setting up a deployment
 
