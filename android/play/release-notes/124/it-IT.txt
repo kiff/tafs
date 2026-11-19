@@ -1,2 +1,2 @@
 • Coach: «Dal tuo orologio» elenca ciò che hai chiesto dall'orologio, giorno per giorno, e com'è andata ogni richiesta. Aprilo dalle conversazioni precedenti di Coach.
-• Il tuo orologio: il telefono toglie ogni importo da ciò che invia all'orologio, e l'orologio non conserva importi.
+• Il tuo orologio: non conserva importi. Vengono tolti da tutto ciò che l'orologio conserva.

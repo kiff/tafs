@@ -1,2 +1,2 @@
 • Coach: „Von deiner Uhr“ zeigt, was du von deiner Uhr aus gefragt hast, Tag für Tag, und was aus jeder Anfrage wurde. Du findest es in Coachs früheren Unterhaltungen.
-• Deine Uhr: Das Handy nimmt jeden Betrag aus dem heraus, was es an die Uhr schickt, und die Uhr speichert keine Beträge.
+• Deine Uhr: Sie speichert keine Beträge. Sie werden aus allem entfernt, was die Uhr aufbewahrt.
