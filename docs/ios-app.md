@@ -854,14 +854,17 @@ with nothing in it keeps Needs you. The sample draws its own brief (`-brief YES`
 
 - **Read leniently, in v2.1's names:** `decisions` (`question`, `answers` with `recommended`, `why`,
   `meanwhile`, `deadline`, `urgent`, `later`, `ref`), `more`, `done` (cases with `state` and
-  `next_check`, `value`, `log`), `next_move`, `rest`, `credits`, `labels` and the headings' `words`. A
+  `next_check`, `value`, `log`), `next_move`, `rest`, `coach_waiting`, `credits`, `labels` and the headings' `words`. A
   part the app can't read is left out, never the brief. A heading tafs cloud didn't send (or sent
   blank) is the shared catalog's, `brief.*` in `app/strings` ("Your brief", "Decisions", "Done since
   the last brief", "Next move", "Coach recommends", "Meanwhile:", "Evidence", "Urgent"), so no
   heading is ever blank; when it's sent, tafs cloud's words win.
 - **Drawn as sent:** decisions first, each with its taf, Coach's recommendation and its why, what
   happens meanwhile, why it can't wait when it can't, and its answers (the recommended one filled, a
-  decline in red, Later beside them). Then one next move, then Done case by case (green once closed,
+  decline in red, Later beside them). Under them, Coach's chats that wait for the person's answer
+  (`coach_waiting`, sent only above 0 and never under a label), in tafs cloud's one line, which opens
+  Needs you, where Home's Coach waiting list is (Open, Set aside, Set all aside); nothing is answered
+  from the brief. Then one next move, then Done case by case (green once closed,
   amber while waiting), with its value and the mission's log. Then the rest in one line, which opens
   today's Needs you list. On an iPad's width, decisions beside Done, the next move under Done.
 - **Label chips** (All, two labels, "+N"; `LabelChips`) filter the brief, as tafs cloud filters it.

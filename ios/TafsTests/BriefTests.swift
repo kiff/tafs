@@ -250,6 +250,19 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(b.words.nextMove, "Next move")
     }
 
+    /// Coach's chats waiting on the person (`coach_waiting`, tafs cloud's line from Needs you's own count):
+    /// drawn only with a count above 0 and its words; another shape is left out, never the brief.
+    func testCoachWaitingIsReadOnlyWithACountAndItsWords() throws {
+        let b = try brief(#"{"decisions":[],"coach_waiting":{"count":17,"words":"17 Coach chats wait for your answer."}}"#)
+        XCTAssertEqual(b.coachWaiting, .init(count: 17, words: "17 Coach chats wait for your answer."))
+        XCTAssertNil(try brief(#"{"coach_waiting":{"count":0,"words":"0 Coach chats wait for your answer."}}"#).coachWaiting)
+        XCTAssertNil(try brief(#"{"coach_waiting":{"count":2,"words":"  "}}"#).coachWaiting)
+        let other = try brief(#"{"coach_waiting":"17","rest":{"count":3,"words":"3 things wait"}}"#)
+        XCTAssertNil(other.coachWaiting)
+        XCTAssertEqual(other.rest?.count, 3, "the rest of the brief still reads")
+        XCTAssertNil(try brief(#"{}"#).coachWaiting, "an older tafs cloud sends none")
+    }
+
     /// With no why, no answer is drawn as recommended: they show as equals.
     func testARecommendationNeedsItsWhy() throws {
         let b = try brief(#"{"decisions":[{"id":"d","question":"q","answers":[{"words":"Yes","answer":"approve","recommended":true},{"words":"No","answer":"reject"}],"meanwhile":"m","ref":{}}]}"#)
