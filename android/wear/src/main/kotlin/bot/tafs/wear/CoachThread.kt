@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,30 +39,21 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
   Column(Modifier.fillMaxWidth().testTag(THREAD_TURN + ask.id), verticalArrangement = Arrangement.spacedBy(3.dp)) {
     Text(timeOf(said.at), fontSize = 10.sp, color = Look.faint, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
     Text(
-      said.text, fontSize = 13.sp, lineHeight = 16.sp, color = Bubble.mineText, maxLines = 4, overflow = TextOverflow.Ellipsis,
+      said.text, fontSize = 13.sp, lineHeight = 16.sp, color = Look.onMineGround, maxLines = 4, overflow = TextOverflow.Ellipsis,
       modifier = Modifier.align(Alignment.End).widthIn(max = 150.dp)
-        .background(Bubble.mine, RoundedCornerShape(14.dp, 14.dp, 4.dp, 14.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+        .background(Look.mineGround, RoundedCornerShape(14.dp, 14.dp, 4.dp, 14.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
     )
     val answer = if (ask.ended) (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone } else stateLine(ask)
     Text(
-      answer, fontSize = 13.sp, lineHeight = 16.sp, color = if (ask.ended) Bubble.coachText else Bubble.coachWorking, maxLines = 5,
+      answer, fontSize = 13.sp, lineHeight = 16.sp, color = if (ask.ended) Look.onCoachGround else Look.coach, maxLines = 5,
       overflow = TextOverflow.Ellipsis,
       modifier = Modifier.align(Alignment.Start).widthIn(max = 156.dp)
-        .background(Bubble.coach, RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp))
+        .background(Look.coachGround, RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp))
         .then(if (ask.ended) Modifier.clickable(onClick = onOpen) else Modifier)
         .padding(horizontal = 10.dp, vertical = 6.dp)
         .testTag(if (ask.ended) THREAD_ANSWER + ask.id else THREAD_WORKING + ask.id),
     )
   }
-}
-
-/** The conversation's bubbles, by meaning: the person's words warm, Coach's blue (the mockup's W7 palette). */
-private object Bubble {
-  val mine = Color(0xFF3A2A22)
-  val mineText = Color(0xFFFFE6D6)
-  val coach = Color(0xFF1E2231)
-  val coachText = Color(0xFFE6ECFF)
-  val coachWorking = Color(0xFF9DB8FF)
 }
 
 /** When something was said, in the watch's own short time ("09:14"). */

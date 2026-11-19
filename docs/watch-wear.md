@@ -333,8 +333,8 @@ comes. On the pages themselves back is the system's own, and leaves the app.
 
 **Colour** (W7, the owner's Galaxy Watch 5 test: "every button is purple"): colour by meaning, from the watch's one palette,
 `Look` (`Look.kt`), and only where it means something. **Send and the person's own words** are orange (`Look.send`): the
-microphone, the words as they're heard and on the review, a message kept for later, Send, Retry and Reply. **Coach** is blue
-(`Look.coach`): an ask at work and its turning ring on Sent, an answer's taf and Hear, an answer in the Inbox and its unread dot,
+microphone, the words as they're heard and on the review, a message kept for later, Send, Retry and Reply; in Coach's
+conversation, the person's bubble is on `Look.mineGround`. **Coach** is blue (`Look.coach`; its bubble on `Look.coachGround`): an ask at work and its turning ring on Sent, an answer's taf and Hear, an answer in the Inbox and its unread dot,
 the answer's words in `Look.onCoachGround`. **Held, waits for you** is amber (`Look.held`): Needs you, a held call and its
 reason, Approve on your phone, "1 needs you" on a taf's page, the mark on Not sure it arrived. **Done and sent** is green
 (`Look.done`): the check on Sent, and the dot of an ask ready (v1). **Delete, halt, refuse and sign out** are red

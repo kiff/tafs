@@ -23,6 +23,9 @@ internal object Look {
   /** Coach's ground, and the words on it. */
   val coachGround = Color(0xFF1E2231)
   val onCoachGround = Color(0xFFE6ECFF)
+  /** The person's own words as a bubble in Coach's conversation (W4): a warm ground, from Send's orange. */
+  val mineGround = Color(0xFF3A2A22)
+  val onMineGround = Color(0xFFFFE6D6)
 
   /** Held, waits for you: Needs you, a held call, Approve on your phone, "Not sure it arrived". */
   val held = Color(0xFFFFB547)
