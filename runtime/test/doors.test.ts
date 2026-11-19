@@ -2147,6 +2147,57 @@ describe("an api door's keys and signed steps", () => {
       expect((await c.read(late.body.request_id)).body.status).toBe("expired");
     }));
 
+    it("starts one run when kiff/agents took the request but its answer was lost", () => withFlag(async () => {
+      const c = await caller();
+      const start = c.w.agents.api.startRun.bind(c.w.agents.api);
+      let lose = true;
+      c.w.agents.api.startRun = async (...a: Parameters<typeof start>) => {
+        const run = await start(...a);
+        if (lose) { lose = false; throw new AgentsError(503, "the answer was lost on the way"); }
+        return run;
+      };
+      const r = await c.submit("lost");
+      expect(r.status).toBe(202); // kept before the start: the start's failure loses nothing
+      expect((await c.read(r.body.request_id)).body.status).toBe("working");
+      expect(c.w.agents.runs.filter((x) => x.source === "api")).toHaveLength(1);
+    }));
+
+    it("counts neither a replay nor a refusal toward the day's cap, and takes the same key as new after 30 days", () => withFlag(async () => {
+      const c = await caller();
+      await changeTo(c.w, (d) => ({ ...d, perDay: 1 }));
+      const first = await c.submit("once");
+      expect((await c.submit("once")).status).toBe(200);
+      expect((await c.submit("once")).status).toBe(200);
+      expect((await c.submit("twice")).status).toBe(429);
+      c.w.at(new Date(NOW.getTime() + 31 * 24 * 3600_000));
+      const later = await c.submit("once");
+      expect(later.status).toBe(202);
+      expect(later.body.request_id).not.toBe(first.body.request_id);
+    }));
+
+    // The race design 3.2 asks for: a revoke committed at the very moment a request starts, between its claim
+    // (accepted to working) and the run, never lets it run. The store commits the revoke inside that claim.
+    it("never runs a request whose key is revoked as it starts", () => withFlag(async () => {
+      const c = await caller();
+      await c.submit("a");
+      const second = await c.submit("b");
+      const other = await c.s.call("POST", `${doorsPath}/${c.door}/keys`, { body: { name: "spare" }, headers: { "kiff-device-signature": "t=2026-10-24T09:02:00Z,v1=s" } });
+      const swap = c.w.store.swap.bind(c.w.store);
+      let revoked = false;
+      c.w.store.swap = async (key, prev, next, until) => {
+        const ok = await swap(key, prev, next, until);
+        if (ok && !revoked && (next as { status?: string; idem?: string } | undefined)?.status === "working" && (next as { idem?: string }).idem === "b") {
+          revoked = true;
+          expect((await c.s.call("DELETE", `${doorsPath}/${c.door}/keys/${c.made.body.key.id}`, { headers: { "kiff-device-signature": "t=2026-10-24T09:02:00Z,v1=r" } })).status).toBe(200);
+        }
+        return ok;
+      };
+      await finish(c.w, c.runOf(), "Outcome: refunded");
+      expect(revoked).toBe(true);
+      expect((await c.read(second.body.request_id, other.body.key)).body).toMatchObject({ status: "cancelled", reason_code: "revoked" });
+      expect(c.w.agents.byKey.has(`t_acme#${REFUNDS}#api:${c.door}:b`)).toBe(false);
+    }));
+
     it("waits for credits as needs_you, and starts once they're back", () => withFlag(async () => {
       const c = await caller();
       c.w.agents.credits.set("t_acme", "credits_used_up");
