@@ -116,6 +116,33 @@ class DoorsTest {
     assertTrue(sent("GET /v1/tafs/taf_unknown/conversation").isEmpty())
   }
 
+  /**
+   * A door "From another application" (`api`) reads with today's fields and its own (counts, the last request, each key's last
+   * four and dates, never the key), and a door this build can't read is left out without hiding the others: email still shows.
+   */
+  @Test fun anAPIDoorReadsAndOneUnreadableDoorHidesNoOther() {
+    val sent = """{"doors":[
+      {"id":"door_ord7","app":"api","kind":"api","label":"Order system","open":true,"address":"/v1/doors/api/door_ord7/requests",
+       "proof":"proven","how":"Your application's key","today":37,"limit":100,"resting":false,
+       "counts":{"today":37,"waiting":2},"last_request":{"status":"done","at":"2026-11-19T09:42:15Z"},
+       "keys":[{"key_id":"key_1","name":"ERP production","last4":"iXrW","made_at":"2026-11-19T08:00:00Z","last_used_at":"2026-11-19T09:42:15Z"}]},
+      {"id":"door_new","kind":"api","keys":[{"key_id":"k"}]},
+      {"id":"email","app":"email","kind":"email","label":"Email","open":true,"address":"refunds@tafs.example",
+       "proof":"proven","how":"x","keys":[],"today":0,"limit":20,"resting":false}],
+      "apps":[{"id":"email","label":"Email","kind":"email"},{"label":"no id"}],
+      "knocks":[{"id":"kn_1","door":"email","app":"email","from":"a@x.example","at":"2026-11-19T09:00:00Z"},{"id":"kn_bad"}]}"""
+    val read = KiffClient.json.decodeFromString(bot.tafs.app.kiff.DoorsRead.serializer(), sent)
+    assertEquals(listOf("door_ord7", "email"), read.doors.map { it.id })
+    val api = read.doors.first()
+    assertEquals(bot.tafs.app.kiff.DoorCounts(today = 37, waiting = 2), api.counts)
+    assertEquals("done", api.lastRequest?.status)
+    val key = api.keys.single()
+    assertEquals(listOf("key_1", "ERP production", "iXrW", "2026-11-19T08:00:00Z"), listOf(key.id, key.name, key.last4, key.madeAt))
+    assertNull(read.doors.last().counts)
+    assertEquals(listOf("email"), read.apps.map { it.id })
+    assertEquals(listOf("kn_1"), read.knocks.map { it.id })
+  }
+
   @Test fun aDoorsWordsAreTafsClouds() {
     val withWords = doorJson.dropLast(1) + ""","words":{"state":"Open: messages from you and paired senders to refunds@tafs.example start work.","tap":"Tap to close the email door.","settings":"Paired senders and today's limits are below."}}"""
     val door = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Door>(withWords)
