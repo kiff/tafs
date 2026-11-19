@@ -1,0 +1,1 @@
+• Archivos: los archivos de un taf se abren ahora desde arriba en su página, lo primero en la línea de su versión, con cuántos tiene.
