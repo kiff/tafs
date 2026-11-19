@@ -647,6 +647,8 @@ final class WatchRelayTests: XCTestCase {
             ("Rückerstattung 1'234.50", Money(minor: 123_450, currency: "CHF", scale: 2), "Rückerstattung"),
             ("Refund 15000 to Ana", .bare(15_000), "Refund to Ana"),
             ("Refund 1234.5 now", Money(minor: 123_450, currency: "EUR", scale: 2), "Refund now"),
+            ("Refund 150.5 to Ana", Money(minor: 15_000, currency: "EUR", scale: 2), "Refund 150.5 to Ana"),
+            ("Refund 150, then more", .bare(150), "Refund, then more"),
         ]
         for (summary, amount, kept) in cases {
             XCTAssertEqual(WatchRelay.withoutAmount(summary, amount: amount), kept, summary)

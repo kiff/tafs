@@ -94,7 +94,8 @@ enum WatchRelay {
         }
         let unit = amount.currency.map { "(?:" + currency + #"|\b"# + NSRegularExpression.escapedPattern(for: $0) + #"\b)"# }
             ?? currency
-        return "(?:" + unit + #"\s?)?(?<![\d.,'’])"# + figure + #"(?![\d])(?:\s?"# + unit + ")?"
+        // Not the start of a longer figure either: "150.5" isn't 150.00, and stays whole (as on Android).
+        return "(?:" + unit + #"\s?)?(?<![\d.,'’])"# + figure + #"(?![.,]?\d)(?:\s?"# + unit + ")?"
     }
 
     /// "1234567" as "1,234,567" with the separator given.
