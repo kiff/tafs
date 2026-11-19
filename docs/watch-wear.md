@@ -113,7 +113,9 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     (`WatchModel.took`, `awaiting`, in memory only). The result card scrolls to its end and closes only with **Close** or the
     system's back, never on a tap on its words. With the app put away, its notification is on a **high-importance**
     channel (`replies`; the old default `results` channel is deleted, since a channel's importance can't be raised), so it
-    peeks and buzzes and stays until opened or swiped away.
+    peeks and buzzes and stays until opened or swiped away. Its words keep no amount (`AskResults.alertText`, watchlink's `Amounts.strip`, as
+    the Inbox and the Apple Watch's alert): when one was taken out, "The rest is on your phone." follows; opened, the answer
+    shows whole. The answer card is a `ScalingLazyColumn`, scrolled by the crown or bezel as by a swipe.
   - **States:** `accepted`, `working`, `done`, `no_taf` (no one taf could: none, or more than one, which its line says) and
     `failed`. One the watch doesn't know is drawn by tafs cloud's words.
   - **Kept in memory only,** and forgotten once the app is put away; which results were opened is kept for the app's process
