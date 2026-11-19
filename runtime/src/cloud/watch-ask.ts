@@ -10,7 +10,9 @@
  * went to, the line, and the Coach conversation and runs it lives in. Never the request's words.
  */
 
+import { localOf } from "./calendar.js";
 import type { CoachStore } from "./coach.js";
+import { RETENTION_NS } from "./tafdef.js";
 import { wordsIn, type Lang } from "./words/index.js";
 
 export type AskState = "accepted" | "working" | "done" | "no_taf" | "failed";
@@ -61,10 +63,17 @@ export const CLIENT_ID = /^[A-Za-z0-9_-]{8,64}$/;
 export const MAX_ASK_TEXT = 2000;
 /** The result line the watch shows and says. */
 export const LINE_MAX = 140;
-/** A request and what's known of it are kept a week, as a task Coach hands over is. */
+/** A request's claims (its client id, its hand-over, its runs' refs) are kept a week, as a task Coach hands over is. */
 export const ASK_KEPT_MS = 7 * 24 * 3600_000;
+/**
+ * The request itself, its place among the person's and its conversation's mark are kept as long as its Coach
+ * conversation is (a run's chat, 30 days: tafdef's RETENTION_NS), so its watch day goes when the conversation does (W11).
+ */
+export const ASK_DAYS_KEPT_MS = RETENTION_NS / 1_000_000;
 /** The recent requests a person's watch reads back: the newest, at most this many. */
 export const RECENT_MAX = 20;
+/** The requests a person's list keeps, newest first, for their watch days: past it the oldest go first. */
+export const DAYS_MAX = 500;
 /** By default the watch reads back the last day's. */
 export const SINCE_DEFAULT_MS = 24 * 3600_000;
 
@@ -129,20 +138,82 @@ export async function ownAsk(store: CoachStore, tenant: string, person: string, 
   return ask && ask.person === person ? ask : undefined;
 }
 
-/** Keeps the request, and its place among the person's recent ones. */
+/** Keeps the request, and its place among the person's recent ones, as long as its conversation is kept. */
 export async function keepAsk(store: CoachStore, tenant: string, ask: Ask, now: Date): Promise<void> {
-  const until = new Date(now.getTime() + ASK_KEPT_MS);
+  const until = new Date(now.getTime() + ASK_DAYS_KEPT_MS);
   await store.put(watchKeys.ask(tenant, ask.id), ask, until);
   const recent = ((await store.get(watchKeys.recent(tenant, ask.person))) as string[] | undefined) ?? [];
-  const ids = [ask.id, ...recent.filter((id) => id !== ask.id)].slice(0, RECENT_MAX);
+  const ids = [ask.id, ...recent.filter((id) => id !== ask.id)].slice(0, DAYS_MAX);
   await store.put(watchKeys.recent(tenant, ask.person), ids, until);
 }
 
-/** The person's requests changed after `since`, newest first. */
+/** The person's requests changed after `since`, newest first: of the RECENT_MAX last changed. */
 export async function recentAsks(store: CoachStore, tenant: string, person: string, since: Date): Promise<Ask[]> {
-  const ids = ((await store.get(watchKeys.recent(tenant, person))) as string[] | undefined) ?? [];
+  const ids = (((await store.get(watchKeys.recent(tenant, person))) as string[] | undefined) ?? []).slice(0, RECENT_MAX);
   const asks = await Promise.all(ids.map((id) => store.get(watchKeys.ask(tenant, id)) as Promise<Ask | undefined>));
   return asks.filter((a): a is Ask => !!a && a.person === person && Date.parse(a.updated) > since.getTime());
+}
+
+/** Every request the person's list still keeps, theirs alone, newest first: what their watch days read (W11). */
+export async function ownAsks(store: CoachStore, tenant: string, person: string): Promise<Ask[]> {
+  const ids = ((await store.get(watchKeys.recent(tenant, person))) as string[] | undefined) ?? [];
+  const asks = await Promise.all(ids.map((id) => store.get(watchKeys.ask(tenant, id)) as Promise<Ask | undefined>));
+  return asks.filter((a): a is Ask => !!a && a.person === person);
+}
+
+/** One request on a watch day (W11): what the person said, when, and where it went, as `GET /v1/watch/asks` words it. */
+export interface WatchTurn {
+  id: string;
+  said: string;
+  said_at: string;
+  taf?: { id: string; name: string };
+  state: AskState;
+  line?: string;
+  words: string;
+  /** The request it replies to, listed just before it the same day. */
+  reply_to?: string;
+}
+
+/** The day a request was made on, YYYY-MM-DD in the account's zone. */
+export function askDay(ask: Ask, zone: string): string {
+  return localOf(ask.at, zone).day;
+}
+
+/** The days with requests, newest first, each with how many. */
+export function watchDaysOf(asks: Ask[], zone: string): Array<{ date: string; count: number }> {
+  const count = new Map<string, number>();
+  for (const a of asks) count.set(askDay(a, zone), (count.get(askDay(a, zone)) ?? 0) + 1);
+  return [...count].map(([date, n]) => ({ date, count: n })).sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/**
+ * One day's turns, oldest first, each reply straight after the request it replies to (then by time), so an app can
+ * show it under the one before. `reply_to` is sent only when that request is listed the same day.
+ */
+export function dayTurns(said: Array<{ ask: Ask; said: string }>, lang: Lang): WatchTurn[] {
+  const byTime = [...said].sort((a, b) => Date.parse(a.ask.at) - Date.parse(b.ask.at) || a.ask.id.localeCompare(b.ask.id));
+  const listed = new Set(byTime.map((t) => t.ask.id));
+  const replies = new Map<string, typeof byTime>();
+  for (const t of byTime) {
+    const to = t.ask.reply_to;
+    if (to && listed.has(to) && to !== t.ask.id) replies.set(to, [...(replies.get(to) ?? []), t]);
+  }
+  const out: WatchTurn[] = [];
+  const placed = new Set<string>();
+  const place = (t: (typeof byTime)[number]) => {
+    if (placed.has(t.ask.id)) return;
+    placed.add(t.ask.id);
+    const shown = shownAsk(t.ask, lang);
+    const to = t.ask.reply_to && listed.has(t.ask.reply_to) && t.ask.reply_to !== t.ask.id ? t.ask.reply_to : undefined;
+    out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), state: shown.state,
+      ...(shown.line ? { line: shown.line } : {}), words: shown.words, ...(to ? { reply_to: to } : {}) });
+    for (const r of replies.get(t.ask.id) ?? []) place(r);
+  };
+  // A request whose own request is listed comes under it; any other starts where its time puts it.
+  for (const t of byTime) if (!t.ask.reply_to || !listed.has(t.ask.reply_to) || t.ask.reply_to === t.ask.id) place(t);
+  // A loop of replies (never made by the route) still lists each once, by time.
+  for (const t of byTime) place(t);
+  return out;
 }
 
 /** The request a Coach conversation was opened for by the watch route; none for any other conversation. */

@@ -33,7 +33,7 @@ import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesF
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
-import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
+import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
@@ -53,7 +53,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
+import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -92,6 +92,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   POST /v1/watch/asks                 a request from the watch, signed by the phone's device key: a Coach conversation of the watch's own (docs/watch-ask.md)
  *   GET  /v1/watch/asks?since=          the person's own watch requests, newest first
  *   GET  /v1/watch/asks/{id}            one of them
+ *   GET  /v1/watch/days                 the days the person asked from a watch, newest first, in the account's zone, and its today (W11): read only
+ *   GET  /v1/watch/days/{yyyy-mm-dd}    one of those days: what they said and where each went, oldest first, a reply under its request
  *   POST /v1/coach/drive/pause          the person touched the app: pause it, so Coach sends nothing (docs/drive.md)
  *   POST /v1/coach/drive/resume         the person tapped Continue: go on, with a look first
  *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
@@ -710,6 +712,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
   // A request from the watch, through the paired phone (docs/watch-ask.md).
   if (parts[1] === "watch" && parts[2] === "asks") return watchRoute(event, method, parts, deps);
+  if (parts[1] === "watch" && parts[2] === "days") return watchDaysRoute(event, method, parts, deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
     const me = await person(event, deps);
@@ -10732,10 +10735,7 @@ async function openKnocks(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ kno
  * client id gets the same request back and starts nothing.
  */
 async function watchRoute(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
-  if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
-  const store = deps.coach;
-  const me = await person(event, deps);
-  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  const { me, store } = await watchPerson(event, deps);
   const now = deps.now?.() ?? new Date();
   const lang = langOf(event);
   if (parts.length === 3 && method === "GET") {
@@ -10806,12 +10806,73 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   await keepAsk(store, me.tenantID, ask, now);
   await Promise.all([
     store.put(watchKeys.client(me.tenantID, me.subject, client), id, until),
-    store.put(watchKeys.session(me.tenantID, started.session), id, until),
+    // The conversation's mark lives as long as the conversation: a watch day reads the person's words through it (W11).
+    store.put(watchKeys.session(me.tenantID, started.session), id, new Date(now.getTime() + ASK_DAYS_KEPT_MS)),
     store.put(watchKeys.ref(me.tenantID, ref), id, until),
   ]);
   // Logged with the device's signature checked, never the request's words (check 2).
   console.log(JSON.stringify({ event: "watch_ask", tenant: me.tenantID, ask: id, signed: "device", reply: Boolean(before) }));
   return { ask: shownAsk(ask, lang) };
+}
+
+/** The person, when asking from the watch is on for their account (TAFS_WATCH_ASK); else every /v1/watch route is 404 `watch_off`. */
+async function watchPerson(event: HTTPEvent, deps: Deps): Promise<{ me: KIFFIdentity; store: CoachStore }> {
+  if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  const me = await person(event, deps);
+  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  return { me, store: deps.coach };
+}
+
+/**
+ * W11, "From your watch" (docs/watch-ask.md): the days the person asked from a watch, and one day's turns. Nothing new is
+ * kept: a day is a read of their own requests made on it, in the account's time zone, and each one's words are the first
+ * message of its own Coach run, in a conversation the watch route marked as the watch's. A request whose conversation
+ * is gone (kept 30 days) isn't listed. Read only: nothing is sent, approved or reopened.
+ */
+async function watchDaysRoute(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
+  const { me, store } = await watchPerson(event, deps);
+  if (method !== "GET" || parts.length > 4) throw new HTTPError(404, "not found");
+  const zone = me.timeZone && validZone(me.timeZone) ? me.timeZone : "UTC";
+  const date = parts.length === 4 ? dateOf(parts[3]) : undefined;
+  if (parts.length === 4 && !date) throw new HTTPError(400, "a day is YYYY-MM-DD", { code: "bad_date" });
+  const asks = (await ownAsks(store, me.tenantID, me.subject)).filter((a) => !date || askDay(a, zone) === date);
+  const said = await watchSaid(me, asks, store, deps);
+  const listed = asks.filter((a) => said.has(a.id));
+  if (date) return { date, turns: dayTurns(listed.map((ask) => ({ ask, said: said.get(ask.id)! })), langOf(event)) };
+  return { today: localOf(deps.now?.() ?? new Date(), zone).day, days: watchDaysOf(listed, zone) };
+}
+
+/**
+ * What the person said for each request, by id: the first owner message of the request's own Coach run, read as the
+ * person, and only in a conversation the watch route marked (`watch-session#`) for a request of theirs. A request whose
+ * conversation is gone, unmarked or someone else's has none, and isn't listed.
+ */
+async function watchSaid(me: KIFFIdentity, asks: Ask[], store: CoachStore, deps: Deps): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const bySession = new Map<string, Ask[]>();
+  for (const a of asks) if (a.session && a.coach_run) bySession.set(a.session, [...(bySession.get(a.session) ?? []), a]);
+  const sessions = [...bySession.keys()];
+  // A few conversations at a time: a month of asking reads each once.
+  for (let i = 0; i < sessions.length; i += 8) {
+    await Promise.all(sessions.slice(i, i + 8).map(async (session) => {
+      const marked = await askOfSession(store, me.tenantID, session);
+      if (!marked || marked.session !== session || marked.person !== me.subject) return;
+      let read: { events: SessionEvent[] };
+      try {
+        read = await deps.agents.session(me.tenantID, session, ownerKey(me));
+      } catch (err) {
+        if (err instanceof AgentsError && (err.status === 404 || err.status === 403)) return;
+        throw agentsFailure(err);
+      }
+      for (const a of bySession.get(session) ?? []) {
+        const first = read.events.find((e) => e.kind === "owner_message" && e.run === a.coach_run);
+        const text = (first?.body as { text?: unknown } | undefined)?.text;
+        const words = typeof text === "string" ? ownerWords(text.trim()) : "";
+        if (words) out.set(a.id, words);
+      }
+    }));
+  }
+  return out;
 }
 
 /** Where a watch conversation's Coach run says it ended. */
