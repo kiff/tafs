@@ -1,0 +1,1 @@
+- **A door From another application, in a taf's doors (off):** tafs cloud keeps an `api` door and its keys as hashes only, and shows it with the fields older apps need, its counts, its last request in words and its keys by name and last four ([doors.md](docs/doors.md), `contracts/doors-api.json`). Nothing makes one yet.
