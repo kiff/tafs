@@ -1,2 +1,2 @@
 • Files: what your tafs make in their runs (a report, a sheet, a document) is in Account › Files, on each taf's page and in its chat, kept 30 days. Open, download or share one, or delete it now for everyone on your account.
-• A file you share leaves no copy on this phone after you sign out.
+• When you sign out, tafs removes its own copy of a file you shared; the app you shared it to keeps what it received.

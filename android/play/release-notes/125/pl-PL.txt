@@ -1,2 +1,2 @@
 • Pliki: to, co Twoje tafy tworzą (raport, arkusz, dokument), jest przez 30 dni w Konto › Pliki, na stronie każdego tafa i w jego czacie. Otwórz, pobierz lub udostępnij plik albo usuń go od razu dla wszystkich na koncie.
-• Udostępniony plik nie zostawia kopii na tym telefonie po wylogowaniu.
+• Po wylogowaniu tafs usuwa własną kopię udostępnionego pliku; aplikacja, której plik udostępniono, zachowuje to, co otrzymała.

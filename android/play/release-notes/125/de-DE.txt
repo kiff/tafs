@@ -1,2 +1,2 @@
 • Dateien: Was deine tafs bei ihren Läufen erstellen (ein Bericht, eine Tabelle, ein Dokument), findest du unter Konto › Dateien, auf der Seite jedes tafs und in seinem Chat, 30 Tage lang. Öffne, lade herunter oder teile eine Datei, oder lösche sie sofort für alle in deinem Konto.
-• Eine geteilte Datei hinterlässt nach dem Abmelden keine Kopie auf diesem Handy.
+• Beim Abmelden entfernt tafs seine eigene Kopie einer geteilten Datei; die App, mit der du sie geteilt hast, behält, was sie erhalten hat.

@@ -1,2 +1,2 @@
 • Ficheiros: o que os seus tafs criam (um relatório, uma folha, um documento) está em Conta › Ficheiros, na página de cada taf e no seu chat, durante 30 dias. Abra, transfira ou partilhe um ficheiro, ou elimine-o já para todos na sua conta.
-• Um ficheiro que partilha não deixa cópia neste telemóvel depois de terminar sessão.
+• Ao terminar sessão, o tafs apaga a cópia própria de um ficheiro que partilhou; a app com que o partilhou fica com o que recebeu.
