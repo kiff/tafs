@@ -52,25 +52,8 @@ enum WatchRelay {
             words = words.replacingOccurrences(of: pattern, with: " ", options: [.regularExpression, .caseInsensitive])
         }
         if let amount, let own = ownFigure(amount) { remove(own) }
-        // A currency before its figure first, then after it: one pattern with both would take "1042 EUR" from
-        // "order 1042 EUR 150.00", leaving the amount and cutting the order's number (dev-android's read).
-        for figure in [spacedFigure, plainFigure] {
-            for money in [currency + #"\s?"# + figure, figure + #"\s?"# + currency] { remove(money) }
-        }
-        words = words.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
-        words = words.replacingOccurrences(of: #"\s+([,.;:])"#, with: "$1", options: .regularExpression)
-        let edges = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;:-–—·"))
-        return words.trimmingCharacters(in: edges)
+        return WatchAmount.strip(words)
     }
-
-    /// A currency as titles write it in tafs' languages: a sign, złoty, crowns, Swiss francs, a code, or a word, written
-    /// apart or right after its figure ("150zł", "150EUR"), and never inside a longer word ("EUROPE").
-    private static let currency = #"(?:[€$£¥₹]|(?<!\p{L})(?:zł|kr|Fr\.|EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK"#
-        + #"|euros?|dollars?|dolar(?:y|ów)?|pounds?|francs?|franken|złot(?:y|e|ych))(?!\p{L}))"#
-    /// A figure grouped by spaces in threes: "1 250,50".
-    private static let spacedFigure = #"(?<![\d.,'’])\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?(?![\d])"#
-    /// A figure with commas, points or the Swiss apostrophe: "150", "150.00", "1,234.56", "1.234,56", "1'234.50".
-    private static let plainFigure = #"(?<![\d.,'’])\d+(?:[.,'’]\d{3})*(?:[.,]\d+)?(?![\d])"#
 
     /// The call's own amount as a pattern: its whole part plain or grouped in threes, its fraction (optional when it's all
     /// zeros, else in full or without its trailing zeros), and its currency, or any currency, on either side. A bare amount,
@@ -93,8 +76,8 @@ enum WatchRelay {
             let short = String(fraction.reversed().drop { $0 == "0" }.reversed())
             figure += "[.,](?:" + Set([fraction, short]).sorted { $0.count > $1.count }.joined(separator: "|") + ")"
         }
-        let unit = amount.currency.map { "(?:" + currency + #"|(?<!\p{L})"# + NSRegularExpression.escapedPattern(for: $0) + #"(?!\p{L}))"# }
-            ?? currency
+        let unit = amount.currency.map { "(?:" + WatchAmount.currency + #"|(?<!\p{L})"# + NSRegularExpression.escapedPattern(for: $0) + #"(?!\p{L}))"# }
+            ?? WatchAmount.currency
         // Not the start of a longer figure either: "150.5" isn't 150.00, and stays whole (as on Android).
         return "(?:" + unit + #"\s?)?(?<![\d.,'’])"# + figure + #"(?![.,]?\d)(?:\s?"# + unit + ")?"
     }

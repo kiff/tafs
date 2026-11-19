@@ -107,6 +107,17 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(InboxLineScreen.title(inbox.lines[0]), Words.Coach.title)
     }
 
+    /// Coach's reply is kept with no amount in it, as a held call's line is, so no amount is kept on the watch at all.
+    func testCoachsReplyIsKeptWithNoAmount() {
+        let store = Kept()
+        let inbox = model(store)
+        inbox.answered(WatchCoachAnswer(text: "Two calls wait: a refund of €84 for order A-1039, and 150 zł for Ivo.", more: false,
+                                        approveOnPhone: false), message: "m_1")
+        inbox.answered(WatchCoachAnswer(text: "€84", more: false, approveOnPhone: false), message: "m_2")
+        XCTAssertEqual(inbox.lines.map(\.line), [Words.Watch.moreOnPhone, "Two calls wait: a refund of for order A-1039, and for Ivo."])
+        for line in store.kept { XCTAssertFalse(line.line.contains("€") || line.line.contains("zł"), line.line) }
+    }
+
     /// An answer taken away keeps no id: it's put once, by its message's id, so nothing would bring it back (dev-android's read).
     func testADismissedAnswerKeepsNoID() {
         let store = Kept()

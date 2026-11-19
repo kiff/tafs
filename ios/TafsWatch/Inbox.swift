@@ -178,9 +178,12 @@ final class InboxModel: ObservableObject {
         call.summary.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.NeedsYou.title
     }
 
-    /// Coach answered words sent from this watch: a line, read already, since the person saw it as it came.
+    /// Coach answered words sent from this watch: a line, read already, since the person saw it as it came. It's kept with
+    /// no amount in it (`WatchAmount.strip`), as Wear OS keeps its asks' lines: the reply on screen keeps its amounts, in
+    /// memory only.
     func answered(_ answer: WatchCoachAnswer?, message: String) {
-        let words = answer.map(\.text).flatMap { $0.isEmpty ? nil : $0 } ?? Words.Watch.moreOnPhone
+        let kept = answer.map { WatchAmount.strip($0.text) } ?? ""
+        let words = kept.isEmpty ? Words.Watch.moreOnPhone : kept
         put(InboxLine(id: InboxLine.answerID(message), kind: .answer, title: nil, line: words, at: clock(), read: true))
     }
 
