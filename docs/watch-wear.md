@@ -179,7 +179,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 - **Ask Coach as one conversation** (W4, the owner-approved Watch Coach mockup; `CoachThread.kt`, `WatchModel.thread`): above the
   microphone, today's turns from this watch, oldest first, so the page opens on the microphone with the newest turn just above
   it. Each turn is the person's words on the right, with when they were sent, and Coach's answer on the left: its line once the
-  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. **Memory
+  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. TalkBack
+  hears an answer as "Coach: …"; a turn at work is heard as its state line alone, which already names Coach. **Memory
   only:** what was said is held with the asks and forgotten with them, when the app is put away and on sign-out, so the watch
   keeps nothing new ("What the watch keeps"). Until tafs cloud keeps the watch's conversation (for the phone's "From your
   watch", W11), it's what this watch said since the app was opened.

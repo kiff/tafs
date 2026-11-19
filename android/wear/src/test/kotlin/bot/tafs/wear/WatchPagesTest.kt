@@ -413,6 +413,15 @@ class WatchPagesTest {
     compose.onNodeWithContentDescription(Words.Coach.title + ": Refunds are paused until 12:00.", useUnmergedTree = true).assertExists()
   }
 
+  /** While Coach works, TalkBack hears the state line as it is, with no second "Coach:" before it. */
+  @Test fun aWorkingTurnIsNamedOnce() {
+    show(read, thread = listOf(WatchModel.Said("Pause the refunds until noon", 1_000L) to
+      answered.copy(state = "working", tafName = Words.Coach.title, words = "Working", line = null)))
+    val line = Words.Coach.title + " · Working"
+    compose.onNodeWithContentDescription(line, useUnmergedTree = true).assertExists()
+    compose.onNodeWithContentDescription(Words.Coach.title + ": " + line, useUnmergedTree = true).assertDoesNotExist()
+  }
+
   @Test fun withNoConversationCoachsPageIsAsBefore() {
     show(read)
     compose.onAllNodesWithTag(THREAD_TURN + answered.id, useUnmergedTree = true).assertCountEquals(0)
