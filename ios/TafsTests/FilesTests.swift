@@ -38,6 +38,19 @@ final class FilesTests: XCTestCase {
     }
 
     /// On since the owner's yes (19 Nov), and kept 30 days (the owner's pick, 1a).
+    /// The taf header's Files entry counts that taf's files kept now, none while they're read or when the read fails, and
+    /// VoiceOver says the count only when there is one.
+    func testTheHeadersFilesEntryCountsOnlyItsTafsFiles() async {
+        let files = FilesModel(store: StubFilesStore())
+        XCTAssertEqual(TafFilesEntry.count(files, taf: "depl_parcels"), 0, "none while they're read")
+        await files.load()
+        XCTAssertEqual(TafFilesEntry.count(files, taf: "depl_parcels"), 2)
+        XCTAssertEqual(TafFilesEntry.count(files, taf: "depl_support"), 1)
+        XCTAssertEqual(TafFilesEntry.count(files, taf: "depl_none"), 0, "a taf with none yet")
+        XCTAssertEqual(TafFilesEntry.label(count: 0), Words.Files.title)
+        XCTAssertEqual(TafFilesEntry.label(count: 2), Words.Files.title + ", " + Words.Files.tafRow(count: 2))
+    }
+
     func testFilesIsOnAndKeptThirtyDays() {
         XCTAssertTrue(FilesFeature.on)
         XCTAssertEqual(FilesFeature.keptDays, 30)

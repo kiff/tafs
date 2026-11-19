@@ -404,3 +404,50 @@ struct ChatFileChips: View {
         }
     }
 }
+
+/// A taf's one way into its files: first on its header's line, "Files · Version 5 · live" (the owner's test of 3054, 19 Nov,
+/// and the mockup's option A). In the page's ink, at least 44 pt to tap, with a count when it has files kept now. It shows
+/// with none yet too, so a taf's files are always found in the same place; the chat has no second Files link.
+struct TafFilesEntry: View {
+    /// The taf, by tafs cloud's id.
+    let taf: String
+    @StateObject private var files: FilesModel
+
+    init(taf: String, store: FilesStore) {
+        self.taf = taf
+        _files = StateObject(wrappedValue: FilesModel(store: store))
+    }
+
+    var body: some View {
+        let count = Self.count(files, taf: taf)
+        NavigationLink { FilesView(taf: taf, store: files.store) } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "doc.on.doc").scaledFont(14, weight: .semibold).accessibilityHidden(true)
+                Text(Words.Files.title).scaledFont(14, weight: .semibold).oneLineUnlessLarge()
+                if count > 0 {
+                    Text(Words.number(count))
+                        .scaledFont(11, weight: .bold).monospacedDigit().foregroundColor(Theme.panel)
+                        .padding(.horizontal, 6).frame(minWidth: 20, minHeight: 20)
+                        .background(Capsule().fill(Theme.ink))
+                        .accessibilityHidden(true)
+                }
+            }
+            .foregroundColor(Theme.ink)
+            .frame(minHeight: 44).contentShape(Rectangle())
+        }
+        .buttonStyle(.drivablePlain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Self.label(count: count))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("taf.files")
+        .task(id: taf) { await files.load() }
+    }
+
+    /// The taf's files kept now, from the account's list; none while it's read or when the read fails.
+    static func count(_ files: FilesModel, taf: String) -> Int { files.files(taf: taf).count }
+
+    /// What VoiceOver says: "Files", then how many when there are some ("Files, 3 files from its runs").
+    static func label(count: Int) -> String {
+        count > 0 ? "\(Words.Files.title), \(Words.Files.tafRow(count: count))" : Words.Files.title
+    }
+}

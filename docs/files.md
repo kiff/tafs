@@ -13,8 +13,8 @@ screens read tafs cloud's routes (`CloudFilesStore`), in KIFF mode only; tests r
 - **Everyone on the account** sees the account's files.
 - **Delete now**, behind a confirm, deletes for everyone on the account, at once. The file leaves the list only once the
   store has deleted it (`FilesModel.delete`).
-- **No tab of its own:** a Files row in Account, a Files row on each taf's page, and under the chat the files a run
-  delivered, with a Files entry at the chat's top.
+- **No tab of its own:** a Files row in Account, the Files entry on each taf's header, and under the chat the files a
+  run delivered.
 
 ## The model (`ios/Tafs/Model/Files.swift`)
 
@@ -30,8 +30,12 @@ Tests: `FilesTests`.
 
 ## The screens (`ios/Tafs/Views/FilesViews.swift`)
 
-- **Where it opens:** Account's Files row (beside People, Devices and Connect apps) opens the account's files; the taf page's
-  Files line, under its version, and the Files entry at the top of its chat open that taf's, by tafs cloud's id.
+- **Where it opens:** Account's Files row (beside People, Devices and Connect apps) opens the account's files. A taf's
+  page has **one** way into that taf's, by tafs cloud's id: **Files, first on the header's line, "Files · Version 5 ·
+  live"** (`TafFilesEntry`; the owner's test of 3054, 19 Nov, and the mockup's option A), in the page's ink, at least
+  44 pt to tap like the version beside it, with a count when it has files kept now (VoiceOver: "Files, 3 files from its
+  runs"). It shows with none yet too, so a taf's files are always found in the same place. The chat has no Files link of
+  its own.
 - **The list** (`FilesView`): the account's files with All, By taf and By run and a chip per taf, or one taf's by run; each
   row its type, name, taf and size, and when it goes ("goes today", "goes tomorrow", "goes in 12 days"). The days are
   under the run's day in the account's zone. With none, what lands there; a failed read says so.
