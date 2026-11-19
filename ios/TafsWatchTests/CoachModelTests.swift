@@ -30,7 +30,28 @@ final class CoachModelTests: XCTestCase {
         }
     }
 
+    /// W2's phone: Send answered with a ticket (or as given), then each read in turn, the last again once they run out.
+    private final class TwoStepPhone: PhoneAsking {
+        var asked: [WatchRequest] = []
+        var send: WatchReply?
+        var reads: [WatchReply?]
+        /// Called as each read is asked, before it's answered.
+        var onRead: (() -> Void)?
+        init(send: WatchReply? = WatchReply(.ok, ticket: CoachModelTests.ticket), reads: [WatchReply?]) {
+            self.send = send
+            self.reads = reads
+        }
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            asked.append(request)
+            guard request.kind == .coachRead else { return send }
+            onRead?()
+            return reads.count > 1 ? reads.removeFirst() : reads.first ?? nil
+        }
+    }
+
+    nonisolated private static let ticket = WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1")
     nonisolated private static let firstID = UUID(uuidString: "6F1C2A4E-0B8D-4E57-9A3C-2D5E8F7B1C90")!
+    nonisolated private static let rae = WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)
 
     /// Ids in turn: the first, then new ones.
     private final class IDs {
@@ -125,8 +146,8 @@ final class CoachModelTests: XCTestCase {
     /// Words from the system's input or a Quick reply wait in Check before sending: nothing reaches the phone before Send.
     /// Blank is nothing, and the words are cut at what Coach takes.
     func testWordsWaitInTheReviewUntilSend() async {
-        let phone = Phone(WatchReply(.ok, line: "The rest is on your phone."))
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
         model.review("   \n")
         XCTAssertFalse(model.reviewing, "blank is nothing")
         model.review(String(repeating: "a", count: WatchRequest.coachLimit + 5))
@@ -136,9 +157,10 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(model.draft, "Pause Rae", "Re-record: the new words take the old ones' place")
         XCTAssertTrue(phone.asked.isEmpty, "nothing leaves the watch before Send")
         await model.sendReviewed()
-        XCTAssertEqual(phone.asked, [WatchRequest(.coach, made: now, text: "Pause Rae", message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90")])
+        XCTAssertEqual(phone.asked, [WatchRequest(.coachSend, made: now, text: "Pause Rae", message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"),
+                                     WatchRequest(.coachRead, made: now, ticket: Self.ticket)])
         XCTAssertFalse(model.reviewing)
-        XCTAssertEqual(model.state, .answered(nil))
+        XCTAssertEqual(model.state, .answered(Self.rae))
     }
 
     /// A Send that doesn't reach Coach keeps the words in the review, to send again under the same id.
@@ -184,7 +206,7 @@ final class CoachModelTests: XCTestCase {
     /// "Deleted. Nothing was sent." (agentgabo's read).
     func testDeleteAndReRecordWaitWhileASendIsInFlight() async {
         let phone = HeldPhone()
-        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next)
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
         model.review("Pause Rae")
         let sending = Task { await model.sendReviewed() }
         while phone.held == nil { await Task.yield() }
@@ -194,11 +216,94 @@ final class CoachModelTests: XCTestCase {
         model.review("Pause Ivo")
         XCTAssertEqual(model.draft, "Pause Rae", "the words shown are the words sent")
         XCTAssertTrue(model.reviewing)
-        phone.answer(WatchReply(.ok, line: "The rest is on your phone."))
+        phone.answer(WatchReply(.ok, ticket: Self.ticket))
+        // Sent, and Coach's answer read: still nothing deleted or re-recorded.
+        while phone.asked.count < 2 || phone.held == nil { await Task.yield() }
+        XCTAssertEqual(model.state, .sent)
+        XCTAssertFalse(model.canSend)
+        model.delete()
+        model.review("Pause Ivo")
+        XCTAssertEqual(model.state, .sent)
+        phone.answer(WatchReply(.ok, coach: Self.rae, answering: false))
         await sending.value
-        XCTAssertEqual(phone.asked.map(\.text), ["Pause Rae"])
-        XCTAssertEqual(model.state, .answered(nil))
+        XCTAssertEqual(phone.asked.map(\.text), ["Pause Rae", nil])
+        XCTAssertEqual(model.state, .answered(Self.rae))
         XCTAssertFalse(model.reviewing)
+    }
+
+    /// W2: "Sent" as soon as tafs cloud has the words, "Coach is answering" while its chat says so, then the answer,
+    /// kept for the Inbox once.
+    func testSendSaysSentThenAnsweringThenTheAnswer() async {
+        let partial = WatchCoachAnswer(text: "Pausing", more: false, approveOnPhone: false)
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: false), WatchReply(.ok, coach: partial, answering: true),
+                                         WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        var seen: [CoachModel.State] = []
+        phone.onRead = { seen.append(model.state) }
+        var kept: [(WatchCoachAnswer?, String)] = []
+        model.onAnswer = { kept.append(($0, $1)) }
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(seen, [.sent, .sent, .answering], "Sent before Coach starts, then Coach is answering")
+        XCTAssertEqual(model.state, .answered(Self.rae))
+        XCTAssertEqual(model.asked, "Pause Rae", "the words that left stay above the answer")
+        XCTAssertEqual(kept.map(\.0), [Self.rae])
+        XCTAssertEqual(kept.map(\.1), ["6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"])
+    }
+
+    /// W2: past `answerReads`, what Coach wrote so far, with the rest on the phone; never "not sent", since it was.
+    func testPastTheReadsTheRestIsOnThePhone() async {
+        let partial = WatchCoachAnswer(text: "Pausing", more: false, approveOnPhone: false)
+        let phone = TwoStepPhone(reads: [nil, WatchReply(.failed, line: "tafs couldn't reach KIFF."),
+                                         WatchReply(.ok, coach: partial, answering: true)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(phone.asked.filter { $0.kind == .coachRead }.count, CoachModel.answerReads)
+        XCTAssertEqual(model.state, .answered(WatchCoachAnswer(text: "Pausing", more: true, approveOnPhone: false)))
+    }
+
+    /// W2: leaving the screen stops the reads, and nothing is kept for the Inbox from them.
+    func testLeavingStopsTheReads() async {
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: true)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        var kept = 0
+        model.onAnswer = { _, _ in kept += 1 }
+        var reads = 0
+        phone.onRead = {
+            reads += 1
+            if reads == 2 { model.leave() }
+        }
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(reads, 2)
+        XCTAssertEqual(model.state, .writing)
+        XCTAssertNil(model.asked)
+        XCTAssertEqual(kept, 0)
+    }
+
+    /// W2: a phone from before the two steps refuses `coach_send`; the same words then go v1's way, under the same id.
+    func testAPhoneFromBeforeTheTwoStepsIsSentV1sWay() async {
+        let v1 = V1Phone(refusing: .coachSend, answer: WatchReply(.ok, coach: Self.rae))
+        let older = CoachModel(phone: v1, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        older.review("Pause Rae")
+        await older.sendReviewed()
+        XCTAssertEqual(v1.asked.map(\.kind), [.coachSend, .coach])
+        XCTAssertEqual(Set(v1.asked.map(\.message)), ["6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"])
+        XCTAssertEqual(older.state, .answered(Self.rae))
+        XCTAssertFalse(older.reviewing)
+    }
+
+    /// A phone that refuses one kind, as one from before it would, and answers the rest.
+    private final class V1Phone: PhoneAsking {
+        var asked: [WatchRequest] = []
+        let refusing: WatchRequest.Kind
+        let answer: WatchReply
+        init(refusing: WatchRequest.Kind, answer: WatchReply) { self.refusing = refusing; self.answer = answer }
+        func ask(_ request: WatchRequest) async -> WatchReply? {
+            asked.append(request)
+            return request.kind == refusing ? WatchReply(.refused) : answer
+        }
     }
 
     /// Quick reply: four lines, in Wear OS's order, each its own words.

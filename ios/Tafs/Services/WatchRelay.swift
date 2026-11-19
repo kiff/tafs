@@ -20,6 +20,10 @@ protocol WatchReading {
     func halt(taf: String?) async -> HaltAll.Outcome
     /// Sends Coach the person's words under the message's id, and reads its answer for a moment.
     func coach(text: String, messageID: UUID) async -> WatchReply
+    /// v2's Send (W2): the words as `coach` sends them, answered as soon as tafs cloud has them, with the ticket.
+    func coachSend(text: String, messageID: UUID) async -> WatchReply
+    /// v2 (W2): Coach's answer so far to the words the ticket names, read once, and whether Coach is still at it.
+    func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply
     /// Your brief, as tafs cloud sends it; nil when the account has none.
     func brief() async throws -> WatchBrief?
     /// One taf's page (watch v2), by tafs cloud's id; nil for a taf the phone doesn't list.
@@ -33,6 +37,9 @@ protocol WatchReading {
 extension WatchReading {
     /// No brief: the watch shows Needs you, as it always has.
     func brief() async throws -> WatchBrief? { nil }
+    /// A reader without W2's two steps: the watch sends as v1 does.
+    func coachSend(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+    func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply { WatchReply(.notYet) }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -129,6 +136,11 @@ enum WatchRelay {
             // The watch's id for the words, the same when they're sent again; a watch from before it
             // sends none, and the phone gives the message one.
             return await reading.coach(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
+        case .coachSend:
+            return await reading.coachSend(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
+        case .coachRead:
+            guard let ticket = request.ticket else { return WatchReply(.refused) }
+            return await reading.coachRead(ticket)
         case .brief:
             // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
             do {
@@ -362,16 +374,9 @@ struct KeptWatchReading: WatchReading {
     func coach(text: String, messageID: UUID) async -> WatchReply {
         let setup: TafsCloud.CloudTaf
         let sent: TafsCloud.Sent
-        do {
-            guard let s = try await cloud.setup() else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
-            setup = s
-            sent = try await cloud.sendMessage(s.id, text: text, messageID: messageID)
-        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
-            return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
-        } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
-            return WatchReply(.failed, line: AppModel.waitsForCredits(e))
-        } catch {
-            return WatchReply(.failed, line: Words.Alert.notSent + "\n" + error.localizedDescription)
+        switch await post(text: text, messageID: messageID) {
+        case .failure(let refusal): return refusal.reply
+        case .success(let posted): (setup, sent) = posted
         }
         var waited: TimeInterval = 0
         var answer: WatchCoachAnswer?
@@ -386,6 +391,54 @@ struct KeptWatchReading: WatchReading {
         guard var answer else { return WatchReply(.ok, line: Words.Watch.moreOnPhone) }
         if waited > Self.coachWait { answer.more = true }
         return WatchReply(.ok, coach: answer)
+    }
+
+    /// Why the words weren't sent, in the phone's words.
+    struct Refusal: Error {
+        let reply: WatchReply
+    }
+
+    /// The words to Coach's current chat under the message's id; refusals in the phone's words.
+    private func post(text: String, messageID: UUID) async -> Result<(TafsCloud.CloudTaf, TafsCloud.Sent), Refusal> {
+        do {
+            guard let setup = try await cloud.setup() else { return .failure(Refusal(reply: WatchReply(.failed, line: Words.Watch.openOnPhone))) }
+            let sent = try await cloud.sendMessage(setup.id, text: text, messageID: messageID)
+            Self.coachChats.insert(setup.id)
+            return .success((setup, sent))
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            return .failure(Refusal(reply: WatchReply(.failed, line: Words.Watch.coachNeedsConsent)))
+        } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
+            return .failure(Refusal(reply: WatchReply(.failed, line: AppModel.waitsForCredits(e))))
+        } catch {
+            return .failure(Refusal(reply: WatchReply(.failed, line: Words.Alert.notSent + "\n" + error.localizedDescription)))
+        }
+    }
+
+    /// The Coach chats this phone sent the watch's words to since it started: a read names one of them, or the chat
+    /// tafs cloud gives as Coach's now, never another conversation.
+    static var coachChats: Set<String> = []
+
+    /// v2's Send (W2): the words, answered as soon as tafs cloud has them, with where Coach's answer will be.
+    func coachSend(text: String, messageID: UUID) async -> WatchReply {
+        switch await post(text: text, messageID: messageID) {
+        case .failure(let refusal): return refusal.reply
+        case .success(let (setup, sent)):
+            return WatchReply(.ok, ticket: WatchCoachTicket(chat: setup.id, session: sent.session, sent: sent.message?.id))
+        }
+    }
+
+    /// v2 (W2): Coach's thread read once: its answer so far, and whether its chat says it's still working. A chat that
+    /// isn't Coach's is never read.
+    func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply {
+        if !Self.coachChats.contains(ticket.chat) {
+            guard let setup = try? await cloud.setup(), setup.id == ticket.chat else { return WatchReply(.refused) }
+            Self.coachChats.insert(setup.id)
+        }
+        guard let thread = try? await cloud.setupThread(ticket.chat, session: ticket.session) else {
+            return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+        }
+        let answer = Self.answer(in: thread, after: ticket.sent, session: ticket.session)
+        return WatchReply(.ok, coach: answer, answering: thread.working != nil)
     }
 
     /// Coach's answer to the person's message: Coach's words written after it in that chat, and

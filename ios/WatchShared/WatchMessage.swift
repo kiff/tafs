@@ -4,7 +4,7 @@ import Foundation
 // Both apps compile this file. A request goes live with WatchConnectivity's message data and a
 // reply, never queued: one made more than `WatchRequest.maxAge` ago is dropped on the phone.
 
-/// A request from the watch. Only the ten kinds below decode, so anything else, an approval
+/// A request from the watch. Only the twelve kinds below decode, so anything else, an approval
 /// among them, never reaches the phone's code.
 struct WatchRequest: Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable {
@@ -23,6 +23,11 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case calendar
         /// Who is signed in, and the plan's line (watch v2). Read only.
         case account
+        /// v2's Send (W2): Coach's words as `coach` sends them, answered as soon as tafs cloud has them, with where Coach's
+        /// answer will be (`WatchReply.ticket`), so the watch can say "Sent" before Coach answers.
+        case coachSend = "coach_send"
+        /// v2 (W2): Coach's answer so far to the words a ticket names, and whether Coach is still at it. Read only.
+        case coachRead = "coach_read"
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -48,9 +53,11 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var message: String?
     /// Calendar: the day, `YYYY-MM-DD`; none is today in the account's zone.
     var day: String?
+    /// Coach's answer so far (`coachRead`): where it will be, as the phone said when it sent the words.
+    var ticket: WatchCoachTicket?
 
     init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil,
-         day: String? = nil) {
+         day: String? = nil, ticket: WatchCoachTicket? = nil) {
         self.kind = kind
         self.made = made
         self.hold = hold
@@ -58,6 +65,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         self.text = text
         self.message = message
         self.day = day
+        self.ticket = ticket
     }
 
     /// A calendar day as the watch names it: `YYYY-MM-DD`, and nothing else.
@@ -75,7 +83,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .halt: return given(taf)
         case .taf: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
         case .calendar: return day.map(Self.isDay) ?? true
-        case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
+        case .coach, .coachSend: return given(text) && (text ?? "").count <= Self.coachLimit
+        case .coachRead: return ticket?.isComplete ?? false
         }
     }
 }
@@ -114,10 +123,14 @@ struct WatchReply: Codable, Equatable, Sendable {
     /// What happened, or why not, in the phone's words: shown only once the phone has KIFF's
     /// or tafs cloud's answer.
     var line: String?
+    /// `coachSend`: where Coach's answer to the words will be, for `coachRead`.
+    var ticket: WatchCoachTicket?
+    /// `coachRead`: Coach is still at it (its chat says it's working).
+    var answering: Bool?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
-         line: String? = nil) {
+         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -127,6 +140,23 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.calendar = calendar
         self.account = account
         self.line = line
+        self.ticket = ticket
+        self.answering = answering
+    }
+}
+
+/// Where Coach's answer to the words the watch sent will be (v2's Send, W2): Coach's chat, the conversation the words
+/// went into, and tafs cloud's id for the message. The phone reads only Coach's own chat by it.
+struct WatchCoachTicket: Codable, Equatable, Sendable {
+    var chat: String
+    var session: String
+    var sent: String?
+
+    /// Each id named, and none longer than a taf's id may be.
+    var isComplete: Bool {
+        [chat, session, sent ?? "x"].allSatisfy { id in
+            !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && id.count <= WatchRequest.tafIDLimit
+        }
     }
 }
 

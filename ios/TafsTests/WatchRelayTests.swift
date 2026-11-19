@@ -528,6 +528,69 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(body?["client_message_id"] as? String, messageID.uuidString.lowercased(), "under the message's id")
     }
 
+    /// W2: v2's Send is answered as soon as tafs cloud has the words, with where Coach's answer will be; nothing is
+    /// read yet, so the watch can say "Sent" at once.
+    func testCoachSendAnswersOnceTafsCloudHasTheWords() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"message":{"id":"m1"}}"#)
+        let messageID = UUID()
+        let reply = await reading.coachSend(text: "Pause Rae", messageID: messageID)
+        XCTAssertEqual(reply, WatchReply(.ok, ticket: WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1")))
+        XCTAssertTrue(sent("GET", "/v1/tafs/taf-setup/conversation/s1").isEmpty, "answered before Coach's thread is read")
+        let body = sent("POST", "/v1/tafs/taf-setup/messages").last?.httpBody
+            .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+        XCTAssertEqual(body?["client_message_id"] as? String, messageID.uuidString.lowercased(), "under the message's id, as v1")
+    }
+
+    /// W2: a refusal at Send is v1's, in the phone's words.
+    func testCoachSendRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (403, #"{"error":"Allow AI use first.","code":"ai_consent_required","consent":{"given":false}}"#)
+        let reply = await reading.coachSend(text: "Pause Rae", messageID: UUID())
+        XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.coachNeedsConsent))
+    }
+
+    /// W2: each read is Coach's answer so far, and whether its chat says it's still working.
+    func testCoachReadSaysWhetherCoachIsStillAtIt() async {
+        KeptWatchReading.coachChats = []
+        let reading = coachReading()
+        let ticket = WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1")
+        let mine = #"{"id":"m1","at":"2026-10-14T10:45:00Z","from":"owner","kind":"message","text":"Pause Rae","session":"s1"}"#
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[\#(mine)],"components":[],"working":{"session":"s1"}}"#)
+        let working = await reading.coachRead(ticket)
+        XCTAssertEqual(working, WatchReply(.ok, answering: true))
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[\#(mine),{"at":"2026-10-14T10:45:05Z","from":"taf","kind":"message","text":"Rae is paused.","session":"s1"}],"components":[]}"#)
+        let done = await reading.coachRead(ticket)
+        XCTAssertEqual(done, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false), answering: false))
+        XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty, "a read sends nothing")
+    }
+
+    /// W2: a read names Coach's chat, or nothing is read: never another taf's conversation.
+    func testCoachReadReadsOnlyCoachsChat() async {
+        KeptWatchReading.coachChats = []
+        let reading = coachReading()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation/s1"] = (200, #"{"messages":[],"components":[]}"#)
+        let refused = await reading.coachRead(WatchCoachTicket(chat: "depl_1", session: "s1", sent: nil))
+        XCTAssertEqual(refused, WatchReply(.refused))
+        XCTAssertTrue(sent("GET", "/v1/tafs/depl_1/conversation/s1").isEmpty, "Rae's conversation is never read")
+    }
+
+    /// W2's kinds decode, and a read with no ticket, or an empty one, is refused before anything is read.
+    func testACoachReadNamesItsTicket() async {
+        let reading = Reading(at: now)
+        let none = await send(WatchRequest(.coachRead, made: now), reading: reading)
+        XCTAssertEqual(none, WatchReply(.refused))
+        let empty = await send(WatchRequest(.coachRead, made: now, ticket: WatchCoachTicket(chat: " ", session: "s1")), reading: reading)
+        XCTAssertEqual(empty, WatchReply(.refused))
+        let long = await send(WatchRequest(.coachSend, made: now, text: String(repeating: "a", count: WatchRequest.coachLimit + 1)),
+                              reading: reading)
+        XCTAssertEqual(long, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched)
+        let read = await send(WatchRequest(.coachRead, made: now, ticket: WatchCoachTicket(chat: "taf-setup", session: "s1")),
+                              reading: reading)
+        XCTAssertEqual(read, WatchReply(.notYet), "the fake reader is one from before W2")
+    }
+
     func testCoachRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
         let reading = coachReading()
         StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (403, #"{"error":"Allow AI use first.","code":"ai_consent_required","consent":{"given":false}}"#)

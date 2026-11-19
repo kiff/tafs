@@ -85,10 +85,29 @@ struct CoachAsk: View {
         }
     }
 
-    /// Sent: Coach's answer as v1 draws it, short, with the rest on the phone.
+    /// Sent (W2): the words that left, "Sent" the moment tafs cloud has them, then "Coach is answering" while Coach is at
+    /// them, then Coach's answer as v1 draws it, short, with the rest on the phone.
     private var answer: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
+                if let asked = model.asked {
+                    Text(verbatim: asked)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .multilineTextAlignment(.trailing)
+                    Label(Words.Watch.sent, systemImage: "checkmark")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                if model.state == .answering {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .frame(width: 18, height: 18)
+                        Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title))
+                            .font(.footnote)
+                    }
+                    .accessibilityElement(children: .combine)
+                }
                 if case .answered(let answer) = model.state {
                     if let answer, !answer.text.isEmpty {
                         Text(answer.text)
