@@ -24,7 +24,7 @@ struct CoachScreen: View {
 
     @ViewBuilder private var answer: some View {
         switch model.state {
-        case .writing, .sending:
+        case .writing, .sending, .deleted:
             EmptyView()
         case .answered(let answer):
             if let answer, !answer.text.isEmpty {

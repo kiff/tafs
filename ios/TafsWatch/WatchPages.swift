@@ -85,9 +85,9 @@ struct WatchPagesView: View {
     }
 }
 
-/// Coach's home: the microphone first, named for Coach; then how many wait in the Inbox (a tap goes there), the line that
-/// Coach gets words and never a voice, and the menu at the foot. Type and Quick reply come with the review (step iii),
-/// and the last chats with tafs cloud's chats read.
+/// Coach's home: the microphone first, named for Coach, which opens the ask (`CoachAsk`: the system's input, Type and Quick
+/// reply, then Check before sending); then how many wait in the Inbox (a tap goes there), the line that Coach gets words
+/// and never a voice, and the menu at the foot. The last chats come with tafs cloud's chats read.
 struct CoachHome: View {
     @ObservedObject var needsYou: NeedsYouModel
     @ObservedObject var coach: CoachModel
@@ -114,7 +114,7 @@ struct CoachHome: View {
             .navigationTitle(Words.Coach.title)
         }
         .sheet(isPresented: $asking) {
-            CoachScreen(model: coach)
+            CoachAsk(model: coach)
         }
         .task { await needsYou.load() }
     }
