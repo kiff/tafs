@@ -1,0 +1,1 @@
+- **Android 128 (1.41.3): on the Wear OS watch, Account's Signed in shows a personal account's email once**, not twice ([watch-wear.md](docs/watch-wear.md)).
