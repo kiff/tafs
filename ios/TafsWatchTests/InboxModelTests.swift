@@ -51,7 +51,7 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(model(store).lines, inbox.lines, "and there when the app opens again")
     }
 
-    /// A held call's line is what it asks, never its amount, in the Inbox and in its file (the PM's ruling, as Wear OS); a
+    /// A held call's line is what it asks, never its amount, in the Inbox and in its file (as Wear OS); a
     /// phone from before `summary` gives Needs you's title. The amount shows only while Needs you holds the call.
     func testNoAmountIsKeptOnTheWatch() {
         let store = Kept()

@@ -162,7 +162,7 @@ final class InboxModel: ObservableObject {
         }
     }
 
-    /// A held call's line as the Inbox keeps it: what it asks, never its amount (the PM's ruling, as Wear OS). A phone from
+    /// A held call's line as the Inbox keeps it: what it asks, never its amount (as Wear OS). A phone from
     /// before `summary` names none, and the line is Needs you's own title.
     static func line(_ call: WatchNeedsYou.Call) -> String {
         call.summary.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.NeedsYou.title
