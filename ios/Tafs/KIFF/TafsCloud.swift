@@ -1123,11 +1123,15 @@ final class TafsCloud {
         }
     }
 
+    /// A person's file is read through a session with no disk cache (`URLSession.noStore`): the only copy on the phone is
+    /// the one the app writes, which goes on sign-out (docs/data.md). A test's own session is used as it is.
+    var bytesSession: URLSession { session === URLSession.shared ? .noStore : session }
+
     /// A file the person attached, downloaded: only their own; another's is a 404.
     func attachment(_ id: String, file: String) async throws -> Data {
         struct Response: Decodable { let url: URL }
         let r: Response = try await send("GET", "/v1/tafs/\(escaped(id))/attachments/\(escaped(file))")
-        let (data, response) = try await session.data(from: r.url)
+        let (data, response) = try await bytesSession.data(from: r.url)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else { throw CloudError(status: status, message: Words.Chat.File.couldNotOpen) }
         return data

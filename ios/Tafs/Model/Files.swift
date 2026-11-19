@@ -85,9 +85,11 @@ enum FileText {
 /// as the file is, and gone when the file's screen closes. A file is never kept on the device past its screen, so
 /// Delete now and the 30 days hold here too.
 enum FileCopy {
+    /// Every copy's folder: cleared with the opened files on sign-out and an account switch (`AppModel.removeOpenedFiles`).
+    static var root: URL { FileManager.default.temporaryDirectory.appendingPathComponent("files", isDirectory: true) }
+
     static func folder(_ id: String) -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("files", isDirectory: true)
-            .appendingPathComponent(safeName(id, id: "file"), isDirectory: true)
+        root.appendingPathComponent(safeName(id, id: "file"), isDirectory: true)
     }
 
     /// A name that stays one path component whatever tafs cloud sends (`FileText.name`), else the file's id.

@@ -5289,6 +5289,9 @@ final class AppModel: ObservableObject {
         try? FileManager.default.removeItem(at: openedFiles)
         // The last export's files too: a person's chats never stay on the phone after them.
         try? FileManager.default.removeItem(at: exportedFiles)
+        // And Files' copies (`FileCopy`): each goes when its screen closes, but one left by an app killed on that screen
+        // goes here, so Delete now's "no copy kept" holds on this phone too.
+        try? FileManager.default.removeItem(at: FileCopy.root)
     }
 
     /// Where Export my chats writes its two files (kiff/tafs#424): removed with the opened files.
