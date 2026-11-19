@@ -373,6 +373,16 @@ class BriefTest {
     assertEquals("Decisions · 2", b.words.decisionsShown)
   }
 
+  /** Coach's chats that wait on the person, in tafs cloud's words: read when there are some, and never at 0 or with no words. */
+  @Test fun theCoachChatsThatWaitAreReadOnlyWhenThereAreSome() {
+    val b = brief("""{"decisions":[],"coach_waiting":{"count":17,"words":"17 Coach chats wait for your answer."}}""")
+    assertEquals(Brief.Counted(17, "17 Coach chats wait for your answer."), b.coachWaiting)
+    assertNull(brief("""{"coach_waiting":{"count":0,"words":"0 Coach chats wait for your answer."}}""").coachWaiting)
+    assertNull(brief("""{"coach_waiting":{"count":3}}""").coachWaiting)
+    assertNull(brief("""{"coach_waiting":"17"}""").coachWaiting)
+    assertNull(brief("""{}""").coachWaiting)
+  }
+
   @Test fun everyHeadingIsTafsCloudsAndTheAppsWordsOnlyStandIn() {
     val sent = brief("""{"words":{"urgent":"Dringend","all":"Alle","decisions":"Entscheidungen · 2"}}""").words
     assertEquals("Dringend", sent.urgentShown)

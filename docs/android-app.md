@@ -193,6 +193,10 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
   (`step`) on its own panel; a taf whose scheduled check couldn't read (`check`, "Open the taf") the taf's page on the tafs tab,
   by tafs cloud's id in `ref.taf`, where the owner sees why; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
   the destination; the brief's code signs and sends nothing (`BriefTest`). Answered there, the card goes back to the brief.
+- **Coach's chats that wait on you** (`coach_waiting`, `{count, words}`) are one line under the decisions, in tafs cloud's words
+  ("17 Coach chats wait for your answer."), opening Needs you, where each waits with Open and Set aside. It's Needs you's `coach`
+  part, so the brief's numbers add up to the badge; drawn only when tafs cloud sends a count above 0 with its words
+  (`theCoachChatsThatWaitAreReadOnlyWhenThereAreSome`), as iOS does.
 - **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever Needs you holds something the brief
   doesn't show, that count shows there too, with the same link, even when tafs cloud sent no `rest`
   (`AppState.briefNeedsYouLine`). It's matched by item, never by count: held calls by KIFF's id and steps by their hand-off

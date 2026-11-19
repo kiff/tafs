@@ -22,6 +22,11 @@ data class Brief(
   val nextMove: NextMove? = null,
   /** The things that wait and need nothing now, in one line: today's Needs you list. */
   val rest: Counted? = null,
+  /**
+   * Coach's chats that wait on this person's answer, in tafs cloud's words ("17 Coach chats wait for your answer."): Needs
+   * you's `coach` part, so the brief's numbers add up to the badge. Only when there are some.
+   */
+  val coachWaiting: Counted? = null,
   /** The day's credits, in tafs cloud's words. */
   val credits: String? = null,
   /** The account's labels, as Home sends them, filtering the brief. */
@@ -108,6 +113,7 @@ data class Brief(
         done = c.objects("done").map(::done).filter { it.cases.isNotEmpty() },
         nextMove = c.obj("next_move")?.let(::nextMove)?.takeIf { it.usable },
         rest = c.obj("rest")?.let(::counted)?.takeIf { it.words.isNotEmpty() },
+        coachWaiting = c.obj("coach_waiting")?.let(::counted)?.takeIf { it.count > 0 && it.words.isNotEmpty() },
         credits = c.obj("credits")?.text("words"),
         labels = c.objects("labels").map(::label).filter { it.id.isNotEmpty() && it.name.isNotEmpty() },
         words = c.obj("words")?.let(::briefWords) ?: BriefWords(),
