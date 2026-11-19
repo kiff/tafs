@@ -218,14 +218,18 @@ final class FilesModel: ObservableObject {
     /// A file's preview: tafs cloud's start when it gives one. The bytes are read for the system to draw only when it
     /// answered with none, or when the type has no text start; a failed read of a text type reads no bytes.
     func readPreview(of file: DeliveredFile) async -> PreviewRead {
+        let text = Self.textTypes.contains(file.type.uppercased())
         let start: FilePreviewText?
         do {
             start = try await store.preview(of: file.id)
         } catch {
-            guard !Self.textTypes.contains(file.type.uppercased()) else { return .unreachable }
+            guard !text else { return .unreachable }
             start = nil
         }
         if let start { return .text(start) }
+        // A text type always has a start from tafs cloud: one answered without it (a malformed or older answer) reads no
+        // bytes either, so its raw file is never drawn in the cleaned start's place (agentgabo's read).
+        guard !text else { return .unreachable }
         do { return .copy(try await localCopy(of: file)) } catch { return .unreachable }
     }
 
