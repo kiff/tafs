@@ -119,7 +119,7 @@ private fun DrawScope.speakerGlyph(color: Color) {
   }
 }
 
-private fun DrawScope.checkGlyph(color: Color, strokeShare: Float = 0.08f) {
+internal fun DrawScope.checkGlyph(color: Color, strokeShare: Float = 0.08f) {
   val d = size.minDimension
   val ox = (size.width - d) / 2
   val oy = (size.height - d) / 2
@@ -268,6 +268,11 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         T(Words.Watch.sending, 15.sp, Look.text, FontWeight.Medium, lines = 1)
       }
       is WatchModel.Voice.Sent -> Centered(Modifier.clickable(onClick = act.closeVoice)) {
+        // v1: "Sent", then the wrist can drop and the microphone comes back by itself (v2 stays until the answer, SentScreenV2).
+        androidx.compose.runtime.LaunchedEffect(voice) {
+          kotlinx.coroutines.delay(WatchActivity.SENT_SHOWN_MS)
+          act.closeVoice()
+        }
         Box(Modifier.size(60.dp).border(BorderStroke(3.dp, Look.amber), CircleShape)) {
           Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.amber, 0.07f) }
         }

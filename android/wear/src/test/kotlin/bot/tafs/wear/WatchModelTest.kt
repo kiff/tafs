@@ -710,7 +710,7 @@ class WatchModelTest {
 
   /**
    * An answer is kept with no amount, as "never an amount" on the watch promises (docs/watch-wear.md, "What the watch keeps"),
-   * and the person's own words the same when there's no answer line; opened while the app holds it, it shows whole.
+   * and its state in tafs cloud's words (AskLine.words) the same when there's no answer line; opened while the app holds it, it shows whole.
    */
   @Test fun anAnswerIsKeptWithNoAmountAndShowsWholeWhileOpen() = runTest {
     val store = Inbox()

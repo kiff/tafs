@@ -17,6 +17,7 @@ import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -276,6 +277,41 @@ class WatchPagesTest {
   @Test fun aReviewWithNoRecordingHasNoPlay() {
     show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
     compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
+  }
+
+  // MARK: Sent (W2, the owner's Watch 5 test)
+
+  private val working = answered.copy(state = "working", words = "Working", line = null)
+
+  /** v2's "Sent" stays until the answer, with tafs cloud's state in its words and a ring turning: it never closes by itself. */
+  @Test fun v2sSentStaysWithTafsCloudsStateUntilTheAnswer() {
+    compose.mainClock.autoAdvance = false
+    show(read, voice = WatchModel.Voice.Sent(working))
+    compose.mainClock.advanceTimeByFrame()
+    compose.onNodeWithText(Words.Watch.sent).assertExists()
+    compose.onNodeWithText("Support replies · Working").assertExists()
+    compose.onNodeWithTag(SENT_WORKING, useUnmergedTree = true).assertExists()
+    compose.mainClock.advanceTimeBy(WatchActivity.SENT_SHOWN_MS * 4)
+    assertTrue("v2's Sent waits for the answer", "close" !in did)
+    // A tap goes back to Coach's home; the ask goes on.
+    compose.onNodeWithTag(SENT_V2).performClick()
+    assertEquals(listOf("close"), did)
+  }
+
+  @Test fun v2sSentOnceTheAskEndedStopsTurning() {
+    show(read, voice = WatchModel.Voice.Sent(answered))
+    compose.onAllNodesWithTag(SENT_WORKING, useUnmergedTree = true).assertCountEquals(0)
+    compose.onNodeWithText("Support replies · Answered").assertExists()
+  }
+
+  /** v1's "Sent" is as before: the microphone comes back by itself. */
+  @Test fun v1sSentStillClosesByItself() {
+    compose.mainClock.autoAdvance = false
+    compose.setContent { MaterialTheme { VoiceScreen(WatchModel.Voice.Sent(working), actions) } }
+    compose.mainClock.advanceTimeByFrame()
+    assertTrue("close" !in did)
+    compose.mainClock.advanceTimeBy(WatchActivity.SENT_SHOWN_MS + 100)
+    assertEquals(listOf("close"), did)
   }
 
   // MARK: The Inbox kept on the watch (step iv)

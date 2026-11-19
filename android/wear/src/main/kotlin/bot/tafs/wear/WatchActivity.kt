@@ -128,13 +128,6 @@ class WatchActivity : ComponentActivity() {
         val signedOutHere by model.signedOutHere.collectAsState()
         val calendar by model.calendar.collectAsState()
         val account by model.account.collectAsState()
-        // "Sent": the wrist can drop; the microphone comes back by itself.
-        androidx.compose.runtime.LaunchedEffect(voice) {
-          if (voice is WatchModel.Voice.Sent) {
-            kotlinx.coroutines.delay(SENT_SHOWN_MS)
-            if (model.voice.value is WatchModel.Voice.Sent) model.closeVoice()
-          }
-        }
         // v2: past 30 s, listening stops by itself and the words go to the review.
         val listeningSince = (voice as? WatchModel.Voice.Listening)?.since
         androidx.compose.runtime.LaunchedEffect(listeningSince) {
@@ -295,7 +288,7 @@ class WatchActivity : ComponentActivity() {
     private const val ACTION_REMOTE_INPUT = "android.support.wearable.input.action.REMOTE_INPUT"
     private const val EXTRA_REMOTE_INPUTS = "android.support.wearable.input.extra.REMOTE_INPUTS"
 
-    /** How long "Sent" stays before the microphone comes back. */
+    /** How long v1's "Sent" stays before the microphone comes back (v2's stays until the answer). */
     const val SENT_SHOWN_MS = 2_500L
 
     /** The internal builds' timing line: listen, receipt and result, in milliseconds as the watch measured them. */
