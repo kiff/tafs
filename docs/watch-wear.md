@@ -116,8 +116,8 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     peeks and buzzes and stays until opened or swiped away. Its words keep no amount (`AskResults.alertText`, watchlink's `Amounts.strip`, as
     the Inbox and the Apple Watch's alert): when one was taken out, "The rest is on your phone." follows; opened, the answer
     shows whole. The answer card is a `ScalingLazyColumn`, scrolled by the crown or bezel as by a swipe.
-  - **States:** `accepted`, `working`, `done`, `no_taf` (no one taf could: none, or more than one, which its line says) and
-    `failed`. One the watch doesn't know is drawn by tafs cloud's words.
+  - **States:** `accepted`, `working`, `done` (a taf's result, or Coach's own answer), `no_taf` (Coach's turn ended with
+    nothing to show) and `failed`; their words are tafs cloud's ("Sent · Coach has it", "Coach is answering", docs/watch-ask.md). One the watch doesn't know is drawn by tafs cloud's words.
   - **Kept in memory only,** and forgotten once the app is put away; which results were opened is kept for the app's process
     only, so "ready" means not opened yet. When the app opens, it reads the asks of the last day again (`asks`).
   - **Timing, on internal builds only:** a result's card shows how long listening took to start, sending took to get tafs

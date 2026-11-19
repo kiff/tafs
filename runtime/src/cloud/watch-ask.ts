@@ -111,7 +111,8 @@ export function shownAsk(ask: Ask, lang: Lang): ShownAsk {
     id: ask.id, client_id: ask.client_id, state: ask.state,
     ...(ask.taf ? { taf: ask.taf } : {}),
     ...(ask.line ? { line: ask.line } : {}),
-    words: wordsIn(lang).watch_ask[ask.state],
+    // {name}: who holds the request now, its taf once there's one, else Coach (the same word in every language).
+    words: wordsIn(lang).watch_ask[ask.state].replace("{name}", ask.taf?.name ?? "Coach"),
     at: ask.at, updated: ask.updated,
   };
 }
