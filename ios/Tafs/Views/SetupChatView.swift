@@ -900,7 +900,8 @@ struct SetupChatsList: View {
             .task {
                 await model.loadSetupChats()
                 guard WatchDaysFeature.on, model.mode == .kiff else { return }
-                let days = watchDays ?? WatchDaysModel(reading: model.cloud)
+                let zone = model.kiffAccount?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
+                let days = watchDays ?? WatchDaysModel(reading: model.cloud, zone: zone)
                 watchDays = days
                 await days.load()
             }

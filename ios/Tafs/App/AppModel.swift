@@ -5304,7 +5304,7 @@ final class AppModel: ObservableObject {
             let dir = Self.openedFiles.appendingPathComponent(ref.id, isDirectory: true)
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             let url = dir.appendingPathComponent((ref.name as NSString).lastPathComponent)
-            try data.write(to: url, options: .atomic)
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
             return url
         } catch {
             fileNotices[key] = Words.Chat.File.notOpened(file: "\(ref.name)", why: "\(error.localizedDescription)")
