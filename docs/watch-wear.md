@@ -421,7 +421,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
   - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
     taken, and on either sign-out; not on a lock or put-away, since the person asked for it to be sent.
   - `tafs.inbox`: the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what a held call wants, the
-    time first seen, read) and the bare ids taken away. No amount and no reason: the phone takes any amount out of what a call wants before it goes (`WatchRelay.withoutAmount`, as the iPhone does), even where KIFF's title writes one in. The lines go when the app is opened or put away
+    time first seen, read) and the bare ids taken away. No amount and no reason: the phone takes any amount out of what a call wants before it goes, even where KIFF's title writes one in (`WatchRelay.withoutAmount`): first the call's own amount however it's written, then any figure with a currency beside it (a sign, a code or a word, such as €, zł, kr, PLN or euros); a number with no currency, such as an order's, stays. The lines go when the app is opened or put away
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.
