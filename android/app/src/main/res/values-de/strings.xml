@@ -1566,7 +1566,7 @@
     <string name="people_uses">Nutzt %1$s</string>
     <string name="people_uses_none">Nutzt noch keinen taf</string>
     <string name="push_channel_briefs">Briefings</string>
-    <string name="push_channel_briefs_description">Dein Briefing zu den festen Zeiten, ohne Ton.</string>
+    <string name="push_channel_briefs_description">Dein Briefing zu den festen Zeiten.</string>
     <string name="push_channel_holds_description">Ein Aufruf wird für deine Antwort zurückgehalten. Nichts wird gesendet, bevor du ihn genehmigst.</string>
     <string name="push_channel_other">Andere Benachrichtigungen</string>
     <string name="push_channel_other_description">Anfragen nach Aufgaben und ihre Antworten, ohne Ton.</string>

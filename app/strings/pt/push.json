@@ -1,6 +1,6 @@
 {
   "push.channel.briefs": "Resumos",
-  "push.channel.briefs_description": "O seu resumo às horas definidas, sem som.",
+  "push.channel.briefs_description": "O seu resumo às horas definidas.",
   "push.channel.holds_description": "Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.",
   "push.channel.other": "Outros alertas",
   "push.channel.other_description": "Pedidos de tarefas e as respetivas respostas, sem som.",

@@ -1,6 +1,6 @@
 {
   "push.channel.briefs": "Briefs",
-  "push.channel.briefs_description": "Your brief at its set times, with no sound.",
+  "push.channel.briefs_description": "Your brief at its set times.",
   "push.channel.holds_description": "A call is held for your answer. Nothing is sent until you approve it.",
   "push.channel.other": "Other alerts",
   "push.channel.other_description": "Requests for tasks and their answers, with no sound.",

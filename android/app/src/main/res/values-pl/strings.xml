@@ -1678,7 +1678,7 @@
     <string name="people_uses">Używa: %1$s</string>
     <string name="people_uses_none">Nie używa jeszcze żadnego tafa</string>
     <string name="push_channel_briefs">Przeglądy</string>
-    <string name="push_channel_briefs_description">Twój przegląd o stałych porach, bez dźwięku.</string>
+    <string name="push_channel_briefs_description">Twój przegląd o stałych porach.</string>
     <string name="push_channel_holds_description">Wywołanie jest oczekujące na Twoją odpowiedź. Nic nie zostanie wysłane, dopóki go nie zatwierdzisz.</string>
     <string name="push_channel_other">Inne alerty</string>
     <string name="push_channel_other_description">Prośby o zadania i odpowiedzi na nie, bez dźwięku.</string>

@@ -78409,49 +78409,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Briefing zu den festen Zeiten, ohne Ton."
+            "value": "Dein Briefing zu den festen Zeiten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your brief at its set times, with no sound."
+            "value": "Your brief at its set times."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu resumen a sus horas, sin sonido."
+            "value": "Tu resumen a sus horas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre briefing aux heures prévues, sans son."
+            "value": "Votre briefing aux heures prévues."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo riepilogo ai suoi orari, senza suono."
+            "value": "Il tuo riepilogo ai suoi orari."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jouw briefing op de vaste tijden, zonder geluid."
+            "value": "Jouw briefing op de vaste tijden."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój przegląd o stałych porach, bez dźwięku."
+            "value": "Twój przegląd o stałych porach."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu resumo às horas definidas, sem som."
+            "value": "O seu resumo às horas definidas."
           }
         }
       }

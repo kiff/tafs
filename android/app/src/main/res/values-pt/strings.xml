@@ -1566,7 +1566,7 @@
     <string name="people_uses">Usa %1$s</string>
     <string name="people_uses_none">Ainda não usa nenhum taf</string>
     <string name="push_channel_briefs">Resumos</string>
-    <string name="push_channel_briefs_description">O seu resumo às horas definidas, sem som.</string>
+    <string name="push_channel_briefs_description">O seu resumo às horas definidas.</string>
     <string name="push_channel_holds_description">Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.</string>
     <string name="push_channel_other">Outros alertas</string>
     <string name="push_channel_other_description">Pedidos de tarefas e as respetivas respostas, sem som.</string>
