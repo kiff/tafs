@@ -1054,6 +1054,9 @@ data class AppState(
   }
 }
 
+/** Where Files' Share puts the copy it hands the app the person picks (in the app's cache): cleared on sign-out. */
+const val KEPT_FILES = "kept-files"
+
 /**
  * The app's state and what changes it, as iOS's AppModel has it. The phone never decides: in
  * production KIFF decides every action; [CardCheck] only drives the sample.
@@ -1918,9 +1921,13 @@ class AppModel(
     store?.clear()
     AccountTime.use(null)
     _state.value = AppState(mode = Mode.signedOut, ready = true)
-    // Nothing the person attached and opened stays on the phone after them, nor their export of their chats (beside it).
+    // Nothing the person attached and opened stays on the phone after them, nor their export of their chats, nor a copy of a
+    // delivered file they shared from Files (beside it, `kept-files`: Files' "no copy kept" holds for the phone too).
     openedFiles.deleteRecursively()
-    openedFiles.parentFile?.let { java.io.File(it, "exports").deleteRecursively() }
+    openedFiles.parentFile?.let { cache ->
+      java.io.File(cache, "exports").deleteRecursively()
+      java.io.File(cache, KEPT_FILES).deleteRecursively()
+    }
   }
 
   // MARK: Sample mode

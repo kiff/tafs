@@ -1,0 +1,1 @@
+- **Android, Files: a file shared from the phone leaves no copy after sign-out.** Share's copy in the app's cache is cleared on sign-out, with opened files and exports, so Files' "no copy kept" holds for the phone too ([data.md](docs/data.md)). Files is still off.
