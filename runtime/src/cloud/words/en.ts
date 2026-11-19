@@ -318,6 +318,7 @@ export const en = {
   brief_refuse: "Refuse",
   brief_more: (n: number, _form: Intl.LDMLPluralRule) => `${n} more`,
   brief_rest_line: (n: number, _form: Intl.LDMLPluralRule) => (n === 0 ? "Nothing else." : n === 1 ? "1 other taf needs nothing from you." : `${n} other tafs need nothing from you.`),
+  brief_coach_line: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 Coach chat waits for your answer." : `${n} Coach chats wait for your answer.`),
   brief_hold_question: (taf: string) => `${taf} waits for your approval`,
   brief_hold_meanwhile: "Nothing is done until you answer.",
   brief_step_meanwhile: "Its run waits for this step.",

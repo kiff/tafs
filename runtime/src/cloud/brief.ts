@@ -80,6 +80,8 @@ export interface BriefWords {
   later: string;
   more: (n: number) => string;
   restLine: (n: number) => string;
+  /** The line for Coach's chats that wait on the person ("17 Coach chats wait for your answer."). */
+  coachLine?: (n: number) => string;
   /** The day's credits line, when the balance could be read. */
   credits?: string;
 }
@@ -148,6 +150,11 @@ export interface Brief {
   more?: { count: number; words: string };
   done: Array<{ mission?: { id: string; name: string }; cases: Array<{ words: string; state: string; next_check?: string }>; value?: string; log?: string }>;
   rest: { count: number; words: string };
+  /**
+   * Coach's chats that wait on this person (coachwaiting.ts), counted as Needs you counts them: so every number the person
+   * sees leads to its items. Only when there are some, and only in the whole brief; it opens Home's Coach waiting list.
+   */
+  coach_waiting?: { count: number; words: string };
   credits?: { words: string };
   labels: Array<{ id: string; name: string; color: string; count: number; waiting: number }>;
   words: { decisions: string; done: string; rest: string };
@@ -167,6 +174,8 @@ export function buildBrief(input: {
   labels: ReadonlyArray<{ id: string; name: string; color: string }>;
   tafs: ReadonlyArray<{ id: string; labels?: string[] }>;
   rest: number;
+  /** How many of Coach's chats wait on this person: Needs you's `coach` part. */
+  coachWaiting?: number;
   label?: string;
   slots?: readonly string[];
   words: BriefWords;
@@ -198,6 +207,8 @@ export function buildBrief(input: {
     ...(more > 0 ? { more: { count: more, words: input.words.more(more) } } : {}),
     done: [...groups.values()],
     rest: { count: input.rest, words: input.words.restLine(input.rest) },
+    ...(!input.label && input.coachWaiting && input.coachWaiting > 0 && input.words.coachLine
+      ? { coach_waiting: { count: input.coachWaiting, words: input.words.coachLine(input.coachWaiting) } } : {}),
     ...(input.words.credits ? { credits: { words: input.words.credits } } : {}),
     labels,
     words: { decisions: input.words.decisions, done: input.words.done, rest: input.words.rest },

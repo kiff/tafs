@@ -1,0 +1,1 @@
+- **Your brief says how many of Coach's chats wait for your answer** ("17 Coach chats wait for your answer."), the part of Needs you's count it didn't list before, so the brief's numbers add up. It shows only when there are some, and opens Home's list of them ([api.md](docs/api.md)).
