@@ -163,7 +163,7 @@ door's own words):
 - `PATCH …/doors/{door}` `{open: true}` is signed; `{open: false}` isn't: pausing is always safe.
 - `DELETE …/doors/{door}` removes it and every key's lookup.
 
-The door's `label` is then the application's name from the draft ("Order system"); the apps say "From another
+Its view then also has the draft's `fields` and `outcomes`, for the API instructions. The door's `label` is the application's name from the draft ("Order system"); the apps say "From another
 application" as its kind. A key is `tafs_api_` and 32 random bytes (base64url). tafs cloud keeps its SHA-256 at `door-api-key#<hash>` (the
 account, taf, door and key it is) and in the door, and never the key. Someone the taf is only shared with sees no
 door and changes none (403).

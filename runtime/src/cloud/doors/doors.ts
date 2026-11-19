@@ -774,6 +774,8 @@ export function apiDoorView(d: Door, today = { keys: 0, others: 0 }, lang: Lang 
   return {
     id: d.id, app: "api", kind: "api" as const, label, open: d.open, address: apiRequestsPath(d.id),
     proof: "proven", how: w.door_api_how,
+    // What a developer sends and gets back, for the API instructions: never a key.
+    ...(d.api ? { fields: d.api.fields, outcomes: d.api.outcomes } : {}),
     keys: (d.apiKeys ?? []).filter((k) => !k.revoked).map((k) => ({ id: k.id, name: k.name, last4: k.last4, made_at: k.made, ...(k.lastUsed ? { last_used_at: k.lastUsed } : {}) })),
     today: today.keys, limit: perDay, resting,
     others_today: 0, others_limit: 0,
