@@ -76,7 +76,7 @@ struct CoachAsk: View {
                     if model.state == .sending {
                         ProgressView().accessibilityLabel(Words.Common.sending)
                     } else {
-                        Label(Words.Common.send, systemImage: "arrow.up").labelStyle(.iconOnly)
+                        Label(Words.Common.send, systemImage: "arrow.right").labelStyle(.iconOnly)
                     }
                 }
                 .tint(.accentColor)
