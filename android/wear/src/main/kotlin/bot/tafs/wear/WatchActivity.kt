@@ -43,7 +43,11 @@ class WatchActivity : ComponentActivity() {
   private val model by lazy {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
-    WatchModel(DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)))
+    WatchModel(
+      DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)),
+      // Only v2 keeps a message for later.
+      drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
+    )
   }
 
   private val listener by lazy { Listener(this, model, lifecycleScope) }
@@ -115,6 +119,7 @@ class WatchActivity : ComponentActivity() {
         val voice by model.voice.collectAsState()
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
+        val kept by model.kept.collectAsState()
         // "Sent": the wrist can drop; the microphone comes back by itself.
         androidx.compose.runtime.LaunchedEffect(voice) {
           if (voice is WatchModel.Voice.Sent) {
@@ -154,12 +159,14 @@ class WatchActivity : ComponentActivity() {
           delete = model::deleteReviewed,
           type = ::type,
           quick = { model.review(it) },
+          keep = if (WATCH_V2) model::keepForLater else null,
+          deleteKept = model::deleteKept,
         )
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
         val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
-        if (WATCH_V2) WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
+        if (WATCH_V2) WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing)
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
     }
@@ -268,6 +275,10 @@ internal class Actions(
   val type: () -> Unit = {},
   /** A quick reply picked: to the review. */
   val quick: (String) -> Unit = {},
+  /** v2's Keep for later, on "Not sure it arrived"; none in v1, which doesn't offer it. */
+  val keep: (() -> Unit)? = null,
+  /** Deletes the message kept for later. */
+  val deleteKept: () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

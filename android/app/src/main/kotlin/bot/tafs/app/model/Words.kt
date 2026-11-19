@@ -2766,6 +2766,8 @@ object Words {
     fun heldCalls(count: Int): String = Res.p(R.plurals.watch_held_calls, count, Res.number(count))
     val inboxEmpty: String get() = Res.s(R.string.watch_inbox_empty)
     fun inboxUnread(count: Int): String = Res.p(R.plurals.watch_inbox_unread, count, Res.number(count))
+    val keepForLater: String get() = Res.s(R.string.watch_keep_for_later)
+    val keptToSend: String get() = Res.s(R.string.watch_kept_to_send)
     val limit: String get() = Res.s(R.string.watch_limit)
     val listening: String get() = Res.s(R.string.watch_listening)
     val menu: String get() = Res.s(R.string.watch_menu)

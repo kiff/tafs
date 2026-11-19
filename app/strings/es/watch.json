@@ -25,6 +25,8 @@
     "one": "{count} sin leer en la Bandeja",
     "other": "{count} sin leer en la Bandeja"
   },
+  "watch.keep_for_later": "Guardar para luego",
+  "watch.kept_to_send": "Guardado en este reloj. Se envía cuando tu teléfono vuelva a estar al alcance.",
   "watch.limit": "30 s como máximo",
   "watch.listening": "Escuchando",
   "watch.menu": "Menú",

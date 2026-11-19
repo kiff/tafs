@@ -25,6 +25,8 @@
     "one": "{count} por ler na Caixa de entrada",
     "other": "{count} por ler na Caixa de entrada"
   },
+  "watch.keep_for_later": "Guardar para mais tarde",
+  "watch.kept_to_send": "Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.",
   "watch.limit": "No máximo 30 s",
   "watch.listening": "A ouvir",
   "watch.menu": "Menu",

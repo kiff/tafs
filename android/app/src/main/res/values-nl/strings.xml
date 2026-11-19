@@ -2563,6 +2563,8 @@
         <item quantity="one">%1$s ongelezen in je Inbox</item>
         <item quantity="other">%1$s ongelezen in je Inbox</item>
     </plurals>
+    <string name="watch_keep_for_later">Bewaren voor later</string>
+    <string name="watch_kept_to_send">Bewaard op dit horloge. Het gaat zodra je telefoon weer binnen bereik is.</string>
     <string name="watch_limit">Maximaal 30 s</string>
     <string name="watch_listening">Luistert</string>
     <string name="watch_menu">Menu</string>

@@ -275,15 +275,19 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         T(stateLine(voice.ask), 12.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 1)
       }
       is WatchModel.Voice.Unsure -> Centered {
-        Box(Modifier.size(34.dp).border(BorderStroke(2.5.dp, Look.amber), CircleShape), contentAlignment = Alignment.Center) {
-          Glyph(Modifier.size(18.dp)) { questionGlyph(Look.amber) }
+        // v2 adds Keep for later; the face makes room for it without the mark.
+        if (act.keep == null) {
+          Box(Modifier.size(34.dp).border(BorderStroke(2.5.dp, Look.amber), CircleShape), contentAlignment = Alignment.Center) {
+            Glyph(Modifier.size(18.dp)) { questionGlyph(Look.amber) }
+          }
+          Spacer(Modifier.height(8.dp))
         }
-        Spacer(Modifier.height(8.dp))
         T(Words.Watch.notSure, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 1)
         Spacer(Modifier.height(3.dp))
         T(Words.Watch.checkPhone, 12.sp, Look.dim, modifier = Modifier.width(140.dp), lineHeight = 15.sp)
         Spacer(Modifier.height(10.dp))
         AmberButton(Words.Watch.retry, act.retry)
+        act.keep?.let { QuietButton(Words.Watch.keepForLater, it) }
         QuietButton(Words.Common.cancel, act.closeVoice)
       }
       is WatchModel.Voice.NotSent -> Centered {

@@ -189,9 +189,16 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   ready-made lines; each goes to the same review. Blank is nothing; the words are cut at 2,000 characters, as an ask is.
 - **Send** sends what v1 sends (`ask`, a new id), checked against the watch's lock again, since it may have locked while the
   words were read; from there Sending, Sent, Not sure it arrived (Retry, the same id) and Not sent are v1's.
-- **Still to come in step (iii):** keeping the recording for Play and Pause, and Keep for later. Both store something on the
-  watch, so they come with legal-i18n's facts confirmed against the build. Until then no audio is kept: the recognizer gives
-  the app text only.
+- **Keep for later** (`WatchModel.keepForLater`, `PreferencesDraftStore`), on "Not sure it arrived", where the phone may not
+  have got it. One message, **text only**: its words, its ask id and the ask it continues, in the watch's private preferences
+  (`tafs.draft`). Coach's home shows it with "Kept on this watch. It's sent when your phone is in reach again." and **Delete**.
+  It's sent at the next read that reaches the phone, from an unlocked watch only, under its **own id**, so tafs cloud starts it at
+  most once; once taken it's gone from the watch and shows as an ask at work, and anything else leaves it for the next read. It's
+  deleted on Delete and when the phone says it's signed out. Putting the app away keeps it, and so does the watch locking, since
+  the person asked for it to be sent. v1 offers none (`v1OffersNoKeepForLater`).
+- **Still to come in step (iii):** keeping the recording for Play and Pause: a probe on the owner's watch first, since whether
+  the watch's recognizer takes the app's own audio is the watch's. Until then no audio is kept: the recognizer gives the app
+  text only.
 - **v1 is unchanged** with the switch off: what's heard is sent the moment the person stops (`whatsHeardGoesAtOnceWithNothingToConfirm`).
 - **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in

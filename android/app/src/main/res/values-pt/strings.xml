@@ -2563,6 +2563,8 @@
         <item quantity="one">%1$s por ler na Caixa de entrada</item>
         <item quantity="other">%1$s por ler na Caixa de entrada</item>
     </plurals>
+    <string name="watch_keep_for_later">Guardar para mais tarde</string>
+    <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
     <string name="watch_listening">A ouvir</string>
     <string name="watch_menu">Menu</string>

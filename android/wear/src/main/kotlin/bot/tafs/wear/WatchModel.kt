@@ -58,6 +58,8 @@ class WatchModel(
    * Send. Off (v1), what's heard goes the moment the person stops. A test passes it rather than flipping [WATCH_V2].
    */
   private val reviewFirst: Boolean = WATCH_V2,
+  /** v2's Keep for later: one message, text only, kept on the watch until it's sent or deleted; none in a test that doesn't use it. */
+  private val drafts: DraftStore? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -434,6 +436,8 @@ class WatchModel(
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also { tile?.saw(reply.count, now()) }
         is WatchReply.SignedOut -> {
           tile?.signedOut()
+          // Signed out: nothing of the account stays on the watch, a kept message included.
+          deleteKept()
           return show(Shown.SignedOut)
         }
         else -> return show(Shown.OpenOnPhone)
@@ -445,6 +449,50 @@ class WatchModel(
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }?.let { TafsRead(it.tafs, it.allHalted) }
     show(Shown.Read(needsYou, tafs, brief))
+    // The phone answered: a message kept for later goes now.
+    sendKept()
+  }
+
+  // MARK: Keep for later (v2, docs/watch-wear.md)
+
+  /** A message kept on the watch to send when the phone is back: its words, its ask id and the chat it continues. Text only. */
+  data class Draft(val text: String, val clientId: String, val replyTo: String?)
+
+  private val _kept = MutableStateFlow(drafts?.read())
+
+  /** The message kept for later, or none. Kept on disk ([DraftStore]) until it's sent, deleted, or the phone signs out. */
+  val kept: StateFlow<Draft?> = _kept.asStateFlow()
+
+  /**
+   * Keep for later, from "Not sure it arrived": the words are kept with their id, and sent at the next read that reaches the phone.
+   * The same id, so tafs cloud starts it at most once if the first send did arrive. One at a time: a newer one replaces it.
+   */
+  fun keepForLater() {
+    val unsure = _voice.value as? Voice.Unsure ?: return
+    val draft = Draft(unsure.text, unsure.clientId, unsure.replyTo)
+    drafts?.write(draft)
+    _kept.value = draft
+    _voice.value = null
+  }
+
+  /** Delete what was kept: nothing is sent. */
+  fun deleteKept() {
+    drafts?.clear()
+    _kept.value = null
+  }
+
+  /**
+   * Sends what was kept, from an unlocked watch only, as any ask. Taken, it's gone from the watch and shows as an ask at work;
+   * anything else, it stays for the next read, never sent twice under two ids.
+   */
+  suspend fun sendKept() {
+    val draft = _kept.value ?: return
+    if (!unlocked()) return
+    val asked = phone.ask(WatchRequest.Ask(now(), draft.clientId, draft.text, draft.replyTo))
+    if (_kept.value != draft) return
+    val taken = ((asked as? Asked.Answered)?.reply as? WatchReply.AskTaken)?.ask ?: return
+    deleteKept()
+    took(taken)
   }
 
   /** What the watch keeps once it's put away or the phone signs out: nothing. */
@@ -459,6 +507,40 @@ class WatchModel(
 
   private fun show(shown: Shown) {
     _shown.value = shown
+  }
+}
+
+/** Where v2 keeps a message for later: the watch's own preferences, or a map in a test. Text only, never audio. */
+interface DraftStore {
+  fun read(): WatchModel.Draft?
+  fun write(draft: WatchModel.Draft)
+  fun clear()
+}
+
+/** [DraftStore] in the watch's private preferences: the words, their ask id and the chat they continue, nothing else. */
+class PreferencesDraftStore(context: android.content.Context) : DraftStore {
+  private val prefs = context.getSharedPreferences("tafs.draft", android.content.Context.MODE_PRIVATE)
+
+  override fun read(): WatchModel.Draft? {
+    val text = prefs.getString(TEXT, null) ?: return null
+    val id = prefs.getString(ID, null) ?: return null
+    return WatchModel.Draft(text, id, prefs.getString(REPLY_TO, null))
+  }
+
+  override fun write(draft: WatchModel.Draft) {
+    prefs.edit().clear().putString(TEXT, draft.text).putString(ID, draft.clientId).apply {
+      draft.replyTo?.let { putString(REPLY_TO, it) }
+    }.apply()
+  }
+
+  override fun clear() {
+    prefs.edit().clear().apply()
+  }
+
+  private companion object {
+    const val TEXT = "text"
+    const val ID = "client_id"
+    const val REPLY_TO = "reply_to"
   }
 }
 

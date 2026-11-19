@@ -25,6 +25,8 @@
     "one": "{count} ongelezen in je Inbox",
     "other": "{count} ongelezen in je Inbox"
   },
+  "watch.keep_for_later": "Bewaren voor later",
+  "watch.kept_to_send": "Bewaard op dit horloge. Het gaat zodra je telefoon weer binnen bereik is.",
   "watch.limit": "Maximaal 30 s",
   "watch.listening": "Luistert",
   "watch.menu": "Menu",

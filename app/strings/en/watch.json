@@ -25,6 +25,8 @@
     "one": "{count} unread in Inbox",
     "other": "{count} unread in Inbox"
   },
+  "watch.keep_for_later": "Keep for later",
+  "watch.kept_to_send": "Kept on this watch. It's sent when your phone is in reach again.",
   "watch.limit": "30 s at most",
   "watch.listening": "Listening",
   "watch.menu": "Menu",
