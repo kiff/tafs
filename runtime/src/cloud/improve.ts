@@ -157,7 +157,21 @@ export function ownerWords(text: string): string {
     const m = text.match(/^\[door knock [^\]\n]*\] The owner says:[ \t]*([\s\S]*?)(?:\n\n|$)/);
     return m?.[1]?.trim() ?? "";
   }
-  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]")) return text;
+  if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]")) return withoutChatNotes(text);
   const at = text.lastIndexOf("\nThe owner says:");
-  return at < 0 ? "" : text.slice(at + "\nThe owner says:".length).trim();
+  return at < 0 ? "" : withoutChatNotes(text.slice(at + "\nThe owner says:".length).trim());
+}
+
+/** A line of a chat's notes for Coach (a connection refused, an approval settled after the owner's message): tafs cloud's. */
+const CHAT_NOTE = /^\[(?:connection refused|approval [^\]\n]*)\] /;
+
+/**
+ * The words without the chat's notes in front of them: before 19 Nov, they went in front of the owner's words with no
+ * envelope (handler.ts, withChatNotes), and a chat's history still holds those turns. Each note is one line.
+ */
+function withoutChatNotes(text: string): string {
+  if (!CHAT_NOTE.test(text)) return text;
+  const lines = text.split("\n");
+  while (lines.length && CHAT_NOTE.test(lines[0]!)) lines.shift();
+  return lines.join("\n").trim();
 }
