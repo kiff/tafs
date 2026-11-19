@@ -69,6 +69,72 @@ final class DoorsTests: XCTestCase {
         XCTAssertNil(r.doors[1].counts, "an email door has none")
     }
 
+    // MARK: A door "From another application" (`api`)
+
+    /// New key, Revoke and opening again are each signed over the exact method, path and body sent, with the words the
+    /// prompt shows; the key is kept only until the key screen is left. Without a signer, nothing is sent.
+    func testAnAPIDoorsKeysAreMadeRevokedAndReopenedOnlySigned() async throws {
+        let cloud = stubbedCloud()
+        var signed: [(String, String, String, String)] = []
+        let model = DoorsModel(cloud: cloud, tafID: "taf_r", sign: { method, path, body, reason in
+            signed.append((method, path, String(decoding: body, as: UTF8.self), reason))
+            return "t=1,v1=sig"
+        })
+        let door = TafsCloud.Door(id: "door_ord7", app: "api", kind: "api", label: "Order system", open: false, address: "/v1/doors/api/door_ord7/requests",
+                                  proof: "proven", how: "Your application's key", keys: [.init(id: "key_1", name: "ERP production", last4: "iXrW")],
+                                  today: 0, limit: 100, resting: false)
+        StubProtocol.responses["POST /v1/tafs/taf_r/doors/door_ord7/keys"] = (200, #"{"id":"key_2","key":"tafs_api_abc","last4":"_abc","made_at":"2026-11-19T18:00:00Z"}"#)
+        StubProtocol.responses["DELETE /v1/tafs/taf_r/doors/door_ord7/keys/key_1"] = (200, #"{"door":{"id":"door_ord7"}}"#)
+        StubProtocol.responses["PATCH /v1/tafs/taf_r/doors/door_ord7"] = (200, #"{"door":{"id":"door_ord7","app":"api","kind":"api","label":"Order system","open":true,"address":"/v1/doors/api/door_ord7/requests","proof":"proven","how":"x","keys":[],"today":0,"limit":100,"resting":false}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf_r/doors"] = (200, #"{"doors":[],"apps":[],"knocks":[]}"#)
+
+        let key = await model.newKey(door, name: "ERP staging", reason: "Make a new key")
+        XCTAssertEqual(key?.key, "tafs_api_abc")
+        XCTAssertEqual(model.issued?.last4, "_abc", "shown once, on the key screen")
+        model.keyShown()
+        XCTAssertNil(model.issued, "never shown again")
+        let made = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "POST" && $0.url?.path == "/v1/tafs/taf_r/doors/door_ord7/keys" })
+        XCTAssertEqual(made.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=1,v1=sig")
+        XCTAssertEqual(String(decoding: made.httpBody ?? Data(), as: UTF8.self), #"{"name":"ERP staging"}"#)
+
+        await model.revoke(door, door.keys[0], reason: "Revoke")
+        let revoked = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "DELETE" })
+        XCTAssertEqual(revoked.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=1,v1=sig")
+
+        await model.reopen(door, reason: "Open again")
+        let opened = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "PATCH" })
+        XCTAssertEqual(String(decoding: opened.httpBody ?? Data(), as: UTF8.self), #"{"open":true}"#)
+        XCTAssertEqual(opened.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=1,v1=sig")
+
+        // Each was signed over exactly what was sent.
+        XCTAssertEqual(signed.map { $0.0 }, ["POST", "DELETE", "PATCH"])
+        XCTAssertEqual(signed.map { $0.1 }, ["/v1/tafs/taf_r/doors/door_ord7/keys", "/v1/tafs/taf_r/doors/door_ord7/keys/key_1",
+                                         "/v1/tafs/taf_r/doors/door_ord7"])
+        XCTAssertEqual(signed.map { $0.2 }, [#"{"name":"ERP staging"}"#, "", #"{"open":true}"#])
+        XCTAssertEqual(signed.map { $0.3 }, ["Make a new key", "Revoke", "Open again"])
+
+        // No signer (a model made without one): nothing is sent.
+        let unsigned = DoorsModel(cloud: cloud, tafID: "taf_r")
+        let before = StubProtocol.sent.count
+        let none = await unsigned.newKey(door, name: "x", reason: "x")
+        await unsigned.revoke(door, door.keys[0], reason: "x")
+        await unsigned.reopen(door, reason: "x")
+        XCTAssertNil(none)
+        XCTAssertEqual(StubProtocol.sent.count, before)
+    }
+
+    /// A refused signature (Face ID cancelled) sends nothing and keeps no key.
+    func testACancelledSignatureSendsNothing() async {
+        let cloud = stubbedCloud()
+        let model = DoorsModel(cloud: cloud, tafID: "taf_r", sign: { _, _, _, _ in throw CancellationError() })
+        let door = TafsCloud.Door(id: "door_ord7", app: "api", kind: "api", label: "Order system", open: true, address: "", proof: "proven",
+                                  how: "", keys: [], today: 0, limit: 100, resting: false)
+        let key = await model.newKey(door, name: "x", reason: "x")
+        XCTAssertNil(key)
+        XCTAssertNil(model.issued)
+        XCTAssertTrue(StubProtocol.sent.isEmpty)
+    }
+
     func testHomeCarriesTafsCloudsNeedsYouCount() throws {
         let sent = #"{"tafs":[],"others":[],"removing":[],"needs_you":{"count":3,"words":"3 need you."}}"#
         XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(sent.utf8)).needsYou, TafsCloud.NeedsYou(count: 3, words: "3 need you."))

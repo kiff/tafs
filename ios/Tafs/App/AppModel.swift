@@ -6450,10 +6450,24 @@ final class AppModel: ObservableObject {
         if let d = doorModels[tafID] { return d }
         // The screenshots draw a sample's doors, with no taf on tafs cloud.
         guard let id = cloudTaf(for: tafID)?.id ?? (Screenshots.enabled ? "sample" : nil) else { return nil }
-        let d = DoorsModel(cloud: cloud, tafID: id)
+        let d = DoorsModel(cloud: cloud, tafID: id, sign: { [weak self] method, path, body, reason in
+            guard let self else { throw CancellationError() }
+            return try await self.signDoorRequest(method: method, path: path, body: body, reason: reason)
+        })
         d.onKnocks = { [weak self] knocks in self?.chatKnocks[tafID] = knocks }
         doorModels[tafID] = d
         return d
+    }
+
+    /// A change to a door "From another application", signed as a taf's removal is: the approval key signs
+    /// `kiff.request.v1` over the method, path and raw body, behind Face ID or Touch ID each time. The answer is the
+    /// `KIFF-Device-Signature` header's value; tafs cloud asks KIFF whether this phone signed it.
+    func signDoorRequest(method: String, path: String, body: Data, reason: String) async throws -> String {
+        guard mode == .kiff, let tenant = kiffTenant else { throw TafsCloud.CloudError(status: 0, message: Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
+        let signedAt = SigningTime.next()
+        let message = KIFFClient.requestMessage(tenant: tenant, method: method, uri: path, body: body, signedAt: signedAt)
+        let signature = try await signer.signApproval(message, reason: reason)
+        return "t=\(signedAt),v1=\(signature)"
     }
 
     /// A silent push from tafs cloud saying what changed (docs/approvals.md, "Live updates"):
