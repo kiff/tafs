@@ -90,7 +90,7 @@ struct WatchPagesView: View {
             // Your brief as v1 draws it, in Needs you's place, while the brief's switch is on.
             NeedsYouScreen(model: needsYou)
         case .tafs:
-            TafsScreen(model: tafs, offersHalt: false)
+            TafsScreen(model: tafs, offersHalt: false, opensPages: true, openInbox: { page = .inbox })
         case .account:
             WatchAccountPage()
         }

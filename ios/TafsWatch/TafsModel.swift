@@ -17,10 +17,10 @@ final class TafsModel: ObservableObject {
     @Published private(set) var state: State = .loading
     /// Each Halt sent from here, by tafs cloud's id for the taf; Halt all under `all`.
     @Published private(set) var halts: [String: WatchAnswer] = [:]
-    private let phone: PhoneAsking
-    private let clock: () -> Date
+    let phone: PhoneAsking
+    let clock: () -> Date
     /// Sending needs a passcode on this watch (`WristLock`).
-    private let lock: WristLock
+    let lock: WristLock
     private var asking = false
 
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {

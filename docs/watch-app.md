@@ -173,6 +173,27 @@ Nothing leaves the watch before Send:
 - **Words:** all already shared (`watch.dismiss`, `watch.clear_read`, `watch.already_answered`, `watch.inbox_empty`,
   `watch.inbox_unread`).
 
+**Step (v), first half: a taf's page and its settings** (`TafPage.swift`: `TafPageModel`, `TafPageScreen`,
+`TafSettingsScreen`; tested in `TafPageModelTests`), as Wear OS's. Halt is never on the main screens:
+- **Your tafs:** each taf with its state, in the phone's words; a tap opens **its page**, read from the phone (`taf`, by its
+  id), in memory only. Before the phone answers it shows the taf's name from Your tafs and "Asking your phone…"; signed out,
+  no phone, the phone's own words, or "Update tafs on your phone" for a phone that doesn't know the read, each with Try again.
+  An answer for a page since closed, or for another taf, is never drawn.
+- **A taf's page:** its name and state (Halted in red), **What it does** and its job, **Its Card** with each Card's title, its
+  face's figure and line, and each rule on a line, as the phone's Card tab draws them, and **Waiting for you** with how many of
+  its calls wait ("2 need you"), which goes to the Inbox, or "Nothing waits for you.". Halted, it says "Halted. Resuming starts
+  only new work." and **Resume on your phone**: resuming asks for Face ID, so it's the phone's. Then **Its settings**.
+- **Its settings:** "{taf} · settings" and **Halt this taf**, in red, asked once more ("Halting stops it until you resume. A
+  call already sent may still arrive.", Halt now). It sends v1's Halt for that taf, only from a watch with a passcode, shows
+  "Halting {taf}…" until the phone has tafs cloud's word, then the phone's word for the result, and the page is read again. A
+  halted taf's settings offer Resume on your phone instead.
+- **Not on Apple Watch:** Wear OS's "Swipe left for its settings" (Its settings is a row here) and Open on phone (watchOS has
+  no way for a watch app to open the phone's app).
+- **Second half, its own PR:** choosing which to halt, from the menu's Halt.
+- **Words:** all already shared (`watch.what_it_does`, `watch.nothing_waits`, `watch.its_settings`, `watch.settings_of`,
+  `watch.halt_this`, `watch.resume_on_phone`, `watch.halting`, `watch.needs_you_count`, `watch.asking_phone`,
+  `watch.update_phone`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`, `halt.now`).
+
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
 The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in
