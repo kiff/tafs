@@ -1,0 +1,1 @@
+• Il tuo orologio: in Account › Accesso effettuato, l'email di un account personale ora compare una volta sola, non due.

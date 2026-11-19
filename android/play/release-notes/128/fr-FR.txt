@@ -1,0 +1,1 @@
+• Votre montre : dans Compte › Connecté, l'e-mail d'un compte personnel s'affiche maintenant une seule fois, pas deux.
