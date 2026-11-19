@@ -200,6 +200,35 @@ final class FilesModel: ObservableObject {
         return url
     }
 
+    /// What a file's screen draws above its buttons.
+    enum PreviewRead: Equatable {
+        /// tafs cloud's cleaned start, drawn as plain text.
+        case text(FilePreviewText)
+        /// The bytes on the device, drawn by the system: only after tafs cloud answered with no start, or for a type that
+        /// has none to give.
+        case copy(URL)
+        /// tafs cloud couldn't be reached, for a type that has a text start: the "couldn't reach" line, and no bytes read.
+        case unreachable
+    }
+
+    /// The types tafs cloud gives a text start for. Their bytes are never drawn on a failed read: that would show the raw
+    /// file, which the cleaned start is there to avoid.
+    static let textTypes: Set<String> = ["CSV", "MD", "TXT", "JSON"]
+
+    /// A file's preview: tafs cloud's start when it gives one. The bytes are read for the system to draw only when it
+    /// answered with none, or when the type has no text start; a failed read of a text type reads no bytes.
+    func readPreview(of file: DeliveredFile) async -> PreviewRead {
+        let start: FilePreviewText?
+        do {
+            start = try await store.preview(of: file.id)
+        } catch {
+            guard !Self.textTypes.contains(file.type.uppercased()) else { return .unreachable }
+            start = nil
+        }
+        if let start { return .text(start) }
+        do { return .copy(try await localCopy(of: file)) } catch { return .unreachable }
+    }
+
     /// Delete now: gone from the list only once the store has deleted it. False when it couldn't be.
     func delete(_ id: String) async -> Bool {
         do {

@@ -24,7 +24,12 @@ final class FilesTests: XCTestCase {
             return listed
         }
         var contentsRead: [String] = []
-        func preview(of id: String) async throws -> FilePreviewText? { FilePreviewText(text: "a,b", truncated: false) }
+        var start: FilePreviewText? = FilePreviewText(text: "a,b", truncated: false)
+        var previewFails = false
+        func preview(of id: String) async throws -> FilePreviewText? {
+            if previewFails { throw URLError(.timedOut) }
+            return start
+        }
         func contents(of id: String) async throws -> Data { contentsRead.append(id); return Data("a,b".utf8) }
         func delete(_ id: String) async throws {
             if fails { throw URLError(.notConnectedToInternet) }
@@ -184,6 +189,45 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: url), Data("a,b".utf8))
         FileCopy.remove("fil_copy")
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    /// A failed read of a text type's start says it couldn't reach KIFF and reads no bytes: its raw file is never drawn
+    /// in the cleaned start's place (agentgabo's read).
+    func testAFailedPreviewOfATextTypeReadsNoBytes() async {
+        let store = Store([])
+        store.previewFails = true
+        let model = FilesModel(store: store)
+        for type in ["CSV", "md", "TXT", "JSON"] {
+            var shown = file("fil_\(type)", hoursAgo: 1)
+            shown.type = type
+            let read = await model.readPreview(of: shown)
+            XCTAssertEqual(read, .unreachable, type)
+        }
+        XCTAssertTrue(store.contentsRead.isEmpty, "no bytes read on a failed preview")
+    }
+
+    /// tafs cloud's start is drawn with no bytes read; with none, or for a type with no text start, the system draws the
+    /// device's copy.
+    func testThePreviewIsTheStartAndTheCopyOnlyWithoutOne() async throws {
+        let store = Store([])
+        let model = FilesModel(store: store)
+        let csv = file("fil_text", hoursAgo: 1, name: "week.csv")
+        let read = await model.readPreview(of: csv)
+        XCTAssertEqual(read, .text(FilePreviewText(text: "a,b", truncated: false)))
+        XCTAssertTrue(store.contentsRead.isEmpty)
+
+        store.start = nil
+        guard case .copy(let copy) = await model.readPreview(of: csv) else { return XCTFail("no start: the copy") }
+        XCTAssertEqual(store.contentsRead, ["fil_text"])
+        FileCopy.remove("fil_text")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: copy.path))
+
+        store.previewFails = true
+        var pdf = file("fil_pdf", hoursAgo: 1, name: "plan.pdf")
+        pdf.type = "PDF"
+        guard case .copy = await model.readPreview(of: pdf) else { return XCTFail("a type with no text start: the copy") }
+        XCTAssertEqual(store.contentsRead, ["fil_text", "fil_pdf"])
+        FileCopy.remove("fil_pdf")
     }
 
     /// A file's name stays one path component on the device whatever tafs cloud sends, and its copy goes when removed.
