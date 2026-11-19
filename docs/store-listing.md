@@ -174,7 +174,7 @@ Support-Tickets, neue Leads, verspätete Pakete: Gib sie an einen taf ab und hol
 Automatisierung,Assistent,Support,Tickets,Leads,Pakete,Kunden,Freigabe,Workflow,Routine
 ```
 
-**Description** (3560/4000):
+**Description** (3217/4000):
 
 ```
 They taf. You kiff.
@@ -201,8 +201,8 @@ WAS DU SIEHST
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Aktion durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
 
 DEINE DATEN
-Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys oder Macs liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Klick. Keine Werbung, keine Tracker. Lösch dein Konto im Bildschirm „Konto“ der App, oder siehe kiff.dev/privacy#delete-account.
 Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/privacy#delete-account.
+
 TARIFE
 Solo mit 500 Credits im Monat und Credit-Pakete, die nie verfallen, beides in der App über den App Store gekauft. Jeder Lauf eines tafs verbraucht Credits für die KI, die er genutzt hat. Eine ruhige Prüfung, wenn nichts neu ist, kostet nichts. Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits. Es gibt keine kostenlose Testphase.
 
@@ -274,7 +274,7 @@ Tickets de support, nouveaux prospects, colis en retard : confiez-les à un taf 
 automatisation,assistant,support,tickets,prospects,colis,clients,validation,workflow,routine
 ```
 
-**Description** (3647/4000):
+**Description** (3306/4000):
 
 ```
 They taf. You kiff.
@@ -301,8 +301,8 @@ CE QUE VOUS VOYEZ
 • Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'une action est passée, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
 
 VOS DONNÉES
-Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone ou de votre Mac. Bloquer arrête un taf, ou tous, d'un clic. Pas de publicité, pas de traceurs. Supprimez votre compte dans l'écran Compte de l'app, ou voir kiff.dev/privacy#delete-account.
 Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/privacy#delete-account.
+
 FORFAITS
 Solo, avec 500 crédits par mois, et des packs de crédits qui n'expirent jamais, tous deux achetés dans l'app via l'App Store. Chaque exécution d'un taf utilise des crédits pour l'IA qu'elle a utilisée. Une vérification quand rien n'est nouveau ne coûte rien. Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits. Il n'y a pas d'essai gratuit.
 
@@ -374,7 +374,7 @@ Tickets de soporte, contactos nuevos, paquetes con retraso: pásaselos a un taf 
 automatización,asistente,soporte,tickets,contactos,paquetes,clientes,aprobación,flujo,rutina
 ```
 
-**Description** (3361/4000):
+**Description** (3044/4000):
 
 ```
 They taf. You kiff.
@@ -401,8 +401,8 @@ LO QUE VES
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que una acción se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono o tu Mac. Bloquear detiene un taf, o todos, con un clic. Sin anuncios, sin rastreadores. Elimina tu cuenta en la pantalla Cuenta de la app, o consulta kiff.dev/privacy#delete-account.
 El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/privacy#delete-account.
+
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
 
@@ -474,7 +474,7 @@ Ticket di assistenza, nuovi contatti, pacchi in ritardo: affidali a un taf e rip
 automazione,assistente,assistenza,ticket,contatti,pacchi,clienti,approvazione,workflow,routine
 ```
 
-**Description** (3466/4000):
+**Description** (3127/4000):
 
 ```
 They taf. You kiff.
@@ -501,8 +501,8 @@ COSA VEDI
 • Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un'azione è andata a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
 
 I TUOI DATI
-Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono o del tuo Mac. Blocca ferma un taf, o tutti, con un clic. Niente pubblicità, niente tracker. Elimina il tuo account nella schermata Account dell'app, oppure vedi kiff.dev/privacy#delete-account.
 Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/privacy#delete-account.
+
 PIANI
 Solo, con 500 crediti al mese, e pacchetti di crediti che non scadono mai, entrambi acquistati nell'app tramite l'App Store. Ogni esecuzione di un taf usa crediti per l'IA che ha usato. Un controllo tranquillo, quando non c'è niente di nuovo, non costa nulla. Coach è incluso: abbastanza per configurare circa 4 nuovi lavori al mese. Oltre questa soglia, l'aiuto di Coach usa i tuoi crediti. Non c'è una prova gratuita.
 
@@ -574,7 +574,7 @@ Tickets de suporte, novos contactos, encomendas atrasadas: entregue-os a um taf 
 automatização,assistente,suporte,tickets,contactos,encomendas,clientes,aprovação,fluxo,rotina
 ```
 
-**Description** (3449/4000):
+**Description** (3124/4000):
 
 ```
 They taf. You kiff.
@@ -601,8 +601,8 @@ O QUE VÊ
 • Decide o que aconteceu mesmo: quando uma app não consegue confirmar que uma ação foi feita, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
 
 OS SEUS DADOS
-O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel ou do seu Mac. Bloquear para um taf, ou todos, com um clique. Sem anúncios, sem rastreadores. Elimine a sua conta no ecrã Conta da app, ou consulte kiff.dev/privacy#delete-account.
 O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/privacy#delete-account.
+
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através da App Store. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito.
 
@@ -674,7 +674,7 @@ Supporttickets, nieuwe leads, vertraagde pakketten: geef ze aan een taf en krijg
 automatisering,assistent,support,tickets,leads,pakketten,klanten,goedkeuring,workflow,routine
 ```
 
-**Description** (3434/4000):
+**Description** (3105/4000):
 
 ```
 They taf. You kiff.
@@ -701,8 +701,8 @@ WAT JE ZIET
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een actie is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
 
 JE GEGEVENS
-Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon of Mac. Stilzetten zet één taf, of allemaal, stil met één klik. Geen advertenties, geen trackers. Verwijder je account in het scherm Account van de app, of zie kiff.dev/privacy#delete-account.
 Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/privacy#delete-account.
+
 ABONNEMENTEN
 Solo, met 500 credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via de App Store. Elke run van een taf gebruikt credits voor de AI die het gebruikte. Een rustige controle, als er niets nieuws is, kost niets. Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits. Er is geen gratis proefperiode.
 
@@ -774,7 +774,7 @@ Zgłoszenia do supportu, nowe leady, spóźnione paczki: oddaj je tafowi i odzys
 automatyzacja,asystent,support,zgłoszenia,leady,paczki,klienci,zatwierdzanie,workflow,rutyna
 ```
 
-**Description** (3450/4000):
+**Description** (3123/4000):
 
 ```
 They taf. You kiff.
@@ -801,8 +801,8 @@ CO WIDZISZ
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że akcja przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
 
 TWOJE DANE
-Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu lub Maca. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym kliknięciem. Bez reklam, bez trackerów. Usuń konto na ekranie Konto w aplikacji albo zobacz kiff.dev/privacy#delete-account.
 Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/privacy#delete-account.
+
 PLANY
 Solo z 500 kredytami miesięcznie oraz pakiety kredytów, które nigdy nie wygasają, oba kupowane w aplikacji przez App Store. Każde uruchomienie tafa zużywa kredyty za AI, której użyło. Spokojne sprawdzenie, gdy nie ma nic nowego, nic nie kosztuje. Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów. Nie ma bezpłatnego okresu próbnego.
 
