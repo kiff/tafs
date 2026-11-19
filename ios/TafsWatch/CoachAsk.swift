@@ -45,30 +45,44 @@ struct CoachAsk: View {
         .navigationTitle(Words.Coach.title)
     }
 
-    /// Check before sending: the words in full, scrolled with the crown; Send, Re-record and Delete.
+    /// Check before sending: the words in full, scrolled with the crown, and under them, pinned at the foot in one row,
+    /// Delete ✕ · Re-record ↻ · Send →, so Send is never below the words however long they are (W9).
     private var review: some View {
         List {
             Text(verbatim: model.draft)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Button {
-                Task { await model.sendReviewed() }
-            } label: {
-                Text(model.state == .sending ? Words.Common.sending : Words.Common.send)
-                    .frame(maxWidth: .infinity)
-            }
-            .disabled(!model.canSend)
             if case .failed(let why) = model.state {
                 Text(why).font(.footnote)
             }
-            // The system's input again; new words take these words' place, and nothing is sent until Send. Neither it nor
-            // Delete acts while the words are in flight: they may already have reached Coach.
-            TextField(Words.Watch.rerecord, text: $input)
-                .onSubmit { take() }
-                .disabled(model.state == .sending)
-            Button(Words.Chat.delete, role: .destructive) { model.delete() }
-                .disabled(model.state == .sending)
         }
         .navigationTitle(Words.Watch.review)
+        .toolbar {
+            ToolbarItemGroup(placement: .bottomBar) {
+                // Neither Delete nor Re-record acts while the words are in flight: they may already have reached Coach.
+                Button(role: .destructive) { model.delete() } label: {
+                    Label(Words.Chat.delete, systemImage: "xmark").labelStyle(.iconOnly)
+                }
+                .disabled(model.state == .sending)
+                // The system's input again; new words take these words' place, and nothing is sent until Send.
+                TextFieldLink(prompt: Text(Words.Watch.typeHint)) {
+                    Label(Words.Watch.rerecord, systemImage: "arrow.counterclockwise").labelStyle(.iconOnly)
+                } onSubmit: { words in
+                    model.review(words)
+                }
+                .disabled(model.state == .sending)
+                Button {
+                    Task { await model.sendReviewed() }
+                } label: {
+                    if model.state == .sending {
+                        ProgressView().accessibilityLabel(Words.Common.sending)
+                    } else {
+                        Label(Words.Common.send, systemImage: "arrow.right").labelStyle(.iconOnly)
+                    }
+                }
+                .tint(.accentColor)
+                .disabled(!model.canSend)
+            }
+        }
     }
 
     /// Sent: Coach's answer as v1 draws it, short, with the rest on the phone.
