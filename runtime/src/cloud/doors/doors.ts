@@ -1236,22 +1236,27 @@ export async function newAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, i
 }
 
 /**
- * Revokes an `api` door's key: its hash goes, so its next request finds nothing. Its record stays without it, saying
- * when and by whom. Revoking a key that's already revoked, or gone, changes nothing.
+ * Revokes an `api` door's key, failing closed: its lookup goes first, so its next request finds nothing, and only then
+ * does the door's record say revoked (without the hash, saying when and by whom). If that write fails, the key already
+ * doesn't work, and a Revoke again finishes the record. Revoking a key that's already revoked, or gone, changes nothing.
+ * The door keeps the last 20 revoked records, so rotations don't grow it without end.
  */
 export async function revokeAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, keyID: string) {
   const { store } = ctx.doors;
-  let hash: string | undefined;
+  const current = (await doorsOf(store, owner.tenant, taf.id)).find((d) => d.id === id);
+  if (!current || current.kind !== "api") throw new DoorError(404, "no such door");
+  const hash = (current.apiKeys ?? []).find((x) => x.id === keyID && !x.revoked)?.hash;
+  if (hash) await store.remove(doorKeys.apiKey(hash));
   const d = await withDoor(ctx, owner, taf, id, (door, doors) => {
     if (door.kind !== "api") throw new DoorError(404, "no such door");
     const k = (door.apiKeys ?? []).find((x) => x.id === keyID && !x.revoked);
     if (!k) return doors;
-    hash = k.hash;
     const { hash: _gone, ...kept } = k;
     const revoked: APIKey = { ...kept, revoked: ctx.now.toISOString(), ...(owner.subject ? { revokedBy: owner.subject } : {}) };
-    return doors.map((x) => (x.id === id ? { ...x, apiKeys: (x.apiKeys ?? []).map((y) => (y.id === keyID ? revoked : y)) } : x));
+    const keys = (door.apiKeys ?? []).map((y) => (y.id === keyID ? revoked : y));
+    const old = keys.filter((y) => y.revoked).slice(0, -API_DOOR.revokedKept).map((y) => y.id);
+    return doors.map((x) => (x.id === id ? { ...x, apiKeys: keys.filter((y) => !old.includes(y.id)) } : x));
   });
-  if (hash) await store.remove(doorKeys.apiKey(hash));
   return { door: apiDoorView(d!, await apiToday(ctx, owner.tenant, taf.id, id), ctx.lang) };
 }
 

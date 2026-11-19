@@ -64,7 +64,7 @@ export interface APIDraft {
 export type APIRequestState = "accepted" | "working" | "needs_you" | "done" | "failed" | "cancelled" | "expired";
 
 /** An `api` door's own limits: the defaults the owner decided (19 Nov), and the most a day may be set to. */
-export const API_DOOR = { perDay: 100, perDayMax: 1000, perMinute: 10, waiting: 20, liveKeys: 2, fields: 20, maxChars: 4000, outcomes: 10 } as const;
+export const API_DOOR = { perDay: 100, perDayMax: 1000, perMinute: 10, waiting: 20, liveKeys: 2, revokedKept: 20, fields: 20, maxChars: 4000, outcomes: 10 } as const;
 
 /** A sender who may give the taf work through one door. */
 export interface Key {

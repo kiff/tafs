@@ -159,7 +159,7 @@ door's own words):
   `door`. Two live at most (409 `too_many_keys`).
   The same signed request again is KIFF's `signature_taken` (409): no second key.
 - `DELETE …/doors/{door}/keys/{key}`: revoke. The key's hash goes from the door and from its lookup, so its next
-  request finds nothing; its record stays without it (`revoked`, `revokedBy`), and isn't listed.
+  request finds nothing, before its record is changed (so a failure between leaves a key that still says live, and a Revoke again finishes it); the record then stays without the hash (`revoked`, `revokedBy`, the last 20 kept), and isn't listed.
 - `PATCH …/doors/{door}` `{open: true}` is signed; `{open: false}` isn't: pausing is always safe.
 - `DELETE …/doors/{door}` removes it and every key's lookup.
 

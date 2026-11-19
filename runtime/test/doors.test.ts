@@ -1836,6 +1836,56 @@ describe("an api door's keys and signed steps", () => {
     expect((await s.call("POST", keysPath, { body: { name: "ERP production 2" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:05Z,v1=k4" } })).status).toBe(200);
   }));
 
+  // Two New key at once on a door with one live key: the cap holds inside the door's compare-and-swap, not only before it.
+  it("gives exactly one of two New key at once, and the other's lookup goes", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const keysPath = `${doorsPath}/${made.body.door.id}/keys`;
+    const both = await Promise.all(["a", "b"].map((x) => s.call("POST", keysPath, { body: { name: `ERP ${x}` }, headers: { "kiff-device-signature": `t=2026-10-24T09:00:10Z,v1=${x}` } })));
+    expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
+    expect(both.find((r) => r.status === 409)!.body.code).toBe("too_many_keys");
+    const lookups = [...w.store.held.keys()].filter((k) => k.startsWith("door-api-key#"));
+    expect(lookups).toHaveLength(2);
+    expect((await s.call("GET", doorsPath)).body.doors[0].keys).toHaveLength(2);
+  }));
+
+  // Revoke fails closed: the lookup goes before the record says revoked, so a failure between leaves no working key
+  // the record calls revoked, and a Revoke again finishes it.
+  it("revokes failing closed: a lookup it couldn't remove leaves the key unrevoked for a retry", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const revokePath = `${doorsPath}/${made.body.door.id}/keys/${made.body.key.id}`;
+    const hashKey = `door-api-key#${createHash("sha256").update(made.body.key.key).digest("hex")}`;
+    const remove = w.store.remove;
+    w.store.remove = async () => { throw new Error("store down"); };
+    const failed = await s.call("DELETE", revokePath, { headers: { "kiff-device-signature": "t=2026-10-24T09:00:11Z,v1=r1" } });
+    w.store.remove = remove;
+    expect(failed.status).toBeGreaterThanOrEqual(500);
+    expect(w.store.held.has(hashKey)).toBe(true);
+    expect((await s.call("GET", doorsPath)).body.doors[0].keys).toHaveLength(1); // not revoked, so a retry can finish
+    expect((await s.call("DELETE", revokePath, { headers: { "kiff-device-signature": "t=2026-10-24T09:00:12Z,v1=r2" } })).status).toBe(200);
+    expect(w.store.held.has(hashKey)).toBe(false);
+    expect((await s.call("GET", doorsPath)).body.doors[0].keys).toEqual([]);
+  }));
+
+  it("keeps the last 20 revoked keys' records, not every rotation's", () => withFlag(async () => {
+    const w = world();
+    const s = signing(w);
+    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const door = made.body.door.id as string;
+    let key = made.body.key.id as string;
+    for (let i = 0; i < 22; i++) {
+      const next = await s.call("POST", `${doorsPath}/${door}/keys`, { body: { name: `k${i}` }, headers: { "kiff-device-signature": `t=2026-10-24T09:01:00Z,v1=n${i}` } });
+      expect((await s.call("DELETE", `${doorsPath}/${door}/keys/${key}`, { headers: { "kiff-device-signature": `t=2026-10-24T09:01:00Z,v1=r${i}` } })).status).toBe(200);
+      key = next.body.id;
+    }
+    const kept = (w.store.held.get(doorKeys.doors("t_acme", REFUNDS))!.value as { doors: Array<{ apiKeys: Array<{ revoked?: string; name: string }> }> }).doors[0]!.apiKeys;
+    expect(kept.filter((k) => k.revoked)).toHaveLength(20);
+    expect(kept.filter((k) => !k.revoked).map((k) => k.name)).toEqual(["k21"]);
+  }));
+
   it("pauses unsigned, opens again only signed, and removes the door and every key's hash only signed", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
