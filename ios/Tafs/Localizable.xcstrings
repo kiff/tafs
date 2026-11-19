@@ -61457,6 +61457,23 @@
         }
       }
     },
+    "files.preview_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the start is shown. Download the file to read all of it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo se muestra el principio. Descarga el archivo para leerlo entero."
+          }
+        }
+      }
+    },
     "files.saved": {
       "extractionState": "manual",
       "localizations": {

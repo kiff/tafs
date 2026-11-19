@@ -3,7 +3,7 @@ import Foundation
 /// Files (docs/files.md): what the account's tafs delivered in their runs, as tafs cloud lists them (`/v1/files`,
 /// `contracts/files-*.json`). Everyone on the account reads them; Delete now is for everyone.
 extension TafsCloud {
-    /// One delivered file, as tafs cloud lists it: its taf's name is kept as it was when the file was delivered.
+    /// One delivered file, as tafs cloud lists it, with its taf's name as tafs has it now (none once the taf is gone).
     struct DeliveredFileRead: Decodable, Equatable {
         let id: String
         let taf: String
@@ -27,6 +27,13 @@ extension TafsCloud {
         var next: String? = nil
     }
 
+    /// One file with its start as plain text (`contracts/files-file.json`): tafs cloud's own cleaning, drawn as it is.
+    struct FileRead: Decodable, Equatable {
+        var preview: String? = nil
+        var previewTruncated: Bool? = nil
+        enum CodingKeys: String, CodingKey { case preview, previewTruncated = "preview_truncated" }
+    }
+
     /// A URL to a file's bytes for a minute: read at once, for its preview, Download and the share sheet. Never handed out.
     struct FileDownload: Decodable, Equatable {
         let url: URL
@@ -37,6 +44,11 @@ extension TafsCloud {
         let query = [("taf", taf), ("run", run), ("chat", chat), ("after", after)]
             .compactMap { key, value in value.map { "\(key)=\(escaped($0))" } }
         return try await send("GET", "/v1/files" + (query.isEmpty ? "" : "?" + query.joined(separator: "&")))
+    }
+
+    /// One file, with its start as plain text.
+    func file(_ id: String) async throws -> FileRead {
+        try await send("GET", "/v1/files/\(escaped(id))")
     }
 
     /// Where a file's bytes can be read, for a minute.
@@ -54,7 +66,8 @@ extension TafsCloud {
 
 extension DeliveredFile {
     /// A file as the screens draw it, from tafs cloud's facts: its type is its name's extension (else its media type's),
-    /// its run's time is when the file was delivered, and it goes when tafs cloud says it expires.
+    /// its run's time is when the file was delivered, it goes when tafs cloud says it expires, and its taf's name is none
+    /// once tafs has none for it.
     init(_ read: TafsCloud.DeliveredFileRead) {
         let ext = (read.name as NSString).pathExtension
         let type = ext.isEmpty ? (read.mediaType.split(separator: "/").last.map(String.init) ?? "") : ext
@@ -82,6 +95,11 @@ struct CloudFilesStore: FilesStore {
             after = next
         }
         return all
+    }
+
+    func preview(of id: String) async throws -> FilePreviewText? {
+        let read = try await cloud.file(id)
+        return read.preview.map { FilePreviewText(text: $0, truncated: read.previewTruncated ?? false) }
     }
 
     func contents(of id: String) async throws -> Data {

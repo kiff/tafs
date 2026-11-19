@@ -34,10 +34,19 @@ struct DeliveredFile: Identifiable, Hashable, Codable, Sendable {
 protocol FilesStore {
     /// Every file the account's tafs delivered and still keep.
     func files() async throws -> [DeliveredFile]
-    /// A file's bytes, for its preview, Download and Share (the file itself, never a link: the owner's pick, 2a).
+    /// A file's start as plain text, as tafs cloud cleaned it (control and direction characters gone), drawn as text and
+    /// never as Markdown or HTML; nil for a type that has no text start.
+    func preview(of id: String) async throws -> FilePreviewText?
+    /// A file's bytes, for Download and Share only (the file itself, never a link: the owner's pick, 2a).
     func contents(of id: String) async throws -> Data
     /// Delete now, for everyone on the account.
     func delete(_ id: String) async throws
+}
+
+/// A file's start as tafs cloud sends it: its first 4 KB as plain text, and whether there's more.
+struct FilePreviewText: Equatable, Sendable {
+    var text: String
+    var truncated: Bool
 }
 
 /// How the lists are drawn: in tafs cloud's facts, grouped and ordered, nothing else worked out.
@@ -128,6 +137,17 @@ final class FilesModel: ObservableObject {
         return all.filter { (taf == nil || $0.tafID == taf) && (run == nil || $0.runID == run) && (chat == nil || $0.chat == chat) }
     }
 
+    /// The file's own bytes as a copy on this device (`FileCopy`), for Download and the share sheet: read only when one of
+    /// them is asked for, never to draw the preview.
+    func localCopy(of file: DeliveredFile) async throws -> URL {
+        let data = try await store.contents(of: file.id)
+        let folder = FileCopy.folder(file.id)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appendingPathComponent(FileCopy.safeName(file.name, id: file.id))
+        try data.write(to: url, options: .completeFileProtection)
+        return url
+    }
+
     /// Delete now: gone from the list only once the store has deleted it. False when it couldn't be.
     func delete(_ id: String) async -> Bool {
         do {
@@ -165,6 +185,10 @@ struct StubFilesStore: FilesStore {
             file("f5", "Call notes.docx", "DOCX", 31, taf: leads, run: "r3", daysAgo: 1.2),
             file("f7", "Access review.csv", "CSV", 9, taf: access, run: "r5", daysAgo: 26),
         ]
+    }
+
+    func preview(of id: String) async throws -> FilePreviewText? {
+        FilePreviewText(text: String(decoding: try await contents(of: id), as: UTF8.self), truncated: false)
     }
 
     func contents(of id: String) async throws -> Data {

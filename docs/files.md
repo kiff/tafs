@@ -34,8 +34,10 @@ Tests: `FilesTests`.
 - **The list** (`FilesView`): the account's files with All, By taf and By run and a chip per taf, or one taf's by run; each
   row its type, name, taf and size, and when it goes ("goes today", "goes tomorrow", "goes in 12 days"). The days are
   under the run's day in the account's zone. With none, what lands there; a failed read says so.
-- **A file** (`FileDetailView`): the system's preview of the file on the device (QuickLook; nothing goes to a viewer
-  service), **Download** (saved where the person picks), **Share** (the share sheet, with the file itself), the taf, the
+- **A file** (`FileDetailView`): tafs cloud's start of the file (`preview`, its first 4 KB as plain text, control and
+  direction characters taken out) drawn as text, never as Markdown or HTML, with a line when there's more; a type with
+  no text start (none in v1) is drawn by the system from its bytes on the device. **Download** (saved where the person
+  picks) and **Share** (the share sheet, with the file itself) read the bytes only when asked, the taf, the
   run, the type and size, "Everyone on this account", and when it goes; **Delete now** apart, behind a confirm that says
   it's gone for everyone, right away.
 - **iPad, full width:** the list and the open file side by side; a file deleted there clears the side.
@@ -53,9 +55,11 @@ Words: `files.*`, in the 8 languages.
 `CloudFilesStore` reads them, from each place Files opens:
 
 - `GET /v1/files`, every page (`next`, then `?after=`), at most 10 at once: the account's files, newest first, each with
-  its taf's name as it was when the file was delivered (`contracts/files-list.json`);
-- `GET /v1/files/{id}/download`: a URL to the file's bytes that lasts a minute, read at once for its preview, Download
-  and the share sheet's file, and never handed out (`contracts/files-download.json`);
+  its taf's name as tafs has it now, none once the taf is gone (`contracts/files-list.json`);
+- `GET /v1/files/{id}`: the file's start as plain text, as tafs cloud cleaned it, for its preview
+  (`contracts/files-file.json`);
+- `GET /v1/files/{id}/download`: a URL to the file's bytes that lasts a minute, read at once and only for Download and
+  the share sheet's file, and never handed out (`contracts/files-download.json`);
 - `DELETE /v1/files/{id}`: Delete now, for everyone on the account.
 
 A file's type is its name's extension, else its media type's; its run's time is when it was delivered; it goes when tafs

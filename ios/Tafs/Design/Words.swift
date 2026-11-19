@@ -2357,6 +2357,8 @@ enum Words {
         static var noneYet: String { Words.line("files.none_yet") }
         /// Pick a file to see it here.
         static var pickOne: String { Words.line("files.pick_one") }
+        /// Only the start is shown. Download the file to read all of it.
+        static var previewStart: String { Words.line("files.preview_start") }
         /// Saved to this device
         static var saved: String { Words.line("files.saved") }
         /// See it in the chat

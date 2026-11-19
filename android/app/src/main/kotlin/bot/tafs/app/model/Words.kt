@@ -1271,6 +1271,7 @@ object Words {
     val madeBy: String get() = Res.s(R.string.files_made_by)
     val noneYet: String get() = Res.s(R.string.files_none_yet)
     val pickOne: String get() = Res.s(R.string.files_pick_one)
+    val previewStart: String get() = Res.s(R.string.files_preview_start)
     val saved: String get() = Res.s(R.string.files_saved)
     val seeInChat: String get() = Res.s(R.string.files_see_in_chat)
     val share: String get() = Res.s(R.string.files_share)

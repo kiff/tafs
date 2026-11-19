@@ -1232,6 +1232,7 @@
     <string name="files_made_by">Hecho por</string>
     <string name="files_none_yet">Aún ninguno · se guardan 30 días</string>
     <string name="files_pick_one">Elige un archivo para verlo aquí.</string>
+    <string name="files_preview_start">Solo se muestra el principio. Descarga el archivo para leerlo entero.</string>
     <string name="files_saved">Guardado en este dispositivo</string>
     <string name="files_see_in_chat">Verlo en el chat</string>
     <string name="files_share">Compartir</string>

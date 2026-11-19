@@ -23,7 +23,9 @@ final class FilesTests: XCTestCase {
             if fails { throw URLError(.notConnectedToInternet) }
             return listed
         }
-        func contents(of id: String) async throws -> Data { Data() }
+        var contentsRead: [String] = []
+        func preview(of id: String) async throws -> FilePreviewText? { FilePreviewText(text: "a,b", truncated: false) }
+        func contents(of id: String) async throws -> Data { contentsRead.append(id); return Data("a,b".utf8) }
         func delete(_ id: String) async throws {
             if fails { throw URLError(.notConnectedToInternet) }
             deleted.append(id)
@@ -139,15 +141,35 @@ final class FilesTests: XCTestCase {
         StubProtocol.responses["GET /v1/files?after=fil_a"] = (200, #"{"files":[\#(record("fil_b"))]}"#)
         StubProtocol.responses["GET /v1/files/fil_a/download"] = (200, #"{"url":"https://s3.test/fil_a?signed"}"#)
         StubProtocol.responses["DELETE /v1/files/fil_a"] = (200, #"{"deleted":"fil_a"}"#)
+        // One file's start, as tafs cloud cleaned it, with a direction override left in to show it's drawn as sent.
+        StubProtocol.responses["GET /v1/files/fil_a"] = (200, #"{"id":"fil_a","preview":"name,amount\nAna\u202E,12.50\n","preview_truncated":true}"#)
         final class Fetched: @unchecked Sendable { var urls: [URL] = [] }
         let fetched = Fetched()
         let store = CloudFilesStore(cloud: cloud, fetch: { url in fetched.urls.append(url); return Data("a,b".utf8) })
         let files = try await store.files()
         XCTAssertEqual(files.map(\.id), ["fil_a", "fil_b"], "both pages")
+        // Opening a file reads its start, never its bytes.
+        let preview = try XCTUnwrap(try await store.preview(of: "fil_a"))
+        XCTAssertEqual(preview, FilePreviewText(text: "name,amount\nAna\u{202E},12.50\n", truncated: true), "drawn as tafs cloud sent it")
+        XCTAssertTrue(fetched.urls.isEmpty, "no download for the preview")
         let bytes = try await store.contents(of: "fil_a")
         XCTAssertEqual(bytes, Data("a,b".utf8))
         XCTAssertEqual(fetched.urls.map(\.absoluteString), ["https://s3.test/fil_a?signed"])
         try await store.delete("fil_a")
+    }
+
+    /// The device's copy is read only when asked for (Download, Share), under the file's own name, and goes with remove.
+    func testTheDevicesCopyIsReadOnlyWhenAskedFor() async throws {
+        let store = Store([file("fil_copy", hoursAgo: 1, name: "week.csv")])
+        let model = FilesModel(store: store)
+        await model.load()
+        XCTAssertTrue(store.contentsRead.isEmpty, "the list never reads bytes")
+        let url = try await model.localCopy(of: try XCTUnwrap(model.files().first))
+        XCTAssertEqual(store.contentsRead, ["fil_copy"])
+        XCTAssertEqual(url.lastPathComponent, "week.csv")
+        XCTAssertEqual(try Data(contentsOf: url), Data("a,b".utf8))
+        FileCopy.remove("fil_copy")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
 
     /// A file's name stays one path component on the device whatever tafs cloud sends, and its copy goes when removed.

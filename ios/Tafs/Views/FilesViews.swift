@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreTransferable
 import QuickLook
 import UniformTypeIdentifiers
 
@@ -120,7 +121,7 @@ struct FilesView: View {
         case .byRun:
             ForEach(FilesGrouping.byRun(shown)) { group in
                 Section { rows(group.files, now: now) } header: {
-                    Text([group.files.first?.tafName, day(group.files.first?.runAt)].compactMap { $0 }.joined(separator: " · "))
+                    Text([group.files.first?.tafName, day(group.files.first?.runAt)].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                 }
             }
         }
@@ -164,7 +165,7 @@ struct FileRow: View {
             FileBadge(type: file.type)
             VStack(alignment: .leading, spacing: 2) {
                 Text(file.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                Text([file.tafName, FileSize.words(file.bytes)].joined(separator: " · "))
+                Text([file.tafName, FileSize.words(file.bytes)].filter { !$0.isEmpty }.joined(separator: " · "))
                     .scaledFont(13).foregroundColor(Theme.dim)
                 Text(FileDays.goes(FilesGrouping.daysLeft(file, now: now)))
                     .scaledFont(12).foregroundColor(Theme.amberText)
@@ -217,6 +218,10 @@ struct FileDetailView: View {
     var deleted: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var model: AppModel
+    /// tafs cloud's start of the file, as text; nil until read, and for a type that has none.
+    @State private var preview: FilePreviewText?
+    @State private var read = false
+    /// The file's own bytes on this device, only once Download or (for a type with no text start) its preview asks.
     @State private var local: URL?
     @State private var saving = false
     @State private var confirming = false
@@ -229,24 +234,36 @@ struct FileDetailView: View {
                     FileBadge(type: file.type, size: 44)
                     Text(file.name).scaledFont(17, weight: .bold).foregroundColor(Theme.ink)
                 }
-                if let local {
+                if let preview {
+                    // tafs cloud's cleaned start, drawn as plain text: never Markdown, HTML or a viewer of the bytes.
+                    ScrollView {
+                        Text(verbatim: preview.text)
+                            .font(.system(.footnote, design: .monospaced))
+                            .foregroundColor(Theme.ink)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 320)
+                    if preview.truncated {
+                        Text(Words.Files.previewStart).scaledFont(12).foregroundColor(Theme.soft)
+                    }
+                } else if read, let local {
+                    // A type with no text start (none in v1): the system draws the file on the device.
                     FilePreview(url: local).frame(height: 320)
-                } else {
+                } else if !read {
                     ProgressView().frame(maxWidth: .infinity, minHeight: 120)
                 }
                 HStack(spacing: 10) {
-                    Button(Words.Files.download) { saving = true }
+                    Button(Words.Files.download) { Task { await download() } }
                         .buttonStyle(.borderedProminent)
-                        .disabled(local == nil)
-                    if let local {
-                        ShareLink(item: local) { Text(Words.Files.share) }
-                            .buttonStyle(.bordered)
-                    }
+                    // The file itself through the share sheet, its bytes read only when it's shared.
+                    ShareLink(item: SharedFile(file: file, files: files), preview: SharePreview(file.name)) { Text(Words.Files.share) }
+                        .buttonStyle(.bordered)
                 }
                 if let note { Text(note).scaledFont(13).foregroundColor(Theme.soft) }
             }
             Section {
-                LabeledContent(Words.Files.madeBy, value: file.tafName)
+                if !file.tafName.isEmpty { LabeledContent(Words.Files.madeBy, value: file.tafName) }
                 LabeledContent(Words.Files.inRun, value: file.runAt.formatted(date: .abbreviated, time: .shortened))
                 LabeledContent(Words.Files.type, value: file.type)
                 LabeledContent(Words.Files.size, value: FileSize.words(file.bytes))
@@ -260,7 +277,7 @@ struct FileDetailView: View {
         .scrollContentBackground(.hidden)
         .screenBackground()
         .navigationTitle(file.name)
-        .task { await fetch() }
+        .task { await readPreview() }
         // The copy goes with the screen: never kept on the device past it.
         .onDisappear { FileCopy.remove(file.id) }
         .fileExporter(isPresented: $saving, document: local.map(FileForSaving.init), contentType: .data, defaultFilename: file.name) { result in
@@ -282,12 +299,32 @@ struct FileDetailView: View {
     }
 
     /// The file's bytes, written where only this app reads them, under its own name, for the preview and the share sheet.
-    private func fetch() async {
-        guard local == nil, let data = try? await files.store.contents(of: file.id) else { return }
-        let folder = FileCopy.folder(file.id)
-        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let url = folder.appendingPathComponent(FileCopy.safeName(file.name, id: file.id))
-        if (try? data.write(to: url, options: .completeFileProtection)) != nil { local = url }
+    /// tafs cloud's start of the file; a type with none is drawn by the system from its bytes.
+    private func readPreview() async {
+        guard !read else { return }
+        preview = try? await files.store.preview(of: file.id)
+        if preview == nil { local = try? await files.localCopy(of: file) }
+        read = true
+    }
+
+    /// Download: the file's own bytes, then where the person picks.
+    private func download() async {
+        if local == nil {
+            do { local = try await files.localCopy(of: file) } catch { note = Words.Alert.tafsCouldNotReachKiff; return }
+        }
+        saving = true
+    }
+}
+
+/// The file itself for the share sheet, read from tafs cloud only when it's shared: never a link.
+struct SharedFile: Transferable, Sendable {
+    let file: DeliveredFile
+    let files: FilesModel
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .data) { shared in
+            SentTransferredFile(try await shared.files.localCopy(of: shared.file))
+        }
     }
 }
 
