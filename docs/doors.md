@@ -121,7 +121,7 @@ tasks do). tafs cloud reads the run back and sends its answer through the door.
 
 **The apps read the list one door at a time** (`GET /v1/tafs/{id}/doors`): a door, an app or a knock that a build can't
 read is left out, and never hides the others (iOS `TafsCloud.Doors`, 19 Nov). A door kind a build doesn't know yet, such as
-"From another application" (`api`, kiff/work#16 §2.5), still carries every field today's builds require, so older builds
+"From another application" (`api`: a company's own software handing a taf work), still carries every field today's builds require, so older builds
 show it as a plain door. The iPhone and iPad also read an `api` door's own fields: `counts` (today, waiting),
 `last_request` (`{status, at}`), and each key's `last4`, `made_at` and `last_used_at`, never the key.
 

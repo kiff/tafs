@@ -62,7 +62,7 @@ extension TafsCloud {
         var grant: String? = nil
         var channel: String? = nil
         var trigger: String? = nil
-        /// An `api` door ("From another application", kiff/work#16 §2.5): today's requests and those waiting, and the
+        /// An `api` door ("From another application": a company's own software handing a taf work): today's requests and those waiting, and the
         /// last request's state and when. None on any other door, or from a tafs cloud without them.
         var counts: Counts? = nil
         var lastRequest: LastRequest? = nil

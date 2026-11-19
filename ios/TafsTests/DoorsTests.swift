@@ -44,7 +44,7 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(r.knocks[1].dropped, 3)
     }
 
-    /// An `api` door ("From another application", kiff/work#16 §2.5) reads with today's fields and its own: counts, the
+    /// An `api` door ("From another application": a company's own software handing a taf work) reads with today's fields and its own: counts, the
     /// last request, and each key's last four and dates, never the key. One door this app can't read (here, one with no
     /// `label`) is left out, and never hides the others.
     func testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther() throws {
