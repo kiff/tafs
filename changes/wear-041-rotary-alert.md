@@ -1,0 +1,1 @@
+- **Wear OS: the answer's alert keeps no amount**, as the Inbox and the Apple Watch's alert don't, and the answer card scrolls with the crown or bezel ([watch-wear.md](docs/watch-wear.md)).

@@ -347,26 +347,27 @@ internal fun stateLine(ask: AskLine): String = listOfNotNull(ask.tafName, ask.wo
 @Composable
 internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
-    Column(
-      Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(top = 22.dp, bottom = 28.dp)
-        .testTag(RESULT_SCREEN),
+    // A ScalingLazyColumn, so the crown or bezel scrolls it as a swipe does (a plain scrolling column takes no rotary input).
+    androidx.wear.compose.foundation.lazy.ScalingLazyColumn(
+      Modifier.fillMaxSize().testTag(RESULT_SCREEN),
+      state = androidx.wear.compose.foundation.lazy.rememberScalingLazyListState(initialCenterItemIndex = 0),
+      contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 22.dp, bottom = 28.dp),
+      autoCentering = null,
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1)
-      Spacer(Modifier.height(4.dp))
+      item { T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1) }
       // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.
-      T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
-      Spacer(Modifier.height(10.dp))
-      Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        RoundAction(Words.Watch.hear, { act.hear(ask) }, Look.coach) { speakerGlyph(Look.coach) }
-        RoundAction(Words.Watch.reply, { act.reply(ask) }, Look.send) { micGlyph(Look.send, 0.95f) }
+      item {
+        T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
       }
-      timing?.let {
-        Spacer(Modifier.height(4.dp))
-        T(it, 8.sp, Look.faint, modifier = Modifier.width(140.dp), lines = 2)
+      item {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+          RoundAction(Words.Watch.hear, { act.hear(ask) }, Look.coach) { speakerGlyph(Look.coach) }
+          RoundAction(Words.Watch.reply, { act.reply(ask) }, Look.send) { micGlyph(Look.send, 0.95f) }
+        }
       }
-      Spacer(Modifier.height(6.dp))
-      QuietButton(Words.Common.close, act.closeResult)
+      timing?.let { item { T(it, 8.sp, Look.faint, modifier = Modifier.width(140.dp), lines = 2) } }
+      item { QuietButton(Words.Common.close, act.closeResult) }
     }
   }
 }
