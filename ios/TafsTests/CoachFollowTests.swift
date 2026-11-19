@@ -80,4 +80,14 @@ final class CoachFollowTests: XCTestCase {
         let card = CoachFollow.content(WatchCoachAnswer(text: "", more: false, approveOnPhone: true))
         XCTAssertEqual(card.body, Words.Watch.approveOnPhone, "a card is only approved on the phone")
     }
+
+    /// No amount in the notification (legal-i18n, 19 Nov): the Inbox's rule, and the rest is on the phone.
+    func testTheNotificationHoldsNoAmount() {
+        let refund = CoachFollow.content(WatchCoachAnswer(text: "Refunded €84 for order A-1039.", more: false, approveOnPhone: false))
+        XCTAssertFalse(refund.body.contains("84"), refund.body)
+        XCTAssertTrue(refund.body.contains("A-1039"), "an order's number stays")
+        XCTAssertTrue(refund.body.hasSuffix(Words.Watch.moreOnPhone), "the whole answer is in Coach's chat")
+        let only = CoachFollow.content(WatchCoachAnswer(text: "€84", more: false, approveOnPhone: false))
+        XCTAssertEqual(only.body, Words.Watch.moreOnPhone)
+    }
 }

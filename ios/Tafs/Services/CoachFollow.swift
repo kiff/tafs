@@ -68,14 +68,17 @@ enum CoachFollow {
         return false
     }
 
-    /// "Coach", then its answer as the wrist shows it; a tap opens Coach's chat.
+    /// "Coach", then its answer with no amount in it (`WatchAmount.strip`, the rule the watch's Inbox keeps: iOS keeps a
+    /// notification until it's dismissed, and the text promises no amount in what's kept or sent through alerts); a tap
+    /// opens Coach's chat, where the whole answer is.
     static func content(_ answer: WatchCoachAnswer) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = Words.Coach.title
-        var lines = [answer.text].filter { !$0.isEmpty }
+        let text = WatchAmount.strip(answer.text)
+        var lines = [text].filter { !$0.isEmpty }
         if answer.approveOnPhone {
             lines.append(Words.Watch.approveOnPhone)
-        } else if answer.more || lines.isEmpty {
+        } else if answer.more || lines.isEmpty || text != answer.text {
             lines.append(Words.Watch.moreOnPhone)
         }
         content.body = lines.joined(separator: "\n")

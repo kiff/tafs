@@ -254,7 +254,8 @@ option A (19 Nov):
   own (the privacy text: its only notifications are the iPhone's). So after a watch Send, the iPhone follows Coach's answer
   itself, inside the background time iOS gives it: 10 reads, stepped as the watch's (24 s). Once Coach has answered, if
   the watch hasn't read for 5 s (it reads at most 3 s apart while open), the iPhone posts a local notification: "Coach", then the answer
-  as the wrist shows it ("Approve on your phone" or "The rest is on your phone" where it applies). watchOS shows it on the
+  with no amount in it (the Inbox's rule, `WatchAmount.strip`, at legal-i18n's ask: iOS keeps a notification until it's
+  dismissed), then "Approve on your phone", or "The rest is on your phone." where it was cut or something was taken out. watchOS shows it on the
   wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
 - **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing.
 - **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
