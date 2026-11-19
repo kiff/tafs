@@ -52,6 +52,9 @@ final class CoachModel: ObservableObject {
     /// v2 (W4): Ask Coach as one conversation, oldest first: what was said from this watch since the app was opened, each with
     /// Coach's answer. In memory only, forgotten when the app is put away or signed out here: nothing new is kept on the watch.
     @Published private(set) var turns: [Turn] = []
+    /// The last request this visit sent: the next Send replies to it (`reply_to`, docs/watch-ask.md), so Coach keeps the
+    /// conversation. Gone when the app leaves the screen, as the turns are.
+    private var lastTicket: WatchCoachTicket?
     private let phone: PhoneAsking
     private let clock: () -> Date
     /// Sending needs a passcode on this watch (`WristLock`).
@@ -141,11 +144,13 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), text: text, message: id.uuidString.lowercased()))
+        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), text: text, message: id.uuidString.lowercased(),
+                                                 ticket: lastTicket))
         guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
         switch reply.outcome {
         case .ok:
             guard let ticket = reply.ticket else { state = .failed(Words.Watch.phoneNotReachable); return }
+            lastTicket = ticket
             draft = ""
             sending = nil
             reviewing = false
@@ -237,6 +242,7 @@ final class CoachModel: ObservableObject {
         visit += 1
         asked = nil
         turns = []
+        lastTicket = nil
         draft = ""
         sending = nil
         reviewing = false

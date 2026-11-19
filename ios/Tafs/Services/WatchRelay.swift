@@ -20,8 +20,10 @@ protocol WatchReading {
     func halt(taf: String?) async -> HaltAll.Outcome
     /// Sends Coach the person's words under the message's id, and reads its answer for a moment.
     func coach(text: String, messageID: UUID) async -> WatchReply
-    /// v2's Send (W2): the words as `coach` sends them, answered as soon as tafs cloud has them, with the ticket.
-    func coachSend(text: String, messageID: UUID) async -> WatchReply
+    /// v2's Send (W2): the words, answered as soon as tafs cloud has them, with the ticket. As a watch request of their own
+    /// (`POST /v1/watch/asks`, docs/watch-ask.md); `after` is the ticket of the request they reply to, when the watch's
+    /// conversation is open.
+    func coachSend(text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply
     /// v2 (W2): Coach's answer so far to the words the ticket names, read once, and whether Coach is still at it.
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply
     /// Your brief, as tafs cloud sends it; nil when the account has none.
@@ -38,7 +40,9 @@ extension WatchReading {
     /// No brief: the watch shows Needs you, as it always has.
     func brief() async throws -> WatchBrief? { nil }
     /// A reader without W2's two steps: the watch sends as v1 does.
-    func coachSend(text: String, messageID: UUID) async -> WatchReply { WatchReply(.notYet) }
+    func coachSend(text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply { WatchReply(.notYet) }
+    /// A Send that replies to nothing.
+    func coachSend(text: String, messageID: UUID) async -> WatchReply { await coachSend(text: text, messageID: messageID, after: nil) }
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply { WatchReply(.notYet) }
 }
 
@@ -137,7 +141,8 @@ enum WatchRelay {
             // sends none, and the phone gives the message one.
             return await reading.coach(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
         case .coachSend:
-            return await reading.coachSend(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID())
+            return await reading.coachSend(text: request.text ?? "", messageID: request.message.flatMap(UUID.init(uuidString:)) ?? UUID(),
+                                           after: request.ticket)
         case .coachRead:
             guard let ticket = request.ticket else { return WatchReply(.refused) }
             return await reading.coachRead(ticket)
@@ -421,8 +426,11 @@ struct KeptWatchReading: WatchReading {
     /// tafs cloud gives as Coach's now, never another conversation.
     static var coachChats: Set<String> = []
 
-    /// v2's Send (W2): the words, answered as soon as tafs cloud has them, with where Coach's answer will be.
-    func coachSend(text: String, messageID: UUID) async -> WatchReply {
+    /// v2's Send (W2): the words, answered as soon as tafs cloud has them, with where the answer will be. A watch request of
+    /// their own first (`POST /v1/watch/asks`, signed with this phone's device key, never the approval key, with no prompt);
+    /// where tafs cloud's switch for it is off (404 `watch_off`), Coach's chat, as before.
+    func coachSend(text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply {
+        if let asked = await ask(text: text, clientID: messageID.uuidString.lowercased(), replyTo: after?.askID) { return asked }
         switch await post(text: text, messageID: messageID) {
         case .failure(let refusal): return refusal.reply
         case .success(let (setup, sent)):
@@ -436,10 +444,49 @@ struct KeptWatchReading: WatchReading {
         }
     }
 
+    /// The words as a watch request of their own (docs/watch-ask.md): the exact body, signed with the device key, under the
+    /// watch's id for them, so a Send again gets the same request back. Nil where tafs cloud's switch for it is off, or the
+    /// phone has no account to sign for: then Coach's chat takes them, as before.
+    func ask(text: String, clientID: String, replyTo: String?) async -> WatchReply? {
+        guard let tenant else { return nil }
+        let body = TafsCloud.watchAskBody(clientID: clientID, text: text, replyTo: replyTo)
+        let signedAt = SigningTime.next()
+        let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: TafsCloud.watchAsksPath, body: body, signedAt: signedAt)
+        let signature: String
+        do { signature = try signer.signConfirmed(message) } catch { return WatchReply(.failed, line: Words.Alert.notSent) }
+        do {
+            let asked = try await cloud.watchAsk(body: body, signature: "t=\(signedAt),v1=\(signature)")
+            let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: asked.id, sent: nil)
+            // W3: if the watch is put away before the request ends, the iPhone posts how it went (`CoachFollow`).
+            if follows {
+                let reading = self
+                Task { @MainActor in await CoachFollow.run(ticket, read: { await reading.readCoach($0) }) }
+            }
+            return WatchReply(.ok, ticket: ticket)
+        } catch let e as TafsCloud.CloudError where e.status == 404 && e.code == "no_coach" {
+            return WatchReply(.failed, line: Words.Watch.openOnPhone)
+        } catch let e as TafsCloud.CloudError where e.status == 404 && e.code == "no_ask" && replyTo != nil {
+            // The request it replies to is gone (kept 30 days): the words go as a request of their own.
+            return await ask(text: text, clientID: clientID, replyTo: nil)
+        } catch let e as TafsCloud.CloudError where e.status == 404 {
+            // tafs cloud's switch for it is off for this account (`watch_off`), or a tafs cloud without the route.
+            return nil
+        } catch let e as TafsCloud.CloudError where e.status == 409 && e.code == "reply_too_soon" && replyTo != nil {
+            // The request it replies to hasn't ended: the words go as a request of their own.
+            return await ask(text: text, clientID: clientID, replyTo: nil)
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
+        } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
+            return WatchReply(.failed, line: AppModel.waitsForCredits(e))
+        } catch {
+            return WatchReply(.failed, line: Words.Alert.notSent + "\n" + error.localizedDescription)
+        }
+    }
+
     /// v2 (W2): Coach's thread read once: its answer so far, and whether its chat says it's still working. A chat that
-    /// isn't Coach's is never read.
+    /// isn't Coach's is never read. A watch request is read by its id, the person's own only.
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply {
-        if !Self.coachChats.contains(ticket.chat) {
+        if ticket.askID == nil, !Self.coachChats.contains(ticket.chat) {
             // Not reached is said as such; only a chat that is someone else's is refused.
             let setup: TafsCloud.CloudTaf?
             do { setup = try await cloud.setup() } catch { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
@@ -452,13 +499,27 @@ struct KeptWatchReading: WatchReading {
         return reply
     }
 
-    /// Coach's thread read once by a ticket whose chat is Coach's: its answer so far, and whether it's still working.
+    /// Coach's thread read once by a ticket whose chat is Coach's: its answer so far, and whether it's still working. A watch
+    /// request's ticket reads the request.
     func readCoach(_ ticket: WatchCoachTicket) async -> WatchReply {
+        if let id = ticket.askID { return await readAsk(id) }
         guard let thread = try? await cloud.setupThread(ticket.chat, session: ticket.session) else {
             return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
         }
         let answer = Self.answer(in: thread, after: ticket.sent, session: ticket.session)
         return WatchReply(.ok, coach: answer, answering: thread.working != nil)
+    }
+
+    /// A watch request read once: while it's at work, "still answering"; once it ends, or a call of it waits for the owner,
+    /// its line (else tafs cloud's words for its state), with "Approve on your phone" for the held call.
+    func readAsk(_ id: String) async -> WatchReply {
+        guard let asked = try? await cloud.watchAsk(id) else { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
+        return Self.reply(asked)
+    }
+
+    nonisolated static func reply(_ asked: TafsCloud.WatchAsk) -> WatchReply {
+        guard asked.ended || asked.held else { return WatchReply(.ok, answering: true) }
+        return WatchReply(.ok, coach: WatchCoachAnswer.cut(asked.shown, more: false, approveOnPhone: asked.held), answering: false)
     }
 
     /// Coach's answer to the person's message: Coach's words written after it in that chat, and

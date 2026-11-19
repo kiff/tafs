@@ -163,6 +163,25 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(model.state, .answered(Self.rae))
     }
 
+    /// The next Send of the same visit replies to the last request (its ticket goes with it, for `reply_to`); once the app
+    /// has left the screen, a Send replies to nothing.
+    func testTheNextSendRepliesToTheLastRequestUntilTheAppLeaves() async {
+        let asked = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_1", sent: nil)
+        let phone = TwoStepPhone(send: WatchReply(.ok, ticket: asked), reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        model.review("Until Monday")
+        await model.sendReviewed()
+        let sends = phone.asked.filter { $0.kind == .coachSend }
+        XCTAssertNil(sends[0].ticket, "the first replies to nothing")
+        XCTAssertEqual(sends[1].ticket, asked, "the next replies to it")
+        model.leave()
+        model.review("What needs me today?")
+        await model.sendReviewed()
+        XCTAssertNil(phone.asked.filter { $0.kind == .coachSend }.last?.ticket, "a new visit starts a new conversation")
+    }
+
     /// A Send that doesn't reach Coach keeps the words in the review, to send again under the same id.
     func testAFailedSendStaysInTheReviewWithItsId() async {
         let phone = Phone(nil)
