@@ -69,11 +69,13 @@ internal object Look {
   val faint = Color(0xFF6E6E78)
   val surface = Color(0xFF1F1F24)
   val surfaceHi = Color(0xFF2C2C33)
+  /** Recording, as mockup v2.1 draws it: the Stop button and "● Recording". */
+  val red = Color(0xFFE5303A)
 }
 
 // MARK: Glyphs, drawn with shapes
 
-private fun DrawScope.micGlyph(color: Color, scale: Float = 1f) {
+internal fun DrawScope.micGlyph(color: Color, scale: Float = 1f) {
   val d = size.minDimension * scale
   val cx = size.width / 2
   val cy = size.height / 2
@@ -140,7 +142,7 @@ private fun DrawScope.questionGlyph(color: Color) {
 }
 
 @Composable
-private fun Glyph(modifier: Modifier, draw: DrawScope.() -> Unit) = Canvas(modifier) { draw() }
+internal fun Glyph(modifier: Modifier, draw: DrawScope.() -> Unit) = Canvas(modifier) { draw() }
 
 // MARK: Pieces
 
@@ -189,7 +191,7 @@ internal fun StatusLine(text: String, dot: Color?, color: Color = Look.dim, onCl
 }
 
 @Composable
-private fun SpinnerAround(size: Dp, content: @Composable BoxScope.() -> Unit) {
+internal fun SpinnerAround(size: Dp, content: @Composable BoxScope.() -> Unit) {
   Box(Modifier.size(size), contentAlignment = Alignment.Center) {
     CircularProgressIndicator(
       modifier = Modifier.fillMaxSize(),
@@ -214,17 +216,17 @@ private fun RoundAction(label: String, onClick: () -> Unit, glyph: DrawScope.() 
 }
 
 @Composable
-private fun AmberButton(label: String, onClick: () -> Unit) {
+internal fun AmberButton(label: String, onClick: () -> Unit, width: Dp = 116.dp) {
   Button(
     onClick = onClick,
-    modifier = Modifier.height(40.dp).width(116.dp),
+    modifier = Modifier.height(40.dp).width(width),
     colors = ButtonDefaults.buttonColors(containerColor = Look.amber, contentColor = Look.onAmber),
     contentPadding = PaddingValues(horizontal = 8.dp),
   ) { T(label, 14.sp, Look.onAmber, FontWeight.SemiBold, Modifier.fillMaxWidth(), lines = 1) }
 }
 
 @Composable
-private fun QuietButton(label: String, onClick: () -> Unit) {
+internal fun QuietButton(label: String, onClick: () -> Unit) {
   TextButton(
     onClick = onClick,
     modifier = Modifier.height(30.dp).width(110.dp),
@@ -303,12 +305,14 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         Spacer(Modifier.height(8.dp))
         QuietButton(Words.Common.close, act.closeVoice)
       }
+      // v2's own screens (ReviewScreens.kt): never shown by v1.
+      is WatchModel.Voice.Ready, is WatchModel.Voice.Review, WatchModel.Voice.Deleted -> Unit
     }
   }
 }
 
 @Composable
-private fun Centered(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun Centered(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
   Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) { content() }
 }
 

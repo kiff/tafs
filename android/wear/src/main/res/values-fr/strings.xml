@@ -4,7 +4,10 @@
     <string name="words_language" translatable="false">fr</string>
     <string name="alert_needs_you">Un taf vous attend</string>
     <string name="alert_not_refused">Non refusé</string>
+    <string name="chat_delete">Supprimer</string>
+    <string name="chat_stop">Arrêter</string>
     <string name="coach_ask">Demander à Coach</string>
+    <string name="coach_start">Démarrer</string>
     <string name="coach_title">Coach</string>
     <string name="common_cancel">Annuler</string>
     <string name="common_close">Fermer</string>
@@ -34,6 +37,7 @@
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
     <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_deleted_nothing_sent">Supprimé. Rien n\'a été envoyé.</string>
     <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
     <string name="watch_halting">Blocage de %1$s…</string>
@@ -48,6 +52,8 @@
         <item quantity="one">Non lus dans la boîte de réception : %1$s</item>
         <item quantity="other">Non lus dans la boîte de réception : %1$s</item>
     </plurals>
+    <string name="watch_limit">30 s maximum</string>
+    <string name="watch_listening">À l\'écoute</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Pour demander à la voix, autorisez le micro pour tafs sur cette montre.</string>
     <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
@@ -61,21 +67,33 @@
     <string name="watch_page_brief">Résumé</string>
     <string name="watch_page_inbox">Boîte de réception</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_qr_needs_me_today">Qu\'est-ce qui m\'attend aujourd\'hui ?</string>
+    <string name="watch_qr_not_now">Pas maintenant</string>
+    <string name="watch_qr_tell_me_more">Dites-m\'en plus</string>
+    <string name="watch_qr_thanks">Merci</string>
+    <string name="watch_quick_reply">Réponse rapide</string>
+    <string name="watch_ready">Prêt</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s prêt</item>
         <item quantity="other">%1$s prêts</item>
     </plurals>
     <string name="watch_recent_chats">Chats récents</string>
+    <string name="watch_recording">Enregistrement</string>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
     <string name="watch_reply">Répondre</string>
+    <string name="watch_rerecord">Réenregistrer</string>
     <string name="watch_result_ready">Un résultat est prêt</string>
     <string name="watch_results_channel">Résultats</string>
     <string name="watch_retry">Réessayer</string>
+    <string name="watch_review">Vérifiez avant d\'envoyer</string>
     <string name="watch_sending">Envoi…</string>
     <string name="watch_sent">Envoyé</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
     <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
+    <string name="watch_type">Écrire</string>
+    <string name="watch_type_hint">Écrire à Coach…</string>
     <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
     <plurals name="watch_working_count">

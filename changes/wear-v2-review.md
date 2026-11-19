@@ -1,0 +1,1 @@
+- **Wear OS v2, step 3 (first half): record, check, then send,** with a 30-second limit, Stop, Re-record, Delete, Type and Quick reply, behind the v2 switch ([watch-wear.md](docs/watch-wear.md)).

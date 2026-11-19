@@ -53,6 +53,11 @@ class WatchModel(
   private val seen: MutableSet<String> = SeenAsks.ids,
   /** Whether the watch asks for Your brief and shows it ([BRIEF_ON_WATCH]); a test passes it rather than flipping the switch. */
   private val briefOn: Boolean = BRIEF_ON_WATCH,
+  /**
+   * Wear v2's microphone (docs/watch-wear.md, Version 2): Start, then Stop or the 30 s limit, then the words to check, sent only on
+   * Send. Off (v1), what's heard goes the moment the person stops. A test passes it rather than flipping [WATCH_V2].
+   */
+  private val reviewFirst: Boolean = WATCH_V2,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -174,8 +179,20 @@ class WatchModel(
 
   /** The microphone's screen, from the tap to tafs cloud's receipt. */
   sealed interface Voice {
-    /** Listening: what's been heard so far, shown as it comes. [replyTo] is the ask a Reply continues. */
-    data class Listening(val heard: String, val replyTo: String?) : Voice
+    /** v2: the microphone's screen, before Start. [replyTo] is the ask a Reply continues. */
+    data class Ready(val replyTo: String?) : Voice
+
+    /**
+     * Listening: what's been heard so far, shown as it comes. [replyTo] is the ask a Reply continues; [since], when listening
+     * began, for v2's timer and its 30 s limit.
+     */
+    data class Listening(val heard: String, val replyTo: String?, val since: Long? = null) : Voice
+
+    /** v2: the words heard, typed or picked, to check before Send. Nothing has left the watch. */
+    data class Review(val text: String, val replyTo: String?) : Voice
+
+    /** v2: deleted from the review; nothing was sent. */
+    data object Deleted : Voice
 
     /** Sending the words, as text, through the phone. */
     data class Sending(val text: String, val clientId: String, val replyTo: String?) : Voice
@@ -234,8 +251,54 @@ class WatchModel(
     tapAt[replyTo] = now()
     listenMs = null
     heardAt = null
-    _voice.value = Voice.Listening("", replyTo)
+    _voice.value = Voice.Listening("", replyTo, since = now())
     return true
+  }
+
+  /**
+   * v2: the microphone tapped (or Reply, with [replyTo]): its screen, ready for Start. From an unlocked watch with a screen lock
+   * only, as [listen].
+   */
+  fun readyToRecord(replyTo: String? = null) {
+    if (!unlocked()) {
+      _voice.value = Voice.NeedsLock
+      return
+    }
+    _result.value = null
+    _voice.value = Voice.Ready(replyTo)
+  }
+
+  /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
+  fun review(text: String, replyTo: String? = null) {
+    val words = text.trim()
+    if (words.isEmpty()) return
+    if (!unlocked()) {
+      _voice.value = Voice.NeedsLock
+      return
+    }
+    _result.value = null
+    _voice.value = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo)
+  }
+
+  /** v2: Send, from the review. The watch is checked again: it may have locked while the words were read. */
+  suspend fun sendReviewed() {
+    val review = _voice.value as? Voice.Review ?: return
+    if (!unlocked()) {
+      _voice.value = Voice.NeedsLock
+      return
+    }
+    send(Voice.Sending(review.text, newClientId(), review.replyTo))
+  }
+
+  /** v2: Re-record, from the review: the words are dropped and the microphone is ready again, for the same chat. */
+  fun rerecord() {
+    val review = _voice.value as? Voice.Review ?: return
+    readyToRecord(review.replyTo)
+  }
+
+  /** v2: Delete, from the review: the words are dropped, and nothing was sent. */
+  fun deleteReviewed() {
+    if (_voice.value is Voice.Review) _voice.value = Voice.Deleted
   }
 
   /** The speech input is ready for words: the listen time ends here. */
@@ -260,12 +323,16 @@ class WatchModel(
     if (_voice.value is Voice.Listening) _voice.value = Voice.HeardNothing
   }
 
-  /** The person spoke and stopped: what was heard goes at once, with nothing to confirm. */
+  /** The person spoke and stopped: in v1 what was heard goes at once, with nothing to confirm; in v2, to the review first. */
   suspend fun heard(text: String) {
     val listening = _voice.value as? Voice.Listening ?: return
     val words = text.trim()
     if (words.isEmpty()) return heardNothing()
     heardAt = now()
+    if (reviewFirst) {
+      _voice.value = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), listening.replyTo)
+      return
+    }
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))
   }
 
