@@ -1,0 +1,7 @@
+Wersja 2 tafs na Wear OS, do testów.
+- Coach jako start: mów, pisz lub wybierz szybką odpowiedź, sprawdź i wyślij.
+- Odtwórz nagranie przed wysłaniem. Zostaje na zegarku i jest kasowane po wysłaniu lub usunięciu.
+- Zachowaj wiadomość na później, gdy telefon jest poza zasięgiem.
+- Skrzynka na odpowiedzi i oczekujące wywołania, dopóki ich nie odrzucisz.
+- Strona i ustawienia każdego tafa; wybierz, które zablokować.
+- Dzisiejszy kalendarz i Twoje konto. Zatwierdzanie zostaje na telefonie.

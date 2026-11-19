@@ -1,0 +1,7 @@
+Versie 2 van tafs op Wear OS, om te testen.
+- Coach als begin: spreek, typ of snel antwoord, controleer, verstuur.
+- Speel je opname af voor je verstuurt. Die blijft op het horloge en wordt gewist na versturen of verwijderen.
+- Bewaar een bericht voor later als je telefoon buiten bereik is.
+- Een Inbox voor antwoorden en vastgehouden aanroepen, tot je ze negeert.
+- Pagina en instellingen van elke taf; kies welke je stilzet.
+- Agenda van vandaag en je account. Goedkeuren blijft op je telefoon.
