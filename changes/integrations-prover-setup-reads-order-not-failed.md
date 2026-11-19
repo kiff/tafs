@@ -1,0 +1,1 @@
+- **tafs cloud: reads asked outside the request that sets the taf's tools never read as the app failing.** Planque's refusal "add these reads in the request that sets the taf's tools" is about how Coach asked, so the step ends "not made", never the red "Coach couldn't connect the app yet" (the last one the Moneybird turn of 19 Nov kept).
