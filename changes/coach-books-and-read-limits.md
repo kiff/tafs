@@ -1,0 +1,3 @@
+- **Coach: which books, and what a read does past its count (`set-up-a-taf@13`, `draft-the-card@39`).**
+  - **Which books:** for something that already exists, Coach takes it by name from the connection's own list when there is one (a Moneybird account's books, a workspace's channels), and asks for its link only when there isn't. When the connection reaches several and the person named none, Coach asks which before it proposes the rules, so the rules name it.
+  - **Past a count:** each tool's Card follows its rule's over (ask: the owner is asked), and the rule's line says it, a read's too. So the words, the rule and the Card agree.

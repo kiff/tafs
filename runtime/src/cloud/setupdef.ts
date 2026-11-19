@@ -226,7 +226,7 @@ export function setupDefinition(id: string): AgentDefinition {
     show: true,
     // What its cards may not say (contracts/coach-wording.json): show refuses such a card with the rule's fix.
     wording: COACH_WORDING.map((w) => ({ ...w, patterns: [...w.patterns], ...(w.unless_next ? { unless_next: [...w.unless_next] } : {}) })),
-    // No kept_words for now: without them show offers a rules notice no lines, and Coach writes its text (draft-the-card@38).
+    // No kept_words for now: without them show offers a rules notice no lines, and Coach writes its text (draft-the-card@39).
     // The lines come back after the Upgrade with COACH_KEPT_WORDS (coach-kept-words.ts).
     planque: PLANQUE,
     drafts: true,
