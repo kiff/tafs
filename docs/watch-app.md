@@ -45,7 +45,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
     A taf tafs cloud doesn't list says "Open tafs on your phone".
   - `calendar`, `day` as `YYYY-MM-DD`, or today in the account's zone (the phone's when it can't be read): tafs cloud's `GET /v1/calendar` for that day
     alone, its line and that day's events in time order with each taf's name.
-  - `account`: who is signed in, the account's name (else its slug) and the plan's line, as Account shows it.
+  - `account`: who is signed in, the account's name (else its slug) and the plan's line, as Account shows it. The name goes
+    only when it isn't the email itself (a personal account's is), so Signed in never shows the email twice (`WatchRelay.account`).
 - **Live only:** each request goes with WatchConnectivity's message data and a reply, never
   queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
   either way.

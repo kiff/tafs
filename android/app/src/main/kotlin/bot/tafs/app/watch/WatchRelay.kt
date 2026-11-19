@@ -377,12 +377,19 @@ class WatchRelay(
       halted = read.halted,
     )
 
-    /** Who is signed in, the account's name, and the plan's line as Account shows it. */
-    fun account(state: AppState): WatchReply.AccountPage = WatchReply.AccountPage(
-      email = state.kiffAccount?.email,
-      account = state.kiffAccount?.displayName ?: state.kiffAccount?.slug,
-      plan = state.balance?.planLine,
-    )
+    /**
+     * Who is signed in, the account's name, and the plan's line as Account shows it. A personal account is named by its email, so
+     * its name goes only when it says something more (mac-air's walk-through, 19 Nov: the watch showed the email twice; iOS #1500).
+     */
+    fun account(state: AppState): WatchReply.AccountPage {
+      val email = state.kiffAccount?.email
+      val name = (state.kiffAccount?.displayName ?: state.kiffAccount?.slug)?.trim()?.takeIf { it.isNotEmpty() }
+      return WatchReply.AccountPage(
+        email = email,
+        account = name?.takeUnless { email != null && it.equals(email.trim(), ignoreCase = true) },
+        plan = state.balance?.planLine,
+      )
+    }
 
     /** Each taf in one line, in tafs cloud's words, and whether it, or the whole account, is halted. */
     fun tafs(state: AppState): WatchReply.Tafs = WatchReply.Tafs(

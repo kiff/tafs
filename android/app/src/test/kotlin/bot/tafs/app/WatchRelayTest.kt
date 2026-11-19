@@ -166,6 +166,16 @@ class WatchRelayTest {
     assertTrue(all.tafs.all { it.halted })
   }
 
+  /** A personal account is named by its email: the watch's Signed in shows it once, and a company's name under it. */
+  @Test fun theWatchsAccountNamesTheAccountOnlyWhenItIsntTheEmail() {
+    val base = testModel().state.value.copy(mode = Mode.kiff)
+    val personal = bot.tafs.app.kiff.Account(tenantId = "t_01", slug = "ana", displayName = "Ana@Example.com", email = "ana@example.com")
+    assertNull(WatchRelay.account(base.copy(kiffAccount = personal)).account)
+    assertEquals("ana@example.com", WatchRelay.account(base.copy(kiffAccount = personal)).email)
+    val company = personal.copy(displayName = "Acme Pay")
+    assertEquals("Acme Pay", WatchRelay.account(base.copy(kiffAccount = company)).account)
+  }
+
   @Test fun theFloorLetsOneReadThroughEveryTenSeconds() {
     val floor = RefreshFloor()
     assertTrue(floor.due(now))
