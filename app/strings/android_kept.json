@@ -146,5 +146,18 @@
     "signed in": "a card's answer in the form the cards read, data, never shown",
     "not now": "a card's answer in the form the cards read, data, never shown",
     "already approved": "a card's answer in the form the cards read, data, never shown"
+  },
+  "files/FilesStore.kt": {
+    "Support replies": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Tickets answered, 17 Nov.csv": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Item,Done,By\\n#7781,09:04,Support replies\\n#7783,09:06,Support replies\\n#7790,09:11,Support replies\\n": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Late parcels": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Parcels without a scan.csv": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Order,Last scan,Days\\n#5098,07 Nov,10\\n#5124,15 Nov,2\\n": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Late parcels, 17 Nov.md": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "# Late parcels, 17 Nov\\n\\n- Order #5120: told the customer the parcel is two days late.\\n- Order #5098: no scan for 10 days; a new parcel waits for your yes.\\n": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Lead follow-up": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Nord Atelier call notes.txt": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
+    "Call with Nord Atelier, Thursday 10:00.\\nThey want a quote for 40 chairs by Friday.\\n": "the Files stub's sample file, standing in for tafs cloud's data until its routes land"
   }
 }

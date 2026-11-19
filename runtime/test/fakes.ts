@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { AgentsError, type AIBound, type AttachmentRef, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type AttachmentRef, type DeliveredFile, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
@@ -113,6 +113,16 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   };
   /** Files people attached (kiff/tafs#209), by id, with their owner and whether a message sent them. */
   const files = new Map<string, { tenant: string; agent: string; owner: string; sent: boolean; ref: AttachmentRef }>();
+  /** Files tafs' runs delivered, oldest first: what a test's run handed its account (deliver). */
+  const delivered: Array<{ tenant: string; file: DeliveredFile; content: string }> = [];
+  /** A taf's run delivers a file, as kiff/agents keeps it after deliver_file. */
+  const deliver = (tenant: string, file: Omit<DeliveredFile, "id" | "created" | "expires" | "size"> & { id?: string }, content: string): DeliveredFile => {
+    const created = now();
+    const f: DeliveredFile = { id: file.id ?? `fil_${String(delivered.length + 1).padStart(32, "0")}`, ...file, size: content.length,
+      created: created.toISOString(), expires: new Date(created.getTime() + 30 * 86400_000).toISOString() };
+    delivered.push({ tenant, file: f, content });
+    return f;
+  };
   /** The files a message names, as kiff/agents takes them: the requester's own, unsent, for this agent. */
   const take = (tenant: string, agent: string, at: RunAt): AttachmentRef[] => {
     const ids = at.attachments ?? [];
@@ -375,6 +385,37 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const f = files.get(id);
       if (!f || f.tenant !== tenant || f.agent !== agent || f.owner !== owner) throw gone();
       return { ...f.ref, created: now().toISOString(), sent: f.sent, url: `https://s3.test/${id}?signed`, url_expires: now().toISOString() };
+    },
+    /** Files a taf's run delivered (kiff/agents' deliver_file): by tenant, newest first, as kiff/agents answers them. */
+    async listFiles(tenant, q) {
+      calls.push(`listFiles ${JSON.stringify(q)}`);
+      failing("listFiles");
+      let list = delivered.filter((f) => f.tenant === tenant && (!q.taf || f.file.taf === q.taf) && (!q.run || f.file.run === q.run) && (!q.chat || f.file.chat === q.chat))
+        .map((f) => f.file).reverse();
+      if (q.after) {
+        const i = list.findIndex((f) => f.id === q.after);
+        if (i < 0) throw new AgentsError(400, "after names no file in this list");
+        list = list.slice(i + 1);
+      }
+      return { files: list.slice(0, 100), ...(list.length > 100 ? { next: list[99]!.id } : {}) };
+    },
+    async readDeliveredFile(tenant, id, member) {
+      calls.push(`readDeliveredFile ${id} ${member}`);
+      const f = delivered.find((x) => x.tenant === tenant && x.file.id === id);
+      if (!f) throw gone();
+      return { ...f.file, preview: f.content.slice(0, 4096), preview_truncated: f.content.length > 4096 };
+    },
+    async downloadDeliveredFile(tenant, id, member) {
+      calls.push(`downloadDeliveredFile ${id} ${member}`);
+      const f = delivered.find((x) => x.tenant === tenant && x.file.id === id);
+      if (!f) throw gone();
+      return { ...f.file, url: `https://s3.test/delivered/${id}?signed`, url_expires: now().toISOString() };
+    },
+    async deleteDeliveredFile(tenant, id, member) {
+      calls.push(`deleteDeliveredFile ${id} ${member}`);
+      const i = delivered.findIndex((x) => x.tenant === tenant && x.file.id === id);
+      if (i < 0) throw gone();
+      delivered.splice(i, 1);
     },
     async startRun(tenant, agent, input, at = {}, ai, notify) {
       calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}${at.only ? ` only=${JSON.stringify(at.only)}` : ""}`);
@@ -714,7 +755,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, breakFirst, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, deliver, delivered, breakFirst, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

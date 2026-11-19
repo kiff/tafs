@@ -115,6 +115,13 @@ export function withZone(text: string, zone: string | undefined, now: Date): str
   return withLine(text, `${ZONE_LINE} The account's time zone is ${zone}: it's ${local} there now. Every time you write or say (a cron, an at, a time in a message) is in it, as the owner says it: never convert it to UTC.`);
 }
 
+/** A person's text without any line that starts as one of tafs' own (the language and time-zone lines), which only tafs cloud writes. */
+export function withoutTafsLines(text: string): string {
+  const own = [LANGUAGE_LINE, ZONE_LINE].map((l) => l.toLowerCase());
+  // Any case, any leading space, anywhere in the message: "[TAFS Language]" reads the same to a model.
+  return text.split("\n").filter((l) => !own.some((o) => l.trimStart().toLowerCase().startsWith(o))).join("\n");
+}
+
 /** A line of tafs' own before the owner's words, after any opening lines, so what reads a message's opening reads it as before. */
 function withLine(text: string, line: string): string {
   // A door's knock quotes the message after the owner's words: the line goes last, out of the quote.

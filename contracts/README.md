@@ -24,6 +24,7 @@ read it: in CI, in seconds, never first on a phone or in an Eval.
 | `connect-apps.json`, `connect-apps-search.json`, `connect-apps-next.json` | `runtime/test/cloud.test.ts` (Connect apps: the first page with the account's own apps and a provider's next page to ask for, a search, and that next page) | the desktop apps (their Connect apps); the phones once they read it |
 | `coach-wording.json` | by hand, as data: Coach's wording rules in the 8 languages, kept equal to `runtime/src/cloud/coach-wording.ts` by `runtime/test/coach-wording.test.ts` | Setup's definition (`setupdef.ts`, `wording`), which kiff/agents' `show` refuses a card by, and the Eval's plan gate, beside its own list |
 | `connect-apps-removed.json` | `runtime/test/cloud.test.ts` (Connect apps with the phone's signed grants read: a removed taf's connections, one kept for a live taf's Card and one Clear ends) | the same |
+| `files-list.json`, `files-file.json`, `files-download.json` | `runtime/test/files.test.ts` (Files: the account's delivered files with their taf's name, one with its plain-text preview, and its one-minute download) | the phones' and iPad's Files, once they read it |
 
 The iPhone and iPad read every file their own reads decode (`ios/TafsTests/ContractTests.swift`): Activity, Setup, runs and
 their reports, the tafs list, Home, `/v1/setup`, Coach's chats and conversation, and Connect apps, each as the type its
