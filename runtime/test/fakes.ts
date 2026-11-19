@@ -439,6 +439,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       const run = newRun(tenant, agent, session, "owner", input, undefined, attached);
       if (at.requester) run.requester = { ...at.requester };
       if (at.source) run.source = at.source;
+      if (at.outcomes?.length) (run as { outcomes?: string[] }).outcomes = [...at.outcomes];
       if (at.dedupKey) requests.set(`${tenant}#${agent}#${at.dedupKey}`, run);
       if (at.dedupKey) byKey.set(`${tenant}#${agent}#${at.dedupKey}`, { run, input, requester: at.requester ? `${at.requester.kind}:${at.requester.id}` : undefined });
       if (notify) notified.set(run.id, notify);

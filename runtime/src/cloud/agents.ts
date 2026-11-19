@@ -245,6 +245,8 @@ export interface Run {
    * How many writes the run sent, a write whose outcome isn't known included. Absent on a kiff/agents
    * that doesn't count them: then an empty `done` doesn't prove that nothing was done.
    */
+  /** The outcome the run answered its request with, as request_outcome accepted it (RunAt.outcomes); absent when none. */
+  outcome?: string;
   sent?: number;
   /**
    * The run's count of its calls, by tool, from their record (kiff/agents#421): those that act and those KIFF refused,
@@ -422,6 +424,11 @@ export interface RunAt {
    */
   dedupKey?: string;
   source?: string;
+  /**
+   * What the run may answer its request with (a door from another application's outcomes): kiff/agents gives the run
+   * request_outcome, which accepts only these, and keeps the one it answered as the run's `outcome`.
+   */
+  outcomes?: string[];
 }
 
 /** What a dedup key named in kiff/agents (runByKey). */
@@ -507,6 +514,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.grant ? { run_grant: at.grant } : {}),
     ...(at.attachments?.length ? { attachments: at.attachments } : {}),
     ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
+    ...(at.outcomes?.length ? { outcomes: at.outcomes } : {}),
     // A new session's skills (the Coach skills design, way 1); a session that exists keeps its own.
     ...(at.skills?.length && !at.session ? { skills: at.skills } : {}),
     ...(at.only && !at.session ? { only: at.only } : {}),
