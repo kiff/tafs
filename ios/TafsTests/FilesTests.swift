@@ -14,7 +14,7 @@ final class FilesTests: XCTestCase {
                              runAt: at, chat: "s_" + run, goesAt: now.addingTimeInterval(goesInDays * 86_400))
     }
 
-    private final class Store: FilesStore, @unchecked Sendable {
+    private final class Store: FilesStore {
         var listed: [DeliveredFile]
         var fails = false
         var deleted: [String] = []
@@ -94,6 +94,60 @@ final class FilesTests: XCTestCase {
         let kept = await model.delete("b")
         XCTAssertFalse(kept)
         XCTAssertEqual(model.files().map(\.id), ["b"], "it couldn't be deleted, so it stays")
+    }
+
+    /// tafs cloud's list (`contracts/files-list.json`, tafs#1412) as the app reads it: newest first, the taf's name kept as
+    /// delivered, the chat only where there's one, times to the millisecond; the type from the file's extension.
+    func testTafsCloudsListReadsAsTheScreensDrawIt() throws {
+        let json = #"""
+        {"files":[{"id":"fil_00000000000000000000000000000002","taf":"taf-0bde5000000000000000","run":"run-2","name":"notes.md","media_type":"text/markdown","size":8,"created":"2026-11-19T08:00:00.000Z","expires":"2026-12-19T08:00:00.000Z","taf_name":"Order rows"},
+                  {"id":"fil_00000000000000000000000000000001","taf":"taf-0bde5000000000000000","run":"run-1","chat":"chat-1","name":"week.csv","media_type":"text/csv","size":22,"created":"2026-11-19T08:00:00.000Z","expires":"2026-12-19T08:00:00.000Z","taf_name":"Order rows"}]}
+        """#
+        let page = try KIFFClient.decoder.decode(TafsCloud.FilesPage.self, from: Data(json.utf8))
+        XCTAssertNil(page.next)
+        let files = page.files.map(DeliveredFile.init)
+        XCTAssertEqual(files.map(\.id), ["fil_00000000000000000000000000000002", "fil_00000000000000000000000000000001"])
+        XCTAssertEqual(files.map(\.type), ["MD", "CSV"])
+        XCTAssertEqual(files.map(\.tafName), ["Order rows", "Order rows"])
+        XCTAssertEqual(files.map(\.chat), [nil, "chat-1"])
+        XCTAssertEqual(files[1].bytes, 22)
+        XCTAssertEqual(files[1].goesAt.timeIntervalSince(files[1].runAt), 30 * 86_400, accuracy: 1, "kept 30 days, as tafs cloud says")
+        // A name with no extension takes its media type's.
+        let bare = TafsCloud.DeliveredFileRead(id: "f", taf: "t", run: "r", name: "report", mediaType: "application/pdf", size: 1,
+                                               created: files[0].runAt, expires: files[0].goesAt, tafName: nil)
+        XCTAssertEqual(DeliveredFile(bare).type, "PDF")
+        XCTAssertEqual(DeliveredFile(bare).tafName, "", "no name from tafs cloud: none drawn")
+    }
+
+    /// One file and its download (`contracts/files-file.json`, `files-download.json`) read as tafs cloud writes them.
+    func testOneFileAndItsDownloadRead() throws {
+        let download = #"{"id":"fil_00000000000000000000000000000001","taf":"taf-0bde5000000000000000","run":"run-1","chat":"chat-1","name":"week.csv","media_type":"text/csv","size":22,"created":"2026-11-19T08:00:00.000Z","expires":"2026-12-19T08:00:00.000Z","url":"https://s3.test/delivered/fil_00000000000000000000000000000001?signed","url_expires":"2026-11-19T08:00:00.000Z","taf_name":"Order rows"}"#
+        let read = try KIFFClient.decoder.decode(TafsCloud.FileDownload.self, from: Data(download.utf8))
+        XCTAssertEqual(read.url.host, "s3.test")
+    }
+
+    /// The cloud store reads every page, fetches a file's bytes through its minute-long URL, and deletes through tafs cloud.
+    func testTheCloudStoreReadsEveryPageAndTheBytesThroughTheURL() async throws {
+        StubProtocol.responses = [:]
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        func record(_ id: String) -> String {
+            #"{"id":"\#(id)","taf":"t1","run":"r1","name":"\#(id).csv","media_type":"text/csv","size":3,"created":"2026-11-19T08:00:00.000Z","expires":"2026-12-19T08:00:00.000Z","taf_name":"Rae"}"#
+        }
+        StubProtocol.responses["GET /v1/files"] = (200, #"{"files":[\#(record("fil_a"))],"next":"fil_a"}"#)
+        StubProtocol.responses["GET /v1/files?after=fil_a"] = (200, #"{"files":[\#(record("fil_b"))]}"#)
+        StubProtocol.responses["GET /v1/files/fil_a/download"] = (200, #"{"url":"https://s3.test/fil_a?signed"}"#)
+        StubProtocol.responses["DELETE /v1/files/fil_a"] = (200, #"{"deleted":"fil_a"}"#)
+        final class Fetched: @unchecked Sendable { var urls: [URL] = [] }
+        let fetched = Fetched()
+        let store = CloudFilesStore(cloud: cloud, fetch: { url in fetched.urls.append(url); return Data("a,b".utf8) })
+        let files = try await store.files()
+        XCTAssertEqual(files.map(\.id), ["fil_a", "fil_b"], "both pages")
+        let bytes = try await store.contents(of: "fil_a")
+        XCTAssertEqual(bytes, Data("a,b".utf8))
+        XCTAssertEqual(fetched.urls.map(\.absoluteString), ["https://s3.test/fil_a?signed"])
+        try await store.delete("fil_a")
     }
 
     /// The stub moves no money and keeps every file 30 days from its run.

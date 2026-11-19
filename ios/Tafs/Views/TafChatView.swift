@@ -79,7 +79,7 @@ struct TafChatView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         // Files (docs/files.md): the taf's files from its chat, at the chat's top, behind its switch.
                         if FilesFeature.on, let cloud = model.cloudTaf(for: tafID) {
-                            NavigationLink { FilesView(taf: cloud.id) } label: {
+                            NavigationLink { FilesView(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud)) } label: {
                                 Label(Words.Files.title, systemImage: "doc.on.doc")
                                     .scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
                             }

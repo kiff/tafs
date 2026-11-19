@@ -45,11 +45,21 @@ Tests: `FilesTests`.
 
 Words: `files.*`, in the 8 languages.
 
+## tafs cloud's reads (`ios/Tafs/KIFF/TafsCloud+Files.swift`)
+
+`CloudFilesStore` reads them, from each place Files opens:
+
+- `GET /v1/files`, every page (`next`, then `?after=`), at most 10 at once: the account's files, newest first, each with
+  its taf's name as it was when the file was delivered (`contracts/files-list.json`);
+- `GET /v1/files/{id}/download`: a URL to the file's bytes that lasts a minute, read at once for its preview, Download
+  and the share sheet's file, and never handed out (`contracts/files-download.json`);
+- `DELETE /v1/files/{id}`: Delete now, for everyone on the account.
+
+A file's type is its name's extension, else its media type's; its run's time is when it was delivered; it goes when tafs
+cloud says it expires. Tests: `FilesTests`, from the contracts' answers.
+
 ## Still to come
 
-- tafs cloud's reads in place of the stub (the server plan): `GET /v1/files` with `?taf=`, `?run=` or `?chat=` (each file
-  carries its run and chat, so the chips under a chat read `?chat=<session>`), `GET /v1/files/{id}` with its preview,
-  `GET /v1/files/{id}/download` (a URL that lasts 60 seconds, for Download and the share sheet's file; never handed out
-  as a link) and `DELETE /v1/files/{id}`.
 - The counts on Account's and the taf's rows, from the same read.
+- The chips under a chat's run messages, from `?chat=<session>`.
 - "Also sent to" is not in v1 (the contract has no field for it); it can come later as an optional `sent_to`.

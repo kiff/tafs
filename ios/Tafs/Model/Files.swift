@@ -28,8 +28,10 @@ struct DeliveredFile: Identifiable, Hashable, Codable, Sendable {
     var goesAt: Date
 }
 
-/// Where the files come from: tafs cloud, once its reads land; `StubFilesStore` until then.
-protocol FilesStore: Sendable {
+/// Where the files come from: tafs cloud (`CloudFilesStore`), or `StubFilesStore` while Files is off. On the main
+/// actor, as the app's tafs cloud client is.
+@MainActor
+protocol FilesStore {
     /// Every file the account's tafs delivered and still keep.
     func files() async throws -> [DeliveredFile]
     /// A file's bytes, for its preview, Download and Share (the file itself, never a link: the owner's pick, 2a).

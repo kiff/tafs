@@ -213,7 +213,7 @@ struct TafDetailView: View {
             versionLine(taf)
             // Files (docs/files.md): what its runs delivered, behind its switch.
             if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
-                NavigationLink { FilesView(taf: cloud.id) } label: {
+                NavigationLink { FilesView(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud)) } label: {
                     Label(Words.Files.title, systemImage: "doc.on.doc")
                         .scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
                 }
