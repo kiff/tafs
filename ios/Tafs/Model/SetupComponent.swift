@@ -5,7 +5,7 @@ import Foundation
 /// nothing: an approval names planque's grant and KIFF's draft, which the app reads from
 /// those services and the phone signs there.
 struct SetupComponent: Decodable, Equatable {
-    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result, knob, drive }
+    enum Kind: String, Decodable { case steps, notice, confirm, questions, approval, signIn = "sign_in", result, knob, drive, door }
 
     struct Step: Decodable, Equatable, Hashable {
         /// pending, active, done, failed or skipped.
@@ -83,8 +83,10 @@ struct SetupComponent: Decodable, Equatable {
     let note: String?
     /// A dial card's version (Coach's `taf_dial`): its words are the knob's `draft`.
     var version: Int? = nil
-    /// The tafs cloud id of the taf a dial card is for.
+    /// The tafs cloud id of the taf a dial card or a door card is for.
     var tafID: String? = nil
+    /// A door card's draft (Coach's `taf_door_api`), read from tafs cloud by this id: the card carries no words of Coach's.
+    var draftID: String? = nil
     /// The run pauses on this card: `owner` (the owner's answer) or `service` (a service's). None: the run
     /// goes on past it (kiff/agents' cards from before this say nothing, and the card's type decides).
     var waits: String? = nil
@@ -160,7 +162,7 @@ struct SetupComponent: Decodable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection, signs, wider
-        case tafID = "taf_id"
+        case tafID = "taf_id", draftID = "draft_id"
     }
 
     /// Where a sign-in goes, as the app shows it: from the card's service, never from

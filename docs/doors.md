@@ -217,6 +217,14 @@ while tafs runs; Done forgets the key. API instructions show where to send reque
 host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
 one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
+**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, behind `APIDoorFeature`, off). Coach's `taf_door_api`
+shows a `door` card (`{taf_id, draft_id}`, no words of Coach's); the app reads the draft from tafs cloud
+(`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`) and draws it **from `body`, the bytes it signs and
+sends**, never from the copy beside it: the application's name, what it can do (`draft_scope`), what the taf does with its
+requests, the fields it sends, what it gets back, the risk of the taf's own words when they're on, and the boundary. Approve
+signs `POST /v1/tafs/{id}/doors` over `body` in its canonical form (Face ID or Touch ID, `faceid_body`), sends those same bytes,
+and shows the door's first key once, as New key does. A cancelled Face ID sends nothing.
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:
