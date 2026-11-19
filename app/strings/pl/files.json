@@ -1,0 +1,48 @@
+{
+  "files.account_row": {
+    "one": "{count} plik · przechowywany 30 dni",
+    "few": "{count} pliki · przechowywane 30 dni",
+    "many": "{count} plików · przechowywanych 30 dni",
+    "other": "{count} pliku · przechowywane 30 dni"
+  },
+  "files.all": "Wszystkie",
+  "files.all_tafs": "Wszystkie tafs",
+  "files.by_run": "Według uruchomienia",
+  "files.by_taf": "Według tafa",
+  "files.delete_body": "Znika z Plików od razu dla wszystkich na tym koncie. Tego nie da się cofnąć.",
+  "files.delete_now": "Usuń teraz",
+  "files.delete_question": "Usunąć „{name}” teraz?",
+  "files.deleted": "Usunięto dla wszystkich",
+  "files.download": "Pobierz",
+  "files.empty": "Jeszcze nic. Gdy taf utworzy w uruchomieniu raport, arkusz lub dokument, jest on tu przechowywany 30 dni, aby każdy na tym koncie mógł go otworzyć, zapisać lub udostępnić.",
+  "files.everyone": "Wszyscy na tym koncie",
+  "files.goes_away": "Zniknie",
+  "files.goes_in_days": {
+    "one": "zniknie za {count} dzień",
+    "few": "zniknie za {count} dni",
+    "many": "zniknie za {count} dni",
+    "other": "zniknie za {count} dnia"
+  },
+  "files.goes_on": "{date} (30 dni po jego uruchomieniu)",
+  "files.goes_today": "zniknie dziś",
+  "files.goes_tomorrow": "zniknie jutro",
+  "files.in_run": "W uruchomieniu",
+  "files.kept_line": "Każdy plik jest przechowywany 30 dni od swojego uruchomienia, a potem sam znika. Wszyscy na tym koncie widzą te pliki. Twoje własne załączniki z czatu zostają przy swoich wiadomościach.",
+  "files.kept_until": "Jego pliki są przechowywane do {date}",
+  "files.made_by": "Utworzył",
+  "files.none_yet": "Jeszcze brak · przechowywane 30 dni",
+  "files.pick_one": "Wybierz plik, aby zobaczyć go tutaj.",
+  "files.saved": "Zapisano na tym urządzeniu",
+  "files.see_in_chat": "Zobacz w czacie",
+  "files.share": "Udostępnij",
+  "files.size": "Rozmiar",
+  "files.taf_row": {
+    "one": "{count} plik z jego uruchomień",
+    "few": "{count} pliki z jego uruchomień",
+    "many": "{count} plików z jego uruchomień",
+    "other": "{count} pliku z jego uruchomień"
+  },
+  "files.title": "Pliki",
+  "files.type": "Typ",
+  "files.who_sees": "Kto go widzi"
+}

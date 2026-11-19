@@ -1203,6 +1203,46 @@
     <string name="export_ready_share_again">Pronto: %1$s. Condividi di nuovo</string>
     <string name="export_row">Esporta le mie chat</string>
     <string name="export_sign_in_first">Accedi con KIFF per esportare le tue chat.</string>
+    <plurals name="files_account_row">
+        <item quantity="one">%1$s file · conservato 30 giorni</item>
+        <item quantity="other">%1$s file · conservati 30 giorni</item>
+    </plurals>
+    <string name="files_all">Tutti</string>
+    <string name="files_all_tafs">Tutti i tafs</string>
+    <string name="files_by_run">Per esecuzione</string>
+    <string name="files_by_taf">Per taf</string>
+    <string name="files_delete_body">Sparisce subito da File per tutti in questo account. Non si può annullare.</string>
+    <string name="files_delete_now">Elimina ora</string>
+    <string name="files_delete_question">Eliminare «%1$s» ora?</string>
+    <string name="files_deleted">Eliminato per tutti</string>
+    <string name="files_download">Scarica</string>
+    <string name="files_empty">Ancora niente. Quando un taf crea un report, un foglio o un documento in un\'esecuzione, viene conservato qui per 30 giorni, perché tutti in questo account possano aprirlo, salvarlo o condividerlo.</string>
+    <string name="files_everyone">Tutti in questo account</string>
+    <string name="files_goes_away">Sparisce</string>
+    <plurals name="files_goes_in_days">
+        <item quantity="one">sparisce tra %1$s giorno</item>
+        <item quantity="other">sparisce tra %1$s giorni</item>
+    </plurals>
+    <string name="files_goes_on">%1$s (30 giorni dopo la sua esecuzione)</string>
+    <string name="files_goes_today">sparisce oggi</string>
+    <string name="files_goes_tomorrow">sparisce domani</string>
+    <string name="files_in_run">Nell\'esecuzione</string>
+    <string name="files_kept_line">Ogni file è conservato 30 giorni dalla sua esecuzione, poi sparisce da solo. Tutti in questo account vedono questi file. I tuoi allegati della chat restano con i loro messaggi.</string>
+    <string name="files_kept_until">I suoi file sono conservati fino al %1$s</string>
+    <string name="files_made_by">Creato da</string>
+    <string name="files_none_yet">Ancora nessuno · conservati 30 giorni</string>
+    <string name="files_pick_one">Scegli un file per vederlo qui.</string>
+    <string name="files_saved">Salvato su questo dispositivo</string>
+    <string name="files_see_in_chat">Vedilo nella chat</string>
+    <string name="files_share">Condividi</string>
+    <string name="files_size">Dimensione</string>
+    <plurals name="files_taf_row">
+        <item quantity="one">%1$s file dalle sue esecuzioni</item>
+        <item quantity="other">%1$s file dalle sue esecuzioni</item>
+    </plurals>
+    <string name="files_title">File</string>
+    <string name="files_type">Tipo</string>
+    <string name="files_who_sees">Chi lo vede</string>
     <string name="halt_again">Blocca di nuovo</string>
     <string name="halt_all_now">Blocca tutto ora</string>
     <string name="halt_explain_halted">Bloccato. Riprendendo, parte solo lavoro nuovo.</string>
