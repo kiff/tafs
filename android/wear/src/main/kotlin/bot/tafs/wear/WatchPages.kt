@@ -83,6 +83,9 @@ internal fun WatchPages(
   timing: String? = null,
   /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
   probe: String? = null,
+  /** Step (v): the taf whose page is open, and Choose which to halt, from the menu (TafScreens.kt). */
+  taf: WatchModel.OpenTaf? = null,
+  haltPick: WatchModel.HaltPick? = null,
 ) {
   when {
     voice != null -> return VoiceScreenV2(voice, act, probe = probe)
@@ -102,15 +105,15 @@ internal fun WatchPages(
     menu = false
     pages.indexOf(page).takeIf { it >= 0 }?.let { scope.launch { pager.animateScrollToPage(it) } }
   }
-  if (menu) {
-    return MenuScreen(shown, pages, confirmingHaltAll, act, open = ::goTo, confirm = {
-      menu = false
-      act.confirmHaltAll()
-    }, close = {
-      menu = false
-      act.cancelHaltAll()
+  // Choosing which to halt, over the menu it came from; a taf's page and its settings, over the pages.
+  haltPick?.let { return HaltPickScreen(it, act) }
+  taf?.let {
+    return TafScreen(it, outcome, act, openInbox = {
+      act.closeTaf()
+      goTo(Page.Inbox)
     })
   }
+  if (menu) return MenuScreen(shown, pages, act, open = ::goTo, close = { menu = false })
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
       ScalingLazyColumn(
@@ -131,7 +134,7 @@ internal fun WatchPages(
           else -> if (notRead(shown, act)) {
             when (page) {
               Page.Inbox -> inboxPage(shown as WatchModel.Shown.Read, ready, act)
-              Page.Tafs -> tafsPage(shown as WatchModel.Shown.Read)
+              Page.Tafs -> tafsPage(shown as WatchModel.Shown.Read, act)
               Page.Brief -> briefPage(shown as WatchModel.Shown.Read, act)
               else -> Unit
             }
@@ -219,13 +222,15 @@ private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: 
   if (shown.needsYou.calls.isEmpty() && ready.isEmpty()) line(Words.Watch.inboxEmpty)
 }
 
-/** Each taf with its state, and nothing else: halting is in the menu and, with step (v), in a taf's settings. */
-private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read) {
+/** Each taf with its state, and nothing else: a tap opens its page; halting is in the menu and in a taf's settings. */
+private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read, act: Actions) {
   val tafs = shown.tafs?.tafs.orEmpty()
   for (taf in tafs) item {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Text(taf.name, style = MaterialTheme.typography.titleSmall)
-      Text(taf.state, style = MaterialTheme.typography.bodySmall)
+    Card(onClick = { act.openTaf(taf.tafId) }, modifier = Modifier.fillMaxWidth()) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(taf.name, style = MaterialTheme.typography.titleSmall)
+        Text(taf.state, style = MaterialTheme.typography.bodySmall)
+      }
     }
   }
 }
@@ -247,39 +252,18 @@ private fun ScalingLazyListScope.accountPage(act: Actions) {
 }
 
 /**
- * The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest. Halt asks once
- * more, for all the tafs, until choosing which to halt comes with step (v).
+ * The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest, while a taf runs.
+ * Halt opens Choose which to halt (step v), which asks once more before anything is sent.
  */
 @Composable
-private fun MenuScreen(
-  shown: WatchModel.Shown,
-  pages: List<Page>,
-  confirmingHaltAll: Boolean,
-  act: Actions,
-  open: (Page) -> Unit,
-  /** Halt all, confirmed: the menu closes on the halting screen. */
-  confirm: () -> Unit,
-  close: () -> Unit,
-) {
+private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, open: (Page) -> Unit, close: () -> Unit) {
   val tafs = (shown as? WatchModel.Shown.Read)?.tafs
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.menu) } }
     for (page in pages) item { Button(onClick = { open(page) }, modifier = Modifier.fillMaxWidth()) { Text(page.title) } }
-    if (tafs != null && tafs.tafs.isNotEmpty() && !tafs.allHalted) {
+    if (tafs != null && !tafs.allHalted && tafs.tafs.any { !it.halted }) {
       item { Spacer(Modifier.height(16.dp)) }
-      item {
-        if (confirmingHaltAll) {
-          Card(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-              Text(Words.HaltAll.title, style = MaterialTheme.typography.titleSmall)
-              Button(onClick = confirm, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
-              Button(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) }
-            }
-          }
-        } else {
-          Button(onClick = act.askHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Taf.Halt.title) }
-        }
-      }
+      item { Button(onClick = act.pickToHalt, modifier = Modifier.fillMaxWidth()) { Text(Words.Taf.Halt.title) } }
     }
     item { Button(onClick = close, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) } }
   }

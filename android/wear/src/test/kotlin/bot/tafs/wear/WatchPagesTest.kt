@@ -47,16 +47,14 @@ class WatchPagesTest {
   private val read = WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), tafs)
   private val answered = AskLine(id = "ask_1", clientId = "c1", state = "done", tafName = "Support replies", words = "Answered", updated = "2026-11-19T08:00:00Z")
 
-  private val haltAllAsked = mutableListOf<Unit>()
-  private val haltAllConfirmed = mutableListOf<Unit>()
   private val opened = mutableListOf<AskLine>()
   private val did = mutableListOf<String>()
   private val actions = Actions(
-    openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = { haltAllAsked += Unit }, confirmHaltAll = { haltAllConfirmed += Unit },
+    openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = {}, confirmHaltAll = {},
     cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
     start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
     delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
-    keep = { did += "keep" }, deleteKept = { did += "delete kept" },
+    keep = { did += "keep" }, deleteKept = { did += "delete kept" }, pickToHalt = { did += "pick to halt" },
   )
 
   private fun show(
@@ -136,16 +134,9 @@ class WatchPagesTest {
     show(read)
     compose.onNodeWithText(Words.Watch.menu).performClick()
     for (page in pages(false)) compose.onNodeWithText(page.title).assertExists()
+    // Step (v): Halt opens Choose which to halt, which asks once more (TafScreensTest).
     compose.onNodeWithText(Words.Taf.Halt.title).performClick()
-    assertEquals(1, haltAllAsked.size)
-  }
-
-  @Test fun haltIsAskedOnceMoreThenHaltsEveryTaf() {
-    show(read, confirmingHaltAll = true)
-    compose.onNodeWithText(Words.Watch.menu).performClick()
-    compose.onNodeWithText(Words.HaltAll.title).assertExists()
-    compose.onNodeWithText(Words.Halt.allNow).performClick()
-    assertEquals(1, haltAllConfirmed.size)
+    assertEquals(listOf("pick to halt"), did)
   }
 
   @Test fun theMenuGoesToAPage() {

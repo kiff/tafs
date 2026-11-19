@@ -1,0 +1,1 @@
+- **Wear OS v2: a taf's page, its settings and choosing which to halt.** Tafs opens each taf's page, with what it does, its Card, what waits for you and Halt this taf one swipe left; the menu's Halt chooses all your tafs or a few, asked once more, behind the v2 switch ([watch-wear.md](docs/watch-wear.md)).

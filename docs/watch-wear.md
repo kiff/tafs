@@ -166,10 +166,11 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   the whole face, as in v1.
 - **Coach's home:** the microphone, named "Ask Coach", with the asks at work under it; how many wait in the Inbox ("2 unread in
   Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
-- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest. Until step (v) Halt is Halt all, asked
-  once more, as v1's; it's offered only while a taf runs.
+- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest, offered only while a taf runs. It
+  opens Choose which to halt (step v, below).
 - **Until their steps:** the Inbox is what the phone answered now (Needs you's held calls, Refuse where allowed and Approve on
-  your phone, then each result ready to open; with nothing, what lands there); Tafs is each taf with its state, no Halt;
+  your phone, then each result ready to open; with nothing, what lands there); Tafs is each taf with its state, no Halt (a tap
+  opens its page, step v);
   Account is the trust line and Open on phone. Before the phone answers, or when it can't, each page says so in v1's words.
 - **Words:** `watch.page.*`, `watch.inbox_unread`, `watch.inbox_empty`, `watch.menu` and `watch.trust` are new, in all 8
   languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
@@ -212,6 +213,39 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 - **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
   all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
+
+**Step (v): Tafs, a taf's page, its settings, and choosing which to halt** (`TafScreens.kt`, `WatchModel.openTaf` and
+`haltPick`, `TafScreensTest`, `TafModelTest`). Halt is never on the main screens:
+- **Tafs:** each taf with its state, in the phone's words; a tap opens **its page**, read from the phone (`taf`, by its id),
+  in memory only, as the rest. Before the phone answers it shows the taf's name from Your tafs and "Asking your phone…"; signed
+  out, no phone (with Try again), the phone's own words with Open on phone, or "Update tafs on your phone" for a phone that
+  doesn't know the read: v1's words. A late answer for a page since closed, or another taf's page, is never drawn.
+- **A taf's page:** its name and state (Halted in red), **What it does** and its job, **Its Card** with each Card's title, its
+  face's figure and line, and each rule on a line, as the phone's Card tab draws them; **Waiting for you** with how many of its
+  calls wait ("2 need you"), which goes to the Inbox, where they are with Refuse and Approve on your phone, or "Nothing waits for
+  you." Halted, it says "Halted. Resuming starts only new work." and **Resume on your phone**: resuming asks for a fingerprint or
+  face, so it's the phone's. Then **Its settings ›**, "Swipe left for its settings", and Close.
+- **Its settings,** one swipe left (a second page beside the taf's), or Its settings: "{taf} · settings", **Open on phone**, and,
+  apart at the end, **Halt this taf**, in red. It's asked once more ("Halting stops it until you resume. A call already sent may
+  still arrive.", Halt now, Cancel); Halt now sends v1's Halt for that taf, only from an unlocked watch with a screen lock, shows
+  "Halting {taf}…" until the phone has tafs cloud's word, then the page read again, with the phone's word for the result. A
+  halted taf's settings offer Resume on your phone instead.
+- **Choose which to halt,** from the menu's Halt: **All your tafs**, then each taf not halted, each a switch (a taf halted
+  already isn't offered), and **Halt now · N**, off with none picked. It's asked once more: every taf offered picked is "Halt all
+  your tafs?" and sends one Halt all (`all: true`); one or a few are named ("Late parcels, Invoices"), with the line for one or
+  for several, and send one Halt per taf picked, one after the other, each to the end, so one that fails never keeps the next
+  from halting. "Halting …" shows until the last answers, then what came of each, by name, in the phone's words, with Open on
+  phone if any didn't go through (`Outcome.Several`). Cancel goes back to the choice, then to the menu; nothing is sent before
+  Halt now, and nothing from a locked watch or one with no screen lock.
+- **Left out until their server piece** (step vii): the mockup's **Tell {taf}** (an ask addressed to one taf: today tafs cloud
+  picks the taf) and **Alerts from this taf** (alerts per taf on the watch). Open on phone and Resume on your phone open Needs you
+  on the phone, the one place a watch's link opens there today (`Alerts.openedFromWatch`); opening the taf itself is the phone's
+  to add.
+- **Words:** `watch.what_it_does`, `watch.nothing_waits`, `watch.its_settings`, `watch.swipe_settings`, `watch.settings_of`,
+  `watch.halt_this`, `watch.resume_on_phone`, `watch.halt_pick_title`, `watch.all_your_tafs`, `watch.halt_now_count` (a count)
+  and `watch.halt_all_q`, in all 8 languages (legal-i18n's list); the rest are the phone's (`card.its_card`,
+  `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`, `halt.explain.running_all`, `halt.now`,
+  `taf.halt.title`). Nothing new is asked of the phone.
 
 ## Versions
 

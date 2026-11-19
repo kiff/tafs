@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "Tutte le chat",
+  "watch.all_your_tafs": "Tutti i tuoi tafs",
   "watch.already_answered": "Ha già una risposta, o è terminata.",
   "watch.approve_on_phone": "Approva sul telefono",
   "watch.as_of": "Aggiornato alle {time}",
@@ -13,6 +14,13 @@
   "watch.deleted_nothing_sent": "Eliminato. Non è stato inviato nulla.",
   "watch.didnt_catch": "Non ho capito. Tocca per riprovare.",
   "watch.glance_description": "Quanti ti aspettano, mai cosa né chi.",
+  "watch.halt_all_q": "Bloccare tutti i tuoi tafs?",
+  "watch.halt_now_count": {
+    "one": "Blocca ora · {count}",
+    "other": "Blocca ora · {count}"
+  },
+  "watch.halt_pick_title": "Scegli quali bloccare",
+  "watch.halt_this": "Blocca questo taf",
   "watch.halting": "Blocco di {taf}…",
   "watch.halting_all": "Blocco di tutti i tuoi tafs…",
   "watch.hear": "Ascolta",
@@ -25,6 +33,7 @@
     "one": "{count} da leggere in In arrivo",
     "other": "{count} da leggere in In arrivo"
   },
+  "watch.its_settings": "Le sue impostazioni",
   "watch.keep_for_later": "Tieni per dopo",
   "watch.kept_to_send": "Tenuto su questo orologio. Viene inviato quando il telefono torna raggiungibile.",
   "watch.limit": "Al massimo 30 s",
@@ -38,6 +47,7 @@
     "other": "{count} ti aspettano"
   },
   "watch.not_sure": "Arrivo non confermato",
+  "watch.nothing_waits": "Niente ti aspetta.",
   "watch.open_on_phone": "Apri sul telefono",
   "watch.page.brief": "Riepilogo",
   "watch.page.inbox": "In arrivo",
@@ -60,11 +70,14 @@
   "watch.rerecord": "Registra di nuovo",
   "watch.result_ready": "C'è un risultato",
   "watch.results_channel": "Risultati",
+  "watch.resume_on_phone": "Riprendi sul telefono",
   "watch.retry": "Riprova",
   "watch.review": "Controlla prima di inviare",
   "watch.sending": "Invio…",
   "watch.sent": "Inviato",
+  "watch.settings_of": "{taf} · impostazioni",
   "watch.sign_in_on_phone": "Prima accedi a tafs sul telefono.",
+  "watch.swipe_settings": "Scorri a sinistra per le sue impostazioni",
   "watch.tap_start": "Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.",
   "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",
   "watch.trust": "Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.",
@@ -72,6 +85,7 @@
   "watch.type_hint": "Scrivi a Coach…",
   "watch.update_phone": "Aggiorna tafs sul telefono, poi riprova.",
   "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce.",
+  "watch.what_it_does": "Cosa fa",
   "watch.working_count": {
     "one": "{count} in corso",
     "other": "{count} in corso"

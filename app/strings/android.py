@@ -37,7 +37,8 @@ WEAR_WORDS_KT = "android/wear/src/main/kotlin/bot/tafs/wear/Words.kt"
 WEAR_AREAS = ("watch",)
 WEAR_KEYS = ("alert.needs_you", "alert.not_refused", "coach.ask", "coach.title", "coach.start", "chat.delete", "chat.stop", "taf.pause", "home.title", "settings.title", "taf.halt.title", "common.cancel", "common.close", "common.done", "common.loading", "common.send", "common.try_again", "halt.all_now", "halt_all.title",
              "home.your_tafs", "taf.state.halted",
-             "halt.now", "needs_you.nothing", "needs_you.refuse", "needs_you.title")
+             "halt.now", "needs_you.nothing", "needs_you.refuse", "needs_you.title",
+             "card.its_card", "chat.waiting_for_you", "halt.explain.halted", "halt.explain.running_all", "halt.explain.running_one")
 
 
 def wear_subset(lines):

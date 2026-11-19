@@ -4,8 +4,10 @@
     <string name="words_language" translatable="false">pl</string>
     <string name="alert_needs_you">Taf czeka na Ciebie</string>
     <string name="alert_not_refused">Nie odrzucono</string>
+    <string name="card_its_card">Jego Card</string>
     <string name="chat_delete">Usuń</string>
     <string name="chat_stop">Zatrzymaj</string>
+    <string name="chat_waiting_for_you">Czeka na Ciebie</string>
     <string name="coach_ask">Zapytaj Coacha</string>
     <string name="coach_start">Start</string>
     <string name="coach_title">Coach</string>
@@ -16,6 +18,9 @@
     <string name="common_send">Wyślij</string>
     <string name="common_try_again">Spróbuj ponownie</string>
     <string name="halt_all_now">Zablokuj wszystko teraz</string>
+    <string name="halt_explain_halted">Zablokowane. Wznowienie uruchamia tylko nową pracę.</string>
+    <string name="halt_explain_running_all">Blokada zatrzymuje Twoje tafs, dopóki ich nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
+    <string name="halt_explain_running_one">Blokada go zatrzymuje, dopóki go nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
     <string name="halt_now">Zablokuj teraz</string>
     <string name="halt_all_title">Zablokuj wszystkie tafs</string>
     <string name="home_title">Tafs</string>
@@ -28,6 +33,7 @@
     <string name="taf_pause">Wstrzymaj</string>
     <string name="taf_state_halted">Zablokowane</string>
     <string name="watch_all_chats">Wszystkie czaty</string>
+    <string name="watch_all_your_tafs">Wszystkie Twoje tafs</string>
     <string name="watch_already_answered">Już odpowiedziano albo zakończono.</string>
     <string name="watch_approve_on_phone">Zatwierdź na telefonie</string>
     <string name="watch_as_of">Stan na %1$s</string>
@@ -41,6 +47,15 @@
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
     <string name="watch_didnt_catch">Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.</string>
     <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
+    <string name="watch_halt_all_q">Zablokować wszystkie Twoje tafs?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Zablokuj teraz · %1$s</item>
+        <item quantity="few">Zablokuj teraz · %1$s</item>
+        <item quantity="many">Zablokuj teraz · %1$s</item>
+        <item quantity="other">Zablokuj teraz · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Wybierz, które zablokować</string>
+    <string name="watch_halt_this">Zablokuj tego tafa</string>
     <string name="watch_halting">Blokowanie: %1$s…</string>
     <string name="watch_halting_all">Blokowanie wszystkich Twoich tafs…</string>
     <string name="watch_hear">Odsłuchaj</string>
@@ -57,6 +72,7 @@
         <item quantity="many">Nieprzeczytane w Skrzynce: %1$s</item>
         <item quantity="other">Nieprzeczytane w Skrzynce: %1$s</item>
     </plurals>
+    <string name="watch_its_settings">Jego ustawienia</string>
     <string name="watch_keep_for_later">Zachowaj na później</string>
     <string name="watch_kept_to_send">Zapisano na tym zegarku. Zostanie wysłane, gdy telefon znów będzie w zasięgu.</string>
     <string name="watch_limit">Maksymalnie 30 s</string>
@@ -72,6 +88,7 @@
         <item quantity="other">%1$s czeka na Ciebie</item>
     </plurals>
     <string name="watch_not_sure">Nie wiadomo, czy dotarło</string>
+    <string name="watch_nothing_waits">Nic na Ciebie nie czeka.</string>
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
@@ -96,11 +113,14 @@
     <string name="watch_rerecord">Nagraj ponownie</string>
     <string name="watch_result_ready">Wynik jest gotowy</string>
     <string name="watch_results_channel">Wyniki</string>
+    <string name="watch_resume_on_phone">Wznów na telefonie</string>
     <string name="watch_retry">Ponów</string>
     <string name="watch_review">Sprawdź przed wysłaniem</string>
     <string name="watch_sending">Wysyłanie…</string>
     <string name="watch_sent">Wysłano</string>
+    <string name="watch_settings_of">%1$s · ustawienia</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_swipe_settings">Przesuń w lewo, by zobaczyć ustawienia</string>
     <string name="watch_tap_start">Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.</string>
     <string name="watch_timing">Słuchanie %1$s ms · potwierdzenie %2$s ms · wynik %3$s ms</string>
     <string name="watch_trust">Ten zegarek nie przechowuje haseł ani kluczy i niczego nie zatwierdza: to, co wymaga Twojej zgody, czeka na telefon. Twoje tafs robią tylko to, na co pozwalają ich Cards.</string>
@@ -108,6 +128,7 @@
     <string name="watch_type_hint">Napisz do Coacha…</string>
     <string name="watch_update_phone">Zaktualizuj tafs na telefonie i spróbuj ponownie.</string>
     <string name="watch_voice_text_only">Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
+    <string name="watch_what_it_does">Co robi</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s pracuje</item>
         <item quantity="few">%1$s pracują</item>

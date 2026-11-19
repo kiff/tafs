@@ -113,6 +113,12 @@ class WatchModel(
     data object NeedsLock : Outcome
 
     data object PhoneUnreachable : Outcome
+
+    /** v2: several tafs halted one after the other, each taf's name with what came of its Halt. */
+    data class Several(val each: List<Pair<String, Outcome>>) : Outcome {
+      /** Every one went through. */
+      val done: Boolean get() = each.all { it.second is Done }
+    }
   }
 
   private val _outcome = MutableStateFlow<Outcome?>(null)
@@ -157,25 +163,169 @@ class WatchModel(
       val name = request.tafId?.let { id -> ((_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == id })?.name }
       _outcome.value = Outcome.Halting(if (request.tafId == null) null else name ?: "")
     }
-    _outcome.value = when (val asked = phone.ask(request)) {
-      // Shown only once the phone has KIFF's or tafs cloud's answer: that's when its reply comes.
-      is Asked.Answered -> when (val reply = asked.reply) {
-        is WatchReply.Done -> Outcome.Done(reply.words)
-        WatchReply.AlreadyAnswered -> Outcome.AlreadyAnswered
-        is WatchReply.Failed -> Outcome.NotDone(reply.words)
-        else -> Outcome.NotDone(null)
-      }
-      Asked.Unreachable -> Outcome.PhoneUnreachable
-      Asked.NotUnderstood -> Outcome.NotDone(null)
-    }
-    // The lists as they stand now.
+    _outcome.value = outcomeOf(phone.ask(request))
+    // The lists as they stand now, and the taf's page open.
     refresh()
+    rereadTaf()
+  }
+
+  /** What came of a Refuse or a Halt: shown only once the phone has KIFF's or tafs cloud's answer, which is when its reply comes. */
+  private fun outcomeOf(asked: Asked): Outcome = when (asked) {
+    is Asked.Answered -> when (val reply = asked.reply) {
+      is WatchReply.Done -> Outcome.Done(reply.words)
+      WatchReply.AlreadyAnswered -> Outcome.AlreadyAnswered
+      is WatchReply.Failed -> Outcome.NotDone(reply.words)
+      else -> Outcome.NotDone(null)
+    }
+    Asked.Unreachable -> Outcome.PhoneUnreachable
+    Asked.NotUnderstood -> Outcome.NotDone(null)
   }
 
   fun dismissOutcome() {
     _outcome.value = null
   }
 
+
+  // MARK: A taf's page, and choosing which to halt (v2, step v; docs/watch-wear.md)
+
+  /** A taf's page as the phone answered it (`taf`), or why there's none, as v1 says it. */
+  sealed interface TafRead {
+    data object Asking : TafRead
+
+    data class Read(val page: WatchReply.TafPage) : TafRead
+
+    data object SignedOut : TafRead
+
+    data object PhoneUnreachable : TafRead
+
+    /** A phone with an older tafs, which doesn't know the page: update it. */
+    data object UpdatePhone : TafRead
+
+    /** The phone couldn't give it, in its words; null: Open on phone. */
+    data class Failed(val words: String?) : TafRead
+  }
+
+  /**
+   * The taf whose page is open: its id, and its line in Your tafs when it was opened, for its name and whether it's halted until
+   * the phone's page comes and says them itself.
+   */
+  data class OpenTaf(val tafId: String, val listed: TafLine?, val read: TafRead) {
+    val name: String get() = (read as? TafRead.Read)?.page?.name ?: listed?.name.orEmpty()
+    val halted: Boolean get() = (read as? TafRead.Read)?.page?.halted ?: listed?.halted ?: false
+  }
+
+  private val _taf = MutableStateFlow<OpenTaf?>(null)
+
+  /** The taf's page open now, from the Tafs page; in memory only, as the rest. */
+  val taf: StateFlow<OpenTaf?> = _taf.asStateFlow()
+
+  /** A taf tapped on the Tafs page: its page, read from the phone. */
+  suspend fun openTaf(tafId: String) {
+    val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
+    _taf.value = OpenTaf(tafId, listed, TafRead.Asking)
+    readTaf(tafId)
+  }
+
+  fun closeTaf() {
+    _taf.value = null
+  }
+
+  private suspend fun rereadTaf() {
+    _taf.value?.let { readTaf(it.tafId) }
+  }
+
+  private suspend fun readTaf(tafId: String) {
+    val read = when (val asked = phone.ask(WatchRequest.Taf(now(), tafId))) {
+      is Asked.Answered -> when (val reply = asked.reply) {
+        // Another taf's page is never drawn as this one's.
+        is WatchReply.TafPage -> if (reply.tafId == tafId) TafRead.Read(reply) else TafRead.Failed(null)
+        WatchReply.SignedOut -> TafRead.SignedOut
+        is WatchReply.Failed -> TafRead.Failed(reply.words)
+        is WatchReply.Refused -> if (reply.reason == NotAccepted.UNKNOWN_PATH) TafRead.UpdatePhone else TafRead.Failed(null)
+        else -> TafRead.Failed(null)
+      }
+      Asked.Unreachable -> TafRead.PhoneUnreachable
+      Asked.NotUnderstood -> TafRead.Failed(null)
+    }
+    // Only while this taf is still the one open: closed, or another opened meanwhile, its answer is dropped.
+    val open = _taf.value?.takeIf { it.tafId == tafId } ?: return
+    _taf.value = open.copy(read = read)
+  }
+
+  /**
+   * Choose which to halt, from the menu's Halt: the tafs offered (every one not halted already), the ones picked, and whether it's
+   * being asked once more.
+   */
+  data class HaltPick(val offered: List<TafLine>, val picked: Set<String> = emptySet(), val confirming: Boolean = false) {
+    /** Every taf offered is picked: it's Halt all, one request for every taf. */
+    val all: Boolean get() = offered.isNotEmpty() && offered.all { it.tafId in picked }
+
+    /** The tafs picked, in Your tafs' order. */
+    val chosen: List<TafLine> get() = offered.filter { it.tafId in picked }
+  }
+
+  private val _haltPick = MutableStateFlow<HaltPick?>(null)
+
+  /** Choose which to halt, while it's open. Nothing is sent before it's confirmed. */
+  val haltPick: StateFlow<HaltPick?> = _haltPick.asStateFlow()
+
+  /** The menu's Halt: every taf not halted, none picked yet. With none running, or every taf halted, nothing opens. */
+  fun pickToHalt() {
+    val read = (_shown.value as? Shown.Read)?.tafs ?: return
+    val offered = read.tafs.filter { !it.halted }
+    if (read.allHalted || offered.isEmpty()) return
+    _haltPick.value = HaltPick(offered)
+  }
+
+  /** One taf's switch: on, or off again. */
+  fun togglePick(tafId: String) {
+    val pick = _haltPick.value?.takeIf { !it.confirming } ?: return
+    if (pick.offered.none { it.tafId == tafId }) return
+    _haltPick.value = pick.copy(picked = if (tafId in pick.picked) pick.picked - tafId else pick.picked + tafId)
+  }
+
+  /** All your tafs: every taf offered on, or, with every one on already, all off. */
+  fun togglePickAll() {
+    val pick = _haltPick.value?.takeIf { !it.confirming } ?: return
+    _haltPick.value = pick.copy(picked = if (pick.all) emptySet() else pick.offered.map { it.tafId }.toSet())
+  }
+
+  /** Halt now · N: asked once more, on the watch. With none picked, nothing. */
+  fun askPicked() {
+    val pick = _haltPick.value ?: return
+    if (pick.chosen.isNotEmpty()) _haltPick.value = pick.copy(confirming = true)
+  }
+
+  /** Cancel: from the question back to the choice, and from the choice back to the menu. Nothing is sent. */
+  fun cancelPick() {
+    val pick = _haltPick.value ?: return
+    _haltPick.value = if (pick.confirming) pick.copy(confirming = false) else null
+  }
+
+  /**
+   * Halt now, confirmed: every taf, with one Halt all, when every taf offered is picked; else a Halt for each taf picked, one after
+   * the other, through the phone, with Halting shown until the last answers. Nothing is sent unless it was asked once more, nor
+   * from a watch without its lock, or locked.
+   */
+  suspend fun haltPicked() {
+    val pick = _haltPick.value?.takeIf { it.confirming } ?: return
+    val chosen = pick.chosen
+    _haltPick.value = null
+    when {
+      chosen.isEmpty() -> return
+      pick.all -> return act(WatchRequest.Halt(now(), null))
+      chosen.size == 1 -> return act(WatchRequest.Halt(now(), chosen.single().tafId))
+    }
+    if (!unlocked()) {
+      _outcome.value = Outcome.NeedsLock
+      return
+    }
+    _outcome.value = Outcome.Halting(chosen.joinToString(", ") { it.name })
+    // Each to the end, one after the other: one that doesn't go through never keeps the next from halting.
+    _outcome.value = Outcome.Several(chosen.map { taf -> taf.name to outcomeOf(phone.ask(WatchRequest.Halt(now(), taf.tafId))) })
+    refresh()
+    rereadTaf()
+  }
 
   // MARK: Ask tafs (docs/watch-wear.md)
 
@@ -521,6 +671,8 @@ class WatchModel(
     voiceNow = null
     _asks.value = emptyMap()
     _result.value = null
+    _taf.value = null
+    _haltPick.value = null
   }
 
   private fun show(shown: Shown) {

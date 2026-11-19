@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "Todos os chats",
+  "watch.all_your_tafs": "Todos os seus tafs",
   "watch.already_answered": "Já respondido, ou terminado.",
   "watch.approve_on_phone": "Aprove no telemóvel",
   "watch.as_of": "Atualizado às {time}",
@@ -13,6 +14,13 @@
   "watch.deleted_nothing_sent": "Eliminado. Nada foi enviado.",
   "watch.didnt_catch": "Não percebi. Toque para tentar novamente.",
   "watch.glance_description": "Quantos precisam de si, nunca o quê nem quem.",
+  "watch.halt_all_q": "Bloquear todos os seus tafs?",
+  "watch.halt_now_count": {
+    "one": "Bloquear agora · {count}",
+    "other": "Bloquear agora · {count}"
+  },
+  "watch.halt_pick_title": "Escolha quais bloquear",
+  "watch.halt_this": "Bloquear este taf",
   "watch.halting": "A bloquear {taf}…",
   "watch.halting_all": "A bloquear todos os seus tafs…",
   "watch.hear": "Ouvir",
@@ -25,6 +33,7 @@
     "one": "{count} por ler na Caixa de entrada",
     "other": "{count} por ler na Caixa de entrada"
   },
+  "watch.its_settings": "As suas definições",
   "watch.keep_for_later": "Guardar para mais tarde",
   "watch.kept_to_send": "Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.",
   "watch.limit": "No máximo 30 s",
@@ -38,6 +47,7 @@
     "other": "{count} precisam de si"
   },
   "watch.not_sure": "Não se sabe se chegou",
+  "watch.nothing_waits": "Nada espera por si.",
   "watch.open_on_phone": "Abrir no telemóvel",
   "watch.page.brief": "Resumo",
   "watch.page.inbox": "Caixa de entrada",
@@ -60,11 +70,14 @@
   "watch.rerecord": "Gravar de novo",
   "watch.result_ready": "Há um resultado pronto",
   "watch.results_channel": "Resultados",
+  "watch.resume_on_phone": "Retomar no telemóvel",
   "watch.retry": "Repetir",
   "watch.review": "Verifique antes de enviar",
   "watch.sending": "A enviar…",
   "watch.sent": "Enviado",
+  "watch.settings_of": "{taf} · definições",
   "watch.sign_in_on_phone": "Primeiro, inicie sessão no tafs no telemóvel.",
+  "watch.swipe_settings": "Deslize para a esquerda para as definições",
   "watch.tap_start": "Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.",
   "watch.timing": "Escuta {listen} ms · receção {receipt} ms · resultado {result} ms",
   "watch.trust": "Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.",
@@ -72,6 +85,7 @@
   "watch.type_hint": "Escrever ao Coach…",
   "watch.update_phone": "Atualize o tafs no telemóvel e tente novamente.",
   "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz.",
+  "watch.what_it_does": "O que faz",
   "watch.working_count": {
     "one": "{count} a trabalhar",
     "other": "{count} a trabalhar"

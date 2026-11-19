@@ -121,6 +121,8 @@ class WatchActivity : ComponentActivity() {
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
         val kept by model.kept.collectAsState()
+        val taf by model.taf.collectAsState()
+        val haltPick by model.haltPick.collectAsState()
         // "Sent": the wrist can drop; the microphone comes back by itself.
         androidx.compose.runtime.LaunchedEffect(voice) {
           if (voice is WatchModel.Voice.Sent) {
@@ -163,6 +165,14 @@ class WatchActivity : ComponentActivity() {
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
+          openTaf = { taf -> lifecycleScope.launch { model.openTaf(taf) } },
+          closeTaf = model::closeTaf,
+          pickToHalt = model::pickToHalt,
+          togglePick = model::togglePick,
+          togglePickAll = model::togglePickAll,
+          askPicked = model::askPicked,
+          cancelPick = model::cancelPick,
+          haltPicked = { lifecycleScope.launch { model.haltPicked() } },
         )
         // Play stops the moment the review is left: its recording is erased then (WatchModel).
         androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
@@ -175,7 +185,7 @@ class WatchActivity : ComponentActivity() {
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
-            probe = if (BuildConfig.TIMING) probe else null)
+            probe = if (BuildConfig.TIMING) probe else null, taf = taf, haltPick = haltPick)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
@@ -296,6 +306,19 @@ internal class Actions(
   val deleteKept: () -> Unit = {},
   /** v2's Play and Pause for the review's recording, on the watch. */
   val playback: Playback? = null,
+  // v2's step (v) (TafScreens.kt): a taf's page, and choosing which to halt.
+  /** A taf tapped on the Tafs page: its page, read from the phone. */
+  val openTaf: (String) -> Unit = {},
+  val closeTaf: () -> Unit = {},
+  /** The menu's Halt: Choose which to halt. */
+  val pickToHalt: () -> Unit = {},
+  val togglePick: (String) -> Unit = {},
+  val togglePickAll: () -> Unit = {},
+  /** Halt now · N: asked once more. */
+  val askPicked: () -> Unit = {},
+  val cancelPick: () -> Unit = {},
+  /** Halt now, confirmed. */
+  val haltPicked: () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */
@@ -465,8 +488,10 @@ internal fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
         WatchModel.Outcome.NeedsLock -> Text(Words.Watch.needsLock)
         WatchModel.Outcome.PhoneUnreachable -> Text(Words.Watch.phoneNotReachable)
         is WatchModel.Outcome.NotDone -> outcome.words?.let { Text(it) }
+        // v2: each taf picked, with what came of its Halt (TafScreens.kt).
+        is WatchModel.Outcome.Several -> for ((taf, each) in outcome.each) Text(listOfNotNull(taf, wordsOf(each)).joinToString(" · "))
       }
-      if (outcome !is WatchModel.Outcome.Done && outcome !is WatchModel.Outcome.AlreadyAnswered) {
+      if (outcome !is WatchModel.Outcome.Done && outcome !is WatchModel.Outcome.AlreadyAnswered && (outcome as? WatchModel.Outcome.Several)?.done != true) {
         Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
       }
     }

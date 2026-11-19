@@ -4,8 +4,10 @@
     <string name="words_language" translatable="false">en</string>
     <string name="alert_needs_you">A taf needs you</string>
     <string name="alert_not_refused">Not refused</string>
+    <string name="card_its_card">Its Card</string>
     <string name="chat_delete">Delete</string>
     <string name="chat_stop">Stop</string>
+    <string name="chat_waiting_for_you">Waiting for you</string>
     <string name="coach_ask">Ask Coach</string>
     <string name="coach_start">Start</string>
     <string name="coach_title">Coach</string>
@@ -16,6 +18,9 @@
     <string name="common_send">Send</string>
     <string name="common_try_again">Try again</string>
     <string name="halt_all_now">Halt all now</string>
+    <string name="halt_explain_halted">Halted. Resuming starts only new work.</string>
+    <string name="halt_explain_running_all">Halting stops your tafs until you resume. A call already sent may still arrive.</string>
+    <string name="halt_explain_running_one">Halting stops it until you resume. A call already sent may still arrive.</string>
     <string name="halt_now">Halt now</string>
     <string name="halt_all_title">Halt all tafs</string>
     <string name="home_title">Tafs</string>
@@ -28,6 +33,7 @@
     <string name="taf_pause">Pause</string>
     <string name="taf_state_halted">Halted</string>
     <string name="watch_all_chats">All chats</string>
+    <string name="watch_all_your_tafs">All your tafs</string>
     <string name="watch_already_answered">Already answered, or it ended.</string>
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_as_of">As of %1$s</string>
@@ -41,6 +47,13 @@
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
+    <string name="watch_halt_all_q">Halt all your tafs?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Halt now · %1$s</item>
+        <item quantity="other">Halt now · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Choose which to halt</string>
+    <string name="watch_halt_this">Halt this taf</string>
     <string name="watch_halting">Halting %1$s…</string>
     <string name="watch_halting_all">Halting all your tafs…</string>
     <string name="watch_hear">Hear</string>
@@ -53,6 +66,7 @@
         <item quantity="one">%1$s unread in Inbox</item>
         <item quantity="other">%1$s unread in Inbox</item>
     </plurals>
+    <string name="watch_its_settings">Its settings</string>
     <string name="watch_keep_for_later">Keep for later</string>
     <string name="watch_kept_to_send">Kept on this watch. It\'s sent when your phone is in reach again.</string>
     <string name="watch_limit">30 s at most</string>
@@ -66,6 +80,7 @@
         <item quantity="other">%1$s need you</item>
     </plurals>
     <string name="watch_not_sure">Not sure it arrived</string>
+    <string name="watch_nothing_waits">Nothing waits for you.</string>
     <string name="watch_open_on_phone">Open on phone</string>
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
@@ -88,11 +103,14 @@
     <string name="watch_rerecord">Re-record</string>
     <string name="watch_result_ready">A result is ready</string>
     <string name="watch_results_channel">Results</string>
+    <string name="watch_resume_on_phone">Resume on your phone</string>
     <string name="watch_retry">Retry</string>
     <string name="watch_review">Check before sending</string>
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
+    <string name="watch_settings_of">%1$s · settings</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
     <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
@@ -100,6 +118,7 @@
     <string name="watch_type_hint">Write to Coach…</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
+    <string name="watch_what_it_does">What it does</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s working</item>
         <item quantity="other">%1$s working</item>

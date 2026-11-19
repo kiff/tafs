@@ -2538,6 +2538,7 @@
     <string name="voice_voice_becomes_text_device_not">A sua voz torna-se texto neste dispositivo. Não é enviada até a enviar.</string>
     <string name="voice_what_you_said_stays_message">O que disse fica na caixa de mensagem, por enviar.</string>
     <string name="watch_all_chats">Todos os chats</string>
+    <string name="watch_all_your_tafs">Todos os seus tafs</string>
     <string name="watch_already_answered">Já respondido, ou terminado.</string>
     <string name="watch_approve_on_phone">Aprove no telemóvel</string>
     <string name="watch_as_of">Atualizado às %1$s</string>
@@ -2551,6 +2552,13 @@
     <string name="watch_deleted_nothing_sent">Eliminado. Nada foi enviado.</string>
     <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
+    <string name="watch_halt_all_q">Bloquear todos os seus tafs?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Bloquear agora · %1$s</item>
+        <item quantity="other">Bloquear agora · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Escolha quais bloquear</string>
+    <string name="watch_halt_this">Bloquear este taf</string>
     <string name="watch_halting">A bloquear %1$s…</string>
     <string name="watch_halting_all">A bloquear todos os seus tafs…</string>
     <string name="watch_hear">Ouvir</string>
@@ -2563,6 +2571,7 @@
         <item quantity="one">%1$s por ler na Caixa de entrada</item>
         <item quantity="other">%1$s por ler na Caixa de entrada</item>
     </plurals>
+    <string name="watch_its_settings">As suas definições</string>
     <string name="watch_keep_for_later">Guardar para mais tarde</string>
     <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o telemóvel voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
@@ -2576,6 +2585,7 @@
         <item quantity="other">%1$s precisam de si</item>
     </plurals>
     <string name="watch_not_sure">Não se sabe se chegou</string>
+    <string name="watch_nothing_waits">Nada espera por si.</string>
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
@@ -2598,11 +2608,14 @@
     <string name="watch_rerecord">Gravar de novo</string>
     <string name="watch_result_ready">Há um resultado pronto</string>
     <string name="watch_results_channel">Resultados</string>
+    <string name="watch_resume_on_phone">Retomar no telemóvel</string>
     <string name="watch_retry">Repetir</string>
     <string name="watch_review">Verifique antes de enviar</string>
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
+    <string name="watch_settings_of">%1$s · definições</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_swipe_settings">Deslize para a esquerda para as definições</string>
     <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
     <string name="watch_trust">Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.</string>
@@ -2610,6 +2623,7 @@
     <string name="watch_type_hint">Escrever ao Coach…</string>
     <string name="watch_update_phone">Atualize o tafs no telemóvel e tente novamente.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
+    <string name="watch_what_it_does">O que faz</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s a trabalhar</item>
         <item quantity="other">%1$s a trabalhar</item>
