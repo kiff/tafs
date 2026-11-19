@@ -328,25 +328,6 @@ struct SharedFile: Transferable, Sendable {
     }
 }
 
-/// The copy of a file this device holds while it's open: in its own folder under the app's temporary directory, named
-/// as the file is, and gone when the file's screen closes. A file is never kept on the device past its screen, so
-/// Delete now and the 30 days hold here too.
-enum FileCopy {
-    static func folder(_ id: String) -> URL {
-        FileManager.default.temporaryDirectory.appendingPathComponent("files", isDirectory: true)
-            .appendingPathComponent(safeName(id, id: "file"), isDirectory: true)
-    }
-
-    /// A name that stays one path component whatever tafs cloud sends (`FileText.name`), else the file's id.
-    static func safeName(_ name: String, id: String) -> String {
-        FileText.name(name, fallback: id)
-    }
-
-    /// Removes a file's copy (its screen closed).
-    static func remove(_ id: String) {
-        try? FileManager.default.removeItem(at: folder(id))
-    }
-}
 
 /// The system's preview of a file on this device: nothing goes to a viewer service.
 struct FilePreview: UIViewControllerRepresentable {
