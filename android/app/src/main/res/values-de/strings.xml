@@ -2547,7 +2547,10 @@
     <string name="watch_ask_not_on">Fragen von der Uhr aus ist noch nicht an.</string>
     <string name="watch_ask_text_only">tafs bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
+    <string name="watch_calendar_today">Heutiger Kalender</string>
     <string name="watch_check_phone">Prüf die Verbindung deines Handys</string>
+    <string name="watch_check_phone_sub">Braucht dich ist dort offen. Genehmige den Aufruf dort.</string>
+    <string name="watch_check_phone_title">Schau auf dein Handy</string>
     <string name="watch_clear_read">Gelesene entfernen</string>
     <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
     <string name="watch_deleted_nothing_sent">Gelöscht. Nichts wurde gesendet.</string>
@@ -2587,6 +2590,7 @@
         <item quantity="other">%1$s brauchen dich</item>
     </plurals>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
+    <string name="watch_nothing_sent_until">Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="watch_nothing_waits">Nichts wartet auf dich.</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
     <string name="watch_page_brief">Briefing</string>
@@ -2617,6 +2621,10 @@
     <string name="watch_sent">Gesendet</string>
     <string name="watch_settings_of">%1$s · Einstellungen</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_sign_out_q">Auf dieser Uhr abmelden?</string>
+    <string name="watch_sign_out_sub">Dein Handy bleibt angemeldet. Diese Uhr vergisst deine tafs, Chats und deinen Eingang.</string>
+    <string name="watch_signed_in">Angemeldet</string>
+    <string name="watch_signed_out_here">Auf dieser Uhr abgemeldet. Dein Handy bleibt angemeldet.</string>
     <string name="watch_swipe_settings">Nach links wischen für seine Einstellungen</string>
     <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>

@@ -5097,8 +5097,14 @@ enum Words {
         static var askTextOnly: String { Words.line("watch.ask_text_only") }
         /// Asking your phone…
         static var askingPhone: String { Words.line("watch.asking_phone") }
+        /// Today's calendar
+        static var calendarToday: String { Words.line("watch.calendar_today") }
         /// Check your phone's connection
         static var checkPhone: String { Words.line("watch.check_phone") }
+        /// Needs you is open there. Approve the call there.
+        static var checkPhoneSub: String { Words.line("watch.check_phone_sub") }
+        /// Check your phone
+        static var checkPhoneTitle: String { Words.line("watch.check_phone_title") }
         /// Clear read
         static var clearRead: String { Words.line("watch.clear_read") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
@@ -5153,6 +5159,8 @@ enum Words {
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
         /// Not sure it arrived
         static var notSure: String { Words.line("watch.not_sure") }
+        /// Nothing is sent until you approve.
+        static var nothingSentUntil: String { Words.line("watch.nothing_sent_until") }
         /// Nothing waits for you.
         static var nothingWaits: String { Words.line("watch.nothing_waits") }
         /// Open on phone
@@ -5211,6 +5219,14 @@ enum Words {
         static func settingsOf(taf: String) -> String { Words.line("watch.settings_of", taf) }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Sign out on this watch?
+        static var signOutQ: String { Words.line("watch.sign_out_q") }
+        /// Your phone stays signed in. This watch forgets your tafs, chats and inbox.
+        static var signOutSub: String { Words.line("watch.sign_out_sub") }
+        /// Signed in
+        static var signedIn: String { Words.line("watch.signed_in") }
+        /// Signed out on this watch. Your phone stays signed in.
+        static var signedOutHere: String { Words.line("watch.signed_out_here") }
         /// Swipe left for its settings
         static var swipeSettings: String { Words.line("watch.swipe_settings") }
         /// Tap Start, then speak. Your words show here as you talk.

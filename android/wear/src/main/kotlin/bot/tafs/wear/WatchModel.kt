@@ -62,6 +62,8 @@ class WatchModel(
   private val drafts: DraftStore? = null,
   /** v2's Inbox, kept on the watch until dismissed ([InboxStore]); in memory only in a test that doesn't pass one. */
   private val inboxStore: InboxStore? = null,
+  /** v2's Sign out on this watch alone (AccountScreens.kt): whether it's signed out here; none in v1, which can't sign out. */
+  private val signIn: WatchSignIn? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -157,6 +159,7 @@ class WatchModel(
   }
 
   private suspend fun act(request: WatchRequest) {
+    if (_signedOutHere.value) return
     if (!unlocked()) {
       _outcome.value = Outcome.NeedsLock
       return
@@ -408,6 +411,7 @@ class WatchModel(
    * taf, so, as Refuse and Halt, never from a watch anyone could pick up. Returns whether to start listening.
    */
   fun listen(replyTo: String? = null): Boolean {
+    if (_signedOutHere.value) return false
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return false
@@ -426,6 +430,7 @@ class WatchModel(
    * only, as [listen].
    */
   fun readyToRecord(replyTo: String? = null) {
+    if (_signedOutHere.value) return
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
@@ -437,7 +442,7 @@ class WatchModel(
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
   fun review(text: String, replyTo: String? = null) {
     val words = text.trim()
-    if (words.isEmpty()) return
+    if (words.isEmpty() || _signedOutHere.value) return
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
@@ -554,6 +559,7 @@ class WatchModel(
    * its result card when it's the one just sent.
    */
   fun took(ask: AskLine) {
+    if (_signedOutHere.value) return
     val before = _asks.value[ask.id]
     // An older state never replaces a newer one (two messages crossing).
     if (before != null && before.updated > ask.updated) return
@@ -576,6 +582,7 @@ class WatchModel(
 
   /** Opens an ask's result card (from the home screen or its notification). */
   fun open(ask: AskLine) {
+    if (_signedOutHere.value) return
     seen += ask.id
     markRead(InboxItem.askId(ask.id))
     _result.value = ask
@@ -670,6 +677,7 @@ class WatchModel(
 
   /** Reads the watch's asks from the phone: those of the last day, as tafs cloud has them. A failed read leaves what's shown. */
   suspend fun readAsks() {
+    if (_signedOutHere.value) return
     val reply = (phone.ask(WatchRequest.Asks(now())) as? Asked.Answered)?.reply as? WatchReply.AskList ?: return
     for (ask in reply.asks) took(ask)
     pruneDismissed("ask:", reply.asks.map { InboxItem.askId(it.id) }.toSet())
@@ -680,10 +688,14 @@ class WatchModel(
 
   /** Reads Needs you, then Your brief (with the switch on), then Your tafs, from the phone. Your tafs not answering leaves Needs you shown, without the tafs. */
   suspend fun refresh() {
+    // Signed out on this watch: nothing is read until the person signs in on it again, and an answer that lands after is dropped.
+    if (_signedOutHere.value) return
     // A locked watch, or one with no screen lock, keeps no Inbox: as the tile's count, nothing shows off the wrist.
     if (!unlocked()) clearInbox()
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
-    val needsYou = when (val asked = phone.ask(WatchRequest.NeedsYou(now()))) {
+    val asked = phone.ask(WatchRequest.NeedsYou(now()))
+    if (_signedOutHere.value) return
+    val needsYou = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
           tile?.saw(reply.count, now())
@@ -707,6 +719,7 @@ class WatchModel(
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }?.let { TafsRead(it.tafs, it.allHalted) }
+    if (_signedOutHere.value) return
     show(Shown.Read(needsYou, tafs, brief))
     // The phone answered: a message kept for later goes now.
     sendKept()
@@ -764,10 +777,115 @@ class WatchModel(
     _result.value = null
     _taf.value = null
     _haltPick.value = null
+    closeCalendar()
+    _account.value = null
   }
 
   private fun show(shown: Shown) {
     _shown.value = shown
+  }
+
+  // MARK: A calendar day, Account, and Sign out on this watch (v2 step vi, AccountScreens.kt)
+
+  /** A read for one of v2's own screens: asking, the phone's answer in its words, or why there's none. */
+  sealed interface Reading<out T> {
+    data object Asking : Reading<Nothing>
+
+    data class Read<T>(val value: T) : Reading<T>
+
+    data object SignedOut : Reading<Nothing>
+
+    data object PhoneUnreachable : Reading<Nothing>
+
+    /** An answer this watch can't draw (an older phone, a failed read): Open on phone, never a guess. */
+    data object OpenOnPhone : Reading<Nothing>
+  }
+
+  /** A calendar day as tafs cloud said it, and whether it's the account's today: the day the phone answered when asked for none. */
+  data class DayRead(val day: WatchReply.CalendarDay, val today: Boolean)
+
+  private val _calendar = MutableStateFlow<Reading<DayRead>?>(null)
+
+  /** The calendar day on screen, in memory only; none until it's opened. */
+  val calendar: StateFlow<Reading<DayRead>?> = _calendar.asStateFlow()
+
+  private val _account = MutableStateFlow<Reading<WatchReply.AccountPage>?>(null)
+
+  /** Who is signed in and the plan's line, read each time Account is shown; in memory only. */
+  val account: StateFlow<Reading<WatchReply.AccountPage>?> = _account.asStateFlow()
+
+  /** The account's today as the phone last answered it, so a day the person moved to says Today only when it is. */
+  private var today: String? = null
+  private var calendarAsk = 0
+
+  /** Reads the calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today with none. Only the last day asked is shown. */
+  suspend fun readCalendar(day: String? = null) {
+    if (_signedOutHere.value) return
+    val ask = ++calendarAsk
+    _calendar.value = Reading.Asking
+    val read = read<WatchReply.CalendarDay>(WatchRequest.Calendar(now(), day))
+    // Closed, another day asked, or signed out here meanwhile: this answer is dropped.
+    if (ask != calendarAsk || _signedOutHere.value) return
+    if (day == null && read is Reading.Read) today = read.value.day
+    _calendar.value = when (read) {
+      is Reading.Read -> Reading.Read(DayRead(read.value, read.value.day == today))
+      Reading.Asking -> Reading.Asking
+      Reading.SignedOut -> Reading.SignedOut
+      Reading.PhoneUnreachable -> Reading.PhoneUnreachable
+      Reading.OpenOnPhone -> Reading.OpenOnPhone
+    }
+  }
+
+  /** Done with the calendar: what it showed is forgotten, and an answer still to come is dropped. */
+  fun closeCalendar() {
+    calendarAsk++
+    _calendar.value = null
+  }
+
+  /** Reads Account's lines from the phone; what's shown stays until the answer replaces it. */
+  suspend fun readAccount() {
+    if (_signedOutHere.value) return
+    if (_account.value !is Reading.Read) _account.value = Reading.Asking
+    val read = read<WatchReply.AccountPage>(WatchRequest.Account(now()))
+    if (!_signedOutHere.value) _account.value = read
+  }
+
+  private suspend inline fun <reified T : WatchReply> read(request: WatchRequest): Reading<T> = when (val asked = phone.ask(request)) {
+    is Asked.Answered -> when (val reply = asked.reply) {
+      is T -> Reading.Read(reply)
+      WatchReply.SignedOut -> Reading.SignedOut
+      else -> Reading.OpenOnPhone
+    }
+    Asked.Unreachable -> Reading.PhoneUnreachable
+    Asked.NotUnderstood -> Reading.OpenOnPhone
+  }
+
+  private val _signedOutHere = MutableStateFlow(signIn?.signedOut() == true)
+
+  /** Signed out on this watch alone: it shows that and Sign in, and reads and sends nothing, until it's signed in here again. */
+  val signedOutHere: StateFlow<Boolean> = _signedOutHere.asStateFlow()
+
+  /**
+   * Sign out, on this watch alone: the phone stays signed in. The watch forgets everything it holds: what it showed, the asks, a
+   * review and its recording, the message kept for later and the tile's count. The flag stays on the watch until Sign in, here.
+   */
+  fun signOutHere() {
+    signIn?.signOut()
+    _signedOutHere.value = true
+    forget()
+    deleteKept()
+    clearInbox()
+    tile?.signedOut()
+    seen.clear()
+    timings.clear()
+    receivedAt.clear()
+    today = null
+  }
+
+  /** Sign in, on this watch again: the phone is still signed in, so the watch only reads it again (the caller refreshes). */
+  fun signInHere() {
+    signIn?.signIn()
+    _signedOutHere.value = false
   }
 }
 

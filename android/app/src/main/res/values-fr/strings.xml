@@ -2547,7 +2547,10 @@
     <string name="watch_ask_not_on">Demander depuis la montre n\'est pas encore activé.</string>
     <string name="watch_ask_text_only">tafs reçoit vos mots en texte, jamais votre voix.</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
+    <string name="watch_calendar_today">Agenda du jour</string>
     <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
+    <string name="watch_check_phone_sub">Vous attend y est ouvert. Approuvez l\'appel là-bas.</string>
+    <string name="watch_check_phone_title">Regardez votre téléphone</string>
     <string name="watch_clear_read">Effacer les lus</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
     <string name="watch_deleted_nothing_sent">Supprimé. Rien n\'a été envoyé.</string>
@@ -2587,6 +2590,7 @@
         <item quantity="other">%1$s vous attendent</item>
     </plurals>
     <string name="watch_not_sure">Envoi incertain</string>
+    <string name="watch_nothing_sent_until">Rien n\'est envoyé avant votre approbation.</string>
     <string name="watch_nothing_waits">Rien ne vous attend.</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
     <string name="watch_page_brief">Résumé</string>
@@ -2617,6 +2621,10 @@
     <string name="watch_sent">Envoyé</string>
     <string name="watch_settings_of">%1$s · réglages</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_sign_out_q">Se déconnecter sur cette montre ?</string>
+    <string name="watch_sign_out_sub">Votre téléphone reste connecté. Cette montre oublie vos tafs, vos chats et votre boîte de réception.</string>
+    <string name="watch_signed_in">Connecté</string>
+    <string name="watch_signed_out_here">Session fermée sur cette montre. Votre téléphone reste connecté.</string>
     <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>

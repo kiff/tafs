@@ -2681,7 +2681,10 @@
     <string name="watch_ask_not_on">Pytanie z zegarka nie jest jeszcze włączone.</string>
     <string name="watch_ask_text_only">tafs dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
+    <string name="watch_calendar_today">Dzisiejszy kalendarz</string>
     <string name="watch_check_phone">Sprawdź połączenie telefonu</string>
+    <string name="watch_check_phone_sub">Czeka na Ciebie jest tam otwarte. Zatwierdź wywołanie tam.</string>
+    <string name="watch_check_phone_title">Sprawdź telefon</string>
     <string name="watch_clear_read">Usuń przeczytane</string>
     <string name="watch_coach_needs_consent">Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.</string>
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
@@ -2729,6 +2732,7 @@
         <item quantity="other">%1$s czeka na Ciebie</item>
     </plurals>
     <string name="watch_not_sure">Nie wiadomo, czy dotarło</string>
+    <string name="watch_nothing_sent_until">Nic nie zostanie wysłane, dopóki nie zatwierdzisz.</string>
     <string name="watch_nothing_waits">Nic na Ciebie nie czeka.</string>
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
     <string name="watch_page_brief">Podsumowanie</string>
@@ -2761,6 +2765,10 @@
     <string name="watch_sent">Wysłano</string>
     <string name="watch_settings_of">%1$s · ustawienia</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_sign_out_q">Wylogować na tym zegarku?</string>
+    <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
+    <string name="watch_signed_in">Zalogowano</string>
+    <string name="watch_signed_out_here">Wylogowano na tym zegarku. Telefon pozostaje zalogowany.</string>
     <string name="watch_swipe_settings">Przesuń w lewo, by zobaczyć ustawienia</string>
     <string name="watch_tap_start">Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.</string>
     <string name="watch_timing">Słuchanie %1$s ms · potwierdzenie %2$s ms · wynik %3$s ms</string>

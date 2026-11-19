@@ -4,6 +4,14 @@
     <string name="words_language" translatable="false">de</string>
     <string name="alert_needs_you">Ein taf braucht dich</string>
     <string name="alert_not_refused">Nicht abgelehnt</string>
+    <string name="calendar_next_day">Nächster Tag</string>
+    <string name="calendar_previous_day">Vorheriger Tag</string>
+    <string name="calendar_reading">Kalender wird gelesen…</string>
+    <plurals name="calendar_times">
+        <item quantity="one">×%1$s</item>
+        <item quantity="other">×%1$s</item>
+    </plurals>
+    <string name="calendar_today">Heute</string>
     <string name="card_its_card">Seine Card</string>
     <string name="chat_delete">Löschen</string>
     <string name="chat_stop">Stoppen</string>
@@ -15,6 +23,7 @@
     <string name="common_close">Schließen</string>
     <string name="common_done">Erledigt</string>
     <string name="common_loading">Wird geladen…</string>
+    <string name="common_ok">OK</string>
     <string name="common_send">Senden</string>
     <string name="common_try_again">Erneut versuchen</string>
     <string name="halt_all_now">Alle jetzt anhalten</string>
@@ -28,7 +37,12 @@
     <string name="needs_you_nothing">Nichts braucht dich.</string>
     <string name="needs_you_refuse">Ablehnen</string>
     <string name="needs_you_title">Braucht dich</string>
+    <string name="settings_language_title">Sprache</string>
+    <string name="settings_plan">Tarif</string>
+    <string name="settings_sign_out">Abmelden</string>
     <string name="settings_title">Konto</string>
+    <string name="settings_version">Version</string>
+    <string name="sign_in_with_phone">Mit deinem Telefon anmelden</string>
     <string name="taf_halt_title">Anhalten</string>
     <string name="taf_pause">Pausieren</string>
     <string name="taf_state_halted">Angehalten</string>
@@ -42,7 +56,10 @@
     <string name="watch_ask_not_on">Fragen von der Uhr aus ist noch nicht an.</string>
     <string name="watch_ask_text_only">tafs bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
+    <string name="watch_calendar_today">Heutiger Kalender</string>
     <string name="watch_check_phone">Prüf die Verbindung deines Handys</string>
+    <string name="watch_check_phone_sub">Braucht dich ist dort offen. Genehmige den Aufruf dort.</string>
+    <string name="watch_check_phone_title">Schau auf dein Handy</string>
     <string name="watch_clear_read">Gelesene entfernen</string>
     <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
     <string name="watch_deleted_nothing_sent">Gelöscht. Nichts wurde gesendet.</string>
@@ -82,6 +99,7 @@
         <item quantity="other">%1$s brauchen dich</item>
     </plurals>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
+    <string name="watch_nothing_sent_until">Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="watch_nothing_waits">Nichts wartet auf dich.</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
     <string name="watch_page_brief">Briefing</string>
@@ -112,6 +130,10 @@
     <string name="watch_sent">Gesendet</string>
     <string name="watch_settings_of">%1$s · Einstellungen</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_sign_out_q">Auf dieser Uhr abmelden?</string>
+    <string name="watch_sign_out_sub">Dein Handy bleibt angemeldet. Diese Uhr vergisst deine tafs, Chats und deinen Eingang.</string>
+    <string name="watch_signed_in">Angemeldet</string>
+    <string name="watch_signed_out_here">Auf dieser Uhr abgemeldet. Dein Handy bleibt angemeldet.</string>
     <string name="watch_swipe_settings">Nach links wischen für seine Einstellungen</string>
     <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>

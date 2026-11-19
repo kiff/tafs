@@ -809,4 +809,27 @@ class WatchModelTest {
     assertTrue(store.items.isEmpty())
     assertTrue(model.inbox.value.isEmpty())
   }
+
+  /** Steps (iv) and (vi) together: signing out on this watch forgets the Inbox too, and nothing is added to it until signed in. */
+  @Test fun signingOutOnTheWatchForgetsTheInbox() = runTest {
+    val store = Inbox()
+    val signIn = object : WatchSignIn {
+      var out = false
+      override fun signedOut() = out
+      override fun signOut() { out = true }
+      override fun signIn() { out = false }
+    }
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store, signIn = signIn)
+    model.refresh()
+    model.dismiss(InboxItem.heldId("hold_1"))
+    model.took(answered)
+    assertEquals(1, store.items.size)
+    model.signOutHere()
+    assertTrue(store.items.isEmpty())
+    assertTrue(store.gone.isEmpty())
+    assertTrue(model.inbox.value.isEmpty())
+    model.took(answered)
+    model.refresh()
+    assertTrue("nothing added while signed out here", model.inbox.value.isEmpty())
+  }
 }

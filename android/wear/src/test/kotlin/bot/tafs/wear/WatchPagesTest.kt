@@ -296,11 +296,18 @@ class WatchPagesTest {
     compose.onNodeWithText("Replied to maria@…").assertExists()
     compose.onNodeWithTag(UNREAD_DOT + heldLine.id, useUnmergedTree = true).assertExists()
     compose.onAllNodesWithTag(UNREAD_DOT + answerLine.id, useUnmergedTree = true).assertCountEquals(0)
-    // The held call Needs you still holds: Refuse and Approve on your phone, as Needs you offers them.
-    compose.onNodeWithText(Words.NeedsYou.refuse).assertExists()
     compose.onNodeWithText(Words.Watch.clearRead).performClick()
     compose.onAllNodesWithText(Words.Watch.dismiss)[0].performClick()
     assertEquals(listOf("clear read", "dismiss ${heldLine.id}"), did)
+  }
+
+  /** A held call Needs you still holds opens whole (step vi), with Refuse and Approve on your phone there; the line is read. */
+  @Test fun aHeldLineOpensTheCallWhole() {
+    showInbox(listOf(heldLine))
+    compose.onNodeWithTag(INBOX_ITEM + heldLine.id).performClick()
+    compose.onNodeWithText(Words.Watch.nothingSentUntil).assertExists()
+    compose.onNodeWithText(Words.NeedsYou.refuse).assertExists()
+    assertEquals(listOf("open ${heldLine.id}"), did)
   }
 
   @Test fun aHeldLineNeedsYouNoLongerHoldsSaysSo() {
