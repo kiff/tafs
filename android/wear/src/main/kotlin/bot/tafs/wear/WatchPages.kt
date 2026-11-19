@@ -291,7 +291,8 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: Wa
           }
           entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 1) }
         }
-        Text(entry.line, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        // An answer that was only an amount is kept blank (no amount is kept on the watch): it says the rest is on the phone.
+        Text(entry.line.ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         if (entry.kind == InboxItem.Kind.HELD) {
           if (call == null) {
             Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)
