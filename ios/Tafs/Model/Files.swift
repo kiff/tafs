@@ -204,9 +204,11 @@ final class FilesModel: ObservableObject {
     enum PreviewRead: Equatable {
         /// tafs cloud's cleaned start, drawn as plain text.
         case text(FilePreviewText)
-        /// The bytes on the device, drawn by the system: only after tafs cloud answered with no start, or for a type that
-        /// has none to give.
+        /// The bytes on the device, drawn by the system: only for a type that has no text start.
         case copy(URL)
+        /// tafs cloud answered a text type with no start: no preview is drawn, and no bytes read. The file's details,
+        /// Download and Share stay, as on Android.
+        case noPreview
         /// tafs cloud couldn't be reached, for a type that has a text start: the "couldn't reach" line, and no bytes read.
         case unreachable
     }
@@ -228,8 +230,9 @@ final class FilesModel: ObservableObject {
         }
         if let start { return .text(start) }
         // A text type always has a start from tafs cloud: one answered without it (a malformed or older answer) reads no
-        // bytes either, so its raw file is never drawn in the cleaned start's place (agentgabo's read).
-        guard !text else { return .unreachable }
+        // bytes either, so its raw file is never drawn in the cleaned start's place (agentgabo's read). tafs cloud was
+        // reached, so no line says otherwise: there's simply no preview, as on Android (dev-android's read).
+        guard !text else { return .noPreview }
         do { return .copy(try await localCopy(of: file)) } catch { return .unreachable }
     }
 

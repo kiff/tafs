@@ -219,7 +219,7 @@ final class FilesTests: XCTestCase {
 
         store.start = nil
         let noStart = await model.readPreview(of: csv)
-        XCTAssertEqual(noStart, .unreachable)
+        XCTAssertEqual(noStart, .noPreview, "tafs cloud was reached: no preview, and no couldn't-reach line")
         XCTAssertTrue(store.contentsRead.isEmpty, "a text type with no start reads no bytes")
 
         var pdf = file("fil_pdf", hoursAgo: 1, name: "plan.pdf")

@@ -37,7 +37,8 @@ Tests: `FilesTests`.
 - **A file** (`FileDetailView`): tafs cloud's start of the file (`preview`, its first 4 KB as plain text, control and
   direction characters taken out) drawn as text, never as Markdown or HTML, with a line when there's more. Only for a type with no text
   start (not CSV, MD, TXT or JSON) is the file drawn by the system from its bytes on the device; a text type whose read
-  fails, or comes back with no start, says it couldn't reach KIFF and reads no bytes. **Download** (saved where the person
+  fails says it couldn't reach KIFF, one answered with no start shows no preview (as on Android), and neither reads any
+  bytes. **Download** (saved where the person
   picks) and **Share** (the share sheet, with the file itself) read the bytes only when asked, the taf, the
   run, the type and size, "Everyone on this account", and when it goes; **Delete now** apart, behind a confirm that says
   it's gone for everyone, right away.
