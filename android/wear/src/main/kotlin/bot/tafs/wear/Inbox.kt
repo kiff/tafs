@@ -32,10 +32,15 @@ data class InboxItem(
   }
 }
 
-/** Where the Inbox is kept: the watch's private preferences, or a list in a test. */
+/**
+ * Where the Inbox is kept: the watch's private preferences, or a list in a test. [dismissed] are the ids taken away (Dismiss, Clear
+ * read) that the phone still lists, so a read doesn't bring them back; each goes once the phone no longer lists it.
+ */
 interface InboxStore {
   fun read(): List<InboxItem>
   fun write(items: List<InboxItem>)
+  fun dismissed(): Set<String> = emptySet()
+  fun writeDismissed(ids: Set<String>) = Unit
   fun clear()
 }
 
@@ -49,12 +54,20 @@ class PreferencesInboxStore(context: android.content.Context) : InboxStore {
     prefs.edit().putString(ITEMS, encode(items)).apply()
   }
 
+  override fun dismissed(): Set<String> =
+    runCatching { JSONArray(prefs.getString(DISMISSED, null) ?: return emptySet()).let { a -> (0 until a.length()).map { a.getString(it) }.toSet() } }.getOrDefault(emptySet())
+
+  override fun writeDismissed(ids: Set<String>) {
+    prefs.edit().putString(DISMISSED, JSONArray(ids.toList()).toString()).apply()
+  }
+
   override fun clear() {
     prefs.edit().clear().apply()
   }
 
   companion object {
     private const val ITEMS = "items"
+    private const val DISMISSED = "dismissed"
 
     fun encode(items: List<InboxItem>): String = JSONArray().apply {
       for (i in items) put(JSONObject().put("id", i.id).put("kind", i.kind.name).put("title", i.title).put("line", i.line).put("at", i.at).put("read", i.read))

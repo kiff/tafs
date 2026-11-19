@@ -683,9 +683,12 @@ class WatchModelTest {
 
   private class Inbox : InboxStore {
     var items: List<InboxItem> = emptyList()
+    var gone: Set<String> = emptySet()
     override fun read() = items
     override fun write(items: List<InboxItem>) { this.items = items }
-    override fun clear() { items = emptyList() }
+    override fun dismissed() = gone
+    override fun writeDismissed(ids: Set<String>) { gone = ids }
+    override fun clear() { items = emptyList(); gone = emptySet() }
   }
 
   private val answered = AskLine("wa_02", "w_00000002", "done", tafName = "Support replies", line = "Replied to maria@…", words = "Done", updated = "2026-11-19T08:00:00Z")
@@ -752,6 +755,57 @@ class WatchModelTest {
     assertEquals(1, store.items.size)
     signedIn = false
     model.refresh()
+    assertTrue(store.items.isEmpty())
+    assertTrue(model.inbox.value.isEmpty())
+  }
+
+  // qa-kiff's #1404 review: Dismiss and Clear read stick while the phone still lists the line.
+
+  @Test fun aDismissedHeldCallStaysGoneWhileNeedsYouStillListsIt() = runTest {
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    model.refresh()
+    model.dismiss(InboxItem.heldId("hold_1"))
+    model.refresh()
+    assertTrue(model.inbox.value.isEmpty())
+    // A new start reads the same store: still gone.
+    val again = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    again.refresh()
+    assertTrue(again.inbox.value.isEmpty())
+  }
+
+  @Test fun aClearedAnswerStaysGoneAfterPutAwayAndTheAsksRead() = runTest {
+    val phone = Phone { if (it is WatchRequest.Asks) Asked.Answered(WatchReply.AskList(listOf(answered))) else reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, inboxStore = Inbox())
+    model.readAsks()
+    model.open(model.askOf(model.inbox.value.first()))
+    model.clearRead()
+    model.forget()
+    model.readAsks()
+    assertTrue(model.inbox.value.none { it.id == InboxItem.askId("wa_02") })
+  }
+
+  @Test fun aDismissedIdGoesOnceThePhoneNoLongerListsIt() = runTest {
+    var calls = listOf(call)
+    val store = Inbox()
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(WatchReply.NeedsYou(calls.size, "x", calls)) else reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    model.refresh()
+    model.dismiss(InboxItem.heldId("hold_1"))
+    assertEquals(setOf(InboxItem.heldId("hold_1")), store.gone)
+    calls = emptyList()
+    model.refresh()
+    assertTrue("pruned: nothing kept of a call that's gone", store.gone.isEmpty())
+  }
+
+  @Test fun putAwayLockedClearsTheInboxThen() = runTest {
+    var unlocked = true
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { unlocked }, inboxStore = store)
+    model.refresh()
+    model.clearInboxIfLocked()
+    assertEquals(1, store.items.size)
+    unlocked = false
+    model.clearInboxIfLocked()
     assertTrue(store.items.isEmpty())
     assertTrue(model.inbox.value.isEmpty())
   }

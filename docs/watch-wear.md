@@ -218,9 +218,11 @@ lists and each ask that ended (Coach's or a taf's answer) is one line of the Inb
 dismissed: its taf, its words, and a blue dot while it's unread. An answer opens its result card (from the line alone if the app
 was put away since), which reads it; a held call shows what it wants, Refuse where Needs you offers it and Approve on your phone
 while Needs you still holds it, else "Already answered, or it ended.", and tapping it reads it. Each line has **Dismiss**, and
-**Clear read** takes every read line away. Coach's home counts only the unread lines. It's kept in the watch's private preferences
+**Clear read** takes every read line away; either stays taken away while the phone still lists the line (its id is kept, and
+dropped once the phone no longer lists it), so a read never brings it back. Coach's home counts only the unread lines. It's kept in the watch's private preferences
 (`tafs.inbox`, one JSON list), and like the tile's count it's cleared, and nothing is added to it, whenever the watch is locked or
-has no screen lock (Wear OS locks a watch taken off the wrist), and when the phone says it's signed out. Read and dismissed stay
+has no screen lock (Wear OS locks a watch taken off the wrist): checked when the app is opened and when it's put away. It's
+also cleared when the phone says it's signed out. Read and dismissed stay
 on this watch until tafs cloud keeps them in step with the phone (server piece c).
 
 ## Versions

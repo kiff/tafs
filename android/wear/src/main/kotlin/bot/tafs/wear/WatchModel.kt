@@ -441,10 +441,14 @@ class WatchModel(
   /** How many lines of the Inbox aren't read yet: Coach's home says so. */
   fun unreadCount(): Int = _inbox.value.count { !it.read }
 
+  /** Lines taken away (Dismiss, Clear read) that the phone still lists: a read doesn't bring them back. */
+  private var dismissed: Set<String> = inboxStore?.dismissed().orEmpty()
+
   /** A new line, unread; one already there keeps its place and whether it was read, with the newest words. */
   private fun inboxPut(item: InboxItem) {
     // A locked watch, or one with no screen lock, keeps no Inbox: nothing is added to it.
     if (!unlocked()) return
+    if (item.id in dismissed) return
     val before = _inbox.value.firstOrNull { it.id == item.id }
     if (before != null && before.line == item.line && before.title == item.title) return
     val next = if (before != null) _inbox.value.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + _inbox.value
@@ -457,19 +461,42 @@ class WatchModel(
     saveInbox(_inbox.value.map { if (it.id == id) it.copy(read = true) else it })
   }
 
-  /** Dismiss: gone from the Inbox. */
+  /** Dismiss: gone from the Inbox, and it stays gone while the phone still lists it. */
   fun dismiss(id: String) {
     if (_inbox.value.none { it.id == id }) return
+    setDismissed(dismissed + id)
     saveInbox(_inbox.value.filterNot { it.id == id })
   }
 
-  /** Clear read: every line read is gone; unread ones stay. */
-  fun clearRead() = saveInbox(_inbox.value.filterNot { it.read })
+  /** Clear read: every line read is gone, and stays gone; unread ones stay. */
+  fun clearRead() {
+    val read = _inbox.value.filter { it.read }.map { it.id }
+    if (read.isEmpty()) return
+    setDismissed(dismissed + read)
+    saveInbox(_inbox.value.filterNot { it.read })
+  }
+
+  /** The phone's list of [kind] now: a line taken away that it no longer lists can't come back, so its id goes. */
+  private fun pruneDismissed(kind: String, listed: Set<String>) {
+    val kept = dismissed.filterTo(mutableSetOf()) { !it.startsWith(kind) || it in listed }
+    if (kept.size != dismissed.size) setDismissed(kept)
+  }
+
+  private fun setDismissed(ids: Set<String>) {
+    dismissed = ids
+    inboxStore?.writeDismissed(ids)
+  }
 
   /** The watch locked, or the phone signed out: nothing of the Inbox stays on the watch. */
   fun clearInbox() {
     inboxStore?.clear()
+    dismissed = emptySet()
     _inbox.value = emptyList()
+  }
+
+  /** Put away while locked (or with no screen lock): the Inbox is cleared now, not at the next start. */
+  fun clearInboxIfLocked() {
+    if (!unlocked()) clearInbox()
   }
 
   private fun saveInbox(items: List<InboxItem>) {
@@ -495,6 +522,7 @@ class WatchModel(
   suspend fun readAsks() {
     val reply = (phone.ask(WatchRequest.Asks(now())) as? Asked.Answered)?.reply as? WatchReply.AskList ?: return
     for (ask in reply.asks) took(ask)
+    pruneDismissed("ask:", reply.asks.map { InboxItem.askId(it.id) }.toSet())
   }
 
   private val _shown = MutableStateFlow<Shown>(Shown.Asking)
@@ -511,6 +539,7 @@ class WatchModel(
           tile?.saw(reply.count, now())
           // Each held call is a line in the Inbox, kept until dismissed.
           for (call in reply.calls) inboxPut(InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, call.wants, now()))
+          pruneDismissed("held:", reply.calls.map { InboxItem.heldId(it.holdId) }.toSet())
         }
         is WatchReply.SignedOut -> {
           tile?.signedOut()

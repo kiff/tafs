@@ -225,8 +225,9 @@ class WatchActivity : ComponentActivity() {
     speaker?.close()
     speaker = null
     playback.release()
-    // Put away: the review and its recording are gone, and any recording left over is swept.
+    // Put away: the review and its recording are gone, and any recording left over is swept. A locked watch keeps no Inbox.
     model.forget()
+    if (WATCH_V2) model.clearInboxIfLocked()
     VoiceFiles.sweep(VoiceFiles.dir(this))
   }
 
