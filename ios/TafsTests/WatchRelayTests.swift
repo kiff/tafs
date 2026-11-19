@@ -344,7 +344,7 @@ final class WatchRelayTests: XCTestCase {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .deletingLastPathComponent().appendingPathComponent("contracts/home.json")
         let root = try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        let home = try JSONDecoder().decode(TafsCloud.Home.self, from: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])))
+        let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: try JSONSerialization.data(withJSONObject: try XCTUnwrap(root["answer"])))
         let listed = try XCTUnwrap(home.tafs.first)
         let page = try XCTUnwrap(KeptWatchReading.tafPage(listed, halted: false, waiting: 2))
         let taf = KIFFMapping.taf(listed, id: UUID(), owner: "")
