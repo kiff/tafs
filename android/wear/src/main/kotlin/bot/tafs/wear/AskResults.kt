@@ -45,8 +45,9 @@ object AskResults {
     val kept = bot.tafs.watchlink.Amounts.strip(whole)
     return when {
       kept.isBlank() -> Words.Watch.moreOnPhone
-      kept != whole.trim() -> kept + "\n" + Words.Watch.moreOnPhone
-      else -> kept
+      // Only when an amount was taken out: a double space or a trailing ":" alone changes nothing said (qa-kiff, #1445).
+      bot.tafs.watchlink.Amounts.hasAmount(whole) -> kept + "\n" + Words.Watch.moreOnPhone
+      else -> whole.trim()
     }
   }
 

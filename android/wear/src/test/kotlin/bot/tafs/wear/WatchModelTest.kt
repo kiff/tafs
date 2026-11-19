@@ -418,6 +418,21 @@ class WatchModelTest {
     assertNull("not sent from this watch", other.result.value)
   }
 
+  /** W4: what was said from this watch and its answer make today's conversation, oldest first, in memory only. */
+  @Test fun v2sConversationIsWhatThisWatchSaidAndItsAnswers() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("Move my call to six")
+    model.sendReviewed()
+    assertEquals(listOf(WatchModel.Said("Move my call to six", t) to taken), model.thread())
+    model.took(done)
+    assertEquals(listOf(WatchModel.Said("Move my call to six", t) to done), model.thread())
+    // Put away or signed out: forgotten, as the asks are. Nothing of it is kept on the watch.
+    model.forget()
+    assertTrue(model.thread().isEmpty())
+  }
+
   @Test fun v2sWordsHeardGoToTheReviewAndOnlySendOnSend() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
     val model = v2(phone)

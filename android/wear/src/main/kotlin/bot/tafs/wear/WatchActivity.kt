@@ -122,6 +122,7 @@ class WatchActivity : ComponentActivity() {
         val voice by model.voice.collectAsState()
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
+        val said by model.said.collectAsState()
         val kept by model.kept.collectAsState()
         val taf by model.taf.collectAsState()
         val haltPick by model.haltPick.collectAsState()
@@ -198,13 +199,14 @@ class WatchActivity : ComponentActivity() {
         val probe by listener.probe.collectAsState()
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
+        val thread = said.let { asks.let { model.thread() } }
         val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
             probe = if (BuildConfig.TIMING) probe else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
-            signedOutHere = signedOutHere, calendar = calendar, account = account)
+            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }

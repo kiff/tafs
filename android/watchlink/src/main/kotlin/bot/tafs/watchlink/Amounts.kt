@@ -10,9 +10,14 @@ package bot.tafs.watchlink
  * it's written (`WatchRelay.withoutAmount`).
  */
 object Amounts {
-  fun strip(words: String): String =
-    words.replace(CURRENCY_FIRST, " ").replace(CURRENCY_AFTER, " ")
-      .replace(SPACES, " ")
+  fun strip(words: String): String = tidy(words.replace(CURRENCY_FIRST, " ").replace(CURRENCY_AFTER, " "))
+
+  /** Whether [strip] takes any amount out of [words]: spacing and edges aside, they differ. */
+  fun hasAmount(words: String): Boolean = strip(words) != tidy(words)
+
+  /** The words with their spacing tidied and stray marks off the edges, as [strip] leaves them, with nothing taken out. */
+  fun tidy(words: String): String =
+    words.replace(SPACES, " ")
       .replace(SPACE_BEFORE_MARK, "$1")
       .trim { it.isWhitespace() || it in ",;:-–—·" }
 
