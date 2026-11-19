@@ -2,20 +2,36 @@ package bot.tafs.app.kiff
 
 import bot.tafs.app.model.InstantAsString
 import java.time.Instant
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonNames
 
 // A taf's doors (docs/doors.md): where work reaches it from outside the app, with the answer going back the same way.
 // tafs cloud keeps them; the phone opens, pairs and closes them with the owner's session. Read leniently: a field
 // tafs cloud adds later, or one the app can't read, never stops a door being shown.
 
-/** A sender the owner paired with a door; tafs pairs the owner's own sign-in email itself. */
+/**
+ * A sender the owner paired with a door; tafs pairs the owner's own sign-in email itself. On a door "From another application"
+ * (`api`), an application's key: its id (`key_id` there), name, last four characters and when it was made and last used, never
+ * the key itself, which tafs cloud shows once, when it's made (docs/doors.md).
+ */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class DoorKey(
-  val id: String,
+  @JsonNames("key_id") val id: String,
   val name: String? = null,
   /** Paired by tafs: the owner's own sign-in email. */
   val auto: Boolean = false,
+  val last4: String? = null,
+  @SerialName("made_at") val madeAt: String? = null,
+  @SerialName("last_used_at") val lastUsedAt: String? = null,
 )
 
 /** One door: an email address or a WhatsApp number. */
@@ -45,9 +61,19 @@ data class Door(
   val grant: String? = null,
   val channel: String? = null,
   val trigger: String? = null,
+  /** A door "From another application" (`api`): today's requests and those waiting. None on any other door. */
+  val counts: DoorCounts? = null,
+  /** A door "From another application" (`api`): the last request's state and when. None on any other door. */
+  @SerialName("last_request") val lastRequest: DoorLastRequest? = null,
 ) {
   val holdsKeys: Boolean get() = proof == "proven"
 }
+
+@Serializable
+data class DoorCounts(val today: Int? = null, val waiting: Int? = null)
+
+@Serializable
+data class DoorLastRequest(val status: String, val at: String)
 
 /** A door's words from tafs cloud (docs/doors.md, "The door's words"). */
 @Serializable
@@ -111,12 +137,34 @@ data class Knock(
   val who: String get() = name?.let { "$it ($from)" } ?: from
 }
 
+/**
+ * A taf's doors, the apps they can open on and the knocks waiting, each read on its own: a door, an app or a knock this build
+ * can't read (a kind it doesn't know yet, say) is left out, and never hides the others (docs/doors.md).
+ */
 @Serializable
 data class DoorsRead(
-  val doors: List<Door> = emptyList(),
-  val apps: List<DoorApp> = emptyList(),
-  val knocks: List<Knock> = emptyList(),
+  @Serializable(with = EachDoor::class) val doors: List<Door> = emptyList(),
+  @Serializable(with = EachDoorApp::class) val apps: List<DoorApp> = emptyList(),
+  @Serializable(with = EachKnock::class) val knocks: List<Knock> = emptyList(),
 )
+
+/** A JSON list read one item at a time: an item that can't be read is left out, never the list. */
+open class EachReadable<T>(private val item: KSerializer<T>) : KSerializer<List<T>> {
+  private val list = ListSerializer(item)
+  override val descriptor = list.descriptor
+
+  override fun deserialize(decoder: Decoder): List<T> {
+    val json = decoder as? JsonDecoder ?: return list.deserialize(decoder)
+    val array = json.decodeJsonElement() as? JsonArray ?: return emptyList()
+    return array.mapNotNull { runCatching { json.json.decodeFromJsonElement(item, it) }.getOrNull() }
+  }
+
+  override fun serialize(encoder: Encoder, value: List<T>) = list.serialize(encoder, value)
+}
+
+internal object EachDoor : EachReadable<Door>(Door.serializer())
+internal object EachDoorApp : EachReadable<DoorApp>(DoorApp.serializer())
+internal object EachKnock : EachReadable<Knock>(Knock.serializer())
 
 @Serializable
 internal data class DoorResponse(val door: Door)

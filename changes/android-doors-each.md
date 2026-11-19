@@ -1,0 +1,1 @@
+- **Android: a taf's doors are read one at a time.** A door the app can't read yet, such as one "From another application", is left out and never hides the others, so email and WhatsApp keep showing. The app also reads that door's own counts, last request and keys' last four characters ([doors.md](docs/doors.md)).
