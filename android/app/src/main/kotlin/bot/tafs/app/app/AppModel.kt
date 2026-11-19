@@ -3350,6 +3350,9 @@ class AppModel(
     return shown to cloud.calendar(shown, shown)
   }
 
+  /** Files' store (docs/android-app.md, Files): tafs cloud's routes, with this session's token. */
+  val filesStore: bot.tafs.app.files.FilesStore get() = bot.tafs.app.files.TafsCloudFilesStore(cloud)
+
   /** The taf behind tafs cloud's id, as the calendar names it, when this person has it listed. */
   fun tafIdForCloud(cloudId: String): String? = _state.value.tafs.firstOrNull { it.cloudId == cloudId }?.id
 

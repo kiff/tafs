@@ -714,3 +714,33 @@ data class HomeDiscardWords(val button: String = "", val title: String = "", val
   /** Every word there: the app has none of its own for this. */
   val usable: Boolean get() = listOf(button, title, text, yes, no).all { it.isNotBlank() }
 }
+
+/**
+ * A file the account's tafs delivered (`GET /v1/files`, `/v1/files/{id}`, `/download`; docs/api.md, contracts/files-*.json): its taf
+ * by id and by the name tafs has for it now (null once the taf is gone), its run and chat, and, for one file, its preview as plain
+ * text or a link to its bytes for a minute.
+ */
+@Serializable
+data class WireFile(
+  val id: String,
+  val taf: String? = null,
+  @SerialName("taf_name") val tafName: String? = null,
+  val run: String? = null,
+  val chat: String? = null,
+  val name: String,
+  @SerialName("media_type") val mediaType: String,
+  val size: Long = 0,
+  val created: String,
+  val expires: String,
+  val preview: String? = null,
+  @SerialName("preview_truncated") val previewTruncated: Boolean = false,
+  val url: String? = null,
+)
+
+/** One page of the account's files, newest first, and the id to read the next page after (`?after=`), none after the last. */
+@Serializable
+data class WireFiles(val files: List<WireFile> = emptyList(), val next: String? = null)
+
+/** `DELETE /v1/files/{id}`'s answer. */
+@Serializable
+data class WireFileDeleted(val deleted: Boolean = false)

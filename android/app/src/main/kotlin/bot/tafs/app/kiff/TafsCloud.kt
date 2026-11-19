@@ -932,6 +932,34 @@ class TafsCloud(
    */
   suspend fun applyAccountTimeZone() { sendJson("POST", "/v1/account/time-zone", kotlinx.serialization.json.JsonObject(emptyMap())) }
 
+  // MARK: Files (docs/android-app.md, Files; docs/api.md): the files the account's tafs delivered, for everyone on the account.
+
+  /** `GET /v1/files`, narrowed by taf, run or chat, after the last id of the page before: newest first, 100 a page. */
+  suspend fun files(taf: String? = null, run: String? = null, chat: String? = null, after: String? = null): WireFiles {
+    val query = listOfNotNull(taf?.let { "taf=${escaped(it)}" }, run?.let { "run=${escaped(it)}" }, chat?.let { "chat=${escaped(it)}" }, after?.let { "after=${escaped(it)}" })
+    return get("/v1/files" + if (query.isEmpty()) "" else "?" + query.joinToString("&"))
+  }
+
+  /** `GET /v1/files/{id}`: one file with its preview as plain text; null when it's gone. */
+  suspend fun file(id: String): WireFile? = orNone { get<WireFile>("/v1/files/${escaped(id)}") }
+
+  /** `GET /v1/files/{id}/download`: a link to its bytes for a minute, for this phone to read and never to give out; null when gone. */
+  suspend fun fileDownload(id: String): WireFile? = orNone { get<WireFile>("/v1/files/${escaped(id)}/download") }
+
+  /** `DELETE /v1/files/{id}`, Delete now: gone for everyone. One already gone is gone, so it answers true too. */
+  suspend fun deleteFile(id: String): Boolean =
+    orNone { KiffClient.json.decodeFromString<WireFileDeleted>(String(send("DELETE", "/v1/files/${escaped(id)}"))).deleted } ?: true
+
+  /**
+   * A file's bytes, from the short link [fileDownload] gave: read by this phone with no token of the person's (the link is signed
+   * for that one object), over HTTPS only. Null when it can't be read, for the screen to say so.
+   */
+  suspend fun signedBytes(url: String): ByteArray? {
+    if (!url.startsWith("https://")) return null
+    val response = runCatching { transport.send(HttpRequest("GET", url)) }.getOrNull() ?: return null
+    return response.body.takeIf { response.status in 200..299 }
+  }
+
   private suspend fun sendJson(method: String, path: String, body: kotlinx.serialization.json.JsonObject): ByteArray =
     send(method, path, KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), body).toByteArray())
 
