@@ -832,4 +832,120 @@ class WatchModelTest {
     model.refresh()
     assertTrue("nothing added while signed out here", model.inbox.value.isEmpty())
   }
+
+  // MARK: The batch's pre-review (#1408): what holds where steps (iv)–(vi) meet.
+
+  private fun signIn() = object : WatchSignIn {
+    var out = false
+    override fun signedOut() = out
+    override fun signOut() { out = true }
+    override fun signIn() { out = false }
+  }
+
+  /** No screen lock: the Inbox isn't kept, and the screen shows what the phone answered now instead of "Nothing new". */
+  @Test fun aWatchThatCantKeepTheInboxSaysSoToTheScreen() = runTest {
+    var unlocked = false
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { unlocked }, inboxStore = Inbox())
+    model.refresh()
+    assertFalse(model.inboxKept.value)
+    assertEquals("the call is still read, for the screen to draw", listOf(call), (model.shown.value as WatchModel.Shown.Read).needsYou.calls)
+    unlocked = true
+    model.refresh()
+    assertTrue(model.inboxKept.value)
+  }
+
+  @Test fun v1KeepsNoInboxEvenInMemory() = runTest {
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true })
+    model.refresh()
+    model.took(answered)
+    assertTrue(model.inbox.value.isEmpty())
+    assertFalse(model.inboxKept.value)
+  }
+
+  @Test fun aLockKeepsWhatWasDismissedGone() = runTest {
+    var unlocked = true
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { unlocked }, inboxStore = store)
+    model.refresh()
+    model.dismiss(InboxItem.heldId("hold_1"))
+    unlocked = false
+    model.clearInboxIfLocked()
+    model.refresh()
+    assertTrue("the lines go", store.items.isEmpty())
+    assertEquals("the bare ids stay", setOf(InboxItem.heldId("hold_1")), store.gone)
+    unlocked = true
+    model.refresh()
+    assertTrue("not back, unread", model.inbox.value.isEmpty())
+  }
+
+  @Test fun anOutcomeThatLandsAfterSigningOutHereIsDropped() = runTest {
+    val signIn = signIn()
+    lateinit var model: WatchModel
+    val phone = Phone {
+      if (it is WatchRequest.Refuse) {
+        model.signOutHere()
+        Asked.Answered(WatchReply.Done("Refused"))
+      } else reads(it)
+    }
+    model = WatchModel(phone, now = { t }, unlocked = { true }, signIn = signIn)
+    model.refresh()
+    model.refuse("hold_1")
+    assertNull(model.outcome.value)
+    model.signInHere()
+    assertNull("never shown after Sign in", model.outcome.value)
+  }
+
+  @Test fun severalHaltsLandingAfterSigningOutHereAreDropped() = runTest {
+    val signIn = signIn()
+    val two = WatchReply.Tafs(listOf(TafLine("taf_1", "Refunds", "Ready", halted = false), TafLine("taf_2", "Invoices", "Ready", halted = false),
+      TafLine("taf_3", "Parcels", "Ready", halted = false)), allHalted = false)
+    lateinit var model: WatchModel
+    val phone = Phone {
+      when (it) {
+        is WatchRequest.Halt -> { model.signOutHere(); Asked.Answered(WatchReply.Done("Halted")) }
+        is WatchRequest.NeedsYou -> Asked.Answered(needsYou)
+        else -> Asked.Answered(two)
+      }
+    }
+    model = WatchModel(phone, now = { t }, unlocked = { true }, signIn = signIn, reviewFirst = true)
+    model.refresh()
+    model.pickToHalt()
+    model.togglePick("taf_1")
+    model.togglePick("taf_2")
+    model.askPicked()
+    model.haltPicked()
+    assertNull(model.outcome.value)
+  }
+
+  @Test fun signedOutHereNoTafPageIsRead() = runTest {
+    val signIn = signIn()
+    val phone = Phone { reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, signIn = signIn)
+    model.signOutHere()
+    phone.asked.clear()
+    model.openTaf("taf_1")
+    assertTrue(phone.asked.isEmpty())
+    assertNull(model.taf.value)
+  }
+
+  @Test fun thePhoneSignedOutClosesWhatAnOpenScreenRead() = runTest {
+    var signedIn = true
+    val phone = Phone {
+      when {
+        !signedIn -> Asked.Answered(WatchReply.SignedOut)
+        it is WatchRequest.Taf -> Asked.Answered(WatchReply.TafPage("taf_1", "Refunds", "Ready", false, "Refunds orders"))
+        else -> reads(it)
+      }
+    }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, reviewFirst = true)
+    model.refresh()
+    model.openTaf("taf_1")
+    assertTrue(model.taf.value != null)
+    signedIn = false
+    model.refresh()
+    assertNull(model.taf.value)
+    assertNull(model.haltPick.value)
+    assertNull(model.calendar.value)
+    assertNull(model.account.value)
+  }
 }

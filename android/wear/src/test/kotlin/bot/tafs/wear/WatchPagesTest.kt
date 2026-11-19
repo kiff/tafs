@@ -330,4 +330,30 @@ class WatchPagesTest {
     val lines = listOf(heldLine, answerLine, InboxItem(InboxItem.askId("wa_03"), InboxItem.Kind.ASK, null, "Done", 3))
     assertEquals(lines, PreferencesInboxStore.decode(PreferencesInboxStore.encode(lines)))
   }
+
+  // MARK: The batch's pre-review (#1408)
+
+  /** A Halt confirmed from the menu comes back to it: what came of it is said there, "set a screen lock" included. */
+  @Test fun theMenuSaysWhatCameOfAHaltAskedFromIt() {
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(read, outcome = WatchModel.Outcome.NeedsLock, confirmingHaltAll = false, voice = null, result = null, working = emptyList(),
+          ready = emptyList(), act = actions, pages = pages(false))
+      }
+    }
+    compose.onNodeWithText(Words.Watch.menu).performClick()
+    compose.onNodeWithText(Words.Watch.needsLock).assertExists()
+  }
+
+  /** The Inbox not kept (locked, no screen lock): the call that needs the person is shown as the phone answered it, never "Nothing new". */
+  @Test fun anInboxNotKeptShowsWhatThePhoneAnsweredNow() {
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(read, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), pager = rememberPagerState(initialPage = 1) { pages(false).size }, inbox = null)
+      }
+    }
+    compose.onNodeWithText("Reship order #5098").assertExists()
+    compose.onAllNodesWithText(Words.Watch.inboxEmpty).assertCountEquals(0)
+  }
 }

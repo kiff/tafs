@@ -197,6 +197,7 @@ class WatchActivity : ComponentActivity() {
           },
         )
         val inbox by model.inbox.collectAsState()
+        val inboxKept by model.inboxKept.collectAsState()
         // Play stops the moment the review is left: its recording is erased then (WatchModel).
         androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
           if (voice !is WatchModel.Voice.Review) playback.release()
@@ -208,7 +209,8 @@ class WatchActivity : ComponentActivity() {
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
-            probe = if (BuildConfig.TIMING) probe else null, inbox = inbox, taf = taf, haltPick = haltPick,
+            // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
+            probe = if (BuildConfig.TIMING) probe else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
             signedOutHere = signedOutHere, calendar = calendar, account = account)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
