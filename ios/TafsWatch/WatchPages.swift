@@ -92,7 +92,7 @@ struct WatchPagesView: View {
         case .tafs:
             TafsScreen(model: tafs, offersHalt: false, opensPages: true, openInbox: { page = .inbox })
         case .account:
-            WatchAccountPage()
+            WatchAccountScreen(model: tafs.accountPage())
         }
     }
 }
@@ -160,19 +160,5 @@ struct WatchMenu: View {
             .navigationTitle(Words.Watch.menu)
         }
         .task { await tafs.load() }
-    }
-}
-
-/// Account, until the account read is drawn (step vi): what this watch holds and can't do.
-struct WatchAccountPage: View {
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                Text(Words.Watch.trust)
-                    .font(.footnote)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .navigationTitle(Words.Settings.title)
-        }
     }
 }

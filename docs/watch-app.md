@@ -202,8 +202,8 @@ Nothing leaves the watch before Send:
   `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
   `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
 
-**Step (vi), first half: a held call whole, and a calendar day** (`CalendarDay.swift`: `CalendarDayModel`,
-`CalendarDayScreen`; tested in `CalendarDayModelTests`), as Wear OS's:
+**Step (vi): a held call whole, a calendar day, and Account** (`CalendarDay.swift`, `AccountPage.swift`; tested in
+`CalendarDayModelTests` and `AccountPageModelTests`), as Wear OS's:
 - **A held call,** opened from the Inbox while Needs you holds it: whole, as the phone's Needs you words it (its taf, what
   it asks with its amount, KIFF's reason, by when), Refuse where Needs you offers it, Approve on your phone, and "Nothing is
   sent until you approve.". Approving is never on the watch. watchOS has no way for a watch app to open the phone's app, so
@@ -213,9 +213,14 @@ Nothing leaves the watch before Send:
   words and "×3" when it happens more than once. **Previous day** and **Next day** read the day before or after the one
   shown; the title is Today only for the day the phone answered as today, else the date in the watch's language. In memory
   only, forgotten on Close, and an answer for a day asked before the last, or after Close, is never drawn.
-- **Second half, its own PR:** Account, and Sign out on this watch.
-- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`; the phone's `calendar.today`,
-  `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`).
+- **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
+  account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
+  the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
+- **Not yet: Sign out on this watch.** Wear OS keeps a flag for it on the watch; on Apple Watch that's one more thing kept,
+  so it waits for a word on the privacy text first.
+- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
+  phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
+  `settings.plan`, `settings.language_title`, `settings.version`).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 

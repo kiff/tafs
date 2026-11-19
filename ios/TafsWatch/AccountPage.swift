@@ -1,0 +1,122 @@
+import SwiftUI
+
+/// v2's Account (docs/watch-app.md, "Step (vi)"), as Wear OS's: read from the phone (`account`) each time the page is shown,
+/// in memory only. Who is signed in, the plan's line as the phone's Account shows it, this watch's language and version, and
+/// what the watch holds and can't do.
+@MainActor
+final class AccountPageModel: ObservableObject {
+    enum State: Equatable {
+        case reading
+        case loaded(WatchAccount)
+        case unreachable
+        case signedOut
+        /// A phone from before the read: "Update tafs on your phone".
+        case updatePhone
+        case failed(String)
+    }
+
+    @Published private(set) var state: State = .reading
+    private let phone: PhoneAsking
+    private let clock: () -> Date
+
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
+        self.phone = phone
+        self.clock = clock
+    }
+
+    func load() async {
+        if case .loaded = state {} else { state = .reading }
+        guard let reply = await phone.ask(WatchRequest(.account, made: clock())) else { state = .unreachable; return }
+        switch reply.outcome {
+        case .ok:
+            guard let account = reply.account else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
+            state = .loaded(account)
+        case .signedOut:
+            state = .signedOut
+        case .failed:
+            state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+        case .notYet:
+            state = .updatePhone
+        case .refused, .stale, .answered:
+            state = .unreachable
+        }
+    }
+
+    /// The page left the screen: nothing of it is kept.
+    func leave() {
+        state = .reading
+    }
+
+    /// This watch's language, in itself.
+    static func language(_ locale: Locale = .current) -> String {
+        let code = locale.language.languageCode?.identifier ?? locale.identifier
+        return locale.localizedString(forLanguageCode: code)?.localizedCapitalized ?? code
+    }
+
+    /// This watch app's version.
+    static func version(_ bundle: Bundle = .main) -> String {
+        bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
+    }
+}
+
+extension TafsModel {
+    /// Account, read through the same phone as Your tafs.
+    func accountPage() -> AccountPageModel {
+        AccountPageModel(phone: phone, clock: clock)
+    }
+}
+
+/// Account: Signed in (the email and the account's name), Plan, the watch's language and version, and the trust line.
+struct WatchAccountScreen: View {
+    @StateObject private var model: AccountPageModel
+
+    init(model: @autoclosure @escaping () -> AccountPageModel) {
+        _model = StateObject(wrappedValue: model())
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                switch model.state {
+                case .reading:
+                    ProgressView()
+                case .loaded(let account):
+                    if account.email != nil || account.account != nil {
+                        Section(Words.Watch.signedIn) {
+                            if let email = account.email { Text(verbatim: email).font(.footnote) }
+                            if let name = account.account { Text(verbatim: name).font(.footnote) }
+                        }
+                    }
+                    if let plan = account.plan {
+                        Section(Words.Settings.plan) { Text(plan).font(.footnote) }
+                    }
+                case .unreachable:
+                    notice(Words.Watch.phoneNotReachable)
+                case .signedOut:
+                    notice(Words.Watch.signInOnPhone)
+                case .updatePhone:
+                    notice(Words.Watch.updatePhone)
+                case .failed(let why):
+                    notice(why)
+                }
+                Section {
+                    LabeledContent(Words.Settings.languageTitle, value: AccountPageModel.language())
+                    LabeledContent(Words.Settings.version, value: AccountPageModel.version())
+                }
+                Text(Words.Watch.trust)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+            }
+            .navigationTitle(Words.Settings.title)
+        }
+        .task { await model.load() }
+        .onDisappear { model.leave() }
+    }
+
+    /// Why the phone's part isn't shown, with Try again; the watch's own lines stay below it.
+    @ViewBuilder private func notice(_ line: String) -> some View {
+        Text(line).font(.footnote)
+        Button(Words.Common.tryAgain) { Task { await model.load() } }
+    }
+}
