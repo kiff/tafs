@@ -30,13 +30,13 @@ final class WatchPagesTests: XCTestCase {
         XCTAssertEqual(Set(WatchPage.allCases.map(\.title)).count, WatchPage.allCases.count, "no two pages share a name")
     }
 
-    /// The Inbox's count on Coach's home is the held calls the phone read, and nothing before the phone answers: never
-    /// "0 unread" for a read that hasn't come.
+    /// The Inbox's count on Coach's home is the held calls the phone read; no line before the phone answers, and none
+    /// while nothing waits (as on Wear OS and in the mockup): never "0 unread".
     func testTheInboxCountIsWhatThePhoneRead() {
         let call = WatchNeedsYou.Call(id: "ce_1", taf: "Rae", what: "Refund order 4502", reason: "Over the limit", answerBy: "10:51")
         XCTAssertEqual(WatchPage.unread(.loaded(WatchNeedsYou(count: 3, calls: [call, call], at: now))), 2,
                        "the calls the Inbox shows, not steps answered on the phone")
-        XCTAssertEqual(WatchPage.unread(.loaded(WatchNeedsYou(count: 0, calls: [], at: now))), 0)
+        XCTAssertNil(WatchPage.unread(.loaded(WatchNeedsYou(count: 0, calls: [], at: now))), "nothing waits: no line")
         XCTAssertNil(WatchPage.unread(.loading))
         XCTAssertNil(WatchPage.unread(.unreachable))
         XCTAssertNil(WatchPage.unread(.signedOut))

@@ -32,9 +32,10 @@ enum WatchPage: String, CaseIterable, Identifiable {
     }
 
     /// What waits in the Inbox, for the count on Coach's home: the calls Needs you holds, as v1 reads them. The inbox
-    /// kept on the watch, with read and dismissed, is step (iv). Nil until the phone has answered.
+    /// kept on the watch, with read and dismissed, is step (iv). Nil, so no line, until the phone has answered and while
+    /// nothing waits: the line shows only above none, as on Wear OS and in the mockup.
     static func unread(_ state: NeedsYouModel.State) -> Int? {
-        if case .loaded(let page) = state { return page.calls.count }
+        if case .loaded(let page) = state, !page.calls.isEmpty { return page.calls.count }
         return nil
     }
 

@@ -121,7 +121,7 @@ turns on, as that one line, once the last step lands and the owner has tried the
   Account; Brief after Your tafs only with `NeedsYouModel.briefOnWatch` on, which still waits for the owner's yes. Each
   is named with the phone's own word where the phone has the page.
 - **Coach's home:** "Ask Coach" first, which opens v1's Coach screen; then "N unread in Inbox", only once the phone has
-  answered (never "0" for a read that hasn't come), a tap going to the Inbox; the line that Coach gets words, never a
+  answered and only while something waits (never "0 unread"), a tap going to the Inbox; the line that Coach gets words, never a
   voice; and **Menu** at the foot.
 - **The menu:** every page by name, and Halt at the very bottom, apart from the rest, offered only while a taf the phone
   listed runs. Until step (v), Halt is v1's Halt all, asked once more; the menu then closes on Your tafs, where the
