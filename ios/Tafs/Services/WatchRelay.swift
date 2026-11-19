@@ -42,21 +42,72 @@ extension WatchReading {
 @MainActor
 enum WatchRelay {
     /// A held call's summary as the watch may keep it (its Inbox, watch v2): with no amount in it, even where KIFF's words
-    /// write one in: any figure with a currency sign or code before or after it goes, and what's left is tidied of the commas
-    /// and dashes around it. A figure with no currency stays, so an order's number is never cut.
-    static func withoutAmount(_ summary: String) -> String {
+    /// write one in. First the call's own amount, in the ways it's written (150, 150.00, 150,00, 1,234.56, 1.234,56,
+    /// 1 234,56), with its currency beside it if there is one; then any figure with a currency sign, code or word before or
+    /// after it. A figure with no currency stays, so an order's number is never cut, and a space joins digits into one
+    /// figure only in groups of three beside a currency ("order 4502 150 €" keeps 4502).
+    static func withoutAmount(_ summary: String, amount: Money? = nil) -> String {
         var words = summary
-        let figure = #"\d+(?:[.,  ]\d{3})*(?:[.,]\d+)?"#
-        let currency = #"(?:[€$£¥₹]|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD)\b)"#
+        func remove(_ pattern: String) {
+            words = words.replacingOccurrences(of: pattern, with: " ", options: [.regularExpression, .caseInsensitive])
+        }
+        if let amount, let own = ownFigure(amount) { remove(own) }
         // A currency before its figure first, then after it: one pattern with both would take "1042 EUR" from
         // "order 1042 EUR 150.00", leaving the amount and cutting the order's number (dev-android's read).
-        for money in [currency + #"\s?"# + figure, figure + #"\s?"# + currency] {
-            words = words.replacingOccurrences(of: money, with: " ", options: [.regularExpression, .caseInsensitive])
+        for figure in [spacedFigure, plainFigure] {
+            for money in [currency + #"\s?"# + figure, figure + #"\s?"# + currency] { remove(money) }
         }
         words = words.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         words = words.replacingOccurrences(of: #"\s+([,.;:])"#, with: "$1", options: .regularExpression)
         let edges = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;:-–—·"))
         return words.trimmingCharacters(in: edges)
+    }
+
+    /// A currency as titles write it in tafs' languages: a sign, złoty, crowns, Swiss francs, a code, or a word.
+    private static let currency =
+        #"(?:[€$£¥₹]|\bzł|\bkr\b|\bFr\.|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK)\b|\b(?:euros?|dollars?|pounds?|francs?)\b)"#
+    /// A figure grouped by spaces in threes: "1 250,50".
+    private static let spacedFigure = #"(?<![\d.,'’])\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?(?![\d])"#
+    /// A figure with commas, points or the Swiss apostrophe: "150", "150.00", "1,234.56", "1.234,56", "1'234.50".
+    private static let plainFigure = #"(?<![\d.,'’])\d+(?:[.,'’]\d{3})*(?:[.,]\d+)?(?![\d])"#
+
+    /// The call's own amount as a pattern: its whole part plain or grouped in threes, its fraction (optional when it's all
+    /// zeros, else in full or without its trailing zeros), and its currency, or any currency, on either side. A bare amount,
+    /// with no unit, goes too: it's the figure the owner reads in Needs you, as Android takes it out for Wear.
+    private static func ownFigure(_ amount: Money) -> String? {
+        let scale = max(amount.scale, 0)
+        let digits = String(amount.minor.magnitude)
+        let padded = String(repeating: "0", count: max(0, scale + 1 - digits.count)) + digits
+        let whole = String(padded.dropLast(scale))
+        let fraction = String(padded.suffix(scale))
+        var wholes = [whole]
+        if whole.count > 3 {
+            for separator in [",", ".", " ", "\u{00A0}", "\u{202F}", "'", "’"] { wholes.append(grouped(whole, by: separator)) }
+        }
+        var figure = "(?:" + wholes.sorted { $0.count > $1.count }.map(NSRegularExpression.escapedPattern(for:))
+            .joined(separator: "|") + ")"
+        if fraction.allSatisfy({ $0 == "0" }) {
+            if !fraction.isEmpty { figure += "(?:[.,]\(fraction))?" }
+        } else {
+            let short = String(fraction.reversed().drop { $0 == "0" }.reversed())
+            figure += "[.,](?:" + Set([fraction, short]).sorted { $0.count > $1.count }.joined(separator: "|") + ")"
+        }
+        let unit = amount.currency.map { "(?:" + currency + #"|\b"# + NSRegularExpression.escapedPattern(for: $0) + #"\b)"# }
+            ?? currency
+        // Not the start of a longer figure either: "150.5" isn't 150.00, and stays whole (as on Android).
+        return "(?:" + unit + #"\s?)?(?<![\d.,'’])"# + figure + #"(?![.,]?\d)(?:\s?"# + unit + ")?"
+    }
+
+    /// "1234567" as "1,234,567" with the separator given.
+    private static func grouped(_ whole: String, by separator: String) -> String {
+        var groups: [String] = []
+        var rest = Substring(whole)
+        while rest.count > 3 {
+            groups.insert(String(rest.suffix(3)), at: 0)
+            rest = rest.dropLast(3)
+        }
+        groups.insert(String(rest), at: 0)
+        return groups.joined(separator: separator)
     }
 
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
@@ -170,7 +221,7 @@ struct KeptWatchReading: WatchReading {
                 let taf = names.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? Words.Coach.title : nil)
                 let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
                 return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what,
-                                          summary: WatchRelay.withoutAmount(call.proposed.summary),
+                                          summary: WatchRelay.withoutAmount(call.proposed.summary, amount: call.proposed.amount),
                                           reason: call.reason,
                                           answerBy: HoldNotification.time(call.expiresAt, in: zone))
             }

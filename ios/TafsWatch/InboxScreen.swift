@@ -91,9 +91,13 @@ struct InboxLineScreen: View {
                 }
             case .held:
                 if let call = Self.held(line, in: needsYou.state) {
+                    // The call whole, as the phone's Needs you words it; Refuse here, Approve only on the phone.
                     HeldCallRow(call: call, answer: needsYou.answers[call.id]) {
                         Task { await needsYou.refuse(call.id) }
                     }
+                    Text(Words.Watch.nothingSentUntil)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(Self.title(line)).font(.headline)

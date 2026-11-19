@@ -39,6 +39,14 @@ struct TafsScreen: View {
                         }
                     }
                 }
+                if opensPages {
+                    // v2 (step vi): today's calendar, at the foot of Your tafs.
+                    Section {
+                        NavigationLink(Words.Watch.calendarToday) {
+                            CalendarDayScreen(model: model.calendarDay())
+                        }
+                    }
+                }
                 if offersHalt && !tafs.isEmpty {
                     Section {
                         switch model.halts[TafsModel.all] {

@@ -152,8 +152,10 @@ Nothing leaves the watch before Send:
 `InboxModelTests`), as Wear OS's:
 - **The lines:** each held call Needs you lists, and each answer Coach gives words sent from this watch, newest first, kept until
   dismissed: its taf (Coach for an answer), its words, and a blue dot while it's unread. A held call's words are what it asks
-  **without its amount** (the phone's `summary`, as Wear OS's, with any figure with a currency taken out of it even where
-  KIFF's words write one in; Needs you's title from a phone from before it): the amount
+  **without its amount** (the phone's `summary`, as Wear OS's, with the call's own amount taken out of it in the ways it's
+  written (a bare amount with no unit too), then any figure with a currency sign, code or word beside it, złoty, crowns,
+  Swiss francs and the Swiss apostrophe included; Needs
+  you's title from a phone from before it): the amount
   shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
   the person saw it arrive. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
@@ -201,6 +203,27 @@ Nothing leaves the watch before Send:
   `watch.update_phone`, `watch.halt_pick_title`, `watch.all_your_tafs`, `watch.halt_now_count`, `watch.halt_all_q`,
   `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
   `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
+
+**Step (vi): a held call whole, a calendar day, and Account** (no Sign out on this watch; `CalendarDay.swift`, `AccountPage.swift`; tested in
+`CalendarDayModelTests` and `AccountPageModelTests`), as Wear OS's:
+- **A held call,** opened from the Inbox while Needs you holds it: whole, as the phone's Needs you words it (its taf, what
+  it asks with its amount, KIFF's reason, by when), Refuse where Needs you offers it, Approve on your phone, and "Nothing is
+  sent until you approve.". Approving is never on the watch. watchOS has no way for a watch app to open the phone's app, so
+  there's no Open on phone.
+- **Today's calendar,** at the foot of Your tafs, reads the phone's `calendar` for today in the account's zone: tafs cloud's
+  line for the day (in red when the account is halted), then each event in tafs cloud's order with its time, its taf, its
+  words and "×3" when it happens more than once. **Previous day** and **Next day** read the day before or after the one
+  shown; the title is Today only for the day the phone answered as today, else the date in the watch's language. In memory
+  only, forgotten on Close, and an answer for a day asked before the last, or after Close, is never drawn.
+- **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
+  account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
+  the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
+- **No Sign out on this watch,** unlike Wear OS: the Apple Watch app has no session of its own, signing out on the iPhone
+  clears everything it holds (the Inbox included), and a sign-out of the watch alone would need a flag kept on it, which
+  the privacy text doesn't name. If the owner wants it, it comes with that flag and one more clause in the text.
+- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
+  phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
+  `settings.plan`, `settings.language_title`, `settings.version`).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
