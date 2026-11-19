@@ -1,0 +1,2 @@
+• O seu relógio: o telemóvel responde às novas páginas da versão de teste do Wear OS: a página de um taf, o calendário de hoje e a sua conta.
+• Quando uma ligação não é concluída, diz agora porquê no seu idioma, nunca com uma mensagem técnica.
