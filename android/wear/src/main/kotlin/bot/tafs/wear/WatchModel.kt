@@ -398,6 +398,20 @@ class WatchModel(
   /** The watch's asks as tafs cloud last said, by id: in memory only. */
   val asks: StateFlow<Map<String, AskLine>> = _asks.asStateFlow()
 
+  /** What the person said from this watch, by its ask's id, with when (W4, Ask Coach as one conversation). Memory only. */
+  data class Said(val text: String, val at: Long)
+
+  private val _said = MutableStateFlow<Map<String, Said>>(emptyMap())
+  val said: StateFlow<Map<String, Said>> = _said.asStateFlow()
+
+  /**
+   * Today's conversation with Coach from this watch, oldest first: each thing said and its ask as the phone relays it (W4).
+   * In memory only, as the asks are: forgotten when the app is put away and on sign-out, so nothing new is kept on the watch
+   * (docs/watch-wear.md, "What the watch keeps"). Until tafs cloud keeps the watch's conversation, it's what this watch said.
+   */
+  fun thread(): List<Pair<Said, AskLine>> =
+    _said.value.mapNotNull { (id, said) -> _asks.value[id]?.let { said to it } }.sortedBy { it.first.at }
+
   private val _result = MutableStateFlow<AskLine?>(null)
 
   /** The result card open now: an ended ask, its taf and its line, with Hear and Reply. */
@@ -544,6 +558,7 @@ class WatchModel(
           receivedAt[sending.clientId] = at
           timings[sending.clientId] = Timing(listenMs, heardAt?.let { at - it }, null)
           awaiting += reply.ask.id
+          _said.value = _said.value + (reply.ask.id to Said(sending.text, at))
           took(reply.ask)
           Voice.Sent(reply.ask)
         }
@@ -816,6 +831,7 @@ class WatchModel(
     _confirmingHaltAll.value = false
     voiceNow = null
     _asks.value = emptyMap()
+    _said.value = emptyMap()
     _result.value = null
     _taf.value = null
     _haltPick.value = null

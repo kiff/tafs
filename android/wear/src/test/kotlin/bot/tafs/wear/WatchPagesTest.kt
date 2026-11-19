@@ -83,12 +83,13 @@ class WatchPagesTest {
     pages: List<Page> = pages(false),
     voice: WatchModel.Voice? = null,
     kept: WatchModel.Draft? = null,
+    thread: List<Pair<WatchModel.Said, AskLine>> = emptyList(),
   ) =
     compose.setContent {
       MaterialTheme {
         WatchPages(
           shown, outcome = null, confirmingHaltAll = confirmingHaltAll, voice = voice, result = null, working = emptyList(), ready = ready, act = actions,
-          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size }, kept = kept,
+          pages = pages, pager = rememberPagerState(initialPage = pages.indexOf(page)) { pages.size }, kept = kept, thread = thread,
         )
       }
     }
@@ -364,6 +365,30 @@ class WatchPagesTest {
     show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
     compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
     compose.onAllNodesWithContentDescription(Words.Watch.play).assertCountEquals(0)
+  }
+
+  // MARK: Ask Coach as one conversation (W4, the owner-approved mockup)
+
+  /** Coach's page shows today's turns from this watch: the person's words, then Coach's answer, which opens its card. */
+  @Test fun coachsPageShowsTheConversationAndAnAnswerOpens() {
+    val working = answered.copy(id = "ask_2", state = "working", words = "Working", line = null)
+    show(read, thread = listOf(
+      WatchModel.Said("Pause the refunds until noon", 1_000L) to answered.copy(line = "Refunds are paused until 12:00."),
+      WatchModel.Said("What needs me today?", 2_000L) to working,
+    ))
+    compose.onNodeWithText("Pause the refunds until noon").assertExists()
+    compose.onNodeWithTag(THREAD_ANSWER + answered.id, useUnmergedTree = true).assertExists()
+    compose.onNodeWithText("What needs me today?").assertExists()
+    // While Coach works, its side is tafs cloud's state, and it opens nothing.
+    compose.onNodeWithTag(THREAD_WORKING + working.id, useUnmergedTree = true).assertExists()
+    compose.onNodeWithText("Refunds are paused until 12:00.").performClick()
+    assertEquals(listOf(answered.id), opened.map { it.id })
+  }
+
+  @Test fun withNoConversationCoachsPageIsAsBefore() {
+    show(read)
+    compose.onAllNodesWithTag(THREAD_TURN + answered.id, useUnmergedTree = true).assertCountEquals(0)
+    compose.onNodeWithText(Words.Coach.ask).assertExists()
   }
 
   // MARK: Sent (W2, the owner's Watch 5 test)
