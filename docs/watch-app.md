@@ -161,7 +161,8 @@ Nothing leaves the watch before Send:
   it back.
 - **Only with a passcode.** The lines are kept in their own file in the app's container on the watch (`tafs.inbox.json`, the
   lines and the ids taken away), written with complete file protection: unreadable whenever the watch is locked, not only
-  before its first unlock (which is all the app's defaults would get), as a held call's amount should be. With no passcode nothing is stored or added, the lines go
+  before its first unlock (which is all the app's defaults would get), as a held call's amount should be. Both halves are
+  written together, and a file there that can't be read (the watch locked) is never written over. With no passcode nothing is stored or added, the lines go
   when the app is opened or put away (the bare ids taken away stay, so a dismissed line doesn't come back unread), and the page
   is Needs you as the phone answered now, with the home counting those calls: a call that needs the person is never hidden
   behind "Nothing new". A locked Apple Watch doesn't show the app, so the passcode is what's checked.

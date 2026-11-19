@@ -51,6 +51,8 @@ final class FileInboxStore: InboxStore {
     }
 
     private let url: URL
+    /// What the file holds, once read: both halves are written from it together, so one never goes with the other.
+    private var known: Kept?
 
     init(url: URL = FileInboxStore.place) {
         self.url = url
@@ -62,33 +64,44 @@ final class FileInboxStore: InboxStore {
             .appendingPathComponent(InboxModel.storeKey + ".json")
     }
 
-    func lines() -> [InboxLine] { read().lines }
+    func lines() -> [InboxLine] { read()?.lines ?? [] }
 
     func write(_ lines: [InboxLine]) {
-        var kept = read()
+        // A file there that can't be read now (the watch locked) is never written over: half of it would be lost.
+        guard var kept = read() else { return }
         kept.lines = lines
         save(kept)
     }
 
-    func dismissed() -> Set<String> { Set(read().dismissed) }
+    func dismissed() -> Set<String> { Set(read()?.dismissed ?? []) }
 
     func writeDismissed(_ ids: Set<String>) {
-        var kept = read()
+        guard var kept = read() else { return }
         kept.dismissed = ids.sorted()
         save(kept)
     }
 
     func clear() {
         try? FileManager.default.removeItem(at: url)
+        known = Kept()
     }
 
-    private func read() -> Kept {
-        guard let data = try? Data(contentsOf: url) else { return Kept() }
-        return (try? JSONDecoder().decode(Kept.self, from: data)) ?? Kept()
+    /// The file's two halves: what was read or written last, else the file; nothing kept is none. Nil when the file is there
+    /// but can't be read now, as while the watch is locked.
+    private func read() -> Kept? {
+        if let known { return known }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            known = Kept()
+            return known
+        }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        known = (try? JSONDecoder().decode(Kept.self, from: data)) ?? Kept()
+        return known
     }
 
     private func save(_ kept: Kept) {
         guard !kept.lines.isEmpty || !kept.dismissed.isEmpty else { return clear() }
+        known = kept
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? JSONEncoder().encode(kept).write(to: url, options: [.atomic, .completeFileProtection])
     }

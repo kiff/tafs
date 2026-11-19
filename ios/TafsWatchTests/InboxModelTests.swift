@@ -140,6 +140,37 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(store.gone, [])
     }
 
+    /// A file there that can't be read now (as while the watch is locked) is never written over, so neither half is lost
+    /// (agentgabo's read). A folder in the file's place stands for it: it's there, and reading it fails.
+    func testAFileThatCantBeReadIsNeverWrittenOver() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("InboxModelTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tafs.inbox.json")
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        let store = FileInboxStore(url: url)
+        XCTAssertEqual(store.lines(), [])
+        store.write([InboxLine(id: "held:h_1", kind: .held, title: "Rae", line: "Refund", at: now)])
+        store.writeDismissed(["held:h_0"])
+        var folderStill: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path, isDirectory: &folderStill))
+        XCTAssertTrue(folderStill.boolValue, "nothing written over what couldn't be read")
+    }
+
+    /// Both halves are written together: the lines and the ids taken away each survive the other's write.
+    func testEachHalfSurvivesTheOthersWrite() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("InboxModelTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tafs.inbox.json")
+        let line = InboxLine(id: "held:h_1", kind: .held, title: "Rae", line: "Refund", at: now)
+        let store = FileInboxStore(url: url)
+        store.write([line])
+        store.writeDismissed(["held:h_0"])
+        store.write([line])
+        let opened = FileInboxStore(url: url)
+        XCTAssertEqual(opened.lines(), [line])
+        XCTAssertEqual(opened.dismissed(), ["held:h_0"])
+    }
+
     /// The file store keeps the lines and the ids taken away in one protected file, and clearing removes it.
     func testTheFileStoreKeepsAndClears() throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("InboxModelTests-\(UUID().uuidString)")
