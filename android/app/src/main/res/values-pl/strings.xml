@@ -1326,6 +1326,7 @@
     <string name="files_made_by">Utworzył</string>
     <string name="files_none_yet">Jeszcze brak · przechowywane 30 dni</string>
     <string name="files_pick_one">Wybierz plik, aby zobaczyć go tutaj.</string>
+    <string name="files_preview_start">Pokazano tylko początek. Pobierz plik, aby przeczytać całość.</string>
     <string name="files_saved">Zapisano na tym urządzeniu</string>
     <string name="files_see_in_chat">Zobacz w czacie</string>
     <string name="files_share">Udostępnij</string>

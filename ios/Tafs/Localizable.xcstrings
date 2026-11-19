@@ -61460,6 +61460,12 @@
     "files.preview_start": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur der Anfang wird angezeigt. Lade die Datei herunter, um alles zu lesen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -61470,6 +61476,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Solo se muestra el principio. Descarga el archivo para leerlo entero."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seul le début est affiché. Téléchargez le fichier pour le lire en entier."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È mostrato solo l'inizio. Scarica il file per leggerlo tutto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen het begin wordt getoond. Download het bestand om alles te lezen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokazano tylko początek. Pobierz plik, aby przeczytać całość."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só é mostrado o início. Transfira o ficheiro para o ler na totalidade."
           }
         }
       }
