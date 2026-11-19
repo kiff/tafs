@@ -196,7 +196,7 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   It shows them in full, scrolled with the crown or a swipe, starting below the face's top curve, and fading out at the curve
   and above the foot rather than being cut. Its three actions are pinned at the foot, always in reach without scrolling (W9):
   round icon buttons in a row that follows the face's bottom curve, **Delete** (✕, left: "Deleted. Nothing was sent.", which
-  closes by itself after 2 s), **Send** (→, in the middle, the biggest, in amber) and **Re-record** (↻, right: the words
+  closes by itself after 2 s), **Send** (→, in the middle, the biggest, in orange) and **Re-record** (↻, right: the words
   dropped, ready again for the same ask). Each is named for TalkBack in the shared words (`chat.delete`, `common.send`,
   `watch.rerecord`). The last line of a long message rests above them (`REVIEW_FOOT`), so it's readable to its end.
 - **Type** opens the system's text input (`RemoteInput`: keyboard, handwriting or voice typing) and **Quick reply** four
@@ -322,11 +322,26 @@ screens (Ready, recording, the review, and v1's after them) back is Cancel (`clo
 it's left. While the words are being sent, or a Halt is, back is taken and does nothing: the phone's answer is shown when it
 comes. On the pages themselves back is the system's own, and leaves the app.
 
+**Colour** (W7, the owner's Galaxy Watch 5 test: "every button is purple"): colour by meaning, from the watch's one palette,
+`Look` (`Look.kt`), and only where it means something. **Send and the person's own words** are orange (`Look.send`): the
+microphone, the words as they're heard and on the review, a message kept for later, Send, Retry and Reply. **Coach** is blue
+(`Look.coach`): an ask at work and its turning ring on Sent, an answer's taf and Hear, an answer in the Inbox and its unread dot,
+the answer's words in `Look.onCoachGround`. **Held, waits for you** is amber (`Look.held`): Needs you, a held call and its
+reason, Approve on your phone, "1 needs you" on a taf's page, the mark on Not sure it arrived. **Done and sent** is green
+(`Look.done`): the check on Sent, and the dot of an ask ready (v1). **Delete, halt, refuse and sign out** are red
+(`Look.danger`): a halted taf's state, the switches of Choose which to halt, and Halt now, Halt this taf and Sign out asked again
+as red buttons; the review's ✕, the menu's Halt, Refuse, Delete on a kept message and Account's Sign out as grey ones with red
+words or a red mark. Every other button is grey (`Look.neutral`, words in `Look.onNeutral`; `Look.raised` on a card). Words on orange, amber, green and red are dark,
+for contrast. The theme (`WatchTheme`, `WatchColors`) is Wear Material3's with primary `Look.send`, its containers
+`Look.neutral` and error `Look.danger`, so nothing is Material's default purple (`WatchColoursTest`). Recording keeps mockup
+v2.1's red (`Look.recording`) and Start the brand's colours.
+
 **Screenshots** (`WearV2Screenshots`): v2's screens for review, not for Play, drawn through `WatchPages` (the switch stays off) in
-English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two sizes, 40 mm (396 ×
-396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread line, Tafs, a taf's
-page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long transcript (its
-actions pinned at the foot), and Recording. 22 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
+the watch's theme, in English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two
+sizes, 40 mm (396 × 396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread
+line, Tafs, a taf's page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long
+transcript (its actions pinned at the foot), Recording, Sent while Coach works, an answer's card, and Halt asked once more. 28
+images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
 they are; otherwise each screen is still drawn:
 
 ```bash

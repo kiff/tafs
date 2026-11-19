@@ -10,7 +10,6 @@ import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
 import androidx.wear.compose.foundation.pager.rememberPagerState
-import androidx.wear.compose.material3.MaterialTheme
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.CardLine
 import bot.tafs.watchlink.EventLine
@@ -47,7 +46,7 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
     // xhdpi: twice the dp in pixels, 396 and 450.
     RuntimeEnvironment.setQualifiers("en-w${dp}dp-h${dp}dp-round-watch-xhdpi")
     Res.install(ApplicationProvider.getApplicationContext())
-    compose.setContent { MaterialTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
+    compose.setContent { WatchTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
     compose.onRoot().captureRoboImage(File(repo, "android/play/wear-screenshots-v2/$size/$name.png").path)
     assertEquals("en", Res.language)
   }
@@ -128,6 +127,17 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
 
   @Test fun recording() = shot("11-recording") {
     pages(Page.Coach, voice = WatchModel.Voice.Listening("Move my call with Nord Atelier to Thursday at ten", null, since = System.currentTimeMillis() - 12_000))
+  }
+
+  /** Sent, while Coach is at work on it: the green check in Coach's turning ring. */
+  @Test fun sent() = shot("12-sent") { pages(Page.Coach, voice = WatchModel.Voice.Sent(working)) }
+
+  /** An answer's card: its taf in Coach's blue, the answer, Hear and Reply. */
+  @Test fun theResult() = shot("13-result") { ResultScreen(answered, act) }
+
+  /** Halt this taf, asked once more: Halt now in red, Cancel grey. */
+  @Test fun haltAsked() = shot("14-halt-confirm") {
+    pages(Page.Coach, haltPick = WatchModel.HaltPick(listOf(parcels, support, leads), setOf("taf_1"), confirming = true))
   }
 
   companion object {

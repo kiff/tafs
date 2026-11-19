@@ -121,16 +121,16 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     Column(Modifier.align(Alignment.TopCenter).padding(top = maxHeight * TOP_INSET_SHARE), horizontalAlignment = Alignment.CenterHorizontally) {
       val state = if (start != null) Words.Watch.ready else "● ${Words.Watch.recording}"
-      T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.red, lines = 1,
+      T("$state · ${limitShort()}", 11.sp, if (start != null) Look.dim else Look.recording, lines = 1,
         modifier = Modifier.semantics { contentDescription = "$state · ${Words.Watch.limit}" }.testTag(RECORD_STATE))
       Spacer(Modifier.height(2.dp))
       Box(Modifier.size(78.dp), contentAlignment = Alignment.Center) {
         // The ring fills to the limit.
         Canvas(Modifier.fillMaxSize()) {
           val stroke = size.minDimension * 0.06f
-          drawCircle(Look.surfaceHi, radius = size.minDimension / 2 - stroke, style = Stroke(stroke))
+          drawCircle(Look.neutral, radius = size.minDimension / 2 - stroke, style = Stroke(stroke))
           drawArc(
-            Look.amber, startAngle = -90f, sweepAngle = 360f * seconds / (LISTEN_LIMIT_MS / 1000f), useCenter = false,
+            Look.send, startAngle = -90f, sweepAngle = 360f * seconds / (LISTEN_LIMIT_MS / 1000f), useCenter = false,
             topLeft = Offset(stroke, stroke),
             size = Size(size.width - 2 * stroke, size.height - 2 * stroke),
             style = Stroke(stroke, cap = StrokeCap.Round),
@@ -141,7 +141,7 @@ private fun RecordScreen(heard: String?, seconds: Int, act: Actions, start: (() 
       T("%d:%02d / 0:%02d".format(seconds / 60, seconds % 60, LISTEN_LIMIT_MS / 1000), 13.sp, Look.text, lines = 1)
       Spacer(Modifier.height(2.dp))
       // The words as they're heard; before Start, what to do. Two lines: a third would meet the face's curve at its sides.
-      T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.text,
+      T(heard?.takeIf { it.isNotEmpty() } ?: Words.Watch.tapStart, 12.sp, if (heard.isNullOrEmpty()) Look.dim else Look.send,
         modifier = Modifier.width(150.dp), lines = 2, lineHeight = 15.sp)
     }
     Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 6.dp)) { QuietButton(Words.Common.cancel, act.closeVoice) }
@@ -157,10 +157,10 @@ private fun RecordButton(recording: Boolean, onClick: () -> Unit) {
   val label = if (recording) Words.Chat.stop else Words.Coach.start
   Box(
     Modifier.size(62.dp)
-      .then(if (recording) Modifier.border(5.dp, Look.red.copy(alpha = 0.28f), CircleShape) else Modifier)
+      .then(if (recording) Modifier.border(5.dp, Look.recording.copy(alpha = 0.28f), CircleShape) else Modifier)
       .padding(if (recording) 5.dp else 0.dp)
       .clip(CircleShape)
-      .then(if (recording) Modifier.background(Look.red) else Modifier.background(Brush.linearGradient(Look.brand)))
+      .then(if (recording) Modifier.background(Look.recording) else Modifier.background(Brush.linearGradient(Look.brand)))
       .clickable(onClick = onClick)
       .semantics { role = Role.Button; contentDescription = label }
       .testTag(if (recording) RECORD_STOP else RECORD_START),
@@ -214,7 +214,7 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
       val playback = act.playback
       if (audio != null && playback != null) item { PlayRow(audio, playback) }
       // Inset from the round edge, so no line of a long transcript is cut where the face curves (qa-kiff's device read, #1409).
-      item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
+      item { Text(text, style = MaterialTheme.typography.bodyMedium, color = Look.send, modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp)) }
       probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
     }
     // Words scrolled past the top curve, or down into the foot, fade out there rather than being cut by the face's edge.
@@ -228,14 +228,14 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
 }
 
 /**
- * The review's three actions, in a row that follows the face's bottom curve: Send lowest, in the middle, the biggest and in amber;
- * Delete and Re-record either side of it, lifted so they stay inside the round face.
+ * The review's three actions, in a row that follows the face's bottom curve: Send lowest, in the middle, the biggest and in Send's
+ * orange; Delete (its ✕ red) and Re-record (grey) either side of it, lifted so they stay inside the round face.
  */
 @Composable
 private fun ReviewActions(act: Actions, modifier: Modifier = Modifier) {
   Row(modifier, verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-    RoundIcon(Words.Chat.delete, act.delete, REVIEW_DELETE, Modifier.padding(bottom = 14.dp)) { crossGlyph(it) }
-    RoundIcon(Words.Common.send, act.send, REVIEW_SEND, size = 48.dp, container = Look.amber, content = Look.onAmber) { sendGlyph(it) }
+    RoundIcon(Words.Chat.delete, act.delete, REVIEW_DELETE, Modifier.padding(bottom = 14.dp), content = Look.danger) { crossGlyph(it) }
+    RoundIcon(Words.Common.send, act.send, REVIEW_SEND, size = 48.dp, container = Look.send, content = Look.onSend) { sendGlyph(it) }
     RoundIcon(Words.Watch.rerecord, act.rerecord, REVIEW_AGAIN, Modifier.padding(bottom = 14.dp)) { againGlyph(it) }
   }
 }
@@ -248,7 +248,7 @@ private fun RoundIcon(
   tag: String,
   modifier: Modifier = Modifier,
   size: Dp = 40.dp,
-  container: Color = Look.surfaceHi,
+  container: Color = Look.neutral,
   content: Color = Look.text,
   glyph: DrawScope.(Color) -> Unit,
 ) {
@@ -358,8 +358,8 @@ internal fun QuickReplyScreen(pick: (String) -> Unit, close: () -> Unit) {
   ScalingLazyColumn(Modifier.fillMaxSize(), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
     verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.quickReply) } }
-    for (line in quickReplies()) item { Button(onClick = { pick(line) }, modifier = Modifier.fillMaxWidth()) { Text(line) } }
-    item { Button(onClick = close, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) } }
+    for (line in quickReplies()) item { Button(onClick = { pick(line) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(line) } }
+    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.cancel) } }
   }
 }
 
@@ -369,20 +369,20 @@ internal fun quickReplies(): List<String> =
 
 /**
  * v2's "Sent" (W2, the owner's Watch 5 test: nothing showed that Coach had it, so it felt broken). It stays until the answer:
- * tafs cloud's state for the ask in its own words (stateLine: "Sent", then "Working"), with a ring turning while it's at work,
- * and the answer opens in its place the moment the ask ends (WatchModel.took). A tap goes back to Coach's home; the ask goes
- * on, and its answer comes as the result's alert.
+ * tafs cloud's state for the ask in its own words (stateLine: "Sent", then "Working"), the check green and Coach's blue ring turning
+ * while it's at work, and the answer opens in its place the moment the ask ends (WatchModel.took). A tap goes back to Coach's
+ * home; the ask goes on, and its answer comes as the result's alert.
  */
 @Composable
 internal fun SentScreenV2(ask: bot.tafs.watchlink.AskLine, act: Actions) {
   Centered(Modifier.background(Color.Black).clickable(onClick = act.closeVoice).testTag(SENT_V2)) {
     val mark: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
-      Box(Modifier.size(44.dp).border(BorderStroke(3.dp, Look.amber), CircleShape)) {
-        Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.amber, 0.07f) }
+      Box(Modifier.size(44.dp).border(BorderStroke(3.dp, Look.done), CircleShape)) {
+        Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.done, 0.07f) }
       }
     }
     if (ask.ended) Box(Modifier.size(64.dp), contentAlignment = Alignment.Center, content = mark)
-    else Box(Modifier.testTag(SENT_WORKING)) { SpinnerAround(64.dp, mark) }
+    else Box(Modifier.testTag(SENT_WORKING)) { SpinnerAround(64.dp, Look.coach, mark) }
     Spacer(Modifier.height(10.dp))
     T(Words.Watch.sent, 18.sp, Look.text, FontWeight.SemiBold, lines = 1)
     Spacer(Modifier.height(4.dp))

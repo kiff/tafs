@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -25,11 +24,11 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.PagerState
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.SwitchButton
+import androidx.wear.compose.material3.SwitchButtonDefaults
 import androidx.wear.compose.material3.Text
 import bot.tafs.watchlink.CardLine
 import kotlinx.coroutines.launch
@@ -42,10 +41,6 @@ import kotlinx.coroutines.launch
 
 /** Where the phone's Open on phone goes: it opens Needs you, and nothing else yet (`Alerts.openedFromWatch`). */
 private const val ON_PHONE = "needs-you"
-
-/** The colours of a button that halts: the watch's red, apart from the rest. */
-@Composable
-private fun haltColors() = ButtonDefaults.buttonColors(containerColor = Look.red, contentColor = Color.White)
 
 /**
  * A taf's page, read from the phone (`taf`): its name and state, what it does, its Card with each rule on a line, what of it waits
@@ -103,7 +98,7 @@ private fun ScalingLazyListScope.tafPage(
   val page = (open.read as? WatchModel.TafRead.Read)?.page
   page?.let {
     item {
-      Text(it.state, style = MaterialTheme.typography.bodySmall, color = if (it.halted) Look.red else Look.dim, textAlign = TextAlign.Center,
+      Text(it.state, style = MaterialTheme.typography.bodySmall, color = if (it.halted) Look.danger else Look.dim, textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth())
     }
   }
@@ -120,19 +115,19 @@ private fun ScalingLazyListScope.tafPage(
     label(Words.Chat.waitingForYou)
     if (page.waiting > 0) {
       // Its held calls are in the Inbox, with Refuse and Approve on your phone.
-      item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.needsYouCount(page.waiting)) } }
+      item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth(), colors = heldButton()) { Text(Words.Watch.needsYouCount(page.waiting)) } }
     } else {
       line(Words.Watch.nothingWaits)
     }
     if (page.halted) resumeOnPhone(act)
   }
   item { Spacer(Modifier.height(8.dp)) }
-  item { Button(onClick = settings, modifier = Modifier.fillMaxWidth()) { Text("${Words.Watch.itsSettings} ›") } }
+  item { Button(onClick = settings, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("${Words.Watch.itsSettings} ›") } }
   item {
     Text(Words.Watch.swipeSettings, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center,
       modifier = Modifier.fillMaxWidth())
   }
-  item { Button(onClick = act.closeTaf, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) } }
+  item { Button(onClick = act.closeTaf, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.close) } }
 }
 
 /** The page before the phone has answered, or when it can't, as v1 says it. */
@@ -142,12 +137,12 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
     WatchModel.TafRead.SignedOut -> line(Words.Watch.signInOnPhone)
     WatchModel.TafRead.PhoneUnreachable -> {
       line(Words.Watch.phoneNotReachable)
-      item { Button(onClick = { act.openTaf(open.tafId) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.tryAgain) } }
+      item { Button(onClick = { act.openTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.TafRead.UpdatePhone -> line(Words.Watch.updatePhone)
     is WatchModel.TafRead.Failed -> {
       read.words?.let { line(it) }
-      item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
+      item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
     }
     is WatchModel.TafRead.Read -> Unit
   }
@@ -157,21 +152,21 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
 private fun ScalingLazyListScope.tafSettings(open: WatchModel.OpenTaf, outcome: WatchModel.Outcome?, act: Actions, halt: () -> Unit) {
   item { ListHeader { Text(Words.Watch.settingsOf(open.name), textAlign = TextAlign.Center) } }
   outcome?.let { item { OutcomeCard(it, act) } }
-  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
+  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
   item { Spacer(Modifier.height(16.dp)) }
   if (open.halted) {
     resumeOnPhone(act)
   } else {
-    item { Button(onClick = halt, colors = haltColors(), modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.haltThis) } }
+    item { Button(onClick = halt, colors = dangerButton(), modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.haltThis) } }
   }
 }
 
 /** Halted: resuming starts only new work, and it's the phone's (it asks for a fingerprint or face). */
 private fun ScalingLazyListScope.resumeOnPhone(act: Actions) {
   item {
-    Text(Words.Halt.Explain.halted, color = Look.red, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
+    Text(Words.Halt.Explain.halted, color = Look.danger, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
   }
-  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
+  item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
 }
 
 private fun ScalingLazyListScope.label(words: String) = item {
@@ -201,8 +196,8 @@ private fun HaltQuestion(title: String, what: String, explain: String, halt: () 
       Text(explain, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
     }
-    item { Button(onClick = halt, colors = haltColors(), modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.now) } }
-    item { Button(onClick = cancel, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) } }
+    item { Button(onClick = halt, colors = dangerButton(), modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.now) } }
+    item { Button(onClick = cancel, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.cancel) } }
   }
 }
 
@@ -225,23 +220,35 @@ internal fun HaltPickScreen(pick: WatchModel.HaltPick, act: Actions) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.haltPickTitle, textAlign = TextAlign.Center) } }
     item {
-      SwitchButton(checked = pick.all, onCheckedChange = { act.togglePickAll() }, modifier = Modifier.fillMaxWidth(),
+      SwitchButton(checked = pick.all, onCheckedChange = { act.togglePickAll() }, modifier = Modifier.fillMaxWidth(), colors = haltPickColors(),
         label = { Text(Words.Watch.allYourTafs) })
     }
     for (taf in pick.offered) item {
-      SwitchButton(checked = taf.tafId in pick.picked, onCheckedChange = { act.togglePick(taf.tafId) }, modifier = Modifier.fillMaxWidth(),
+      SwitchButton(checked = taf.tafId in pick.picked, onCheckedChange = { act.togglePick(taf.tafId) }, modifier = Modifier.fillMaxWidth(), colors = haltPickColors(),
         label = { Text(taf.name) })
     }
     item { Spacer(Modifier.height(8.dp)) }
     item {
       val count = pick.chosen.size
-      Button(onClick = act.askPicked, enabled = count > 0, colors = haltColors(), modifier = Modifier.fillMaxWidth()) {
+      Button(onClick = act.askPicked, enabled = count > 0, colors = dangerButton(), modifier = Modifier.fillMaxWidth()) {
         Text(Words.Watch.haltNowCount(count))
       }
     }
-    item { Button(onClick = act.cancelPick, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) } }
+    item { Button(onClick = act.cancelPick, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.cancel) } }
   }
 }
+
+/** A taf picked to halt: its switch in the red of halting, on the grey of a button that means nothing else. */
+@Composable
+private fun haltPickColors() = SwitchButtonDefaults.switchButtonColors(
+  checkedContainerColor = Look.neutral,
+  checkedContentColor = Look.onNeutral,
+  checkedIconColor = Look.danger,
+  checkedThumbColor = Look.onDanger,
+  checkedThumbIconColor = Look.danger,
+  checkedTrackColor = Look.danger,
+  checkedTrackBorderColor = Look.danger,
+)
 
 /** What came of one taf's Halt, in the phone's words, for the line beside its name; null where there's nothing to add. */
 internal fun wordsOf(outcome: WatchModel.Outcome): String? = when (outcome) {

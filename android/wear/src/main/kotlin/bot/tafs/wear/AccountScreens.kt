@@ -19,7 +19,6 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
@@ -81,7 +80,7 @@ internal fun OverScreen(
 internal fun HeldCallRow(call: HeldLine, open: () -> Unit) {
   Card(onClick = open, modifier = Modifier.fillMaxWidth()) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Text(call.taf, style = MaterialTheme.typography.labelSmall, color = Look.amber)
+      Text(call.taf, style = MaterialTheme.typography.labelSmall, color = Look.held)
       Text(call.wants, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
       call.amount?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
     }
@@ -96,11 +95,11 @@ internal fun HeldCallRow(call: HeldLine, open: () -> Unit) {
 @Composable
 private fun HeldCallScreen(call: HeldLine, act: Actions, handoff: () -> Unit, close: () -> Unit) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    item { ListHeader { Text(Words.NeedsYou.title, color = Look.amber) } }
+    item { ListHeader { Text(Words.NeedsYou.title, color = Look.held) } }
     item { Text(call.taf, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(call.wants, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     call.amount?.let { item { Text(it, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
-    call.reason?.let { item { Text(it, color = Look.amber, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
+    call.reason?.let { item { Text(it, color = Look.held, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) } }
     item { Text(Words.Watch.nothingSentUntil, style = MaterialTheme.typography.bodySmall, color = Look.dim, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item {
       Button(
@@ -109,7 +108,7 @@ private fun HeldCallScreen(call: HeldLine, act: Actions, handoff: () -> Unit, cl
           handoff()
         },
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(containerColor = Look.amber, contentColor = Look.onAmber),
+        colors = heldButton(),
       ) { Text(Words.Watch.approveOnPhone) }
     }
     if (call.refusable) item {
@@ -120,10 +119,10 @@ private fun HeldCallScreen(call: HeldLine, act: Actions, handoff: () -> Unit, cl
           close()
         },
         modifier = Modifier.fillMaxWidth(),
-        colors = ButtonDefaults.buttonColors(containerColor = Look.surfaceHi, contentColor = Look.red),
+        colors = dangerQuietButton(),
       ) { Text(Words.NeedsYou.refuse) }
     }
-    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text(Words.Common.close) } }
+    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.close) } }
   }
 }
 
@@ -136,13 +135,13 @@ private fun HandoffScreen(ok: () -> Unit) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { Text(Words.Watch.checkPhoneTitle, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(Words.Watch.checkPhoneSub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) }
-    item { Button(onClick = ok, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.ok) } }
+    item { Button(onClick = ok, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.ok) } }
   }
 }
 
 /** The door to the calendar's day: on the Tafs page, and on Brief where the brief is on. */
 internal fun ScalingLazyListScope.calendarDoor(open: () -> Unit) = item {
-  Button(onClick = open, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text(Words.Watch.calendarToday) }
+  Button(onClick = open, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.calendarToday) }
 }
 
 /**
@@ -160,10 +159,10 @@ private fun CalendarScreen(calendar: WatchModel.Reading<WatchModel.DayRead>?, ac
       WatchModel.Reading.SignedOut -> line(Words.Watch.signInOnPhone)
       WatchModel.Reading.PhoneUnreachable -> {
         line(Words.Watch.phoneNotReachable)
-        item { Button(onClick = { act.readCalendar(null) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.tryAgain) } }
+        item { Button(onClick = { act.readCalendar(null) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
       }
       WatchModel.Reading.OpenOnPhone -> item {
-        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
       }
       is WatchModel.Reading.Read -> {
         val day = calendar.value.day
@@ -171,20 +170,20 @@ private fun CalendarScreen(calendar: WatchModel.Reading<WatchModel.DayRead>?, ac
         item {
           Text(
             day.words, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            color = if (day.halted) Look.red else Look.text, style = MaterialTheme.typography.bodySmall,
+            color = if (day.halted) Look.danger else Look.text, style = MaterialTheme.typography.bodySmall,
           )
         }
         for (event in day.events) item { EventRow(event) }
         item {
           Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Button(onClick = { act.readCalendar(shift(day.day, -1)) }, modifier = Modifier.weight(1f)) { Text(Words.Calendar.previousDay, maxLines = 2) }
-            Button(onClick = { act.readCalendar(shift(day.day, 1)) }, modifier = Modifier.weight(1f)) { Text(Words.Calendar.nextDay, maxLines = 2) }
+            Button(onClick = { act.readCalendar(shift(day.day, -1)) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Calendar.previousDay, maxLines = 2) }
+            Button(onClick = { act.readCalendar(shift(day.day, 1)) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Calendar.nextDay, maxLines = 2) }
           }
         }
       }
     }
     item { Spacer(Modifier.height(4.dp)) }
-    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text(Words.Common.close) } }
+    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.close) } }
   }
 }
 
@@ -222,7 +221,7 @@ internal fun ScalingLazyListScope.accountItems(account: WatchModel.Reading<Watch
     WatchModel.Reading.SignedOut -> line(Words.Watch.signInOnPhone)
     WatchModel.Reading.PhoneUnreachable -> {
       line(Words.Watch.phoneNotReachable)
-      item { Button(onClick = act.readAccount, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.tryAgain) } }
+      item { Button(onClick = act.readAccount, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.Reading.OpenOnPhone -> Unit
     is WatchModel.Reading.Read -> {
@@ -233,9 +232,9 @@ internal fun ScalingLazyListScope.accountItems(account: WatchModel.Reading<Watch
   }
   item { AccountRow(Words.Settings.languageTitle, listOf(languageName())) }
   item { AccountRow(Words.Settings.version, listOf(BuildConfig.VERSION_NAME)) }
-  item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
+  item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
   item {
-    Button(onClick = signOut, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Look.surfaceHi, contentColor = Look.red)) {
+    Button(onClick = signOut, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton()) {
       Text(Words.Settings.signOut)
     }
   }
@@ -263,11 +262,11 @@ private fun SignOutScreen(confirm: () -> Unit, cancel: () -> Unit) {
     item { Text(Words.Watch.signOutQ, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }
     item { Text(Words.Watch.signOutSub, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)) }
     item {
-      Button(onClick = confirm, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Look.red, contentColor = Look.text)) {
+      Button(onClick = confirm, modifier = Modifier.fillMaxWidth(), colors = dangerButton()) {
         Text(Words.Settings.signOut)
       }
     }
-    item { Button(onClick = cancel, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.filledTonalButtonColors()) { Text(Words.Common.cancel) } }
+    item { Button(onClick = cancel, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.cancel) } }
   }
 }
 
@@ -276,7 +275,7 @@ private fun SignOutScreen(confirm: () -> Unit, cancel: () -> Unit) {
 internal fun SignedOutHereScreen(act: Actions) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     line(Words.Watch.signedOutHere)
-    item { Button(onClick = act.signIn, modifier = Modifier.fillMaxWidth()) { Text(Words.SignIn.withPhone) } }
+    item { Button(onClick = act.signIn, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.SignIn.withPhone) } }
   }
 }
 
