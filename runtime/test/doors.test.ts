@@ -2003,6 +2003,18 @@ describe("an api door's keys and signed steps", () => {
       expect((await s.call("POST", doorsPath, { body, headers: SIG })).status).toBe(404);
     }));
 
+    it("refuses a lapsed draft the store still holds, as DynamoDB keeps one until it deletes it", () => withFlag(async () => {
+      const w = world();
+      const s = signing(w);
+      // Lapsed an hour ago by its own expires, but still held (the store's deletion is lazy): only tafs cloud's own check refuses it.
+      const draft_id = "draft-00000000000000aa";
+      const lapsed = new Date(NOW.getTime() - 3600_000);
+      await w.store.put(doorKeys.apiDraft("t_acme", REFUNDS, draft_id), { draft: DRAFT, made: new Date(NOW.getTime() - 8 * 24 * 3600_000).toISOString(), expires: lapsed.toISOString() }, new Date(NOW.getTime() + 24 * 3600_000));
+      expect((await s.call("GET", `${doorsPath}/drafts/${draft_id}`)).status).toBe(404);
+      expect((await s.call("POST", doorsPath, { body: { kind: "api", draft_id, draft: DRAFT }, headers: SIG })).status).toBe(404);
+      expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+    }));
+
     it("refuses an instruction for a field, a second api door, and anything while the door isn't offered", async () => {
       const w = world();
       await expect(draftOf(w, DRAFT)).rejects.toThrow(/isn't offered here yet/);

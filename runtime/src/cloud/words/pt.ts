@@ -798,7 +798,7 @@ export const pt: Words = {
   cts_taf_results_does: "Definir para onde vão os resultados de um taf.",
   cts_taf_results_why: "Os resultados podem sair do tafs, por email ou para uma app.",
   cts_taf_door_api: "Redigir uma porta para uma aplicação",
-  cts_taf_door_api_does: "Escrever uma porta pela qual o software da sua empresa entrega trabalho a um taf. Nada é criado a partir de um rascunho: é você quem aprova a porta.",
+  cts_taf_door_api_does: "Escrever uma porta pela qual o software da sua empresa entrega trabalho a um taf. Nada é criado a partir de um rascunho: a porta só existe quando a aprovar.",
   cts_taf_door_api_why: "Um rascunho é o que aprovaria.",
   cts_taf_estimate: "Estimar os créditos de um taf",
   cts_taf_estimate_does: "Dizer quanto um taf vai provavelmente usar num mês, a partir de registos, antes de o aprovar. Não chama nenhuma app.",

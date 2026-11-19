@@ -798,7 +798,7 @@ export const pl: Words = {
   cts_taf_results_does: "Ustal, dokąd trafiają wyniki tafa.",
   cts_taf_results_why: "Wyniki mogą opuścić tafs, e-mailem lub do aplikacji.",
   cts_taf_door_api: "Naszkicuj drzwi dla aplikacji",
-  cts_taf_door_api_does: "Napisz drzwi, przez które oprogramowanie Twojej firmy zleca pracę dla tafa. Ze szkicu nic nie powstaje: drzwi zatwierdzasz sam.",
+  cts_taf_door_api_does: "Napisz drzwi, przez które oprogramowanie Twojej firmy zleca pracę dla tafa. Ze szkicu nic nie powstaje: to Ty zatwierdzasz drzwi.",
   cts_taf_door_api_why: "Szkic to wersja, którą możesz zatwierdzić.",
   cts_taf_estimate: "Oszacuj kredyty tafa",
   cts_taf_estimate_does: "Powiedz, ile taf prawdopodobnie zużyje w miesiącu, na podstawie zapisów, zanim to zatwierdzisz. Nie wywołuje żadnej aplikacji.",
