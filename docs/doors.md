@@ -147,6 +147,16 @@ it, its last four characters and its SHA-256, never the key. `GET /v1/tafs/{id}/
 state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors-api.json`). Making one, its keys and its
 caller's routes come in the next steps, behind `TAFS_API_DOORS` (off).
 
+**Android's screen for an `api` door** (`ApiDoorPanels`, `views/ApiDoorViews.kt`) replaces its usual panel while the switch is on: the door's
+state and its switch (off pauses it at once; on is signed), today against its cap and how many wait, the last request in
+tafs cloud's words (no line without them), its keys by name with when each was made and last used and its last four, Revoke
+asked once more and then signed, and New key while it holds fewer than two: named (trimmed; a blank name is the door's
+own, as on iPhone; never while the door is busy), signed, then shown once with Copy, where to send requests, an example and
+Done. Copy marks the clip sensitive (Android 13 and later) and clears it a minute later if it's still tafs's own clip,
+while tafs runs; Done forgets the key. API instructions show where to send requests (the door's `address` on tafs cloud's
+host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
+one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:
