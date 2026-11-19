@@ -1,6 +1,7 @@
-tafs on your watch, rebuilt around Coach.
-- Coach is home: speak, type or pick a quick reply, check your words, then send.
+tafs version 2 on Wear OS.
+- Coach is home: speak, type or pick a quick reply, check it, then send.
+- What you say is turned into text, and you see that text before it's sent.
 - Keep a message for later when your phone is out of reach.
-- An Inbox for answers and held calls, until you dismiss them. No amount is kept on the watch.
-- Each taf's page and settings, and choose which tafs to halt.
-- Today's calendar, and your account. Approving stays on your phone.
+- An Inbox for replies and held calls, until you dismiss them.
+- Each taf's page and settings; choose which ones to halt.
+- Today's calendar and your account. Approving stays on your phone.

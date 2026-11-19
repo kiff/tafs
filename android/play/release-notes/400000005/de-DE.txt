@@ -1,0 +1,7 @@
+Version 2 von tafs auf Wear OS.
+- Coach als Start: sprechen, tippen oder Schnellantwort, prüfen, senden.
+- Was du sagst, wird zu Text, und du siehst diesen Text, bevor er gesendet wird.
+- Eine Nachricht für später behalten, wenn das Handy außer Reichweite ist.
+- Ein Eingang für Antworten und zurückgehaltene Aufrufe, bis du sie verwirfst.
+- Seite und Einstellungen jedes tafs; wähle, welche anhalten.
+- Heutiger Kalender und Konto. Genehmigen bleibt auf dem Handy.

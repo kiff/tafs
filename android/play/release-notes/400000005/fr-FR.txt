@@ -1,0 +1,7 @@
+Version 2 de tafs sur Wear OS.
+- Coach en accueil : parlez, écrivez ou choisissez une réponse rapide, vérifiez, envoyez.
+- Ce que vous dites devient du texte, et vous voyez ce texte avant son envoi.
+- Gardez un message pour plus tard si le téléphone est hors de portée.
+- Une boîte de réception pour réponses et appels retenus, jusqu'à ce que vous les ignoriez.
+- Page et réglages de chaque taf ; choisissez lesquels bloquer.
+- Agenda du jour et votre compte. L'approbation reste sur le téléphone.
