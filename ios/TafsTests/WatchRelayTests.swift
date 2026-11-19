@@ -640,7 +640,13 @@ final class WatchRelayTests: XCTestCase {
             ("Refund 1 234,56 now", Money(minor: 123_456, currency: "EUR", scale: 2), "Refund now"),
             ("Refund 300 XYZ to Ana", Money(minor: 300, currency: "XYZ", scale: 0), "Refund to Ana"),
             ("Order 4150 refund", Money(minor: 15_000, currency: "EUR", scale: 2), "Order 4150 refund"),
-            ("Order 150 refund", .bare(150), "Order 150 refund"),
+            ("Order 4150 refund", .bare(150), "Order 4150 refund"),
+            // The Swiss apostrophe, a bare amount, and a fraction written without its trailing zeros (dev-android's read).
+            ("Rückerstattung CHF 1'234.50", nil, "Rückerstattung"),
+            ("Rückerstattung CHF 1’234.50", nil, "Rückerstattung"),
+            ("Rückerstattung 1'234.50", Money(minor: 123_450, currency: "CHF", scale: 2), "Rückerstattung"),
+            ("Refund 15000 to Ana", .bare(15_000), "Refund to Ana"),
+            ("Refund 1234.5 now", Money(minor: 123_450, currency: "EUR", scale: 2), "Refund now"),
         ]
         for (summary, amount, kept) in cases {
             XCTAssertEqual(WatchRelay.withoutAmount(summary, amount: amount), kept, summary)
