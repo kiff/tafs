@@ -1,0 +1,1 @@
+- **tafs cloud: a step on something that waits for the person never reads as a failure.** When a connection call is refused only because the rules or the key it needs wait for the owner, the step ends "not made", never the red "Coach couldn't connect the app yet" over the card that is waiting for them.

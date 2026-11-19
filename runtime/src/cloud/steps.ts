@@ -450,7 +450,10 @@ export function coachGuard(text: unknown): boolean {
     // A tool Coach named that the catalog doesn't hold by that name ("the catalog has no tool named GMAIL_FETCH_EMAILS",
     // "mcp.example.com lists no tool named …"): Coach looked it up wrong and looks again, never the person's app (14 Nov,
     // Gmail: a red "Coach couldn't connect the app yet" over a sign-in that had worked).
-    || /\b(?:has|lists) no tool named\b/i.test(line);
+    || /\b(?:has|lists) no tool named\b/i.test(line)
+    // A call on something that waits for the person (rules to agree, a key to give): the person is already being asked, so the
+    // step is not made, never "Coach couldn't connect" in red over a card that is waiting for them (Android 120, 19 Nov, Pipedrive).
+    || /\bwaits[_ ]for[_ ]the[_ ]owner'?s?[_ ]approval\b|\bwaits_for_approval\b/i.test(line);
 }
 
 /**
