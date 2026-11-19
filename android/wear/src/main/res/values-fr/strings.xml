@@ -4,8 +4,10 @@
     <string name="words_language" translatable="false">fr</string>
     <string name="alert_needs_you">Un taf vous attend</string>
     <string name="alert_not_refused">Non refusé</string>
+    <string name="card_its_card">Sa Card</string>
     <string name="chat_delete">Supprimer</string>
     <string name="chat_stop">Arrêter</string>
+    <string name="chat_waiting_for_you">Vous attend</string>
     <string name="coach_ask">Demander à Coach</string>
     <string name="coach_start">Démarrer</string>
     <string name="coach_title">Coach</string>
@@ -16,6 +18,9 @@
     <string name="common_send">Envoyer</string>
     <string name="common_try_again">Réessayer</string>
     <string name="halt_all_now">Tout bloquer maintenant</string>
+    <string name="halt_explain_halted">Bloqué. La reprise ne lance que du nouveau travail.</string>
+    <string name="halt_explain_running_all">Bloquer arrête vos tafs jusqu\'à ce que vous repreniez. Un appel déjà envoyé peut encore arriver.</string>
+    <string name="halt_explain_running_one">Bloquer l\'arrête jusqu\'à ce que vous repreniez. Un appel déjà envoyé peut encore arriver.</string>
     <string name="halt_now">Bloquer maintenant</string>
     <string name="halt_all_title">Bloquer tous les tafs</string>
     <string name="home_title">Tafs</string>
@@ -28,6 +33,7 @@
     <string name="taf_pause">Mettre en pause</string>
     <string name="taf_state_halted">Bloqué</string>
     <string name="watch_all_chats">Tous les chats</string>
+    <string name="watch_all_your_tafs">Tous vos tafs</string>
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
@@ -43,6 +49,13 @@
     <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
     <string name="watch_dismiss">Ignorer</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
+    <string name="watch_halt_all_q">Bloquer tous vos tafs ?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Bloquer maintenant · %1$s</item>
+        <item quantity="other">Bloquer maintenant · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Choisissez lesquels bloquer</string>
+    <string name="watch_halt_this">Bloquer ce taf</string>
     <string name="watch_halting">Blocage de %1$s…</string>
     <string name="watch_halting_all">Blocage de tous vos tafs…</string>
     <string name="watch_hear">Écouter</string>
@@ -55,6 +68,7 @@
         <item quantity="one">Non lus dans la boîte de réception : %1$s</item>
         <item quantity="other">Non lus dans la boîte de réception : %1$s</item>
     </plurals>
+    <string name="watch_its_settings">Ses réglages</string>
     <string name="watch_keep_for_later">Garder pour plus tard</string>
     <string name="watch_kept_to_send">Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.</string>
     <string name="watch_limit">30 s maximum</string>
@@ -68,6 +82,7 @@
         <item quantity="other">%1$s vous attendent</item>
     </plurals>
     <string name="watch_not_sure">Envoi incertain</string>
+    <string name="watch_nothing_waits">Rien ne vous attend.</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
     <string name="watch_page_brief">Résumé</string>
     <string name="watch_page_inbox">Boîte de réception</string>
@@ -90,11 +105,14 @@
     <string name="watch_rerecord">Réenregistrer</string>
     <string name="watch_result_ready">Un résultat est prêt</string>
     <string name="watch_results_channel">Résultats</string>
+    <string name="watch_resume_on_phone">Reprendre sur votre téléphone</string>
     <string name="watch_retry">Réessayer</string>
     <string name="watch_review">Vérifiez avant d\'envoyer</string>
     <string name="watch_sending">Envoi…</string>
     <string name="watch_sent">Envoyé</string>
+    <string name="watch_settings_of">%1$s · réglages</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
     <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
@@ -102,6 +120,7 @@
     <string name="watch_type_hint">Écrire à Coach…</string>
     <string name="watch_update_phone">Mettez à jour tafs sur votre téléphone, puis réessayez.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
+    <string name="watch_what_it_does">Ce qu\'il fait</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s en cours</item>
         <item quantity="other">%1$s en cours</item>

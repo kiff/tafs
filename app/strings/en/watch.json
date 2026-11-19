@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "All chats",
+  "watch.all_your_tafs": "All your tafs",
   "watch.already_answered": "Already answered, or it ended.",
   "watch.approve_on_phone": "Approve on your phone",
   "watch.as_of": "As of {time}",
@@ -15,6 +16,13 @@
   "watch.didnt_catch": "Didn't catch that. Tap to try again.",
   "watch.dismiss": "Dismiss",
   "watch.glance_description": "How many need you, never what or who.",
+  "watch.halt_all_q": "Halt all your tafs?",
+  "watch.halt_now_count": {
+    "one": "Halt now · {count}",
+    "other": "Halt now · {count}"
+  },
+  "watch.halt_pick_title": "Choose which to halt",
+  "watch.halt_this": "Halt this taf",
   "watch.halting": "Halting {taf}…",
   "watch.halting_all": "Halting all your tafs…",
   "watch.hear": "Hear",
@@ -27,6 +35,7 @@
     "one": "{count} unread in Inbox",
     "other": "{count} unread in Inbox"
   },
+  "watch.its_settings": "Its settings",
   "watch.keep_for_later": "Keep for later",
   "watch.kept_to_send": "Kept on this watch. It's sent when your phone is in reach again.",
   "watch.limit": "30 s at most",
@@ -40,6 +49,7 @@
     "other": "{count} need you"
   },
   "watch.not_sure": "Not sure it arrived",
+  "watch.nothing_waits": "Nothing waits for you.",
   "watch.open_on_phone": "Open on phone",
   "watch.page.brief": "Brief",
   "watch.page.inbox": "Inbox",
@@ -62,11 +72,14 @@
   "watch.rerecord": "Re-record",
   "watch.result_ready": "A result is ready",
   "watch.results_channel": "Results",
+  "watch.resume_on_phone": "Resume on your phone",
   "watch.retry": "Retry",
   "watch.review": "Check before sending",
   "watch.sending": "Sending…",
   "watch.sent": "Sent",
+  "watch.settings_of": "{taf} · settings",
   "watch.sign_in_on_phone": "Sign in to tafs on your phone first.",
+  "watch.swipe_settings": "Swipe left for its settings",
   "watch.tap_start": "Tap Start, then speak. Your words show here as you talk.",
   "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",
   "watch.trust": "This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.",
@@ -74,6 +87,7 @@
   "watch.type_hint": "Write to Coach…",
   "watch.update_phone": "Update tafs on your phone, then try again.",
   "watch.voice_text_only": "Coach gets your words as text, never your voice.",
+  "watch.what_it_does": "What it does",
   "watch.working_count": {
     "one": "{count} working",
     "other": "{count} working"

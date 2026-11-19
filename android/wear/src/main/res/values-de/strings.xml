@@ -4,8 +4,10 @@
     <string name="words_language" translatable="false">de</string>
     <string name="alert_needs_you">Ein taf braucht dich</string>
     <string name="alert_not_refused">Nicht abgelehnt</string>
+    <string name="card_its_card">Seine Card</string>
     <string name="chat_delete">Löschen</string>
     <string name="chat_stop">Stoppen</string>
+    <string name="chat_waiting_for_you">Wartet auf dich</string>
     <string name="coach_ask">Coach fragen</string>
     <string name="coach_start">Starten</string>
     <string name="coach_title">Coach</string>
@@ -16,6 +18,9 @@
     <string name="common_send">Senden</string>
     <string name="common_try_again">Erneut versuchen</string>
     <string name="halt_all_now">Alle jetzt anhalten</string>
+    <string name="halt_explain_halted">Angehalten. Fortsetzen startet nur neue Arbeit.</string>
+    <string name="halt_explain_running_all">Anhalten stoppt deine tafs, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen.</string>
+    <string name="halt_explain_running_one">Anhalten stoppt ihn, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen.</string>
     <string name="halt_now">Jetzt anhalten</string>
     <string name="halt_all_title">Alle tafs anhalten</string>
     <string name="home_title">Tafs</string>
@@ -28,6 +33,7 @@
     <string name="taf_pause">Pausieren</string>
     <string name="taf_state_halted">Angehalten</string>
     <string name="watch_all_chats">Alle Chats</string>
+    <string name="watch_all_your_tafs">Alle deine tafs</string>
     <string name="watch_already_answered">Schon beantwortet oder beendet.</string>
     <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
     <string name="watch_as_of">Stand: %1$s</string>
@@ -43,6 +49,13 @@
     <string name="watch_didnt_catch">Nicht verstanden. Tippe, um es erneut zu versuchen.</string>
     <string name="watch_dismiss">Verwerfen</string>
     <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
+    <string name="watch_halt_all_q">Alle deine tafs anhalten?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Jetzt anhalten · %1$s</item>
+        <item quantity="other">Jetzt anhalten · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Wähle, was angehalten wird</string>
+    <string name="watch_halt_this">Diesen taf anhalten</string>
     <string name="watch_halting">%1$s wird angehalten…</string>
     <string name="watch_halting_all">Alle deine tafs werden angehalten…</string>
     <string name="watch_hear">Anhören</string>
@@ -55,6 +68,7 @@
         <item quantity="one">%1$s ungelesen im Eingang</item>
         <item quantity="other">%1$s ungelesen im Eingang</item>
     </plurals>
+    <string name="watch_its_settings">Seine Einstellungen</string>
     <string name="watch_keep_for_later">Für später behalten</string>
     <string name="watch_kept_to_send">Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.</string>
     <string name="watch_limit">Höchstens 30 s</string>
@@ -68,6 +82,7 @@
         <item quantity="other">%1$s brauchen dich</item>
     </plurals>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
+    <string name="watch_nothing_waits">Nichts wartet auf dich.</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
     <string name="watch_page_brief">Briefing</string>
     <string name="watch_page_inbox">Eingang</string>
@@ -90,11 +105,14 @@
     <string name="watch_rerecord">Neu aufnehmen</string>
     <string name="watch_result_ready">Ein Ergebnis ist da</string>
     <string name="watch_results_channel">Ergebnisse</string>
+    <string name="watch_resume_on_phone">Auf dem Handy fortsetzen</string>
     <string name="watch_retry">Erneut senden</string>
     <string name="watch_review">Vor dem Senden prüfen</string>
     <string name="watch_sending">Wird gesendet…</string>
     <string name="watch_sent">Gesendet</string>
+    <string name="watch_settings_of">%1$s · Einstellungen</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_swipe_settings">Nach links wischen für seine Einstellungen</string>
     <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>
     <string name="watch_trust">Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.</string>
@@ -102,6 +120,7 @@
     <string name="watch_type_hint">Schreib an Coach…</string>
     <string name="watch_update_phone">Aktualisiere tafs auf deinem Handy und versuch es dann erneut.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
+    <string name="watch_what_it_does">Was er tut</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s arbeitet</item>
         <item quantity="other">%1$s arbeiten</item>

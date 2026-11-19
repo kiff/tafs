@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "Alle Chats",
+  "watch.all_your_tafs": "Alle deine tafs",
   "watch.already_answered": "Schon beantwortet oder beendet.",
   "watch.approve_on_phone": "Genehmige auf deinem Handy",
   "watch.as_of": "Stand: {time}",
@@ -15,6 +16,13 @@
   "watch.didnt_catch": "Nicht verstanden. Tippe, um es erneut zu versuchen.",
   "watch.dismiss": "Verwerfen",
   "watch.glance_description": "Wie viele dich brauchen, nie was oder wer.",
+  "watch.halt_all_q": "Alle deine tafs anhalten?",
+  "watch.halt_now_count": {
+    "one": "Jetzt anhalten · {count}",
+    "other": "Jetzt anhalten · {count}"
+  },
+  "watch.halt_pick_title": "Wähle, was angehalten wird",
+  "watch.halt_this": "Diesen taf anhalten",
   "watch.halting": "{taf} wird angehalten…",
   "watch.halting_all": "Alle deine tafs werden angehalten…",
   "watch.hear": "Anhören",
@@ -27,6 +35,7 @@
     "one": "{count} ungelesen im Eingang",
     "other": "{count} ungelesen im Eingang"
   },
+  "watch.its_settings": "Seine Einstellungen",
   "watch.keep_for_later": "Für später behalten",
   "watch.kept_to_send": "Auf dieser Uhr gespeichert. Wird gesendet, sobald dein Handy wieder in Reichweite ist.",
   "watch.limit": "Höchstens 30 s",
@@ -40,6 +49,7 @@
     "other": "{count} brauchen dich"
   },
   "watch.not_sure": "Unklar, ob es ankam",
+  "watch.nothing_waits": "Nichts wartet auf dich.",
   "watch.open_on_phone": "Auf dem Handy öffnen",
   "watch.page.brief": "Briefing",
   "watch.page.inbox": "Eingang",
@@ -62,11 +72,14 @@
   "watch.rerecord": "Neu aufnehmen",
   "watch.result_ready": "Ein Ergebnis ist da",
   "watch.results_channel": "Ergebnisse",
+  "watch.resume_on_phone": "Auf dem Handy fortsetzen",
   "watch.retry": "Erneut senden",
   "watch.review": "Vor dem Senden prüfen",
   "watch.sending": "Wird gesendet…",
   "watch.sent": "Gesendet",
+  "watch.settings_of": "{taf} · Einstellungen",
   "watch.sign_in_on_phone": "Melde dich zuerst auf deinem Handy bei tafs an.",
+  "watch.swipe_settings": "Nach links wischen für seine Einstellungen",
   "watch.tap_start": "Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.",
   "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",
   "watch.trust": "Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.",
@@ -74,6 +87,7 @@
   "watch.type_hint": "Schreib an Coach…",
   "watch.update_phone": "Aktualisiere tafs auf deinem Handy und versuch es dann erneut.",
   "watch.voice_text_only": "Coach bekommt deine Worte als Text, nie deine Stimme.",
+  "watch.what_it_does": "Was er tut",
   "watch.working_count": {
     "one": "{count} arbeitet",
     "other": "{count} arbeiten"

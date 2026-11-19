@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "Wszystkie czaty",
+  "watch.all_your_tafs": "Wszystkie Twoje tafs",
   "watch.already_answered": "Już odpowiedziano albo zakończono.",
   "watch.approve_on_phone": "Zatwierdź na telefonie",
   "watch.as_of": "Stan na {time}",
@@ -15,6 +16,15 @@
   "watch.didnt_catch": "Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.",
   "watch.dismiss": "Odrzuć",
   "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
+  "watch.halt_all_q": "Zablokować wszystkie Twoje tafs?",
+  "watch.halt_now_count": {
+    "few": "Zablokuj teraz · {count}",
+    "many": "Zablokuj teraz · {count}",
+    "one": "Zablokuj teraz · {count}",
+    "other": "Zablokuj teraz · {count}"
+  },
+  "watch.halt_pick_title": "Wybierz, które zablokować",
+  "watch.halt_this": "Zablokuj tego tafa",
   "watch.halting": "Blokowanie: {taf}…",
   "watch.halting_all": "Blokowanie wszystkich Twoich tafs…",
   "watch.hear": "Odsłuchaj",
@@ -31,6 +41,7 @@
     "one": "Nieprzeczytane w Skrzynce: {count}",
     "other": "Nieprzeczytane w Skrzynce: {count}"
   },
+  "watch.its_settings": "Jego ustawienia",
   "watch.keep_for_later": "Zachowaj na później",
   "watch.kept_to_send": "Zapisano na tym zegarku. Zostanie wysłane, gdy telefon znów będzie w zasięgu.",
   "watch.limit": "Maksymalnie 30 s",
@@ -46,6 +57,7 @@
     "other": "{count} czeka na Ciebie"
   },
   "watch.not_sure": "Nie wiadomo, czy dotarło",
+  "watch.nothing_waits": "Nic na Ciebie nie czeka.",
   "watch.open_on_phone": "Otwórz na telefonie",
   "watch.page.brief": "Podsumowanie",
   "watch.page.inbox": "Skrzynka",
@@ -70,11 +82,14 @@
   "watch.rerecord": "Nagraj ponownie",
   "watch.result_ready": "Wynik jest gotowy",
   "watch.results_channel": "Wyniki",
+  "watch.resume_on_phone": "Wznów na telefonie",
   "watch.retry": "Ponów",
   "watch.review": "Sprawdź przed wysłaniem",
   "watch.sending": "Wysyłanie…",
   "watch.sent": "Wysłano",
+  "watch.settings_of": "{taf} · ustawienia",
   "watch.sign_in_on_phone": "Najpierw zaloguj się do tafs na telefonie.",
+  "watch.swipe_settings": "Przesuń w lewo, by zobaczyć ustawienia",
   "watch.tap_start": "Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.",
   "watch.timing": "Słuchanie {listen} ms · potwierdzenie {receipt} ms · wynik {result} ms",
   "watch.trust": "Ten zegarek nie przechowuje haseł ani kluczy i niczego nie zatwierdza: to, co wymaga Twojej zgody, czeka na telefon. Twoje tafs robią tylko to, na co pozwalają ich Cards.",
@@ -82,6 +97,7 @@
   "watch.type_hint": "Napisz do Coacha…",
   "watch.update_phone": "Zaktualizuj tafs na telefonie i spróbuj ponownie.",
   "watch.voice_text_only": "Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.",
+  "watch.what_it_does": "Co robi",
   "watch.working_count": {
     "few": "{count} pracują",
     "many": "{count} pracuje",

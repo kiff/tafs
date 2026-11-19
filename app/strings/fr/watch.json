@@ -1,5 +1,6 @@
 {
   "watch.all_chats": "Tous les chats",
+  "watch.all_your_tafs": "Tous vos tafs",
   "watch.already_answered": "Déjà répondu, ou terminé.",
   "watch.approve_on_phone": "Approuvez sur votre téléphone",
   "watch.as_of": "Mis à jour à {time}",
@@ -15,6 +16,13 @@
   "watch.didnt_catch": "Pas compris. Touchez pour réessayer.",
   "watch.dismiss": "Ignorer",
   "watch.glance_description": "Combien vous attendent, jamais quoi ni qui.",
+  "watch.halt_all_q": "Bloquer tous vos tafs ?",
+  "watch.halt_now_count": {
+    "one": "Bloquer maintenant · {count}",
+    "other": "Bloquer maintenant · {count}"
+  },
+  "watch.halt_pick_title": "Choisissez lesquels bloquer",
+  "watch.halt_this": "Bloquer ce taf",
   "watch.halting": "Blocage de {taf}…",
   "watch.halting_all": "Blocage de tous vos tafs…",
   "watch.hear": "Écouter",
@@ -27,6 +35,7 @@
     "one": "Non lus dans la boîte de réception : {count}",
     "other": "Non lus dans la boîte de réception : {count}"
   },
+  "watch.its_settings": "Ses réglages",
   "watch.keep_for_later": "Garder pour plus tard",
   "watch.kept_to_send": "Gardé sur cette montre. Il part dès que votre téléphone est de nouveau à portée.",
   "watch.limit": "30 s maximum",
@@ -40,6 +49,7 @@
     "other": "{count} vous attendent"
   },
   "watch.not_sure": "Envoi incertain",
+  "watch.nothing_waits": "Rien ne vous attend.",
   "watch.open_on_phone": "Ouvrir sur le téléphone",
   "watch.page.brief": "Résumé",
   "watch.page.inbox": "Boîte de réception",
@@ -62,11 +72,14 @@
   "watch.rerecord": "Réenregistrer",
   "watch.result_ready": "Un résultat est prêt",
   "watch.results_channel": "Résultats",
+  "watch.resume_on_phone": "Reprendre sur votre téléphone",
   "watch.retry": "Réessayer",
   "watch.review": "Vérifiez avant d'envoyer",
   "watch.sending": "Envoi…",
   "watch.sent": "Envoyé",
+  "watch.settings_of": "{taf} · réglages",
   "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone.",
+  "watch.swipe_settings": "Balayez vers la gauche pour ses réglages",
   "watch.tap_start": "Touchez Démarrer, puis parlez. Vos mots s'affichent ici pendant que vous parlez.",
   "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",
   "watch.trust": "Cette montre ne garde ni mot de passe ni clé, et n'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.",
@@ -74,6 +87,7 @@
   "watch.type_hint": "Écrire à Coach…",
   "watch.update_phone": "Mettez à jour tafs sur votre téléphone, puis réessayez.",
   "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix.",
+  "watch.what_it_does": "Ce qu'il fait",
   "watch.working_count": {
     "one": "{count} en cours",
     "other": "{count} en cours"
