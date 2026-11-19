@@ -1,0 +1,1 @@
+- **tafs cloud: every answer sends HSTS** (`Strict-Transport-Security: max-age=31536000`), as kiff.dev, app, api and mcp do: a client that saw it once never tries plain HTTP for a year. No subdomains, no preload. Refusals and streams carry it too.

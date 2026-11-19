@@ -595,7 +595,17 @@ export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> 
   const began = Date.now();
   const r = await answer(event, withKIFFLanguage(event, deps));
   logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
-  return r;
+  return secured(r);
+}
+
+/**
+ * HSTS on every answer, as kiff.dev, app, api and mcp send it: tafs cloud is HTTPS only (CloudFront, TLS 1.2 at least), and a
+ * client that saw this once never tries plain HTTP for a year. No subdomains, no preload.
+ */
+export const HSTS = "max-age=31536000";
+
+function secured<T extends { headers?: Record<string, string> }>(r: T): T {
+  return { ...r, headers: { ...r.headers, "strict-transport-security": HSTS } };
 }
 
 async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
@@ -6413,6 +6423,10 @@ export class StreamTiming {
  * the conversation.
  */
 export async function handleStream(event: HTTPEvent, given: Deps): Promise<StreamResult> {
+  return secured(await streamAnswer(event, given));
+}
+
+async function streamAnswer(event: HTTPEvent, given: Deps): Promise<StreamResult> {
   const deps = withKIFFLanguage(event, given);
   try {
     const method = event.requestContext.http.method.toUpperCase();
