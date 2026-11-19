@@ -1,0 +1,1 @@
+- **Wear OS: Account's Signed in shows a personal account's email once.** The phone sends the account's name only when it isn't the email itself, as on Apple Watch ([watch-wear.md](docs/watch-wear.md)).
