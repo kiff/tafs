@@ -218,9 +218,8 @@ struct FileDetailView: View {
     var deleted: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var model: AppModel
-    /// tafs cloud's start of the file, as text; nil until read, and for a type that has none.
-    @State private var preview: FilePreviewText?
-    @State private var read = false
+    /// What's drawn above the buttons; nil until read (`FilesModel.readPreview`).
+    @State private var shown: FilesModel.PreviewRead?
     /// The file's own bytes on this device, only once Download or (for a type with no text start) its preview asks.
     @State private var local: URL?
     @State private var saving = false
@@ -234,7 +233,8 @@ struct FileDetailView: View {
                     FileBadge(type: file.type, size: 44)
                     Text(file.name).scaledFont(17, weight: .bold).foregroundColor(Theme.ink)
                 }
-                if let preview {
+                switch shown {
+                case .text(let preview):
                     // tafs cloud's cleaned start, drawn as plain text: never Markdown, HTML or a viewer of the bytes.
                     ScrollView {
                         Text(verbatim: preview.text)
@@ -247,10 +247,12 @@ struct FileDetailView: View {
                     if preview.truncated {
                         Text(Words.Files.previewStart).scaledFont(12).foregroundColor(Theme.soft)
                     }
-                } else if read, let local {
-                    // A type with no text start (none in v1): the system draws the file on the device.
-                    FilePreview(url: local).frame(height: 320)
-                } else if !read {
+                case .copy(let copy):
+                    // No text start from tafs cloud: the system draws the file on the device.
+                    FilePreview(url: copy).frame(height: 320)
+                case .unreachable:
+                    Text(Words.Alert.tafsCouldNotReachKiff).scaledFont(14).foregroundColor(Theme.no)
+                case nil:
                     ProgressView().frame(maxWidth: .infinity, minHeight: 120)
                 }
                 HStack(spacing: 10) {
@@ -299,13 +301,12 @@ struct FileDetailView: View {
         }
     }
 
-    /// The file's bytes, written where only this app reads them, under its own name, for the preview and the share sheet.
-    /// tafs cloud's start of the file; a type with none is drawn by the system from its bytes.
+    /// tafs cloud's start of the file, once; the bytes only as `FilesModel.readPreview` allows.
     private func readPreview() async {
-        guard !read else { return }
-        preview = try? await files.store.preview(of: file.id)
-        if preview == nil { local = try? await files.localCopy(of: file) }
-        read = true
+        guard shown == nil else { return }
+        let read = await files.readPreview(of: file)
+        if case .copy(let copy) = read { local = copy }
+        shown = read
     }
 
     /// Download: the file's own bytes, then where the person picks.

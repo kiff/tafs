@@ -35,8 +35,9 @@ Tests: `FilesTests`.
   row its type, name, taf and size, and when it goes ("goes today", "goes tomorrow", "goes in 12 days"). The days are
   under the run's day in the account's zone. With none, what lands there; a failed read says so.
 - **A file** (`FileDetailView`): tafs cloud's start of the file (`preview`, its first 4 KB as plain text, control and
-  direction characters taken out) drawn as text, never as Markdown or HTML, with a line when there's more; a type with
-  no text start (none in v1) is drawn by the system from its bytes on the device. **Download** (saved where the person
+  direction characters taken out) drawn as text, never as Markdown or HTML, with a line when there's more. Only when tafs cloud answers
+  with no start, or for a type with none (not CSV, MD, TXT or JSON), is the file drawn by the system from its bytes on
+  the device; a failed read of a text type says it couldn't reach KIFF and reads no bytes. **Download** (saved where the person
   picks) and **Share** (the share sheet, with the file itself) read the bytes only when asked, the taf, the
   run, the type and size, "Everyone on this account", and when it goes; **Delete now** apart, behind a confirm that says
   it's gone for everyone, right away.
