@@ -4,7 +4,7 @@ import Foundation
 // Both apps compile this file. A request goes live with WatchConnectivity's message data and a
 // reply, never queued: one made more than `WatchRequest.maxAge` ago is dropped on the phone.
 
-/// A request from the watch. Only the seven kinds below decode, so anything else, an approval
+/// A request from the watch. Only the ten kinds below decode, so anything else, an approval
 /// among them, never reaches the phone's code.
 struct WatchRequest: Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable {
@@ -16,12 +16,21 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case coach
         /// Your brief, as the phone reads it: read only, behind the watch's switch (`briefOnWatch`).
         case brief
+        /// One taf's page (watch v2), by tafs cloud's id in `taf`: its state, job, Cards with today's use, and
+        /// how many of its calls wait on the person. Read only.
+        case taf
+        /// A calendar day (watch v2): `day` as `YYYY-MM-DD`, or today in the account's zone with none. Read only.
+        case calendar
+        /// Who is signed in, and the plan's line (watch v2). Read only.
+        case account
     }
 
     /// How old a request may be when the phone reads it, either way.
     static let maxAge: TimeInterval = 30
     /// The most Coach's words may be, as on Wear OS: longer is refused before anything is sent.
     static let coachLimit = 2_000
+    /// The longest taf id a taf's page may name, as on Wear OS.
+    static let tafIDLimit = 128
 
     var kind: Kind
     /// When the watch made it.
@@ -37,23 +46,35 @@ struct WatchRequest: Codable, Equatable, Sendable {
     /// `client_message_id`, so a message that reached Coach once is acted on once. A phone from before
     /// it ignores it.
     var message: String?
+    /// Calendar: the day, `YYYY-MM-DD`; none is today in the account's zone.
+    var day: String?
 
-    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil) {
+    init(_ kind: Kind, made: Date, hold: String? = nil, taf: String? = nil, text: String? = nil, message: String? = nil,
+         day: String? = nil) {
         self.kind = kind
         self.made = made
         self.hold = hold
         self.taf = taf
         self.text = text
         self.message = message
+        self.day = day
     }
 
-    /// Whether it names what its kind needs: Refuse its hold, Halt its taf, Coach its words.
+    /// A calendar day as the watch names it: `YYYY-MM-DD`, and nothing else.
+    static func isDay(_ value: String) -> Bool {
+        value.range(of: #"^[0-9]{4}-[0-9]{2}-[0-9]{2}$"#, options: .regularExpression) != nil
+    }
+
+    /// Whether it names what its kind needs: Refuse its hold, Halt and a taf's page their taf, Coach its words, and a
+    /// calendar day, if it names one, a day.
     var isComplete: Bool {
         func given(_ value: String?) -> Bool { !(value ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         switch kind {
-        case .needsYou, .tafs, .haltAll, .brief: return true
+        case .needsYou, .tafs, .haltAll, .brief, .account: return true
         case .refuse: return given(hold)
         case .halt: return given(taf)
+        case .taf: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
+        case .calendar: return day.map(Self.isDay) ?? true
         case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
         }
     }
@@ -84,19 +105,74 @@ struct WatchReply: Codable, Equatable, Sendable {
     var coach: WatchCoachAnswer?
     /// Your brief; nil with `ok` when the account has none, and the watch shows Needs you.
     var brief: WatchBrief?
+    /// A taf's page; nil with `failed` for a taf the phone doesn't list.
+    var tafPage: WatchTafPage?
+    /// A calendar day.
+    var calendar: WatchCalendarDay?
+    /// Who is signed in, and the plan's line.
+    var account: WatchAccount?
     /// What happened, or why not, in the phone's words: shown only once the phone has KIFF's
     /// or tafs cloud's answer.
     var line: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
-         brief: WatchBrief? = nil, line: String? = nil) {
+         brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
+         line: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
         self.coach = coach
         self.brief = brief
+        self.tafPage = tafPage
+        self.calendar = calendar
+        self.account = account
         self.line = line
     }
+}
+
+/// One taf's page on the wrist (watch v2), in the phone's words: its state, its job, each Card as the phone's Card tab
+/// draws it (title, the face's figure and line, its rules one line each), and how many of its calls wait on the
+/// person. Nothing on it is changed from the wrist but Halt.
+struct WatchTafPage: Codable, Equatable, Sendable {
+    struct Card: Codable, Equatable, Sendable {
+        var title: String
+        var figure: String?
+        var words: String?
+        var rules: [String]
+    }
+
+    /// tafs cloud's id: what Halt names.
+    var id: String
+    var name: String
+    var state: String
+    var halted: Bool
+    var job: String
+    var cards: [Card]
+    var waiting: Int
+}
+
+/// A calendar day on the wrist (watch v2), in tafs cloud's words: its line, and that day's events in time order.
+struct WatchCalendarDay: Codable, Equatable, Sendable {
+    struct Event: Codable, Equatable, Sendable {
+        /// Its time in the account's zone, as tafs cloud writes it.
+        var time: String
+        /// Its taf's name.
+        var taf: String
+        var words: String
+        var count: Int
+    }
+
+    var day: String
+    var words: String
+    var events: [Event]
+    var halted: Bool
+}
+
+/// Who is signed in on the phone, the account's name, and the plan's line in tafs cloud's words (watch v2).
+struct WatchAccount: Codable, Equatable, Sendable {
+    var email: String?
+    var account: String?
+    var plan: String?
 }
 
 /// Your brief on the wrist, every word tafs cloud's: its title and when, every decision it sends still to answer
