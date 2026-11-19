@@ -11,16 +11,29 @@ extension TafsCloud {
             var name: String? = nil
             /// Paired by tafs: the owner's own sign-in email.
             var auto: Bool = false
+            /// An application's key (an `api` door): its last four characters and when it was made and last used.
+            /// Never the key itself, which tafs cloud shows once, when it's made.
+            var last4: String? = nil
+            var madeAt: String? = nil
+            var lastUsedAt: String? = nil
 
-            enum CodingKeys: String, CodingKey { case id, name, auto }
-            init(id: String, name: String? = nil, auto: Bool = false) {
+            enum CodingKeys: String, CodingKey {
+                case id, name, auto, last4
+                case madeAt = "made_at", lastUsedAt = "last_used_at"
+            }
+            init(id: String, name: String? = nil, auto: Bool = false, last4: String? = nil, madeAt: String? = nil,
+                 lastUsedAt: String? = nil) {
                 self.id = id; self.name = name; self.auto = auto
+                self.last4 = last4; self.madeAt = madeAt; self.lastUsedAt = lastUsedAt
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 id = try c.decode(String.self, forKey: .id)
                 name = try? c.decodeIfPresent(String.self, forKey: .name)
                 auto = (try? c.decode(Bool.self, forKey: .auto)) ?? false
+                last4 = try? c.decodeIfPresent(String.self, forKey: .last4)
+                madeAt = try? c.decodeIfPresent(String.self, forKey: .madeAt)
+                lastUsedAt = try? c.decodeIfPresent(String.self, forKey: .lastUsedAt)
             }
         }
 
@@ -49,6 +62,20 @@ extension TafsCloud {
         var grant: String? = nil
         var channel: String? = nil
         var trigger: String? = nil
+        /// An `api` door ("From another application": a company's own software handing a taf work): today's requests and those waiting, and the
+        /// last request's state and when. None on any other door, or from a tafs cloud without them.
+        var counts: Counts? = nil
+        var lastRequest: LastRequest? = nil
+
+        struct Counts: Decodable, Equatable {
+            var today: Int? = nil
+            var waiting: Int? = nil
+        }
+
+        struct LastRequest: Decodable, Equatable {
+            let status: String
+            let at: String
+        }
 
         /// Where the door stands, what a tap on it does, and that its settings are below.
         struct Words: Decodable, Equatable {
@@ -58,8 +85,8 @@ extension TafsCloud {
         }
 
         enum CodingKeys: String, CodingKey {
-            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting, words, grant, channel, trigger
-            case othersToday = "others_today", othersLimit = "others_limit"
+            case id, app, kind, label, open, address, proof, how, keys, today, limit, resting, words, grant, channel, trigger, counts
+            case othersToday = "others_today", othersLimit = "others_limit", lastRequest = "last_request"
         }
 
         var holdsKeys: Bool { proof == "proven" }
@@ -130,6 +157,20 @@ extension TafsCloud {
         var doors: [Door]
         var apps: [DoorApp]
         var knocks: [Knock]
+
+        init(doors: [Door], apps: [DoorApp], knocks: [Knock]) {
+            self.doors = doors; self.apps = apps; self.knocks = knocks
+        }
+
+        /// Each door, app and knock is read on its own: one this app can't read is left out, and never hides the others
+        /// (an `api` door on a build without it, say, must leave email and WhatsApp showing).
+        init(from decoder: Decoder) throws {
+            enum K: String, CodingKey { case doors, apps, knocks }
+            let c = try decoder.container(keyedBy: K.self)
+            doors = ((try? c.decode([LenientItem<Door>].self, forKey: .doors)) ?? []).compactMap(\.value)
+            apps = ((try? c.decode([LenientItem<DoorApp>].self, forKey: .apps)) ?? []).compactMap(\.value)
+            knocks = ((try? c.decode([LenientItem<Knock>].self, forKey: .knocks)) ?? []).compactMap(\.value)
+        }
     }
 
     private struct DoorResponse: Decodable { let door: Door }

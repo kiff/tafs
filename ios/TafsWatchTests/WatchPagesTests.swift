@@ -7,9 +7,9 @@ import XCTest
 final class WatchPagesTests: XCTestCase {
     private let now = Date(timeIntervalSinceReferenceDate: 813_667_500)
 
-    /// Off: a watch shows v1 whole until every step is in.
-    func testVersionTwoIsOff() {
-        XCTAssertFalse(WatchV2.on)
+    /// On since 19 Nov, every step in and Sign out's privacy text live.
+    func testVersionTwoIsOn() {
+        XCTAssertTrue(WatchV2.on)
     }
 
     /// Coach is home, then the Inbox, Your tafs and Account; Brief comes after Your tafs only with its switch on.

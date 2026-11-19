@@ -115,11 +115,11 @@ With it on (`NeedsYouModel(briefOn: true)` in the tests):
 - **Unchanged:** no keys and nothing signed on the watch; kept in memory and forgotten when the app leaves the
   screen; no new words (the brief's are tafs cloud's, the rest the watch's own).
 
-## Version 2 (behind a switch, off)
+## Version 2 (on since 19 Nov)
 
-Watch v2 follows the owner-approved mockup v2.1, as Wear OS's does (`docs/watch-wear.md`), one step at a time behind
-`WatchV2.on` (`ios/TafsWatch/WatchPages.swift`), which is `false`: a watch shows v1 whole until every step is in. It
-turns on, as that one line, once the last step lands and the owner has tried the build.
+Watch v2 follows the owner-approved mockup v2.1, as Wear OS's does (`docs/watch-wear.md`), built one step at a time behind
+`WatchV2.on` (`ios/TafsWatch/WatchPages.swift`). It's `true` since 19 Nov, once every step was in and the privacy text for
+Sign out on this watch was live in 8 languages; turned off, a watch shows v1 whole.
 
 **Step (ii), the pages and Coach's home** (`WatchPagesView`, tested in `WatchPagesTests`):
 - **The pages,** one under the other, moved between with the crown or a swipe: Coach (home), Inbox, Your tafs and
@@ -326,7 +326,9 @@ can't be one capture on the watch as they are on Wear OS (docs/watch-wear.md, Pl
   The phone's copy is erased the moment the words are made, whether or not they were. Only the words go back.
 - **Check before sending, on the watch:** the words, and **Play** (▶) and **Pause** (‖) with "0:03 / 0:12", from the watch's
   own file. Send sends the words only, through the relay, as today.
-- **The watch's file is erased** when the review is left (Send, Delete, Re-record, Cancel, put away, signed out), and any
+- **The watch's file is erased** when the review is left (Send, Delete, Re-record, Cancel, put away, signed out), after
+  any transfer of it still queued to the phone is cancelled (`WCSessionFileTransfer.cancel()`), so the phone never gets a
+  recording the person already threw away (dev-android's read); and any
   file no screen holds is swept when the app starts and when it's put away.
 - **When it can't, nothing is sent anywhere, and the watch says why:** the phone out of reach (the file waits on the watch
   only until the review is left); no on-device model for the person's language on the phone; speech recognition never

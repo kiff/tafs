@@ -44,6 +44,31 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(r.knocks[1].dropped, 3)
     }
 
+    /// An `api` door ("From another application": a company's own software handing a taf work) reads with today's fields and its own: counts, the
+    /// last request, and each key's last four and dates, never the key. One door this app can't read (here, one with no
+    /// `label`) is left out, and never hides the others.
+    func testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther() throws {
+        let sent = #"""
+        {"doors":[
+          {"id":"door_ord7","app":"api","kind":"api","label":"Order system","open":true,"address":"/v1/doors/api/door_ord7/requests",
+           "proof":"proven","how":"Your application's key","today":37,"limit":100,"resting":false,
+           "counts":{"today":37,"waiting":2},"last_request":{"status":"done","at":"2026-11-19T09:42:15Z"},
+           "keys":[{"id":"key_1","name":"ERP production","last4":"iXrW","made_at":"2026-11-19T08:00:00Z","last_used_at":"2026-11-19T09:42:15Z"}]},
+          {"id":"door_new","kind":"api","keys":[{"key_id":"k"}]},
+          {"id":"email","app":"email","kind":"email","label":"Email","open":true,"address":"refunds@tafs.example",
+           "proof":"proven","how":"x","keys":[],"today":0,"limit":20,"resting":false}],
+         "apps":[],"knocks":[]}
+        """#
+        let r = try KIFFClient.decoder.decode(TafsCloud.Doors.self, from: Data(sent.utf8))
+        XCTAssertEqual(r.doors.map(\.id), ["door_ord7", "email"], "the unreadable door is left out, and email still shows")
+        let api = try XCTUnwrap(r.doors.first)
+        XCTAssertEqual(api.counts, .init(today: 37, waiting: 2))
+        XCTAssertEqual(api.lastRequest, .init(status: "done", at: "2026-11-19T09:42:15Z"))
+        XCTAssertEqual(api.keys.first?.last4, "iXrW")
+        XCTAssertEqual(api.keys.first?.lastUsedAt, "2026-11-19T09:42:15Z")
+        XCTAssertNil(r.doors[1].counts, "an email door has none")
+    }
+
     func testHomeCarriesTafsCloudsNeedsYouCount() throws {
         let sent = #"{"tafs":[],"others":[],"removing":[],"needs_you":{"count":3,"words":"3 need you."}}"#
         XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(sent.utf8)).needsYou, TafsCloud.NeedsYou(count: 3, words: "3 need you."))
