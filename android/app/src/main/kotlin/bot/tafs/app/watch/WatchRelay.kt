@@ -251,7 +251,8 @@ class WatchRelay(
      * with no amount, even where KIFF's title writes one in.
      * - First the call's own [amount], in the ways a figure is written (150, 150.00, 150,00, 1,234.56, 1.234,56, 1 234,56,
      *   1'234.56, and as the app formats it), with a currency beside it or none.
-     * - Then any other figure with a currency beside it: a sign, a code or a word (€, zł, kr, Fr., PLN, euros, dollars…), before
+     * - Then any other figure with a currency beside it, spaced or not (150zł, 150 EUR): a sign, a code or a word (€, zł, kr, Fr.,
+     *   PLN, euros, dollars, Franken, dolarów…), before
      *   it first and then after it, so in "order 1042 EUR 150.00" the order's number stays. A figure never starts inside a
      *   number, and a space groups thousands only after 1 to 3 digits, so "order 4502 150 €" keeps 4502.
      *
@@ -294,7 +295,7 @@ class WatchRelay(
     private const val FIGURE =
       """(?<![\d.,'’])(?:\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?|\d+(?:[.,'’]\d{3})*(?:[.,]\d+)?)"""
     private const val CURRENCY =
-      """(?:[€$£¥₹]|(?<![\p{L}\d])(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK|zł|złotych|złote|kr|Fr\.|euros?|dollars?|pounds?|francs?)(?![\p{L}]))"""
+      """(?:[€$£¥₹]|(?<![\p{L}])(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK|zł|złot(?:y|e|ych)|kr|Fr\.|euros?|dollars?|dolar(?:y|ów)?|pounds?|francs?|franken)(?![\p{L}]))"""
     private val CURRENCY_FIRST = Regex("""$CURRENCY\s?$FIGURE""", RegexOption.IGNORE_CASE)
     private val CURRENCY_AFTER = Regex("""$FIGURE\s?$CURRENCY""", RegexOption.IGNORE_CASE)
     private val SPACES = Regex("""\s+""")

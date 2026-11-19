@@ -1,0 +1,1 @@
+- **Wear's "never an amount" also covers a unit written against the figure (150zł, 150EUR) and the words Franken, dolarów and złotych**, as on the iPhone ([watch-wear.md](docs/watch-wear.md)).

@@ -94,6 +94,14 @@ class WatchRelayTest {
       "Remboursement de 1 250,50 € à Ana" to "Remboursement de à Ana",
       "Ship 3 items to Lyon" to "Ship 3 items to Lyon",
       "Krakow order 77" to "Krakow order 77",
+      // qa-kiff's follow-up (07:36): a unit right after the figure, and the words still missing; and two that must stay.
+      "Zwrot 150zł" to "Zwrot",
+      "Refund 150EUR" to "Refund",
+      "Rückerstattung 80 Franken" to "Rückerstattung",
+      "Zwrot 50 dolarów" to "Zwrot",
+      "Zwrot 150 złotych" to "Zwrot",
+      "Ship 3 crates to EUROPE" to "Ship 3 crates to EUROPE",
+      "Zamów 4 krzesła" to "Zamów 4 krzesła",
     )) {
       assertEquals(title, kept, WatchRelay.withoutAmount(title))
     }
