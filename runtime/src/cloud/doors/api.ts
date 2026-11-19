@@ -368,13 +368,18 @@ export async function apiRunEnded(note: Note, ctx: DoorsContext, publicURL: stri
   const at = (await ctx.doors.store.get(apiKeys.ref(tenant, note.ref))) as { taf: string; door: string; id: string } | undefined;
   if (!at) return false;
   if (at.taf !== note.agent) return true;
-  await settleRequest(ctx, tenant, at.taf, at.door, at.id, publicURL);
+  await settleRequest(ctx, tenant, at.taf, at.door, at.id, publicURL, note.run);
   return true;
 }
 
-/** Reads the request's run and, once it ended, keeps its result and starts the next. Safe to repeat. */
-async function settleRequest(ctx: DoorsContext, tenant: string, taf: string, doorID: string, id: string, publicURL: string): Promise<APIRequest | undefined> {
-  const r = (await ctx.doors.store.get(apiKeys.request(tenant, doorID, id))) as APIRequest | undefined;
+/**
+ * Reads the request's run and, once it ended, keeps its result and starts the next. Safe to repeat. A request whose
+ * run id wasn't kept after its start (the write after startRun failed) takes it from the run's note, which its ref
+ * names: else it would stay working and hold its door.
+ */
+async function settleRequest(ctx: DoorsContext, tenant: string, taf: string, doorID: string, id: string, publicURL: string, noted?: string): Promise<APIRequest | undefined> {
+  let r = (await ctx.doors.store.get(apiKeys.request(tenant, doorID, id))) as APIRequest | undefined;
+  if (r?.status === "working" && !r.run && noted) r = (await move(ctx, tenant, r, { run: noted })) ?? r;
   if (!r || r.status !== "working" || !r.run) return r;
   const run = await ctx.agents.getRun(tenant, taf, r.run);
   if (run.status !== "COMPLETED" && run.status !== "ERROR" && run.status !== "CANCELLED") return r;

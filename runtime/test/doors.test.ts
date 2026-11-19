@@ -2012,7 +2012,11 @@ describe("an api door's keys and signed steps", () => {
       const wrong = `tafs_api_${"A".repeat(43)}`;
       expect((await c.api("POST", `/v1/doors/api/${c.door}/requests`, { key: wrong, idem: "x", body: { input: {} } })).body).toEqual({ error: "not found", code: "not_found" });
       expect((await c.api("POST", `/v1/doors/api/api-000000000000/requests`, { idem: "x", body: { input: {} } })).status).toBe(404);
-      expect((await c.api("POST", `/v1/doors/api/${c.door}/requests`, { idem: "x", query: `key=${c.key}`, body: { input: {} } })).status).toBe(400);
+      // A key in the query string, with a request that would otherwise be taken: 400, and nothing starts.
+      const queried = await c.api("POST", `/v1/doors/api/${c.door}/requests`, { idem: "q", query: `key=${c.key}`, body: { input: { order: "A", reason: "late" } } });
+      expect(queried.status).toBe(400);
+      expect(queried.body.code).toBe("invalid_input");
+      expect(c.w.agents.runs.filter((r) => r.source === "api")).toHaveLength(0);
       // Another account's door, with this account's key: 404.
       const other = signing(c.w);
       const theirs = await other.call("POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=max" } });
@@ -2160,6 +2164,23 @@ describe("an api door's keys and signed steps", () => {
       expect(r.status).toBe(202); // kept before the start: the start's failure loses nothing
       expect((await c.read(r.body.request_id)).body.status).toBe("working");
       expect(c.w.agents.runs.filter((x) => x.source === "api")).toHaveLength(1);
+    }));
+
+    it("settles a request whose run id wasn't kept after its start, from its run's note, and starts the next", () => withFlag(async () => {
+      const c = await caller();
+      const swap = c.w.store.swap.bind(c.w.store);
+      let lost = false;
+      c.w.store.swap = async (key, prev, next, until) => {
+        // The write that keeps the run's id on the request, lost once.
+        if (!lost && (next as { run?: string; idem?: string } | undefined)?.run && (next as { idem?: string }).idem === "a" && !(prev as { run?: string }).run) { lost = true; return false; }
+        return swap(key, prev, next, until);
+      };
+      const a = await c.submit("a");
+      const b = await c.submit("b");
+      expect(lost).toBe(true);
+      await finish(c.w, c.runOf(), "Outcome: refunded");
+      expect((await c.read(a.body.request_id)).body).toMatchObject({ status: "done", result: { outcome: "refunded" } });
+      expect((await c.read(b.body.request_id)).body.status).toBe("working");
     }));
 
     it("counts neither a replay nor a refusal toward the day's cap, and takes the same key as new after 30 days", () => withFlag(async () => {
