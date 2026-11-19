@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -211,21 +212,32 @@ fun CardBar(card: TafCard, count: Int, color: Color, revoked: Boolean = false, o
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
+    // A small Card, with the Card's mark on it: never an empty coloured block (the owner's Android, 19 Nov), as iOS's.
     Box(
       Modifier.size(width = 46.dp, height = 29.dp).clip(RoundedCornerShape(5.dp))
         .background(cardFill(card, color).copy(alpha = if (faded(card, revoked)) 0.4f else 1f)),
-    )
+      contentAlignment = Alignment.Center,
+    ) {
+      Icon(
+        painterResource(R.drawable.ic_card), contentDescription = null, tint = Color.White.copy(alpha = 0.9f),
+        modifier = Modifier.size(16.dp).testTag(CARD_BAR_MARK),
+      )
+    }
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+      // Up to two lines each, so a long Card's name reads whole, as iOS's.
       Text(
         card.hero?.let { "${it.figure} ${it.words}" } ?: card.title,
         style = scaled(15, FontWeight.SemiBold, Theme.ink).copy(fontFeatureSettings = "tnum"),
-        maxLines = 1, overflow = TextOverflow.Ellipsis,
+        maxLines = 2, overflow = TextOverflow.Ellipsis,
       )
-      Text(details(card, count), style = scaled(12, color = Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
+      Text(details(card, count), style = scaled(12, color = Theme.dim), maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
     Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, tint = Theme.dim, modifier = Modifier.size(16.dp))
   }
 }
+
+/** The mark on a Card bar's small Card. */
+internal const val CARD_BAR_MARK = "card.bar.mark"
 
 /** "Refunds · 3 Cards": the Card's name, its environment when it isn't production, and the others. */
 private fun details(card: TafCard, count: Int): String {

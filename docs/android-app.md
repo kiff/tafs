@@ -766,6 +766,9 @@ answered:
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`). Signed in, tafs
   cloud's filters are bordered pills as on the iPad, amber for the one chosen and soft for the rest,
   and each group's title is small and quiet (`ActivityFilterPill`).
+- **The Card bar** (`CardBar`, on the taf's main tab) is the Cards in one line: a small Card in the taf's colour **with the Card's
+  mark on it** (`ic_card`, never an empty coloured block: the owner's phone, 19 Nov), the front Card's balance and its name, each
+  on up to two lines, as iOS's (`aCardBarsSmallCardHasItsMark`). A tap opens the Card tab.
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
   iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
