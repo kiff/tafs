@@ -135,7 +135,7 @@ Nothing leaves the watch before Send:
 - **Ask Coach** on the home opens the ask: the system's input (Type: dictation, Scribble or the keyboard, which watchOS
   offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
   app can drive, so the system's input is the microphone: there's no Start, Stop, timer or recording of the app's own, and
-  no Play. Only the words leave, as text ("tafs gets your words as text, never your voice.").
+  no Play. Only the words leave, as text ("Coach gets your words as text, never your voice.", as Wear OS says it).
 - **Check before sending** shows the words in full, scrolled with the crown, with **Send**, **Re-record** (the system's
   input again; the new words take the old ones' place, and a cancelled input keeps them) and **Delete** ("Deleted.
   Nothing was sent.", which closes by itself after 2 s). Blank is nothing; the words are cut at 2,000 characters, as a
@@ -147,7 +147,7 @@ Nothing leaves the watch before Send:
   (`ask` instead of `coach`, below), which waits on the Wear OS slice and tafs cloud's iPhone push.
 - **v1 is unchanged:** with the switch off, Coach is v1's screen, its words shown before Send.
 - **Words:** all already shared (`watch.type`, `watch.type_hint`, `watch.quick_reply`, `watch.qr.*`, `watch.review`,
-  `watch.rerecord`, `watch.deleted_nothing_sent`, `watch.ask_text_only`; Send and Delete are the phone's).
+  `watch.rerecord`, `watch.deleted_nothing_sent`, `watch.voice_text_only`; Send and Delete are the phone's).
 
 **Step (iv), the Inbox kept on the watch** (`Inbox.swift`: `InboxModel`, `DefaultsInboxStore`; `InboxScreen`; tested in
 `InboxModelTests`), as Wear OS's:
