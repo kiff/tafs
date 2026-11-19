@@ -43,8 +43,9 @@ struct APIDoorPanel: View {
                 Meter(fraction: Double(today) / Double(max(door.limit, 1)), color: Theme.tafColor(taf.colorIndex))
                 Text(Words.Door.Api.ofLimit(count: today, limit: Words.number(door.limit)))
                     .scaledFont(13, weight: .medium).foregroundColor(Theme.soft)
-                if let last = door.lastRequest {
-                    Text(Words.Door.Api.lastRequest(time: APIDoorText.when(last.at) ?? last.at, status: last.shown))
+                // Only in tafs cloud's words: the app never words a state itself, so none is drawn until they're sent.
+                if let last = door.lastRequest, let words = APIDoorText.lastRequestWords(last) {
+                    Text(Words.Door.Api.lastRequest(time: APIDoorText.when(last.at) ?? last.at, status: words))
                         .scaledFont(13).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("door.api.last_request")
                 }
@@ -130,6 +131,10 @@ struct NewKeySheet: View {
             Text(Words.Door.Api.twoKeys).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             Text(Words.Door.Api.keyName).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
             DriveField(Words.Door.Api.keyNameHint, text: $name).textFieldStyle(.roundedBorder).disableAutocorrection(true)
+                // tafs cloud takes at most 80; 60, as Android, so a name never comes back refused.
+                .onChange(of: name) { typed in
+                    if typed.count > APIDoorText.maxKeyName { name = String(typed.prefix(APIDoorText.maxKeyName)) }
+                }
             Button(Words.Door.Api.newKey) {
                 Task {
                     let made = await doors.newKey(door, name: APIDoorText.keyName(name, door: door),
@@ -174,7 +179,8 @@ struct IssuedKeyView: View {
                     .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
                     .accessibilityIdentifier("door.api.key")
                 Button(copied ? Words.Door.Api.copied : Words.Door.Api.copyKey) {
-                    Clipboard.copy(key.key)
+                    // This device only, and off the pasteboard after a minute.
+                    Clipboard.copySecret(key.key)
                     copied = true
                 }
                 .buttonStyle(PrimaryButtonStyle())
@@ -232,6 +238,15 @@ enum APIDoorText {
     /// A door holds at most two live keys, so one can be replaced without stopping the other.
     static let maxKeys = 2
 
+    /// The longest key name the field takes (tafs cloud takes 80; 60, as Android).
+    static let maxKeyName = 60
+
+    /// The last request's state in tafs cloud's words, trimmed; none until it sends them, never the raw `status`.
+    static func lastRequestWords(_ last: TafsCloud.Door.LastRequest) -> String? {
+        let words = last.words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return words.isEmpty ? nil : words
+    }
+
     /// An ISO time from tafs cloud, shown in the account's zone; nil when it isn't one.
     static func when(_ iso: String?) -> String? {
         guard let iso else { return nil }
@@ -254,8 +269,8 @@ enum APIDoorText {
 
     /// A new key's name: what the owner typed, else the door's own name.
     static func keyName(_ typed: String, door: TafsCloud.Door) -> String {
-        let name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? door.label : name
+        let name = String(typed.trimmingCharacters(in: .whitespacesAndNewlines).prefix(maxKeyName))
+        return name.isEmpty ? String(door.label.prefix(maxKeyName)) : name
     }
 
     /// An example request. It reads the key from the caller's own secret, `$TAFS_API_KEY`: the key is never written in it.
