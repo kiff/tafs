@@ -60,11 +60,35 @@ class WatchRelayTest {
     assertEquals(state.held.map { it.id }, reply.calls.map { it.holdId })
     for ((call, line) in state.held.zip(reply.calls)) {
       assertEquals(state.taf(call.tafId)!!.name, line.taf)
-      assertEquals(call.proposed.summary, line.wants)
+      assertEquals(WatchRelay.withoutAmount(call.proposed.summary), line.wants)
       assertEquals(call.proposed.amount?.formatted, line.amount)
       assertEquals(call.reason, line.reason)
       assertEquals(call.kiffId != null && state.canAnswer(call), line.refusable)
     }
+  }
+
+  /**
+   * What a held call wants reaches the watch with no amount, even where KIFF's title writes one in: v2's Inbox keeps it, and
+   * "never an amount" is what the watch promises (docs/watch-wear.md). The amount goes on its own, for Needs you while it's held.
+   */
+  @Test fun whatACallWantsReachesTheWatchWithNoAmount() {
+    for ((title, kept) in listOf(
+      "Refund order 1042, €150.00" to "Refund order 1042",
+      "Refund €1.234,56 to Ana" to "Refund to Ana",
+      "Refund order 1042 EUR 150.00" to "Refund order 1042",
+      "Pay 99 usd – invoice 7781" to "Pay – invoice 7781",
+      "Charge \$12 now" to "Charge now",
+      "Refund order 4502: 150 €" to "Refund order 4502",
+      "Refund order 4502" to "Refund order 4502",
+      "Add 50 rows" to "Add 50 rows",
+    )) {
+      assertEquals(title, kept, WatchRelay.withoutAmount(title))
+    }
+    val state = testModel().state.value.copy(mode = Mode.kiff)
+    val call = state.held.first().let { it.copy(proposed = it.proposed.copy(summary = "Refund order 1042, €150.00")) }
+    val line = WatchRelay.needsYou(state.copy(held = listOf(call))).calls.single()
+    assertEquals("Refund order 1042", line.wants)
+    assertEquals(call.proposed.amount?.formatted, line.amount)
   }
 
   /**

@@ -246,6 +246,26 @@ class WatchRelay(
     fun refusableFromWrist(state: AppState, call: HeldCall): Boolean = call.kiffId != null && state.canAnswer(call)
 
     /**
+     * A held call's words as the watch may keep them (v2's Inbox keeps `wants`, docs/watch-wear.md, "What the watch keeps"):
+     * with no amount, even where KIFF's title writes one in. A figure with a currency sign or code before it goes first, then one
+     * with it after, so in "order 1042 EUR 150.00" the order's number stays; a figure with no currency is never cut. The amount
+     * goes to the watch on its own ([HeldLine.amount]), drawn while Needs you holds the call and never kept. As the iPhone's
+     * `WatchRelay.withoutAmount`.
+     */
+    fun withoutAmount(summary: String): String =
+      summary.replace(CURRENCY_FIRST, " ").replace(CURRENCY_AFTER, " ")
+        .replace(SPACES, " ")
+        .replace(SPACE_BEFORE_MARK, "$1")
+        .trim { it.isWhitespace() || it in ",;:-–—·" }
+
+    private const val FIGURE = """\d+(?:[.,   ]\d{3})*(?:[.,]\d+)?"""
+    private const val CURRENCY = """(?:[€$£¥₹]|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD)\b)"""
+    private val CURRENCY_FIRST = Regex("""$CURRENCY\s?$FIGURE""", RegexOption.IGNORE_CASE)
+    private val CURRENCY_AFTER = Regex("""$FIGURE\s?$CURRENCY""", RegexOption.IGNORE_CASE)
+    private val SPACES = Regex("""\s+""")
+    private val SPACE_BEFORE_MARK = Regex("""\s+([,.;:])""")
+
+    /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
      * amount and the reason. One this phone can't answer from here (KIFF doesn't hold its key) isn't refusable from the wrist.
      */
@@ -256,7 +276,7 @@ class WatchRelay(
         HeldLine(
           holdId = call.id,
           taf = state.taf(call.tafId)?.name ?: Words.NeedsYou.aTaf,
-          wants = call.proposed.summary,
+          wants = withoutAmount(call.proposed.summary),
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() },
           refusable = refusableFromWrist(state, call),
