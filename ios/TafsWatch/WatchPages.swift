@@ -59,6 +59,8 @@ struct WatchPagesView: View {
     @ObservedObject var tafs: TafsModel
     @ObservedObject var coach: CoachModel
     @ObservedObject var inbox: InboxModel
+    /// Account's Sign out on this watch, once confirmed.
+    var signOut: () -> Void = {}
     @State private var page: WatchPage = .coach
     @State private var menu = false
 
@@ -92,7 +94,7 @@ struct WatchPagesView: View {
         case .tafs:
             TafsScreen(model: tafs, offersHalt: false, opensPages: true, openInbox: { page = .inbox })
         case .account:
-            WatchAccountScreen(model: tafs.accountPage())
+            WatchAccountScreen(model: tafs.accountPage(), signOut: signOut)
         }
     }
 }

@@ -212,7 +212,7 @@ Nothing leaves the watch before Send:
   `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
   `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
 
-**Step (vi): a held call whole, a calendar day, and Account** (no Sign out on this watch; `CalendarDay.swift`, `AccountPage.swift`; tested in
+**Step (vi): a held call whole, a calendar day, and Account** (with Sign out on this watch since 19 Nov; `CalendarDay.swift`, `AccountPage.swift`, `WatchSignIn.swift`; tested in
 `CalendarDayModelTests` and `AccountPageModelTests`), as Wear OS's:
 - **A held call,** opened from the Inbox while Needs you holds it: whole, as the phone's Needs you words it (its taf, what
   it asks with its amount, KIFF's reason, by when), Refuse where Needs you offers it, Approve on your phone, and "Nothing is
@@ -226,12 +226,18 @@ Nothing leaves the watch before Send:
 - **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
   account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
   the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
-- **No Sign out on this watch,** unlike Wear OS: the Apple Watch app has no session of its own, signing out on the iPhone
-  clears everything it holds (the Inbox included), and a sign-out of the watch alone would need a flag kept on it, which
-  the privacy text doesn't name. If the owner wants it, it comes with that flag and one more clause in the text.
-- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
-  phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
-  `settings.plan`, `settings.language_title`, `settings.version`).
+- **Sign out on this watch** (the owner's choice, 19 Nov, as Wear OS's; `WatchSignIn`, tested in `WatchSignInTests`): at the
+  foot of Account, asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats
+  and inbox."). It's on this watch alone: nothing is sent to the phone, and it works with the phone out of reach. The watch
+  forgets everything it holds: its Inbox (the ids taken away too) and what each page showed. It keeps one flag, an empty file
+  `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
+  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing. Sign in
+  takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
+  watch", legal-i18n's clause), which ships with the switch.
+- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
+  `watch.sign_out_q`, `watch.sign_out_sub`, `watch.signed_out_here`; the phone's `calendar.today`, `calendar.previous_day`,
+  `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`, `settings.language_title`, `settings.version`,
+  `settings.sign_out`, `sign_in.with_phone`).
 
 **W2, Sent and Coach is answering** (`CoachModel.sendReviewed`, `CoachAsk`; tested in `CoachModelTests` and
 `WatchRelayTests`), the owner's Watch 5 test, as Wear OS's 0.4.1:
@@ -348,6 +354,8 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
 - **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, never its amount, and
   Coach's answers, also with no amount) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
   protection, and cleared on sign-out.
+- **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
+  phone.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch
