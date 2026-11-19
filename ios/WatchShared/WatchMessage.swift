@@ -259,10 +259,22 @@ struct WatchNeedsYou: Codable, Equatable, Sendable {
         var taf: String?
         /// What it asks, with its amount: "Refund order 1042, €150.00".
         var what: String
+        /// What it asks, without its amount: "Refund order 1042". The one line watch v2's Inbox keeps, as Wear OS's: the
+        /// amount is shown only while Needs you holds the call, in memory. Nil from a phone from before it.
+        var summary: String? = nil
         /// Why it was held: "Over €50 each".
         var reason: String
         /// When it lapses, in the account's time zone: "14:05".
         var answerBy: String
+
+        init(id: String, taf: String?, what: String, summary: String? = nil, reason: String, answerBy: String) {
+            self.id = id
+            self.taf = taf
+            self.what = what
+            self.summary = summary
+            self.reason = reason
+            self.answerBy = answerBy
+        }
     }
 
     /// Everything that waits for the person, as tafs cloud counts it. It can be more than

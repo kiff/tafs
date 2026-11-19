@@ -16,7 +16,7 @@ struct InboxLine: Codable, Equatable, Identifiable, Sendable {
     var kind: Kind
     /// The taf, as the phone named it; none for Coach's answer.
     var title: String?
-    /// Coach's words, or what the held call asks with its amount, in the phone's words.
+    /// Coach's words, or what the held call asks without its amount, in the phone's words: no amount is kept on the watch.
     var line: String
     /// When the watch first saw it, for the order: newest first.
     var at: Date
@@ -51,6 +51,8 @@ final class FileInboxStore: InboxStore {
     }
 
     private let url: URL
+    /// What the file holds, once read: both halves are written from it together, so one never goes with the other.
+    private var known: Kept?
 
     init(url: URL = FileInboxStore.place) {
         self.url = url
@@ -62,33 +64,44 @@ final class FileInboxStore: InboxStore {
             .appendingPathComponent(InboxModel.storeKey + ".json")
     }
 
-    func lines() -> [InboxLine] { read().lines }
+    func lines() -> [InboxLine] { read()?.lines ?? [] }
 
     func write(_ lines: [InboxLine]) {
-        var kept = read()
+        // A file there that can't be read now (the watch locked) is never written over: half of it would be lost.
+        guard var kept = read() else { return }
         kept.lines = lines
         save(kept)
     }
 
-    func dismissed() -> Set<String> { Set(read().dismissed) }
+    func dismissed() -> Set<String> { Set(read()?.dismissed ?? []) }
 
     func writeDismissed(_ ids: Set<String>) {
-        var kept = read()
+        guard var kept = read() else { return }
         kept.dismissed = ids.sorted()
         save(kept)
     }
 
     func clear() {
         try? FileManager.default.removeItem(at: url)
+        known = Kept()
     }
 
-    private func read() -> Kept {
-        guard let data = try? Data(contentsOf: url) else { return Kept() }
-        return (try? JSONDecoder().decode(Kept.self, from: data)) ?? Kept()
+    /// The file's two halves: what was read or written last, else the file; nothing kept is none. Nil when the file is there
+    /// but can't be read now, as while the watch is locked.
+    private func read() -> Kept? {
+        if let known { return known }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            known = Kept()
+            return known
+        }
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        known = (try? JSONDecoder().decode(Kept.self, from: data)) ?? Kept()
+        return known
     }
 
     private func save(_ kept: Kept) {
         guard !kept.lines.isEmpty || !kept.dismissed.isEmpty else { return clear() }
+        known = kept
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? JSONEncoder().encode(kept).write(to: url, options: [.atomic, .completeFileProtection])
     }
@@ -139,7 +152,7 @@ final class InboxModel: ObservableObject {
         switch state {
         case .loaded(let page):
             for call in page.calls {
-                put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: call.what, at: clock()))
+                put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: InboxModel.line(call), at: clock()))
             }
             prune(listed: Set(page.calls.map { InboxLine.heldID($0.id) }))
         case .signedOut:
@@ -147,6 +160,12 @@ final class InboxModel: ObservableObject {
         case .loading, .unreachable, .failed:
             break
         }
+    }
+
+    /// A held call's line as the Inbox keeps it: what it asks, never its amount (as Wear OS). A phone from
+    /// before `summary` names none, and the line is Needs you's own title.
+    static func line(_ call: WatchNeedsYou.Call) -> String {
+        call.summary.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.NeedsYou.title
     }
 
     /// Coach answered words sent from this watch: a line, read already, since the person saw it as it came.

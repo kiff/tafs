@@ -152,7 +152,9 @@ Nothing leaves the watch before Send:
 **Step (iv), the Inbox kept on the watch** (`Inbox.swift`: `InboxModel`, `FileInboxStore`; `InboxScreen`; tested in
 `InboxModelTests`), as Wear OS's:
 - **The lines:** each held call Needs you lists, and each answer Coach gives words sent from this watch, newest first, kept until
-  dismissed: its taf (Coach for an answer), its words, and a blue dot while it's unread. Coach's answer comes in read, since
+  dismissed: its taf (Coach for an answer), its words, and a blue dot while it's unread. A held call's words are what it asks
+  **without its amount** (the phone's `summary`, as Wear OS's; Needs you's title from a phone from before it): the amount
+  shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
   the person saw it arrive. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
   you has them; else "Already answered, or it ended.". Coach's answer shows whole.
@@ -161,7 +163,8 @@ Nothing leaves the watch before Send:
   it back.
 - **Only with a passcode.** The lines are kept in their own file in the app's container on the watch (`tafs.inbox.json`, the
   lines and the ids taken away), written with complete file protection: unreadable whenever the watch is locked, not only
-  before its first unlock (which is all the app's defaults would get), as a held call's amount should be. With no passcode nothing is stored or added, the lines go
+  before its first unlock (which is all the app's defaults would get). Both halves are
+  written together, and a file there that can't be read (the watch locked) is never written over. With no passcode nothing is stored or added, the lines go
   when the app is opened or put away (the bare ids taken away stay, so a dismissed line doesn't come back unread), and the page
   is Needs you as the phone answered now, with the home counting those calls: a call that needs the person is never hidden
   behind "Nothing new". A locked Apple Watch doesn't show the app, so the passcode is what's checked.
@@ -252,7 +255,7 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
   screen, and are read again when it's back.
-- **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, with its amount, and
+- **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, never its amount, and
   Coach's answers) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
   protection, and cleared on sign-out.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared

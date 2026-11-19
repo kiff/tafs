@@ -151,7 +151,7 @@ struct KeptWatchReading: WatchReading {
                 // As the notification names it: the taf by its KIFF agent, Coach's own agent "setup".
                 let taf = names.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? Words.Coach.title : nil)
                 let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-                return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what, reason: call.reason,
+                return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what, summary: call.proposed.summary, reason: call.reason,
                                           answerBy: HoldNotification.time(call.expiresAt, in: zone))
             }
         let count = await home?.needsYou?.count ?? calls.count
