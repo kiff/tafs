@@ -247,6 +247,20 @@ Nothing leaves the watch before Send:
   watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
   new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
 
+**W3, Coach's answer you can't miss** (`CoachFollow`, tested in `CoachFollowTests`), the owner's Watch 5 test, the PM's
+option A (19 Nov):
+- **With the app open,** the answer shows in place (W2).
+- **Once the watch app is put away,** watchOS stops its reads within seconds, and the watch posts no notifications of its
+  own (the privacy text: its only notifications are the iPhone's). So after a watch Send, the iPhone follows Coach's answer
+  itself, inside the background time iOS gives it: 16 reads, 1.5 s apart (24 s). Once Coach has answered, if the watch
+  hasn't read for 4 s (it reads every 1.5 s while open), the iPhone posts a local notification: "Coach", then the answer
+  as the wrist shows it ("Approve on your phone" or "The rest is on your phone" where it applies). watchOS shows it on the
+  wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
+- **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing.
+- **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
+  cloud's push to the iPhone (piece d, step (vii)) lifts it.
+- **Words:** none new (`coach.title`, `watch.approve_on_phone`, `watch.more_on_phone`). No change to the privacy text.
+
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
 The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in

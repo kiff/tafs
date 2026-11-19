@@ -180,23 +180,26 @@ struct KeptWatchReading: WatchReading {
     let keyed: Bool
     /// Between two reads of a halt still halting.
     let wait: () async -> Void
+    /// W3: after a watch Send, the iPhone follows Coach's answer (`CoachFollow`). Only the app's own reader does.
+    let follows: Bool
 
     init() {
         let token = Keychain.load(HoldNotification.sessionAccount)
         let kiff = KIFFClient()
         kiff.token = token
         self.init(kiff: kiff, cloud: TafsCloud(token: token), signer: ApprovalSigner(),
-                  tenant: Keychain.load(AppModel.tenantAccount), keyed: Keychain.load(AppModel.keyedAccount) == "1")
+                  tenant: Keychain.load(AppModel.tenantAccount), keyed: Keychain.load(AppModel.keyedAccount) == "1", follows: true)
     }
 
     init(kiff: KIFFClient, cloud: TafsCloud, signer: ApprovalSigning, tenant: String?, keyed: Bool,
-         wait: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }) {
+         wait: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }, follows: Bool = false) {
         self.kiff = kiff
         self.cloud = cloud
         self.signer = signer
         self.tenant = tenant
         self.keyed = keyed
         self.wait = wait
+        self.follows = follows
     }
 
     var signedIn: Bool { kiff.token != nil }
@@ -423,7 +426,13 @@ struct KeptWatchReading: WatchReading {
         switch await post(text: text, messageID: messageID) {
         case .failure(let refusal): return refusal.reply
         case .success(let (setup, sent)):
-            return WatchReply(.ok, ticket: WatchCoachTicket(chat: setup.id, session: sent.session, sent: sent.message?.id))
+            let ticket = WatchCoachTicket(chat: setup.id, session: sent.session, sent: sent.message?.id)
+            // W3: if the watch is put away before Coach answers, the iPhone posts the answer (`CoachFollow`).
+            if follows {
+                let reading = self
+                Task { @MainActor in await CoachFollow.run(ticket, read: { await reading.readCoach($0) }) }
+            }
+            return WatchReply(.ok, ticket: ticket)
         }
     }
 
@@ -434,6 +443,14 @@ struct KeptWatchReading: WatchReading {
             guard let setup = try? await cloud.setup(), setup.id == ticket.chat else { return WatchReply(.refused) }
             Self.coachChats.insert(setup.id)
         }
+        CoachFollow.watchReading(ticket)
+        let reply = await readCoach(ticket)
+        if reply.outcome == .ok, reply.answering == false, reply.coach != nil { CoachFollow.watchHas(ticket) }
+        return reply
+    }
+
+    /// Coach's thread read once by a ticket whose chat is Coach's: its answer so far, and whether it's still working.
+    func readCoach(_ ticket: WatchCoachTicket) async -> WatchReply {
         guard let thread = try? await cloud.setupThread(ticket.chat, session: ticket.session) else {
             return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
         }
