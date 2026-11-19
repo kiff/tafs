@@ -11,10 +11,12 @@ final class InboxModelTests: XCTestCase {
     private final class Kept: InboxStore {
         var kept: [InboxLine] = []
         var gone: Set<String> = []
-        func lines() -> [InboxLine] { kept }
-        func write(_ lines: [InboxLine]) { kept = lines }
-        func dismissed() -> Set<String> { gone }
-        func writeDismissed(_ ids: Set<String>) { gone = ids }
+        /// As a protected file while the watch is locked: it reads as nothing, and nothing is written over it.
+        var locked = false
+        func lines() -> [InboxLine] { locked ? [] : kept }
+        func write(_ lines: [InboxLine]) { if !locked { kept = lines } }
+        func dismissed() -> Set<String> { locked ? [] : gone }
+        func writeDismissed(_ ids: Set<String>) { if !locked { gone = ids } }
         func clear() { kept = []; gone = [] }
     }
 
@@ -142,6 +144,24 @@ final class InboxModelTests: XCTestCase {
         opened.kept = [InboxLine(id: "held:h_9", kind: .held, title: "Rae", line: "Refund", at: now)]
         XCTAssertEqual(model(opened, lock: NoPasscode()).lines, [])
         XCTAssertEqual(opened.kept, [], "opened with no passcode: cleared")
+    }
+
+    /// A model made while the file can't be read starts empty; once the watch is unlocked it takes in what the file kept, so
+    /// its next write leaves nothing out (agentgabo's read).
+    func testAModelMadeWhileLockedTakesInTheFileOnceItCan() {
+        let store = Kept()
+        store.kept = [InboxLine(id: "held:h_1", kind: .held, title: "Rae", line: "Refund order 4502", at: now)]
+        store.gone = ["held:h_0"]
+        store.locked = true
+        let inbox = model(store)
+        XCTAssertEqual(inbox.lines, [], "locked: nothing read")
+        now += 60
+        inbox.heard(heard([call("h_0"), call("h_2")]))
+        XCTAssertEqual(store.kept.map(\.id), ["held:h_1"], "nothing written over while locked")
+        store.locked = false
+        inbox.checkLock()
+        XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2", "held:h_1"], "the file's line taken in, the dismissed one still gone")
+        XCTAssertEqual(store.kept.map(\.id), ["held:h_2", "held:h_1"])
     }
 
     /// Signed out on the phone: nothing of the Inbox stays, the ids taken away included.

@@ -143,7 +143,17 @@ final class InboxModel: ObservableObject {
     /// line doesn't come back unread once one is set.
     func checkLock() {
         kept = lock.isSecure
-        if !kept { clearLines() }
+        if kept { adoptStored() } else { clearLines() }
+    }
+
+    /// What the file holds that this model doesn't yet: a model made while the file couldn't be read (the watch locked)
+    /// starts empty, and takes the kept lines and ids in once it can, before anything it writes could leave them out.
+    private func adoptStored() {
+        dismissed.formUnion(store.dismissed())
+        let missing = store.lines().filter { stored in !lines.contains { $0.id == stored.id } }
+        let next = (lines + missing).filter { !dismissed.contains($0.id) }.sorted { $0.at > $1.at }
+        guard next != lines else { return }
+        save(next)
     }
 
     /// What Needs you read: each held call is a line, kept until dismissed; an id taken away goes once the phone no longer lists

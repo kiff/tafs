@@ -41,6 +41,21 @@ extension WatchReading {
 /// signs, with the current key, as from its notification. Coach gets text, never audio.
 @MainActor
 enum WatchRelay {
+    /// A held call's summary as the watch may keep it (its Inbox, watch v2): with no amount in it, even where KIFF's words
+    /// write one in: any figure with a currency sign or code before or after it goes, and what's left is tidied of the commas
+    /// and dashes around it. A figure with no currency stays, so an order's number is never cut.
+    static func withoutAmount(_ summary: String) -> String {
+        var words = summary
+        let figure = #"\d+(?:[.,  ]\d{3})*(?:[.,]\d+)?"#
+        let currency = #"(?:[€$£¥₹]|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD)\b)"#
+        let money = currency + #"\s?"# + figure + "|" + figure + #"\s?"# + currency
+        words = words.replacingOccurrences(of: money, with: " ", options: [.regularExpression, .caseInsensitive])
+        words = words.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        words = words.replacingOccurrences(of: #"\s+([,.;:])"#, with: "$1", options: .regularExpression)
+        let edges = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;:-–—·"))
+        return words.trimmingCharacters(in: edges)
+    }
+
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
         guard let request = WatchMessage.decode(WatchRequest.self, from: data), request.isComplete else {
             return WatchReply(.refused)
@@ -151,7 +166,9 @@ struct KeptWatchReading: WatchReading {
                 // As the notification names it: the taf by its KIFF agent, Coach's own agent "setup".
                 let taf = names.first { $0.kiffAgent == hold.subject }?.name ?? (hold.subject == "setup" ? Words.Coach.title : nil)
                 let what = [call.proposed.summary, call.proposed.amount?.formatted].compactMap { $0 }.joined(separator: ", ")
-                return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what, summary: call.proposed.summary, reason: call.reason,
+                return WatchNeedsYou.Call(id: hold.id, taf: taf, what: what,
+                                          summary: WatchRelay.withoutAmount(call.proposed.summary),
+                                          reason: call.reason,
                                           answerBy: HoldNotification.time(call.expiresAt, in: zone))
             }
         let count = await home?.needsYou?.count ?? calls.count
