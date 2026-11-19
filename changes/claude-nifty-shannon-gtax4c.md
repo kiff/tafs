@@ -1,0 +1,1 @@
+- **iPhone and iPad: a file opened full size is kept with complete file protection,** so its temporary copy can't be read while the device is locked, like Files' copies and the exports (docs/data.md).
