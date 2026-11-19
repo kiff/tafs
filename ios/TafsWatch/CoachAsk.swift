@@ -23,7 +23,8 @@ struct CoachAsk: View {
                 }
             }
         }
-        .onDisappear { model.leave() }
+        // Closing the ask keeps the conversation and any answer on its way (W4); the app put away forgets it (`leave`).
+        .onDisappear { model.closeAsk() }
     }
 
     /// The words, by voice or by hand: watchOS's own input, which offers dictation first. There's no speech recognizer a
