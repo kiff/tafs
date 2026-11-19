@@ -138269,6 +138269,59 @@
         }
       }
     },
+    "watch.view_only_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Handy kann nur ansehen, daher kannst du nicht von der Uhr aus fragen. Melde dich auf einem Handy an, das genehmigen kann."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone can only view, so you can't ask from the watch. Sign in on a phone that can approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono solo puede ver, así que no puedes pedir desde el reloj. Inicia sesión en un teléfono que pueda aprobar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce téléphone peut seulement consulter, vous ne pouvez donc pas demander depuis la montre. Connectez-vous sur un téléphone qui peut approuver."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo telefono può solo visualizzare, quindi non puoi chiedere dall'orologio. Accedi da un telefono che può approvare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon kan alleen bekijken, dus je kunt niets vragen vanaf je horloge. Log in op een telefoon die kan goedkeuren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten telefon może tylko wyświetlać, więc nie możesz pytać z zegarka. Zaloguj się na telefonie, który może zatwierdzać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este telemóvel só pode ver, por isso não pode pedir a partir do relógio. Inicie sessão num telemóvel que possa aprovar."
+          }
+        }
+      }
+    },
     "watch.voice_text_only": {
       "extractionState": "manual",
       "localizations": {

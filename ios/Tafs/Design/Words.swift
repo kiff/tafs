@@ -5403,6 +5403,8 @@ enum Words {
         static var typeHint: String { Words.line("watch.type_hint") }
         /// Update tafs on your phone, then try again.
         static var updatePhone: String { Words.line("watch.update_phone") }
+        /// This phone can only view, so you can't ask from the watch. Sign in on a phone that can approve.
+        static var viewOnlyPhone: String { Words.line("watch.view_only_phone") }
         /// Coach gets your words as text, never your voice.
         static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
         /// What it does

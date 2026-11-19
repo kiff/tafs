@@ -94,6 +94,7 @@
   "watch.type": "Escrever",
   "watch.type_hint": "Escrever ao Coach…",
   "watch.update_phone": "Atualize o tafs no telemóvel e tente novamente.",
+  "watch.view_only_phone": "Este telemóvel só pode ver, por isso não pode pedir a partir do relógio. Inicie sessão num telemóvel que possa aprovar.",
   "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz.",
   "watch.what_it_does": "O que faz",
   "watch.working_count": {

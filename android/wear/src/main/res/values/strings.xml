@@ -141,6 +141,7 @@
     <string name="watch_type">Type</string>
     <string name="watch_type_hint">Write to Coach…</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
+    <string name="watch_view_only_phone">This phone can only view, so you can\'t ask from the watch. Sign in on a phone that can approve.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
     <string name="watch_what_it_does">What it does</string>
     <plurals name="watch_working_count">

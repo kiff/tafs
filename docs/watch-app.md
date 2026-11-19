@@ -143,7 +143,8 @@ Sign out on this watch was live in 8 languages; turned off, a watch shows v1 who
 - **The menu:** every page by name, and Halt at the very bottom, apart from the rest, offered only while a taf the phone
   listed runs. It opens Choose which to halt (step v).
 - **Until their own steps:** the Inbox is Needs you as v1 reads it (with the brief in its place when that switch is on);
-  Your tafs is each taf with its state and no Halt; Account is the trust line.
+  Your tafs is each taf with its state and no Halt (halted, paused, its next run, else Home's state in the iPhone's words:
+  Ready, Stopped, Working; never no line); Account is the trust line.
 - **Nothing new** reaches the phone, and nothing is stored on the watch. The last chats come with tafs cloud's chats read.
 
 **Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
@@ -236,7 +237,7 @@ Nothing leaves the watch before Send:
   shown; the title is Today only for the day the phone answered as today, else the date in the watch's language. In memory
   only, forgotten on Close, and an answer for a day asked before the last, or after Close, is never drawn.
 - **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
-  account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
+  account's name, the name only when it isn't the email itself, as a personal account's is), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
   the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
 - **Sign out on this watch** (the owner's choice, 19 Nov, as Wear OS's; `WatchSignIn`, tested in `WatchSignInTests`): at the
   foot of Account, asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats
@@ -264,6 +265,9 @@ Nothing leaves the watch before Send:
   fail (seen in the simulator on 19 Nov, its `wcd` dropping the message), and without a limit the watch stayed on its send
   screen with no words. Past it, the phone counts as not in reach; a Send tried again goes under the same id, which tafs
   cloud takes once.
+- **A phone that can only view** (KIFF's `view_only`: signed in with no approval key, as the simulator is) can't sign a watch
+  request, and tafs cloud refuses it (403 `view_only`). The watch says so, `watch.view_only_phone` ("This phone can only view,
+  so you can't ask from the watch. Sign in on a phone that can approve."), never "a reply wasn't sent".
 - **The words are the app's own, not `watch_ask`'s:** Apple Watch's Coach is the iPhone's Coach chat, never tafs cloud's
   watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
   new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
