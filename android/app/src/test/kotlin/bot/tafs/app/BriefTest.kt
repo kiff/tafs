@@ -524,6 +524,9 @@ class BriefTest {
     // The ids Needs you's and the quiet channel always had stay, so the settings people gave them hold.
     assertEquals("holds", bot.tafs.app.push.AlertNotifier.idOf(AlertChannel.NEEDS_YOU))
     assertEquals("quiet", bot.tafs.app.push.AlertNotifier.idOf(AlertChannel.OTHER))
+    // Your brief's channel is a new one, which sounds: the first, quiet one can't be raised, so it's replaced.
+    assertEquals("brief", bot.tafs.app.push.AlertNotifier.idOf(AlertChannel.BRIEFS))
+    assertEquals(android.app.NotificationManager.IMPORTANCE_DEFAULT, bot.tafs.app.push.AlertNotifier.BRIEFS_IMPORTANCE)
     assertEquals(listOf(true, true, false, false), AlertChannel.entries.map { bot.tafs.app.push.AlertNotifier.interrupts(it) })
   }
 

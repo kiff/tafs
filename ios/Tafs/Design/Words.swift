@@ -3018,7 +3018,7 @@ enum Words {
         enum Channel {
             /// Briefs
             static var briefs: String { Words.line("push.channel.briefs") }
-            /// Your brief at its set times, with no sound.
+            /// Your brief at its set times.
             static var briefsDescription: String { Words.line("push.channel.briefs_description") }
             /// A call is held for your answer. Nothing is sent until you approve it.
             static var holdsDescription: String { Words.line("push.channel.holds_description") }

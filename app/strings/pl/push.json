@@ -1,6 +1,6 @@
 {
   "push.channel.briefs": "Przeglądy",
-  "push.channel.briefs_description": "Twój przegląd o stałych porach, bez dźwięku.",
+  "push.channel.briefs_description": "Twój przegląd o stałych porach.",
   "push.channel.holds_description": "Wywołanie jest oczekujące na Twoją odpowiedź. Nic nie zostanie wysłane, dopóki go nie zatwierdzisz.",
   "push.channel.other": "Inne alerty",
   "push.channel.other_description": "Prośby o zadania i odpowiedzi na nie, bez dźwięku.",

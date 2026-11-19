@@ -1566,7 +1566,7 @@
     <string name="people_uses">Usa %1$s</string>
     <string name="people_uses_none">Non usa ancora nessun taf</string>
     <string name="push_channel_briefs">Riepiloghi</string>
-    <string name="push_channel_briefs_description">Il tuo riepilogo ai suoi orari, senza suono.</string>
+    <string name="push_channel_briefs_description">Il tuo riepilogo ai suoi orari.</string>
     <string name="push_channel_holds_description">Una chiamata è trattenuta in attesa della tua risposta. Non viene inviato nulla finché non la approvi.</string>
     <string name="push_channel_other">Altri avvisi</string>
     <string name="push_channel_other_description">Richieste di attività e le relative risposte, senza suono.</string>

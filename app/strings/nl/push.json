@@ -1,6 +1,6 @@
 {
   "push.channel.briefs": "Briefings",
-  "push.channel.briefs_description": "Jouw briefing op de vaste tijden, zonder geluid.",
+  "push.channel.briefs_description": "Jouw briefing op de vaste tijden.",
   "push.channel.holds_description": "Een aanroep wordt vastgehouden voor je antwoord. Er wordt niets verzonden tot je het goedkeurt.",
   "push.channel.other": "Andere meldingen",
   "push.channel.other_description": "Verzoeken om taken en de antwoorden erop, zonder geluid.",

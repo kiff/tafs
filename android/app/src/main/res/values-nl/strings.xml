@@ -1566,7 +1566,7 @@
     <string name="people_uses">Gebruikt %1$s</string>
     <string name="people_uses_none">Gebruikt nog geen taf</string>
     <string name="push_channel_briefs">Briefings</string>
-    <string name="push_channel_briefs_description">Jouw briefing op de vaste tijden, zonder geluid.</string>
+    <string name="push_channel_briefs_description">Jouw briefing op de vaste tijden.</string>
     <string name="push_channel_holds_description">Een aanroep wordt vastgehouden voor je antwoord. Er wordt niets verzonden tot je het goedkeurt.</string>
     <string name="push_channel_other">Andere meldingen</string>
     <string name="push_channel_other_description">Verzoeken om taken en de antwoorden erop, zonder geluid.</string>

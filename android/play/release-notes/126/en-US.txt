@@ -1,0 +1,1 @@
+• Your brief: the alert that it's ready now plays your phone's notification sound, so it isn't missed. You can change it in Android's settings for tafs.
