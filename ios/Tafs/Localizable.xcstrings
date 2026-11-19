@@ -50279,6 +50279,112 @@
         }
       }
     },
+    "door.api.key_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benenne diesen Schlüssel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name this key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ponle nombre a esta clave"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nommez cette clé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dai un nome a questa chiave"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geef deze sleutel een naam"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazwij ten klucz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dê um nome a esta chave"
+          }
+        }
+      }
+    },
+    "door.api.key_name_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo er genutzt wird, z. B. Produktion"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where it's used, like Production"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dónde se usa, p. ej. Producción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Où elle sert, par ex. Production"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dove si usa, ad es. Produzione"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar hij wordt gebruikt, bv. Productie"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie jest używany, np. Produkcja"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onde é usada, p. ex. Produção"
+          }
+        }
+      }
+    },
     "door.api.key_never_used": {
       "extractionState": "manual",
       "localizations": {
@@ -50986,6 +51092,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ver como correu"
+          }
+        }
+      }
+    },
+    "door.api.remove_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Schlüssel funktionieren nicht mehr, und %1$@ kann %2$@ keine Arbeit mehr geben. Anfragen, die noch nicht begonnen haben, werden abgebrochen; eine laufende wird zu Ende geführt. Was schon getan ist, wird nicht rückgängig gemacht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Its keys stop working, and %1$@ can no longer hand %2$@ work. Requests that haven't started are cancelled; one that's running finishes. Nothing already done is undone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus claves dejan de funcionar y %1$@ ya no puede darle trabajo a %2$@. Las solicitudes que aún no han empezado se cancelan; la que está en curso termina. No se deshace nada de lo ya hecho."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ses clés cessent de fonctionner et %1$@ ne peut plus confier de travail à %2$@. Les requêtes qui n'ont pas commencé sont annulées ; celle en cours se termine. Rien de ce qui est déjà fait n'est annulé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le sue chiavi smettono di funzionare e %1$@ non può più affidare lavoro a %2$@. Le richieste non ancora iniziate vengono annullate; quella in corso finisce. Nulla di ciò che è già stato fatto viene annullato."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutels werken niet meer en %1$@ kan %2$@ geen werk meer geven. Verzoeken die nog niet begonnen zijn, worden geannuleerd; een verzoek dat loopt, wordt afgemaakt. Wat al gedaan is, wordt niet teruggedraaid."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich klucze przestają działać, a aplikacja %1$@ nie może już zlecać pracy dla %2$@. Żądania, które się nie zaczęły, zostają anulowane; trwające kończy się. Nic, co już zrobiono, nie zostaje cofnięte."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As suas chaves deixam de funcionar e %1$@ deixa de poder entregar trabalho a %2$@. Os pedidos que ainda não começaram são cancelados; um que esteja em curso termina. Nada do que já foi feito é desfeito."
           }
         }
       }

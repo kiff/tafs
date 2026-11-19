@@ -1926,6 +1926,10 @@ enum Words {
             static var instructions: String { Words.line("door.api.instructions") }
             /// Made {made} · last used {used} · ends …{last4}
             static func keyLine(made: String, used: String, last4: String) -> String { Words.line("door.api.key_line", made, used, last4) }
+            /// Name this key
+            static var keyName: String { Words.line("door.api.key_name") }
+            /// Where it's used, like Production
+            static var keyNameHint: String { Words.line("door.api.key_name_hint") }
             /// Made {made} · not used yet · ends …{last4}
             static func keyNeverUsed(made: String, last4: String) -> String { Words.line("door.api.key_never_used", made, last4) }
             /// The key isn't here. Use the one you copied when you made it, or make a new key.
@@ -1950,6 +1954,8 @@ enum Words {
             static var perMinute: String { Words.line("door.api.per_minute") }
             /// Read how it went
             static var readHow: String { Words.line("door.api.read_how") }
+            /// Its keys stop working, and {app} can no longer hand {taf} work. Requests that haven't started are cancelled; one that's running finishes. Nothing already done is undone.
+            static func removeBody(app: String, taf: String) -> String { Words.line("door.api.remove_body", app, taf) }
             /// Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key.
             static var revokeBody: String { Words.line("door.api.revoke_body") }
             /// Revoke “{key}”

@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Campi</string>
     <string name="door_api_instructions">Istruzioni API</string>
     <string name="door_api_key_line">Creata %1$s · ultimo uso %2$s · termina con …%3$s</string>
+    <string name="door_api_key_name">Dai un nome a questa chiave</string>
+    <string name="door_api_key_name_hint">Dove si usa, ad es. Produzione</string>
     <string name="door_api_key_never_used">Creata %1$s · non ancora usata · termina con …%2$s</string>
     <string name="door_api_key_not_here">La chiave non è qui. Usa quella che hai copiato quando l\'hai creata, o crea una nuova chiave.</string>
     <string name="door_api_keys">Chiavi</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Le richieste vengono rifiutate finché non la apri. Nulla di ciò che è già stato fatto viene annullato.</string>
     <string name="door_api_per_minute">Al minuto</string>
     <string name="door_api_read_how">Leggi com\'è andata</string>
+    <string name="door_api_remove_body">Le sue chiavi smettono di funzionare e %1$s non può più affidare lavoro a %2$s. Le richieste non ancora iniziate vengono annullate; quella in corso finisce. Nulla di ciò che è già stato fatto viene annullato.</string>
     <string name="door_api_revoke_body">Le richieste che ha inviato e non ancora iniziate vengono annullate. Quella in corso finisce. Per fermarla subito, blocca il taf. Una chiave revocata non si può recuperare: una chiave nuova è una chiave nuova.</string>
     <string name="door_api_revoke_reason">Revoca «%1$s»</string>
     <string name="door_api_revoke_title">Revocare «%1$s»?</string>

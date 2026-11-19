@@ -1090,6 +1090,8 @@
     <string name="door_api_fields">Pola</string>
     <string name="door_api_instructions">Instrukcje API</string>
     <string name="door_api_key_line">Utworzony %1$s · ostatnio użyty %2$s · kończy się na …%3$s</string>
+    <string name="door_api_key_name">Nazwij ten klucz</string>
+    <string name="door_api_key_name_hint">Gdzie jest używany, np. Produkcja</string>
     <string name="door_api_key_never_used">Utworzony %1$s · jeszcze nieużyty · kończy się na …%2$s</string>
     <string name="door_api_key_not_here">Klucza tu nie ma. Użyj tego, który skopiowano przy jego tworzeniu, albo utwórz nowy klucz.</string>
     <string name="door_api_keys">Klucze</string>
@@ -1107,6 +1109,7 @@
     <string name="door_api_paused">Żądania są odrzucane, dopóki ich nie otworzysz. Nic, co już zrobiono, nie zostaje cofnięte.</string>
     <string name="door_api_per_minute">Na minutę</string>
     <string name="door_api_read_how">Zobacz, jak poszło</string>
+    <string name="door_api_remove_body">Ich klucze przestają działać, a aplikacja %1$s nie może już zlecać pracy dla %2$s. Żądania, które się nie zaczęły, zostają anulowane; trwające kończy się. Nic, co już zrobiono, nie zostaje cofnięte.</string>
     <string name="door_api_revoke_body">Wysłane nim żądania, które się nie zaczęły, zostają anulowane. Trwające kończy się. Aby zatrzymać je od razu, zablokuj taf. Unieważnionego klucza nie da się przywrócić: nowy klucz to nowy klucz.</string>
     <string name="door_api_revoke_reason">Unieważnij „%1$s”</string>
     <string name="door_api_revoke_title">Unieważnić „%1$s”?</string>

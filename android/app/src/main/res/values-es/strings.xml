@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Campos</string>
     <string name="door_api_instructions">Instrucciones de la API</string>
     <string name="door_api_key_line">Creada %1$s · último uso %2$s · termina en …%3$s</string>
+    <string name="door_api_key_name">Ponle nombre a esta clave</string>
+    <string name="door_api_key_name_hint">Dónde se usa, p. ej. Producción</string>
     <string name="door_api_key_never_used">Creada %1$s · sin usar aún · termina en …%2$s</string>
     <string name="door_api_key_not_here">La clave no está aquí. Usa la que copiaste al crearla o crea una clave nueva.</string>
     <string name="door_api_keys">Claves</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Las solicitudes se rechazan hasta que la abras. No se deshace nada de lo ya hecho.</string>
     <string name="door_api_per_minute">Por minuto</string>
     <string name="door_api_read_how">Ver cómo fue</string>
+    <string name="door_api_remove_body">Sus claves dejan de funcionar y %1$s ya no puede darle trabajo a %2$s. Las solicitudes que aún no han empezado se cancelan; la que está en curso termina. No se deshace nada de lo ya hecho.</string>
     <string name="door_api_revoke_body">Las solicitudes que envió y que aún no han empezado se cancelan. La que está en curso termina. Para pararla ya, bloquea el taf. Una clave revocada no se puede recuperar: una clave nueva es una clave nueva.</string>
     <string name="door_api_revoke_reason">Revocar «%1$s»</string>
     <string name="door_api_revoke_title">¿Revocar «%1$s»?</string>

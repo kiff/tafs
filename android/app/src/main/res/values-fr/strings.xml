@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Champs</string>
     <string name="door_api_instructions">Instructions de l\'API</string>
     <string name="door_api_key_line">Créée %1$s · dernière utilisation %2$s · se termine par …%3$s</string>
+    <string name="door_api_key_name">Nommez cette clé</string>
+    <string name="door_api_key_name_hint">Où elle sert, par ex. Production</string>
     <string name="door_api_key_never_used">Créée %1$s · pas encore utilisée · se termine par …%2$s</string>
     <string name="door_api_key_not_here">La clé n\'est pas ici. Utilisez celle que vous avez copiée en la créant, ou créez-en une nouvelle.</string>
     <string name="door_api_keys">Clés</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Les requêtes sont refusées jusqu\'à ce que vous l\'ouvriez. Rien de ce qui est déjà fait n\'est annulé.</string>
     <string name="door_api_per_minute">Par minute</string>
     <string name="door_api_read_how">Voir comment ça s\'est passé</string>
+    <string name="door_api_remove_body">Ses clés cessent de fonctionner et %1$s ne peut plus confier de travail à %2$s. Les requêtes qui n\'ont pas commencé sont annulées ; celle en cours se termine. Rien de ce qui est déjà fait n\'est annulé.</string>
     <string name="door_api_revoke_body">Les requêtes qu\'elle a envoyées et qui n\'ont pas commencé sont annulées. Celle en cours se termine. Pour l\'arrêter tout de suite, bloquez le taf. Une clé révoquée ne peut pas être récupérée : une nouvelle clé est une nouvelle clé.</string>
     <string name="door_api_revoke_reason">Révoquer « %1$s »</string>
     <string name="door_api_revoke_title">Révoquer « %1$s » ?</string>

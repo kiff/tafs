@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Velden</string>
     <string name="door_api_instructions">API-instructies</string>
     <string name="door_api_key_line">Gemaakt %1$s · laatst gebruikt %2$s · eindigt op …%3$s</string>
+    <string name="door_api_key_name">Geef deze sleutel een naam</string>
+    <string name="door_api_key_name_hint">Waar hij wordt gebruikt, bv. Productie</string>
     <string name="door_api_key_never_used">Gemaakt %1$s · nog niet gebruikt · eindigt op …%2$s</string>
     <string name="door_api_key_not_here">De sleutel staat hier niet. Gebruik die je kopieerde toen je hem maakte, of maak een nieuwe sleutel.</string>
     <string name="door_api_keys">Sleutels</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Verzoeken worden geweigerd tot je hem opent. Wat al gedaan is, wordt niet teruggedraaid.</string>
     <string name="door_api_per_minute">Per minuut</string>
     <string name="door_api_read_how">Lees hoe het ging</string>
+    <string name="door_api_remove_body">De sleutels werken niet meer en %1$s kan %2$s geen werk meer geven. Verzoeken die nog niet begonnen zijn, worden geannuleerd; een verzoek dat loopt, wordt afgemaakt. Wat al gedaan is, wordt niet teruggedraaid.</string>
     <string name="door_api_revoke_body">Verzoeken die hij stuurde en die nog niet begonnen zijn, worden geannuleerd. Een verzoek dat loopt, wordt afgemaakt. Om het nu te stoppen, zet je de taf stil. Een ingetrokken sleutel kan niet terug: een nieuwe sleutel is een nieuwe sleutel.</string>
     <string name="door_api_revoke_reason">‘%1$s’ intrekken</string>
     <string name="door_api_revoke_title">‘%1$s’ intrekken?</string>

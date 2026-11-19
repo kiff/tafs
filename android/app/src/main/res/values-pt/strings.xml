@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Campos</string>
     <string name="door_api_instructions">Instruções da API</string>
     <string name="door_api_key_line">Criada %1$s · último uso %2$s · termina em …%3$s</string>
+    <string name="door_api_key_name">Dê um nome a esta chave</string>
+    <string name="door_api_key_name_hint">Onde é usada, p. ex. Produção</string>
     <string name="door_api_key_never_used">Criada %1$s · ainda não usada · termina em …%2$s</string>
     <string name="door_api_key_not_here">A chave não está aqui. Use a que copiou quando a criou, ou crie uma nova chave.</string>
     <string name="door_api_keys">Chaves</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Os pedidos são recusados até a abrir. Nada do que já foi feito é desfeito.</string>
     <string name="door_api_per_minute">Por minuto</string>
     <string name="door_api_read_how">Ver como correu</string>
+    <string name="door_api_remove_body">As suas chaves deixam de funcionar e %1$s deixa de poder entregar trabalho a %2$s. Os pedidos que ainda não começaram são cancelados; um que esteja em curso termina. Nada do que já foi feito é desfeito.</string>
     <string name="door_api_revoke_body">Os pedidos que enviou e que ainda não começaram são cancelados. Um que esteja em curso termina. Para o parar já, bloqueie o taf. Uma chave revogada não pode ser recuperada: uma chave nova é uma chave nova.</string>
     <string name="door_api_revoke_reason">Revogar «%1$s»</string>
     <string name="door_api_revoke_title">Revogar «%1$s»?</string>

@@ -1010,6 +1010,8 @@
     <string name="door_api_fields">Fields</string>
     <string name="door_api_instructions">API instructions</string>
     <string name="door_api_key_line">Made %1$s · last used %2$s · ends …%3$s</string>
+    <string name="door_api_key_name">Name this key</string>
+    <string name="door_api_key_name_hint">Where it\'s used, like Production</string>
     <string name="door_api_key_never_used">Made %1$s · not used yet · ends …%2$s</string>
     <string name="door_api_key_not_here">The key isn\'t here. Use the one you copied when you made it, or make a new key.</string>
     <string name="door_api_keys">Keys</string>
@@ -1025,6 +1027,7 @@
     <string name="door_api_paused">Requests are refused until you open it. Nothing already done is undone.</string>
     <string name="door_api_per_minute">A minute</string>
     <string name="door_api_read_how">Read how it went</string>
+    <string name="door_api_remove_body">Its keys stop working, and %1$s can no longer hand %2$s work. Requests that haven\'t started are cancelled; one that\'s running finishes. Nothing already done is undone.</string>
     <string name="door_api_revoke_body">Requests it sent that haven\'t started are cancelled. One that\'s running finishes. To stop it now, halt the taf. A revoked key can\'t be brought back: a new key is a new key.</string>
     <string name="door_api_revoke_reason">Revoke “%1$s”</string>
     <string name="door_api_revoke_title">Revoke “%1$s”?</string>
