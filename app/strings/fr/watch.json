@@ -86,7 +86,7 @@
   "watch.sign_out_q": "Se déconnecter sur cette montre ?",
   "watch.sign_out_sub": "Votre téléphone reste connecté. Cette montre oublie vos tafs, vos chats et votre boîte de réception.",
   "watch.signed_in": "Connecté",
-  "watch.signed_out_here": "Session fermée sur cette montre. Votre téléphone reste connecté.",
+  "watch.signed_out_here": "Déconnecté de cette montre. Votre téléphone reste connecté.",
   "watch.swipe_settings": "Balayez vers la gauche pour ses réglages",
   "watch.tap_start": "Touchez Démarrer, puis parlez. Vos mots s'affichent ici pendant que vous parlez.",
   "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",
