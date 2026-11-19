@@ -252,6 +252,9 @@ struct FileDetailView: View {
                     FilePreview(url: copy).frame(height: 320)
                 case .unreachable:
                     Text(Words.Alert.tafsCouldNotReachKiff).scaledFont(14).foregroundColor(Theme.no)
+                case .noPreview?:
+                    // tafs cloud answered with no start for a text type: no preview, only the details and the buttons.
+                    EmptyView()
                 case nil:
                     ProgressView().frame(maxWidth: .infinity, minHeight: 120)
                 }
