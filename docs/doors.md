@@ -135,6 +135,14 @@ over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`Ap
 removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
 closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.
 
+**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, behind `APIDoorFeature`, off), from the owner's
+mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
+in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
+(asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (an optional
+name, the door's own when left blank; at most two); the key shown once (Copy key, where to send work, and an example that
+reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
+but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:

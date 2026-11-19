@@ -151,6 +151,11 @@ final class DoorsModel: ObservableObject {
         }
     }
 
+    /// Where an `api` door's caller sends work: its address on tafs cloud, whole.
+    func endpoint(_ door: TafsCloud.Door) -> String {
+        URL(string: door.address, relativeTo: cloud.baseURL)?.absoluteString ?? door.address
+    }
+
     /// The key screen was left: the key is never shown again.
     func keyShown() { issued = nil }
 
