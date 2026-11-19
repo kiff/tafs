@@ -119,6 +119,12 @@ it: no raw headers, no HTML, no attachments. [data.md](data.md) lists every item
 A door's run asks kiff/agents to announce when it ends (`/v1/runs/ended`, as Coach's
 tasks do). tafs cloud reads the run back and sends its answer through the door.
 
+**The apps read the list one door at a time** (`GET /v1/tafs/{id}/doors`): a door, an app or a knock that a build can't
+read is left out, and never hides the others (iOS `TafsCloud.Doors`, 19 Nov). A door kind a build doesn't know yet, such as
+"From another application" (`api`, kiff/work#16 §2.5), still carries every field today's builds require, so older builds
+show it as a plain door. The iPhone and iPad also read an `api` door's own fields: `counts` (today, waiting),
+`last_request` (`{status, at}`), and each key's `last4`, `made_at` and `last_used_at`, never the key.
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:
