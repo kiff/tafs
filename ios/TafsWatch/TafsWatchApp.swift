@@ -20,6 +20,7 @@ struct TafsWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
+            Group {
             if WatchV2.on, signIn.signedOutHere {
                 // Signed out on this watch: only that, and Sign in with your phone. Nothing is read or sent.
                 SignedOutHereScreen(signIn: signIn)
@@ -35,6 +36,9 @@ struct TafsWatchApp: App {
                 }
                 .tabViewStyle(.verticalPage)
             }
+            }
+            // v2 (W7): Send and the microphone in the app's orange; everything else the system's grey.
+            .tint(WatchV2.on ? WatchLook.send : nil)
         }
         .onChange(of: scenePhase) { _, phase in
             // Signed out on this watch: nothing is read, and there's nothing to forget.

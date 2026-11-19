@@ -280,8 +280,18 @@ owner-approved Watch Coach mockup, as Wear OS's:
 - **Memory only:** the turns go when the app is put away and on Sign out on this watch. Nothing new is kept on the watch, so
   the approved text's "It keeps only your Inbox" still holds. Until tafs cloud keeps the watch's conversation (W11), it's what
   this watch said.
-- **Colours:** neutral (the app's tint for the person's words, grey for Coach's) until W7's palette lands.
+- **Colours:** W7's: the person's words on `mineGround`, Coach's on `coachGround`, "Sent" in `done`, "Coach is answering" in `coach`.
 - **Words:** none new (`watch.sent`, `chat.taf_is_answering`, `coach.title`, `watch.more_on_phone`, `watch.approve_on_phone`).
+
+**W7, colour by meaning** (`WatchLook`, tested in `WatchLookTests`), the owner-approved Watch Coach mockup: one palette, Wear
+OS's `Look` value for value (#1451), so both watches read alike.
+- **Send and your words orange** (`send` #E8531D): the app's tint in v2, so the microphone, Send → and links. Your words in
+  the conversation on `mineGround` #3A2A22.
+- **Coach blue** (`coach` #7FA8FF, on `coachGround` #1E2231): Coach's answers, "Coach is answering", the Inbox's unread dots.
+- **What waits for you amber** (`held` #FFB547): Approve on your phone, and why a Send didn't go (the review's line).
+- **Done green** (`done` #3FCF7E): the Sent check.
+- **Delete, halt and sign out red** (`danger` #FF5A5F): the review's ✕, Halt now, Sign out, a halted taf's or day's line.
+- **Everything else** stays the system's grey. v1 is unchanged: it keeps the system's tint, and Needs you its own colours.
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 

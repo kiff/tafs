@@ -157,7 +157,8 @@ struct CoachTurnRow: View {
                 .lineLimit(4)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
-                .background(.tint.opacity(0.25), in: RoundedRectangle(cornerRadius: 12))
+                .foregroundStyle(WatchLook.onMineGround)
+                .background(WatchLook.mineGround, in: RoundedRectangle(cornerRadius: 12))
                 .frame(maxWidth: .infinity, alignment: .trailing)
             coachSide
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -170,11 +171,11 @@ struct CoachTurnRow: View {
         case .sent:
             Label(Words.Watch.sent, systemImage: "checkmark")
                 .font(.caption2)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(WatchLook.done)
         case .answering:
             HStack(spacing: 4) {
                 ProgressView().frame(width: 14, height: 14)
-                Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title)).font(.caption2)
+                Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title)).font(.caption2).foregroundStyle(WatchLook.coach)
             }
             .accessibilityElement(children: .combine)
         case .answered(let answer):
@@ -186,7 +187,8 @@ struct CoachTurnRow: View {
                     .lineLimit(5)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 5)
-                    .background(Color.secondary.opacity(0.2), in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundStyle(WatchLook.onCoachGround)
+                    .background(WatchLook.coachGround, in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(Words.Coach.title + ": " + CoachTurnRow.line(answer))
@@ -217,7 +219,7 @@ struct CoachTurnScreen: View {
                     Text(answer.text)
                 }
                 if answer?.approveOnPhone == true {
-                    Label(Words.Watch.approveOnPhone, systemImage: "iphone").font(.footnote)
+                    Label(Words.Watch.approveOnPhone, systemImage: "iphone").font(.footnote).foregroundStyle(WatchLook.held)
                 }
                 if answer == nil || answer?.more == true {
                     Text(Words.Watch.moreOnPhone).font(.footnote).foregroundStyle(.secondary)
@@ -248,7 +250,7 @@ struct WatchMenu: View {
                         NavigationLink {
                             HaltPickScreen(tafs: tafs)
                         } label: {
-                            Text(Words.Halt.now).foregroundStyle(.red)
+                            Text(Words.Halt.now).foregroundStyle(WatchLook.danger)
                         }
                     }
                 }

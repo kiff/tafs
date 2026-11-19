@@ -47,7 +47,7 @@ struct InboxRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 6) {
             Circle()
-                .fill(line.read ? Color.clear : Color.blue)
+                .fill(line.read ? Color.clear : WatchLook.coach)
                 .frame(width: 6, height: 6)
                 .padding(.top, 6)
                 .accessibilityHidden(true)

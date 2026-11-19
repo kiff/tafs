@@ -116,6 +116,7 @@ struct WatchAccountScreen: View {
                 }
                 // The watch's own: it works with the phone out of reach too.
                 Button(Words.Settings.signOut, role: .destructive) { confirming = true }
+                    .tint(WatchLook.danger)
                 Text(Words.Watch.trust)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
