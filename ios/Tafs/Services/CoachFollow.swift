@@ -47,21 +47,21 @@ enum CoachFollow {
     @discardableResult
     static func follow(_ ticket: WatchCoachTicket, read: (WatchCoachTicket) async -> WatchReply, wait: () async -> Void,
                        now: () -> Date, post: (WatchCoachAnswer) async -> Void) async -> Bool {
-        let key = key(ticket)
+        let id = Self.key(ticket)
         // The watch reads from the moment it's told "Sent".
-        watchLastRead[key] = now()
+        watchLastRead[id] = now()
         defer {
-            watchLastRead[key] = nil
-            watchHad.remove(key)
+            watchLastRead[id] = nil
+            watchHad.remove(id)
         }
-        for read in 0..<reads {
+        for index in 0..<reads {
             await wait()
-            if read >= quickReads { await wait() }
-            if watchHad.contains(key) { return false }
+            if index >= quickReads { await wait() }
+            if watchHad.contains(id) { return false }
             let reply = await read(ticket)
             guard reply.outcome == .ok, reply.answering == false, let answer = reply.coach else { continue }
-            if watchHad.contains(key) { return false }
-            guard now().timeIntervalSince(watchLastRead[key] ?? .distantPast) > watchAway else { return false }
+            if watchHad.contains(id) { return false }
+            guard now().timeIntervalSince(watchLastRead[id] ?? .distantPast) > watchAway else { return false }
             await post(answer)
             return true
         }

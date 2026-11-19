@@ -247,7 +247,7 @@ Nothing leaves the watch before Send:
   watch ask, so it shows the chat's line for that state (`chat.taf_is_answering` with Coach's name) and `watch.sent`. No
   new strings. Moving onto `watch_ask` waits on tafs cloud's push to the iPhone (Ask tafs, below).
 
-**W3, Coach's answer you can't miss** (`CoachFollow`, tested in `CoachFollowTests`), the owner's Watch 5 test, the PM's
+**W3, Coach's answer you can't miss** (`CoachFollow`, tested in `CoachFollowTests`), the owner's Watch 5 test,
 option A (19 Nov):
 - **With the app open,** the answer shows in place (W2).
 - **Once the watch app is put away,** watchOS stops its reads within seconds, and the watch posts no notifications of its

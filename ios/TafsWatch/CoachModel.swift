@@ -153,9 +153,9 @@ final class CoachModel: ObservableObject {
     private func read(_ ticket: WatchCoachTicket, message: String) async {
         let visit = self.visit
         var last: WatchCoachAnswer?
-        for read in 0..<Self.answerReads {
+        for index in 0..<Self.answerReads {
             await pause()
-            if read >= Self.quickReads { await pause() }
+            if index >= Self.quickReads { await pause() }
             guard visit == self.visit else { return }
             let reply = await phone.ask(WatchRequest(.coachRead, made: clock(), ticket: ticket))
             guard visit == self.visit else { return }
