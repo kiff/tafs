@@ -6,7 +6,7 @@ import { type Lang, type Words, wordsIn } from "../words/index.js";
 import type { AgentsAPI, ResultPlace, Taf, Tafs } from "../handler.js";
 import { APPS, type DoorApp } from "./apps.js";
 import { type EmailProvider, replySubject } from "./email.js";
-import { type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
+import { API_DOOR, type Arrival, DOOR, type Door, doorKeys, type DoorSecrets, type DoorStore, type Key, type Knock, type Reply, type Sent, whatsappSecretName } from "./model.js";
 import { cut } from "./text.js";
 import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
@@ -742,6 +742,7 @@ async function sendReply(ctx: DoorsContext, cfg: DoorsConfig, tenant: string, ta
 
 /** A door as the app shows it, with today's counts: from keys, and from everyone else. */
 export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, others: 0 }, lang: Lang = "en") {
+  if (d.kind === "api") return apiDoorView(d, today, lang);
   return {
     id: d.id, app: d.app, kind: d.kind, label: app?.label ?? d.app, open: d.open, address: d.address,
     proof: app?.proof ?? "none", how: app ? appWords(app, lang).how : "",
@@ -753,6 +754,36 @@ export function doorView(d: Door, app: DoorApp | undefined, today = { keys: 0, o
     ...(d.kind === "slack" ? { grant: d.grant, channel: d.channel, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
     // A Telegram door names its connection and planque subscription the same way.
     ...(d.kind === "telegram" ? { grant: d.grant, ...(d.trigger ? { trigger: d.trigger } : {}) } : {}),
+  };
+}
+
+/** Where an `api` door's caller sends its requests: the path, on tafs cloud's own address. */
+export const apiRequestsPath = (door: string) => `/v1/doors/api/${door}/requests`;
+
+/**
+ * A door "From another application" (`api`) as the owner's apps show it (docs/doors.md). It carries every field a build
+ * without row 4 requires, so an older app shows it as a plain door: `address` is where requests go, `proof` is `proven`
+ * (only a key's holder reaches it), and each key has an `id`. Then its own: today's and waiting `counts`, the
+ * `last_request` with tafs cloud's word for its state, and each key's name, last four and dates. Never a key or its hash.
+ */
+export function apiDoorView(d: Door, today = { keys: 0, others: 0 }, lang: Lang = "en") {
+  const w = wordsIn(lang);
+  const perDay = d.perDay ?? API_DOOR.perDay;
+  const resting = today.keys >= perDay;
+  const label = w.door_api_label;
+  return {
+    id: d.id, app: "api", kind: "api" as const, label, open: d.open, address: apiRequestsPath(d.id),
+    proof: "proven", how: w.door_api_how,
+    keys: (d.apiKeys ?? []).map((k) => ({ id: k.id, name: k.name, last4: k.last4, made_at: k.made, ...(k.lastUsed ? { last_used_at: k.lastUsed } : {}) })),
+    today: today.keys, limit: perDay, resting,
+    others_today: 0, others_limit: 0,
+    counts: { today: today.keys, waiting: d.waiting ?? 0 },
+    ...(d.lastRequest ? { last_request: { status: d.lastRequest.status, at: d.lastRequest.at, words: w.door_api_request[d.lastRequest.status] ?? d.lastRequest.status } } : {}),
+    words: {
+      state: !d.open ? w.door_api_state_paused : resting ? w.door_api_state_resting(perDay) : w.door_api_state_open,
+      tap: d.open ? w.door_tap_close(label) : w.door_tap_open(label),
+      settings: w.door_api_settings,
+    },
   };
 }
 

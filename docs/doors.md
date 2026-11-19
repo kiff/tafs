@@ -140,6 +140,13 @@ off), signed by the approval key behind the fingerprint (`TafsCloud.doorSignatur
 screen closes (`apiKeyShown`), and a last request's `words` are drawn as tafs cloud sends them
 (`anApiDoorsNewKeyIsSignedOverItsBodyAndShownOnce`, `anApiDoorsRevokeReopenAndRemoveAreSignedAndNeverGoUnsigned`).
 
+**tafs cloud keeps an `api` door** (`kind: "api"`, `doors/model.ts`) with its keys as `APIKey`s: an id, the owner's name for
+it, its last four characters and its SHA-256, never the key. `GET /v1/tafs/{id}/doors` shows it through `apiDoorView`, with
+`address` the path its caller sends requests to (`/v1/doors/api/{door}/requests`), `proof: "proven"`, its day's cap as `limit`
+(100 by default, `API_DOOR`), `counts: {today, waiting}`, `last_request: {status, at, words}` (`words` tafs cloud's, one per
+state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors-api.json`). Making one, its keys and its
+caller's routes come in the next steps, behind `TAFS_API_DOORS` (off).
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:

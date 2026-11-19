@@ -13,7 +13,30 @@
  *   information, never instructions.
  */
 
-export type DoorKind = "email" | "whatsapp" | "slack" | "telegram";
+export type DoorKind = "email" | "whatsapp" | "slack" | "telegram" | "api";
+
+/**
+ * A key of a door "From another application" (`api`, docs/doors.md): what tafs cloud keeps of it. Never the key itself,
+ * which is shown once, in the answer that made it: only its SHA-256, and what the door's screen shows to tell two apart.
+ */
+export interface APIKey {
+  /** The key's id, as the apps and the revoke route name it ("key_" and 16 hex characters). */
+  id: string;
+  /** The owner's name for where it's used ("ERP production"). */
+  name: string;
+  /** The key's last four characters. */
+  last4: string;
+  /** Hex SHA-256 of the whole key: a request's key is looked up by it. */
+  hash: string;
+  made: string;
+  lastUsed?: string;
+}
+
+/** A request's states, as the caller and the owner read them (docs/doors.md, the `api` door). */
+export type APIRequestState = "accepted" | "working" | "needs_you" | "done" | "failed" | "cancelled" | "expired";
+
+/** An `api` door's own limits: the defaults the owner decided (19 Nov), and the most a day may be set to. */
+export const API_DOOR = { perDay: 100, perDayMax: 1000, perMinute: 10, waiting: 20 } as const;
 
 /** A sender who may give the taf work through one door. */
 export interface Key {
@@ -51,6 +74,11 @@ export interface Door {
   channel?: string;
   /** planque's subscription that hands this channel's messages over: the app deletes it when the door goes. */
   trigger?: string;
+  /** An `api` door's keys (two live at most), its day's cap, the requests waiting, and its last request. */
+  apiKeys?: APIKey[];
+  perDay?: number;
+  waiting?: number;
+  lastRequest?: { status: APIRequestState; at: string };
 }
 
 /** Where a door's answer goes back, in the same thread: what the door's provider needs. */
