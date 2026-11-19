@@ -152,8 +152,9 @@ Nothing leaves the watch before Send:
 `InboxModelTests`), as Wear OS's:
 - **The lines:** each held call Needs you lists, and each answer Coach gives words sent from this watch, newest first, kept until
   dismissed: its taf (Coach for an answer), its words, and a blue dot while it's unread. A held call's words are what it asks
-  **without its amount** (the phone's `summary`, as Wear OS's, with any figure with a currency taken out of it even where
-  KIFF's words write one in; Needs you's title from a phone from before it): the amount
+  **without its amount** (the phone's `summary`, as Wear OS's, with the call's own amount taken out of it in the ways it's
+  written, then any figure with a currency sign, code or word beside it, złoty, crowns and Swiss francs included; Needs
+  you's title from a phone from before it): the amount
   shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
   the person saw it arrive. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs

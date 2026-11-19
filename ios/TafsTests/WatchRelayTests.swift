@@ -614,20 +614,36 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertFalse(KeptWatchReading(kiff: KIFFClient(), cloud: cloud, signer: CurrentKeyOnly(), tenant: nil, keyed: false).signedIn)
     }
 
-    /// The summary the watch may keep holds no amount, even where KIFF's words write one in; an order's own number stays.
+    /// The summary the watch may keep holds no amount, even where KIFF's words write one in, in the ways tafs' languages
+    /// write money (qa-kiff's table); an order's own number stays.
     func testTheSummaryForTheWatchHoldsNoAmount() {
-        let cases = [
-            ("Refund order 4502", "Refund order 4502"),
-            ("Refund €150.00 to order 4502", "Refund to order 4502"),
-            ("Refund order 4502, €150.00", "Refund order 4502"),
-            ("Pay 150.00 EUR to the supplier", "Pay to the supplier"),
-            ("Refund 150,00 € on order 4502", "Refund on order 4502"),
-            ("Refund 1 250,50 € now", "Refund now"),
-            ("Ship 3 items to Lyon", "Ship 3 items to Lyon"),
-            ("Refund order 1042 EUR 150.00", "Refund order 1042"),
+        let cases: [(String, Money?, String)] = [
+            ("Refund order 4502", nil, "Refund order 4502"),
+            ("Refund €150.00 to order 4502", nil, "Refund to order 4502"),
+            ("Refund order 4502, €150.00", nil, "Refund order 4502"),
+            ("Pay 150.00 EUR to the supplier", nil, "Pay to the supplier"),
+            ("Refund 150,00 € on order 4502", nil, "Refund on order 4502"),
+            ("Refund 1 250,50 € now", nil, "Refund now"),
+            ("Ship 3 items to Lyon", nil, "Ship 3 items to Lyon"),
+            ("Refund order 1042 EUR 150.00", nil, "Refund order 1042"),
+            ("Zwrot zamówienia 1042, 150 zł", nil, "Zwrot zamówienia 1042"),
+            ("Zwrot 150 PLN", nil, "Zwrot"),
+            ("Refund 150 euros to Ana", nil, "Refund to Ana"),
+            ("Rembourser 150 euros", nil, "Rembourser"),
+            ("Refund 20 dollars", nil, "Refund"),
+            ("Återbetala 200 kr", nil, "Återbetala"),
+            ("Refund order 4502 150 €", nil, "Refund order 4502"),
+            ("Rückerstattung Fr. 80.50", nil, "Rückerstattung"),
+            // The call's own amount goes whatever sits beside it, or nothing does.
+            ("Refund 150 to Ana", Money(minor: 15_000, currency: "EUR", scale: 2), "Refund to Ana"),
+            ("Refund 1,234.56 for order 77", Money(minor: 123_456, currency: "USD", scale: 2), "Refund for order 77"),
+            ("Refund 1 234,56 now", Money(minor: 123_456, currency: "EUR", scale: 2), "Refund now"),
+            ("Refund 300 XYZ to Ana", Money(minor: 300, currency: "XYZ", scale: 0), "Refund to Ana"),
+            ("Order 4150 refund", Money(minor: 15_000, currency: "EUR", scale: 2), "Order 4150 refund"),
+            ("Order 150 refund", .bare(150), "Order 150 refund"),
         ]
-        for (summary, kept) in cases {
-            XCTAssertEqual(WatchRelay.withoutAmount(summary), kept, summary)
+        for (summary, amount, kept) in cases {
+            XCTAssertEqual(WatchRelay.withoutAmount(summary, amount: amount), kept, summary)
         }
     }
 }
