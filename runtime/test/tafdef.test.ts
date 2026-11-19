@@ -31,11 +31,13 @@ describe("a taf's definition on kiff/agents", () => {
       expect(d.gateway, job.id).toBe("https://mcp.kiff.dev/mcp");
       expect(d.gateway).toBe(KIFF_GATEWAY);
       // A job that writes outside the company also has `disclose` and `credit`, which add no tool and no
-      // server; `show` with `show_types` adds kiff/agents' own show tool, limited to a taf's ask_coach card.
+      // server; `show` with `show_types` adds kiff/agents' own show tool, limited to a taf's ask_coach card;
+      // `files` adds its deliver_file, which writes only into the account's own Files and reaches no server.
       expect(Object.keys(d).sort(), job.id).toEqual(
         ["effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "price", "thinking",
-          "show", "show_types", ...(job.disclose ? ["disclose"] : [])].sort());
+          "show", "show_types", "files", ...(job.disclose ? ["disclose"] : [])].sort());
       expect(d.show_types, job.id).toEqual(["ask_coach"]);
+      expect(d.files, job.id).toBe(true);
     }
   });
 

@@ -1,0 +1,1 @@
+- **Files: every taf can hand its account a file.** A taf's definition turns on kiff/agents' `deliver_file`, so a report, a table or a document it makes is kept 30 days in Files for everyone on the account. Existing tafs get it at the next Upgrade.

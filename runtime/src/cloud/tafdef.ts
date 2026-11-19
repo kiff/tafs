@@ -261,6 +261,8 @@ export function definition(tafID: string, job: Job, opts: { budgetCents?: number
     ...(job.disclose?.length ? { disclose: { line: disclosureLine(job), ...linesOf(job), in: job.disclose.map((d) => ({ tool: d.tool, fields: [...d.fields] })) } } : {}),
     // Its one card: a setting's request for Coach, with Coach's button (kiff/tafs#476, gap 15).
     show: true, show_types: ["ask_coach"],
+    // A file it made (a report, a table, a document) handed to the account's Files for 30 days (docs/api.md, Files).
+    files: true,
     // "Your step" (yourstep.ts): it hands its owner a step it may never take, once kiff/agents offers the tool.
     ...(yourStepOn() ? { your_step: true } : {}),
   };
