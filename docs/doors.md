@@ -124,12 +124,13 @@ tasks do). tafs cloud reads the run back and sends its answer through the door.
 (`testAnAPIDoorReadsAndOneUnreadableDoorHidesNoOther`, `anAPIDoorReadsAndOneUnreadableDoorHidesNoOther`). A door kind a build
 doesn't know yet, such as "From another application" (`api`: a company's own software handing a taf work), still carries
 every field today's builds require, so older builds show it as a plain door. Both apps also read an `api` door's own
-fields when they're present: `counts` (today, waiting), `last_request` (`{status, at}`), and each key's `last4`, `made_at`
+fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows tafs cloud's `words` (`LastRequest.shown`), falling back to `status` only until they're sent), and each key's `last4`, `made_at`
 and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 
-**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke` and `reopen`, behind `APIDoorFeature`,
-off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`) and opening a paused door again
-(`PATCH …/{door}` `{open: true}`) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
+**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
+first three behind `APIDoorFeature`, off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
+opening a paused door again (`PATCH …/{door}` `{open: true}`) and removing the door (`DELETE …/{door}`, its keys with it,
+from the door's Remove, which never sends an `api` door's removal unsigned) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
 over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
 removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
 closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.

@@ -103,7 +103,9 @@ final class DoorsModel: ObservableObject {
         _ = await work { try await cloud.setDoorOpen(tafID, door: door.id, open: open) }
     }
 
+    /// Removes a door. An `api` door is never removed unsigned: it goes through `removeAPI(_:reason:)`.
     func remove(_ door: TafsCloud.Door) async {
+        guard !door.isAPI else { return }
         let cloud = cloud, tafID = tafID
         _ = await work { () -> TafsCloud.Door? in
             try await cloud.removeDoor(tafID, door: door.id)
@@ -164,6 +166,23 @@ final class DoorsModel: ObservableObject {
             try await cloud.revokeKey(tafID, door: door.id, key: key.id, signature: signature)
             error = nil
             await load()
+        } catch {
+            self.error = Self.words(error)
+        }
+    }
+
+    /// Removes an `api` door, signed: its keys stop working with it.
+    func removeAPI(_ door: TafsCloud.Door, reason: String) async {
+        guard let sign, door.isAPI else { return }
+        let cloud = cloud, tafID = tafID
+        let path = cloud.doorPath(tafID, door: door.id)
+        busy = true
+        defer { busy = false }
+        do {
+            let signature = try await sign("DELETE", path, Data(), reason)
+            try await cloud.removeAPIDoor(tafID, door: door.id, signature: signature)
+            doors.removeAll { $0.id == door.id }
+            error = nil
         } catch {
             self.error = Self.words(error)
         }

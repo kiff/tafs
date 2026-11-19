@@ -115,7 +115,14 @@ struct DoorsView: View {
             Button(Words.Door.remove, role: .destructive) {
                 if let d = confirmRemove {
                     Task {
-                        if d.kind == "slack", let removeSlack { await removeSlack(d) } else { await doors.remove(d) }
+                        if d.kind == "slack", let removeSlack {
+                            await removeSlack(d)
+                        } else if d.isAPI {
+                            // Signed: Face ID or Touch ID, over the DELETE (docs/doors.md).
+                            await doors.removeAPI(d, reason: Words.Door.removeTitle(door: d.label.lowercased()))
+                        } else {
+                            await doors.remove(d)
+                        }
                         selected = min(selected, doors.doors.count)
                     }
                 }
