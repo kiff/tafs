@@ -128,20 +128,23 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(store.gone, [])
     }
 
-    /// The defaults store keeps the lines and the ids taken away under `tafs.inbox`, and clears both.
-    func testTheDefaultsStoreKeepsAndClears() throws {
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: "InboxModelTests"))
-        defaults.removePersistentDomain(forName: "InboxModelTests")
-        let store = DefaultsInboxStore(defaults: defaults)
+    /// The file store keeps the lines and the ids taken away in one protected file, and clearing removes it.
+    func testTheFileStoreKeepsAndClears() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("InboxModelTests-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tafs.inbox.json")
+        let store = FileInboxStore(url: url)
+        XCTAssertEqual(store.lines(), [], "nothing before anything's kept")
         let line = InboxLine(id: "held:h_1", kind: .held, title: nil, line: "Refund order 4502, €150.00", at: now, read: true)
         store.write([line])
         store.writeDismissed(["held:h_0"])
-        XCTAssertEqual(DefaultsInboxStore(defaults: defaults).lines(), [line])
-        XCTAssertEqual(DefaultsInboxStore(defaults: defaults).dismissed(), ["held:h_0"])
-        XCTAssertNotNil(defaults.data(forKey: InboxModel.storeKey))
+        XCTAssertEqual(FileInboxStore(url: url).lines(), [line])
+        XCTAssertEqual(FileInboxStore(url: url).dismissed(), ["held:h_0"])
         store.clear()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path), "cleared: no file left on the watch")
         XCTAssertEqual(store.lines(), [])
         XCTAssertEqual(store.dismissed(), [])
-        defaults.removePersistentDomain(forName: "InboxModelTests")
+        store.write([])
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path), "nothing kept: no file written")
     }
 }

@@ -29,7 +29,7 @@ struct InboxLine: Codable, Equatable, Identifiable, Sendable {
     static func heldID(_ hold: String) -> String { "held:" + hold }
 }
 
-/// Where the Inbox is kept: the watch's own defaults, or a list in a test. `dismissed` are the ids taken away (Dismiss, Clear
+/// Where the Inbox is kept: a protected file on the watch, or a list in a test. `dismissed` are the ids taken away (Dismiss, Clear
 /// read) that the phone still lists, so a read doesn't bring them back; each goes once the phone no longer lists it.
 @MainActor
 protocol InboxStore: AnyObject {
@@ -40,40 +40,57 @@ protocol InboxStore: AnyObject {
     func clear()
 }
 
-/// `InboxStore` in this app's own defaults on the watch, as one JSON list, and the ids taken away beside it. watchOS keeps them
-/// encrypted with the watch's passcode, and the Inbox is kept only while there is one.
+/// `InboxStore` in its own file in this app's container on the watch (`tafs.inbox.json`: the lines, and the ids taken away),
+/// written with complete file protection: unreadable whenever the watch is locked, not only before its first unlock, as a
+/// held call's amount should be. The Inbox is kept only while the watch has a passcode.
 @MainActor
-final class DefaultsInboxStore: InboxStore {
-    private let defaults: UserDefaults
-    private let linesKey: String
-    private let dismissedKey: String
-
-    init(defaults: UserDefaults = .standard, key: String = InboxModel.storeKey) {
-        self.defaults = defaults
-        linesKey = key
-        dismissedKey = key + InboxModel.dismissedSuffix
+final class FileInboxStore: InboxStore {
+    private struct Kept: Codable {
+        var lines: [InboxLine] = []
+        var dismissed: [String] = []
     }
 
-    func lines() -> [InboxLine] {
-        guard let data = defaults.data(forKey: linesKey) else { return [] }
-        return (try? JSONDecoder().decode([InboxLine].self, from: data)) ?? []
+    private let url: URL
+
+    init(url: URL = FileInboxStore.place) {
+        self.url = url
     }
+
+    /// Application Support, which isn't a cache the system clears.
+    static var place: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent(InboxModel.storeKey + ".json")
+    }
+
+    func lines() -> [InboxLine] { read().lines }
 
     func write(_ lines: [InboxLine]) {
-        defaults.set(try? JSONEncoder().encode(lines), forKey: linesKey)
+        var kept = read()
+        kept.lines = lines
+        save(kept)
     }
 
-    func dismissed() -> Set<String> {
-        Set(defaults.stringArray(forKey: dismissedKey) ?? [])
-    }
+    func dismissed() -> Set<String> { Set(read().dismissed) }
 
     func writeDismissed(_ ids: Set<String>) {
-        defaults.set(ids.sorted(), forKey: dismissedKey)
+        var kept = read()
+        kept.dismissed = ids.sorted()
+        save(kept)
     }
 
     func clear() {
-        defaults.removeObject(forKey: linesKey)
-        defaults.removeObject(forKey: dismissedKey)
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    private func read() -> Kept {
+        guard let data = try? Data(contentsOf: url) else { return Kept() }
+        return (try? JSONDecoder().decode(Kept.self, from: data)) ?? Kept()
+    }
+
+    private func save(_ kept: Kept) {
+        guard !kept.lines.isEmpty || !kept.dismissed.isEmpty else { return clear() }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? JSONEncoder().encode(kept).write(to: url, options: [.atomic, .completeFileProtection])
     }
 }
 
@@ -81,9 +98,8 @@ final class DefaultsInboxStore: InboxStore {
 /// passcode on this watch nothing is stored, and the page shows what the phone answered now (`kept` false).
 @MainActor
 final class InboxModel: ObservableObject {
-    /// The defaults key the lines are kept under, as Wear OS's preferences file.
+    /// The name the Inbox is kept under, as Wear OS's preferences file.
     static let storeKey = "tafs.inbox"
-    static let dismissedSuffix = ".dismissed"
 
     /// The Inbox, newest first.
     @Published private(set) var lines: [InboxLine] = []
@@ -94,7 +110,7 @@ final class InboxModel: ObservableObject {
     private let clock: () -> Date
     private var dismissed: Set<String>
 
-    init(store: InboxStore = DefaultsInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init) {
+    init(store: InboxStore = FileInboxStore(), lock: WristLock = DeviceWristLock(), clock: @escaping () -> Date = Date.init) {
         self.store = store
         self.lock = lock
         self.clock = clock
