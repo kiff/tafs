@@ -169,6 +169,8 @@ data class TafDoors(
   val loaded: Boolean = false,
   val busy: Boolean = false,
   val error: String? = null,
+  /** An `api` door's new key, shown once on its screen and forgotten when that screen closes ([AppModel.apiKeyShown]). */
+  val issued: bot.tafs.app.kiff.IssuedKey? = null,
 ) {
   val openKnocks: List<Knock> get() = knocks.filter { it.state == "open" }
 
@@ -7478,10 +7480,88 @@ class AppModel(
   }
 
   suspend fun setDoorOpen(tafId: String, door: Door, open: Boolean) {
+    // An `api` door opens again only signed ([reopenApiDoor]): pausing it is always safe.
+    if (door.kind == "api" && open) return
     doorWork(tafId) { cloud.setDoorOpen(it, door.id, open) }
   }
 
+  // MARK: A door "From another application" (`api`, docs/doors.md): New key, Revoke, open again and Remove, each signed
+
+  /** The fingerprint over the exact request, as a taf's removal is signed; null where it wasn't given (the door says why). */
+  private suspend fun signDoor(tafId: String, method: String, path: String, body: ByteArray, reason: String): String? {
+    val tenant = kiffTenant ?: return null
+    return try {
+      cloud.doorSignature(tenant, method, path, body) { built -> signer.signCritical(reason) { built() } }
+    } catch (e: SignerException) {
+      updateDoors(tafId) { it.copy(error = if (e is bot.tafs.app.signing.PromptClosed) null else e.message) }
+      null
+    }
+  }
+
+  /** New key, named by the owner: the key comes back once, held in [TafDoors.issued] until its screen closes. */
+  suspend fun newApiKey(tafId: String, door: Door, name: String, reason: String): bot.tafs.app.kiff.IssuedKey? {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || door.kind != "api" || name.isBlank()) return null
+    val body = bot.tafs.app.kiff.newApiKeyBody(name.trim())
+    val path = cloud.doorKeysPath(cloudId, door.id)
+    val signature = signDoor(tafId, "POST", path, body, reason) ?: return null
+    val generation = accountGeneration
+    updateDoors(tafId) { it.copy(busy = true) }
+    return try {
+      val key = cloud.newApiKey(path, body, signature)
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(issued = key, error = null) }
+      loadDoors(tafId)
+      key
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(error = ErrorWords.of(e)) }
+      null
+    } finally {
+      if (generation == accountGeneration) updateDoors(tafId) { it.copy(busy = false) }
+    }
+  }
+
+  /** The key's screen closed: nothing of the key is kept. */
+  fun apiKeyShown(tafId: String) {
+    updateDoors(tafId) { it.copy(issued = null) }
+  }
+
+  suspend fun revokeApiKey(tafId: String, door: Door, key: bot.tafs.app.kiff.DoorKey, reason: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || door.kind != "api") return
+    val path = cloud.doorKeyPath(cloudId, door.id, key.id)
+    val signature = signDoor(tafId, "DELETE", path, ByteArray(0), reason) ?: return
+    doorWork(tafId) {
+      cloud.revokeApiKey(path, signature)
+      updateDoors(tafId) { d -> d.copy(doors = d.doors.map { if (it.id == door.id) it.copy(keys = it.keys.filterNot { k -> k.id == key.id }) else it }) }
+      null
+    }
+  }
+
+  suspend fun reopenApiDoor(tafId: String, door: Door, reason: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || door.kind != "api") return
+    val path = cloud.doorPath(cloudId, door.id)
+    val signature = signDoor(tafId, "PATCH", path, bot.tafs.app.kiff.REOPEN_BODY, reason) ?: return
+    doorWork(tafId) { cloud.reopenApiDoor(path, signature) }
+  }
+
+  suspend fun removeApiDoor(tafId: String, door: Door, reason: String) {
+    val cloudId = _state.value.taf(tafId)?.cloudId
+    if (_state.value.mode != Mode.kiff || cloudId == null || door.kind != "api") return
+    val path = cloud.doorPath(cloudId, door.id)
+    val signature = signDoor(tafId, "DELETE", path, ByteArray(0), reason) ?: return
+    doorWork(tafId) {
+      cloud.removeApiDoor(path, signature)
+      updateDoors(tafId) { d -> d.copy(doors = d.doors.filterNot { it.id == door.id }) }
+      null
+    }
+  }
+
   suspend fun removeDoor(tafId: String, door: Door) {
+    // An `api` door is never removed unsigned: it goes through [removeApiDoor].
+    if (door.kind == "api") return
     // A door with planque's subscription (a Slack channel's, or a bot's): it goes first (a signed delete), then the door, so nothing listens for a door that's gone.
     if (door.grant != null && door.trigger != null) {
       val tenant = kiffTenant ?: return

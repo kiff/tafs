@@ -72,8 +72,21 @@ data class Door(
 @Serializable
 data class DoorCounts(val today: Int? = null, val waiting: Int? = null)
 
+/** An `api` door's last request: its state, when, and tafs cloud's word for the state in the reader's language, drawn as given. */
 @Serializable
-data class DoorLastRequest(val status: String, val at: String)
+data class DoorLastRequest(val status: String, val at: String, val words: String? = null)
+
+/** Row 4 of the API trigger (kiff/work#16): an `api` door's screens and its signed calls. Off until row 2 is live. */
+object ApiDoorFeature {
+  const val on = false
+}
+
+/**
+ * A key an `api` door's New key made: the key itself, in this one answer only (tafs cloud keeps only its hash), held by the app
+ * until its screen closes, never stored. Then its id, last four and when it was made, as the list shows it from then on.
+ */
+@Serializable
+data class IssuedKey(val id: String, val key: String, val last4: String, @SerialName("made_at") val madeAt: String)
 
 /** A door's words from tafs cloud (docs/doors.md, "The door's words"). */
 @Serializable
