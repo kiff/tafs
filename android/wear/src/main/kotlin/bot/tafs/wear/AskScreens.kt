@@ -3,6 +3,8 @@ package bot.tafs.wear
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -352,16 +354,23 @@ private fun Listening(heard: String, cancel: () -> Unit) {
 /** An ask's state in one line: the taf it went to and tafs cloud's word for where it is ("Calendar · Working"). */
 internal fun stateLine(ask: AskLine): String = listOfNotNull(ask.tafName, ask.words).joinToString(" · ")
 
-/** The result card: the taf, its line, Hear and Reply. [timing] only on an internal build. */
+/**
+ * The result card: the taf, its line, Hear and Reply, then Close. [timing] only on an internal build. It scrolls (crown or swipe)
+ * so a long answer reads to its end, and only Close, or the system's back, closes it: a tap on the words never does (W3, the
+ * owner's Watch 5 test: the answer flashed past and couldn't be read).
+ */
 @Composable
 internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
-    Column(Modifier.fillMaxSize().padding(top = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+      Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(top = 22.dp, bottom = 28.dp)
+        .testTag(RESULT_SCREEN),
+      horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
       T(ask.tafName ?: "", 12.sp, Look.amber, FontWeight.Medium, lines = 1)
       Spacer(Modifier.height(4.dp))
-      // tafs cloud's checked line; with none, its word for the state.
-      // Up to 140 characters: four lines at most on a 40 mm face.
-      T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(156.dp).clickable(onClick = act.closeResult), lines = 4, lineHeight = 18.sp)
+      // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.
+      T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
       Spacer(Modifier.height(10.dp))
       Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         RoundAction(Words.Watch.hear, { act.hear(ask) }) { speakerGlyph(Look.amber) }
@@ -371,9 +380,13 @@ internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
         Spacer(Modifier.height(4.dp))
         T(it, 8.sp, Look.faint, modifier = Modifier.width(140.dp), lines = 2)
       }
+      Spacer(Modifier.height(6.dp))
+      QuietButton(Words.Common.close, act.closeResult)
     }
   }
 }
+
+internal const val RESULT_SCREEN = "result-screen"
 
 /** A Halt sent, until the phone answers: never "halted" before tafs cloud says so. */
 @Composable

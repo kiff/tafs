@@ -25,6 +25,10 @@ import androidx.wear.compose.material3.MaterialTheme
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
+import org.junit.Assert.assertNull
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.assertIsDisplayed
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -63,7 +67,7 @@ class WatchPagesTest {
   private val did = mutableListOf<String>()
   private val actions = Actions(
     openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = {}, confirmHaltAll = {},
-    cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
+    cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = { did += "close result" }, dismiss = {},
     start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
     delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
     keep = { did += "keep" }, deleteKept = { did += "delete kept" }, pickToHalt = { did += "pick to halt" },
@@ -394,6 +398,29 @@ class WatchPagesTest {
     assertTrue("close" !in did)
     compose.mainClock.advanceTimeBy(WatchActivity.SENT_SHOWN_MS + 100)
     assertEquals(listOf("close"), did)
+  }
+
+  // MARK: The answer (W3, the owner's Watch 5 test)
+
+  /** A tap on the answer's words never closes it, a long one scrolls to its end, and Close closes it. */
+  @Test fun theAnswerStaysUntilCloseAndReadsToItsEnd() {
+    val long = answered.copy(line = "Your refund for order A-1039 is paused until noon; Rae asks first for anything over the limit, and Ivo stays paused until Monday 08:00.")
+    compose.setContent { MaterialTheme { ResultScreen(long, actions) } }
+    compose.onNodeWithText(long.line!!).performClick()
+    assertFalse("a tap on the words never closes it", "close result" in did)
+    compose.onNodeWithTag(RESULT_SCREEN).performScrollToNode(hasText(Words.Common.close))
+    compose.onNodeWithText(Words.Common.close).assertIsDisplayed().performClick()
+    assertEquals(listOf("close result"), did)
+  }
+
+  /** The answer's alert is on a high-importance channel, so it peeks and stays; the old default one is gone. */
+  @Test fun theAnswersAlertIsOnAHighImportanceChannel() {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val manager = context.getSystemService(android.app.NotificationManager::class.java)
+    manager.createNotificationChannel(android.app.NotificationChannel("results", "Results", android.app.NotificationManager.IMPORTANCE_DEFAULT))
+    AskResults.notify(context, answered)
+    assertEquals(android.app.NotificationManager.IMPORTANCE_HIGH, manager.getNotificationChannel(AskResults.CHANNEL).importance)
+    assertNull(manager.getNotificationChannel("results"))
   }
 
   // MARK: The Inbox kept on the watch (step iv)
