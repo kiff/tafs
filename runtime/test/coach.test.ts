@@ -1090,6 +1090,13 @@ describe("a connection refused in a Coach chat is that chat's", () => {
     expect(sentIn(w, a)).toContain("setup_reads goes on a server's first request");
     expect(sentIn(w, a)).not.toContain("an older refusal");
     expect(await w.coach.get(coachKeys.chatNotes(T, "u_ana", a))).toBeFalsy();
+    // In tafs cloud's envelope, so the chat shows the person's words alone, never the note or the server's words (19 Nov,
+    // a Moneybird check: the note showed as the owner's message, the server's JSON and all).
+    expect(sentIn(w, a)).toMatch(/^\[tafs coach lines\]\n\[connection refused\] .*\nThe owner says: Try again$/s);
+    const shown = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.messages as Array<{ from: string; text: string; session?: string }>;
+    const own = shown.filter((m) => m.from === "owner" && m.session === a).map((m) => m.text);
+    expect(own).toContain("Try again");
+    expect(own.join("\n")).not.toMatch(/connection refused|setup_reads|tafs coach lines/);
 
     // A message written for a run that had ended goes as A's next words the same way, the chat's refusal with it.
     for (const r of w.agents.runs) Object.assign(r, { status: "COMPLETED" });

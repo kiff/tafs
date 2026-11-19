@@ -4407,13 +4407,20 @@ async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: stri
 
 /**
  * A chat's own notes for Coach (coachKeys.chatNotes: a connection the server refused in it), before the person's next
- * words in that same chat, taken once. A new chat has none: it starts clean.
+ * words in that same chat, taken once. A new chat has none: it starts clean. They go in tafs cloud's envelope, before
+ * "The owner says: ", as every line of tafs' own does, so the thread shows the person's words alone (ownerWords; 19 Nov,
+ * a Moneybird check: a refusal's note, the server's words and all, showed as the owner's message).
  */
 async function withChatNotes(me: KIFFIdentity, session: string, text: string, deps: Deps): Promise<string> {
   if (!deps.coach) return text;
   const notes = ((await deps.coach.take(coachKeys.chatNotes(me.tenantID, me.subject, session)).catch(() => [])) ?? []) as CoachLine[];
   const said = notes.map((n) => n?.text).filter((t): t is string => typeof t === "string" && t.length > 0);
-  return said.length ? `${said.join("\n")}\n${text}` : text;
+  if (!said.length) return text;
+  // Words that already go in tafs cloud's envelope (Coach's lines taken with them) get the notes before their owner's part.
+  // Its owner line may end the words, trimmed of its space (an attachment alone).
+  const at = text.lastIndexOf("\nThe owner says:");
+  if (text.startsWith(COACH_LINES) && at >= 0) return `${text.slice(0, at)}\n${said.join("\n")}${text.slice(at)}`;
+  return `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${text}`;
 }
 
 async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, lang: Lang, deps: Deps): Promise<string> {
