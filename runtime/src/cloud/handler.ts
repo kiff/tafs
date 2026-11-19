@@ -48,6 +48,7 @@ import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorK
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
+import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
@@ -188,7 +189,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf, or a door's run, paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
  *   GET  /v1/tafs/{id}/doors            the taf's doors, the apps a door can open on here, and its open knocks
  *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?}: turn a door on (a taf has none until then)
- *                                       or {kind: "api", draft}: a door from another application and its first key, signed (TAFS_API_DOORS)
+ *                                       or {kind: "api", draft_id, draft}: a door from another application and its first key, signed, from the draft Coach made and tafs cloud keeps, once (TAFS_API_DOORS)
  *   PATCH /v1/tafs/{id}/doors/{door}    {open}
  *   DELETE /v1/tafs/{id}/doors/{door}
  *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender; an api door's: {name}, a new key, signed (its DELETE revokes, signed)
@@ -10381,7 +10382,7 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as { draft: APIDraft; made: string; expires: string } | undefined;
     if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again");
     return { draft_id: b, draft: kept.draft, made_at: kept.made, expires_at: kept.expires,
-      body: { kind: "api", draft: kept.draft } };
+      body: { kind: "api", draft_id: b, draft: kept.draft } };
   }
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
@@ -10399,7 +10400,17 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 4 && method === "POST" && body.kind === "api") {
     if (process.env.TAFS_API_DOORS !== "on") throw new HTTPError(400, "that door isn't offered here");
     await doorSigned(event, me, deps);
-    return addAPIDoor(ctx, owner, taf, body);
+    // Only the draft Coach made and tafs cloud keeps (design 4): the signed body names it by draft_id, its draft is that
+    // draft byte for byte (canonical), and it's used once. A body made elsewhere, changed, lapsed or replayed makes nothing.
+    const draft = apiDraftOf(body.draft);
+    const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
+    const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
+    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as { draft: APIDraft; expires: string } | undefined : undefined;
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
+    const added = await addAPIDoor(ctx, owner, taf, body);
+    await ctx.doors.store.remove(draftKey).catch((err) => console.error("api door draft not removed:", err instanceof Error ? err.message : "error"));
+    return added;
   }
   if (kind === "api") {
     if (parts.length === 5 && method === "PATCH" && body.open === false) return setOpen(ctx, owner, taf, a!, false);

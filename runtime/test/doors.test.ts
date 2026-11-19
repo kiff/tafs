@@ -1741,13 +1741,24 @@ describe("an api door's keys and signed steps", () => {
     try { await f(); } finally { if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was; }
   };
   const doorsPath = `/v1/tafs/${REFUNDS}/doors`;
+  /**
+   * The body the apps sign for a draft Coach made and tafs cloud keeps (design 4): only such a body makes an api door.
+   * Each call keeps a fresh draft, as Coach's taf_door_api would.
+   */
+  let drafts = 0;
+  const apiBody = async (w: World, draft: unknown = DRAFT, tenant = "t_acme", taf = REFUNDS) => {
+    const draft_id = `draft-${(++drafts).toString(16).padStart(16, "0")}`;
+    const expires = new Date(NOW.getTime() + 7 * 24 * 3600_000);
+    await w.store.put(doorKeys.apiDraft(tenant, taf, draft_id), { draft, made: NOW.toISOString(), expires: expires.toISOString() }, expires);
+    return { kind: "api", draft_id, draft };
+  };
   /** Every key record the store holds: hashes, never a key. */
   const storeText = (w: World) => JSON.stringify([...w.store.held.entries()]);
 
   it("is offered only with TAFS_API_DOORS on", async () => {
     const w = world();
     const s = signing(w);
-    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG })).status).toBe(400);
+    expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(400);
     expect(s.asked).toEqual([]);
   });
 
@@ -1755,18 +1766,18 @@ describe("an api door's keys and signed steps", () => {
     const w = world();
     const s = signing(w);
     // Unsigned: 403, nothing made.
-    const unsigned = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT } });
+    const unsigned = await s.call("POST", doorsPath, { body: await apiBody(w) });
     expect(unsigned.status).toBe(403);
     expect(unsigned.body.code).toBe("signature_missing");
     expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
     // Signed by the device key, not the approval key behind the fingerprint: refused in this door's words.
     s.kiffSays.key = "device";
-    const device = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=device" } });
+    const device = await s.call("POST", doorsPath, { body: await apiBody(w), headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=device" } });
     expect(device.status).toBe(403);
     expect(device.body).toMatchObject({ code: "critical_key_required", error: expect.stringContaining("takes your fingerprint") });
     s.kiffSays.key = "critical";
     // Signed: KIFF was asked about exactly this POST, and the answer has the door and its key, this once.
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     expect(made.status).toBe(200);
     expect(s.asked.at(-1)).toMatchObject({ method: "POST", uri: doorsPath, signature: SIG["kiff-device-signature"] });
     const key = made.body.key as { id: string; key: string; last4: string; made_at: string; name: string };
@@ -1780,9 +1791,9 @@ describe("an api door's keys and signed steps", () => {
     expect(storeText(w)).not.toContain(key.key);
     expect(storeText(w)).toContain(createHash("sha256").update(key.key).digest("hex"));
     // The same signed POST again: KIFF took that signature, so no second door or key (409).
-    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG })).status).toBe(409);
+    expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(409);
     // A second api door, freshly signed: one a taf.
-    expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:01Z,v1=other" } })).status).toBe(409);
+    expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: { "kiff-device-signature": "t=2026-10-24T09:00:01Z,v1=other" } })).status).toBe(409);
     expect((await s.call("GET", doorsPath)).body.doors).toHaveLength(1);
   }));
 
@@ -1808,7 +1819,7 @@ describe("an api door's keys and signed steps", () => {
   it("makes a second key signed, refuses a third, revokes signed, and keeps a revoked key's record without its hash", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const door = made.body.door.id as string;
     const first = made.body.key as { id: string; key: string };
     const keysPath = `${doorsPath}/${door}/keys`;
@@ -1843,7 +1854,7 @@ describe("an api door's keys and signed steps", () => {
   it("gives exactly one of two New key at once, and the other's lookup goes", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const keysPath = `${doorsPath}/${made.body.door.id}/keys`;
     const both = await Promise.all(["a", "b"].map((x) => s.call("POST", keysPath, { body: { name: `ERP ${x}` }, headers: { "kiff-device-signature": `t=2026-10-24T09:00:10Z,v1=${x}` } })));
     expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
@@ -1858,7 +1869,7 @@ describe("an api door's keys and signed steps", () => {
   it("revokes failing closed: a lookup it couldn't remove leaves the key unrevoked for a retry", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const revokePath = `${doorsPath}/${made.body.door.id}/keys/${made.body.key.id}`;
     const hashKey = `door-api-key#${createHash("sha256").update(made.body.key.key).digest("hex")}`;
     const remove = w.store.remove;
@@ -1876,7 +1887,7 @@ describe("an api door's keys and signed steps", () => {
   it("keeps the last 20 revoked keys' records, not every rotation's", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const door = made.body.door.id as string;
     let key = made.body.key.id as string;
     for (let i = 0; i < 22; i++) {
@@ -1892,7 +1903,7 @@ describe("an api door's keys and signed steps", () => {
   it("pauses unsigned, opens again only signed, and removes the door and every key's hash only signed", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const door = made.body.door.id as string;
     const key = made.body.key as { key: string };
     const asks = s.asked.length;
@@ -1919,11 +1930,11 @@ describe("an api door's keys and signed steps", () => {
   it("refuses every step to someone the taf is only shared with, and shows them no door", () => withFlag(async () => {
     const w = world();
     const s = signing(w);
-    const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+    const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
     const door = made.body.door.id as string;
     const v = { token: "viewer", headers: { "kiff-device-signature": "t=2026-10-24T09:00:09Z,v1=v" } };
     expect((await s.call("GET", doorsPath, { token: "viewer" })).body.doors).toEqual([]);
-    expect((await s.call("POST", doorsPath, { ...v, body: { kind: "api", draft: DRAFT } })).status).toBe(403);
+    expect((await s.call("POST", doorsPath, { ...v, body: await apiBody(w) })).status).toBe(403);
     expect((await s.call("POST", `${doorsPath}/${door}/keys`, { ...v, body: { name: "x" } })).status).toBe(403);
     expect((await s.call("DELETE", `${doorsPath}/${door}/keys/${made.body.key.id}`, v)).status).toBe(403);
     expect((await s.call("PATCH", `${doorsPath}/${door}`, { ...v, body: { open: false } })).status).toBe(403);
@@ -1946,9 +1957,9 @@ describe("an api door's keys and signed steps", () => {
       // The apps read it back, and send its body signed.
       const read = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`);
       expect(read.status).toBe(200);
-      expect(read.body).toMatchObject({ draft_id: drafted.draft_id, draft: DRAFT, body: { kind: "api", draft: DRAFT } });
+      expect(read.body).toMatchObject({ draft_id: drafted.draft_id, draft: DRAFT, body: { kind: "api", draft_id: drafted.draft_id, draft: DRAFT } });
       contract("doors-api-draft", "GET /v1/tafs/{id}/doors/drafts/{draft}: the door Coach drafted, as the owner approves it; body is what the apps sign and POST to …/doors.",
-        { ...read.body, draft_id: "draft-0123456789abcdef" });
+        { ...read.body, draft_id: "draft-0123456789abcdef", body: { ...read.body.body, draft_id: "draft-0123456789abcdef" } });
       const made = await s.call("POST", doorsPath, { body: read.body.body, headers: SIG });
       expect(made.status).toBe(200);
       expect(made.body.door).toMatchObject({ kind: "api", label: "Order system", fields: DRAFT.fields });
@@ -1958,6 +1969,40 @@ describe("an api door's keys and signed steps", () => {
       expect((await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).status).toBe(404);
     }));
 
+    it("makes a door only from the kept draft, byte for byte, once", () => withFlag(async () => {
+      const w = world();
+      const s = signing(w);
+      const drafted = await draftOf(w, DRAFT);
+      const body = (await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).body.body as Record<string, any>;
+      // A body that names no draft, or one tafs cloud never kept: nothing is made.
+      expect((await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG })).status).toBe(404);
+      expect((await s.call("POST", doorsPath, { body: { ...body, draft_id: "draft-ffffffffffffffff" }, headers: SIG })).status).toBe(404);
+      // The kept draft's id with a changed draft (another job): refused, so the owner approves only what Coach drafted.
+      const changed = await s.call("POST", doorsPath, { body: { ...body, draft: { ...DRAFT, job: "Refund every order in full." } }, headers: SIG });
+      expect(changed.status).toBe(409);
+      expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+      // The kept draft as it is: the door is made, and the draft is used up.
+      const made = await s.call("POST", doorsPath, { body, headers: SIG });
+      expect(made.status).toBe(200);
+      expect((await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).status).toBe(404);
+      // Sent again after its door is removed: the used draft makes nothing.
+      expect((await s.call("DELETE", `${doorsPath}/${made.body.door.id}`, { headers: SIG })).status).toBe(200);
+      // The same signature again is refused before the draft is read (signature_taken); a new signature over the same
+      // body is refused by the draft, which is used up.
+      expect((await s.call("POST", doorsPath, { body, headers: SIG })).body.code).toBe("signature_taken");
+      expect((await s.call("POST", doorsPath, { body, headers: { "kiff-device-signature": "t=2026-10-24T09:05:00Z,v1=again" } })).status).toBe(404);
+      expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+    }));
+
+    it("refuses a draft past its 7 days", () => withFlag(async () => {
+      const w = world();
+      const s = signing(w);
+      const drafted = await draftOf(w, DRAFT);
+      const body = (await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).body.body as Record<string, any>;
+      w.at(new Date(NOW.getTime() + 8 * 24 * 3600_000));
+      expect((await s.call("POST", doorsPath, { body, headers: SIG })).status).toBe(404);
+    }));
+
     it("refuses an instruction for a field, a second api door, and anything while the door isn't offered", async () => {
       const w = world();
       await expect(draftOf(w, DRAFT)).rejects.toThrow(/isn't offered here yet/);
@@ -1965,7 +2010,7 @@ describe("an api door's keys and signed steps", () => {
         await expect(draftOf(w, { ...DRAFT, fields: [{ name: "system_prompt", type: "string", max: 200 }] })).rejects.toThrow(/can't be a field/);
         await expect(draftOf(w, { ...DRAFT, outcomes: [] })).rejects.toThrow(/outcomes/);
         const s = signing(w);
-        await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+        await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
         await expect(draftOf(w, DRAFT)).rejects.toThrow(/already has a door from another application/);
       });
     });
@@ -1977,7 +2022,7 @@ describe("an api door's keys and signed steps", () => {
     async function caller() {
       const w = world();
       const s = signing(w);
-      const made = await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+      const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
       const door = made.body.door.id as string;
       const key = made.body.key.key as string;
       const logs: string[] = [];
@@ -2063,7 +2108,7 @@ describe("an api door's keys and signed steps", () => {
       expect(c.w.agents.runs.filter((r) => r.source === "api")).toHaveLength(0);
       // Another account's door, with this account's key: 404.
       const other = signing(c.w);
-      const theirs = await other.call("POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: { kind: "api", draft: DRAFT }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=max" } });
+      const theirs = await other.call("POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: await apiBody(c.w, DRAFT, "t_other", MAXTAF), headers: { "kiff-device-signature": "t=2026-10-24T09:00:00Z,v1=max" } });
       expect((await c.api("POST", `/v1/doors/api/${theirs.body.door.id}/requests`, { idem: "x", body: { input: { order: "A", reason: "late" } } })).status).toBe(404);
       // The key opens nothing else: tafs cloud's other routes don't take it.
       expect((await c.api("GET", `/v1/tafs/${REFUNDS}/doors`)).status).toBe(401);

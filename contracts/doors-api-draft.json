@@ -32,6 +32,7 @@
     "expires_at": "2026-10-31T09:00:00.000Z",
     "body": {
       "kind": "api",
+      "draft_id": "draft-0123456789abcdef",
       "draft": {
         "name": "Order system",
         "fields": [

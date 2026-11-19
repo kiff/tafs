@@ -158,7 +158,10 @@ with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval ke
 taken once), and is 403 unsigned (`signature_missing`) or signed with the device key (`critical_key_required`, in the
 door's own words):
 
-- `POST /v1/tafs/{id}/doors` `{kind: "api", draft: {name, fields, job, outcomes, text}}` approves Coach's draft. A field
+- `POST /v1/tafs/{id}/doors` `{kind: "api", draft_id, draft: {name, fields, job, outcomes, text}}` approves Coach's draft:
+  only the draft tafs cloud keeps, by its `draft_id` and byte for byte (canonical), and only once. An unknown, lapsed or
+  used `draft_id` is 404, and a `draft` that isn't the kept one is 409, so the owner's signature makes only what Coach
+  drafted and they read. The kept draft is removed once its door is made. A field
   is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
   instruction (any `_` part such as `instructions`, `prompt`, `system` or `rules`, so `system_prompt` too); outcomes are 1 to 10 names. Anything else is 400. It answers the door
   and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).
