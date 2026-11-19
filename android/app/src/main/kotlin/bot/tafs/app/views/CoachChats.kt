@@ -66,7 +66,7 @@ class CoachChatActions(
 
 /**
  * Coach's earlier conversations, newest first: each reopens; one can be archived, and the archived ones put back. Under them,
- * where its switch is on ([watchDays]), the watch's conversations by day, each opened read only in the sheet's place.
+ * where the app has them ([watchDays]), the watch's conversations by day, each opened read only in the sheet's place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +74,6 @@ internal fun PreviousConversations(
   state: AppState,
   actions: CoachChatActions,
   watchDays: bot.tafs.app.watch.WatchDaysStore? = LocalWatchDays.current,
-  watchDaysOn: Boolean = bot.tafs.app.watch.WatchDaysFeature.on,
   onClose: () -> Unit,
 ) {
   val scope = rememberCoroutineScope()
@@ -91,7 +90,7 @@ internal fun PreviousConversations(
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
       val day = watchDay
-      if (day != null && watchDays != null && watchDaysOn) {
+      if (day != null && watchDays != null) {
         WatchDayView(watchDays, day, watchToday, onBack = { watchDay = null }, onClose = onClose)
         return@Column
       }
@@ -120,7 +119,7 @@ internal fun PreviousConversations(
         )
       }
       if (!archived) {
-        WatchDaysSection(watchDays, on = watchDaysOn) { day, today -> watchToday = today; watchDay = day }
+        WatchDaysSection(watchDays) { day, today -> watchToday = today; watchDay = day }
         Text(Words.Coach.Chats.archived, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { archived = true }.padding(top = 12.dp))
       }
     }

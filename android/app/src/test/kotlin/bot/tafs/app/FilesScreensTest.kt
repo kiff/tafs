@@ -16,7 +16,6 @@ import androidx.compose.ui.test.performScrollTo
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.files.FileDetail
 import bot.tafs.app.files.FilePreview
-import bot.tafs.app.files.FilesFeature
 import bot.tafs.app.files.FilesModel
 import bot.tafs.app.files.FilesState
 import bot.tafs.app.files.FilesView
@@ -77,14 +76,10 @@ class FilesScreensTest {
   private fun withFiles(model: FilesModel?, content: @androidx.compose.runtime.Composable () -> Unit) =
     compose.setContent { TafsTheme { CompositionLocalProvider(LocalFiles provides model) { content() } } }
 
-  // MARK: The switch
+  // MARK: No model
 
-  @Test fun filesShipsOn() {
-    assertTrue("Files is on since Android 125 (the owner's 19 Nov yes, its privacy lines live)", FilesFeature.on)
-  }
-
-  @Test fun withTheSwitchOffNothingOfFilesIsDrawn() {
-    // No model where it's off: the Account row, a taf's row and a chat's files draw nothing.
+  @Test fun withNoModelNothingOfFilesIsDrawn() {
+    // No model (a preview, a test): the Account row, a taf's entry and a chat's files draw nothing.
     withFiles(null) {
       Column {
         FilesAccountRow {}

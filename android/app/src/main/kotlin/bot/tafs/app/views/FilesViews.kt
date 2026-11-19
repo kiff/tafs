@@ -79,7 +79,7 @@ import kotlinx.coroutines.launch
 
 /*
  * Files (docs/android-app.md, Files): the account's files, from Account, a taf's page and a taf's chat, over [FilesModel]. Drawn
- * only where [LocalFiles] holds a model, which it does only with FilesFeature on: off, nothing of Files is drawn.
+ * only where [LocalFiles] holds a model (the app always provides one; none in a preview or a test draws nothing).
  */
 
 /** The Files model, where Files is on; null, and nothing of it drawn, where it's off. */

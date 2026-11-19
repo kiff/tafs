@@ -1494,8 +1494,9 @@ afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 
 What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
 account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes. **On since Android 125
-(1.41.0)**, on the owner's yes of 19 Nov: `FilesFeature.on` is `true` (`files/FilesStore.kt`, pinned by `filesShipsOn`). Turned off, no
-model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
+(1.41.0)**, on the owner's yes of 19 Nov; its switch (`FilesFeature`) was removed on 21 Nov, so `MainActivity` always makes the
+model. Where `LocalFiles` is null (a preview, a test), Account, a taf's page and its chat draw nothing of it
+(`withNoModelNothingOfFilesIsDrawn`).
 
 - **The store** (`FilesStore`) is tafs cloud's four routes and nothing else (docs/api.md, contracts/files-*.json): `list`
   (`GET /v1/files?taf=&run=&chat=`, paged by the last id read, `?after=`, with `next`, newest first), `file`
@@ -1546,10 +1547,10 @@ model is made and `LocalFiles` is null, and Account, a taf's page and its chat d
 ## From your watch (W11)
 
 The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). **On since
-Android 124 (1.40.0)**: `WatchDaysFeature.on` is `true` (`watch/WatchDays.kt`, pinned by `fromYourWatchShipsOn`), on the owner's
-rule of 19 Nov that a finished, reviewed feature goes on at once; tafs cloud's routes are live (tafs#1463). Turned off, `MainActivity`
-makes no store and `LocalWatchDays` is null, and Coach's Previous conversations draws nothing of it and asks tafs cloud nothing
-(`withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing`).
+Android 124 (1.40.0)**, on the owner's rule of 19 Nov that a finished, reviewed feature goes on at once; tafs cloud's routes are
+live (tafs#1463). Its switch (`WatchDaysFeature`) was removed on 21 Nov, so `MainActivity` always provides the store; tafs cloud's
+own switch still decides (a 404 draws nothing). Where `LocalWatchDays` is null (a preview, a test), Coach's Previous conversations
+draws nothing of it and asks nothing (`withNoStoreNothingOfTheWatchIsDrawn`).
 
 - **The store** (`WatchDaysStore`) is tafs cloud's two routes and nothing else, with the session, under the same switch as
   `GET /v1/watch/asks`: `days` (`GET /v1/watch/days`: the days, newest first, each `date` and `count`, and `today`, the
