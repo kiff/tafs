@@ -87,10 +87,34 @@ over a full answer (W5, the owner's Galaxy Watch 5 test). Requests kept from bef
 go, and a longer line is cut at a word with an ellipsis (`checkedLine`). With no line from Coach, the state's words stand
 in; if Coach's turn can't be started, the taf's own two sentences, checked the same way, are the line.
 
+## Watch days (W11)
+
+The phone's "From your watch" (Coach's Previous conversations, [watch-app.md](watch-app.md)) reads the person's requests
+one day at a time: `GET /v1/watch/days` and `GET /v1/watch/days/{yyyy-mm-dd}` ([api.md](api.md)).
+
+- **A read, nothing new kept.** A day is the person's own requests whose `at` (when the request came in) falls on that
+  date in the **account's time zone**, the one KIFF answers for the person's session (`time_zone`), UTC when it has none.
+  `today` is today's date in that zone, so someone travelling sees "Today" on the account's day.
+- **What they said** is the first message of the request's own Coach run, read as the person in the conversation the
+  watch route opened and marked (`watch-session#`). Only tafs cloud's own lines are taken off it (language, time zone),
+  as in any Coach chat. A conversation the route didn't mark is never read for it, whatever its messages say, and a reply's
+  words are its own run's, not its request's.
+- **A turn** is `{id, said, said_at, taf?, state, line?, words, reply_to?}`: the state, line and words of `{ask}` above, in
+  the reader's language. Turns go oldest first, a reply straight after the request it replies to, so the apps can show it
+  under it. `reply_to` is sent only when that request is listed the same day.
+- **The person's own only.** Another member of the account never sees them, the account's owner included, and another
+  account's are never read. Tenant and person come from the session.
+- **30 days.** A request's conversation is a run's chat, kept 30 days by kiff/agents' keep rules. A request whose
+  conversation is gone, or holds no message of its run any more, isn't listed or counted, so a day goes when its
+  conversations do. tafs cloud keeps the request, the person's list (their last 500) and the conversation's mark 30 days
+  from the request's last change, then DynamoDB's ttl deletes them. Until 19 Nov they were kept 7 days.
+- **Read only.** Neither route sends, approves or reopens anything; a reply goes from the watch, or from the phone in a
+  Coach chat of its own.
+
 ## The switch
 
 `TAFS_WATCH_ASK` in tafs cloud's environment: `on` for every account, one account id, or several joined with `+`, for those
 alone (a test on a real watch before it's on for everyone), anything else off. Never commas: `infra/aws.sh` passes the
 environment to Lambda as a comma-separated list. It's set with a rerun of `infra/aws.sh`, which keeps every other flag:
-`TAFS_WATCH_ASK=<account id> infra/aws.sh`. Off, every `/v1/watch` route is 404 with `code: "watch_off"`. It goes on
+`TAFS_WATCH_ASK=<account id> infra/aws.sh`. Off, every `/v1/watch` route, the watch days too, is 404 with `code: "watch_off"`. It goes on
 only once kiff/agents holds a session to its `only` and keeps named-only skills out of `read_skill`.
