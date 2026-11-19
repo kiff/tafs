@@ -278,6 +278,10 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     expect(s.connectionRefusal("c5", "read the app's tool catalog before selecting this action")).toBeUndefined();
     expect(coachGuard("read the app's tool catalog before selecting this action")).toBe(true);
     expect(coachGuard("403: missing the organization scope")).toBe(false);
+    // A call on a grant that waits for the owner's approval is not a failure of the app.
+    expect(coachGuard("Pipedrive waits for the owner's approval: it isn't usable yet")).toBe(true);
+    expect(coachGuard("waits_for_approval: Pipedrive waits for the owner's approval")).toBe(true);
+    expect(coachGuard("the sign-in to Pipedrive didn't finish")).toBe(false);
     // The request's own shape, as planque checks it: Coach wrote it, and Coach fixes it (job 3's pinned post tool).
     expect(coachGuard("fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBe(true);
     expect(coachGuard("argument post_text is not a valid name")).toBe(true);
