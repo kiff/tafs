@@ -39,14 +39,24 @@ enum CoachFollow {
         defer { if task != .invalid { UIApplication.shared.endBackgroundTask(task) } }
         #endif
         await follow(ticket, read: read, wait: { try? await Task.sleep(nanoseconds: 1_500_000_000) }, now: Date.init,
-                     post: { answer in await notify(answer, ticket: ticket) })
+                     phoneInUse: { Self.phoneActive }, post: { answer in await notify(answer, ticket: ticket) })
     }
 
-    /// Reads Coach's answer up to `reads` times. Once it's finished, posts it only if the watch hasn't read it itself and
-    /// hasn't read at all for `watchAway`. Returns whether it posted.
+    /// The iPhone is open in front of the person: tafs on screen, where Coach's chat shows the answer as it lands.
+    private static var phoneActive: Bool {
+        #if canImport(UIKit)
+        UIApplication.shared.applicationState == .active
+        #else
+        false
+        #endif
+    }
+
+    /// Reads Coach's answer up to `reads` times. Once it's finished, posts it only if the watch hasn't read it itself, hasn't
+    /// read at all for `watchAway`, and the iPhone isn't open in front of the person. Returns whether it posted.
     @discardableResult
     static func follow(_ ticket: WatchCoachTicket, read: (WatchCoachTicket) async -> WatchReply, wait: () async -> Void,
-                       now: () -> Date, post: (WatchCoachAnswer) async -> Void) async -> Bool {
+                       now: () -> Date, phoneInUse: () -> Bool = { false },
+                       post: (WatchCoachAnswer) async -> Void) async -> Bool {
         let id = Self.key(ticket)
         // The watch reads from the moment it's told "Sent".
         watchLastRead[id] = now()
@@ -62,6 +72,8 @@ enum CoachFollow {
             guard reply.outcome == .ok, reply.answering == false, let answer = reply.coach else { continue }
             if watchHad.contains(id) { return false }
             guard now().timeIntervalSince(watchLastRead[id] ?? .distantPast) > watchAway else { return false }
+            // tafs open on the iPhone: Coach's chat already shows it, so no banner over the answer being read.
+            guard !phoneInUse() else { return false }
             await post(answer)
             return true
         }

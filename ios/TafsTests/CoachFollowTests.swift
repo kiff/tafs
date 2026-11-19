@@ -20,11 +20,12 @@ final class CoachFollowTests: XCTestCase {
         }
     }
 
-    private func follow(_ thread: Thread, eachWait: @escaping () -> Void = {}) async -> (posted: [WatchCoachAnswer], did: Bool) {
+    private func follow(_ thread: Thread, phoneInUse: Bool = false,
+                        eachWait: @escaping () -> Void = {}) async -> (posted: [WatchCoachAnswer], did: Bool) {
         var posted: [WatchCoachAnswer] = []
         let did = await CoachFollow.follow(ticket, read: { _ in thread.read() },
                                            wait: { self.t.addTimeInterval(1.5); eachWait() }, now: { self.t },
-                                           post: { posted.append($0) })
+                                           phoneInUse: { phoneInUse }, post: { posted.append($0) })
         return (posted, did)
     }
 
@@ -36,6 +37,15 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertEqual(posted, [rae])
         XCTAssertEqual(thread.reads, 4, "no read after the answer")
         XCTAssertTrue(CoachFollow.watchLastRead.isEmpty, "nothing kept once it's done")
+    }
+
+    /// With tafs open on the iPhone, Coach's chat already shows the answer: no banner over it (dev-android's read of #1444).
+    func testAnIPhoneInUseGetsNoBanner() async {
+        let thread = Thread([WatchReply(.ok, answering: true), WatchReply(.ok, answering: true), WatchReply(.ok, answering: true),
+                             WatchReply(.ok, coach: rae, answering: false)])
+        let (posted, did) = await follow(thread, phoneInUse: true)
+        XCTAssertFalse(did)
+        XCTAssertTrue(posted.isEmpty)
     }
 
     func testAWatchStillReadingGetsNoNotification() async {
