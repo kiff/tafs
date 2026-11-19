@@ -71,7 +71,7 @@ struct WatchPagesView: View {
         .tabViewStyle(.verticalPage)
         // What Needs you reads, and each answer Coach gives this watch, are lines of the Inbox (step iv).
         .onChange(of: needsYou.state, initial: true) { _, state in inbox.heard(state) }
-        .onAppear { coach.onAnswer = { [inbox] answer, message in inbox.answered(answer, message: message) } }
+        .onAppear { coach.onAnswer = { answer, message in inbox.answered(answer, message: message) } }
         .sheet(isPresented: $menu) {
             WatchMenu(pages: WatchPage.pages(), tafs: tafs) { chosen in
                 menu = false
