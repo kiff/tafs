@@ -299,6 +299,7 @@ export const pl: Words = {
   brief_refuse: "Odrzuć",
   brief_more: (n) => `Jeszcze ${n}`,
   brief_rest_line: (n) => (n === 0 ? "Nic więcej." : n === 1 ? "Jeszcze 1 taf niczego od Ciebie nie potrzebuje." : `Jeszcze ${n} tafs: żaden niczego od Ciebie nie potrzebuje.`),
+  brief_coach_line: (n, form) => (form === "one" && n === 1 ? "1 Coach chat waits for your answer." : `${n} Coach chats wait for your answer.`),
   brief_hold_question: (taf) => `${taf} czeka na Twoje zatwierdzenie`,
   brief_hold_meanwhile: "Nic się nie dzieje, dopóki nie odpowiesz.",
   brief_step_meanwhile: "Jego uruchomienie czeka na ten krok.",

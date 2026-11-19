@@ -102,6 +102,19 @@ describe("Your brief (design v2.1 §7)", () => {
   });
 
   // With a label chosen, the other labels keep their waiting, so their dot still says where to look.
+  it("says how many of Coach's chats wait on the person, so the brief accounts for Needs you's coach part; never in a label, never at 0", () => {
+    const base = { now: new Date("2026-11-19T17:30:00Z"), timeZone: "Europe/Paris", decisions: [hold("a")], later: new Map(), rest: 3, cases: [], labels: [], tafs: [] };
+    const words = { ...W, coachLine: (n: number) => `${n} Coach chats wait for your answer.` };
+    expect(buildBrief({ ...base, coachWaiting: 17, words }).coach_waiting).toEqual({ count: 17, words: "17 Coach chats wait for your answer." });
+    expect(buildBrief({ ...base, coachWaiting: 0, words }).coach_waiting).toBeUndefined();
+    expect(buildBrief({ ...base, words }).coach_waiting).toBeUndefined();
+    expect(buildBrief({ ...base, coachWaiting: 17, words, label: "money" }).coach_waiting).toBeUndefined();
+    // The words, in English, with its one and other.
+    const en = wordsIn("en");
+    expect(en.brief_coach_line(1, "one")).toBe("1 Coach chat waits for your answer.");
+    expect(en.brief_coach_line(17, "other")).toBe("17 Coach chats wait for your answer.");
+  });
+
   it("keeps every label's waiting over the whole account when one label is chosen, put-off decisions included", () => {
     const decisions = [hold("a"), hold("b"), hold("other", { taf: taf("desk", ["support"]), ref: { kind: "step", id: "s1", taf: "desk" } })];
     const b = buildBrief({

@@ -7832,15 +7832,18 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
       return r ? [checkDecision(tafOf(t), healthLine(r, lang, zone, now, checkAppOf(conns, t.kiffAgent)), r.since, dw)] : [];
     }),
   ];
-  return { lang, w, tafs: tafs.map(tafOf), decisions, labelSet, later: laterOf(kept, now) };
+  return { lang, w, tafs: tafs.map(tafOf), decisions, labelSet, later: laterOf(kept, now), coach: records.find((t) => t.job === SETUP_JOB && !t.removing) };
 }
 
 /** GET /v1/brief?label=: Your brief, built here (brief.ts), so the apps count and cut nothing. */
 async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const now = deps.now?.() ?? new Date();
+  const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
+  // Coach's chats that wait on this person, read beside the rest: the whole brief only.
+  const paused = label ? Promise.resolve([] as Run[]) : deps.agents.pausedRuns(me.tenantID).catch(() => [] as Run[]);
   // The account's credits line, as Settings says it (credits.ts balanceView), read beside the rest: a balance that can't
   // be read leaves the line out, never the brief.
-  const [{ lang, w, tafs, decisions, labelSet, later }, balance] = await Promise.all([
+  const [{ lang, w, tafs, decisions, labelSet, later, coach }, balance] = await Promise.all([
     briefInputs(event, me, deps, now),
     within(readBalance(bearer(event), deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined),
   ]);
@@ -7848,15 +7851,20 @@ async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   if (deps.coach && me.timeZone) {
     await deps.coach.put(briefZoneKey(me.tenantID), { zone: me.timeZone }, new Date(now.getTime() + 30 * 24 * 3600_000)).catch(() => undefined);
   }
-  const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
   const waiting = new Set(decisions.map((d) => d.taf.id));
   const rest = tafs.filter((t) => !waiting.has(t.id) && (!label || t.labels.includes(label))).length;
+  // Coach's chats that wait on this person, counted as Needs you counts them (its `coach` part), so the brief says what
+  // that part of the number is: a read that fails counts none, and never stops the brief.
+  const coachWaiting = coach && !label
+    ? coachWaitingOf(await notEndedHere(deps, me.tenantID, await paused).catch(() => [] as Run[]), coach.id, me.subject, now).length
+    : 0;
   const b = buildBrief({
-    now, timeZone: me.timeZone ?? "UTC", decisions, cases: [], later, tafs, rest, ...(label ? { label } : {}),
+    now, timeZone: me.timeZone ?? "UTC", decisions, cases: [], later, tafs, rest, coachWaiting, ...(label ? { label } : {}),
     labels: (labelSet?.labels ?? []).map((l) => ({ id: l.id, name: labelName(l, lang), color: l.color })),
     words: { decisions: w.brief_decisions, done: w.brief_done, rest: w.brief_rest, later: w.brief_later,
       ...(balance ? { credits: balanceView(balance, lang).balance.words } : {}),
-      more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)) },
+      more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)),
+      coachLine: (n) => w.brief_coach_line(n, plural(lang, n)) },
   });
   // The tab's own name, in the glossary's words ("Your brief"), with the headings; and each deadline in words ("by Fri
   // 12:00", in the account's zone and the person's language), beside the time itself, so the apps never draw the time raw.
