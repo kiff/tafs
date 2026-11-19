@@ -5,7 +5,8 @@ import java.time.Instant
 
 /**
  * Files (docs/android-app.md, Files): what the account's tafs made in their runs, kept 30 days from the run for everyone on the
- * account. Off until tafs cloud's routes land and its contract test passes; with it off, nothing of Files is drawn anywhere.
+ * account. Off until the owner's yes: tafs cloud's routes are live (tafs#1412) and `deliver_file` reaches the tafs at the Upgrade.
+ * With it off, nothing of Files is drawn anywhere.
  */
 object FilesFeature {
   const val on = false
@@ -45,8 +46,8 @@ data class FileDetail(val file: KeptFile, val preview: FilePreview)
 data class FilesPage(val files: List<KeptFile>, val next: String? = null)
 
 /**
- * tafs cloud's four Files routes, and nothing else: the seam the screens are written against. [StubFilesStore] stands in for
- * it until `TafsCloudFilesStore` is written to the settled contract and its contract test lands.
+ * tafs cloud's four Files routes, and nothing else: the seam the screens are written against. [TafsCloudFilesStore] is the
+ * real one; [StubFilesStore] stands in for the screens' tests.
  */
 interface FilesStore {
   /** `GET /v1/files?taf=&run=&chat=`: the account's files, paged, newest first. */

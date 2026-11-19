@@ -442,8 +442,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
-  // Files (docs/android-app.md, Files): a model only with its switch on, over the stub store until tafs cloud's routes land.
-  val files = remember { if (bot.tafs.app.files.FilesFeature.on) bot.tafs.app.files.FilesModel(bot.tafs.app.files.StubFilesStore(), bot.tafs.app.model.ErrorWords::of) else null }
+  // Files (docs/android-app.md, Files): a model only with its switch on, over tafs cloud's routes.
+  val files = remember { if (bot.tafs.app.files.FilesFeature.on) bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) else null }
   val filesShowing = files?.state?.collectAsState()?.value?.showing == true
   var filesFromAccount by rememberSaveable { mutableStateOf(false) }
   var showingConnectApps by rememberSaveable { mutableStateOf(false) }

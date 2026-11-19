@@ -1,0 +1,1 @@
+- **Files on Android reads tafs cloud's Files routes** (still behind its switch): the list, a file and its preview, its bytes from the short link, and Delete now ([android-app.md](docs/android-app.md)).

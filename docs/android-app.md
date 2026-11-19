@@ -1484,18 +1484,21 @@ afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 ## Files (behind a switch)
 
 What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
-account, as mockup v2.1 draws it (kiff/work `files-v2/`). It's built against a stub and stays off: `FilesFeature.on` is
-`false` (`files/FilesStore.kt`), so no model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw
+account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes and stays off until the owner's
+yes: `FilesFeature.on` is `false` (`files/FilesStore.kt`), so no model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw
 nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
 
-- **The store** (`FilesStore`) is tafs cloud's four routes and nothing else: `list` (`GET /v1/files?taf=&run=&chat=`, paged,
-  newest first), `file` (`GET /v1/files/{id}`, with its preview: a text file's first 4 KB, or a 60 s link for an image or PDF),
+- **The store** (`FilesStore`) is tafs cloud's four routes and nothing else (docs/api.md, contracts/files-*.json): `list`
+  (`GET /v1/files?taf=&run=&chat=`, paged by the last id read, `?after=`, with `next`, newest first), `file`
+  (`GET /v1/files/{id}`, with its preview: a text file's first 4 KB as plain text),
   `download` (`GET /v1/files/{id}/download`, a 60 s link this phone fetches with `fetch`, never gives out) and `delete`
   (`DELETE /v1/files/{id}`, for anyone on the account, gone for everyone). A file (`KeptFile`) carries its name, media type,
   size, when it was made and when it goes, its taf (by id, and `taf_name` as named at delivery), its run and its chat.
-  `StubFilesStore` holds four sample files of the sample tafs (Late parcels, Support replies, Lead follow-up: CSV, Markdown and
-  plain text) in memory. `TafsCloudFilesStore` isn't written: it comes with tafs cloud's routes and their contract test, in
-  `StubFilesStore`'s place in `MainActivity`.
+  **`TafsCloudFilesStore`** is the real one (`AppModel.filesStore`, in `MainActivity`): `TafsCloud.files`, `file`,
+  `fileDownload` and `deleteFile`. A file already gone answers Delete as gone. The short link's bytes are read by
+  `TafsCloud.signedBytes`, over HTTPS only and with no token of the person's, since the link is signed for its one object. A file
+  whose times can't be read is left out of the list, never drawn with guessed ones. `StubFilesStore` holds four sample files of
+  the sample tafs (Late parcels, Support replies, Lead follow-up: CSV, Markdown and plain text) in memory, for the screens' tests.
 - **The model** (`FilesModel`) reads every page, keeps the list, the view (All, By taf, By run), the taf chip, the file open,
   and Delete's question. A failed read keeps what was shown, with `ErrorWords`' line.
 - **Shown cleaned** (`FileNames`): a name without its path (what follows the last `/` or `\`) and without control or
@@ -1522,7 +1525,8 @@ nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
 - **Left out:** the mockup's counts over the list (files, total size, going this week) and the run's result line on By run,
   which have no words or data yet; "Also sent to", which v1 drops; drawing a PDF or an image preview (the 60 s link isn't
   fetched yet).
-- Tests: `FilesModelTest` (the stub's filters and pages, the groups, the days left at the account's midnight, names and
+- Tests: `TafsCloudFilesStoreTest` (tafs cloud's contract answers read as the app reads them, the query and paging, the short
+  link read with no bearer and over HTTPS only, Delete, a file gone), `FilesModelTest` (the stub's filters and pages, the groups, the days left at the account's midnight, names and
   previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
   views, a file, Delete's question, the tablet's two panes).
 
