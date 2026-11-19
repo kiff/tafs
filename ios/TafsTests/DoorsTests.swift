@@ -64,6 +64,10 @@ final class DoorsTests: XCTestCase {
         let api = try XCTUnwrap(r.doors.first)
         XCTAssertEqual(api.counts, .init(today: 37, waiting: 2))
         XCTAssertEqual(api.lastRequest, .init(status: "done", at: "2026-11-19T09:42:15Z"))
+        XCTAssertEqual(api.lastRequest?.shown, "done", "until tafs cloud sends its words, its status")
+        let worded = try KIFFClient.decoder.decode(TafsCloud.Door.LastRequest.self,
+                                                   from: Data(#"{"status":"done","at":"2026-11-19T09:42:15Z","words":"Erledigt"}"#.utf8))
+        XCTAssertEqual(worded.shown, "Erledigt", "tafs cloud's word, in the reader's language")
         XCTAssertEqual(api.keys.first?.last4, "iXrW")
         XCTAssertEqual(api.keys.first?.lastUsedAt, "2026-11-19T09:42:15Z")
         XCTAssertNil(r.doors[1].counts, "an email door has none")
@@ -121,6 +125,40 @@ final class DoorsTests: XCTestCase {
         await unsigned.reopen(door, reason: "x")
         XCTAssertNil(none)
         XCTAssertEqual(StubProtocol.sent.count, before)
+    }
+
+    /// An `api` door is removed only signed, over the DELETE and its empty body; never through the unsigned remove.
+    func testAnAPIDoorIsRemovedOnlySigned() async throws {
+        let cloud = stubbedCloud()
+        var signed: [(String, String, String)] = []
+        let model = DoorsModel(cloud: cloud, tafID: "taf_r", sign: { method, path, body, _ in
+            signed.append((method, path, String(decoding: body, as: UTF8.self)))
+            return "t=1,v1=sig"
+        })
+        let door = TafsCloud.Door(id: "door_ord7", app: "api", kind: "api", label: "Order system", open: true, address: "", proof: "proven",
+                                  how: "", keys: [], today: 0, limit: 100, resting: false)
+        StubProtocol.responses["GET /v1/tafs/taf_r/doors"] = (200, #"{"doors":[{"id":"door_ord7","app":"api","kind":"api","label":"Order system","open":true,"address":"","proof":"proven","how":"","keys":[],"today":0,"limit":100,"resting":false}],"apps":[],"knocks":[]}"#)
+        StubProtocol.responses["DELETE /v1/tafs/taf_r/doors/door_ord7"] = (200, #"{"removed":"door_ord7"}"#)
+        await model.load()
+        XCTAssertEqual(model.doors.map(\.id), ["door_ord7"])
+        StubProtocol.sent = []
+
+        await model.remove(door)
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "the unsigned remove sends nothing for an api door")
+        XCTAssertEqual(model.doors.map(\.id), ["door_ord7"])
+
+        await DoorsModel(cloud: cloud, tafID: "taf_r").removeAPI(door, reason: "Remove")
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "no signer: nothing is sent")
+
+        await model.removeAPI(door, reason: "Remove")
+        let removed = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "DELETE" })
+        XCTAssertEqual(removed.url?.path, "/v1/tafs/taf_r/doors/door_ord7")
+        XCTAssertEqual(removed.value(forHTTPHeaderField: "KIFF-Device-Signature"), "t=1,v1=sig")
+        XCTAssertEqual(signed.count, 1)
+        XCTAssertEqual(signed.first?.0, "DELETE")
+        XCTAssertEqual(signed.first?.1, "/v1/tafs/taf_r/doors/door_ord7")
+        XCTAssertEqual(signed.first?.2, "", "signed over the empty body sent")
+        XCTAssertTrue(model.doors.isEmpty)
     }
 
     /// A refused signature (Face ID cancelled) sends nothing and keeps no key.

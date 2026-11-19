@@ -72,9 +72,16 @@ extension TafsCloud {
             var waiting: Int? = nil
         }
 
+        /// The door's last request: its state, when, and tafs cloud's word for that state in the reader's language.
         struct LastRequest: Decodable, Equatable {
             let status: String
             let at: String
+            var words: String? = nil
+            /// What the app draws: tafs cloud's word, never one the app maps from `status`; `status` only until it's sent.
+            var shown: String {
+                let w = words?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                return w.isEmpty ? status : w
+            }
         }
 
         /// Where the door stands, what a tap on it does, and that its settings are below.
@@ -90,6 +97,8 @@ extension TafsCloud {
         }
 
         var holdsKeys: Bool { proof == "proven" }
+        /// A door "From another application": its keys, reopening and removal are signed (docs/doors.md).
+        var isAPI: Bool { kind == "api" }
     }
 
     /// An app a door can open on here.

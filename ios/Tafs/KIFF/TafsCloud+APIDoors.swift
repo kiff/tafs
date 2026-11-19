@@ -55,6 +55,12 @@ extension TafsCloud {
                                headers: ["KIFF-Device-Signature": signature])
     }
 
+    /// Removes an `api` door, signed over the DELETE and its empty body: its keys go with it.
+    func removeAPIDoor(_ taf: String, door: String, signature: String) async throws {
+        _ = try await sendData("DELETE", doorPath(taf, door: door), body: Optional<[String: String]>.none,
+                               headers: ["KIFF-Device-Signature": signature])
+    }
+
     /// Opens a paused door again, signed: it re-admits a caller the owner may have paused for misuse.
     func reopenDoor(_ taf: String, door: String, signature: String) async throws -> Door {
         struct Answer: Decodable { let door: Door }
