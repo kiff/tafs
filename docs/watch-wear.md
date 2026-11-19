@@ -293,6 +293,26 @@ to them:
   `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`,
   `settings.version`, `settings.language_title`, `settings.sign_out`, `sign_in.with_phone`).
 
+**Back** (`BackHandler`, `WatchBackTest`): the system's back gesture, a swipe from the left edge, closes what's drawn over the
+pages, through the same action as its own Cancel or Close, and never the app. The menu and Quick reply close (nothing picked);
+Choose which to halt goes from the question to the choice, then to the menu (`cancelPick`); a taf's page goes from Halt this
+taf's question to its settings, from its settings to its page, then to the pages; a held call, the hand-off, the calendar
+(`closeCalendar`) and Sign out's question close, nothing answered or signed out; a result's card closes; on the microphone's
+screens (Ready, recording, the review, and v1's after them) back is Cancel (`closeVoice`), so the review's recording is erased as
+it's left. While the words are being sent, or a Halt is, back is taken and does nothing: the phone's answer is shown when it
+comes. On the pages themselves back is the system's own, and leaves the app.
+
+**Screenshots** (`WearV2Screenshots`): v2's screens for review, not for Play, drawn through `WatchPages` (the switch stays off) in
+English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two sizes, 40 mm (396 ×
+396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread line, Tafs, a taf's
+page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long transcript, and
+Recording. 22 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
+they are; otherwise each screen is still drawn:
+
+```bash
+cd android && ./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearV2Screenshots' -PwearScreenshots
+```
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and

@@ -1,5 +1,6 @@
 package bot.tafs.wear
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -98,10 +99,22 @@ internal fun WatchPages(
   account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
 ) {
   if (signedOutHere) return SignedOutHereScreen(act)
+  // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
+  // the app; on the pages themselves it's the system's own (backOf).
   when {
-    voice != null -> return VoiceScreenV2(voice, act, probe = probe)
-    result != null -> return ResultScreen(result, act, timing)
-    outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
+    voice != null -> {
+      BackHandler(onBack = backOf(voice, act))
+      return VoiceScreenV2(voice, act, probe = probe)
+    }
+    result != null -> {
+      BackHandler(onBack = act.closeResult)
+      return ResultScreen(result, act, timing)
+    }
+    outcome is WatchModel.Outcome.Halting -> {
+      // Nothing to cancel: the phone's answer is shown when it comes.
+      BackHandler {}
+      return HaltingScreen(outcome.taf)
+    }
   }
   var menu by remember { mutableStateOf(false) }
   var quick by remember { mutableStateOf(false) }
@@ -109,6 +122,7 @@ internal fun WatchPages(
   var over by remember { mutableStateOf<Over?>(null) }
   over?.let { o -> return OverScreen(o, shown, calendar, act, go = { over = it }, close = { over = null }) }
   if (quick) {
+    BackHandler { quick = false }
     return QuickReplyScreen(pick = {
       quick = false
       act.quick(it)
@@ -120,7 +134,11 @@ internal fun WatchPages(
     pages.indexOf(page).takeIf { it >= 0 }?.let { scope.launch { pager.animateScrollToPage(it) } }
   }
   // Choosing which to halt, over the menu it came from; a taf's page and its settings, over the pages.
-  haltPick?.let { return HaltPickScreen(it, act) }
+  haltPick?.let {
+    // From the question back to the choice, then to the menu, as Cancel.
+    BackHandler(onBack = act.cancelPick)
+    return HaltPickScreen(it, act)
+  }
   taf?.let {
     return TafScreen(it, outcome, act, openInbox = {
       act.closeTaf()
@@ -129,7 +147,10 @@ internal fun WatchPages(
   }
   // Account is read from the phone each time it's the page shown.
   androidx.compose.runtime.LaunchedEffect(pager.currentPage) { if (pages.getOrNull(pager.currentPage) == Page.Account) act.readAccount() }
-  if (menu) return MenuScreen(shown, pages, act, open = ::goTo, close = { menu = false })
+  if (menu) {
+    BackHandler { menu = false }
+    return MenuScreen(shown, pages, act, open = ::goTo, close = { menu = false })
+  }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
       ScalingLazyColumn(
@@ -153,7 +174,6 @@ internal fun WatchPages(
                 else inboxPage(shown as WatchModel.Shown.Read, ready, act, openCall = { over = Over.HeldCall(it.holdId) })
               Page.Tafs -> { tafsPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
               Page.Brief -> { briefPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
-              else -> Unit
             }
           }
         }
@@ -162,6 +182,12 @@ internal fun WatchPages(
     HorizontalPageIndicator(pager, Modifier.align(Alignment.BottomCenter))
   }
 }
+
+/**
+ * Back on the microphone's screens: Cancel, through the model, so a review's recording is erased (`WatchModel.voiceNow`); while the
+ * words are being sent, nothing, since what tafs cloud answers is shown when it comes.
+ */
+internal fun backOf(voice: WatchModel.Voice, act: Actions): () -> Unit = if (voice is WatchModel.Voice.Sending) ({}) else act.closeVoice
 
 /**
  * Coach's home: the microphone first, named for Coach, with the asks at work under it; Type and Quick reply, which open the review

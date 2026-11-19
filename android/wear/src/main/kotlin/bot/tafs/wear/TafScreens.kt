@@ -1,5 +1,6 @@
 package bot.tafs.wear
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -61,13 +62,21 @@ internal fun TafScreen(
   pager: PagerState = rememberPagerState { 2 },
 ) {
   var confirming by remember(open.tafId) { mutableStateOf(false) }
+  val scope = rememberCoroutineScope()
+  // Back: from the question to its settings, from its settings to its page, and from its page to the pages.
+  BackHandler {
+    when {
+      confirming -> confirming = false
+      pager.currentPage > 0 -> scope.launch { pager.animateScrollToPage(0) }
+      else -> act.closeTaf()
+    }
+  }
   if (confirming) {
     return HaltQuestion(Words.Watch.haltThis, open.name, Words.Halt.Explain.runningOne, halt = {
       confirming = false
       act.halt(open.tafId)
     }, cancel = { confirming = false })
   }
-  val scope = rememberCoroutineScope()
   HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
     ScalingLazyColumn(
       Modifier.fillMaxWidth(),
