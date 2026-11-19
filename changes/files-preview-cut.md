@@ -1,0 +1,1 @@
+- **Files on Android says when a preview is only the file's start** (still behind its switch): "Only the start is shown. Download the file to read all of it." under a preview tafs cloud cut at 4 KB, as on iOS ([android-app.md](docs/android-app.md)).

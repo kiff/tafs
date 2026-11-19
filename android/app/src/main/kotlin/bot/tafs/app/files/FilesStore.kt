@@ -31,8 +31,11 @@ data class KeptFile(
 
 /** What a file's screen previews, as tafs cloud sends it with the file (`GET /v1/files/{id}`). */
 sealed interface FilePreview {
-  /** A text file's first 4 KB, drawn as plain text only, once cleaned ([FileNames.preview]). */
-  data class Text(val text: String) : FilePreview
+  /**
+   * A text file's first 4 KB, drawn as plain text only, once cleaned ([FileNames.preview]). [truncated] is tafs cloud's
+   * `preview_truncated`: the file goes on past it, and the screen says only the start is shown.
+   */
+  data class Text(val text: String, val truncated: Boolean = false) : FilePreview
 
   /** An image or a PDF: a link that lasts 60 s. Not drawn yet (docs/android-app.md, Files). */
   data class Link(val url: String) : FilePreview
@@ -100,7 +103,7 @@ class StubFilesStore(now: Instant = Instant.now(), private val pageSize: Int = 5
   }
 
   override suspend fun file(id: String): FileDetail? =
-    samples.firstOrNull { it.file.id == id }?.let { FileDetail(it.file, FilePreview.Text(it.text.take(PREVIEW_BYTES))) }
+    samples.firstOrNull { it.file.id == id }?.let { FileDetail(it.file, FilePreview.Text(it.text.take(PREVIEW_BYTES), truncated = it.text.length > PREVIEW_BYTES)) }
 
   override suspend fun download(id: String): String? = samples.firstOrNull { it.file.id == id }?.let { STUB_LINK + id }
 

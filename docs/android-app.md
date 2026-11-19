@@ -1514,7 +1514,8 @@ nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
   and time); "All tafs" and a chip per taf narrow it. Each row: the file, its taf, its size as the phone writes one, and when it
   goes, counted to the account's midnight: "goes today" (or past), "goes tomorrow", "goes in N days" (`Goes`). Then
   `files.kept_line`; with no file, `files.empty`.
-- **A file:** its preview, **Download** and **Share**, then Made by (`taf_name`), In the run, Type, Size, Who sees it
+- **A file:** its preview (cut at 4 KB, tafs cloud's `preview_truncated`, it says `files.preview_start` under it, so a start never
+  passes for the whole file), **Download** and **Share**, then Made by (`taf_name`), In the run, Type, Size, Who sees it
   (Everyone on this account) and Goes away ("{date} (30 days after its run)"), See it in the chat (its taf's page) and **Delete
   now** apart at the end. Download writes the bytes into the phone's Downloads through MediaStore (no permission from Android
   10), then "Saved to this device". Share writes the bytes as a file into the app's cache (`kept-files/`) and offers it through
