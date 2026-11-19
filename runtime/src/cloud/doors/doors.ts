@@ -770,11 +770,10 @@ export function apiDoorView(d: Door, today = { keys: 0, others: 0 }, lang: Lang 
   const w = wordsIn(lang);
   const perDay = d.perDay ?? API_DOOR.perDay;
   const resting = today.keys >= perDay;
-  const label = w.door_api_label;
+  const label = d.api?.name ?? w.door_api_label; // the application's name, as the owner approved it
   return {
     id: d.id, app: "api", kind: "api" as const, label, open: d.open, address: apiRequestsPath(d.id),
     proof: "proven", how: w.door_api_how,
-    ...(d.api ? { application: d.api.name } : {}),
     keys: (d.apiKeys ?? []).filter((k) => !k.revoked).map((k) => ({ id: k.id, name: k.name, last4: k.last4, made_at: k.made, ...(k.lastUsed ? { last_used_at: k.lastUsed } : {}) })),
     today: today.keys, limit: perDay, resting,
     others_today: 0, others_limit: 0,

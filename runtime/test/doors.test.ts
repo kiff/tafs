@@ -1771,7 +1771,7 @@ describe("an api door's keys and signed steps", () => {
     const key = made.body.key as { id: string; key: string; last4: string; made_at: string; name: string };
     expect(key.key).toMatch(/^tafs_api_[A-Za-z0-9_-]{43}$/);
     expect(key.last4).toBe(key.key.slice(-4));
-    expect(made.body.door).toMatchObject({ kind: "api", open: true, application: "Order system", keys: [{ id: key.id, name: "Order system", last4: key.last4 }] });
+    expect(made.body.door).toMatchObject({ kind: "api", open: true, label: "Order system", keys: [{ id: key.id, name: "Order system", last4: key.last4 }] });
     // The list never has it again, nor its hash; the store has the hash only.
     const list = await s.call("GET", doorsPath);
     expect(JSON.stringify(list.body)).not.toContain(key.key);
