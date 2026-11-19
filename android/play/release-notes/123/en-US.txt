@@ -1,0 +1,2 @@
+• Your watch: the phone answers the new pages of the Wear OS test version, a taf's page, today's calendar and your account.
+• When a connection doesn't go through, it now says why in your language, never in a technical message.
