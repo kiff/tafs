@@ -24,9 +24,18 @@ enum WatchAmount {
                 words = words.replacingOccurrences(of: money, with: " ", options: [.regularExpression, .caseInsensitive])
             }
         }
-        words = words.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        return tidy(words)
+    }
+
+    /// The words with their spacing tidied and stray marks off the edges, as `strip` leaves them, with nothing taken out.
+    static func tidy(_ text: String) -> String {
+        var words = text.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         words = words.replacingOccurrences(of: #"\s+([,.;:])"#, with: "$1", options: .regularExpression)
         let edges = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;:-–—·"))
         return words.trimmingCharacters(in: edges)
     }
+
+    /// Whether `strip` takes any amount out of the words: spacing and edges aside, they differ (as watchlink's
+    /// `Amounts.hasAmount`).
+    static func hasAmount(_ text: String) -> Bool { strip(text) != tidy(text) }
 }

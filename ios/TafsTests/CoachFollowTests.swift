@@ -99,5 +99,16 @@ final class CoachFollowTests: XCTestCase {
         XCTAssertTrue(refund.body.hasSuffix(Words.Watch.moreOnPhone), "the whole answer is in Coach's chat")
         let only = CoachFollow.content(WatchCoachAnswer(text: "€84", more: false, approveOnPhone: false))
         XCTAssertEqual(only.body, Words.Watch.moreOnPhone)
+        // Spacing or a trailing ":" alone takes nothing out, so nothing is added, and the answer reads as written (#1450).
+        let colon = CoachFollow.content(WatchCoachAnswer(text: "Here's what I found:", more: false, approveOnPhone: false))
+        XCTAssertEqual(colon.body, "Here's what I found:")
+    }
+
+    /// An amount taken out is told apart from spacing tidied, as watchlink's `Amounts.hasAmount` (#1450), row for row.
+    func testOnlyAnAmountCountsAsTakenOut() {
+        XCTAssertTrue(WatchAmount.hasAmount("Refunded €84 for order A-1039"))
+        for plain in ["Paused  until Monday", "Here's what I found:", " Ivo is paused, ", "Order 4502 is late"] {
+            XCTAssertFalse(WatchAmount.hasAmount(plain), plain)
+        }
     }
 }

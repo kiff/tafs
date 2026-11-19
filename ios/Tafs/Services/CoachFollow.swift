@@ -86,11 +86,13 @@ enum CoachFollow {
     static func content(_ answer: WatchCoachAnswer) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         content.title = Words.Coach.title
-        let text = WatchAmount.strip(answer.text)
+        // An amount taken out leaves the stripped words; otherwise the answer as written (spacing alone takes nothing out).
+        let taken = WatchAmount.hasAmount(answer.text)
+        let text = taken ? WatchAmount.strip(answer.text) : answer.text.trimmingCharacters(in: .whitespacesAndNewlines)
         var lines = [text].filter { !$0.isEmpty }
         if answer.approveOnPhone {
             lines.append(Words.Watch.approveOnPhone)
-        } else if answer.more || lines.isEmpty || text != answer.text {
+        } else if answer.more || lines.isEmpty || taken {
             lines.append(Words.Watch.moreOnPhone)
         }
         content.body = lines.joined(separator: "\n")
