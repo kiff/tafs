@@ -195,6 +195,16 @@ class FilesScreensTest {
     assertEquals(listOf("download f_1", "share f_1", "ask f_1"), did)
   }
 
+  @Test fun aWholePreviewSaysNothingMore() {
+    show(FilesState(files = listOf(tickets), open = detail))
+    compose.onAllNodesWithText(Words.Files.previewStart).assertCountEquals(0)
+  }
+
+  @Test fun aPreviewCutAt4KbSaysOnlyTheStartIsShown() {
+    show(FilesState(files = listOf(tickets), open = detail.copy(preview = FilePreview.Text("# Item,Done", truncated = true))))
+    compose.onNodeWithText(Words.Files.previewStart).assertExists()
+  }
+
   @Test fun onAPhoneAFileTakesTheListsPlaceWithBack() {
     show(FilesState(files = listOf(tickets, parcels), open = detail))
     compose.onAllNodesWithText(Words.Files.byRun).assertCountEquals(0)

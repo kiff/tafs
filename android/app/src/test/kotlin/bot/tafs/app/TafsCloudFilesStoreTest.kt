@@ -59,6 +59,11 @@ class TafsCloudFilesStoreTest {
     assertEquals(FilePreview.Text("name,amount\nAna,12.50\n"), detail.preview)
   }
 
+  @Test fun aPreviewCutByTafsCloudSaysSo() = runTest {
+    transport.answer("GET /v1/files/fil_1", 200, """{"id":"fil_1","name":"big.csv","media_type":"text/csv","size":90000,"created":"2026-11-19T08:00:00Z","expires":"2026-12-19T08:00:00Z","preview":"name,amount","preview_truncated":true}""")
+    assertEquals(FilePreview.Text("name,amount", truncated = true), store.file("fil_1")!!.preview)
+  }
+
   @Test fun aFileGoneIsNoneAndAFileWithNoPreviewHasNone() = runTest {
     // Nothing queued: a 404, a file deleted or past its 30 days.
     assertNull(store.file("fil_gone"))

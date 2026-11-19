@@ -357,6 +357,8 @@ private fun FileScreen(detail: FileDetail, state: FilesState, act: FilesActions,
     // Plain text only, cleaned: never Markdown or HTML, whatever the file says it is.
     (detail.preview as? FilePreview.Text)?.let { preview ->
       Panel(Modifier.testTag(FILE_PREVIEW)) { Text(FileNames.preview(preview.text), style = scaled(13, color = Theme.ink, mono = true)) }
+      // Cut at 4 KB: never let a start pass for the whole file.
+      if (preview.truncated) Text(Words.Files.previewStart, style = scaled(12, color = Theme.dim))
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       FileButton(Words.Files.download, Theme.amber, Theme.amberInk, Modifier.weight(1f)) { act.download(file) }

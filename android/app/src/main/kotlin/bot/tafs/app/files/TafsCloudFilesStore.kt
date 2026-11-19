@@ -18,7 +18,7 @@ class TafsCloudFilesStore(private val cloud: TafsCloud) : FilesStore {
   override suspend fun file(id: String): FileDetail? {
     val f = cloud.file(id) ?: return null
     val file = kept(f) ?: return null
-    return FileDetail(file, f.preview?.let { FilePreview.Text(it) } ?: FilePreview.None)
+    return FileDetail(file, f.preview?.let { FilePreview.Text(it, truncated = f.previewTruncated) } ?: FilePreview.None)
   }
 
   override suspend fun download(id: String): String? = cloud.fileDownload(id)?.url
