@@ -385,6 +385,34 @@ class WatchPagesTest {
     assertEquals(listOf(answered.id), opened.map { it.id })
   }
 
+  /** After a send, Coach's page is back on the microphone, with the new turn just above it, however long the conversation. */
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  @Test fun aNewTurnBringsThePageBackToTheMicrophone() {
+    roundFace()
+    val turns = androidx.compose.runtime.mutableStateOf((1..6).map { n ->
+      WatchModel.Said("Question $n", n * 1_000L) to answered.copy(id = "ask_$n", line = "Answer $n")
+    })
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(
+          read, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), pager = rememberPagerState(initialPage = 0) { pages(false).size }, thread = turns.value,
+        )
+      }
+    }
+    compose.onNodeWithText(Words.Coach.ask).assertIsDisplayed()
+    turns.value = turns.value + (WatchModel.Said("Question 7", 7_000L) to answered.copy(id = "ask_7", line = "Answer 7"))
+    compose.waitForIdle()
+    compose.onNodeWithText(Words.Coach.ask).assertIsDisplayed()
+    compose.onNodeWithText("Question 7").assertIsDisplayed()
+  }
+
+  /** TalkBack hears "Coach: …" for Coach's side, as VoiceOver does on the Apple Watch. */
+  @Test fun coachsSideIsNamedForTalkBack() {
+    show(read, thread = listOf(WatchModel.Said("Pause the refunds until noon", 1_000L) to answered.copy(line = "Refunds are paused until 12:00.")))
+    compose.onNodeWithContentDescription(Words.Coach.title + ": Refunds are paused until 12:00.", useUnmergedTree = true).assertExists()
+  }
+
   @Test fun withNoConversationCoachsPageIsAsBefore() {
     show(read)
     compose.onAllNodesWithTag(THREAD_TURN + answered.id, useUnmergedTree = true).assertCountEquals(0)
