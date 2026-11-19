@@ -55,6 +55,9 @@ final class CoachModel: ObservableObject {
     /// The last request this visit sent: the next Send replies to it (`reply_to`, docs/watch-ask.md), so Coach keeps the
     /// conversation. Gone when the app leaves the screen, as the turns are.
     private var lastTicket: WatchCoachTicket?
+    /// Chatting with a taf (docs/watch-ask.md): tafs cloud's id for the taf whose own chat takes the words, or none for
+    /// Coach. A taf's words never go to Coach, and its answers never go to the watch's Inbox.
+    let taf: String?
     private let phone: PhoneAsking
     private let clock: () -> Date
     /// Sending needs a passcode on this watch (`WristLock`).
@@ -78,10 +81,11 @@ final class CoachModel: ObservableObject {
     static let answerReads = 12
     static let quickReads = 4
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
+    init(phone: PhoneAsking, taf: String? = nil, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock(),
          newID: @escaping () -> UUID = UUID.init,
          pause: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_500_000_000) }) {
         self.phone = phone
+        self.taf = taf
         self.clock = clock
         self.lock = lock
         self.newID = newID
@@ -97,6 +101,8 @@ final class CoachModel: ObservableObject {
     /// Sends the words the person sees, through the phone.
     func send() async {
         guard canSend else { return }
+        // v1's send is Coach's: a taf's words never take it.
+        guard taf == nil else { state = .failed(Words.Watch.openOnPhone); return }
         // No passcode on this watch: nothing is sent, and the words stay to send once one is set.
         guard lock.isSecure else { state = .failed(Words.Watch.needsLock); return }
         let text = words
@@ -144,7 +150,7 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), text: text, message: id.uuidString.lowercased(),
+        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
                                                  ticket: lastTicket))
         guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
         switch reply.outcome {
@@ -158,6 +164,9 @@ final class CoachModel: ObservableObject {
             state = .sent
             turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .sent))
             await read(ticket, message: id.uuidString.lowercased())
+        case .notYet where taf != nil, .refused where taf != nil:
+            // A phone from before chatting with a taf: the words stay, and never go to Coach.
+            state = .failed(Words.Watch.openOnPhone)
         case .notYet, .refused:
             // A phone from before W2 doesn't know the two steps: v1's send, the same words under the same id.
             state = .writing
@@ -205,7 +214,8 @@ final class CoachModel: ObservableObject {
         // The ask may have been closed meanwhile: the conversation still gets its answer.
         if inFlight { state = .answered(answer) }
         setTurn(message, .answered(answer))
-        onAnswer?(answer, message)
+        // The Inbox keeps Coach's answers only: nothing of a taf's chat is kept on the watch.
+        if taf == nil { onAnswer?(answer, message) }
     }
 
     private func setTurn(_ id: String, _ answer: Turn.Answer) {

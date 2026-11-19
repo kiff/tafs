@@ -95,6 +95,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   replies to the taf's last request. A request that ends waiting on the person (`held: true`) says "Approve on your
   phone"; an answer past 400 characters (`more: true`) says the rest is on the phone. The watch keeps nothing of a taf's
   chat.
+  On the wrist, `CoachModel` takes the taf's id: its Send names it, a phone from before it never sends the words to
+  Coach by v1's send, and its answers never go to the Inbox.
 
 ## Coach
 
