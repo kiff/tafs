@@ -55,7 +55,8 @@ final class RouteWalkUITests: TafsUITestCase {
         for route in routes {
             let path = route.route.replacingOccurrences(of: "{taf}", with: taf)
             typeInto(field, text: path + "\n")
-            guard within(10, { answer.label.hasPrefix(path + "|") }) else {
+            // As long as a loaded runner takes to open a screen (#1350's rule): the sample's own load gets 30 s above.
+            guard within(30, { answer.label.hasPrefix(path + "|") }) else {
                 XCTFail("\(route.route): no answer for \(path) (\(answer.label))")
                 continue
             }

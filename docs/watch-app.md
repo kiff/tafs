@@ -157,7 +157,8 @@ Nothing leaves the watch before Send:
   Swiss francs and the Swiss apostrophe included; Needs
   you's title from a phone from before it): the amount
   shows only while Needs you holds the call, in memory, and is never kept on the watch. Coach's answer comes in read, since
-  the person saw it arrive. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
+  the person saw it arrive, and is kept with its amounts taken out the same way (`WatchAmount.strip`, which the phone's
+  summary uses too), so no line kept on the watch has an amount; on screen it shows whole, in memory. Coach's home counts the unread lines ("2 unread in Inbox"), and shows no line with none.
 - **Opened, it's read.** A held call shows whole while Needs you still holds it, with Refuse and Approve on your phone as Needs
   you has them; else "Already answered, or it ended.". Coach's answer shows whole.
 - **Dismiss** on each line (a swipe, or at the foot of the opened line), and **Clear read** for every read line. Either stays
@@ -308,7 +309,7 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
   screen, and are read again when it's back.
 - **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, never its amount, and
-  Coach's answers) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
+  Coach's answers, also with no amount) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
   protection, and cleared on sign-out.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
