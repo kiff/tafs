@@ -687,7 +687,7 @@ export const pt: Words = {
   door_api_how: "A chave da sua aplicação",
   door_api_state_open: "Aberta: uma aplicação com uma das suas chaves pode entregar trabalho a este taf.",
   door_api_state_paused: "Em pausa: os pedidos são recusados até a abrir.",
-  door_api_state_resting: (n) => `Os ${n} pedidos de hoje foram usados: os seguintes são recusados até à meia-noite.`,
+  door_api_state_resting: (n) => `Os ${n} pedidos de hoje foram usados: os seguintes são recusados até à meia-noite UTC.`,
   door_api_settings: "As suas chaves e os limites de hoje estão abaixo.",
   door_api_request: { accepted: "Recebido", working: "Em curso", needs_you: "À sua espera", done: "Concluído", failed: "Falhou", cancelled: "Cancelado", expired: "Expirado" },
   door_how_email: "O email tem de passar a verificação do remetente",

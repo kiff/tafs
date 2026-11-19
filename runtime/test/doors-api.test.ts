@@ -66,7 +66,7 @@ describe("a door From another application (api), in the owner's list", () => {
     expect(paused).not.toHaveProperty("last_request");
     const full = apiDoorView(API, { keys: API_DOOR.perDay, others: 0 });
     expect(full.resting).toBe(true);
-    expect(full.words.state).toBe(`Today's ${API_DOOR.perDay} requests are used: more are refused until midnight.`);
+    expect(full.words.state).toBe(`Today's ${API_DOOR.perDay} requests are used: more are refused until midnight UTC.`);
     expect(apiDoorView({ ...API, perDay: 500 }).limit).toBe(500);
   });
 

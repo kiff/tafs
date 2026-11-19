@@ -687,7 +687,7 @@ export const pl: Words = {
   door_api_how: "Klucz Twojej aplikacji",
   door_api_state_open: "Otwarte: aplikacja z jednym ze swoich kluczy może zlecać pracę dla tego tafa.",
   door_api_state_paused: "Wstrzymane: żądania są odrzucane, dopóki ich nie otworzysz.",
-  door_api_state_resting: (n) => `Dzisiejszy limit żądań (${n}) jest wykorzystany: kolejne są odrzucane do północy.`,
+  door_api_state_resting: (n) => `Dzisiejszy limit żądań (${n}) jest wykorzystany: kolejne są odrzucane do północy UTC.`,
   door_api_settings: "Klucze i dzisiejsze limity są poniżej.",
   door_api_request: { accepted: "Odebrane", working: "W toku", needs_you: "Czeka na Ciebie", done: "Gotowe", failed: "Nie powiodło się", cancelled: "Anulowane", expired: "Wygasłe" },
   door_how_email: "E-mail musi przejść weryfikację nadawcy",
