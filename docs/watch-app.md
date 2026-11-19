@@ -202,7 +202,7 @@ Nothing leaves the watch before Send:
   `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
   `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
 
-**Step (vi): a held call whole, a calendar day, and Account** (`CalendarDay.swift`, `AccountPage.swift`; tested in
+**Step (vi): a held call whole, a calendar day, and Account** (no Sign out on this watch; `CalendarDay.swift`, `AccountPage.swift`; tested in
 `CalendarDayModelTests` and `AccountPageModelTests`), as Wear OS's:
 - **A held call,** opened from the Inbox while Needs you holds it: whole, as the phone's Needs you words it (its taf, what
   it asks with its amount, KIFF's reason, by when), Refuse where Needs you offers it, Approve on your phone, and "Nothing is
@@ -216,8 +216,9 @@ Nothing leaves the watch before Send:
 - **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
   account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
   the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
-- **Not yet: Sign out on this watch.** Wear OS keeps a flag for it on the watch; on Apple Watch that's one more thing kept,
-  so it waits for a word on the privacy text first.
+- **No Sign out on this watch,** unlike Wear OS: the Apple Watch app has no session of its own, signing out on the iPhone
+  clears everything it holds (the Inbox included), and a sign-out of the watch alone would need a flag kept on it, which
+  the privacy text doesn't name. If the owner wants it, it comes with that flag and one more clause in the text.
 - **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
   phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
   `settings.plan`, `settings.language_title`, `settings.version`).
