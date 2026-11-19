@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// Watch v2 (docs/watch-app.md, "Version 2"): off. It's built one step at a time behind this switch, as Wear OS's
-/// `WATCH_V2`, so a watch shows v1 whole until every step is in; it turns on, as this one line, when the last of them
-/// lands and the owner has tried the build.
+/// Watch v2 (docs/watch-app.md, "Version 2"): on since 19 Nov, once every step was in and the privacy text for Sign out
+/// on this watch was live in 8 languages. Built one step at a time behind this switch, as Wear OS's `WATCH_V2`; turned
+/// off, a watch shows v1 whole.
 enum WatchV2 {
-    static let on = false
+    static let on = true
 }
 
 /// v2's pages, one under the other, moved between with the crown or a swipe: Coach is home, since talking to Coach is
