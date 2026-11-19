@@ -1,0 +1,1 @@
+- **Wear OS: after Send, the watch stays on "Sent" with tafs cloud's state ("Working") until the answer comes**, instead of closing after a moment, so it never looks as if nothing happened ([watch-wear.md](docs/watch-wear.md)).

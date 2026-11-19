@@ -1,6 +1,7 @@
 package bot.tafs.wear
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -106,6 +107,7 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
         T(Words.Watch.deletedNothingSent, 15.sp, Look.text, FontWeight.Medium, Modifier.width(150.dp), lines = 3, lineHeight = 18.sp)
       }
     }
+    is WatchModel.Voice.Sent -> SentScreenV2(voice.ask, act)
     else -> VoiceScreen(voice, act)
   }
 }
@@ -364,3 +366,29 @@ internal fun QuickReplyScreen(pick: (String) -> Unit, close: () -> Unit) {
 /** The quick replies, in the watch's language. */
 internal fun quickReplies(): List<String> =
   listOf(Words.Watch.Qr.needsMeToday, Words.Watch.Qr.tellMeMore, Words.Watch.Qr.notNow, Words.Watch.Qr.thanks)
+
+/**
+ * v2's "Sent" (W2, the owner's Watch 5 test: nothing showed that Coach had it, so it felt broken). It stays until the answer:
+ * tafs cloud's state for the ask in its own words (stateLine: "Sent", then "Working"), with a ring turning while it's at work,
+ * and the answer opens in its place the moment the ask ends (WatchModel.took). A tap goes back to Coach's home; the ask goes
+ * on, and its answer comes as the result's alert.
+ */
+@Composable
+internal fun SentScreenV2(ask: bot.tafs.watchlink.AskLine, act: Actions) {
+  Centered(Modifier.background(Color.Black).clickable(onClick = act.closeVoice).testTag(SENT_V2)) {
+    val mark: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit = {
+      Box(Modifier.size(44.dp).border(BorderStroke(3.dp, Look.amber), CircleShape)) {
+        Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.amber, 0.07f) }
+      }
+    }
+    if (ask.ended) Box(Modifier.size(64.dp), contentAlignment = Alignment.Center, content = mark)
+    else Box(Modifier.testTag(SENT_WORKING)) { SpinnerAround(64.dp, mark) }
+    Spacer(Modifier.height(10.dp))
+    T(Words.Watch.sent, 18.sp, Look.text, FontWeight.SemiBold, lines = 1)
+    Spacer(Modifier.height(4.dp))
+    T(stateLine(ask), 13.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 2, lineHeight = 16.sp)
+  }
+}
+
+internal const val SENT_V2 = "sent-v2"
+internal const val SENT_WORKING = "sent-working"
