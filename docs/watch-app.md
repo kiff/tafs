@@ -257,7 +257,8 @@ option A (19 Nov):
   with no amount in it (the Inbox's rule, `WatchAmount.strip`, at legal-i18n's ask: iOS keeps a notification until it's
   dismissed), then "Approve on your phone", or "The rest is on your phone." where it was cut or something was taken out. watchOS shows it on the
   wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
-- **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing.
+- **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing; nor does an iPhone with tafs
+  open on screen, where Coach's chat already shows the answer.
 - **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
   cloud's push to the iPhone (piece d, step (vii)) lifts it.
 - **Words:** none new (`coach.title`, `watch.approve_on_phone`, `watch.more_on_phone`). No change to the privacy text.
