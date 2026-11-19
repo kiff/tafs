@@ -2,12 +2,22 @@ package bot.tafs.wear
 
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getBoundsInRoot
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.wear.compose.foundation.pager.rememberPagerState
@@ -17,12 +27,14 @@ import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * Wear v2's pages (docs/watch-wear.md, Version 2), step (ii): Coach home with the microphone, the pages side by side, and the menu
@@ -169,7 +181,7 @@ class WatchPagesTest {
 
   @Test fun theMicrophoneOpensReadyAndStartsOnStart() {
     show(read, voice = WatchModel.Voice.Ready("ask_1"))
-    compose.onNodeWithText("${Words.Watch.ready} · ${Words.Watch.limit}").assertExists()
+    compose.onNodeWithText("${Words.Watch.ready} · 30 s").assertExists()
     compose.onNodeWithText(Words.Watch.tapStart).assertExists()
     compose.onNodeWithText("0:00 / 0:30").assertExists()
     // Start is its own control: the brand's round button with the microphone, never Stop's.
@@ -180,7 +192,7 @@ class WatchPagesTest {
 
   @Test fun listeningShowsTheWordsAsHeardAndStop() {
     show(read, voice = WatchModel.Voice.Listening("Move my call", null, since = System.currentTimeMillis()))
-    compose.onNodeWithText("● ${Words.Watch.recording} · ${Words.Watch.limit}").assertExists()
+    compose.onNodeWithText("● ${Words.Watch.recording} · 30 s").assertExists()
     compose.onNodeWithText("Move my call").assertExists()
     // Stop is another control, not Start relabelled: the red one with the square.
     compose.onAllNodesWithTag(RECORD_START).assertCountEquals(0)
@@ -195,10 +207,80 @@ class WatchPagesTest {
     show(read, voice = WatchModel.Voice.Review(long, null))
     compose.onNodeWithText(Words.Watch.review).assertExists()
     compose.onNodeWithText(long).assertExists()
-    compose.onNodeWithText(Words.Watch.rerecord).performClick()
-    compose.onNodeWithText(Words.Chat.delete).performClick()
-    compose.onNodeWithText(Words.Common.send).performClick()
+    compose.onNodeWithContentDescription(Words.Watch.rerecord).performClick()
+    compose.onNodeWithContentDescription(Words.Chat.delete).performClick()
+    compose.onNodeWithContentDescription(Words.Common.send).performClick()
     assertEquals(listOf("rerecord", "delete", "send"), did)
+  }
+
+  // MARK: The round face (the Galaxy Watch 5 test, W8 and W9)
+
+  /** The Galaxy Watch 5's 40 mm face, the smaller: 198 dp across, round. */
+  private fun roundFace() {
+    RuntimeEnvironment.setQualifiers("en-w198dp-h198dp-round-watch-xhdpi")
+    Res.install(ApplicationProvider.getApplicationContext())
+  }
+
+  /** True when every corner of [box] lies inside the round face the root draws on. */
+  private fun insideTheFace(box: androidx.compose.ui.unit.DpRect): Boolean {
+    val face = compose.onRoot().getBoundsInRoot()
+    val r = (face.right - face.left) / 2
+    val cx = face.left + r
+    val cy = face.top + r
+    return listOf(box.left to box.top, box.right to box.top, box.left to box.bottom, box.right to box.bottom).all { (x, y) ->
+      val dx = (x - cx).value
+      val dy = (y - cy).value
+      dx * dx + dy * dy <= r.value * r.value
+    }
+  }
+
+  /** A round button's own circle, inside the face: its centre's distance from the face's centre plus its radius. */
+  private fun roundInsideTheFace(box: androidx.compose.ui.unit.DpRect): Boolean {
+    val face = compose.onRoot().getBoundsInRoot()
+    val r = (face.right - face.left) / 2
+    val dx = ((box.left + box.right) / 2 - (face.left + r)).value
+    val dy = ((box.top + box.bottom) / 2 - (face.top + r)).value
+    return kotlin.math.sqrt(dx * dx + dy * dy) + (box.right - box.left).value / 2 <= r.value
+  }
+
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  @Test fun theReviewKeepsDeleteAgainAndSendInReachWithoutScrolling() {
+    roundFace()
+    show(read, voice = WatchModel.Voice.Review(WearV2Screenshots.LONG, null))
+    // Nothing scrolled: each is on the face, inside its curve, named for TalkBack, and does what it says.
+    for (tag in listOf(REVIEW_DELETE, REVIEW_AGAIN, REVIEW_SEND)) {
+      val button = compose.onNodeWithTag(tag).assertIsDisplayed().assertHasClickAction()
+      assertTrue("$tag reaches past the round face", roundInsideTheFace(button.getBoundsInRoot()))
+    }
+    compose.onNodeWithTag(REVIEW_DELETE).assertContentDescriptionEquals(Words.Chat.delete).performClick()
+    compose.onNodeWithTag(REVIEW_AGAIN).assertContentDescriptionEquals(Words.Watch.rerecord).performClick()
+    compose.onNodeWithTag(REVIEW_SEND).assertContentDescriptionEquals(Words.Common.send).performClick()
+    assertEquals(listOf("delete", "rerecord", "send"), did)
+  }
+
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  @Test fun aLongReviewScrollsOnItsOwnToItsLastLineAboveTheButtons() {
+    roundFace()
+    show(read, voice = WatchModel.Voice.Review(WearV2Screenshots.LONG, null))
+    val words = compose.onNodeWithText(WearV2Screenshots.LONG)
+    val face = compose.onRoot().getBoundsInRoot()
+    assertTrue("the long message fits without scrolling: the test proves nothing", words.getUnclippedBoundsInRoot().bottom > face.bottom)
+    // The words scroll, the buttons stay: to the end, the last line rests above them.
+    repeat(6) { compose.onNode(androidx.compose.ui.test.hasScrollAction()).performTouchInput { swipeUp() } }
+    compose.waitForIdle()
+    val highest = listOf(REVIEW_DELETE, REVIEW_AGAIN, REVIEW_SEND).minOf { compose.onNodeWithTag(it).assertIsDisplayed().getBoundsInRoot().top }
+    assertTrue("the last line ends under the buttons", words.getUnclippedBoundsInRoot().bottom <= highest)
+  }
+
+  @GraphicsMode(GraphicsMode.Mode.NATIVE)
+  @Test fun theRecordingScreensTopLineIsShortAndBelowTheCurve() {
+    roundFace()
+    show(read, voice = WatchModel.Voice.Listening("Move my call", null, since = System.currentTimeMillis()))
+    val line = compose.onNodeWithTag(RECORD_STATE)
+    line.assertTextEquals("● ${Words.Watch.recording} · 30 s")
+    // TalkBack reads the limit in full.
+    line.assertContentDescriptionEquals("● ${Words.Watch.recording} · ${Words.Watch.limit}")
+    assertTrue("the top line meets the face's curve", insideTheFace(line.getBoundsInRoot()))
   }
 
   @Test fun deletedSaysNothingWasSent() {
@@ -268,7 +350,7 @@ class WatchPagesTest {
     compose.onNodeWithText("0:03 / 0:12").assertExists()
     compose.onNodeWithTag(PLAYBACK_PLAY).assertExists().performClick()
     compose.onNodeWithTag(PLAYBACK_PAUSE).assertExists()
-    compose.onNodeWithText(Words.Taf.pause).performClick()
+    compose.onNodeWithContentDescription(Words.Taf.pause).performClick()
     compose.onNodeWithTag(PLAYBACK_PLAY).assertExists()
     assertEquals(2, playback.toggled)
   }
@@ -276,6 +358,7 @@ class WatchPagesTest {
   @Test fun aReviewWithNoRecordingHasNoPlay() {
     show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
     compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
+    compose.onAllNodesWithContentDescription(Words.Watch.play).assertCountEquals(0)
   }
 
   // MARK: The Inbox kept on the watch (step iv)
