@@ -313,6 +313,33 @@ in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved 
 - **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
   `calendar.today` and tafs cloud's own.
 
+**W12, Play and Pause on Apple Watch: the plan (not built; held for the owner's yes)**, as the owner asked for the next
+version ("on the watch first", PM 19 Nov 14:40). On Apple Watch only the phone's path exists: watchOS gives an app no speech
+recognizer (no `Speech` framework), and the system's dictation hands back text, never the sound. So words and a recording
+can't be one capture on the watch as they are on Wear OS (docs/watch-wear.md, Play and Pause).
+- **Start, on the watch:** the app records itself (`AVAudioRecorder`, AAC, 16 kHz mono) into its own container, at most
+  30 s, with v2's screens: Ready, Recording, Stop.
+- **Stop:** the file goes to the paired iPhone over the watch's own link (`WCSession.transferFile`), which queues it and
+  wakes tafs on the phone. Nothing goes to tafs cloud.
+- **On the iPhone:** the phone's on-device recognizer turns it into words (`SFSpeechURLRecognitionRequest`,
+  `requiresOnDeviceRecognition`), in the person's Coach language, as the phone's own microphone does (`Dictation.swift`).
+  The phone's copy is erased the moment the words are made, whether or not they were. Only the words go back.
+- **Check before sending, on the watch:** the words, and **Play** (▶) and **Pause** (‖) with "0:03 / 0:12", from the watch's
+  own file. Send sends the words only, through the relay, as today.
+- **The watch's file is erased** when the review is left (Send, Delete, Re-record, Cancel, put away, signed out), and any
+  file no screen holds is swept when the app starts and when it's put away.
+- **When it can't, nothing is sent anywhere, and the watch says why:** the phone out of reach (the file waits on the watch
+  only until the review is left); no on-device model for the person's language on the phone; speech recognition never
+  allowed on the phone (iOS asks only while tafs is open there, so the watch asks the person to open tafs on the iPhone once).
+  Dictation and Type stay offered.
+- **Checked on the owner's devices, the owner present, before it ships:** that the phone turns a file into words while tafs
+  is in the background, and how long 30 s takes there and back. If iOS refuses it in the background, the plan stops there
+  and the watch keeps the system's dictation, with no Play.
+- **Privacy:** the watch now makes a recording, and it goes to the person's own iPhone; no new recipient. The Apple Watch
+  sentence ("It makes no recording") changes with it, legal-i18n's, held for the owner's yes with the build. New words:
+  the watch app's microphone prompt (`NSMicrophoneUsageDescription`) and the three "can't" lines.
+- **Switches:** behind `WatchV2.on` (off); v1 and the system's dictation are unchanged.
+
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
 The Wear OS watch asks tafs by voice ([watch-wear.md](watch-wear.md), tafs cloud's side in

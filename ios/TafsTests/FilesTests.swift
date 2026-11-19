@@ -191,6 +191,19 @@ final class FilesTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
 
+    /// A copy whose screen never closed (the app killed on it) still goes on sign-out and an account switch, with the
+    /// opened attachments: Delete now's "no copy kept" holds on the phone.
+    func testSignOutClearsACopyLeftBehind() async throws {
+        let store = Store([file("fil_left", hoursAgo: 1, name: "left.csv")])
+        let model = FilesModel(store: store)
+        await model.load()
+        let url = try await model.localCopy(of: try XCTUnwrap(model.files().first))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        AppModel.removeOpenedFiles()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: FileCopy.root.path))
+    }
+
     /// A failed read of a text type's start says it couldn't reach KIFF and reads no bytes: its raw file is never drawn
     /// in the cleaned start's place (agentgabo's read).
     func testAFailedPreviewOfATextTypeReadsNoBytes() async {
