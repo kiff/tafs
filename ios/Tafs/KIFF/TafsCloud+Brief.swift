@@ -162,7 +162,7 @@ extension TafsCloud {
             var usable: Bool { !words.isEmpty && !start.isEmpty && !dismiss.isEmpty }
         }
 
-        /// A count and its words: "more" decisions, the "rest" that need nothing now.
+        /// A count and its words: "more" decisions, the "rest" that need nothing now, the Coach chats waiting.
         struct Counted: Decodable, Equatable {
             var count = 0, words = ""
             enum CodingKeys: String, CodingKey { case count, words }
@@ -208,13 +208,15 @@ extension TafsCloud {
         var done: [Done] = []
         var nextMove: NextMove?
         var rest: Counted?
+        /// Coach's chats that wait for the person's answer (`coach_waiting`): sent only above 0, in the whole brief.
+        var coachWaiting: Counted?
         var credits: String?
         var labels: [Label] = []
         var words = Words()
 
         enum CodingKeys: String, CodingKey {
             case at, decisions, more, done, rest, credits, labels, words
-            case nextAt = "next_at", nextMove = "next_move"
+            case nextAt = "next_at", nextMove = "next_move", coachWaiting = "coach_waiting"
         }
         private struct CreditWords: Decodable { var words: String? }
 
@@ -227,6 +229,7 @@ extension TafsCloud {
             done = (Self.list(c, .done) as [Done]).filter { !$0.cases.isEmpty }
             nextMove = ((try? c.decodeIfPresent(NextMove.self, forKey: .nextMove)) ?? nil).flatMap { $0.usable ? $0 : nil }
             rest = ((try? c.decodeIfPresent(Counted.self, forKey: .rest)) ?? nil).flatMap { $0.words.isEmpty ? nil : $0 }
+            coachWaiting = ((try? c.decodeIfPresent(Counted.self, forKey: .coachWaiting)) ?? nil).flatMap { $0.count > 0 && !$0.words.isEmpty ? $0 : nil }
             credits = ((try? c.decodeIfPresent(CreditWords.self, forKey: .credits)) ?? nil)?.words.flatMap { $0.isEmpty ? nil : $0 }
             labels = (Self.list(c, .labels) as [Label]).filter(\.usable)
             // No `words` sent at all: every heading is the shared catalog's, as for one left out.

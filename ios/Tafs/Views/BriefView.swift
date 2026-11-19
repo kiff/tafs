@@ -17,8 +17,11 @@ struct BriefView: View {
                     header(brief)
                     if sizeClass == .regular {
                         HStack(alignment: .top, spacing: 20) {
-                            VStack(alignment: .leading, spacing: 14) { decisions(brief) }
-                                .frame(maxWidth: .infinity, alignment: .topLeading)
+                            VStack(alignment: .leading, spacing: 14) {
+                                decisions(brief)
+                                coachWaiting(brief)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
                             VStack(alignment: .leading, spacing: 14) {
                                 done(brief)
                                 // Under Done, so it stays in view beside the decisions (the iPad mockup).
@@ -29,6 +32,7 @@ struct BriefView: View {
                         }
                     } else {
                         decisions(brief)
+                        coachWaiting(brief)
                         nextMove(brief)
                         done(brief)
                         rest(brief)
@@ -122,6 +126,17 @@ struct BriefView: View {
                 }
             }
             .accessibilityIdentifier("brief.done")
+        }
+    }
+
+    /// Coach's chats that wait for the person's answer, in tafs cloud's one line, under the decisions. It opens
+    /// Needs you, where Home's Coach waiting list is (Open, Set aside, Set all aside); nothing is answered here.
+    @ViewBuilder private func coachWaiting(_ brief: TafsCloud.Brief) -> some View {
+        if let waiting = brief.coachWaiting {
+            PanelLink { NeedsYouView() } label: {
+                Text(waiting.words).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+            }
+            .accessibilityIdentifier("brief.coach_waiting")
         }
     }
 
