@@ -45,8 +45,9 @@ class WatchActivity : ComponentActivity() {
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
     WatchModel(
       DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)),
-      // Only v2 keeps a message for later.
+      // Only v2 keeps a message for later, and signs out on the watch alone.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
+      signIn = if (WATCH_V2) PreferencesWatchSignIn(this) else null,
     )
   }
 
@@ -121,6 +122,9 @@ class WatchActivity : ComponentActivity() {
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
         val kept by model.kept.collectAsState()
+        val signedOutHere by model.signedOutHere.collectAsState()
+        val calendar by model.calendar.collectAsState()
+        val account by model.account.collectAsState()
         // "Sent": the wrist can drop; the microphone comes back by itself.
         androidx.compose.runtime.LaunchedEffect(voice) {
           if (voice is WatchModel.Voice.Sent) {
@@ -163,6 +167,18 @@ class WatchActivity : ComponentActivity() {
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
+          readCalendar = { day -> lifecycleScope.launch { model.readCalendar(day) } },
+          closeCalendar = model::closeCalendar,
+          readAccount = { lifecycleScope.launch { model.readAccount() } },
+          signOut = ::signOutHere,
+          signIn = {
+            model.signInHere()
+            lifecycleScope.launch {
+              model.refresh()
+              model.readAsks()
+              NeedsYouTileService.update(this@WatchActivity)
+            }
+          },
         )
         // Play stops the moment the review is left: its recording is erased then (WatchModel).
         androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
@@ -175,7 +191,7 @@ class WatchActivity : ComponentActivity() {
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
-            probe = if (BuildConfig.TIMING) probe else null)
+            probe = if (BuildConfig.TIMING) probe else null, signedOutHere = signedOutHere, calendar = calendar, account = account)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
@@ -229,6 +245,20 @@ class WatchActivity : ComponentActivity() {
   }
 
   private fun speaker(): Speaker = speaker ?: Speaker(this).also { speaker = it }
+
+  /**
+   * v2's Sign out, on this watch alone: listening and playing stop, the model forgets all it holds (the message kept for later and
+   * the tile's count included), every recording is swept, the watch's own result notifications are taken away, and the tile is
+   * drawn again with no count. The phone stays signed in.
+   */
+  private fun signOutHere() {
+    listener.cancel()
+    playback.release()
+    model.signOutHere()
+    VoiceFiles.sweep(VoiceFiles.dir(this))
+    runCatching { getSystemService(android.app.NotificationManager::class.java)?.cancelAll() }
+    NeedsYouTileService.update(this)
+  }
 
   /** Opens tafs on the phone, at [where] (`needs-you`): approvals, and anything longer than the watch draws, are the phone's. */
   private fun openOnPhone(where: String) {
@@ -296,6 +326,16 @@ internal class Actions(
   val deleteKept: () -> Unit = {},
   /** v2's Play and Pause for the review's recording, on the watch. */
   val playback: Playback? = null,
+  // v2's step (vi) (AccountScreens.kt): v1 never calls these.
+  /** Reads a calendar day (`YYYY-MM-DD`), or today with none. */
+  val readCalendar: (String?) -> Unit = {},
+  val closeCalendar: () -> Unit = {},
+  /** Reads Account's lines from the phone. */
+  val readAccount: () -> Unit = {},
+  /** Sign out, on this watch alone, confirmed. */
+  val signOut: () -> Unit = {},
+  /** Sign in on this watch again. */
+  val signIn: () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

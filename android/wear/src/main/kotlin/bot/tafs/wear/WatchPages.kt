@@ -83,7 +83,14 @@ internal fun WatchPages(
   timing: String? = null,
   /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
   probe: String? = null,
+  /** Signed out on this watch alone (step vi): only that, and Sign in. */
+  signedOutHere: Boolean = false,
+  /** The calendar day, while it's open (step vi). */
+  calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
+  /** Account's read from the phone (step vi). */
+  account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
 ) {
+  if (signedOutHere) return SignedOutHereScreen(act)
   when {
     voice != null -> return VoiceScreenV2(voice, act, probe = probe)
     result != null -> return ResultScreen(result, act, timing)
@@ -91,6 +98,9 @@ internal fun WatchPages(
   }
   var menu by remember { mutableStateOf(false) }
   var quick by remember { mutableStateOf(false) }
+  // A held call, the hand-off, the calendar or Sign out's question (AccountScreens.kt), over the pages.
+  var over by remember { mutableStateOf<Over?>(null) }
+  over?.let { o -> return OverScreen(o, shown, calendar, act, go = { over = it }, close = { over = null }) }
   if (quick) {
     return QuickReplyScreen(pick = {
       quick = false
@@ -111,6 +121,8 @@ internal fun WatchPages(
       act.cancelHaltAll()
     })
   }
+  // Account is read from the phone each time it's the page shown.
+  androidx.compose.runtime.LaunchedEffect(pager.currentPage) { if (pages.getOrNull(pager.currentPage) == Page.Account) act.readAccount() }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
       ScalingLazyColumn(
@@ -127,12 +139,12 @@ internal fun WatchPages(
         outcome?.let { item { OutcomeCard(it, act) } }
         when (page) {
           Page.Coach -> Unit
-          Page.Account -> accountPage(act)
+          Page.Account -> accountItems(account, act, signOut = { over = Over.SignOut })
           else -> if (notRead(shown, act)) {
             when (page) {
-              Page.Inbox -> inboxPage(shown as WatchModel.Shown.Read, ready, act)
-              Page.Tafs -> tafsPage(shown as WatchModel.Shown.Read)
-              Page.Brief -> briefPage(shown as WatchModel.Shown.Read, act)
+              Page.Inbox -> inboxPage(shown as WatchModel.Shown.Read, ready, act, openCall = { over = Over.HeldCall(it.holdId) })
+              Page.Tafs -> { tafsPage(shown as WatchModel.Shown.Read); calendarDoor { over = Over.Calendar } }
+              Page.Brief -> { briefPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
               else -> Unit
             }
           }
@@ -208,11 +220,11 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
 }
 
 /**
- * The Inbox, until it's kept on the watch (step iv): Needs you's held calls, Refuse where the phone allows it and approving on the
- * phone, then each result ready to open. With nothing, the Inbox says what lands there.
+ * The Inbox, until it's kept on the watch (step iv): Needs you's held calls, each opening on its own screen (step vi), then each
+ * result ready to open. With nothing, the Inbox says what lands there.
  */
-private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions) {
-  for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
+private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
+  for (call in shown.needsYou.calls) item { HeldCallRow(call) { openCall(call) } }
   for (ask in ready) item {
     Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth()) { Text(stateLine(ask)) }
   }
@@ -238,12 +250,6 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
   } else {
     item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
   }
-}
-
-/** Account, until the account read is drawn (step vi): what this watch holds and can't do, and the way to the phone. */
-private fun ScalingLazyListScope.accountPage(act: Actions) {
-  line(Words.Watch.trust)
-  item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
 }
 
 /**

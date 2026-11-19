@@ -4,6 +4,16 @@
     <string name="words_language" translatable="false">pl</string>
     <string name="alert_needs_you">Taf czeka na Ciebie</string>
     <string name="alert_not_refused">Nie odrzucono</string>
+    <string name="calendar_next_day">Następny dzień</string>
+    <string name="calendar_previous_day">Poprzedni dzień</string>
+    <string name="calendar_reading">Odczytywanie kalendarza…</string>
+    <plurals name="calendar_times">
+        <item quantity="one">×%1$s</item>
+        <item quantity="few">×%1$s</item>
+        <item quantity="many">×%1$s</item>
+        <item quantity="other">×%1$s</item>
+    </plurals>
+    <string name="calendar_today">Dziś</string>
     <string name="chat_delete">Usuń</string>
     <string name="chat_stop">Zatrzymaj</string>
     <string name="coach_ask">Zapytaj Coacha</string>
@@ -13,6 +23,7 @@
     <string name="common_close">Zamknij</string>
     <string name="common_done">Gotowe</string>
     <string name="common_loading">Wczytywanie…</string>
+    <string name="common_ok">OK</string>
     <string name="common_send">Wyślij</string>
     <string name="common_try_again">Spróbuj ponownie</string>
     <string name="halt_all_now">Zablokuj wszystko teraz</string>
@@ -23,7 +34,12 @@
     <string name="needs_you_nothing">Nic nie czeka na Ciebie.</string>
     <string name="needs_you_refuse">Odrzuć</string>
     <string name="needs_you_title">Czeka na Ciebie</string>
+    <string name="settings_language_title">Język</string>
+    <string name="settings_plan">Plan</string>
+    <string name="settings_sign_out">Wyloguj</string>
     <string name="settings_title">Konto</string>
+    <string name="settings_version">Wersja</string>
+    <string name="sign_in_with_phone">Zaloguj się telefonem</string>
     <string name="taf_halt_title">Zablokuj</string>
     <string name="taf_pause">Wstrzymaj</string>
     <string name="taf_state_halted">Zablokowane</string>
@@ -36,7 +52,10 @@
     <string name="watch_ask_not_on">Pytanie z zegarka nie jest jeszcze włączone.</string>
     <string name="watch_ask_text_only">tafs dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
+    <string name="watch_calendar_today">Dzisiejszy kalendarz</string>
     <string name="watch_check_phone">Sprawdź połączenie telefonu</string>
+    <string name="watch_check_phone_sub">Czeka na Ciebie jest tam otwarte. Zatwierdź wywołanie tam.</string>
+    <string name="watch_check_phone_title">Sprawdź telefon</string>
     <string name="watch_coach_needs_consent">Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.</string>
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
     <string name="watch_didnt_catch">Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.</string>
@@ -72,6 +91,7 @@
         <item quantity="other">%1$s czeka na Ciebie</item>
     </plurals>
     <string name="watch_not_sure">Nie wiadomo, czy dotarło</string>
+    <string name="watch_nothing_sent_until">Nic nie zostanie wysłane, dopóki nie zatwierdzisz.</string>
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
@@ -101,6 +121,10 @@
     <string name="watch_sending">Wysyłanie…</string>
     <string name="watch_sent">Wysłano</string>
     <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_sign_out_q">Wylogować na tym zegarku?</string>
+    <string name="watch_sign_out_sub">Telefon pozostaje zalogowany. Ten zegarek zapomina Twoje tafs, czaty i Skrzynkę.</string>
+    <string name="watch_signed_in">Zalogowano</string>
+    <string name="watch_signed_out_here">Wylogowano na tym zegarku. Telefon pozostaje zalogowany.</string>
     <string name="watch_tap_start">Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.</string>
     <string name="watch_timing">Słuchanie %1$s ms · potwierdzenie %2$s ms · wynik %3$s ms</string>
     <string name="watch_trust">Ten zegarek nie przechowuje haseł ani kluczy i niczego nie zatwierdza: to, co wymaga Twojej zgody, czeka na telefon. Twoje tafs robią tylko to, na co pozwalają ich Cards.</string>

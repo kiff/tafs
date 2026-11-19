@@ -2546,7 +2546,10 @@
     <string name="watch_ask_not_on">Chiedere dall\'orologio non è ancora attivo.</string>
     <string name="watch_ask_text_only">tafs riceve le tue parole come testo, mai la tua voce.</string>
     <string name="watch_asking_phone">Chiedo al telefono…</string>
+    <string name="watch_calendar_today">Calendario di oggi</string>
     <string name="watch_check_phone">Controlla la connessione del telefono</string>
+    <string name="watch_check_phone_sub">Ti aspetta è aperto lì. Approva la chiamata lì.</string>
+    <string name="watch_check_phone_title">Guarda il telefono</string>
     <string name="watch_coach_needs_consent">Prima di parlare con Coach, consenti l\'uso dell\'IA in tafs sul telefono.</string>
     <string name="watch_deleted_nothing_sent">Eliminato. Non è stato inviato nulla.</string>
     <string name="watch_didnt_catch">Non ho capito. Tocca per riprovare.</string>
@@ -2576,6 +2579,7 @@
         <item quantity="other">%1$s ti aspettano</item>
     </plurals>
     <string name="watch_not_sure">Arrivo non confermato</string>
+    <string name="watch_nothing_sent_until">Non viene inviato nulla finché non approvi.</string>
     <string name="watch_open_on_phone">Apri sul telefono</string>
     <string name="watch_page_brief">Riepilogo</string>
     <string name="watch_page_inbox">In arrivo</string>
@@ -2603,6 +2607,10 @@
     <string name="watch_sending">Invio…</string>
     <string name="watch_sent">Inviato</string>
     <string name="watch_sign_in_on_phone">Prima accedi a tafs sul telefono.</string>
+    <string name="watch_sign_out_q">Uscire su questo orologio?</string>
+    <string name="watch_sign_out_sub">Il telefono resta connesso. Questo orologio dimentica i tuoi tafs, le chat e In arrivo.</string>
+    <string name="watch_signed_in">Accesso effettuato</string>
+    <string name="watch_signed_out_here">Sessione chiusa su questo orologio. Il telefono resta connesso.</string>
     <string name="watch_tap_start">Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.</string>
     <string name="watch_timing">Ascolto %1$s ms · ricevuta %2$s ms · risultato %3$s ms</string>
     <string name="watch_trust">Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.</string>

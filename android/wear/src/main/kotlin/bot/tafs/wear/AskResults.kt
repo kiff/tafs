@@ -29,6 +29,8 @@ object AskResults {
   fun arrived(context: Context, ask: AskLine) {
     val app = shown
     if (app != null) return app(ask)
+    // Signed out on this watch (v2's Account): nothing is shown of the account until it's signed in here again.
+    if (PreferencesWatchSignIn(context).signedOut()) return
     if (ask.ended) notify(context, ask)
   }
 

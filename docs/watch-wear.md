@@ -213,6 +213,40 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
   all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
 
+**Step (vi): a held call, a calendar day, Account and Sign out on this watch** (`AccountScreens.kt`, `WatchModel.readCalendar`,
+`readAccount`, `signOutHere`, `AccountModelTest`, `AccountScreensTest`). Each opens over the pages (`Over`); back or Close returns
+to them:
+- **A held call:** the Inbox lists each held call in a line (its taf, what it wants, the amount); a tap opens it whole, as the
+  phone's Needs you words it: its taf, what it wants, KIFF's amount and reason, and "Nothing is sent until you approve." It's
+  drawn from Needs you's read as it stands, so a call answered meanwhile closes. **Refuse** only where Needs you's read says the
+  wrist may (`refusable`), through v1's path: from an unlocked watch with a screen lock, signed by the phone. **Approve on your
+  phone** opens Needs you there (`tafs://open/needs-you`) and shows "Check your phone" with OK, which goes back to the Inbox and
+  reads it again. Approving is never on the watch. The phone opens Needs you's list, not the one call (`AlertPayload.openedFromWatch`
+  knows only `needs-you`), so the line says "Needs you is open there. Approve the call there." and not "on this call".
+- **A calendar day:** "Today's calendar", at the foot of the Tafs page (and of Brief, where the brief is on), reads the
+  `calendar` read for today in the account's zone: tafs cloud's line for the day (in red when the account is halted), then each
+  event in tafs cloud's order with its time, its taf, its words and "×3" when it happens more than once. **Previous day** and
+  **Next day** read the day before or after the one shown; the title is Today only for the day the phone answered as today, else
+  the date in the watch's language. It's in memory only and forgotten on Close.
+- **Account**, read from the phone (`account`) each time the page is shown: Signed in (the email and the account's name), Plan
+  (the plan's line as the phone's Account shows it), the watch's language, its version, **Open on phone**, **Sign out** and the
+  trust line. With the phone out of reach it says so, with Try again, and Sign out still works: it's the watch's own.
+- **Sign out,** asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats and
+  inbox."), is on this watch alone: nothing is sent to the phone. The watch forgets everything it holds: what it showed, the asks
+  and the results opened, a review and its recording (every recording is swept), the message kept for later, the tile's count,
+  the calendar and Account, and its own result notifications. It keeps one flag in its private preferences (`tafs.sign_in`,
+  `PreferencesWatchSignIn`) and shows only "Signed out on this watch. Your phone stays signed in." with **Sign in with your
+  phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing (no read, ask, Refuse or Halt, the
+  tile's Ask tafs included) and shows no result notification. Sign in clears the flag and reads the phone again.
+- **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
+  phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
+  it waits until it can switch both.
+- **Words:** `watch.check_phone_title`, `watch.check_phone_sub` (legal-i18n's line without "on this call"),
+  `watch.nothing_sent_until`, `watch.calendar_today`, `watch.signed_in`, `watch.sign_out_q`, `watch.sign_out_sub` and
+  `watch.signed_out_here` (not in legal-i18n's list) are new, in all 8 languages; the rest are the phone's (`common.ok`,
+  `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`,
+  `settings.version`, `settings.language_title`, `settings.sign_out`, `sign_in.with_phone`).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and

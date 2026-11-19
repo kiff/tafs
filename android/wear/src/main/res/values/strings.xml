@@ -4,6 +4,14 @@
     <string name="words_language" translatable="false">en</string>
     <string name="alert_needs_you">A taf needs you</string>
     <string name="alert_not_refused">Not refused</string>
+    <string name="calendar_next_day">Next day</string>
+    <string name="calendar_previous_day">Previous day</string>
+    <string name="calendar_reading">Reading the calendar…</string>
+    <plurals name="calendar_times">
+        <item quantity="one">×%1$s</item>
+        <item quantity="other">×%1$s</item>
+    </plurals>
+    <string name="calendar_today">Today</string>
     <string name="chat_delete">Delete</string>
     <string name="chat_stop">Stop</string>
     <string name="coach_ask">Ask Coach</string>
@@ -13,6 +21,7 @@
     <string name="common_close">Close</string>
     <string name="common_done">Done</string>
     <string name="common_loading">Loading…</string>
+    <string name="common_ok">OK</string>
     <string name="common_send">Send</string>
     <string name="common_try_again">Try again</string>
     <string name="halt_all_now">Halt all now</string>
@@ -23,7 +32,12 @@
     <string name="needs_you_nothing">Nothing needs you.</string>
     <string name="needs_you_refuse">Refuse</string>
     <string name="needs_you_title">Needs you</string>
+    <string name="settings_language_title">Language</string>
+    <string name="settings_plan">Plan</string>
+    <string name="settings_sign_out">Sign out</string>
     <string name="settings_title">Account</string>
+    <string name="settings_version">Version</string>
+    <string name="sign_in_with_phone">Sign in with your phone</string>
     <string name="taf_halt_title">Halt</string>
     <string name="taf_pause">Pause</string>
     <string name="taf_state_halted">Halted</string>
@@ -36,7 +50,10 @@
     <string name="watch_ask_not_on">Asking from your watch isn\'t on yet.</string>
     <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
+    <string name="watch_calendar_today">Today\'s calendar</string>
     <string name="watch_check_phone">Check your phone\'s connection</string>
+    <string name="watch_check_phone_sub">Needs you is open there. Approve the call there.</string>
+    <string name="watch_check_phone_title">Check your phone</string>
     <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
@@ -66,6 +83,7 @@
         <item quantity="other">%1$s need you</item>
     </plurals>
     <string name="watch_not_sure">Not sure it arrived</string>
+    <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
     <string name="watch_open_on_phone">Open on phone</string>
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
@@ -93,6 +111,10 @@
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_sign_out_q">Sign out on this watch?</string>
+    <string name="watch_sign_out_sub">Your phone stays signed in. This watch forgets your tafs, chats and inbox.</string>
+    <string name="watch_signed_in">Signed in</string>
+    <string name="watch_signed_out_here">Signed out on this watch. Your phone stays signed in.</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
     <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>

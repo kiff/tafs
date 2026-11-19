@@ -11,6 +11,13 @@ object Words {
     val needsYou: String get() = Res.s(R.string.alert_needs_you)
     val notRefused: String get() = Res.s(R.string.alert_not_refused)
   }
+  object Calendar {
+    val nextDay: String get() = Res.s(R.string.calendar_next_day)
+    val previousDay: String get() = Res.s(R.string.calendar_previous_day)
+    val reading: String get() = Res.s(R.string.calendar_reading)
+    fun times(count: Int): String = Res.p(R.plurals.calendar_times, count, Res.number(count))
+    val today: String get() = Res.s(R.string.calendar_today)
+  }
   object Chat {
     val delete: String get() = Res.s(R.string.chat_delete)
     val stop: String get() = Res.s(R.string.chat_stop)
@@ -25,6 +32,7 @@ object Words {
     val close: String get() = Res.s(R.string.common_close)
     val done: String get() = Res.s(R.string.common_done)
     val loading: String get() = Res.s(R.string.common_loading)
+    val ok: String get() = Res.s(R.string.common_ok)
     val send: String get() = Res.s(R.string.common_send)
     val tryAgain: String get() = Res.s(R.string.common_try_again)
   }
@@ -45,7 +53,14 @@ object Words {
     val title: String get() = Res.s(R.string.needs_you_title)
   }
   object Settings {
+    val languageTitle: String get() = Res.s(R.string.settings_language_title)
+    val plan: String get() = Res.s(R.string.settings_plan)
+    val signOut: String get() = Res.s(R.string.settings_sign_out)
     val title: String get() = Res.s(R.string.settings_title)
+    val version: String get() = Res.s(R.string.settings_version)
+  }
+  object SignIn {
+    val withPhone: String get() = Res.s(R.string.sign_in_with_phone)
   }
   object Taf {
     object Halt {
@@ -66,7 +81,10 @@ object Words {
     val askNotOn: String get() = Res.s(R.string.watch_ask_not_on)
     val askTextOnly: String get() = Res.s(R.string.watch_ask_text_only)
     val askingPhone: String get() = Res.s(R.string.watch_asking_phone)
+    val calendarToday: String get() = Res.s(R.string.watch_calendar_today)
     val checkPhone: String get() = Res.s(R.string.watch_check_phone)
+    val checkPhoneSub: String get() = Res.s(R.string.watch_check_phone_sub)
+    val checkPhoneTitle: String get() = Res.s(R.string.watch_check_phone_title)
     val coachNeedsConsent: String get() = Res.s(R.string.watch_coach_needs_consent)
     val deletedNothingSent: String get() = Res.s(R.string.watch_deleted_nothing_sent)
     val didntCatch: String get() = Res.s(R.string.watch_didnt_catch)
@@ -87,6 +105,7 @@ object Words {
     val needsLock: String get() = Res.s(R.string.watch_needs_lock)
     fun needsYouCount(count: Int): String = Res.p(R.plurals.watch_needs_you_count, count, Res.number(count))
     val notSure: String get() = Res.s(R.string.watch_not_sure)
+    val nothingSentUntil: String get() = Res.s(R.string.watch_nothing_sent_until)
     val openOnPhone: String get() = Res.s(R.string.watch_open_on_phone)
     object Page {
       val brief: String get() = Res.s(R.string.watch_page_brief)
@@ -115,6 +134,10 @@ object Words {
     val sending: String get() = Res.s(R.string.watch_sending)
     val sent: String get() = Res.s(R.string.watch_sent)
     val signInOnPhone: String get() = Res.s(R.string.watch_sign_in_on_phone)
+    val signOutQ: String get() = Res.s(R.string.watch_sign_out_q)
+    val signOutSub: String get() = Res.s(R.string.watch_sign_out_sub)
+    val signedIn: String get() = Res.s(R.string.watch_signed_in)
+    val signedOutHere: String get() = Res.s(R.string.watch_signed_out_here)
     val tapStart: String get() = Res.s(R.string.watch_tap_start)
     fun timing(listen: String, receipt: String, result: String): String = Res.s(R.string.watch_timing, listen, receipt, result)
     val trust: String get() = Res.s(R.string.watch_trust)

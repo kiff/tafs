@@ -4,6 +4,14 @@
     <string name="words_language" translatable="false">nl</string>
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_not_refused">Niet geweigerd</string>
+    <string name="calendar_next_day">Volgende dag</string>
+    <string name="calendar_previous_day">Vorige dag</string>
+    <string name="calendar_reading">Agenda lezen…</string>
+    <plurals name="calendar_times">
+        <item quantity="one">×%1$s</item>
+        <item quantity="other">×%1$s</item>
+    </plurals>
+    <string name="calendar_today">Vandaag</string>
     <string name="chat_delete">Verwijderen</string>
     <string name="chat_stop">Stoppen</string>
     <string name="coach_ask">Coach vragen</string>
@@ -13,6 +21,7 @@
     <string name="common_close">Sluiten</string>
     <string name="common_done">Klaar</string>
     <string name="common_loading">Laden…</string>
+    <string name="common_ok">OK</string>
     <string name="common_send">Verzenden</string>
     <string name="common_try_again">Opnieuw proberen</string>
     <string name="halt_all_now">Alles nu stilzetten</string>
@@ -23,7 +32,12 @@
     <string name="needs_you_nothing">Niets wacht op jou.</string>
     <string name="needs_you_refuse">Weigeren</string>
     <string name="needs_you_title">Wacht op jou</string>
+    <string name="settings_language_title">Taal</string>
+    <string name="settings_plan">Abonnement</string>
+    <string name="settings_sign_out">Uitloggen</string>
     <string name="settings_title">Account</string>
+    <string name="settings_version">Versie</string>
+    <string name="sign_in_with_phone">Inloggen met je telefoon</string>
     <string name="taf_halt_title">Stilzetten</string>
     <string name="taf_pause">Pauzeren</string>
     <string name="taf_state_halted">Stilgezet</string>
@@ -36,7 +50,10 @@
     <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
     <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
+    <string name="watch_calendar_today">Agenda van vandaag</string>
     <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
+    <string name="watch_check_phone_sub">Wacht op jou staat daar open. Keur de aanroep daar goed.</string>
+    <string name="watch_check_phone_title">Kijk op je telefoon</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
     <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
@@ -66,6 +83,7 @@
         <item quantity="other">%1$s wachten op jou</item>
     </plurals>
     <string name="watch_not_sure">Onzeker of het aankwam</string>
+    <string name="watch_nothing_sent_until">Er wordt niets verstuurd tot je goedkeurt.</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
@@ -93,6 +111,10 @@
     <string name="watch_sending">Versturen…</string>
     <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_sign_out_q">Uitloggen op dit horloge?</string>
+    <string name="watch_sign_out_sub">Je telefoon blijft ingelogd. Dit horloge vergeet je tafs, chats en Inbox.</string>
+    <string name="watch_signed_in">Ingelogd</string>
+    <string name="watch_signed_out_here">Uitgelogd op dit horloge. Je telefoon blijft ingelogd.</string>
     <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
     <string name="watch_trust">Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.</string>
