@@ -224,7 +224,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   watch took, so the probe never ran (#1716, W1), and a production build keeps no recording: its review is the words alone.
   In a test version the app opens the microphone itself (`AudioTap`,
   16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
-  OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
+  OS 4 and later), so the recording and the words are one capture. **Stop** (or the 30 s limit) ends that sound first
+  (`AudioTap.endFeed`): the microphone stops and the pipe closes, so the recognizer reaches the end of the audio and returns the
+  words, and the recording stays for Play. Before, Stop only asked the recognizer to stop while the app went on filling the
+  pipe, and the owner's Galaxy Watch 5 (0.4.0-test) answered "Didn't catch that" (`AudioTapTest`). The recording is a WAV in the app's private files
   (`files/voice/`), kept beside the review only, under its title and above the words: **Play** (▶) and **Pause** (‖), a round
   icon button named for TalkBack (`watch.play`, `taf.pause`), go on from where it was, with "0:03 / 0:12". It never
   leaves the watch, only the words do. It's erased the moment the review is left, by whatever leaves it (`WatchModel.voiceNow`):

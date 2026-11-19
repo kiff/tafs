@@ -119,6 +119,22 @@ internal class AudioTap(private val dir: File) {
     return read
   }
 
+  /** What has been recorded so far, in bytes of audio. */
+  internal val recorded: Long get() = bytes
+
+  /**
+   * Stop: the microphone stops and the recognizer's pipe closes, so the recognizer reaches the end of the audio and returns the
+   * words. The recording stays, for [finish]. Without it the recognizer waits on a pipe the app goes on filling to the 30 s limit,
+   * and Stop ends in "Didn't catch that" (the owner's Galaxy Watch 5, 0.4.0-test).
+   */
+  fun endFeed() {
+    running = false
+    // A write blocked on a recognizer that no longer reads ends when its pipe closes.
+    runCatching { pipe?.close() }
+    runCatching { thread?.join(500) }
+    runCatching { record?.stop() }
+  }
+
   /** Stops the microphone and keeps the recording; null when nothing was recorded. */
   fun finish(): KeptAudio? {
     val f = file ?: return null

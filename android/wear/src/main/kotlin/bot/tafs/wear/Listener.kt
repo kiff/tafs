@@ -97,8 +97,13 @@ internal class Listener(
     return started
   }
 
-  /** v2's Stop, or its 30 s limit: listening ends, and what was heard comes back as the result, to the review. */
+  /**
+   * v2's Stop, or its 30 s limit: listening ends, and what was heard comes back as the result, to the review. With the app's own
+   * audio, its microphone stops and the pipe closes first: the recognizer returns the words at the end of the audio, not at
+   * `stopListening`.
+   */
   fun stop() {
+    tap?.endFeed()
     runCatching { recognizer?.stopListening() }
   }
 
