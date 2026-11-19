@@ -107,6 +107,13 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     cloud's checked line (at most 140 characters; with none, its word for the state), **Hear** (the watch's own text-to-speech,
     in its language) and **Reply** (the microphone again, continuing that ask: `reply_to`). An older state never replaces a
     newer one.
+  - **The answer you can't miss** (v2, W3; the owner's Watch 5 test: it flashed past, and then they didn't know where it
+    was). With the app open, the answer to an ask sent from this watch opens by itself when it ends, wherever the app is,
+    unless a new message is being recorded or another answer is open: then it waits, unread, in Coach's home and the Inbox
+    (`WatchModel.took`, `awaiting`, in memory only). The result card scrolls to its end and closes only with **Close** or the
+    system's back, never on a tap on its words. With the app put away, its notification is on a **high-importance**
+    channel (`replies`; the old default `results` channel is deleted, since a channel's importance can't be raised), so it
+    peeks and buzzes and stays until opened or swiped away.
   - **States:** `accepted`, `working`, `done`, `no_taf` (no one taf could: none, or more than one, which its line says) and
     `failed`. One the watch doesn't know is drawn by tafs cloud's words.
   - **Kept in memory only,** and forgotten once the app is put away; which results were opened is kept for the app's process
