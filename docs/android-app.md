@@ -1531,11 +1531,12 @@ nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
   previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
   views, a file, Delete's question, the tablet's two panes).
 
-## From your watch (W11, behind a switch)
+## From your watch (W11)
 
-The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). Off until
-the owner's yes and tafs cloud's routes: `WatchDaysFeature.on` is `false` (`watch/WatchDays.kt`), so `MainActivity` makes no
-store and `LocalWatchDays` is null, and Coach's Previous conversations draws nothing of it and asks tafs cloud nothing
+The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). **On since
+Android 124 (1.40.0)**: `WatchDaysFeature.on` is `true` (`watch/WatchDays.kt`, pinned by `fromYourWatchShipsOn`), on the owner's
+rule of 19 Nov that a finished, reviewed feature goes on at once; tafs cloud's routes are live (tafs#1463). Turned off, `MainActivity`
+makes no store and `LocalWatchDays` is null, and Coach's Previous conversations draws nothing of it and asks tafs cloud nothing
 (`withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing`).
 
 - **The store** (`WatchDaysStore`) is tafs cloud's two routes and nothing else, with the session, under the same switch as

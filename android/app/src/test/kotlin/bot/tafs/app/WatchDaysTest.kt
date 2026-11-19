@@ -34,7 +34,6 @@ import java.time.Instant
 import java.time.LocalDate
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -95,10 +94,13 @@ class WatchDaysTest {
 
   // MARK: The switch
 
+  @Test fun fromYourWatchShipsOn() {
+    assertTrue("From your watch is on since Android 124 (the owner's 19 Nov rule; tafs cloud's routes are live)", WatchDaysFeature.on)
+  }
+
   @Test fun withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing() {
-    assertFalse("From your watch ships off until the owner's yes and tafs cloud's routes", WatchDaysFeature.on)
     val store = Counting()
-    sheet(store, on = WatchDaysFeature.on)
+    sheet(store, on = false)
     compose.waitForIdle()
     compose.onNodeWithText(Words.Coach.Chats.previous).assertExists()
     compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)

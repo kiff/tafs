@@ -1,0 +1,2 @@
+• Coach: „Z Twojego zegarka” pokazuje prośby wysłane z zegarka, dzień po dniu, i co się stało z każdą z nich. Otwórz to z poprzednich rozmów Coacha.
+• Twój zegarek: telefon usuwa każdą kwotę z tego, co wysyła do zegarka, a zegarek nie przechowuje kwot.

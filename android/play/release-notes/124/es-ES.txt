@@ -1,0 +1,2 @@
+• Coach: «Desde tu reloj» muestra lo que pediste desde tu reloj, día a día, y qué pasó con cada petición. Ábrelo desde las conversaciones anteriores de Coach.
+• Tu reloj: el teléfono quita cualquier importe de lo que envía al reloj, y el reloj no guarda importes.
