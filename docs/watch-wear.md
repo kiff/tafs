@@ -152,9 +152,11 @@ With it on (`WatchModel(briefOn = true)` in the tests):
 
 ## Version 2 (behind a switch, being built)
 
-Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built one step at a time behind `WATCH_V2`
-(`wear/…/WatchPages.kt`), which is `false`, so a watch shows v1 whole until every step is in; it turns on, as that one line,
-once the last step lands and the owner has tried the build. Steps: (i) the phone's three new reads (`taf`, `calendar`,
+Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built behind `WATCH_V2`
+(`wear/…/WatchPages.kt`, from `BuildConfig.WATCH_V2`): on only in a test version (a `-test` `versionName`, or
+`TAFS_WATCH_V2=1`) for the owner's watch on Play's internal track, and off in debug builds, the unit tests and any production
+build, where a watch shows v1 whole. It turns on for everyone, as one line in `wear/build.gradle.kts`, once the owner has tried
+it and the server pieces it waits on are in. Steps: (i) the phone's three new reads (`taf`, `calendar`,
 `account`, above); (ii) the pages and Coach's home; (iii) record, review and send, with Type and Quick reply; (iv) the inbox
 kept on the watch; (v) Tafs, a taf's page, its settings and choosing which to halt; (vi) the held call, the calendar day and
 Account; (vii) the switches for what needs a new server piece (a watch ask as a Coach chat, the chats read, the inbox's read and
@@ -320,6 +322,10 @@ The watch shares the phone's package, and Play needs every `versionCode` on the 
 the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Versions). **The watch has its own band: it
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
+
+**400,000,004 (0.4.0-test)** is v2's test build for the owner's Galaxy Watch 5: its `-test` name turns on v2 (`WATCH_V2`) and
+the timing readout, with the Play/Pause probe line on the review. It needs the phone at Android 123 or later, the first with the
+relay for v2's reads (`taf`, `calendar`, `account`). Never promoted to production.
 
 **400,000,003 (0.3.0-test)** is Ask tafs's test build for a real watch: its `-test` name turns on the timing readout on a
 result's card, so the build a merge raising it starts has it, and it's never promoted to production. Production gets its own

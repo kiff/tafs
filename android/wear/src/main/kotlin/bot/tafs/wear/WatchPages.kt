@@ -37,10 +37,11 @@ import bot.tafs.watchlink.AskLine
 import kotlinx.coroutines.launch
 
 /**
- * Wear OS v2 (docs/watch-wear.md, Version 2): off. It's built one step at a time behind this switch, so a watch shows v1 whole
- * until every step is in; it turns on, as this one line, when the last of them lands and the owner has tried the build.
+ * Wear OS v2 (docs/watch-wear.md, Version 2), from the build: on only in a test version ("-test") for the owner's watch on Play's
+ * internal track, off in debug builds, the unit tests and any production build. It turns on for everyone, as one line in
+ * wear/build.gradle.kts, once the owner has tried it and the server pieces it waits on are in.
  */
-internal const val WATCH_V2 = false
+internal val WATCH_V2: Boolean = BuildConfig.WATCH_V2
 
 /** v2's pages, side by side, moved between with a swipe: Coach is home, since talking to Coach is what the wrist is for. */
 internal enum class Page { Coach, Inbox, Tafs, Brief, Account }

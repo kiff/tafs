@@ -1,0 +1,7 @@
+Version 2 of tafs on Wear OS, for testing.
+- Coach is home: speak, type or pick a quick reply, check your words, then send.
+- Play your recording before sending. It stays on the watch, and is erased once sent or deleted.
+- Keep a message for later when your phone is out of reach.
+- An Inbox for answers and held calls, until you dismiss them.
+- Each taf's page and settings, and choose which tafs to halt.
+- Today's calendar, and your account. Approving stays on your phone.
