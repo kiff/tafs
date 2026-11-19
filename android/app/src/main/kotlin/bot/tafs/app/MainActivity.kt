@@ -651,6 +651,9 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         turnOnAlerts = { scope.launch { model.turnOnAlertsFromOffer() } },
         notNowAlerts = model::notNowAlertsOffer,
         openPlan = { coachOpen = false; usageOpen = true },
+        doorDraft = model::doorDraft,
+        approveDoorDraft = model::approveDoorDraft,
+        endpoint = model::apiEndpoint,
       ),
     )
   }

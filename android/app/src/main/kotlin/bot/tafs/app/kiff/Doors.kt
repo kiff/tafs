@@ -195,3 +195,50 @@ data class WireDoorMark(
   val reply: String? = null,
   val why: String? = null,
 )
+
+/**
+ * The door Coach drafted for a taf (`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`), as the owner
+ * approves it. What's drawn is read from `body`, the bytes the phone signs and sends, never from the `draft` copy beside it, so
+ * the owner approves exactly what they see (as iOS's `DoorDraft`).
+ */
+class DoorDraft(val id: String, val draft: Draft, val body: ByteArray) {
+  /** One field the application sends: its name, its type, and for a choice its values. */
+  @Serializable
+  data class Field(val name: String, val type: String = "", val values: List<String>? = null)
+
+  /** The application's name, the fields it sends, what the taf does with them, what it gets back, and whether its own words go back. */
+  data class Draft(val name: String, val fields: List<Field>, val job: String, val outcomes: List<String>, val text: Boolean)
+
+  @Serializable
+  private data class Raw(
+    val name: String? = null,
+    @Serializable(with = EachField::class) val fields: List<Field> = emptyList(),
+    val job: String? = null,
+    val outcomes: List<String> = emptyList(),
+    val text: Boolean = false,
+  )
+
+  private object EachField : EachReadable<Field>(Field.serializer())
+
+  companion object {
+    /** Read from tafs cloud's answer; null for one with no draft, a body that isn't an `api` door's, or a draft with no name or job. */
+    fun read(json: String): DoorDraft? {
+      val answer = runCatching { KiffClient.json.parseToJsonElement(json) }.getOrNull() as? kotlinx.serialization.json.JsonObject ?: return null
+      val id = (answer["draft_id"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content ?: return null
+      val body = answer["body"] as? kotlinx.serialization.json.JsonObject ?: return null
+      if ((body["kind"] as? kotlinx.serialization.json.JsonPrimitive)?.content != "api") return null
+      val drawn = body["draft"] as? kotlinx.serialization.json.JsonObject ?: return null
+      val raw = runCatching { KiffClient.json.decodeFromJsonElement(Raw.serializer(), drawn) }.getOrNull() ?: return null
+      val name = raw.name?.trim().orEmpty()
+      val job = raw.job?.trim().orEmpty()
+      if (name.isEmpty() || job.isEmpty()) return null
+      // RFC 8785: what's signed, and the same bytes sent.
+      val canonical = Jcs.canonical(body).toByteArray(Charsets.UTF_8)
+      return DoorDraft(id, Draft(name, raw.fields, job, raw.outcomes, raw.text), canonical)
+    }
+  }
+}
+
+/** The door an approved draft opened, and its first key, shown in this one answer only. */
+@Serializable
+data class AddedApiDoor(val door: Door, val key: IssuedKey)

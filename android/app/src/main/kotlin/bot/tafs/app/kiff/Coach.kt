@@ -103,6 +103,8 @@ data class SetupComponent(
   @SerialName("taf") val tafValue: kotlinx.serialization.json.JsonElement? = null,
   /** A `knob` card's taf, by its tafs cloud id, when it's sent under this name. */
   @SerialName("taf_id") val tafId: String? = null,
+  /** A `door` card's draft (Coach's `taf_door_api`), read from tafs cloud by this id with [tafId]: the card carries no words of Coach's. */
+  @SerialName("draft_id") val draftId: String? = null,
   /** A `knob` card's dial version: the card is drawn from that taf's knob `draft` while it's this version. */
   val version: Int? = null,
   val tools: List<String>? = null,
@@ -143,7 +145,7 @@ data class SetupComponent(
   val destination: String get() = service ?: Words.Connect.theVendorsPage
 
   companion object {
-    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive",
+    val KINDS = setOf("steps", "notice", "confirm", "questions", "approval", "sign_in", "result", "knob", "drive", "door",
       // A taf's own card in its chat: a setting it hands to Coach (kiff/tafs#476, gap 15).
       "ask_coach")
   }

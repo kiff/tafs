@@ -217,6 +217,14 @@ while tafs runs; Done forgets the key. API instructions show where to send reque
 host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
 one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
+**Android draws Coach's drafted door** (`show {type: "door", taf_id, draft_id}`, `DoorDraftCard` in `views/ApiDoorViews.kt`,
+behind `ApiDoorFeature`, off) as iOS does: it reads `GET /v1/tafs/{id}/doors/drafts/{draft}` (`contracts/doors-api-draft.json`)
+and draws from `body`, never the `draft` copy beside it or Coach's words (`DoorDraft.read`): the application's name, what it may
+do, what the taf does, the fields it sends, the outcomes it gets back, its own words' risk when `text` is on, and the boundary.
+Approve, for whoever manages the taf, signs `POST …/doors` over `body` in its canonical form (RFC 8785, `Jcs`) with the
+fingerprint and sends those same bytes (`AppModel.approveDoorDraft`); the door's first key is then shown once, as New key's
+(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`).
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:

@@ -24,6 +24,7 @@ import bot.tafs.app.views.API_KEY_CLIP
 import bot.tafs.app.views.API_KEY_SHOWN
 import bot.tafs.app.views.API_NEW_KEY
 import bot.tafs.app.views.apiNewKeyName
+import bot.tafs.app.views.draftField
 import bot.tafs.app.views.apiExample
 import bot.tafs.app.views.API_INSTRUCTIONS
 import bot.tafs.app.views.ApiDoorActions
@@ -123,6 +124,52 @@ class ApiDoorScreensTest {
   @Test fun anAddressThatIsAPathIsOnTafsCloudsOwnHost() {
     assertEquals("https://cloud.example/v1/doors/api/d/requests", bot.tafs.app.app.endpointOn("https://cloud.example/", "/v1/doors/api/d/requests"))
     assertEquals("https://elsewhere.example/r", bot.tafs.app.app.endpointOn("https://cloud.example", "https://elsewhere.example/r"))
+  }
+
+  private val drafted = bot.tafs.app.kiff.DoorDraft.read("""{"draft_id":"draft-1","body":{"kind":"api","draft":{"name":"Order system",
+    "job":"Check the return and refund it if the Card allows","fields":[{"name":"order","type":"string","max":40}],
+    "outcomes":["refunded","refused"],"text":true}}}""")!!
+  private val cloudTaf = taf.copy(cloudId = "taf_1")
+
+  private fun draftCard(manage: Boolean, actions: bot.tafs.app.views.CoachActions) {
+    val state = bot.tafs.app.app.AppState(mode = bot.tafs.app.app.Mode.kiff, tafs = listOf(cloudTaf),
+      access = mapOf(cloudTaf.id to bot.tafs.app.kiff.Access(use = true, manage = manage)))
+    val card = bot.tafs.app.kiff.SetupComponent(type = "door", id = "c1", tafId = "taf_1", draftId = "draft-1")
+    compose.setContent { TafsTheme { androidx.compose.foundation.layout.Column { bot.tafs.app.views.DoorDraftCard(card, state, actions) } } }
+  }
+
+  private fun coachActions(approve: suspend (String, bot.tafs.app.kiff.DoorDraft, String) -> bot.tafs.app.kiff.AddedApiDoor? = { _, _, _ -> null }) =
+    bot.tafs.app.views.CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {},
+      doorDraft = { t, d -> if (t == "taf_1" && d == "draft-1") drafted else null }, approveDoorDraft = approve,
+      endpoint = { "https://cloud.example/v1/doors/api/${it.id}/requests" })
+
+  /** The card draws tafs cloud's draft, never Coach's words: its name, what the taf does, what it sends and gets back, the risk. */
+  @Test fun coachsDoorDraftIsDrawnAndItsApprovalShowsTheFirstKeyOnce() {
+    val signed = mutableListOf<String>()
+    draftCard(manage = true, coachActions { t, d, reason ->
+      signed += "$t ${d.id} | $reason"
+      bot.tafs.app.kiff.AddedApiDoor(door, bot.tafs.app.kiff.IssuedKey("key_1", "tafs_api_first", "irst", "2026-11-19T22:00:00Z"))
+    })
+    compose.onNodeWithText("Order system").assertExists()
+    compose.onNodeWithText(Words.Door.Api.draftWill(taf = "Returns", job = "Check the return and refund it if the Card allows")).assertExists()
+    compose.onNodeWithText("order · string").assertExists()
+    compose.onNodeWithText(Words.Door.Api.draftWordsRisk(taf = "Returns", app = "Order system")).assertExists()
+    compose.onNodeWithTag(bot.tafs.app.views.DOOR_DRAFT_APPROVE).performClick()
+    compose.waitForIdle()
+    assertEquals(listOf("taf_1 draft-1 | ${Words.Door.Api.faceidBody(app = "Order system", taf = "Returns")}"), signed)
+    compose.onNodeWithTag(API_KEY_SHOWN).assertExists()
+    compose.onNodeWithText("tafs_api_first").assertExists()
+  }
+
+  @Test fun onlyTheTafsManagerSeesApproveOnCoachsDoorDraft() {
+    draftCard(manage = false, coachActions())
+    compose.onNodeWithText("Order system").assertExists()
+    compose.onAllNodesWithTag(bot.tafs.app.views.DOOR_DRAFT_APPROVE).assertCountEquals(0)
+  }
+
+  @Test fun aDoorDraftFieldReadsAsADeveloperReadsIt() {
+    assertEquals("reason · damaged | late", draftField(bot.tafs.app.kiff.DoorDraft.Field("reason", "enum", listOf("damaged", "late"))))
+    assertEquals("order · string", draftField(bot.tafs.app.kiff.DoorDraft.Field("order", "string")))
   }
 
   @Test fun aCopiedKeyIsSensitiveAndGoneAfterAMinuteButNeverThePersonsNextCopy() {
