@@ -133,13 +133,12 @@ struct CoachHome: View {
     }
 }
 
-/// The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest. Halt
-/// asks once more, for all the tafs, until choosing which to halt comes with step (v).
+/// The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest, which
+/// opens Choose which to halt (step v).
 struct WatchMenu: View {
     let pages: [WatchPage]
     @ObservedObject var tafs: TafsModel
     let go: (WatchPage) -> Void
-    @State private var confirming = false
 
     var body: some View {
         // Its own stack, so its title shows over the sheet (qa-kiff's read).
@@ -150,22 +149,17 @@ struct WatchMenu: View {
                 }
                 if WatchPage.offersHalt(tafs.state) {
                     Section {
-                        Button(Words.Halt.allNow, role: .destructive) { confirming = true }
+                        NavigationLink {
+                            HaltPickScreen(tafs: tafs)
+                        } label: {
+                            Text(Words.Halt.now).foregroundStyle(.red)
+                        }
                     }
                 }
             }
             .navigationTitle(Words.Watch.menu)
         }
         .task { await tafs.load() }
-        .confirmationDialog(Words.HaltAll.title, isPresented: $confirming) {
-            Button(Words.Halt.allNow, role: .destructive) {
-                // The menu closes on Your tafs, where the halt's answer shows.
-                go(.tafs)
-                Task { await tafs.halt(nil) }
-            }
-        } message: {
-            Text(Words.Halt.Explain.runningAll)
-        }
     }
 }
 

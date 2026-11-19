@@ -124,8 +124,7 @@ turns on, as that one line, once the last step lands and the owner has tried the
   answered and only while something waits (never "0 unread"), a tap going to the Inbox; the line that Coach gets words, never a
   voice; and **Menu** at the foot.
 - **The menu:** every page by name, and Halt at the very bottom, apart from the rest, offered only while a taf the phone
-  listed runs. Until step (v), Halt is v1's Halt all, asked once more; the menu then closes on Your tafs, where the
-  answer shows.
+  listed runs. It opens Choose which to halt (step v).
 - **Until their own steps:** the Inbox is Needs you as v1 reads it (with the brief in its place when that switch is on);
   Your tafs is each taf with its state and no Halt; Account is the trust line.
 - **Nothing new** reaches the phone, and nothing is stored on the watch. The last chats come with tafs cloud's chats read.
@@ -175,7 +174,7 @@ Nothing leaves the watch before Send:
 - **Words:** all already shared (`watch.dismiss`, `watch.clear_read`, `watch.already_answered`, `watch.inbox_empty`,
   `watch.inbox_unread`).
 
-**Step (v), first half: a taf's page and its settings** (`TafPage.swift`: `TafPageModel`, `TafPageScreen`,
+**Step (v): a taf's page, its settings, and choosing which to halt** (`TafPage.swift`: `TafPageModel`, `TafPageScreen`,
 `TafSettingsScreen`; tested in `TafPageModelTests`), as Wear OS's. Halt is never on the main screens:
 - **Your tafs:** each taf with its state, in the phone's words; a tap opens **its page**, read from the phone (`taf`, by its
   id), in memory only. Before the phone answers it shows the taf's name from Your tafs and "Asking your phone…"; signed out,
@@ -191,10 +190,17 @@ Nothing leaves the watch before Send:
   halted taf's settings offer Resume on your phone instead.
 - **Not on Apple Watch:** Wear OS's "Swipe left for its settings" (Its settings is a row here) and Open on phone (watchOS has
   no way for a watch app to open the phone's app).
-- **Second half, its own PR:** choosing which to halt, from the menu's Halt.
+- **Choose which to halt** (`HaltPick.swift`, tested in `HaltPickModelTests`), from the menu's Halt: **All your tafs**,
+  then each taf not halted, each a switch (a taf halted already isn't offered), and **Halt now · N**, off with none
+  picked. It's asked once more: every taf offered picked is "Halt all your tafs?" and sends one Halt all; one or a few are
+  named ("Rae, Ola"), with the line for one or for several, and send one Halt per taf picked, one after the other, each to
+  the end, so one that fails never keeps the next from halting. "Halting …" shows until the last answers, then what came
+  of each, by name, in the phone's words. Nothing is sent before Halt now, and nothing from a watch with no passcode.
 - **Words:** all already shared (`watch.what_it_does`, `watch.nothing_waits`, `watch.its_settings`, `watch.settings_of`,
   `watch.halt_this`, `watch.resume_on_phone`, `watch.halting`, `watch.needs_you_count`, `watch.asking_phone`,
-  `watch.update_phone`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`, `halt.now`).
+  `watch.update_phone`, `watch.halt_pick_title`, `watch.all_your_tafs`, `watch.halt_now_count`, `watch.halt_all_q`,
+  `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
+  `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
