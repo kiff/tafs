@@ -130,7 +130,9 @@ describe("Setup's definition on kiff/agents", () => {
     // A taf keeps what it makes by the id the call gives back (the guide's returns), and asks for an existing one's link.
     expect(flat).toContain("A taf finds things by id, never by name.");
     expect(flat).toContain("it keeps by the id the call gives back, as the guide's returns name it (data.spreadsheetId)");
-    expect(flat).toContain("For what exists, ask the owner for its link: a search by name often needs more than the connection gives");
+    // Picked by name from the connection's own list when it has one, the link only without; several reached and none named
+    // is asked before the rules (19 Nov, a Moneybird check: the rules left every set of books open) (set-up-a-taf@13).
+    expect(flat).toContain("For what exists, take it by name from the connection's list (books, channels), else ask its link. Several, none named: ask which before the rules.");
     expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
     expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026"); the taf never looks the place up by name.');
     expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
