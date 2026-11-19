@@ -255,6 +255,31 @@ describe("the watch's conversation", () => {
     expect(ask).not.toHaveProperty("line");
   });
 
+  it("refuses a hand-over that names no chat while the person's watch request chooses its taf, never sending it the ordinary way", async () => {
+    // The owner's 17:33 ask: KIFF kept taf_task's schema from before it asked for the chat, so the call came with none,
+    // went to the taf's own chat, and the watch never heard its answer.
+    const { w, id, session } = await asked();
+    await expect(w.tool("taf_task", { taf: CAL, text: ASK.text })).rejects.toThrow(/which chat/);
+    expect(w.agents.calls.filter((c) => c.startsWith(`startRun ${CAL}`))).toEqual([]);
+    expect(await w.askOf(id)).toMatchObject({ state: "accepted" });
+    // A phone chat that names itself goes on as before, and the watch's own hand-over still works.
+    expect((await w.tool("taf_task", { taf: INBOX, text: "file the receipts" }, "s_phone_chat")) as { taf: string }).toMatchObject({ taf: "Inbox" });
+    expect((await w.tool("taf_task", { taf: CAL, text: ASK.text }, session)) as { taf: string }).toMatchObject({ taf: "Calendar" });
+    // Once no request of theirs is choosing, a call with no chat goes the ordinary way again.
+    expect((await w.tool("taf_task", { taf: INBOX, text: "file the receipts" })) as { taf: string }).toMatchObject({ taf: "Inbox" });
+  });
+
+  it("never ends a request with Coach's own sentence when its routing turn handed work to a taf the request didn't get", async () => {
+    const { w, id, coachRun } = await asked();
+    const run = w.agents.runs.find((r) => r.id === coachRun)!;
+    Object.assign(run, { status: "COMPLETED", output: "Morning inbox: trabajando.", tally: { tafs_state: { sent: 1 }, taf_task: { sent: 1 } } });
+    const ref = [...w.agents.notified.entries()].find(([r]) => r === coachRun)![1].ref;
+    await w.ended(ref, coachRun, COACH, "COMPLETED");
+    const ask = await w.askOf(id);
+    expect(ask).toMatchObject({ state: "failed" });
+    expect(ask).not.toHaveProperty("line");
+  });
+
   it("turns the taf's result into Coach's one line, and never into the phone's Coach chat or its alerts", async () => {
     const { w, id, session } = await asked();
     await w.tool("taf_task", { taf: CAL, text: ASK.text }, session);
