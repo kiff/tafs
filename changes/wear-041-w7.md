@@ -1,0 +1,1 @@
+- **Wear OS: colour by meaning, and no more purple buttons:** Send and your own words in orange, Coach in blue, what waits for you in amber, sent in green, halt, refuse and sign out in red, and every other button grey ([watch-wear.md](docs/watch-wear.md)).

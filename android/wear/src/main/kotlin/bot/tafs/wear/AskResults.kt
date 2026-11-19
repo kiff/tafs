@@ -35,6 +35,22 @@ object AskResults {
     if (ask.ended) notify(context, ask)
   }
 
+  /**
+   * The alert's words: the answer with no amount in it (watchlink's `Amounts.strip`, the rule the Inbox keeps), since a
+   * notification stays in the watch's list until it's dismissed; when something was taken out, "The rest is on your phone."
+   * follows, as on the Apple Watch. Opened, the answer shows whole, from memory.
+   */
+  internal fun alertText(ask: AskLine): String {
+    val whole = ask.line ?: ask.words
+    val kept = bot.tafs.watchlink.Amounts.strip(whole)
+    return when {
+      kept.isBlank() -> Words.Watch.moreOnPhone
+      // Only when an amount was taken out: a double space or a trailing ":" alone changes nothing said (qa-kiff, #1445).
+      bot.tafs.watchlink.Amounts.hasAmount(whole) -> kept + "\n" + Words.Watch.moreOnPhone
+      else -> whole.trim()
+    }
+  }
+
   internal fun notify(context: Context, ask: AskLine) {
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
     // High importance, so an answer peeks on the face and buzzes, and stays in the list until it's opened or swiped away (W3:
@@ -50,11 +66,12 @@ object AskResults {
     val name = context.getString(R.string.app_name)
     // What a locked watch shows: that a result is ready, never the taf or its line.
     val locked = NotificationCompat.Builder(context, CHANNEL).setSmallIcon(R.mipmap.ic_launcher).setContentTitle(name).setContentText(Words.Watch.resultReady).build()
+    val text = alertText(ask)
     val shown = NotificationCompat.Builder(context, CHANNEL)
       .setSmallIcon(R.mipmap.ic_launcher)
       .setContentTitle(ask.tafName ?: name)
-      .setContentText(ask.line ?: ask.words)
-      .setStyle(NotificationCompat.BigTextStyle().bigText(ask.line ?: ask.words))
+      .setContentText(text)
+      .setStyle(NotificationCompat.BigTextStyle().bigText(text))
       .setCategory(NotificationCompat.CATEGORY_MESSAGE)
       .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)

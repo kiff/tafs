@@ -212,7 +212,7 @@ Nothing leaves the watch before Send:
   `watch.halting_all`; `card.its_card`, `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`,
   `halt.explain.running_all`, `halt.halting_stops_no_run_starts`, `halt.now`).
 
-**Step (vi): a held call whole, a calendar day, and Account** (no Sign out on this watch; `CalendarDay.swift`, `AccountPage.swift`; tested in
+**Step (vi): a held call whole, a calendar day, and Account** (with Sign out on this watch since 19 Nov; `CalendarDay.swift`, `AccountPage.swift`, `WatchSignIn.swift`; tested in
 `CalendarDayModelTests` and `AccountPageModelTests`), as Wear OS's:
 - **A held call,** opened from the Inbox while Needs you holds it: whole, as the phone's Needs you words it (its taf, what
   it asks with its amount, KIFF's reason, by when), Refuse where Needs you offers it, Approve on your phone, and "Nothing is
@@ -226,12 +226,18 @@ Nothing leaves the watch before Send:
 - **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
   account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
   the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
-- **No Sign out on this watch,** unlike Wear OS: the Apple Watch app has no session of its own, signing out on the iPhone
-  clears everything it holds (the Inbox included), and a sign-out of the watch alone would need a flag kept on it, which
-  the privacy text doesn't name. If the owner wants it, it comes with that flag and one more clause in the text.
-- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`; the
-  phone's `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`,
-  `settings.plan`, `settings.language_title`, `settings.version`).
+- **Sign out on this watch** (the owner's choice, 19 Nov, as Wear OS's; `WatchSignIn`, tested in `WatchSignInTests`): at the
+  foot of Account, asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats
+  and inbox."). It's on this watch alone: nothing is sent to the phone, and it works with the phone out of reach. The watch
+  forgets everything it holds: its Inbox (the ids taken away too) and what each page showed. It keeps one flag, an empty file
+  `tafs.signed_out_here` in its Application Support, and shows only "Signed out on this watch. Your phone stays signed in."
+  with **Sign in with your phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing. Sign in
+  takes the flag away and reads the phone again. The privacy text names the flag ("…and whether you signed out on the
+  watch", legal-i18n's clause), which ships with the switch.
+- **Words:** all already shared (`watch.calendar_today`, `watch.nothing_sent_until`, `watch.signed_in`, `watch.trust`,
+  `watch.sign_out_q`, `watch.sign_out_sub`, `watch.signed_out_here`; the phone's `calendar.today`, `calendar.previous_day`,
+  `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`, `settings.language_title`, `settings.version`,
+  `settings.sign_out`, `sign_in.with_phone`).
 
 **W2, Sent and Coach is answering** (`CoachModel.sendReviewed`, `CoachAsk`; tested in `CoachModelTests` and
 `WatchRelayTests`), the owner's Watch 5 test, as Wear OS's 0.4.1:
@@ -257,10 +263,35 @@ option A (19 Nov):
   with no amount in it (the Inbox's rule, `WatchAmount.strip`, at legal-i18n's ask: iOS keeps a notification until it's
   dismissed), then "Approve on your phone", or "The rest is on your phone." where it was cut or something was taken out. watchOS shows it on the
   wrist while the iPhone is locked; a tap opens Coach's chat on the iPhone.
-- **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing.
+- **Never twice:** an answer the watch read itself, or a watch still reading, posts nothing; nor does an iPhone with tafs
+  open on screen, where Coach's chat already shows the answer.
 - **Its limit:** iOS doesn't promise the background time, and an answer past the follow is only in Coach's chat. tafs
   cloud's push to the iPhone (piece d, step (vii)) lifts it.
 - **Words:** none new (`coach.title`, `watch.approve_on_phone`, `watch.more_on_phone`). No change to the privacy text.
+
+**W4, Ask Coach as one conversation** (`CoachModel.turns`, `CoachHome`, `CoachTurnRow`; tested in `CoachModelTests`), the
+owner-approved Watch Coach mockup, as Wear OS's:
+- **On Coach's home, above the microphone:** each thing said from this watch since the app was opened, oldest first, so the
+  page opens on the microphone with the newest turn just above it. A turn is when it was said, the person's words on the
+  right, then Coach's side on the left: "✓ Sent" until Coach starts, "Coach is answering" while its chat says so, then its
+  answer, which opens whole. VoiceOver hears Coach's side as "Coach: …".
+- **Closing the ask keeps the conversation,** and an answer on its way still lands in it (and in the Inbox, once). Words still
+  on their way to the phone stay in the review, so a failure can be sent again under the same id.
+- **Memory only:** the turns go when the app is put away and on Sign out on this watch. Nothing new is kept on the watch, so
+  the approved text's "It keeps only your Inbox" still holds. Until tafs cloud keeps the watch's conversation (W11), it's what
+  this watch said.
+- **Colours:** W7's: the person's words on `mineGround`, Coach's on `coachGround`, "Sent" in `done`, "Coach is answering" in `coach`.
+- **Words:** none new (`watch.sent`, `chat.taf_is_answering`, `coach.title`, `watch.more_on_phone`, `watch.approve_on_phone`).
+
+**W7, colour by meaning** (`WatchLook`, tested in `WatchLookTests`), the owner-approved Watch Coach mockup: one palette, Wear
+OS's `Look` value for value (#1451), so both watches read alike.
+- **Send and your words orange** (`send` #E8531D): the app's tint in v2, so the microphone, Send → and links. Your words in
+  the conversation on `mineGround` #3A2A22.
+- **Coach blue** (`coach` #7FA8FF, on `coachGround` #1E2231): Coach's answers, "Coach is answering", the Inbox's unread dots.
+- **What waits for you amber** (`held` #FFB547): Approve on your phone, and why a Send didn't go (the review's line).
+- **Done green** (`done` #3FCF7E): the Sent check.
+- **Delete, halt and sign out red** (`danger` #FF5A5F): the review's ✕, Halt now, Sign out, a halted taf's or day's line.
+- **Everything else** stays the system's grey. v1 is unchanged: it keeps the system's tint, and Needs you its own colours.
 
 ## Ask tafs: the plan for the Apple Watch (not built yet)
 
@@ -347,6 +378,8 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
 - **v2, behind its switch (step iv):** the Inbox's lines (each held call's taf and what it asks, never its amount, and
   Coach's answers, also with no amount) are kept on the watch until dismissed, only while it has a passcode, in a file with complete file
   protection, and cleared on sign-out.
+- **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
+  phone.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch

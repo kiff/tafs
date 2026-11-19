@@ -56,26 +56,11 @@ import androidx.wear.compose.material3.TextButton
 import androidx.wear.compose.material3.TextButtonDefaults
 import bot.tafs.watchlink.AskLine
 
-/**
+/*
  * The microphone's screens (docs/watch-wear.md, Ask tafs): the microphone first, listening, sending, sent, the result with Hear
  * and Reply, "not sure it arrived" with Retry, and a Halt until the phone confirms it. Every word is the watch's own, from
- * app/strings, or tafs cloud's as it comes; the glyphs are drawn and carry none.
+ * app/strings, or tafs cloud's as it comes; the glyphs are drawn and carry none. Their colours are Look's (Look.kt), by meaning.
  */
-internal object Look {
-  val amber = Color(0xFFFF8A1F)
-  val onAmber = Color(0xFF1A0E00)
-  val green = Color(0xFF2E9E5B)
-  val brand = listOf(Color(0xFFB35C00), Color(0xFFE8003A), Color(0xFF2A64F5))
-  val text = Color(0xFFF2F2F2)
-  val dim = Color(0xFFA8A8B0)
-  val faint = Color(0xFF6E6E78)
-  val surface = Color(0xFF1F1F24)
-  val surfaceHi = Color(0xFF2C2C33)
-  /** An Inbox line not read yet: the mockup's blue dot. */
-  val unread = Color(0xFF4D8DF0)
-  /** Recording, as mockup v2.1 draws it: the Stop button and "● Recording". */
-  val red = Color(0xFFE5303A)
-}
 
 // MARK: Glyphs, drawn with shapes
 
@@ -166,15 +151,15 @@ internal fun T(
   )
 }
 
-/** The big amber microphone: about 45 % of a 192 dp face. */
+/** The big microphone, in Send's orange (the person's own words): about 45 % of a 192 dp face. */
 @Composable
 internal fun BigMic(onClick: () -> Unit, size: Dp = 86.dp) {
   FilledIconButton(
     onClick = onClick,
     modifier = Modifier.size(size).semantics { contentDescription = Words.Watch.ask },
-    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Look.amber, contentColor = Look.onAmber),
+    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Look.send, contentColor = Look.onSend),
   ) {
-    Glyph(Modifier.size(size * 0.5f)) { micGlyph(Look.onAmber) }
+    Glyph(Modifier.size(size * 0.5f)) { micGlyph(Look.onSend) }
   }
 }
 
@@ -195,11 +180,11 @@ internal fun StatusLine(text: String, dot: Color?, color: Color = Look.dim, onCl
 }
 
 @Composable
-internal fun SpinnerAround(size: Dp, content: @Composable BoxScope.() -> Unit) {
+internal fun SpinnerAround(size: Dp, color: Color, content: @Composable BoxScope.() -> Unit) {
   Box(Modifier.size(size), contentAlignment = Alignment.Center) {
     CircularProgressIndicator(
       modifier = Modifier.fillMaxSize(),
-      colors = ProgressIndicatorDefaults.colors(indicatorColor = Look.amber, trackColor = Look.surfaceHi),
+      colors = ProgressIndicatorDefaults.colors(indicatorColor = color, trackColor = Look.neutral),
       strokeWidth = 4.dp,
     )
     content()
@@ -207,12 +192,12 @@ internal fun SpinnerAround(size: Dp, content: @Composable BoxScope.() -> Unit) {
 }
 
 @Composable
-private fun RoundAction(label: String, onClick: () -> Unit, glyph: DrawScope.() -> Unit) {
+private fun RoundAction(label: String, onClick: () -> Unit, color: Color, glyph: DrawScope.() -> Unit) {
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
     FilledIconButton(
       onClick = onClick,
       modifier = Modifier.size(48.dp).semantics { contentDescription = label },
-      colors = IconButtonDefaults.filledIconButtonColors(containerColor = Look.surfaceHi, contentColor = Look.amber),
+      colors = IconButtonDefaults.filledIconButtonColors(containerColor = Look.neutral, contentColor = color),
     ) { Glyph(Modifier.size(24.dp), glyph) }
     Spacer(Modifier.height(3.dp))
     T(label, 11.sp, Look.dim, lines = 1)
@@ -220,13 +205,13 @@ private fun RoundAction(label: String, onClick: () -> Unit, glyph: DrawScope.() 
 }
 
 @Composable
-internal fun AmberButton(label: String, onClick: () -> Unit, width: Dp = 116.dp) {
+internal fun SendButton(label: String, onClick: () -> Unit, width: Dp = 116.dp) {
   Button(
     onClick = onClick,
     modifier = Modifier.height(40.dp).width(width),
-    colors = ButtonDefaults.buttonColors(containerColor = Look.amber, contentColor = Look.onAmber),
+    colors = ButtonDefaults.buttonColors(containerColor = Look.send, contentColor = Look.onSend),
     contentPadding = PaddingValues(horizontal = 8.dp),
-  ) { T(label, 14.sp, Look.onAmber, FontWeight.SemiBold, Modifier.fillMaxWidth(), lines = 1) }
+  ) { T(label, 14.sp, Look.onSend, FontWeight.SemiBold, Modifier.fillMaxWidth(), lines = 1) }
 }
 
 @Composable
@@ -261,9 +246,9 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
     when (voice) {
       is WatchModel.Voice.Listening -> Listening(voice.heard, act.closeVoice)
       is WatchModel.Voice.Sending -> Centered {
-        SpinnerAround(64.dp) {
+        SpinnerAround(64.dp, Look.send) {
           Box(Modifier.size(44.dp).background(Look.surface, CircleShape), contentAlignment = Alignment.Center) {
-            Glyph(Modifier.size(24.dp)) { micGlyph(Look.amber) }
+            Glyph(Modifier.size(24.dp)) { micGlyph(Look.send) }
           }
         }
         Spacer(Modifier.height(12.dp))
@@ -275,8 +260,8 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
           kotlinx.coroutines.delay(WatchActivity.SENT_SHOWN_MS)
           act.closeVoice()
         }
-        Box(Modifier.size(60.dp).border(BorderStroke(3.dp, Look.amber), CircleShape)) {
-          Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.amber, 0.07f) }
+        Box(Modifier.size(60.dp).border(BorderStroke(3.dp, Look.done), CircleShape)) {
+          Glyph(Modifier.fillMaxSize()) { checkGlyph(Look.done, 0.07f) }
         }
         Spacer(Modifier.height(10.dp))
         T(Words.Watch.sent, 18.sp, Look.text, FontWeight.SemiBold, lines = 1)
@@ -286,8 +271,8 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
       is WatchModel.Voice.Unsure -> Centered {
         // v2 adds Keep for later; the face makes room for it without the mark.
         if (act.keep == null) {
-          Box(Modifier.size(34.dp).border(BorderStroke(2.5.dp, Look.amber), CircleShape), contentAlignment = Alignment.Center) {
-            Glyph(Modifier.size(18.dp)) { questionGlyph(Look.amber) }
+          Box(Modifier.size(34.dp).border(BorderStroke(2.5.dp, Look.held), CircleShape), contentAlignment = Alignment.Center) {
+            Glyph(Modifier.size(18.dp)) { questionGlyph(Look.held) }
           }
           Spacer(Modifier.height(8.dp))
         }
@@ -295,7 +280,7 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         Spacer(Modifier.height(3.dp))
         T(Words.Watch.checkPhone, 12.sp, Look.dim, modifier = Modifier.width(140.dp), lineHeight = 15.sp)
         Spacer(Modifier.height(10.dp))
-        AmberButton(Words.Watch.retry, act.retry)
+        SendButton(Words.Watch.retry, act.retry)
         act.keep?.let { QuietButton(Words.Watch.keepForLater, it) }
         QuietButton(Words.Common.cancel, act.closeVoice)
       }
@@ -307,7 +292,7 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
       }
       WatchModel.Voice.HeardNothing -> Centered(Modifier.clickable(onClick = act.listen)) {
         Box(Modifier.size(48.dp).background(Look.surface, CircleShape), contentAlignment = Alignment.Center) {
-          Glyph(Modifier.size(26.dp)) { micGlyph(Look.amber) }
+          Glyph(Modifier.size(26.dp)) { micGlyph(Look.send) }
         }
         Spacer(Modifier.height(10.dp))
         T(Words.Watch.didntCatch, 14.sp, Look.text, modifier = Modifier.width(150.dp), lines = 3, lineHeight = 17.sp)
@@ -336,16 +321,16 @@ private fun Listening(heard: String, cancel: () -> Unit) {
       Box(Modifier.size(86.dp), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
           val r = size.minDimension / 2
-          drawCircle(Look.amber.copy(alpha = 0.10f), radius = r)
-          drawCircle(Look.amber.copy(alpha = 0.16f), radius = r * 0.88f)
+          drawCircle(Look.send.copy(alpha = 0.10f), radius = r)
+          drawCircle(Look.send.copy(alpha = 0.16f), radius = r * 0.88f)
           val ringR = r * 0.74f
           drawCircle(Brush.sweepGradient(Look.brand + Look.brand.first(), center = center), radius = ringR, style = Stroke(width = r * 0.11f))
           drawCircle(Color(0xFF141416), radius = ringR - r * 0.055f)
         }
-        Glyph(Modifier.size(42.dp)) { micGlyph(Look.amber) }
+        Glyph(Modifier.size(42.dp)) { micGlyph(Look.send) }
       }
       Spacer(Modifier.height(4.dp))
-      T(heard, 15.sp, Look.text, FontWeight.Medium, Modifier.width(150.dp), lines = 3, lineHeight = 18.sp)
+      T(heard, 15.sp, Look.send, FontWeight.Medium, Modifier.width(150.dp), lines = 3, lineHeight = 18.sp)
     }
     Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) { QuietButton(Words.Common.cancel, cancel) }
   }
@@ -362,26 +347,27 @@ internal fun stateLine(ask: AskLine): String = listOfNotNull(ask.tafName, ask.wo
 @Composable
 internal fun ResultScreen(ask: AskLine, act: Actions, timing: String? = null) {
   Box(Modifier.fillMaxSize().background(Color.Black)) {
-    Column(
-      Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(top = 22.dp, bottom = 28.dp)
-        .testTag(RESULT_SCREEN),
+    // A ScalingLazyColumn, so the crown or bezel scrolls it as a swipe does (a plain scrolling column takes no rotary input).
+    androidx.wear.compose.foundation.lazy.ScalingLazyColumn(
+      Modifier.fillMaxSize().testTag(RESULT_SCREEN),
+      state = androidx.wear.compose.foundation.lazy.rememberScalingLazyListState(initialCenterItemIndex = 0),
+      contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 22.dp, bottom = 28.dp),
+      autoCentering = null,
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-      T(ask.tafName ?: "", 12.sp, Look.amber, FontWeight.Medium, lines = 1)
-      Spacer(Modifier.height(4.dp))
+      item { T(ask.tafName ?: "", 12.sp, Look.coach, FontWeight.Medium, lines = 1) }
       // tafs cloud's checked line (up to 140 characters); with none, its word for the state. Whole, however many lines.
-      T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
-      Spacer(Modifier.height(10.dp))
-      Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        RoundAction(Words.Watch.hear, { act.hear(ask) }) { speakerGlyph(Look.amber) }
-        RoundAction(Words.Watch.reply, { act.reply(ask) }) { micGlyph(Look.amber, 0.95f) }
+      item {
+        T((ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone }, 15.sp, Look.onCoachGround, FontWeight.SemiBold, Modifier.width(156.dp), lines = Int.MAX_VALUE, lineHeight = 18.sp)
       }
-      timing?.let {
-        Spacer(Modifier.height(4.dp))
-        T(it, 8.sp, Look.faint, modifier = Modifier.width(140.dp), lines = 2)
+      item {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+          RoundAction(Words.Watch.hear, { act.hear(ask) }, Look.coach) { speakerGlyph(Look.coach) }
+          RoundAction(Words.Watch.reply, { act.reply(ask) }, Look.send) { micGlyph(Look.send, 0.95f) }
+        }
       }
-      Spacer(Modifier.height(6.dp))
-      QuietButton(Words.Common.close, act.closeResult)
+      timing?.let { item { T(it, 8.sp, Look.faint, modifier = Modifier.width(140.dp), lines = 2) } }
+      item { QuietButton(Words.Common.close, act.closeResult) }
     }
   }
 }
@@ -392,8 +378,8 @@ internal const val RESULT_SCREEN = "result-screen"
 @Composable
 internal fun HaltingScreen(taf: String?) {
   Centered(Modifier.background(Color.Black)) {
-    SpinnerAround(52.dp) {
-      Canvas(Modifier.size(16.dp)) { drawRoundRect(Look.amber, cornerRadius = CornerRadius(3.dp.toPx())) }
+    SpinnerAround(52.dp, Look.danger) {
+      Canvas(Modifier.size(16.dp)) { drawRoundRect(Look.danger, cornerRadius = CornerRadius(3.dp.toPx())) }
     }
     Spacer(Modifier.height(10.dp))
     T(if (taf.isNullOrEmpty()) Words.Watch.haltingAll else Words.Watch.halting(taf), 15.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 2)
@@ -405,8 +391,8 @@ internal fun HaltingScreen(taf: String?) {
 internal fun DoneScreen(words: String, dismiss: () -> Unit) {
   Centered(Modifier.background(Color.Black).clickable(onClick = dismiss).semantics { role = Role.Button }) {
     Canvas(Modifier.size(56.dp)) {
-      drawCircle(Look.green)
-      checkGlyph(Color.White, 0.08f)
+      drawCircle(Look.done)
+      checkGlyph(Look.onDone, 0.08f)
     }
     Spacer(Modifier.height(10.dp))
     T(words, 16.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 2)

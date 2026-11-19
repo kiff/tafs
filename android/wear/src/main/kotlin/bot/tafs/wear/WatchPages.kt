@@ -98,6 +98,8 @@ internal fun WatchPages(
   calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
   /** Account's read from the phone (step vi). */
   account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
+  /** Today's conversation with Coach from this watch, oldest first (W4). */
+  thread: List<Pair<WatchModel.Said, AskLine>> = emptyList(),
 ) {
   if (signedOutHere) return SignedOutHereScreen(act)
   // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
@@ -156,13 +158,15 @@ internal fun WatchPages(
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
       ScalingLazyColumn(
         Modifier.fillMaxWidth(),
-        state = rememberScalingLazyListState(initialCenterItemIndex = 0),
+        // Coach's page opens on the microphone, with the conversation's newest turn just above it (W4); others at the top.
+        state = rememberScalingLazyListState(initialCenterItemIndex = if (pages[i] == Page.Coach) thread.size else 0),
         verticalArrangement = Arrangement.spacedBy(4.dp),
         // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
         contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
+          coachThread(thread, act)
           coachHome(shown, working, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
@@ -208,12 +212,12 @@ private fun ScalingLazyListScope.coachHome(
   openMenu: () -> Unit,
   openQuick: () -> Unit,
 ) {
-  item { AskHome(working.map { stateLine(it) to Look.brand[2] }, act.listen, label = Words.Coach.ask) }
+  item { AskHome(working.map { stateLine(it) to Look.coach }, act.listen, label = Words.Coach.ask) }
   // Typed words and quick replies go to the same review as words heard.
   item {
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-      Button(onClick = act.type, modifier = Modifier.weight(1f)) { Text(Words.Watch.type, maxLines = 1) }
-      Button(onClick = openQuick, modifier = Modifier.weight(1f)) { Text(Words.Watch.quickReply, maxLines = 2) }
+      Button(onClick = act.type, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.type, maxLines = 1) }
+      Button(onClick = openQuick, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.quickReply, maxLines = 2) }
     }
   }
   // A message kept for later: its words, that it's sent once the phone is in reach, and Delete.
@@ -221,9 +225,9 @@ private fun ScalingLazyListScope.coachHome(
     item {
       Card(onClick = {}, modifier = Modifier.fillMaxWidth()) {
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-          Text(draft.text, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+          Text(draft.text, color = Look.send, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
           Text(Words.Watch.keptToSend, style = MaterialTheme.typography.bodySmall)
-          Button(onClick = act.deleteKept, modifier = Modifier.fillMaxWidth()) { Text(Words.Chat.delete) }
+          Button(onClick = act.deleteKept, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton(onCard = true)) { Text(Words.Chat.delete) }
         }
       }
     }
@@ -233,12 +237,12 @@ private fun ScalingLazyListScope.coachHome(
   } else {
     // Read means opened, on this watch (step iv); when the Inbox can't be kept, what waits now.
     val count = inbox?.count { !it.read } ?: unread(shown, ready)
-    if (count > 0) item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.inboxUnread(count)) } }
+    if (count > 0) item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.inboxUnread(count)) } }
   }
   item {
     Text(Words.Watch.voiceTextOnly, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
   }
-  item { Button(onClick = openMenu, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.menu) } }
+  item { Button(onClick = openMenu, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.menu) } }
 }
 
 /** A page's lines before the phone has answered, or when it can't, as v1 says them. True once [shown] is the phone's read. */
@@ -248,10 +252,10 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
     WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
     WatchModel.Shown.PhoneUnreachable -> {
       line(Words.Watch.phoneNotReachable)
-      item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.tryAgain) } }
+      item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.Shown.OpenOnPhone -> item {
-      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
     }
     is WatchModel.Shown.Read -> return true
   }
@@ -287,9 +291,10 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: Wa
       Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
           if (!entry.read) {
-            androidx.compose.foundation.Canvas(Modifier.size(6.dp).testTag(UNREAD_DOT + entry.id)) { drawCircle(Look.unread) }
+            androidx.compose.foundation.Canvas(Modifier.size(6.dp).testTag(UNREAD_DOT + entry.id)) { drawCircle(Look.coach) }
           }
-          entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 1) }
+          // Its taf, by what it is: a held call amber, an answer in Coach's blue.
+          entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = if (entry.kind == InboxItem.Kind.HELD) Look.held else Look.coach, maxLines = 1) }
         }
         // An answer that was only an amount is kept blank (no amount is kept on the watch): it says the rest is on the phone.
         Text(entry.line.ifBlank { Words.Watch.moreOnPhone }, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -300,11 +305,11 @@ private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: Wa
             call.amount?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
           }
         }
-        Button(onClick = { act.dismissItem(entry.id) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.dismiss) }
+        Button(onClick = { act.dismissItem(entry.id) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton(onCard = true)) { Text(Words.Watch.dismiss) }
       }
     }
   }
-  if (inbox.any { it.read }) item { Button(onClick = act.clearRead, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.clearRead) } }
+  if (inbox.any { it.read }) item { Button(onClick = act.clearRead, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.clearRead) } }
 }
 
 /** Test tags for an Inbox line and its unread dot, by the line's id. */
@@ -318,7 +323,7 @@ private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read, act: Act
     Card(onClick = { act.openTaf(taf.tafId) }, modifier = Modifier.fillMaxWidth()) {
       Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(taf.name, style = MaterialTheme.typography.titleSmall)
-        Text(taf.state, style = MaterialTheme.typography.bodySmall)
+        Text(taf.state, style = MaterialTheme.typography.bodySmall, color = if (taf.halted) Look.danger else Look.dim)
       }
     }
   }
@@ -330,7 +335,7 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
   if (brief != null) {
     briefItems(brief, shown, act)
   } else {
-    item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
+    item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
   }
 }
 
@@ -345,11 +350,11 @@ private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions,
     item { ListHeader { Text(Words.Watch.menu) } }
     // A Halt confirmed from here comes back here: what came of it, "set a screen lock" included, is said where it was asked.
     outcome?.let { item { OutcomeCard(it, act) } }
-    for (page in pages) item { Button(onClick = { open(page) }, modifier = Modifier.fillMaxWidth()) { Text(page.title) } }
+    for (page in pages) item { Button(onClick = { open(page) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(page.title) } }
     if (tafs != null && !tafs.allHalted && tafs.tafs.any { !it.halted }) {
       item { Spacer(Modifier.height(16.dp)) }
-      item { Button(onClick = act.pickToHalt, modifier = Modifier.fillMaxWidth()) { Text(Words.Taf.Halt.title) } }
+      item { Button(onClick = act.pickToHalt, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton()) { Text(Words.Taf.Halt.title) } }
     }
-    item { Button(onClick = close, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) } }
+    item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.close) } }
   }
 }

@@ -49,8 +49,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   new approval with the grant and the draft. The draft is the agreed rules,
   line for line, never merged ("€50 a day each" stays a line per
   tool, not €200 for all). A limit it can't hold as agreed is a changed rule:
-  show it in a new rules notice and get it agreed first. Each tool's on_exceed is its agreed line's: owner only where it
-  says the owner is asked, else refuse. Every tool the taf gets goes on
+  show it in a new rules notice and get it agreed first. Each tool's on_exceed is its rule's over (ask: owner), and its line
+  says it, a read's too. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
   read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the

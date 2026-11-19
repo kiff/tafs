@@ -23,7 +23,8 @@ struct CoachAsk: View {
                 }
             }
         }
-        .onDisappear { model.leave() }
+        // Closing the ask keeps the conversation and any answer on its way (W4); the app put away forgets it (`leave`).
+        .onDisappear { model.closeAsk() }
     }
 
     /// The words, by voice or by hand: watchOS's own input, which offers dictation first. There's no speech recognizer a
@@ -52,7 +53,8 @@ struct CoachAsk: View {
             Text(verbatim: model.draft)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if case .failed(let why) = model.state {
-                Text(why).font(.footnote)
+                // Not sent, or not sure it arrived: what waits for you, in amber (W7).
+                Text(why).font(.footnote).foregroundStyle(WatchLook.held)
             }
         }
         .navigationTitle(Words.Watch.review)
@@ -62,6 +64,7 @@ struct CoachAsk: View {
                 Button(role: .destructive) { model.delete() } label: {
                     Label(Words.Chat.delete, systemImage: "xmark").labelStyle(.iconOnly)
                 }
+                .tint(WatchLook.danger)
                 .disabled(model.state == .sending)
                 // The system's input again; new words take these words' place, and nothing is sent until Send.
                 TextFieldLink(prompt: Text(Words.Watch.typeHint)) {
@@ -79,7 +82,7 @@ struct CoachAsk: View {
                         Label(Words.Common.send, systemImage: "arrow.right").labelStyle(.iconOnly)
                     }
                 }
-                .tint(.accentColor)
+                .tint(WatchLook.send)
                 .disabled(!model.canSend)
             }
         }
@@ -96,7 +99,7 @@ struct CoachAsk: View {
                         .multilineTextAlignment(.trailing)
                     Label(Words.Watch.sent, systemImage: "checkmark")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(WatchLook.done)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 if model.state == .answering {
@@ -105,6 +108,7 @@ struct CoachAsk: View {
                             .frame(width: 18, height: 18)
                         Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title))
                             .font(.footnote)
+                            .foregroundStyle(WatchLook.coach)
                     }
                     .accessibilityElement(children: .combine)
                 }
@@ -115,6 +119,7 @@ struct CoachAsk: View {
                     if answer?.approveOnPhone == true {
                         Label(Words.Watch.approveOnPhone, systemImage: "iphone")
                             .font(.footnote)
+                            .foregroundStyle(WatchLook.held)
                     }
                     if answer == nil || answer?.more == true {
                         Text(Words.Watch.moreOnPhone)

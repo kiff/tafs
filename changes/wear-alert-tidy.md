@@ -1,0 +1,1 @@
+- **Wear OS: the answer's alert adds "The rest is on your phone." only when an amount was taken out**, never for spacing or a trailing colon, and otherwise shows the answer as written.

@@ -122,7 +122,7 @@ struct TafPageScreen: View {
                     Text(page.name).font(.headline)
                     Text(page.state)
                         .font(.footnote)
-                        .foregroundStyle(page.halted ? Color.red : Color.secondary)
+                        .foregroundStyle(page.halted ? WatchLook.danger : Color.secondary)
                 }
                 Section(Words.Watch.whatItDoes) {
                     Text(page.job).font(.footnote)

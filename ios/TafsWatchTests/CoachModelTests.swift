@@ -294,6 +294,86 @@ final class CoachModelTests: XCTestCase {
         XCTAssertFalse(older.reviewing)
     }
 
+    // MARK: W4, Ask Coach as one conversation
+
+    /// Each Send is a turn, oldest first: what was said and when, then Sent, Coach is answering and the answer.
+    func testTheConversationKeepsEachTurnAndItsAnswer() async {
+        let ivo = WatchCoachAnswer(text: "Ivo is paused until Monday.", more: false, approveOnPhone: false)
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        var seen: [CoachModel.Turn.Answer] = []
+        phone.onRead = { seen.append(model.turns.last!.answer) }
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(model.turns.map(\.said), ["Pause Rae"])
+        XCTAssertEqual(seen, [.sent], "Sent before Coach answers")
+        XCTAssertEqual(model.turns[0].answer, .answered(Self.rae))
+        XCTAssertEqual(model.turns[0].at, now)
+        model.closeAsk()
+        phone.reads = [WatchReply(.ok, answering: true), WatchReply(.ok, coach: ivo, answering: false)]
+        seen = []
+        model.review("Pause Ivo")
+        await model.sendReviewed()
+        XCTAssertEqual(model.turns.map(\.said), ["Pause Rae", "Pause Ivo"], "oldest first")
+        XCTAssertEqual(seen, [.sent, .answering])
+        XCTAssertEqual(model.turns.map(\.answer), [.answered(Self.rae), .answered(ivo)])
+    }
+
+    /// Closing the ask while Coach is at it keeps the conversation, and the answer still lands in it and in the Inbox.
+    func testClosingTheAskKeepsTheAnswerOnItsWay() async {
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, answering: true), WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        var kept: [WatchCoachAnswer?] = []
+        model.onAnswer = { answer, _ in kept.append(answer) }
+        var reads = 0
+        phone.onRead = {
+            reads += 1
+            if reads == 2 { model.closeAsk() }
+        }
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(model.turns.map(\.answer), [.answered(Self.rae)])
+        XCTAssertEqual(kept, [Self.rae])
+        model.closeAsk()
+        XCTAssertEqual(model.state, .writing, "the next ask starts afresh")
+        XCTAssertNil(model.asked)
+        XCTAssertEqual(model.turns.count, 1, "the conversation stays")
+    }
+
+    /// Closing the ask while the words are still on their way to the phone keeps them, so a failure can be sent again.
+    func testClosingTheAskWhileSendingKeepsTheWords() async {
+        let phone = HeldPhone()
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        model.review("Pause Rae")
+        let sending = Task { await model.sendReviewed() }
+        while phone.held == nil { await Task.yield() }
+        model.closeAsk()
+        phone.answer(nil)
+        await sending.value
+        XCTAssertEqual(model.state, .failed(Words.Watch.phoneNotReachable))
+        XCTAssertEqual(model.draft, "Pause Rae")
+        XCTAssertTrue(model.reviewing)
+        XCTAssertTrue(model.turns.isEmpty, "nothing was sent")
+    }
+
+    /// Put away or signed out: the conversation goes. Nothing of it was ever kept on the watch.
+    func testLeavingForgetsTheConversation() async {
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        model.review("Pause Rae")
+        await model.sendReviewed()
+        XCTAssertEqual(model.turns.count, 1)
+        model.leave()
+        XCTAssertTrue(model.turns.isEmpty)
+    }
+
+    /// Coach's side of a turn: its words, else where the rest is.
+    func testATurnsLineIsCoachsWordsElseWhereTheRestIs() {
+        XCTAssertEqual(CoachTurnRow.line(Self.rae), "Rae is paused.")
+        XCTAssertEqual(CoachTurnRow.line(nil), Words.Watch.moreOnPhone)
+        XCTAssertEqual(CoachTurnRow.line(WatchCoachAnswer(text: "", more: false, approveOnPhone: true)), Words.Watch.approveOnPhone)
+    }
+
     /// A phone that refuses one kind, as one from before it would, and answers the rest.
     private final class V1Phone: PhoneAsking {
         var asked: [WatchRequest] = []

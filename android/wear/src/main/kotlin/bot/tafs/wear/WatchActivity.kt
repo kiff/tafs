@@ -115,13 +115,14 @@ class WatchActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MaterialTheme {
+      WatchTheme {
         val shown by model.shown.collectAsState()
         val outcome by model.outcome.collectAsState()
         val confirmingHaltAll by model.confirmingHaltAll.collectAsState()
         val voice by model.voice.collectAsState()
         val result by model.result.collectAsState()
         val asks by model.asks.collectAsState()
+        val said by model.said.collectAsState()
         val kept by model.kept.collectAsState()
         val taf by model.taf.collectAsState()
         val haltPick by model.haltPick.collectAsState()
@@ -198,13 +199,14 @@ class WatchActivity : ComponentActivity() {
         val probe by listener.probe.collectAsState()
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
+        val thread = said.let { asks.let { model.thread() } }
         val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
             probe = if (BuildConfig.TIMING) probe else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
-            signedOutHere = signedOutHere, calendar = calendar, account = account)
+            signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
@@ -406,10 +408,10 @@ internal fun WatchScreen(
       WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
       WatchModel.Shown.PhoneUnreachable -> {
         line(Words.Watch.phoneNotReachable)
-        item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.tryAgain) } }
+        item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
       }
       WatchModel.Shown.OpenOnPhone -> item {
-        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) }
       }
       is WatchModel.Shown.Read -> {
         val brief = shown.brief
@@ -417,7 +419,7 @@ internal fun WatchScreen(
           // Your brief, in Needs you's place (the switch on, and the account has one).
           briefItems(brief, shown, act)
         } else {
-          item { ListHeader { Text(Words.NeedsYou.title, color = Look.amber) } }
+          item { ListHeader { Text(Words.NeedsYou.title, color = Look.held) } }
           // Nothing waits: the owner's all-clear (board 12) above Needs you's own words.
           if (shown.needsYou.allClear) item { AllClearIllustration() }
           line(shown.needsYou.words)
@@ -432,12 +434,12 @@ internal fun WatchScreen(
               Card(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                   Text(Words.HaltAll.title, style = MaterialTheme.typography.titleSmall)
-                  Button(onClick = act.confirmHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
-                  Button(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) }
+                  Button(onClick = act.confirmHaltAll, modifier = Modifier.fillMaxWidth(), colors = dangerButton()) { Text(Words.Halt.allNow) }
+                  Button(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth(), colors = neutralButton(onCard = true)) { Text(Words.Common.cancel) }
                 }
               }
             } else {
-              Button(onClick = act.askHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
+              Button(onClick = act.askHaltAll, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton()) { Text(Words.Halt.allNow) }
             }
           }
         }
@@ -449,13 +451,14 @@ internal fun WatchScreen(
 
 /**
  * The lines under the microphone: each ask at work or ready, by its taf and tafs cloud's word, when there are one or two; past
- * that, how many; then Needs you's count, in amber, when something waits.
+ * that, how many, at work with Coach's blue dot and ready with the green one; then Needs you's count, in amber, when something
+ * waits.
  */
 internal fun status(shown: WatchModel.Shown, working: List<AskLine>, ready: List<AskLine>): List<Pair<String, androidx.compose.ui.graphics.Color?>> {
   val lines = mutableListOf<Pair<String, androidx.compose.ui.graphics.Color?>>()
   if (working.size + ready.size <= 2) {
-    working.forEach { lines += stateLine(it) to Look.brand[2] }
-    ready.forEach { lines += stateLine(it) to Look.green }
+    working.forEach { lines += stateLine(it) to Look.coach }
+    ready.forEach { lines += stateLine(it) to Look.done }
   } else {
     lines += listOfNotNull(
       working.size.takeIf { it > 0 }?.let(Words.Watch::workingCount),
@@ -463,7 +466,7 @@ internal fun status(shown: WatchModel.Shown, working: List<AskLine>, ready: List
     ).joinToString(" · ") to null
   }
   val count = (shown as? WatchModel.Shown.Read)?.needsYou?.count ?: 0
-  if (count > 0) lines += Words.Watch.needsYouCount(count) to Look.amber
+  if (count > 0) lines += Words.Watch.needsYouCount(count) to Look.held
   return lines
 }
 
@@ -513,9 +516,9 @@ private fun DecisionCard(decision: DecisionLine, urgentWord: String?, refuseHold
       decision.deadline?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
       decision.cantWait?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
       if (refuseHold != null) {
-        Button(onClick = { act.refuse(refuseHold) }, modifier = Modifier.fillMaxWidth()) { Text(Words.NeedsYou.refuse) }
+        Button(onClick = { act.refuse(refuseHold) }, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton(onCard = true)) { Text(Words.NeedsYou.refuse) }
       }
-      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton(onCard = true)) { Text(Words.Watch.openOnPhone) }
     }
   }
 }
@@ -540,7 +543,7 @@ internal fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
         is WatchModel.Outcome.Several -> for ((taf, each) in outcome.each) Text(listOfNotNull(taf, wordsOf(each)).joinToString(" · "))
       }
       if (outcome !is WatchModel.Outcome.Done && outcome !is WatchModel.Outcome.AlreadyAnswered && (outcome as? WatchModel.Outcome.Several)?.done != true) {
-        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+        Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = neutralButton(onCard = true)) { Text(Words.Watch.openOnPhone) }
       }
     }
   }
@@ -559,9 +562,9 @@ internal fun HeldCallCard(call: HeldLine, act: Actions) {
       call.amount?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
       call.reason?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
       if (call.refusable) {
-        Button(onClick = { act.refuse(call.holdId) }, modifier = Modifier.fillMaxWidth()) { Text(Words.NeedsYou.refuse) }
+        Button(onClick = { act.refuse(call.holdId) }, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton(onCard = true)) { Text(Words.NeedsYou.refuse) }
       }
-      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.approveOnPhone) }
+      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth(), colors = heldButton()) { Text(Words.Watch.approveOnPhone) }
     }
   }
 }
@@ -571,6 +574,6 @@ private fun TafRow(taf: TafLine, act: Actions) {
   Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Text(taf.name, style = MaterialTheme.typography.titleSmall)
     Text(taf.state, style = MaterialTheme.typography.bodySmall)
-    if (!taf.halted) Button(onClick = { act.halt(taf.tafId) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.now) }
+    if (!taf.halted) Button(onClick = { act.halt(taf.tafId) }, modifier = Modifier.fillMaxWidth(), colors = dangerQuietButton()) { Text(Words.Halt.now) }
   }
 }

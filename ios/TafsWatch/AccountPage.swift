@@ -73,12 +73,16 @@ extension TafsModel {
     }
 }
 
-/// Account: Signed in (the email and the account's name), Plan, the watch's language and version, and the trust line.
+/// Account: Signed in (the email and the account's name), Plan, the watch's language and version, Sign out on this watch
+/// (asked once more), and the trust line.
 struct WatchAccountScreen: View {
     @StateObject private var model: AccountPageModel
+    private let signOut: () -> Void
+    @State private var confirming = false
 
-    init(model: @autoclosure @escaping () -> AccountPageModel) {
+    init(model: @autoclosure @escaping () -> AccountPageModel, signOut: @escaping () -> Void = {}) {
         _model = StateObject(wrappedValue: model())
+        self.signOut = signOut
     }
 
     var body: some View {
@@ -110,12 +114,20 @@ struct WatchAccountScreen: View {
                     LabeledContent(Words.Settings.languageTitle, value: AccountPageModel.language())
                     LabeledContent(Words.Settings.version, value: AccountPageModel.version())
                 }
+                // The watch's own: it works with the phone out of reach too.
+                Button(Words.Settings.signOut, role: .destructive) { confirming = true }
+                    .tint(WatchLook.danger)
                 Text(Words.Watch.trust)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .listRowBackground(Color.clear)
             }
             .navigationTitle(Words.Settings.title)
+            .confirmationDialog(Words.Watch.signOutQ, isPresented: $confirming, titleVisibility: .visible) {
+                Button(Words.Settings.signOut, role: .destructive) { signOut() }
+            } message: {
+                Text(Words.Watch.signOutSub)
+            }
         }
         .task { await model.load() }
         .onDisappear { model.leave() }
