@@ -89,6 +89,18 @@ final class InboxModelTests: XCTestCase {
         XCTAssertEqual(InboxLineScreen.title(inbox.lines[0]), Words.Coach.title)
     }
 
+    /// An answer taken away keeps no id: it's put once, by its message's id, so nothing would bring it back (dev-android's read).
+    func testADismissedAnswerKeepsNoID() {
+        let store = Kept()
+        let inbox = model(store)
+        inbox.answered(WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false), message: "m_1")
+        inbox.answered(nil, message: "m_2")
+        inbox.dismiss("answer:m_1")
+        inbox.clearRead()
+        XCTAssertEqual(inbox.lines, [])
+        XCTAssertEqual(store.gone, [])
+    }
+
     /// With no passcode nothing is kept or added, and the lines go when the app is opened or put away; the ids taken away
     /// stay, so a dismissed line doesn't come back unread once a passcode is set again.
     func testNoPasscodeKeepsNothing() {

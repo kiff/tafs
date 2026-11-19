@@ -141,7 +141,7 @@ final class InboxModel: ObservableObject {
             for call in page.calls {
                 put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: call.what, at: clock()))
             }
-            prune(kind: .held, listed: Set(page.calls.map { InboxLine.heldID($0.id) }))
+            prune(listed: Set(page.calls.map { InboxLine.heldID($0.id) }))
         case .signedOut:
             clear()
         case .loading, .unreachable, .failed:
@@ -200,15 +200,18 @@ final class InboxModel: ObservableObject {
         }
     }
 
+    /// Only a held call's id is kept once taken away: the phone may list the call again. Coach's answer is put once, by its
+    /// message's id, so its id is never needed again.
     private func takeAway(_ ids: [String]) {
-        dismissed.formUnion(ids)
+        let held = ids.filter { $0.hasPrefix(InboxLine.heldID("")) }
+        guard !held.isEmpty else { return }
+        dismissed.formUnion(held)
         store.writeDismissed(dismissed)
     }
 
-    /// An id taken away goes once the phone no longer lists it, so the list of them never grows.
-    private func prune(kind: InboxLine.Kind, listed: Set<String>) {
-        let prefix = kind == .held ? InboxLine.heldID("") : InboxLine.answerID("")
-        let still = dismissed.filter { !$0.hasPrefix(prefix) || listed.contains($0) }
+    /// A held call's id taken away goes once the phone no longer lists it, so the list of them never grows.
+    private func prune(listed: Set<String>) {
+        let still = dismissed.filter { listed.contains($0) }
         guard still != dismissed else { return }
         dismissed = still
         store.writeDismissed(dismissed)
