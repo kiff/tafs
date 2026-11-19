@@ -218,6 +218,16 @@ class TabletAccessibilityTest {
     total = bot.tafs.app.model.CardTotal(Money(200000, "EUR", 2), Money(4000, "EUR", 2), bot.tafs.app.model.Window.day),
   )
 
+  /** A Card bar's small Card carries the Card's mark, never an empty coloured block, and its name reads on up to two lines. */
+  @Test fun aCardBarsSmallCardHasItsMark() {
+    words()
+    val long = card.copy(title = "Lister vos litiges Stripe (mode test) pour la boutique de Lyon")
+    compose.setContent { Column(Modifier.width(320.dp)) { bot.tafs.app.views.CardBar(long, 3, androidx.compose.ui.graphics.Color.Blue) {} } }
+    compose.waitForIdle()
+    compose.onNode(hasTestTag(bot.tafs.app.views.CARD_BAR_MARK), useUnmergedTree = true).assertExists()
+    compose.onNode(hasText(long.title, substring = true), useUnmergedTree = true).assertExists()
+  }
+
   /** The usual face, the face at twice the text size and a stack at twice: each Card's face, and the stack's foot below its front Card's. */
   private fun cards(): Triple<androidx.compose.ui.geometry.Rect, androidx.compose.ui.geometry.Rect, Float> {
     words()

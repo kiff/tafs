@@ -1,0 +1,1 @@
+- **Android: a taf's Card bar shows a small Card with its mark**, never an empty coloured block, and its name on up to two lines, as on iPhone and iPad ([android-app.md](docs/android-app.md)).
