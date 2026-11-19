@@ -63,9 +63,10 @@ enum WatchRelay {
         return words.trimmingCharacters(in: edges)
     }
 
-    /// A currency as titles write it in tafs' languages: a sign, złoty, crowns, Swiss francs, a code, or a word.
-    private static let currency =
-        #"(?:[€$£¥₹]|\bzł|\bkr\b|\bFr\.|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK)\b|\b(?:euros?|dollars?|pounds?|francs?)\b)"#
+    /// A currency as titles write it in tafs' languages: a sign, złoty, crowns, Swiss francs, a code, or a word, written
+    /// apart or right after its figure ("150zł", "150EUR"), and never inside a longer word ("EUROPE").
+    private static let currency = #"(?:[€$£¥₹]|(?<!\p{L})(?:zł|kr|Fr\.|EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK"#
+        + #"|euros?|dollars?|dolar(?:y|ów)?|pounds?|francs?|franken|złot(?:y|e|ych))(?!\p{L}))"#
     /// A figure grouped by spaces in threes: "1 250,50".
     private static let spacedFigure = #"(?<![\d.,'’])\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?(?![\d])"#
     /// A figure with commas, points or the Swiss apostrophe: "150", "150.00", "1,234.56", "1.234,56", "1'234.50".
@@ -92,7 +93,7 @@ enum WatchRelay {
             let short = String(fraction.reversed().drop { $0 == "0" }.reversed())
             figure += "[.,](?:" + Set([fraction, short]).sorted { $0.count > $1.count }.joined(separator: "|") + ")"
         }
-        let unit = amount.currency.map { "(?:" + currency + #"|\b"# + NSRegularExpression.escapedPattern(for: $0) + #"\b)"# }
+        let unit = amount.currency.map { "(?:" + currency + #"|(?<!\p{L})"# + NSRegularExpression.escapedPattern(for: $0) + #"(?!\p{L}))"# }
             ?? currency
         // Not the start of a longer figure either: "150.5" isn't 150.00, and stays whole (as on Android).
         return "(?:" + unit + #"\s?)?(?<![\d.,'’])"# + figure + #"(?![.,]?\d)(?:\s?"# + unit + ")?"
