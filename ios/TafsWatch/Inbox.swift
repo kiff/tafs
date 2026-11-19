@@ -16,7 +16,7 @@ struct InboxLine: Codable, Equatable, Identifiable, Sendable {
     var kind: Kind
     /// The taf, as the phone named it; none for Coach's answer.
     var title: String?
-    /// Coach's words, or what the held call asks with its amount, in the phone's words.
+    /// Coach's words, or what the held call asks without its amount, in the phone's words: no amount is kept on the watch.
     var line: String
     /// When the watch first saw it, for the order: newest first.
     var at: Date
@@ -152,7 +152,7 @@ final class InboxModel: ObservableObject {
         switch state {
         case .loaded(let page):
             for call in page.calls {
-                put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: call.what, at: clock()))
+                put(InboxLine(id: InboxLine.heldID(call.id), kind: .held, title: call.taf, line: InboxModel.line(call), at: clock()))
             }
             prune(listed: Set(page.calls.map { InboxLine.heldID($0.id) }))
         case .signedOut:
@@ -160,6 +160,12 @@ final class InboxModel: ObservableObject {
         case .loading, .unreachable, .failed:
             break
         }
+    }
+
+    /// A held call's line as the Inbox keeps it: what it asks, never its amount (the PM's ruling, as Wear OS). A phone from
+    /// before `summary` names none, and the line is Needs you's own title.
+    static func line(_ call: WatchNeedsYou.Call) -> String {
+        call.summary.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.NeedsYou.title
     }
 
     /// Coach answered words sent from this watch: a line, read already, since the person saw it as it came.

@@ -24,8 +24,9 @@ final class InboxModelTests: XCTestCase {
         var isSecure: Bool { on }
     }
 
-    private func call(_ id: String, what: String = "Refund order 4502, €150.00") -> WatchNeedsYou.Call {
-        WatchNeedsYou.Call(id: id, taf: "Rae", what: what, reason: "Over the limit", answerBy: "10:51")
+    private func call(_ id: String, summary: String? = "Refund order 4502", amount: String = "€150.00") -> WatchNeedsYou.Call {
+        WatchNeedsYou.Call(id: id, taf: "Rae", what: [summary, amount].compactMap { $0 }.joined(separator: ", "), summary: summary,
+                           reason: "Over the limit", answerBy: "10:51")
     }
 
     private func heard(_ calls: [WatchNeedsYou.Call]) -> NeedsYouModel.State {
@@ -42,12 +43,27 @@ final class InboxModelTests: XCTestCase {
         let inbox = model(store)
         inbox.heard(heard([call("h_1")]))
         now += 60
-        inbox.heard(heard([call("h_1", what: "Refund order 4502, €140.00"), call("h_2")]))
+        inbox.heard(heard([call("h_1", summary: "Refund order 4503"), call("h_2")]))
         XCTAssertEqual(inbox.lines.map(\.id), ["held:h_2", "held:h_1"])
-        XCTAssertEqual(inbox.lines.last?.line, "Refund order 4502, €140.00")
+        XCTAssertEqual(inbox.lines.last?.line, "Refund order 4503")
         XCTAssertEqual(inbox.unread, 2)
         XCTAssertEqual(store.kept, inbox.lines, "kept on the watch")
         XCTAssertEqual(model(store).lines, inbox.lines, "and there when the app opens again")
+    }
+
+    /// A held call's line is what it asks, never its amount, in the Inbox and in its file (the PM's ruling, as Wear OS); a
+    /// phone from before `summary` gives Needs you's title. The amount shows only while Needs you holds the call.
+    func testNoAmountIsKeptOnTheWatch() {
+        let store = Kept()
+        let inbox = model(store)
+        inbox.heard(heard([call("h_1", amount: "€150.00"), call("h_2", summary: nil, amount: "€90.00"), call("h_3", summary: " ")]))
+        XCTAssertEqual(Set(inbox.lines.map(\.line)), ["Refund order 4502", Words.NeedsYou.title])
+        for line in store.kept {
+            XCTAssertFalse(line.line.contains("€"), line.line)
+            XCTAssertFalse((line.title ?? "").contains("€"))
+        }
+        XCTAssertEqual(InboxLineScreen.held(inbox.lines.last!, in: heard([call("h_1")]))?.what, "Refund order 4502, €150.00",
+                       "opened while Needs you holds it: the amount, from memory")
     }
 
     /// A held call no longer listed stays until it's dismissed: opened, it says it was answered or ended.
@@ -178,7 +194,7 @@ final class InboxModelTests: XCTestCase {
         let url = folder.appendingPathComponent("tafs.inbox.json")
         let store = FileInboxStore(url: url)
         XCTAssertEqual(store.lines(), [], "nothing before anything's kept")
-        let line = InboxLine(id: "held:h_1", kind: .held, title: nil, line: "Refund order 4502, €150.00", at: now, read: true)
+        let line = InboxLine(id: "held:h_1", kind: .held, title: nil, line: "Refund order 4502", at: now, read: true)
         store.write([line])
         store.writeDismissed(["held:h_0"])
         XCTAssertEqual(FileInboxStore(url: url).lines(), [line])
