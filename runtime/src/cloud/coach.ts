@@ -87,6 +87,23 @@ export const TOOLS: ToolDef[] = [
     description: "Pauses a taf's schedule, or resumes it. A taf that works from its chat has no schedule to pause.",
   },
   {
+    name: "taf_door_api", line: "Draft a door from another application",
+    properties: {
+      taf: TAF,
+      draft: {
+        type: "object",
+        description: "The door, as the owner asked for it: {name: the application's name, fields: [{name, type: string (with max, at most 4000) | number | boolean | " +
+          "enum (with values)}], 1 to 20 flat fields of data the application sends, never one named like an instruction; job: what the taf does with each request, " +
+          "in the owner's words; outcomes: 1 to 10 lowercase names the taf answers with (\"refunded\", \"refused\", \"needs_review\"); text: true only when the owner " +
+          "wants the taf's own words sent back too, after hearing the risk}.",
+      },
+    },
+    required: ["taf", "draft"],
+    description: "Drafts a door through which another application (the company's own software) hands this taf work, with a key the owner makes on their phone. " +
+      "It makes nothing: it checks the draft and keeps it 7 days for the owner, who reads it in tafs and approves it with their fingerprint. The key is shown " +
+      "to them once, never to you. Answers the draft's id; show it as next says.",
+  },
+  {
     name: "taf_results", line: "Set where a taf's results go",
     properties: {
       taf: TAF,
@@ -269,6 +286,8 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-taf-pause", actions: ["taf_pause"], limit: 50, asks: false },
   { id: "coach-version-install", actions: ["version_install"], limit: 0, asks: true },
   { id: "coach-taf-results", actions: ["taf_results"], limit: 0, asks: true },
+  // A draft makes nothing: the door is the owner's, made only by their signed approval in tafs.
+  { id: "coach-taf-door", actions: ["taf_door_api"], limit: 20, asks: false },
   // A dial draft makes a version and runs nothing: installing it is held above.
   { id: "coach-taf-dial", actions: ["taf_dial"], limit: 20, asks: false },
   // A drive is the person's approval of one request; each look and step goes through KIFF all the same.
@@ -294,7 +313,7 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
 export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive"; tools: string[] }> = [
   { id: "watch", tools: ["tafs_state", "taf_run", "taf_check"] },
   { id: "run", tools: ["taf_task", "run_stop", "taf_pause"] },
-  { id: "build", tools: ["taf_dial", "taf_estimate", "web_read", "taf_labels", "mission_create", "mission", "business_context", "version_try", "version_install", "taf_results"] },
+  { id: "build", tools: ["taf_dial", "taf_estimate", "web_read", "taf_labels", "mission_create", "mission", "business_context", "version_try", "version_install", "taf_results", "taf_door_api"] },
   { id: "drive", tools: ["app_look", "app_act"] },
 ];
 

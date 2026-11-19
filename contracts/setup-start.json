@@ -73,6 +73,15 @@
                 "idempotency_argument": "tafs_op"
               },
               {
+                "name": "taf_door_api",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_door_api",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
                 "name": "taf_results",
                 "url": "https://tafs.test/v1/mcp",
                 "tool": "taf_results",
@@ -192,6 +201,7 @@
             "Give a taf a task or a message",
             "Stop a taf's run",
             "Pause or resume a taf's schedule",
+            "Draft a door from another application",
             "Set where a taf's results go",
             "Draft a change to a taf",
             "Say what a taf will likely use",
@@ -343,6 +353,24 @@
                   {
                     "quantity": "count",
                     "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-taf-door",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_door_api"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 20,
                     "window": "calendar_day"
                   }
                 ]
@@ -577,6 +605,12 @@
               ]
             },
             {
+              "id": "coach-taf-door",
+              "lines": [
+                "KIFF's line for coach-taf-door"
+              ]
+            },
+            {
               "id": "coach-taf-dial",
               "lines": [
                 "KIFF's line for coach-taf-dial"
@@ -742,6 +776,11 @@
                 "name": "Choose where results go",
                 "does": "Set where a taf's results go. Each one waits for your approval.",
                 "why": "Results can leave tafs, by email or into an app."
+              },
+              {
+                "name": "Draft a door for an application",
+                "does": "Write a door through which your company's own software hands a taf work. Nothing is made from a draft: you approve the door yourself. Up to 20 a day.",
+                "why": "A draft is what you'd approve."
               }
             ]
           },

@@ -1,7 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { AgentsError, type Run } from "../src/cloud/agents.js";
-import { type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
+import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
 import type { Device } from "../src/cloud/push.js";
 import type { DoorsConfig } from "../src/cloud/doors/doors.js";
 import { localPart, parseDoorMessage, replyText } from "../src/cloud/doors/doors.js";
@@ -12,6 +12,7 @@ import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
 import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
 import { fakeAgents, memoryAccounts, memoryCoach, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import { eventLog } from "../src/cloud/events.js";
+import { contract } from "./contract.js";
 import { consentPauseOf } from "../src/cloud/consent.js";
 
 const NOW = new Date("2026-10-24T09:00:00Z");
@@ -1928,6 +1929,47 @@ describe("an api door's keys and signed steps", () => {
     expect((await s.call("PATCH", `${doorsPath}/${door}`, { ...v, body: { open: false } })).status).toBe(403);
     expect((await s.call("DELETE", `${doorsPath}/${door}`, v)).status).toBe(403);
   }));
+
+  // Coach drafts the door; the owner reads it in tafs and makes it with their signed approval (design 4).
+  describe("Coach's draft", () => {
+    const coachCall = { tenant: "t_acme", coach: "setup-acme", notify: () => ({ url: "https://tafs.example/v1/runs/ended", ref: "r" }) };
+    const draftOf = (w: World, draft: unknown) => coachTool("taf_door_api", { taf: REFUNDS, draft }, coachCall as never, depsOf(w)) as Promise<Record<string, any>>;
+
+    it("checks and keeps the draft, and the owner makes exactly that door with their signature", () => withFlag(async () => {
+      const w = world();
+      const s = signing(w);
+      const drafted = await draftOf(w, DRAFT);
+      expect(drafted).toMatchObject({ taf_id: REFUNDS, draft_id: expect.stringMatching(/^draft-[0-9a-f]{16}$/), draft: { ...DRAFT } });
+      expect(drafted.next).toBe(`show {type: "door", taf_id: "${REFUNDS}", draft_id: "${drafted.draft_id}"}: the owner reads it in tafs and approves it with their fingerprint; the key is shown to them once, never to you`);
+      // Nothing is made by the draft.
+      expect((await s.call("GET", doorsPath)).body.doors).toEqual([]);
+      // The apps read it back, and send its body signed.
+      const read = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`);
+      expect(read.status).toBe(200);
+      expect(read.body).toMatchObject({ draft_id: drafted.draft_id, draft: DRAFT, body: { kind: "api", draft: DRAFT } });
+      contract("doors-api-draft", "GET /v1/tafs/{id}/doors/drafts/{draft}: the door Coach drafted, as the owner approves it; body is what the apps sign and POST to …/doors.",
+        { ...read.body, draft_id: "draft-0123456789abcdef" });
+      const made = await s.call("POST", doorsPath, { body: read.body.body, headers: SIG });
+      expect(made.status).toBe(200);
+      expect(made.body.door).toMatchObject({ kind: "api", label: "Order system", fields: DRAFT.fields });
+      // Someone the taf is only shared with doesn't see the draft; a draft past its 7 days is gone.
+      expect((await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`, { token: "viewer" })).status).toBe(404);
+      w.at(new Date(NOW.getTime() + 8 * 24 * 3600_000));
+      expect((await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).status).toBe(404);
+    }));
+
+    it("refuses an instruction for a field, a second api door, and anything while the door isn't offered", async () => {
+      const w = world();
+      await expect(draftOf(w, DRAFT)).rejects.toThrow(/isn't offered here yet/);
+      await withFlag(async () => {
+        await expect(draftOf(w, { ...DRAFT, fields: [{ name: "system_prompt", type: "string", max: 200 }] })).rejects.toThrow(/can't be a field/);
+        await expect(draftOf(w, { ...DRAFT, outcomes: [] })).rejects.toThrow(/outcomes/);
+        const s = signing(w);
+        await s.call("POST", doorsPath, { body: { kind: "api", draft: DRAFT }, headers: SIG });
+        await expect(draftOf(w, DRAFT)).rejects.toThrow(/already has a door from another application/);
+      });
+    });
+  });
 
   // The caller's side: another application hands the taf work with a key, and reads back how it went (design 2.1–3.6).
   describe("the caller's requests", () => {

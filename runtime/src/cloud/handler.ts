@@ -44,9 +44,10 @@ import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPa
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerKnock, DoorError, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
+import { type APIDraft, doorKeys } from "./doors/model.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
@@ -8987,6 +8988,27 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     await deps.tafs.put(call.tenant, { ...taf, results: places });
     return { taf: taf.name, results: places };
   }
+  if (name === "taf_door_api") {
+    // A door from another application, drafted: it makes nothing. The owner reads it in tafs and makes it with their
+    // signed approval (POST …/doors {kind: "api", draft}), and its key is shown to them once, never to Coach.
+    if (process.env.TAFS_API_DOORS !== "on" || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
+    if (may && !may.manage) throw new ToolRefusal(`${taf.name}'s doors are for the people who manage it`);
+    if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no doors");
+    let draft: APIDraft;
+    try { draft = apiDraftOf(args.draft); } catch (err) {
+      if (err instanceof DoorError) throw new ToolRefusal(err.message);
+      throw err;
+    }
+    if ((await doorsOf(deps.doors.store, call.tenant, taf.id)).some((d) => d.kind === "api")) {
+      throw new ToolRefusal(`${taf.name} already has a door from another application: a taf has one, and its keys are changed in tafs`);
+    }
+    const id = `draft-${randomBytes(8).toString("hex")}`;
+    const now = deps.now?.() ?? new Date();
+    const expires = new Date(now.getTime() + 7 * 24 * 3600_000);
+    await deps.doors.store.put(doorKeys.apiDraft(call.tenant, taf.id, id), { draft, made: now.toISOString(), expires: expires.toISOString() }, expires);
+    return { taf: taf.name, taf_id: taf.id, draft_id: id, draft,
+      next: `show {type: "door", taf_id: "${taf.id}", draft_id: "${id}"}: the owner reads it in tafs and approves it with their fingerprint; the key is shown to them once, never to you` };
+  }
   if (name === "taf_dial") {
     // Coach's draft of the dial: the taf's next version, nothing running from it. Installing it is
     // version_install, held for the owner, who sees its rings on the dial's draft.
@@ -10352,6 +10374,15 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     say: (text) => startMessage(event, me, taf, text, deps),
   };
   const [, , , , a, b, c] = parts;
+  // A door Coach drafted, read back to show the owner what they'd approve (`show {type: "door", draft_id}`): the draft as
+  // tafs cloud checked and keeps it, for the people who manage the taf. The apps sign and send exactly this draft.
+  if (parts.length === 6 && method === "GET" && a === "drafts" && b) {
+    if (!await managesTaf(event, me, taf, deps)) throw new HTTPError(404, "not found");
+    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as { draft: APIDraft; made: string; expires: string } | undefined;
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again");
+    return { draft_id: b, draft: kept.draft, made_at: kept.made, expires_at: kept.expires,
+      body: { kind: "api", draft: kept.draft } };
+  }
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
     await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
