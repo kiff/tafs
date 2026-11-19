@@ -181,6 +181,10 @@ See [chat.md](chat.md) for how the app uses these.
 | `POST /v1/tafs/{id}/chats/{session}/archive`, `unarchive` | a person, their own chat | Out of the list and the thread, or back |
 | `POST /v1/tafs/{id}/attachments` | a person | `{media_type, name, size, sha256}`: declare a file, and get where to upload it ([attachments.md](attachments.md)) |
 | `GET /v1/tafs/{id}/attachments/{att}` | a person, their own file | A download link for a minute |
+| `GET /v1/files` | a person on the account | `?taf=`, `?run=`, `?chat=` (ids) and `?after=` (the last id of the page before): the files the account's tafs delivered (kiff/agents' `deliver_file`), newest first, 100 a page with `next`. Each is `{id, taf, taf_name, run, chat?, name, media_type, size, created, expires}`, with its taf's name as tafs has it now (`null` once the taf is gone, which takes its files with it). Everyone on the account sees every file |
+| `GET /v1/files/{id}` | a person on the account | One file, with `preview`: its first 4 KB as plain text, with no control or direction characters, for the app to draw as text and never as Markdown or HTML (`preview_truncated` when there's more). kiff/agents logs the read by member |
+| `GET /v1/files/{id}/download` | a person on the account | `url`, to the file's bytes for a minute (`url_expires`), served as an attachment of its checked type. The app reads the bytes to save or share the file itself, and never hands out the link |
+| `DELETE /v1/files/{id}` | a person on the account | Delete now: gone for everyone on the account, its bytes at once. kiff/agents logs who. Answers `{deleted}` |
 
 Coach's chat uses the same routes, with Coach's id from `GET /v1/setup`.
 
