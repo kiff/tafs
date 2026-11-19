@@ -152,6 +152,12 @@ struct WatchCoachTicket: Codable, Equatable, Sendable {
     var session: String
     var sent: String?
 
+    /// A ticket for a watch request of its own (docs/watch-ask.md): `chat` is this, and `session` the request's id.
+    static let askChat = "watch-ask"
+
+    /// The watch request this ticket names, when it names one.
+    var askID: String? { chat == Self.askChat ? session : nil }
+
     /// Each id named, and none longer than a taf's id may be.
     var isComplete: Bool {
         [chat, session, sent ?? "x"].allSatisfy { id in

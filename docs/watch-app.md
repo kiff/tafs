@@ -75,6 +75,18 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   and is answered with Coach's answer so far and whether its chat says it's still working, read once, never sending. The
   phone reads only Coach's own chat by a ticket: one it sent the watch's words to, or the one tafs cloud gives as
   Coach's now; any other is refused unread.
+- **Since 19 Nov, `coach_send` is a watch request of its own** (`KeptWatchReading.ask`, docs/watch-ask.md), as Android's
+  relay sends one: the phone signs the exact body `{client_id, text, reply_to?}` with its **device key, no prompt**
+  (`signConfirmed`, never the approval key) and sends `POST /v1/watch/asks`. `client_id` is the watch's id for the words,
+  so a Send again gets the same request back and starts nothing. The ticket names the request (`chat` `watch-ask`,
+  `session` its id), and `coach_read` reads it back by its id (`GET /v1/watch/asks/{id}`): at work, "still answering";
+  ended, its line, else tafs cloud's words for its state; a call held for the owner, its line with "Approve on your phone".
+  - **A reply:** the next Send of the same visit carries the last request's ticket, and the phone sends it as `reply_to`, so
+    Coach goes on in that request's conversation. One still at work (409 `reply_too_soon`), or gone (404 `no_ask`), makes
+    the words a request of their own. Leaving the screen ends the conversation, as the turns go.
+  - **Where tafs cloud's switch for it is off** for the account (404 `watch_off`), or on a tafs cloud without the route,
+    the words go to Coach's chat as before.
+  - W3's follow-up (`CoachFollow`) reads the request the same way when the watch is put away.
 
 ## Coach
 
@@ -308,8 +320,8 @@ in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved 
 - **Nothing kept on the phone:** each is read when shown, a day is forgotten when it's left, and an answer for a day asked
   before the last is never drawn. A read that fails, or a tafs cloud without the routes (404 `watch_off`), shows no section,
   never an error.
-- **Apple Watch days** come once the iPhone sends the Apple Watch's words through `POST /v1/watch/asks`, as Android's relay
-  does; until then the section lists only what came through that route.
+- **Apple Watch days** come with the iPhone sending the Apple Watch's words through `POST /v1/watch/asks` (19 Nov, below), as
+  Android's relay does; what was asked before then went to Coach's chat and isn't listed.
 - **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
   `calendar.today` and tafs cloud's own.
 

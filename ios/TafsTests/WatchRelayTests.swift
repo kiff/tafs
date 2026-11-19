@@ -542,6 +542,79 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(body?["client_message_id"] as? String, messageID.uuidString.lowercased(), "under the message's id, as v1")
     }
 
+    // MARK: Asking from the watch (docs/watch-ask.md)
+
+    /// v2's Send goes as a watch request of its own: the exact `{client_id, text}` body, signed with the device key (no
+    /// prompt, never the approval key), under the watch's id for the words. The ticket names the request; Coach's chat
+    /// isn't written to.
+    func testASendIsAWatchRequestSignedWithTheDeviceKey() async throws {
+        let signer = CurrentKeyOnly()
+        let reading = kept(signer)
+        StubProtocol.responses["POST /v1/watch/asks"] = (200, #"{"ask":{"id":"wa_1","client_id":"x","state":"accepted","words":"Sent · Coach has it"}}"#)
+        let messageID = UUID()
+        let reply = await reading.coachSend(text: "Pause Rae", messageID: messageID, after: nil)
+        XCTAssertEqual(reply, WatchReply(.ok, ticket: WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_1", sent: nil)))
+        let request = try XCTUnwrap(sent("POST", "/v1/watch/asks").last)
+        let body = try XCTUnwrap(request.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self), #"{"client_id":"\#(messageID.uuidString.lowercased())","text":"Pause Rae"}"#)
+        XCTAssertTrue(request.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasPrefix("t=") ?? false)
+        XCTAssertEqual(signer.signed.count, 1, "signed once, with the device key")
+        XCTAssertTrue(signer.signed[0].contains("/v1/watch/asks"))
+        XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty, "Coach's chat isn't written to")
+    }
+
+    /// The next Send of the watch's conversation replies to the last request (`reply_to`); one that's still at work, or gone,
+    /// makes the words a request of their own.
+    func testASendAfterARequestRepliesToIt() async throws {
+        let reading = kept(CurrentKeyOnly())
+        let last = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_1", sent: nil)
+        StubProtocol.responses["POST /v1/watch/asks"] = (200, #"{"ask":{"id":"wa_2","client_id":"x","state":"accepted","words":"Sent"}}"#)
+        _ = await reading.coachSend(text: "Until Monday", messageID: UUID(), after: last)
+        let body = try XCTUnwrap(sent("POST", "/v1/watch/asks").last?.httpBody)
+        XCTAssertTrue(String(decoding: body, as: UTF8.self).hasSuffix(#","reply_to":"wa_1"}"#))
+        // A ticket of Coach's chat names no request: nothing to reply to.
+        _ = await reading.coachSend(text: "Hi", messageID: UUID(), after: WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1"))
+        let plain = try XCTUnwrap(sent("POST", "/v1/watch/asks").last?.httpBody)
+        XCTAssertFalse(String(decoding: plain, as: UTF8.self).contains("reply_to"))
+        // Still at work: the words go on their own.
+        StubProtocol.responses["POST /v1/watch/asks"] = (409, #"{"error":"wait for its result before replying","code":"reply_too_soon"}"#)
+        StubProtocol.thenRespond["POST /v1/watch/asks"] = ["POST /v1/watch/asks": (200, #"{"ask":{"id":"wa_3","client_id":"x","state":"accepted","words":"Sent"}}"#)]
+        let alone = await reading.coachSend(text: "And Lea", messageID: UUID(), after: last)
+        XCTAssertEqual(alone.ticket?.session, "wa_3")
+        XCTAssertFalse(String(decoding: sent("POST", "/v1/watch/asks").last?.httpBody ?? Data(), as: UTF8.self).contains("reply_to"))
+    }
+
+    /// Where tafs cloud's switch for watch requests is off (404 `watch_off`), the words go to Coach's chat, as before.
+    func testASendWithTheSwitchOffGoesToCoachsChat() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/watch/asks"] = (404, #"{"error":"asking from the watch isn't on yet","code":"watch_off"}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"message":{"id":"m1"}}"#)
+        let reply = await reading.coachSend(text: "Pause Rae", messageID: UUID(), after: nil)
+        XCTAssertEqual(reply, WatchReply(.ok, ticket: WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1")))
+    }
+
+    /// A request is read by its id: at work is "still answering"; ended, its line (else tafs cloud's words); a call held for
+    /// the owner, its line with "Approve on your phone". Coach's setup is never read for it, and nothing is sent.
+    func testARequestIsReadByItsId() async {
+        let reading = kept(CurrentKeyOnly())
+        let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_1", sent: nil)
+        StubProtocol.responses["GET /v1/watch/asks/wa_1"] = (200, #"{"ask":{"id":"wa_1","client_id":"x","state":"working","taf":{"id":"t","name":"Rae"},"words":"Rae is answering"}}"#)
+        let working = await reading.coachRead(ticket)
+        XCTAssertEqual(working, WatchReply(.ok, answering: true))
+        StubProtocol.responses["GET /v1/watch/asks/wa_1"] = (200, #"{"ask":{"id":"wa_1","client_id":"x","state":"working","line":"Rae's refund waits for you on your phone.","words":"Rae is answering"}}"#)
+        let held = await reading.coachRead(ticket)
+        XCTAssertEqual(held.coach?.approveOnPhone, true)
+        XCTAssertEqual(held.answering, false)
+        StubProtocol.responses["GET /v1/watch/asks/wa_1"] = (200, #"{"ask":{"id":"wa_1","client_id":"x","state":"done","line":"Rae is paused until Monday.","words":"Done"}}"#)
+        let done = await reading.coachRead(ticket)
+        XCTAssertEqual(done, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused until Monday.", more: false, approveOnPhone: false), answering: false))
+        StubProtocol.responses["GET /v1/watch/asks/wa_1"] = (200, #"{"ask":{"id":"wa_1","client_id":"x","state":"no_taf","words":"No taf took it"}}"#)
+        let none = await reading.coachRead(ticket)
+        XCTAssertEqual(none.coach?.text, "No taf took it", "tafs cloud's words, with no line")
+        XCTAssertTrue(sent("GET", "/v1/setup").isEmpty)
+        XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty)
+    }
+
     /// W2: a refusal at Send is v1's, in the phone's words.
     func testCoachSendRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
         let reading = coachReading()

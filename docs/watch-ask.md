@@ -10,7 +10,7 @@ relay are in [watch-wear.md](watch-wear.md).
 ## The path
 
 1. **The watch** makes an id for the request (`client_id`) and keeps it for a retry. It sends the request's text to the
-   phone over the Data Layer. The watch holds no keys.
+   phone over the Data Layer (Wear OS) or WatchConnectivity (Apple Watch, docs/watch-app.md). The watch holds no keys.
 2. **The phone's relay** signs the request with the phone's **device key** (`KIFF-Device-Signature`, as a taf's removal is
    signed, never the approval key) and sends it to `POST /v1/watch/asks` with the person's session.
 3. **tafs cloud** has KIFF check the signature, then opens a **new Coach conversation of the watch's own** with one skill,
