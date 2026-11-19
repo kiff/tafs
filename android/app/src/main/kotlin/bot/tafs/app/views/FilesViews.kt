@@ -43,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -123,17 +124,33 @@ internal fun FilesAccountRow(onOpen: () -> Unit) {
   HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }
 
-/** Files' row on a taf's page: how many files its runs made, and until when they're kept. Nothing where Files is off. */
+/**
+ * A taf's one way into its files: first on its header's line, "Files · Version 5 · live" (the owner's test of 125, 19 Nov, and the
+ * mockup's option A, as iOS's `TafFilesEntry`). In the page's ink, at least 48 dp to tap, with a count when it has files kept now.
+ * It shows with none yet too, so a taf's files are always found in the same place. Nothing where Files is off.
+ */
 @Composable
-internal fun TafFilesRow(tafCloudId: String?) {
+internal fun TafFilesEntry(tafCloudId: String?, modifier: Modifier = Modifier) {
   val files = LocalFiles.current ?: return
   if (tafCloudId == null) return
   val state by files.state.collectAsState()
   LaunchedEffect(files) { if (files.state.value.files == null) files.refresh() }
-  val its = FileGroups.forTaf(state.files.orEmpty(), tafCloudId)
-  Panel(Modifier.testTag(FILES_TAF_ROW)) {
-    FilesRow(if (its.isEmpty()) Words.Files.noneYet else Words.Files.tafRow(its.size), Modifier) { files.show(tafCloudId, FilesView.ByRun) }
-    FileGroups.keptUntil(its)?.let { Text(Words.Files.keptUntil(shownDate(it)), style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(horizontal = 12.dp)) }
+  val count = FileGroups.forTaf(state.files.orEmpty(), tafCloudId).size
+  // TalkBack: "Files", then how many when there are some ("Files, 3 files from its runs").
+  val label = if (count > 0) "${Words.Files.title}, ${Words.Files.tafRow(count)}" else Words.Files.title
+  Row(
+    modifier.heightIn(min = 48.dp).tapping(onClickLabel = label) { files.show(tafCloudId, FilesView.ByRun) }
+      .semantics(mergeDescendants = true) { contentDescription = label }.testTag(FILES_TAF_ENTRY),
+    horizontalArrangement = Arrangement.spacedBy(6.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(Words.Files.title, style = scaled(14, FontWeight.SemiBold, Theme.ink), maxLines = 1)
+    if (count > 0) {
+      Text(
+        bot.tafs.app.model.Res.number(count), style = scaled(12, FontWeight.SemiBold, Theme.ink),
+        modifier = Modifier.clip(RoundedCornerShape(50)).background(Theme.panel).padding(horizontal = 7.dp, vertical = 1.dp),
+      )
+    }
   }
 }
 
@@ -427,7 +444,7 @@ internal fun shareFile(context: Context, file: KeptFile, bytes: ByteArray) {
 }
 
 internal const val FILES_ACCOUNT_ROW = "files-account-row"
-internal const val FILES_TAF_ROW = "files-taf-row"
+internal const val FILES_TAF_ENTRY = "files-taf-entry"
 internal const val FILES_CHAT = "files-chat"
 internal const val FILES_SCREEN = "files-screen"
 internal const val FILE_SCREEN = "file-screen"
