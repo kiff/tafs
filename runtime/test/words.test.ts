@@ -253,10 +253,10 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     },
     fr: { crédits: ["crédit"], approuver: ["approuvez"], réessayer: ["réessayez"] },
     es: {
-      créditos: ["crédito"], hecho: ["hechas"], aprobar: ["aprueba"], "falló": ["fallos"], llamada: ["llamará"],
+      créditos: ["crédito"], hecho: ["hechas", "hecha"], aprobar: ["aprueba"], "falló": ["fallos"], llamada: ["llamará"],
       "preguntar a coach": ["pedir a coach"], reintentar: ["vuelve a intentar"],
     },
-    it: { crediti: ["credito"], fatto: ["fatte"], trattenuta: ["trattenute"], "non riuscito": ["non riuscite"], bussata: ["busserà"], "metti in pausa": ["mettere in pausa"] },
+    it: { crediti: ["credito"], fatto: ["fatte", "fatta"], trattenuta: ["trattenute"], "non riuscito": ["non riuscite", "non riuscita"], bussata: ["busserà"], "metti in pausa": ["mettere in pausa"] },
     pt: {
       créditos: ["crédito"], concluído: ["concluídas"], aprovar: ["aprove"], falhou: ["falhas"],
       "perguntar ao coach": ["pedir ao coach"], "tentar novamente": ["tente novamente", "tente mais tarde"],

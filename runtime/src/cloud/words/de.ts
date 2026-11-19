@@ -685,7 +685,7 @@ export const de: Words = {
   door_settings: "Gekoppelte Absender und die heutigen Limits stehen unten.",
   door_api_label: "Aus einer anderen Anwendung",
   door_api_how: "Der Schlüssel deiner Anwendung",
-  door_api_state_open: "Offen: Eine Anwendung mit einem ihrer Schlüssel kann diesem taf Arbeit übergeben.",
+  door_api_state_open: "Offen: Eine Anwendung mit einem ihrer Schlüssel kann diesem taf Arbeit geben.",
   door_api_state_paused: "Pausiert: Anfragen werden abgelehnt, bis du sie öffnest.",
   door_api_state_resting: (n) => `Die ${n} Anfragen für heute sind aufgebraucht: Weitere werden bis Mitternacht abgelehnt.`,
   door_api_settings: "Ihre Schlüssel und die Limits für heute stehen unten.",
