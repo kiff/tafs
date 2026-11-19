@@ -1889,6 +1889,98 @@ enum Words {
         static var addShort: String { Words.line("door.add_short") }
         /// {others} of {cap} from anyone else today.
         static func anyoneElseToday(others: String, cap: String) -> String { Words.line("door.anyone_else_today", others, cap) }
+        enum Api {
+            /// A door's key can only hand {taf} work. It can never pay or buy.
+            static func boundary(taf: String) -> String { Words.line("door.api.boundary", taf) }
+            /// Copied. It won't be shown again.
+            static var copied: String { Words.line("door.api.copied") }
+            /// Copy key
+            static var copyKey: String { Words.line("door.api.copy_key") }
+            /// It gets back one of: {outcomes}, and how many calls were made.
+            static func draftBack(outcomes: String) -> String { Words.line("door.api.draft_back", outcomes) }
+            /// Up to {count} requests a day.
+            static func draftCap(count: Int) -> String { Words.count("door.api.draft_cap", count) }
+            /// New door · from another application
+            static var draftKind: String { Words.line("door.api.draft_kind") }
+            /// {app} can only hand {taf} work. What {taf} may do stays its Card's.
+            static func draftScope(app: String, taf: String) -> String { Words.line("door.api.draft_scope", app, taf) }
+            /// It sends
+            static var draftSends: String { Words.line("door.api.draft_sends") }
+            /// What {taf} does: {job}
+            static func draftWill(taf: String, job: String) -> String { Words.line("door.api.draft_will", taf, job) }
+            /// {taf|possessive} own words too
+            static func draftWords(taf: String) -> String { Words.line("door.api.draft_words", taf, Words.possessive(taf)) }
+            /// Turned on, {taf} may answer in its own words. They could carry what it read, other people's data included, back to {app}.
+            static func draftWordsRisk(taf: String, app: String) -> String { Words.line("door.api.draft_words_risk", taf, app) }
+            /// Ask Coach to email these to a developer
+            static var emailDeveloper: String { Words.line("door.api.email_developer") }
+            /// Example
+            static var example: String { Words.line("door.api.example") }
+            /// {app} will be able to hand {taf} work. Confirm it's you.
+            static func faceidBody(app: String, taf: String) -> String { Words.line("door.api.faceid_body", app, taf) }
+            /// Open a new door to {taf}
+            static func faceidTitle(taf: String) -> String { Words.line("door.api.faceid_title", taf) }
+            /// Fields
+            static var fields: String { Words.line("door.api.fields") }
+            /// API instructions
+            static var instructions: String { Words.line("door.api.instructions") }
+            /// Made {made} · last used {used} · ends …{last4}
+            static func keyLine(made: String, used: String, last4: String) -> String { Words.line("door.api.key_line", made, used, last4) }
+            /// Name this key
+            static var keyName: String { Words.line("door.api.key_name") }
+            /// Where it's used, like Production
+            static var keyNameHint: String { Words.line("door.api.key_name_hint") }
+            /// Made {made} · not used yet · ends …{last4}
+            static func keyNeverUsed(made: String, last4: String) -> String { Words.line("door.api.key_never_used", made, last4) }
+            /// The key isn't here. Use the one you copied when you made it, or make a new key.
+            static var keyNotHere: String { Words.line("door.api.key_not_here") }
+            /// Keys
+            static var keys: String { Words.line("door.api.keys") }
+            /// From another application
+            static var kind: String { Words.line("door.api.kind") }
+            /// Last request {time} · {status}
+            static func lastRequest(time: String, status: String) -> String { Words.line("door.api.last_request", time, status) }
+            /// New key
+            static var newKey: String { Words.line("door.api.new_key") }
+            /// Make a new key for {app}
+            static func newKeyReason(app: String) -> String { Words.line("door.api.new_key_reason", app) }
+            /// {count} of {limit}
+            static func ofLimit(count: Int, limit: String) -> String { Words.count("door.api.of_limit", count, limit) }
+            /// Open {app|possessive} door again
+            static func openReason(app: String) -> String { Words.line("door.api.open_reason", app, Words.possessive(app)) }
+            /// Requests are refused until you open it. Nothing already done is undone.
+            static var paused: String { Words.line("door.api.paused") }
+            /// A minute
+            static var perMinute: String { Words.line("door.api.per_minute") }
+            /// Read how it went
+            static var readHow: String { Words.line("door.api.read_how") }
+            /// Its keys stop working, and {app} can no longer hand {taf} work. Requests that haven't started are cancelled; one that's running finishes. Nothing already done is undone.
+            static func removeBody(app: String, taf: String) -> String { Words.line("door.api.remove_body", app, taf) }
+            /// Requests it sent that haven't started are cancelled. One that's running finishes. To stop it now, halt the taf. A revoked key can't be brought back: a new key is a new key.
+            static var revokeBody: String { Words.line("door.api.revoke_body") }
+            /// Revoke “{key}”
+            static func revokeReason(key: String) -> String { Words.line("door.api.revoke_reason", key) }
+            /// Revoke “{key}”?
+            static func revokeTitle(key: String) -> String { Words.line("door.api.revoke_title", key) }
+            /// {app} · {count} of {limit} today
+            static func row(count: Int, app: String, limit: String) -> String { Words.count("door.api.row", count, app, limit) }
+            /// Selected: copy it with your keyboard.
+            static var selected: String { Words.line("door.api.selected") }
+            /// Shown only now.
+            static var shownOnce: String { Words.line("door.api.shown_once") }
+            /// Copy it into {app|possessive} secrets. tafs keeps no copy it can show again.
+            static func shownOnceBody(app: String) -> String { Words.line("door.api.shown_once_body", app, Words.possessive(app)) }
+            /// Today
+            static var today: String { Words.line("door.api.today") }
+            /// At most two keys, so you can replace one without stopping the other.
+            static var twoKeys: String { Words.line("door.api.two_keys") }
+            /// up to {count}
+            static func upTo(count: Int) -> String { Words.count("door.api.up_to", count) }
+            /// At once
+            static var waiting: String { Words.line("door.api.waiting") }
+            /// Where to send work
+            static var `where`: String { Words.line("door.api.where") }
+        }
         enum App {
             /// email
             static var email: String { Words.line("door.app.email") }
