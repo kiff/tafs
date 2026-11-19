@@ -22,6 +22,12 @@ protocol WatchReading {
     func coach(text: String, messageID: UUID) async -> WatchReply
     /// Your brief, as tafs cloud sends it; nil when the account has none.
     func brief() async throws -> WatchBrief?
+    /// One taf's page (watch v2), by tafs cloud's id; nil for a taf the phone doesn't list.
+    func tafPage(_ id: String) async throws -> WatchTafPage?
+    /// A calendar day (watch v2), `YYYY-MM-DD`, or today in the account's zone with none.
+    func calendar(day: String?) async throws -> WatchCalendarDay
+    /// Who is signed in, the account's name and the plan's line (watch v2).
+    func account() async throws -> WatchAccount
 }
 
 extension WatchReading {
@@ -74,6 +80,23 @@ enum WatchRelay {
             // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
             do {
                 return WatchReply(.ok, brief: try await reading.brief())
+            } catch {
+                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            }
+        case .taf, .calendar, .account:
+            // The watch v2 pages: reads only, nothing answered or signed.
+            do {
+                switch request.kind {
+                case .taf:
+                    guard let page = try await reading.tafPage(request.taf ?? "") else {
+                        return WatchReply(.failed, line: Words.Watch.openOnPhone)
+                    }
+                    return WatchReply(.ok, tafPage: page)
+                case .calendar:
+                    return WatchReply(.ok, calendar: try await reading.calendar(day: request.day))
+                default:
+                    return WatchReply(.ok, account: try await reading.account())
+                }
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
@@ -186,6 +209,76 @@ struct KeptWatchReading: WatchReading {
                           decisions: decisions, more: brief.more.flatMap { words($0.words) },
                           done: brief.done.isEmpty ? nil : words(brief.words.done),
                           doneCases: Array(cases.prefix(WatchBrief.wristCases)), rest: brief.rest.flatMap { words($0.words) })
+    }
+
+    /// One taf's page, read as Home reads it: tafs cloud's list with each Card's use, the taf's halt and the
+    /// account's, and KIFF's held calls for its agent. Nil for a taf tafs cloud doesn't list.
+    func tafPage(_ id: String) async throws -> WatchTafPage? {
+        let home = try await cloud.home()
+        guard let listed = home.tafs.first(where: { $0.id == id }) else { return nil }
+        let all = try? await cloud.halted(nil)
+        // Its own halt, unless the account's covers it, as `tafs()` reads it.
+        let own = all?.state == .running || all == nil ? (try? await cloud.halted(id)) : nil
+        let held = (try? await kiff.heldCalls()) ?? []
+        let halted = [all, own].contains { $0.map { $0.state != .running } ?? false }
+        return Self.tafPage(listed, halted: halted, waiting: held.filter { $0.subject == listed.kiffAgent }.count)
+    }
+
+    /// A taf's page from tafs cloud's listing, as the phone's Card tab draws it: the Cards in tafs cloud's order,
+    /// each with its title, its face (figure and line) and a line per rule. Nil for an agent tafs doesn't run.
+    static func tafPage(_ listed: TafsCloud.HomeTaf, halted: Bool, waiting: Int) -> WatchTafPage? {
+        guard let id = listed.id else { return nil }
+        let taf = KIFFMapping.taf(listed, id: UUID(), owner: "")
+        let cards = taf.shownCards.map { card in
+            WatchTafPage.Card(title: card.title, figure: card.hero?.figure, words: card.hero?.words,
+                              rules: card.rules.map { Words.Card.ruleLine(rule: $0.label, summary: $0.summary) })
+        }
+        return WatchTafPage(id: id, name: taf.name, state: halted ? Words.Taf.State.halted : taf.now, halted: halted,
+                            job: taf.job, cards: cards, waiting: waiting)
+    }
+
+    /// A calendar day, read from tafs cloud for that day alone; with none, today in the account's zone.
+    func calendar(day: String?) async throws -> WatchCalendarDay {
+        let shown: String
+        if let day {
+            shown = day
+        } else {
+            // The account's zone, else the phone's own (as Android's): closer to the person's day than UTC.
+            let zone = (try? await kiff.me())?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
+            shown = Self.day(Date(), in: zone)
+        }
+        let read = try await cloud.calendar(from: shown, to: shown)
+        return Self.calendarDay(shown, read)
+    }
+
+    /// A date as the calendar names its days, `YYYY-MM-DD`, in `zone`.
+    nonisolated static func day(_ date: Date, in zone: TimeZone) -> String {
+        let f = DateFormatter()
+        f.calendar = Calendar(identifier: .gregorian)
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = zone
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
+    }
+
+    /// A calendar day in tafs cloud's words: its line, and that day's events in time order, each with its taf's name.
+    nonisolated static func calendarDay(_ day: String, _ read: TafsCloud.CalendarRead) -> WatchCalendarDay {
+        let events = read.events.filter { $0.day == day }.sorted { $0.minute < $1.minute }
+            .map { WatchCalendarDay.Event(time: $0.time, taf: $0.name, words: $0.words, count: $0.count) }
+        return WatchCalendarDay(day: day, words: read.words, events: events, halted: read.halted)
+    }
+
+    /// Who is signed in, and the plan's line as Account shows it (none when tafs cloud doesn't send one).
+    func account() async throws -> WatchAccount {
+        let me = try await kiff.me()
+        let balance = (try? await cloud.balance()) ?? nil
+        return Self.watchAccount(email: me.email, displayName: me.displayName, slug: me.slug, plan: balance?.planLine)
+    }
+
+    /// The account as the wrist names it: its display name, else its slug.
+    nonisolated static func watchAccount(email: String?, displayName: String?, slug: String, plan: String?) -> WatchAccount {
+        func words(_ s: String?) -> String? { s.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } }
+        return WatchAccount(email: words(email), account: words(displayName) ?? words(slug), plan: words(plan))
     }
 
     /// `NotificationRefuse.refuseKept`, answering the watch: the same signed refusal, then the

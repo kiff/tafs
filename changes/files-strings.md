@@ -1,0 +1,1 @@
+- **Files: the words, in all 8 languages,** for the Files screens on Android and iOS (mockup v2.1); nothing shows them yet.

@@ -1,0 +1,42 @@
+{
+  "files.account_row": {
+    "one": "{count} file · conservato 30 giorni",
+    "other": "{count} file · conservati 30 giorni"
+  },
+  "files.all": "Tutti",
+  "files.all_tafs": "Tutti i tafs",
+  "files.by_run": "Per esecuzione",
+  "files.by_taf": "Per taf",
+  "files.delete_body": "Sparisce subito da File per tutti in questo account. Non si può annullare.",
+  "files.delete_now": "Elimina ora",
+  "files.delete_question": "Eliminare «{name}» ora?",
+  "files.deleted": "Eliminato per tutti",
+  "files.download": "Scarica",
+  "files.empty": "Ancora niente. Quando un taf crea un report, un foglio o un documento in un'esecuzione, viene conservato qui per 30 giorni, perché tutti in questo account possano aprirlo, salvarlo o condividerlo.",
+  "files.everyone": "Tutti in questo account",
+  "files.goes_away": "Sparisce",
+  "files.goes_in_days": {
+    "one": "sparisce tra {count} giorno",
+    "other": "sparisce tra {count} giorni"
+  },
+  "files.goes_on": "{date} (30 giorni dopo la sua esecuzione)",
+  "files.goes_today": "sparisce oggi",
+  "files.goes_tomorrow": "sparisce domani",
+  "files.in_run": "Nell'esecuzione",
+  "files.kept_line": "Ogni file è conservato 30 giorni dalla sua esecuzione, poi sparisce da solo. Tutti in questo account vedono questi file. I tuoi allegati della chat restano con i loro messaggi.",
+  "files.kept_until": "I suoi file sono conservati fino al {date}",
+  "files.made_by": "Creato da",
+  "files.none_yet": "Ancora nessuno · conservati 30 giorni",
+  "files.pick_one": "Scegli un file per vederlo qui.",
+  "files.saved": "Salvato su questo dispositivo",
+  "files.see_in_chat": "Vedilo nella chat",
+  "files.share": "Condividi",
+  "files.size": "Dimensione",
+  "files.taf_row": {
+    "one": "{count} file dalle sue esecuzioni",
+    "other": "{count} file dalle sue esecuzioni"
+  },
+  "files.title": "File",
+  "files.type": "Tipo",
+  "files.who_sees": "Chi lo vede"
+}

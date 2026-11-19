@@ -314,6 +314,8 @@ fun TafDetailView(
               VersionsRow({ onVersions(taf.id) }, title = version?.title ?: Words.Version.changesRow, summary = version?.summary)
             }
             if (state.canHalt(taf.id)) UsageRow { onUsage(taf.id) }
+            // Files, behind its switch: its runs' files, and until when they're kept.
+            TafFilesRow(taf.cloudId)
             RevokeRow(taf, managesHere, onRevoke = { confirmRevoke = true })
           }
           Section.Setup -> {
