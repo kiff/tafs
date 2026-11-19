@@ -362,8 +362,10 @@ export function attachWhys<T extends { tool: string; error?: true }>(steps: T[],
     if (!s.error) return s;
     const i = whys.findIndex((w) => w.tool === s.tool);
     const kept = i >= 0 ? whys.splice(i, 1)[0]! : undefined;
-    // Refused for how Coach wrote it: not made, as the stream said, never red.
-    if (kept?.not_made) { const { error: _e, ...rest } = s; return { ...(rest as T), not_made: true as const }; }
+    // Refused for how Coach wrote it: not made, as the stream said, never red. A run kept before a pattern joined coachGuard has
+    // no `not_made`, but it kept the server's reason (`refusal`): read again, it says what the stream says now (19 Nov, the
+    // Pipedrive and Moneybird turns that still showed red in the history after the stream stopped showing it).
+    if (kept?.not_made || (kept?.refusal !== undefined && coachGuard(kept.refusal))) { const { error: _e, ...rest } = s; return { ...(rest as T), not_made: true as const }; }
     const why = kept?.why;
     const refused = kept?.refused && !kept.resolved
       ? { words: kept.why, ...(kept.refused.reason ? { why: kept.refused.reason } : {}), next: kept.refused.next } : undefined;
