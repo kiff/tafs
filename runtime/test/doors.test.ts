@@ -1813,7 +1813,8 @@ describe("an api door's keys and signed steps", () => {
     expect((await s.call("POST", keysPath, { body: { name: "ERP staging" } })).status).toBe(403);
     const second = await s.call("POST", keysPath, { body: { name: "ERP staging" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=k2" } });
     expect(second.status).toBe(200);
-    expect(second.body.key).toMatchObject({ name: "ERP staging", key: expect.stringMatching(/^tafs_api_/) });
+    // The key at the answer's top ({id, key, last4, made_at}), as the apps decode it.
+    expect(second.body).toMatchObject({ id: expect.stringMatching(/^key_[0-9a-f]{16}$/), name: "ERP staging", key: expect.stringMatching(/^tafs_api_/), last4: expect.any(String), made_at: NOW.toISOString() });
     expect(second.body.door.keys.map((k: { name: string }) => k.name)).toEqual(["Order system", "ERP staging"]);
     // Replayed: KIFF took that signature, so no second key from it.
     expect((await s.call("POST", keysPath, { body: { name: "ERP staging" }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:02Z,v1=k2" } })).status).toBe(409);

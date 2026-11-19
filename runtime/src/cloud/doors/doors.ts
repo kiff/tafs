@@ -1207,7 +1207,10 @@ export async function addAPIDoor(ctx: DoorsContext, owner: Owner, taf: Taf, body
   return { door: apiDoorView(door, undefined, ctx.lang), key: keyShown(record, key) };
 }
 
-/** A new key for an `api` door, named by its owner: two live at most, so one replaces the other without a gap. */
+/**
+ * A new key for an `api` door, named by its owner: two live at most, so one replaces the other without a gap. Answers
+ * `{id, name, key, last4, made_at, door}`, the key this once.
+ */
 export async function newAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, id: string, body: Record<string, unknown>) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   if (!name || name.length > 80) throw new DoorError(400, "name the key: where it's used, up to 80 characters");
@@ -1229,7 +1232,8 @@ export async function newAPIDoorKey(ctx: DoorsContext, owner: Owner, taf: Taf, i
     await store.remove(doorKeys.apiKey(record.hash!)).catch(() => undefined);
     throw err;
   }
-  return { door: apiDoorView(d!, await apiToday(ctx, owner.tenant, taf.id, id), ctx.lang), key: keyShown(record, key) };
+  // The key at the answer's top, as the design and the apps read it, with the door as it is now beside it.
+  return { ...keyShown(record, key), door: apiDoorView(d!, await apiToday(ctx, owner.tenant, taf.id, id), ctx.lang) };
 }
 
 /**

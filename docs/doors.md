@@ -155,7 +155,8 @@ door's own words):
   is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
   instruction (`instructions`, `prompt`, `rules`, …); outcomes are 1 to 10 names. Anything else is 400. It answers the door
   and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).
-- `POST …/doors/{door}/keys` `{name}`: a new key, answered the same way. Two live at most (409 `too_many_keys`).
+- `POST …/doors/{door}/keys` `{name}`: a new key, answered at the top, `{id, name, key, last4, made_at}`, with the door as
+  `door`. Two live at most (409 `too_many_keys`).
   The same signed request again is KIFF's `signature_taken` (409): no second key.
 - `DELETE …/doors/{door}/keys/{key}`: revoke. The key's hash goes from the door and from its lookup, so its next
   request finds nothing; its record stays without it (`revoked`, `revokedBy`), and isn't listed.
