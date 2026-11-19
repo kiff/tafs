@@ -678,4 +678,81 @@ class WatchModelTest {
     VoiceFiles.sweep(dir)
     assertTrue(dir.list()!!.isEmpty())
   }
+
+  // MARK: The Inbox (v2 step iv): kept on the watch until dismissed; cleared when locked and on sign-out.
+
+  private class Inbox : InboxStore {
+    var items: List<InboxItem> = emptyList()
+    override fun read() = items
+    override fun write(items: List<InboxItem>) { this.items = items }
+    override fun clear() { items = emptyList() }
+  }
+
+  private val answered = AskLine("wa_02", "w_00000002", "done", tafName = "Support replies", line = "Replied to maria@…", words = "Done", updated = "2026-11-19T08:00:00Z")
+
+  @Test fun heldCallsAndAnswersAreKeptUnreadInTheInbox() = runTest {
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    model.refresh()
+    model.took(answered)
+    assertEquals(listOf(InboxItem.askId("wa_02"), InboxItem.heldId("hold_1")), model.inbox.value.map { it.id })
+    assertEquals(InboxItem(InboxItem.heldId("hold_1"), InboxItem.Kind.HELD, "Refunds", "Refund order 1042", t), model.inbox.value[1])
+    assertEquals(2, model.unreadCount())
+    // Read again: still one line each, never two.
+    model.refresh()
+    model.took(answered)
+    assertEquals(2, model.inbox.value.size)
+    assertEquals("kept on the watch", model.inbox.value, store.items)
+  }
+
+  @Test fun openingALineReadsItAndDismissAndClearReadTakeLinesAway() = runTest {
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = Inbox())
+    model.refresh()
+    model.took(answered)
+    model.open(model.askOf(model.inbox.value.first()))
+    assertEquals(1, model.unreadCount())
+    assertTrue(model.inbox.value.first { it.id == InboxItem.askId("wa_02") }.read)
+    model.clearRead()
+    assertEquals("unread lines stay", listOf(InboxItem.heldId("hold_1")), model.inbox.value.map { it.id })
+    model.dismiss(InboxItem.heldId("hold_1"))
+    assertTrue(model.inbox.value.isEmpty())
+  }
+
+  @Test fun theInboxSurvivesPutAwayAndANewStart() = runTest {
+    val store = Inbox()
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    model.took(answered)
+    model.forget()
+    assertEquals(1, model.inbox.value.size)
+    val again = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    assertEquals(model.inbox.value, again.inbox.value)
+    // An answer kept from before opens its card from the line alone.
+    assertEquals("Replied to maria@…", again.askOf(again.inbox.value.first()).line)
+  }
+
+  @Test fun aLockedWatchOrOneWithNoLockKeepsNoInbox() = runTest {
+    val store = Inbox().apply { items = listOf(InboxItem(InboxItem.askId("wa_02"), InboxItem.Kind.ASK, "Support replies", "Replied", t)) }
+    var unlocked = false
+    val model = WatchModel(Phone { reads(it) }, now = { t }, unlocked = { unlocked }, inboxStore = store)
+    model.refresh()
+    assertTrue(store.items.isEmpty())
+    assertTrue("nothing added while locked, the held call included", model.inbox.value.isEmpty())
+    model.took(answered)
+    assertTrue(model.inbox.value.isEmpty())
+    unlocked = true
+    model.refresh()
+    assertEquals(listOf(InboxItem.heldId("hold_1")), model.inbox.value.map { it.id })
+  }
+
+  @Test fun signedOutTheInboxIsGone() = runTest {
+    var signedIn = true
+    val store = Inbox()
+    val model = WatchModel(Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else reads(it) }, now = { t }, unlocked = { true }, inboxStore = store)
+    model.refresh()
+    assertEquals(1, store.items.size)
+    signedIn = false
+    model.refresh()
+    assertTrue(store.items.isEmpty())
+    assertTrue(model.inbox.value.isEmpty())
+  }
 }

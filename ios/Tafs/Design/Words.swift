@@ -5097,12 +5097,16 @@ enum Words {
         static var askingPhone: String { Words.line("watch.asking_phone") }
         /// Check your phone's connection
         static var checkPhone: String { Words.line("watch.check_phone") }
+        /// Clear read
+        static var clearRead: String { Words.line("watch.clear_read") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
         /// Deleted. Nothing was sent.
         static var deletedNothingSent: String { Words.line("watch.deleted_nothing_sent") }
         /// Didn't catch that. Tap to try again.
         static var didntCatch: String { Words.line("watch.didnt_catch") }
+        /// Dismiss
+        static var dismiss: String { Words.line("watch.dismiss") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
         /// Halting {taf}…

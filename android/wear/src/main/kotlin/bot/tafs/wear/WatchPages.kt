@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -83,6 +85,8 @@ internal fun WatchPages(
   timing: String? = null,
   /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
   probe: String? = null,
+  /** The Inbox kept on the watch (step iv); null draws what the phone answered now, as before it. */
+  inbox: List<InboxItem>? = null,
 ) {
   when {
     voice != null -> return VoiceScreenV2(voice, act, probe = probe)
@@ -120,7 +124,7 @@ internal fun WatchPages(
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
-          coachHome(shown, working, ready, act, kept, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
+          coachHome(shown, working, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
         }
@@ -130,7 +134,7 @@ internal fun WatchPages(
           Page.Account -> accountPage(act)
           else -> if (notRead(shown, act)) {
             when (page) {
-              Page.Inbox -> inboxPage(shown as WatchModel.Shown.Read, ready, act)
+              Page.Inbox -> if (inbox != null) keptInboxPage(inbox, shown as WatchModel.Shown.Read, act) else inboxPage(shown as WatchModel.Shown.Read, ready, act)
               Page.Tafs -> tafsPage(shown as WatchModel.Shown.Read)
               Page.Brief -> briefPage(shown as WatchModel.Shown.Read, act)
               else -> Unit
@@ -154,6 +158,7 @@ private fun ScalingLazyListScope.coachHome(
   ready: List<AskLine>,
   act: Actions,
   kept: WatchModel.Draft?,
+  inbox: List<InboxItem>?,
   openInbox: () -> Unit,
   openMenu: () -> Unit,
   openQuick: () -> Unit,
@@ -181,7 +186,8 @@ private fun ScalingLazyListScope.coachHome(
   if (shown !is WatchModel.Shown.Read) {
     notRead(shown, act)
   } else {
-    val count = unread(shown, ready)
+    // Read means opened, on this watch (step iv); before it, what waits now.
+    val count = inbox?.count { !it.read } ?: unread(shown, ready)
     if (count > 0) item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.inboxUnread(count)) } }
   }
   item {
@@ -218,6 +224,47 @@ private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: 
   }
   if (shown.needsYou.calls.isEmpty() && ready.isEmpty()) line(Words.Watch.inboxEmpty)
 }
+
+/**
+ * The Inbox kept on the watch (step iv): newest first, each line with a dot while unread, its taf and its words. An answer opens
+ * its result card; a held call shows what it wants, Refuse where the phone allows it and Approve on your phone, while Needs you
+ * still holds it, else that it's already answered. Each has Dismiss; Clear read takes every read line away.
+ */
+private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: WatchModel.Shown.Read, act: Actions) {
+  if (inbox.isEmpty()) {
+    line(Words.Watch.inboxEmpty)
+    return
+  }
+  for (entry in inbox) item {
+    val call = if (entry.kind == InboxItem.Kind.HELD) shown.needsYou.calls.firstOrNull { it.holdId == entry.ref } else null
+    Card(onClick = { act.openItem(entry) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + entry.id)) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+          if (!entry.read) {
+            androidx.compose.foundation.Canvas(Modifier.size(6.dp).testTag(UNREAD_DOT + entry.id)) { drawCircle(Look.unread) }
+          }
+          entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 1) }
+        }
+        Text(entry.line, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        if (entry.kind == InboxItem.Kind.HELD) {
+          if (call == null) {
+            Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)
+          } else {
+            call.amount?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+            if (call.refusable) Button(onClick = { act.refuse(call.holdId) }, modifier = Modifier.fillMaxWidth()) { Text(Words.NeedsYou.refuse) }
+            Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.approveOnPhone) }
+          }
+        }
+        Button(onClick = { act.dismissItem(entry.id) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.dismiss) }
+      }
+    }
+  }
+  if (inbox.any { it.read }) item { Button(onClick = act.clearRead, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.clearRead) } }
+}
+
+/** Test tags for an Inbox line and its unread dot, by the line's id. */
+internal const val INBOX_ITEM = "inbox-item:"
+internal const val UNREAD_DOT = "unread-dot:"
 
 /** Each taf with its state, and nothing else: halting is in the menu and, with step (v), in a taf's settings. */
 private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read) {

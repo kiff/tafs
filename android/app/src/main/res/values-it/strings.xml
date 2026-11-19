@@ -2547,9 +2547,11 @@
     <string name="watch_ask_text_only">tafs riceve le tue parole come testo, mai la tua voce.</string>
     <string name="watch_asking_phone">Chiedo al telefono…</string>
     <string name="watch_check_phone">Controlla la connessione del telefono</string>
+    <string name="watch_clear_read">Togli i letti</string>
     <string name="watch_coach_needs_consent">Prima di parlare con Coach, consenti l\'uso dell\'IA in tafs sul telefono.</string>
     <string name="watch_deleted_nothing_sent">Eliminato. Non è stato inviato nulla.</string>
     <string name="watch_didnt_catch">Non ho capito. Tocca per riprovare.</string>
+    <string name="watch_dismiss">Ignora</string>
     <string name="watch_glance_description">Quanti ti aspettano, mai cosa né chi.</string>
     <string name="watch_halting">Blocco di %1$s…</string>
     <string name="watch_halting_all">Blocco di tutti i tuoi tafs…</string>

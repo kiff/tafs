@@ -2547,9 +2547,11 @@
     <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
     <string name="watch_check_phone">Check your phone\'s connection</string>
+    <string name="watch_clear_read">Clear read</string>
     <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
+    <string name="watch_dismiss">Dismiss</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
     <string name="watch_halting">Halting %1$s…</string>
     <string name="watch_halting_all">Halting all your tafs…</string>

@@ -37,9 +37,11 @@
     <string name="watch_ask_text_only">tafs dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
     <string name="watch_check_phone">Sprawdź połączenie telefonu</string>
+    <string name="watch_clear_read">Usuń przeczytane</string>
     <string name="watch_coach_needs_consent">Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.</string>
     <string name="watch_deleted_nothing_sent">Usunięto. Nic nie zostało wysłane.</string>
     <string name="watch_didnt_catch">Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.</string>
+    <string name="watch_dismiss">Odrzuć</string>
     <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
     <string name="watch_halting">Blokowanie: %1$s…</string>
     <string name="watch_halting_all">Blokowanie wszystkich Twoich tafs…</string>

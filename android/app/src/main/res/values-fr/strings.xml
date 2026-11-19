@@ -2547,9 +2547,11 @@
     <string name="watch_ask_text_only">tafs reçoit vos mots en texte, jamais votre voix.</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
     <string name="watch_check_phone">Vérifiez la connexion du téléphone</string>
+    <string name="watch_clear_read">Effacer les lus</string>
     <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
     <string name="watch_deleted_nothing_sent">Supprimé. Rien n\'a été envoyé.</string>
     <string name="watch_didnt_catch">Pas compris. Touchez pour réessayer.</string>
+    <string name="watch_dismiss">Ignorer</string>
     <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
     <string name="watch_halting">Blocage de %1$s…</string>
     <string name="watch_halting_all">Blocage de tous vos tafs…</string>

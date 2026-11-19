@@ -45,8 +45,9 @@ class WatchActivity : ComponentActivity() {
     // A screen lock set and the watch unlocked now: the confirmation for an ask, a Refuse and a Halt (docs/watch-wear.md).
     WatchModel(
       DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)),
-      // Only v2 keeps a message for later.
+      // Only v2 keeps a message for later, and an Inbox.
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
+      inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,
     )
   }
 
@@ -163,7 +164,13 @@ class WatchActivity : ComponentActivity() {
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
+          openItem = { item ->
+            if (item.kind == InboxItem.Kind.ASK) model.open(model.askOf(item)) else model.markRead(item.id)
+          },
+          dismissItem = model::dismiss,
+          clearRead = model::clearRead,
         )
+        val inbox by model.inbox.collectAsState()
         // Play stops the moment the review is left: its recording is erased then (WatchModel).
         androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
           if (voice !is WatchModel.Voice.Review) playback.release()
@@ -175,7 +182,7 @@ class WatchActivity : ComponentActivity() {
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
-            probe = if (BuildConfig.TIMING) probe else null)
+            probe = if (BuildConfig.TIMING) probe else null, inbox = inbox)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
@@ -296,6 +303,10 @@ internal class Actions(
   val deleteKept: () -> Unit = {},
   /** v2's Play and Pause for the review's recording, on the watch. */
   val playback: Playback? = null,
+  /** v2's Inbox: opens a line (read), dismisses one, clears the read ones. */
+  val openItem: (InboxItem) -> Unit = {},
+  val dismissItem: (String) -> Unit = {},
+  val clearRead: () -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

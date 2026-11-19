@@ -1,0 +1,1 @@
+- **Wear OS v2: the Inbox kept on the watch.** Answers and held calls stay until dismissed, with an unread dot, Dismiss and Clear read; cleared when the watch locks or the phone signs out. Behind the v2 switch ([watch-wear.md](docs/watch-wear.md)).

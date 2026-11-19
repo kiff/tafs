@@ -60,6 +60,8 @@ class WatchModel(
   private val reviewFirst: Boolean = WATCH_V2,
   /** v2's Keep for later: one message, text only, kept on the watch until it's sent or deleted; none in a test that doesn't use it. */
   private val drafts: DraftStore? = null,
+  /** v2's Inbox, kept on the watch until dismissed ([InboxStore]); in memory only in a test that doesn't pass one. */
+  private val inboxStore: InboxStore? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -406,6 +408,8 @@ class WatchModel(
     // An older state never replaces a newer one (two messages crossing).
     if (before != null && before.updated > ask.updated) return
     _asks.value = _asks.value + (ask.id to ask)
+    // An ended ask is a line in the Inbox: Coach's or a taf's answer, kept until dismissed.
+    if (ask.ended) inboxPut(InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, ask.line ?: ask.words, now()))
     val at = now()
     if (ask.ended) receivedAt[ask.clientId]?.let { t -> timings[ask.clientId] = (timings[ask.clientId] ?: Timing(null, null, null)).copy(resultMs = at - t) }
     when (val v = _voice.value) {
@@ -423,8 +427,59 @@ class WatchModel(
   /** Opens an ask's result card (from the home screen or its notification). */
   fun open(ask: AskLine) {
     seen += ask.id
+    markRead(InboxItem.askId(ask.id))
     _result.value = ask
   }
+
+  // MARK: The Inbox (v2, docs/watch-wear.md): kept on the watch until dismissed; cleared on sign-out and when the watch is locked.
+
+  private val _inbox = MutableStateFlow(inboxStore?.read().orEmpty().sortedByDescending { it.at })
+
+  /** The Inbox, newest first. */
+  val inbox: StateFlow<List<InboxItem>> = _inbox.asStateFlow()
+
+  /** How many lines of the Inbox aren't read yet: Coach's home says so. */
+  fun unreadCount(): Int = _inbox.value.count { !it.read }
+
+  /** A new line, unread; one already there keeps its place and whether it was read, with the newest words. */
+  private fun inboxPut(item: InboxItem) {
+    // A locked watch, or one with no screen lock, keeps no Inbox: nothing is added to it.
+    if (!unlocked()) return
+    val before = _inbox.value.firstOrNull { it.id == item.id }
+    if (before != null && before.line == item.line && before.title == item.title) return
+    val next = if (before != null) _inbox.value.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + _inbox.value
+    saveInbox(next)
+  }
+
+  /** Opened: read. */
+  fun markRead(id: String) {
+    if (_inbox.value.none { it.id == id && !it.read }) return
+    saveInbox(_inbox.value.map { if (it.id == id) it.copy(read = true) else it })
+  }
+
+  /** Dismiss: gone from the Inbox. */
+  fun dismiss(id: String) {
+    if (_inbox.value.none { it.id == id }) return
+    saveInbox(_inbox.value.filterNot { it.id == id })
+  }
+
+  /** Clear read: every line read is gone; unread ones stay. */
+  fun clearRead() = saveInbox(_inbox.value.filterNot { it.read })
+
+  /** The watch locked, or the phone signed out: nothing of the Inbox stays on the watch. */
+  fun clearInbox() {
+    inboxStore?.clear()
+    _inbox.value = emptyList()
+  }
+
+  private fun saveInbox(items: List<InboxItem>) {
+    _inbox.value = items
+    inboxStore?.write(items)
+  }
+
+  /** The ask behind an Inbox line, as this watch knows it now or as the line kept it: its result card opens from either. */
+  fun askOf(item: InboxItem): AskLine =
+    _asks.value[item.ref] ?: AskLine(item.ref, "", "done", tafName = item.title, line = item.line, words = item.line, updated = "")
 
   fun closeResult() {
     _result.value = null
@@ -447,14 +502,21 @@ class WatchModel(
 
   /** Reads Needs you, then Your brief (with the switch on), then Your tafs, from the phone. Your tafs not answering leaves Needs you shown, without the tafs. */
   suspend fun refresh() {
+    // A locked watch, or one with no screen lock, keeps no Inbox: as the tile's count, nothing shows off the wrist.
+    if (!unlocked()) clearInbox()
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
     val needsYou = when (val asked = phone.ask(WatchRequest.NeedsYou(now()))) {
       is Asked.Answered -> when (val reply = asked.reply) {
-        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also { tile?.saw(reply.count, now()) }
+        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
+          tile?.saw(reply.count, now())
+          // Each held call is a line in the Inbox, kept until dismissed.
+          for (call in reply.calls) inboxPut(InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, call.wants, now()))
+        }
         is WatchReply.SignedOut -> {
           tile?.signedOut()
           // Signed out: nothing of the account stays on the watch, a kept message and a recording included.
           deleteKept()
+          clearInbox()
           if (_voice.value is Voice.Review) voiceNow = null
           return show(Shown.SignedOut)
         }

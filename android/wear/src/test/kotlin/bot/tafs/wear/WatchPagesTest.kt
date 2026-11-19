@@ -57,6 +57,7 @@ class WatchPagesTest {
     start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
     delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
     keep = { did += "keep" }, deleteKept = { did += "delete kept" },
+    openItem = { did += "open ${it.id}" }, dismissItem = { did += "dismiss $it" }, clearRead = { did += "clear read" },
   )
 
   private fun show(
@@ -284,5 +285,51 @@ class WatchPagesTest {
   @Test fun aReviewWithNoRecordingHasNoPlay() {
     show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
     compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
+  }
+
+  // MARK: The Inbox kept on the watch (step iv)
+
+  private val heldLine = InboxItem(InboxItem.heldId("hold_1"), InboxItem.Kind.HELD, "Late parcels", "Reship order #5098", 2)
+  private val answerLine = InboxItem(InboxItem.askId("wa_02"), InboxItem.Kind.ASK, "Support replies", "Replied to maria@…", 1, read = true)
+
+  private fun showInbox(inbox: List<InboxItem>, page: Page = Page.Inbox, shown: WatchModel.Shown = read) = compose.setContent {
+    MaterialTheme {
+      WatchPages(shown, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+        pages = pages(false), pager = rememberPagerState(initialPage = pages(false).indexOf(page)) { pages(false).size }, inbox = inbox)
+    }
+  }
+
+  @Test fun theInboxShowsEachLineWithItsUnreadDotAndDismiss() {
+    showInbox(listOf(heldLine, answerLine))
+    compose.onNodeWithText("Reship order #5098").assertExists()
+    compose.onNodeWithText("Replied to maria@…").assertExists()
+    compose.onNodeWithTag(UNREAD_DOT + heldLine.id, useUnmergedTree = true).assertExists()
+    compose.onAllNodesWithTag(UNREAD_DOT + answerLine.id, useUnmergedTree = true).assertCountEquals(0)
+    // The held call Needs you still holds: Refuse and Approve on your phone, as Needs you offers them.
+    compose.onNodeWithText(Words.NeedsYou.refuse).assertExists()
+    compose.onNodeWithText(Words.Watch.clearRead).performClick()
+    compose.onAllNodesWithText(Words.Watch.dismiss)[0].performClick()
+    assertEquals(listOf("clear read", "dismiss ${heldLine.id}"), did)
+  }
+
+  @Test fun aHeldLineNeedsYouNoLongerHoldsSaysSo() {
+    showInbox(listOf(heldLine), shown = read.copy(needsYou = WatchModel.NeedsYouRead(0, "Nothing needs you", emptyList())))
+    compose.onNodeWithText(Words.Watch.alreadyAnswered).assertExists()
+    compose.onAllNodesWithText(Words.NeedsYou.refuse).assertCountEquals(0)
+  }
+
+  @Test fun anEmptyKeptInboxSaysWhatLandsThere() {
+    showInbox(emptyList())
+    compose.onNodeWithText(Words.Watch.inboxEmpty).assertExists()
+  }
+
+  @Test fun homeCountsOnlyUnreadLines() {
+    showInbox(listOf(heldLine, answerLine), page = Page.Coach)
+    compose.onNodeWithText(Words.Watch.inboxUnread(1)).assertExists()
+  }
+
+  @Test fun theStoreKeepsEachLineAsWritten() {
+    val lines = listOf(heldLine, answerLine, InboxItem(InboxItem.askId("wa_03"), InboxItem.Kind.ASK, null, "Done", 3))
+    assertEquals(lines, PreferencesInboxStore.decode(PreferencesInboxStore.encode(lines)))
   }
 }

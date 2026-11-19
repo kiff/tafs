@@ -213,6 +213,16 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
   all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
 
+**Step (iv): the Inbox kept on the watch** (`Inbox.kt`, `WatchModel.inbox`, `PreferencesInboxStore`). Each held call Needs you
+lists and each ask that ended (Coach's or a taf's answer) is one line of the Inbox, newest first, kept on the watch until it's
+dismissed: its taf, its words, and a blue dot while it's unread. An answer opens its result card (from the line alone if the app
+was put away since), which reads it; a held call shows what it wants, Refuse where Needs you offers it and Approve on your phone
+while Needs you still holds it, else "Already answered, or it ended.", and tapping it reads it. Each line has **Dismiss**, and
+**Clear read** takes every read line away. Coach's home counts only the unread lines. It's kept in the watch's private preferences
+(`tafs.inbox`, one JSON list), and like the tile's count it's cleared, and nothing is added to it, whenever the watch is locked or
+has no screen lock (Wear OS locks a watch taken off the wrist), and when the phone says it's signed out. Read and dismissed stay
+on this watch until tafs cloud keeps them in step with the phone (server piece c).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and

@@ -37,9 +37,11 @@
     <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
+    <string name="watch_clear_read">Gelezen wissen</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
     <string name="watch_deleted_nothing_sent">Verwijderd. Er is niets verstuurd.</string>
     <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
+    <string name="watch_dismiss">Negeren</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <string name="watch_halting">%1$s wordt stilgezet…</string>
     <string name="watch_halting_all">Al je tafs worden stilgezet…</string>

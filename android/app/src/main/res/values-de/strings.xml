@@ -2547,9 +2547,11 @@
     <string name="watch_ask_text_only">tafs bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
     <string name="watch_check_phone">Prüf die Verbindung deines Handys</string>
+    <string name="watch_clear_read">Gelesene entfernen</string>
     <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
     <string name="watch_deleted_nothing_sent">Gelöscht. Nichts wurde gesendet.</string>
     <string name="watch_didnt_catch">Nicht verstanden. Tippe, um es erneut zu versuchen.</string>
+    <string name="watch_dismiss">Verwerfen</string>
     <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
     <string name="watch_halting">%1$s wird angehalten…</string>
     <string name="watch_halting_all">Alle deine tafs werden angehalten…</string>
