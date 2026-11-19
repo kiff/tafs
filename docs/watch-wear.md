@@ -152,9 +152,11 @@ With it on (`WatchModel(briefOn = true)` in the tests):
 
 ## Version 2 (behind a switch, being built)
 
-Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built one step at a time behind `WATCH_V2`
-(`wear/…/WatchPages.kt`), which is `false`, so a watch shows v1 whole until every step is in; it turns on, as that one line,
-once the last step lands and the owner has tried the build. Steps: (i) the phone's three new reads (`taf`, `calendar`,
+Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built behind `WATCH_V2`
+(`wear/…/WatchPages.kt`, from `BuildConfig.WATCH_V2`): on only in a test version (a `-test` `versionName`, or
+`TAFS_WATCH_V2=1`) for the owner's watch on Play's internal track, and off in debug builds, the unit tests and any production
+build, where a watch shows v1 whole. It turns on for everyone, as one line in `wear/build.gradle.kts`, once the owner has tried
+it and the server pieces it waits on are in. Steps: (i) the phone's three new reads (`taf`, `calendar`,
 `account`, above); (ii) the pages and Coach's home; (iii) record, review and send, with Type and Quick reply; (iv) the inbox
 kept on the watch; (v) Tafs, a taf's page, its settings and choosing which to halt; (vi) the held call, the calendar day and
 Account; (vii) the switches for what needs a new server piece (a watch ask as a Coach chat, the chats read, the inbox's read and
@@ -166,11 +168,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   the whole face, as in v1.
 - **Coach's home:** the microphone, named "Ask Coach", with the asks at work under it; how many wait in the Inbox ("2 unread in
   Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
-- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest. Until step (v) Halt is Halt all, asked
-  once more, as v1's; it's offered only while a taf runs.
-- **Until their steps:** the Inbox is what the phone answered now (Needs you's held calls, Refuse where allowed and Approve on
-  your phone, then each result ready to open; with nothing, what lands there); Tafs is each taf with its state, no Halt;
-  Account is the trust line and Open on phone. Before the phone answers, or when it can't, each page says so in v1's words.
+- **The menu:** every page by name, and **Halt** at the very bottom, apart from the rest, offered only while a taf runs. It
+  opens Choose which to halt (step v, below).
+- **The Inbox, Tafs and Account** were stand-ins here, as v1 reads them; steps (iv), (v) and (vi) below replace them. Before the
+  phone answers, or when it can't, each page says so in v1's words.
 - **Words:** `watch.page.*`, `watch.inbox_unread`, `watch.inbox_empty`, `watch.menu` and `watch.trust` are new, in all 8
   languages (legal-i18n's list); the rest are the phone's own (`coach.ask`, `coach.title`, `home.title`, `settings.title`,
   `taf.halt.title`). Nothing new is asked of the phone, and nothing is stored on the watch.
@@ -213,12 +214,118 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in
   all 8 languages; Start, Stop and Delete are the phone's (`coach.start`, `chat.stop`, `chat.delete`).
 
+**Step (iv): the Inbox kept on the watch** (`Inbox.kt`, `WatchModel.inbox`, `PreferencesInboxStore`). Each held call Needs you
+lists and each ask that ended (Coach's or a taf's answer) is one line of the Inbox, newest first, kept on the watch until it's
+dismissed: its taf, its words, and a blue dot while it's unread. An answer opens its result card (from the line alone if the app
+was put away since), which reads it; a held call shows what it wants, and its amount, while Needs you still holds it, and a tap reads it and opens
+it whole (step vi), where Refuse and Approve on your phone are; else it says "Already answered, or it ended.". Each line has **Dismiss**, and
+**Clear read** takes every read line away; either stays taken away while the phone still lists the line (its id is kept, and
+dropped once the phone no longer lists it), so a read never brings it back; a lock clears the lines but keeps those bare ids, so a dismissed line doesn't come back
+unread after it. **When the Inbox can't be kept** (locked, or no screen lock), nothing is stored and the page shows what the
+phone answered now, Needs you's calls and the results ready, with Coach's home counting those (`WatchModel.inboxKept`): a call
+that needs the person is never hidden behind "Nothing new". Coach's home counts only the unread lines. It's kept in the watch's private preferences
+(`tafs.inbox`, one JSON list), and like the tile's count its lines are cleared, and nothing is added to it, whenever the watch is locked or
+has no screen lock (Wear OS locks a watch taken off the wrist): checked when the app is opened and when it's put away. It's
+also cleared, with the ids taken away, when the phone says it's signed out, and with everything else when the person signs out on this watch (step vi). Read and dismissed stay
+on this watch until tafs cloud keeps them in step with the phone (server piece c).
+
+**Step (v): Tafs, a taf's page, its settings, and choosing which to halt** (`TafScreens.kt`, `WatchModel.openTaf` and
+`haltPick`, `TafScreensTest`, `TafModelTest`). Halt is never on the main screens:
+- **Tafs:** each taf with its state, in the phone's words; a tap opens **its page**, read from the phone (`taf`, by its id),
+  in memory only, as the rest. Before the phone answers it shows the taf's name from Your tafs and "Asking your phone…"; signed
+  out, no phone (with Try again), the phone's own words with Open on phone, or "Update tafs on your phone" for a phone that
+  doesn't know the read: v1's words. A late answer for a page since closed, or another taf's page, is never drawn.
+- **A taf's page:** its name and state (Halted in red), **What it does** and its job, **Its Card** with each Card's title, its
+  face's figure and line, and each rule on a line, as the phone's Card tab draws them; **Waiting for you** with how many of its
+  calls wait ("2 need you"), which goes to the Inbox, where they are with Refuse and Approve on your phone, or "Nothing waits for
+  you." Halted, it says "Halted. Resuming starts only new work." and **Resume on your phone**: resuming asks for a fingerprint or
+  face, so it's the phone's. Then **Its settings ›**, "Swipe left for its settings", and Close.
+- **Its settings,** one swipe left (a second page beside the taf's), or Its settings: "{taf} · settings", **Open on phone**, and,
+  apart at the end, **Halt this taf**, in red. It's asked once more ("Halting stops it until you resume. A call already sent may
+  still arrive.", Halt now, Cancel); Halt now sends v1's Halt for that taf, only from an unlocked watch with a screen lock, shows
+  "Halting {taf}…" until the phone has tafs cloud's word, then the page read again, with the phone's word for the result. A
+  halted taf's settings offer Resume on your phone instead.
+- **Choose which to halt,** from the menu's Halt: **All your tafs**, then each taf not halted, each a switch (a taf halted
+  already isn't offered), and **Halt now · N**, off with none picked. It's asked once more: every taf offered picked is "Halt all
+  your tafs?" and sends one Halt all (`all: true`); one or a few are named ("Late parcels, Invoices"), with the line for one or
+  for several, and send one Halt per taf picked, one after the other, each to the end, so one that fails never keeps the next
+  from halting. "Halting …" shows until the last answers, then what came of each, by name, in the phone's words, with Open on
+  phone if any didn't go through (`Outcome.Several`). Cancel goes back to the choice, then to the menu; nothing is sent before
+  Halt now, and nothing from a locked watch or one with no screen lock.
+- **Left out until their server piece** (step vii): the mockup's **Tell {taf}** (an ask addressed to one taf: today tafs cloud
+  picks the taf) and **Alerts from this taf** (alerts per taf on the watch). Open on phone and Resume on your phone open Needs you
+  on the phone, the one place a watch's link opens there today (`Alerts.openedFromWatch`); opening the taf itself is the phone's
+  to add.
+- **Words:** `watch.what_it_does`, `watch.nothing_waits`, `watch.its_settings`, `watch.swipe_settings`, `watch.settings_of`,
+  `watch.halt_this`, `watch.resume_on_phone`, `watch.halt_pick_title`, `watch.all_your_tafs`, `watch.halt_now_count` (a count)
+  and `watch.halt_all_q`, in all 8 languages (legal-i18n's list); the rest are the phone's (`card.its_card`,
+  `chat.waiting_for_you`, `halt.explain.halted`, `halt.explain.running_one`, `halt.explain.running_all`, `halt.now`,
+  `taf.halt.title`). Nothing new is asked of the phone.
+
+**Step (vi): a held call, a calendar day, Account and Sign out on this watch** (`AccountScreens.kt`, `WatchModel.readCalendar`,
+`readAccount`, `signOutHere`, `AccountModelTest`, `AccountScreensTest`). Each opens over the pages (`Over`); back or Close returns
+to them:
+- **A held call:** the Inbox lists each held call in a line (its taf, what it wants, the amount); a tap opens it whole, as the
+  phone's Needs you words it: its taf, what it wants, KIFF's amount and reason, and "Nothing is sent until you approve." It's
+  drawn from Needs you's read as it stands, so a call answered meanwhile closes. **Refuse** only where Needs you's read says the
+  wrist may (`refusable`), through v1's path: from an unlocked watch with a screen lock, signed by the phone. **Approve on your
+  phone** opens Needs you there (`tafs://open/needs-you`) and shows "Check your phone" with OK, which goes back to the Inbox and
+  reads it again. Approving is never on the watch. The phone opens Needs you's list, not the one call (`AlertPayload.openedFromWatch`
+  knows only `needs-you`), so the line says "Needs you is open there. Approve the call there." and not "on this call".
+- **A calendar day:** "Today's calendar", at the foot of the Tafs page (and of Brief, where the brief is on), reads the
+  `calendar` read for today in the account's zone: tafs cloud's line for the day (in red when the account is halted), then each
+  event in tafs cloud's order with its time, its taf, its words and "×3" when it happens more than once. **Previous day** and
+  **Next day** read the day before or after the one shown; the title is Today only for the day the phone answered as today, else
+  the date in the watch's language. It's in memory only and forgotten on Close.
+- **Account**, read from the phone (`account`) each time the page is shown: Signed in (the email and the account's name), Plan
+  (the plan's line as the phone's Account shows it), the watch's language, its version, **Open on phone**, **Sign out** and the
+  trust line. With the phone out of reach it says so, with Try again, and Sign out still works: it's the watch's own.
+- **Sign out,** asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats and
+  inbox."), is on this watch alone: nothing is sent to the phone. The watch forgets everything it holds: what it showed, the asks
+  and the results opened, a review and its recording (every recording is swept), the message kept for later, the tile's count,
+  the calendar and Account, and its own result notifications. It keeps one flag in its private preferences (`tafs.sign_in`,
+  `PreferencesWatchSignIn`) and shows only "Signed out on this watch. Your phone stays signed in." with **Sign in with your
+  phone**, across restarts, until the person taps it. Meanwhile it reads and sends nothing (no read, ask, Refuse or Halt, the
+  tile's Ask tafs included) and shows no result notification. Sign in clears the flag and reads the phone again.
+- **Left out:** "Alerts on this watch". The watch's own notifications are only an ask's result; Needs you's alerts are the
+  phone's, which Wear OS bridges, and the watch app doesn't switch them today. A switch with that name would leave those on, so
+  it waits until it can switch both.
+- **Words:** `watch.check_phone_title`, `watch.check_phone_sub` (legal-i18n's line without "on this call"),
+  `watch.nothing_sent_until`, `watch.calendar_today`, `watch.signed_in`, `watch.sign_out_q`, `watch.sign_out_sub` and
+  `watch.signed_out_here` (not in legal-i18n's list) are new, in all 8 languages; the rest are the phone's (`common.ok`,
+  `calendar.today`, `calendar.previous_day`, `calendar.next_day`, `calendar.reading`, `calendar.times`, `settings.plan`,
+  `settings.version`, `settings.language_title`, `settings.sign_out`, `sign_in.with_phone`).
+
+**Back** (`BackHandler`, `WatchBackTest`): the system's back gesture, a swipe from the left edge, closes what's drawn over the
+pages, through the same action as its own Cancel or Close, and never the app. The menu and Quick reply close (nothing picked);
+Choose which to halt goes from the question to the choice, then to the menu (`cancelPick`); a taf's page goes from Halt this
+taf's question to its settings, from its settings to its page, then to the pages; a held call, the hand-off, the calendar
+(`closeCalendar`) and Sign out's question close, nothing answered or signed out; a result's card closes; on the microphone's
+screens (Ready, recording, the review, and v1's after them) back is Cancel (`closeVoice`), so the review's recording is erased as
+it's left. While the words are being sent, or a Halt is, back is taken and does nothing: the phone's answer is shown when it
+comes. On the pages themselves back is the system's own, and leaves the app.
+
+**Screenshots** (`WearV2Screenshots`): v2's screens for review, not for Play, drawn through `WatchPages` (the switch stays off) in
+English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two sizes, 40 mm (396 ×
+396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread line, Tafs, a taf's
+page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long transcript, and
+Recording. 22 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
+they are; otherwise each screen is still drawn:
+
+```bash
+cd android && ./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearV2Screenshots' -PwearScreenshots
+```
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
 the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Versions). **The watch has its own band: it
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
+
+**400,000,004 (0.4.0-test)** is v2's test build for the owner's Galaxy Watch 5: its `-test` name turns on v2 (`WATCH_V2`) and
+the timing readout, with the Play/Pause probe line on the review. It needs the phone at Android 123 or later, the first with the
+relay for v2's reads (`taf`, `calendar`, `account`). Never promoted to production.
 
 **400,000,003 (0.3.0-test)** is Ask tafs's test build for a real watch: its `-test` name turns on the timing readout on a
 result's card, so the build a merge raising it starts has it, and it's never promoted to production. Production gets its own
@@ -308,11 +415,25 @@ watch doesn't know is shown as Open on phone, never guessed at.
   notification's Refuse on iPhone: they only take authority away. The phone acts only on a message from the paired watch
   running this app, and the watch sends one only while it has a screen lock and is unlocked; otherwise it says to set one
   (`watch.needs_lock`) and offers Open on phone. The approval key is never used on this path.
-- **What the watch keeps:** on disk, only Needs you's count and its time, for the tile, cleared on sign-out and when the
-  watch comes off the wrist. The lists, Your tafs and the asks and their results stay in memory. No tokens or keys, and no amount,
-  merchant or person's name in a log on the watch or in the phone's relay.
+- **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (`tafs.tile`), cleared on
+  sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
+  `WATCH_V2`) keeps more, all in the app's private storage:
+  - `tafs.draft`: one message kept for later, its text, ask id and the ask it continues; gone on Delete, once it's sent and
+    taken, and on either sign-out; not on a lock or put-away, since the person asked for it to be sent.
+  - `tafs.inbox`: the Inbox's lines (`ask:`/`held:` id, kind, the taf's name, the result's line or what a held call wants, the
+    time first seen, read) and the bare ids taken away. No amount and no reason. The lines go when the app is opened or put away
+    while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
+    either sign-out.
+  - `tafs.sign_in`: one flag, signed out on this watch.
+  - `files/voice/`: the review's recording, erased when the review is left and swept at start, put-away and sign-out here.
+  - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
+
+  In memory only, forgotten when the app is put away: the reads, the asks, an open result, a taf's page, the halt pick, the
+  calendar day, and Account's read (email, account name, plan). No tokens or keys, and no amount, merchant or person's name in a
+  log on the watch or in the phone's relay.
 - **Voice:** the watch's own speech recognizer makes text, and only the text goes to the phone and tafs cloud, after the AI
-  consent already given on the phone. No audio is kept or sent to tafs cloud. Speaking is an instruction to a taf, never an
+  consent already given on the phone. No audio is sent anywhere; v1 keeps none, and v2 keeps the review's recording on the
+  watch only until it's sent or deleted (Play and Pause, step iii). Speaking is an instruction to a taf, never an
   approval: the taf acts under its own Cards.
 - **A locked watch** shows only "A taf needs you" for an alert the phone bridges to it, as a locked phone does.
 - **Words** come from `app/strings` (`watch.*` and the phone's own keys), in all 8 languages.

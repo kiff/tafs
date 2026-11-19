@@ -60,6 +60,10 @@ class WatchModel(
   private val reviewFirst: Boolean = WATCH_V2,
   /** v2's Keep for later: one message, text only, kept on the watch until it's sent or deleted; none in a test that doesn't use it. */
   private val drafts: DraftStore? = null,
+  /** v2's Inbox, kept on the watch until dismissed ([InboxStore]); in memory only in a test that doesn't pass one. */
+  private val inboxStore: InboxStore? = null,
+  /** v2's Sign out on this watch alone (AccountScreens.kt): whether it's signed out here; none in v1, which can't sign out. */
+  private val signIn: WatchSignIn? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -113,6 +117,12 @@ class WatchModel(
     data object NeedsLock : Outcome
 
     data object PhoneUnreachable : Outcome
+
+    /** v2: several tafs halted one after the other, each taf's name with what came of its Halt. */
+    data class Several(val each: List<Pair<String, Outcome>>) : Outcome {
+      /** Every one went through. */
+      val done: Boolean get() = each.all { it.second is Done }
+    }
   }
 
   private val _outcome = MutableStateFlow<Outcome?>(null)
@@ -149,6 +159,7 @@ class WatchModel(
   }
 
   private suspend fun act(request: WatchRequest) {
+    if (_signedOutHere.value) return
     if (!unlocked()) {
       _outcome.value = Outcome.NeedsLock
       return
@@ -157,25 +168,176 @@ class WatchModel(
       val name = request.tafId?.let { id -> ((_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == id })?.name }
       _outcome.value = Outcome.Halting(if (request.tafId == null) null else name ?: "")
     }
-    _outcome.value = when (val asked = phone.ask(request)) {
-      // Shown only once the phone has KIFF's or tafs cloud's answer: that's when its reply comes.
-      is Asked.Answered -> when (val reply = asked.reply) {
-        is WatchReply.Done -> Outcome.Done(reply.words)
-        WatchReply.AlreadyAnswered -> Outcome.AlreadyAnswered
-        is WatchReply.Failed -> Outcome.NotDone(reply.words)
-        else -> Outcome.NotDone(null)
-      }
-      Asked.Unreachable -> Outcome.PhoneUnreachable
-      Asked.NotUnderstood -> Outcome.NotDone(null)
-    }
-    // The lists as they stand now.
+    val asked = phone.ask(request)
+    // Signed out on this watch meanwhile: its answer is dropped, never shown after Sign in.
+    if (_signedOutHere.value) return
+    _outcome.value = outcomeOf(asked)
+    // The lists as they stand now, and the taf's page open.
     refresh()
+    rereadTaf()
+  }
+
+  /** What came of a Refuse or a Halt: shown only once the phone has KIFF's or tafs cloud's answer, which is when its reply comes. */
+  private fun outcomeOf(asked: Asked): Outcome = when (asked) {
+    is Asked.Answered -> when (val reply = asked.reply) {
+      is WatchReply.Done -> Outcome.Done(reply.words)
+      WatchReply.AlreadyAnswered -> Outcome.AlreadyAnswered
+      is WatchReply.Failed -> Outcome.NotDone(reply.words)
+      else -> Outcome.NotDone(null)
+    }
+    Asked.Unreachable -> Outcome.PhoneUnreachable
+    Asked.NotUnderstood -> Outcome.NotDone(null)
   }
 
   fun dismissOutcome() {
     _outcome.value = null
   }
 
+
+  // MARK: A taf's page, and choosing which to halt (v2, step v; docs/watch-wear.md)
+
+  /** A taf's page as the phone answered it (`taf`), or why there's none, as v1 says it. */
+  sealed interface TafRead {
+    data object Asking : TafRead
+
+    data class Read(val page: WatchReply.TafPage) : TafRead
+
+    data object SignedOut : TafRead
+
+    data object PhoneUnreachable : TafRead
+
+    /** A phone with an older tafs, which doesn't know the page: update it. */
+    data object UpdatePhone : TafRead
+
+    /** The phone couldn't give it, in its words; null: Open on phone. */
+    data class Failed(val words: String?) : TafRead
+  }
+
+  /**
+   * The taf whose page is open: its id, and its line in Your tafs when it was opened, for its name and whether it's halted until
+   * the phone's page comes and says them itself.
+   */
+  data class OpenTaf(val tafId: String, val listed: TafLine?, val read: TafRead) {
+    val name: String get() = (read as? TafRead.Read)?.page?.name ?: listed?.name.orEmpty()
+    val halted: Boolean get() = (read as? TafRead.Read)?.page?.halted ?: listed?.halted ?: false
+  }
+
+  private val _taf = MutableStateFlow<OpenTaf?>(null)
+
+  /** The taf's page open now, from the Tafs page; in memory only, as the rest. */
+  val taf: StateFlow<OpenTaf?> = _taf.asStateFlow()
+
+  /** A taf tapped on the Tafs page: its page, read from the phone. */
+  suspend fun openTaf(tafId: String) {
+    if (_signedOutHere.value) return
+    val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
+    _taf.value = OpenTaf(tafId, listed, TafRead.Asking)
+    readTaf(tafId)
+  }
+
+  fun closeTaf() {
+    _taf.value = null
+  }
+
+  private suspend fun rereadTaf() {
+    _taf.value?.let { readTaf(it.tafId) }
+  }
+
+  private suspend fun readTaf(tafId: String) {
+    val read = when (val asked = phone.ask(WatchRequest.Taf(now(), tafId))) {
+      is Asked.Answered -> when (val reply = asked.reply) {
+        // Another taf's page is never drawn as this one's.
+        is WatchReply.TafPage -> if (reply.tafId == tafId) TafRead.Read(reply) else TafRead.Failed(null)
+        WatchReply.SignedOut -> TafRead.SignedOut
+        is WatchReply.Failed -> TafRead.Failed(reply.words)
+        is WatchReply.Refused -> if (reply.reason == NotAccepted.UNKNOWN_PATH) TafRead.UpdatePhone else TafRead.Failed(null)
+        else -> TafRead.Failed(null)
+      }
+      Asked.Unreachable -> TafRead.PhoneUnreachable
+      Asked.NotUnderstood -> TafRead.Failed(null)
+    }
+    // Only while this taf is still the one open: closed, or another opened meanwhile, its answer is dropped.
+    val open = _taf.value?.takeIf { it.tafId == tafId } ?: return
+    _taf.value = open.copy(read = read)
+  }
+
+  /**
+   * Choose which to halt, from the menu's Halt: the tafs offered (every one not halted already), the ones picked, and whether it's
+   * being asked once more.
+   */
+  data class HaltPick(val offered: List<TafLine>, val picked: Set<String> = emptySet(), val confirming: Boolean = false) {
+    /** Every taf offered is picked: it's Halt all, one request for every taf. */
+    val all: Boolean get() = offered.isNotEmpty() && offered.all { it.tafId in picked }
+
+    /** The tafs picked, in Your tafs' order. */
+    val chosen: List<TafLine> get() = offered.filter { it.tafId in picked }
+  }
+
+  private val _haltPick = MutableStateFlow<HaltPick?>(null)
+
+  /** Choose which to halt, while it's open. Nothing is sent before it's confirmed. */
+  val haltPick: StateFlow<HaltPick?> = _haltPick.asStateFlow()
+
+  /** The menu's Halt: every taf not halted, none picked yet. With none running, or every taf halted, nothing opens. */
+  fun pickToHalt() {
+    val read = (_shown.value as? Shown.Read)?.tafs ?: return
+    val offered = read.tafs.filter { !it.halted }
+    if (read.allHalted || offered.isEmpty()) return
+    _haltPick.value = HaltPick(offered)
+  }
+
+  /** One taf's switch: on, or off again. */
+  fun togglePick(tafId: String) {
+    val pick = _haltPick.value?.takeIf { !it.confirming } ?: return
+    if (pick.offered.none { it.tafId == tafId }) return
+    _haltPick.value = pick.copy(picked = if (tafId in pick.picked) pick.picked - tafId else pick.picked + tafId)
+  }
+
+  /** All your tafs: every taf offered on, or, with every one on already, all off. */
+  fun togglePickAll() {
+    val pick = _haltPick.value?.takeIf { !it.confirming } ?: return
+    _haltPick.value = pick.copy(picked = if (pick.all) emptySet() else pick.offered.map { it.tafId }.toSet())
+  }
+
+  /** Halt now · N: asked once more, on the watch. With none picked, nothing. */
+  fun askPicked() {
+    val pick = _haltPick.value ?: return
+    if (pick.chosen.isNotEmpty()) _haltPick.value = pick.copy(confirming = true)
+  }
+
+  /** Cancel: from the question back to the choice, and from the choice back to the menu. Nothing is sent. */
+  fun cancelPick() {
+    val pick = _haltPick.value ?: return
+    _haltPick.value = if (pick.confirming) pick.copy(confirming = false) else null
+  }
+
+  /**
+   * Halt now, confirmed: every taf, with one Halt all, when every taf offered is picked; else a Halt for each taf picked, one after
+   * the other, through the phone, with Halting shown until the last answers. Nothing is sent unless it was asked once more, nor
+   * from a watch without its lock, or locked.
+   */
+  suspend fun haltPicked() {
+    if (_signedOutHere.value) return
+    val pick = _haltPick.value?.takeIf { it.confirming } ?: return
+    val chosen = pick.chosen
+    _haltPick.value = null
+    when {
+      chosen.isEmpty() -> return
+      pick.all -> return act(WatchRequest.Halt(now(), null))
+      chosen.size == 1 -> return act(WatchRequest.Halt(now(), chosen.single().tafId))
+    }
+    if (!unlocked()) {
+      _outcome.value = Outcome.NeedsLock
+      return
+    }
+    _outcome.value = Outcome.Halting(chosen.joinToString(", ") { it.name })
+    // Each to the end, one after the other: one that doesn't go through never keeps the next from halting.
+    val each = chosen.map { taf -> taf.name to outcomeOf(phone.ask(WatchRequest.Halt(now(), taf.tafId))) }
+    if (_signedOutHere.value) return
+    _outcome.value = Outcome.Several(each)
+    refresh()
+    rereadTaf()
+  }
 
   // MARK: Ask tafs (docs/watch-wear.md)
 
@@ -256,6 +418,7 @@ class WatchModel(
    * taf, so, as Refuse and Halt, never from a watch anyone could pick up. Returns whether to start listening.
    */
   fun listen(replyTo: String? = null): Boolean {
+    if (_signedOutHere.value) return false
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return false
@@ -274,6 +437,7 @@ class WatchModel(
    * only, as [listen].
    */
   fun readyToRecord(replyTo: String? = null) {
+    if (_signedOutHere.value) return
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
@@ -285,7 +449,7 @@ class WatchModel(
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
   fun review(text: String, replyTo: String? = null) {
     val words = text.trim()
-    if (words.isEmpty()) return
+    if (words.isEmpty() || _signedOutHere.value) return
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
@@ -402,10 +566,13 @@ class WatchModel(
    * its result card when it's the one just sent.
    */
   fun took(ask: AskLine) {
+    if (_signedOutHere.value) return
     val before = _asks.value[ask.id]
     // An older state never replaces a newer one (two messages crossing).
     if (before != null && before.updated > ask.updated) return
     _asks.value = _asks.value + (ask.id to ask)
+    // An ended ask is a line in the Inbox: Coach's or a taf's answer, kept until dismissed.
+    if (ask.ended) inboxPut(InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, ask.line ?: ask.words, now()))
     val at = now()
     if (ask.ended) receivedAt[ask.clientId]?.let { t -> timings[ask.clientId] = (timings[ask.clientId] ?: Timing(null, null, null)).copy(resultMs = at - t) }
     when (val v = _voice.value) {
@@ -422,9 +589,107 @@ class WatchModel(
 
   /** Opens an ask's result card (from the home screen or its notification). */
   fun open(ask: AskLine) {
+    if (_signedOutHere.value) return
     seen += ask.id
+    markRead(InboxItem.askId(ask.id))
     _result.value = ask
   }
+
+  // MARK: The Inbox (v2, docs/watch-wear.md): kept on the watch until dismissed; cleared on sign-out and when the watch is locked.
+
+  private val _inbox = MutableStateFlow(inboxStore?.read().orEmpty().sortedByDescending { it.at })
+
+  /** The Inbox, newest first. */
+  val inbox: StateFlow<List<InboxItem>> = _inbox.asStateFlow()
+
+  private val _inboxKept = MutableStateFlow(false)
+
+  /**
+   * Whether the Inbox can be kept on this watch now: v2, unlocked, with a screen lock. When it can't, nothing is stored and the
+   * screen shows what the phone answered now (Needs you's calls, the results ready), so a call that needs the person is never
+   * hidden behind "Nothing new".
+   */
+  val inboxKept: StateFlow<Boolean> = _inboxKept.asStateFlow()
+
+  /** How many lines of the Inbox aren't read yet: Coach's home says so. */
+  fun unreadCount(): Int = _inbox.value.count { !it.read }
+
+  /** Lines taken away (Dismiss, Clear read) that the phone still lists: a read doesn't bring them back. */
+  private var dismissed: Set<String> = inboxStore?.dismissed().orEmpty()
+
+  /** A new line, unread; one already there keeps its place and whether it was read, with the newest words. */
+  private fun inboxPut(item: InboxItem) {
+    // v1 keeps no Inbox; a locked watch, or one with no screen lock, adds nothing to it.
+    if (inboxStore == null && !reviewFirst) return
+    if (!unlocked()) return
+    if (item.id in dismissed) return
+    val before = _inbox.value.firstOrNull { it.id == item.id }
+    if (before != null && before.line == item.line && before.title == item.title) return
+    val next = if (before != null) _inbox.value.map { if (it.id == item.id) it.copy(title = item.title, line = item.line) else it } else listOf(item) + _inbox.value
+    saveInbox(next)
+  }
+
+  /** Opened: read. */
+  fun markRead(id: String) {
+    if (_inbox.value.none { it.id == id && !it.read }) return
+    saveInbox(_inbox.value.map { if (it.id == id) it.copy(read = true) else it })
+  }
+
+  /** Dismiss: gone from the Inbox, and it stays gone while the phone still lists it. */
+  fun dismiss(id: String) {
+    if (_inbox.value.none { it.id == id }) return
+    setDismissed(dismissed + id)
+    saveInbox(_inbox.value.filterNot { it.id == id })
+  }
+
+  /** Clear read: every line read is gone, and stays gone; unread ones stay. */
+  fun clearRead() {
+    val read = _inbox.value.filter { it.read }.map { it.id }
+    if (read.isEmpty()) return
+    setDismissed(dismissed + read)
+    saveInbox(_inbox.value.filterNot { it.read })
+  }
+
+  /** The phone's list of [kind] now: a line taken away that it no longer lists can't come back, so its id goes. */
+  private fun pruneDismissed(kind: String, listed: Set<String>) {
+    val kept = dismissed.filterTo(mutableSetOf()) { !it.startsWith(kind) || it in listed }
+    if (kept.size != dismissed.size) setDismissed(kept)
+  }
+
+  private fun setDismissed(ids: Set<String>) {
+    dismissed = ids
+    inboxStore?.writeDismissed(ids)
+  }
+
+  /** Signed out (on the phone, or on this watch): nothing of the Inbox stays on the watch, the ids taken away included. */
+  fun clearInbox() {
+    inboxStore?.clear()
+    dismissed = emptySet()
+    _inbox.value = emptyList()
+  }
+
+  /**
+   * Locked, or no screen lock: the lines go (no taf, words or time stays), but the ids taken away stay, bare, so a line dismissed
+   * before the lock doesn't come back unread after it.
+   */
+  private fun clearInboxLines() {
+    inboxStore?.write(emptyList())
+    _inbox.value = emptyList()
+  }
+
+  /** Put away while locked (or with no screen lock): the Inbox's lines are cleared now, not at the next start. */
+  fun clearInboxIfLocked() {
+    if (!unlocked()) clearInboxLines()
+  }
+
+  private fun saveInbox(items: List<InboxItem>) {
+    _inbox.value = items
+    inboxStore?.write(items)
+  }
+
+  /** The ask behind an Inbox line, as this watch knows it now or as the line kept it: its result card opens from either. */
+  fun askOf(item: InboxItem): AskLine =
+    _asks.value[item.ref] ?: AskLine(item.ref, "", "done", tafName = item.title, line = item.line, words = item.line, updated = "")
 
   fun closeResult() {
     _result.value = null
@@ -438,8 +703,10 @@ class WatchModel(
 
   /** Reads the watch's asks from the phone: those of the last day, as tafs cloud has them. A failed read leaves what's shown. */
   suspend fun readAsks() {
+    if (_signedOutHere.value) return
     val reply = (phone.ask(WatchRequest.Asks(now())) as? Asked.Answered)?.reply as? WatchReply.AskList ?: return
     for (ask in reply.asks) took(ask)
+    pruneDismissed("ask:", reply.asks.map { InboxItem.askId(it.id) }.toSet())
   }
 
   private val _shown = MutableStateFlow<Shown>(Shown.Asking)
@@ -447,15 +714,34 @@ class WatchModel(
 
   /** Reads Needs you, then Your brief (with the switch on), then Your tafs, from the phone. Your tafs not answering leaves Needs you shown, without the tafs. */
   suspend fun refresh() {
+    // Signed out on this watch: nothing is read until the person signs in on it again, and an answer that lands after is dropped.
+    if (_signedOutHere.value) return
+    // A locked watch, or one with no screen lock, keeps no Inbox: as the tile's count, nothing shows off the wrist.
+    val kept = unlocked()
+    if (!kept) clearInboxLines()
+    _inboxKept.value = kept && (inboxStore != null || reviewFirst)
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
-    val needsYou = when (val asked = phone.ask(WatchRequest.NeedsYou(now()))) {
+    val asked = phone.ask(WatchRequest.NeedsYou(now()))
+    if (_signedOutHere.value) return
+    val needsYou = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
-        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also { tile?.saw(reply.count, now()) }
+        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also {
+          tile?.saw(reply.count, now())
+          // Each held call is a line in the Inbox, kept until dismissed.
+          for (call in reply.calls) inboxPut(InboxItem(InboxItem.heldId(call.holdId), InboxItem.Kind.HELD, call.taf, call.wants, now()))
+          pruneDismissed("held:", reply.calls.map { InboxItem.heldId(it.holdId) }.toSet())
+        }
         is WatchReply.SignedOut -> {
           tile?.signedOut()
           // Signed out: nothing of the account stays on the watch, a kept message and a recording included.
           deleteKept()
+          clearInbox()
           if (_voice.value is Voice.Review) voiceNow = null
+          // Nor what an open screen read: a taf's page, the halt pick, the calendar, Account.
+          _taf.value = null
+          _haltPick.value = null
+          closeCalendar()
+          _account.value = null
           return show(Shown.SignedOut)
         }
         else -> return show(Shown.OpenOnPhone)
@@ -466,6 +752,7 @@ class WatchModel(
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }?.let { TafsRead(it.tafs, it.allHalted) }
+    if (_signedOutHere.value) return
     show(Shown.Read(needsYou, tafs, brief))
     // The phone answered: a message kept for later goes now.
     sendKept()
@@ -521,10 +808,117 @@ class WatchModel(
     voiceNow = null
     _asks.value = emptyMap()
     _result.value = null
+    _taf.value = null
+    _haltPick.value = null
+    closeCalendar()
+    _account.value = null
   }
 
   private fun show(shown: Shown) {
     _shown.value = shown
+  }
+
+  // MARK: A calendar day, Account, and Sign out on this watch (v2 step vi, AccountScreens.kt)
+
+  /** A read for one of v2's own screens: asking, the phone's answer in its words, or why there's none. */
+  sealed interface Reading<out T> {
+    data object Asking : Reading<Nothing>
+
+    data class Read<T>(val value: T) : Reading<T>
+
+    data object SignedOut : Reading<Nothing>
+
+    data object PhoneUnreachable : Reading<Nothing>
+
+    /** An answer this watch can't draw (an older phone, a failed read): Open on phone, never a guess. */
+    data object OpenOnPhone : Reading<Nothing>
+  }
+
+  /** A calendar day as tafs cloud said it, and whether it's the account's today: the day the phone answered when asked for none. */
+  data class DayRead(val day: WatchReply.CalendarDay, val today: Boolean)
+
+  private val _calendar = MutableStateFlow<Reading<DayRead>?>(null)
+
+  /** The calendar day on screen, in memory only; none until it's opened. */
+  val calendar: StateFlow<Reading<DayRead>?> = _calendar.asStateFlow()
+
+  private val _account = MutableStateFlow<Reading<WatchReply.AccountPage>?>(null)
+
+  /** Who is signed in and the plan's line, read each time Account is shown; in memory only. */
+  val account: StateFlow<Reading<WatchReply.AccountPage>?> = _account.asStateFlow()
+
+  /** The account's today as the phone last answered it, so a day the person moved to says Today only when it is. */
+  private var today: String? = null
+  private var calendarAsk = 0
+
+  /** Reads the calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today with none. Only the last day asked is shown. */
+  suspend fun readCalendar(day: String? = null) {
+    if (_signedOutHere.value) return
+    val ask = ++calendarAsk
+    _calendar.value = Reading.Asking
+    val read = read<WatchReply.CalendarDay>(WatchRequest.Calendar(now(), day))
+    // Closed, another day asked, or signed out here meanwhile: this answer is dropped.
+    if (ask != calendarAsk || _signedOutHere.value) return
+    if (day == null && read is Reading.Read) today = read.value.day
+    _calendar.value = when (read) {
+      is Reading.Read -> Reading.Read(DayRead(read.value, read.value.day == today))
+      Reading.Asking -> Reading.Asking
+      Reading.SignedOut -> Reading.SignedOut
+      Reading.PhoneUnreachable -> Reading.PhoneUnreachable
+      Reading.OpenOnPhone -> Reading.OpenOnPhone
+    }
+  }
+
+  /** Done with the calendar: what it showed is forgotten, and an answer still to come is dropped. */
+  fun closeCalendar() {
+    calendarAsk++
+    _calendar.value = null
+  }
+
+  /** Reads Account's lines from the phone; what's shown stays until the answer replaces it. */
+  suspend fun readAccount() {
+    if (_signedOutHere.value) return
+    if (_account.value !is Reading.Read) _account.value = Reading.Asking
+    val read = read<WatchReply.AccountPage>(WatchRequest.Account(now()))
+    if (!_signedOutHere.value) _account.value = read
+  }
+
+  private suspend inline fun <reified T : WatchReply> read(request: WatchRequest): Reading<T> = when (val asked = phone.ask(request)) {
+    is Asked.Answered -> when (val reply = asked.reply) {
+      is T -> Reading.Read(reply)
+      WatchReply.SignedOut -> Reading.SignedOut
+      else -> Reading.OpenOnPhone
+    }
+    Asked.Unreachable -> Reading.PhoneUnreachable
+    Asked.NotUnderstood -> Reading.OpenOnPhone
+  }
+
+  private val _signedOutHere = MutableStateFlow(signIn?.signedOut() == true)
+
+  /** Signed out on this watch alone: it shows that and Sign in, and reads and sends nothing, until it's signed in here again. */
+  val signedOutHere: StateFlow<Boolean> = _signedOutHere.asStateFlow()
+
+  /**
+   * Sign out, on this watch alone: the phone stays signed in. The watch forgets everything it holds: what it showed, the asks, a
+   * review and its recording, the message kept for later and the tile's count. The flag stays on the watch until Sign in, here.
+   */
+  fun signOutHere() {
+    signIn?.signOut()
+    _signedOutHere.value = true
+    forget()
+    deleteKept()
+    clearInbox()
+    tile?.signedOut()
+    seen.clear()
+    timings.clear()
+    receivedAt.clear()
+    today = null
+  }
+
+  /** Sign in, on this watch again: the phone is still signed in, so the watch only reads it again (the caller refreshes). */
+  fun signInHere() {
+    signIn?.signIn()
+    _signedOutHere.value = false
   }
 }
 

@@ -47,16 +47,15 @@ class WatchPagesTest {
   private val read = WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), tafs)
   private val answered = AskLine(id = "ask_1", clientId = "c1", state = "done", tafName = "Support replies", words = "Answered", updated = "2026-11-19T08:00:00Z")
 
-  private val haltAllAsked = mutableListOf<Unit>()
-  private val haltAllConfirmed = mutableListOf<Unit>()
   private val opened = mutableListOf<AskLine>()
   private val did = mutableListOf<String>()
   private val actions = Actions(
-    openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = { haltAllAsked += Unit }, confirmHaltAll = { haltAllConfirmed += Unit },
+    openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = {}, confirmHaltAll = {},
     cancelHaltAll = {}, listen = { did += "listen" }, closeVoice = { did += "close" }, retry = {}, open = { opened += it }, hear = {}, reply = {}, closeResult = {}, dismiss = {},
     start = { did += "start ${it ?: ""}".trim() }, stop = { did += "stop" }, send = { did += "send" }, rerecord = { did += "rerecord" },
     delete = { did += "delete" }, type = { did += "type" }, quick = { did += "quick $it" },
-    keep = { did += "keep" }, deleteKept = { did += "delete kept" },
+    keep = { did += "keep" }, deleteKept = { did += "delete kept" }, pickToHalt = { did += "pick to halt" },
+    openItem = { did += "open ${it.id}" }, dismissItem = { did += "dismiss $it" }, clearRead = { did += "clear read" },
   )
 
   private fun show(
@@ -136,16 +135,9 @@ class WatchPagesTest {
     show(read)
     compose.onNodeWithText(Words.Watch.menu).performClick()
     for (page in pages(false)) compose.onNodeWithText(page.title).assertExists()
+    // Step (v): Halt opens Choose which to halt, which asks once more (TafScreensTest).
     compose.onNodeWithText(Words.Taf.Halt.title).performClick()
-    assertEquals(1, haltAllAsked.size)
-  }
-
-  @Test fun haltIsAskedOnceMoreThenHaltsEveryTaf() {
-    show(read, confirmingHaltAll = true)
-    compose.onNodeWithText(Words.Watch.menu).performClick()
-    compose.onNodeWithText(Words.HaltAll.title).assertExists()
-    compose.onNodeWithText(Words.Halt.allNow).performClick()
-    assertEquals(1, haltAllConfirmed.size)
+    assertEquals(listOf("pick to halt"), did)
   }
 
   @Test fun theMenuGoesToAPage() {
@@ -284,5 +276,84 @@ class WatchPagesTest {
   @Test fun aReviewWithNoRecordingHasNoPlay() {
     show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
     compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
+  }
+
+  // MARK: The Inbox kept on the watch (step iv)
+
+  private val heldLine = InboxItem(InboxItem.heldId("hold_1"), InboxItem.Kind.HELD, "Late parcels", "Reship order #5098", 2)
+  private val answerLine = InboxItem(InboxItem.askId("wa_02"), InboxItem.Kind.ASK, "Support replies", "Replied to maria@…", 1, read = true)
+
+  private fun showInbox(inbox: List<InboxItem>, page: Page = Page.Inbox, shown: WatchModel.Shown = read) = compose.setContent {
+    MaterialTheme {
+      WatchPages(shown, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+        pages = pages(false), pager = rememberPagerState(initialPage = pages(false).indexOf(page)) { pages(false).size }, inbox = inbox)
+    }
+  }
+
+  @Test fun theInboxShowsEachLineWithItsUnreadDotAndDismiss() {
+    showInbox(listOf(heldLine, answerLine))
+    compose.onNodeWithText("Reship order #5098").assertExists()
+    compose.onNodeWithText("Replied to maria@…").assertExists()
+    compose.onNodeWithTag(UNREAD_DOT + heldLine.id, useUnmergedTree = true).assertExists()
+    compose.onAllNodesWithTag(UNREAD_DOT + answerLine.id, useUnmergedTree = true).assertCountEquals(0)
+    compose.onNodeWithText(Words.Watch.clearRead).performClick()
+    compose.onAllNodesWithText(Words.Watch.dismiss)[0].performClick()
+    assertEquals(listOf("clear read", "dismiss ${heldLine.id}"), did)
+  }
+
+  /** A held call Needs you still holds opens whole (step vi), with Refuse and Approve on your phone there; the line is read. */
+  @Test fun aHeldLineOpensTheCallWhole() {
+    showInbox(listOf(heldLine))
+    compose.onNodeWithTag(INBOX_ITEM + heldLine.id).performClick()
+    compose.onNodeWithText(Words.Watch.nothingSentUntil).assertExists()
+    compose.onNodeWithText(Words.NeedsYou.refuse).assertExists()
+    assertEquals(listOf("open ${heldLine.id}"), did)
+  }
+
+  @Test fun aHeldLineNeedsYouNoLongerHoldsSaysSo() {
+    showInbox(listOf(heldLine), shown = read.copy(needsYou = WatchModel.NeedsYouRead(0, "Nothing needs you", emptyList())))
+    compose.onNodeWithText(Words.Watch.alreadyAnswered).assertExists()
+    compose.onAllNodesWithText(Words.NeedsYou.refuse).assertCountEquals(0)
+  }
+
+  @Test fun anEmptyKeptInboxSaysWhatLandsThere() {
+    showInbox(emptyList())
+    compose.onNodeWithText(Words.Watch.inboxEmpty).assertExists()
+  }
+
+  @Test fun homeCountsOnlyUnreadLines() {
+    showInbox(listOf(heldLine, answerLine), page = Page.Coach)
+    compose.onNodeWithText(Words.Watch.inboxUnread(1)).assertExists()
+  }
+
+  @Test fun theStoreKeepsEachLineAsWritten() {
+    val lines = listOf(heldLine, answerLine, InboxItem(InboxItem.askId("wa_03"), InboxItem.Kind.ASK, null, "Done", 3))
+    assertEquals(lines, PreferencesInboxStore.decode(PreferencesInboxStore.encode(lines)))
+  }
+
+  // MARK: The batch's pre-review (#1408)
+
+  /** A Halt confirmed from the menu comes back to it: what came of it is said there, "set a screen lock" included. */
+  @Test fun theMenuSaysWhatCameOfAHaltAskedFromIt() {
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(read, outcome = WatchModel.Outcome.NeedsLock, confirmingHaltAll = false, voice = null, result = null, working = emptyList(),
+          ready = emptyList(), act = actions, pages = pages(false))
+      }
+    }
+    compose.onNodeWithText(Words.Watch.menu).performClick()
+    compose.onNodeWithText(Words.Watch.needsLock).assertExists()
+  }
+
+  /** The Inbox not kept (locked, no screen lock): the call that needs the person is shown as the phone answered it, never "Nothing new". */
+  @Test fun anInboxNotKeptShowsWhatThePhoneAnsweredNow() {
+    compose.setContent {
+      MaterialTheme {
+        WatchPages(read, outcome = null, confirmingHaltAll = false, voice = null, result = null, working = emptyList(), ready = emptyList(), act = actions,
+          pages = pages(false), pager = rememberPagerState(initialPage = 1) { pages(false).size }, inbox = null)
+      }
+    }
+    compose.onNodeWithText("Reship order #5098").assertExists()
+    compose.onAllNodesWithText(Words.Watch.inboxEmpty).assertCountEquals(0)
   }
 }

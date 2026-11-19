@@ -2579,6 +2579,7 @@
     <string name="voice_voice_becomes_text_device_not">Your voice becomes text on this device. It isn\'t sent until you send it.</string>
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
     <string name="watch_all_chats">All chats</string>
+    <string name="watch_all_your_tafs">All your tafs</string>
     <string name="watch_already_answered">Already answered, or it ended.</string>
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_as_of">As of %1$s</string>
@@ -2587,11 +2588,23 @@
     <string name="watch_ask_not_on">Asking from your watch isn\'t on yet.</string>
     <string name="watch_ask_text_only">tafs gets your words as text, never your voice.</string>
     <string name="watch_asking_phone">Asking your phone…</string>
+    <string name="watch_calendar_today">Today\'s calendar</string>
     <string name="watch_check_phone">Check your phone\'s connection</string>
+    <string name="watch_check_phone_sub">Needs you is open there. Approve the call there.</string>
+    <string name="watch_check_phone_title">Check your phone</string>
+    <string name="watch_clear_read">Clear read</string>
     <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
     <string name="watch_deleted_nothing_sent">Deleted. Nothing was sent.</string>
     <string name="watch_didnt_catch">Didn\'t catch that. Tap to try again.</string>
+    <string name="watch_dismiss">Dismiss</string>
     <string name="watch_glance_description">How many need you, never what or who.</string>
+    <string name="watch_halt_all_q">Halt all your tafs?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Halt now · %1$s</item>
+        <item quantity="other">Halt now · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Choose which to halt</string>
+    <string name="watch_halt_this">Halt this taf</string>
     <string name="watch_halting">Halting %1$s…</string>
     <string name="watch_halting_all">Halting all your tafs…</string>
     <string name="watch_hear">Hear</string>
@@ -2604,6 +2617,7 @@
         <item quantity="one">%1$s unread in Inbox</item>
         <item quantity="other">%1$s unread in Inbox</item>
     </plurals>
+    <string name="watch_its_settings">Its settings</string>
     <string name="watch_keep_for_later">Keep for later</string>
     <string name="watch_kept_to_send">Kept on this watch. It\'s sent when your phone is in reach again.</string>
     <string name="watch_limit">30 s at most</string>
@@ -2617,6 +2631,8 @@
         <item quantity="other">%1$s need you</item>
     </plurals>
     <string name="watch_not_sure">Not sure it arrived</string>
+    <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
+    <string name="watch_nothing_waits">Nothing waits for you.</string>
     <string name="watch_open_on_phone">Open on phone</string>
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
@@ -2639,11 +2655,18 @@
     <string name="watch_rerecord">Re-record</string>
     <string name="watch_result_ready">A result is ready</string>
     <string name="watch_results_channel">Results</string>
+    <string name="watch_resume_on_phone">Resume on your phone</string>
     <string name="watch_retry">Retry</string>
     <string name="watch_review">Check before sending</string>
     <string name="watch_sending">Sending…</string>
     <string name="watch_sent">Sent</string>
+    <string name="watch_settings_of">%1$s · settings</string>
     <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_sign_out_q">Sign out on this watch?</string>
+    <string name="watch_sign_out_sub">Your phone stays signed in. This watch forgets your tafs, chats and inbox.</string>
+    <string name="watch_signed_in">Signed in</string>
+    <string name="watch_signed_out_here">Signed out on this watch. Your phone stays signed in.</string>
+    <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
     <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
@@ -2651,6 +2674,7 @@
     <string name="watch_type_hint">Write to Coach…</string>
     <string name="watch_update_phone">Update tafs on your phone, then try again.</string>
     <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
+    <string name="watch_what_it_does">What it does</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s working</item>
         <item quantity="other">%1$s working</item>

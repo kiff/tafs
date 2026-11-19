@@ -1,0 +1,7 @@
+Versione 2 di tafs su Wear OS, per i test.
+- Coach come home: parla, scrivi o risposta rapida, controlla, invia.
+- Riascolta la registrazione prima di inviarla. Resta sull'orologio ed è cancellata dopo l'invio o l'eliminazione.
+- Tieni un messaggio per dopo se il telefono non è raggiungibile.
+- In arrivo per risposte e chiamate trattenute, finché non le ignori.
+- Pagina e impostazioni di ogni taf; scegli quali bloccare.
+- Calendario di oggi e il tuo account. Le approvazioni restano sul telefono.

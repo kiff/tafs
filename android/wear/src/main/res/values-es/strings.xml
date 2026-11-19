@@ -4,8 +4,18 @@
     <string name="words_language" translatable="false">es</string>
     <string name="alert_needs_you">Un taf te necesita</string>
     <string name="alert_not_refused">No rechazada</string>
+    <string name="calendar_next_day">Día siguiente</string>
+    <string name="calendar_previous_day">Día anterior</string>
+    <string name="calendar_reading">Leyendo el calendario…</string>
+    <plurals name="calendar_times">
+        <item quantity="one">×%1$s</item>
+        <item quantity="other">×%1$s</item>
+    </plurals>
+    <string name="calendar_today">Hoy</string>
+    <string name="card_its_card">Su Card</string>
     <string name="chat_delete">Eliminar</string>
     <string name="chat_stop">Detener</string>
+    <string name="chat_waiting_for_you">Te necesita</string>
     <string name="coach_ask">Preguntar a Coach</string>
     <string name="coach_start">Empezar</string>
     <string name="coach_title">Coach</string>
@@ -13,9 +23,13 @@
     <string name="common_close">Cerrar</string>
     <string name="common_done">Hecho</string>
     <string name="common_loading">Cargando…</string>
+    <string name="common_ok">OK</string>
     <string name="common_send">Enviar</string>
     <string name="common_try_again">Reintentar</string>
     <string name="halt_all_now">Bloquear todo ahora</string>
+    <string name="halt_explain_halted">Bloqueado. Al reanudar, solo empieza trabajo nuevo.</string>
+    <string name="halt_explain_running_all">Bloquear detiene tus tafs hasta que los reanudes. Una llamada ya enviada aún puede llegar.</string>
+    <string name="halt_explain_running_one">Bloquear lo detiene hasta que lo reanudes. Una llamada ya enviada aún puede llegar.</string>
     <string name="halt_now">Bloquear ahora</string>
     <string name="halt_all_title">Bloquear todos los tafs</string>
     <string name="home_title">Tafs</string>
@@ -23,11 +37,17 @@
     <string name="needs_you_nothing">Nada te necesita.</string>
     <string name="needs_you_refuse">Rechazar</string>
     <string name="needs_you_title">Te necesita</string>
+    <string name="settings_language_title">Idioma</string>
+    <string name="settings_plan">Plan</string>
+    <string name="settings_sign_out">Cerrar sesión</string>
     <string name="settings_title">Cuenta</string>
+    <string name="settings_version">Versión</string>
+    <string name="sign_in_with_phone">Iniciar sesión con tu teléfono</string>
     <string name="taf_halt_title">Bloquear</string>
     <string name="taf_pause">Pausar</string>
     <string name="taf_state_halted">Bloqueado</string>
     <string name="watch_all_chats">Todos los chats</string>
+    <string name="watch_all_your_tafs">Todos tus tafs</string>
     <string name="watch_already_answered">Ya respondida, o terminada.</string>
     <string name="watch_approve_on_phone">Aprueba en tu teléfono</string>
     <string name="watch_as_of">Actualizado a las %1$s</string>
@@ -36,11 +56,23 @@
     <string name="watch_ask_not_on">Pedir desde el reloj aún no está activado.</string>
     <string name="watch_ask_text_only">tafs recibe tus palabras como texto, nunca tu voz.</string>
     <string name="watch_asking_phone">Preguntando a tu teléfono…</string>
+    <string name="watch_calendar_today">Calendario de hoy</string>
     <string name="watch_check_phone">Revisa la conexión del teléfono</string>
+    <string name="watch_check_phone_sub">Te necesita está abierto allí. Aprueba la llamada allí.</string>
+    <string name="watch_check_phone_title">Mira tu teléfono</string>
+    <string name="watch_clear_read">Quitar leídos</string>
     <string name="watch_coach_needs_consent">Antes de hablar con Coach, permite el uso de IA en tafs en tu teléfono.</string>
     <string name="watch_deleted_nothing_sent">Eliminado. No se envió nada.</string>
     <string name="watch_didnt_catch">No lo he entendido. Toca para volver a intentarlo.</string>
+    <string name="watch_dismiss">Descartar</string>
     <string name="watch_glance_description">Cuántos te necesitan, nunca qué ni quién.</string>
+    <string name="watch_halt_all_q">¿Bloquear todos tus tafs?</string>
+    <plurals name="watch_halt_now_count">
+        <item quantity="one">Bloquear ahora · %1$s</item>
+        <item quantity="other">Bloquear ahora · %1$s</item>
+    </plurals>
+    <string name="watch_halt_pick_title">Elige cuáles bloquear</string>
+    <string name="watch_halt_this">Bloquear este taf</string>
     <string name="watch_halting">Bloqueando %1$s…</string>
     <string name="watch_halting_all">Bloqueando todos tus tafs…</string>
     <string name="watch_hear">Escuchar</string>
@@ -53,6 +85,7 @@
         <item quantity="one">%1$s sin leer en la Bandeja</item>
         <item quantity="other">%1$s sin leer en la Bandeja</item>
     </plurals>
+    <string name="watch_its_settings">Sus ajustes</string>
     <string name="watch_keep_for_later">Guardar para luego</string>
     <string name="watch_kept_to_send">Guardado en este reloj. Se envía cuando tu teléfono vuelva a estar al alcance.</string>
     <string name="watch_limit">30 s como máximo</string>
@@ -66,6 +99,8 @@
         <item quantity="other">%1$s te necesitan</item>
     </plurals>
     <string name="watch_not_sure">No se sabe si llegó</string>
+    <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
+    <string name="watch_nothing_waits">Nada te espera.</string>
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
@@ -88,11 +123,18 @@
     <string name="watch_rerecord">Volver a grabar</string>
     <string name="watch_result_ready">Hay un resultado listo</string>
     <string name="watch_results_channel">Resultados</string>
+    <string name="watch_resume_on_phone">Reanudar en tu teléfono</string>
     <string name="watch_retry">Reintentar</string>
     <string name="watch_review">Revisa antes de enviar</string>
     <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
+    <string name="watch_settings_of">%1$s · ajustes</string>
     <string name="watch_sign_in_on_phone">Primero inicia sesión en tafs en tu teléfono.</string>
+    <string name="watch_sign_out_q">¿Cerrar sesión en este reloj?</string>
+    <string name="watch_sign_out_sub">Tu teléfono sigue con la sesión iniciada. Este reloj olvida tus tafs, chats y bandeja.</string>
+    <string name="watch_signed_in">Sesión iniciada</string>
+    <string name="watch_signed_out_here">Sesión cerrada en este reloj. Tu teléfono sigue con la sesión iniciada.</string>
+    <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
     <string name="watch_trust">Este reloj no guarda contraseñas ni claves y no aprueba nada: lo que necesita tu sí espera a tu teléfono. Tus tafs solo hacen lo que permiten sus Cards.</string>
@@ -100,6 +142,7 @@
     <string name="watch_type_hint">Escribe a Coach…</string>
     <string name="watch_update_phone">Actualiza tafs en tu teléfono y vuelve a intentarlo.</string>
     <string name="watch_voice_text_only">Coach recibe tus palabras como texto, nunca tu voz.</string>
+    <string name="watch_what_it_does">Qué hace</string>
     <plurals name="watch_working_count">
         <item quantity="one">%1$s trabajando</item>
         <item quantity="other">%1$s trabajando</item>

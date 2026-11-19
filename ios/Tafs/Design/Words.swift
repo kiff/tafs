@@ -5145,6 +5145,8 @@ enum Words {
     enum Watch {
         /// All chats
         static var allChats: String { Words.line("watch.all_chats") }
+        /// All your tafs
+        static var allYourTafs: String { Words.line("watch.all_your_tafs") }
         /// Already answered, or it ended.
         static var alreadyAnswered: String { Words.line("watch.already_answered") }
         /// Approve on your phone
@@ -5161,16 +5163,34 @@ enum Words {
         static var askTextOnly: String { Words.line("watch.ask_text_only") }
         /// Asking your phone…
         static var askingPhone: String { Words.line("watch.asking_phone") }
+        /// Today's calendar
+        static var calendarToday: String { Words.line("watch.calendar_today") }
         /// Check your phone's connection
         static var checkPhone: String { Words.line("watch.check_phone") }
+        /// Needs you is open there. Approve the call there.
+        static var checkPhoneSub: String { Words.line("watch.check_phone_sub") }
+        /// Check your phone
+        static var checkPhoneTitle: String { Words.line("watch.check_phone_title") }
+        /// Clear read
+        static var clearRead: String { Words.line("watch.clear_read") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
         /// Deleted. Nothing was sent.
         static var deletedNothingSent: String { Words.line("watch.deleted_nothing_sent") }
         /// Didn't catch that. Tap to try again.
         static var didntCatch: String { Words.line("watch.didnt_catch") }
+        /// Dismiss
+        static var dismiss: String { Words.line("watch.dismiss") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
+        /// Halt all your tafs?
+        static var haltAllQ: String { Words.line("watch.halt_all_q") }
+        /// Halt now · {count}
+        static func haltNowCount(count: Int) -> String { Words.count("watch.halt_now_count", count) }
+        /// Choose which to halt
+        static var haltPickTitle: String { Words.line("watch.halt_pick_title") }
+        /// Halt this taf
+        static var haltThis: String { Words.line("watch.halt_this") }
         /// Halting {taf}…
         static func halting(taf: String) -> String { Words.line("watch.halting", taf) }
         /// Halting all your tafs…
@@ -5183,6 +5203,8 @@ enum Words {
         static var inboxEmpty: String { Words.line("watch.inbox_empty") }
         /// {count} unread in Inbox
         static func inboxUnread(count: Int) -> String { Words.count("watch.inbox_unread", count) }
+        /// Its settings
+        static var itsSettings: String { Words.line("watch.its_settings") }
         /// Keep for later
         static var keepForLater: String { Words.line("watch.keep_for_later") }
         /// Kept on this watch. It's sent when your phone is in reach again.
@@ -5203,6 +5225,10 @@ enum Words {
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
         /// Not sure it arrived
         static var notSure: String { Words.line("watch.not_sure") }
+        /// Nothing is sent until you approve.
+        static var nothingSentUntil: String { Words.line("watch.nothing_sent_until") }
+        /// Nothing waits for you.
+        static var nothingWaits: String { Words.line("watch.nothing_waits") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
         enum Page {
@@ -5245,6 +5271,8 @@ enum Words {
         static var resultReady: String { Words.line("watch.result_ready") }
         /// Results
         static var resultsChannel: String { Words.line("watch.results_channel") }
+        /// Resume on your phone
+        static var resumeOnPhone: String { Words.line("watch.resume_on_phone") }
         /// Retry
         static var retry: String { Words.line("watch.retry") }
         /// Check before sending
@@ -5253,8 +5281,20 @@ enum Words {
         static var sending: String { Words.line("watch.sending") }
         /// Sent
         static var sent: String { Words.line("watch.sent") }
+        /// {taf} · settings
+        static func settingsOf(taf: String) -> String { Words.line("watch.settings_of", taf) }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Sign out on this watch?
+        static var signOutQ: String { Words.line("watch.sign_out_q") }
+        /// Your phone stays signed in. This watch forgets your tafs, chats and inbox.
+        static var signOutSub: String { Words.line("watch.sign_out_sub") }
+        /// Signed in
+        static var signedIn: String { Words.line("watch.signed_in") }
+        /// Signed out on this watch. Your phone stays signed in.
+        static var signedOutHere: String { Words.line("watch.signed_out_here") }
+        /// Swipe left for its settings
+        static var swipeSettings: String { Words.line("watch.swipe_settings") }
         /// Tap Start, then speak. Your words show here as you talk.
         static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
@@ -5269,6 +5309,8 @@ enum Words {
         static var updatePhone: String { Words.line("watch.update_phone") }
         /// Coach gets your words as text, never your voice.
         static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
+        /// What it does
+        static var whatItDoes: String { Words.line("watch.what_it_does") }
         /// {count} working
         static func workingCount(count: Int) -> String { Words.count("watch.working_count", count) }
     }

@@ -1,0 +1,7 @@
+Version 2 de tafs sur Wear OS, pour test.
+- Coach en accueil : parlez, écrivez ou réponse rapide, vérifiez, envoyez.
+- Écoutez l'enregistrement avant l'envoi. Il reste sur la montre, effacé une fois envoyé ou supprimé.
+- Gardez un message pour plus tard si le téléphone est hors de portée.
+- Boîte de réception pour réponses et appels retenus, jusqu'à les ignorer.
+- Page et réglages de chaque taf ; choisissez lesquels bloquer.
+- Agenda du jour et votre compte. L'approbation reste sur le téléphone.

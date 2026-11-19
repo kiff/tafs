@@ -1,5 +1,6 @@
 package bot.tafs.wear
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,10 +37,11 @@ import bot.tafs.watchlink.AskLine
 import kotlinx.coroutines.launch
 
 /**
- * Wear OS v2 (docs/watch-wear.md, Version 2): off. It's built one step at a time behind this switch, so a watch shows v1 whole
- * until every step is in; it turns on, as this one line, when the last of them lands and the owner has tried the build.
+ * Wear OS v2 (docs/watch-wear.md, Version 2), from the build: on only in a test version ("-test") for the owner's watch on Play's
+ * internal track, off in debug builds, the unit tests and any production build. It turns on for everyone, as one line in
+ * wear/build.gradle.kts, once the owner has tried it and the server pieces it waits on are in.
  */
-internal const val WATCH_V2 = false
+internal val WATCH_V2: Boolean = BuildConfig.WATCH_V2
 
 /** v2's pages, side by side, moved between with a swipe: Coach is home, since talking to Coach is what the wrist is for. */
 internal enum class Page { Coach, Inbox, Tafs, Brief, Account }
@@ -56,8 +60,8 @@ internal val Page.title: String
   }
 
 /**
- * What waits in the Inbox, for the count on Coach's home: the calls Needs you holds and the results not opened yet. The inbox kept
- * on the watch, with read and dismissed, is step (iv); until then it's what the phone answered now, as v1 shows it.
+ * What waits in the Inbox, for the count on Coach's home, when the Inbox can't be kept on this watch (locked, or no screen lock):
+ * the calls Needs you holds and the results not opened yet, as the phone answered now. When it's kept, its unread lines count.
  */
 internal fun unread(shown: WatchModel.Shown, ready: List<AskLine>): Int =
   ((shown as? WatchModel.Shown.Read)?.needsYou?.count ?: 0) + ready.size
@@ -83,15 +87,43 @@ internal fun WatchPages(
   timing: String? = null,
   /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
   probe: String? = null,
+  /** The Inbox kept on the watch (step iv); null when it can't be kept now (locked, no screen lock): what the phone answered now. */
+  inbox: List<InboxItem>? = null,
+  /** Step (v): the taf whose page is open, and Choose which to halt, from the menu (TafScreens.kt). */
+  taf: WatchModel.OpenTaf? = null,
+  haltPick: WatchModel.HaltPick? = null,
+  /** Signed out on this watch alone (step vi): only that, and Sign in. */
+  signedOutHere: Boolean = false,
+  /** The calendar day, while it's open (step vi). */
+  calendar: WatchModel.Reading<WatchModel.DayRead>? = null,
+  /** Account's read from the phone (step vi). */
+  account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
 ) {
+  if (signedOutHere) return SignedOutHereScreen(act)
+  // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
+  // the app; on the pages themselves it's the system's own (backOf).
   when {
-    voice != null -> return VoiceScreenV2(voice, act, probe = probe)
-    result != null -> return ResultScreen(result, act, timing)
-    outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
+    voice != null -> {
+      BackHandler(onBack = backOf(voice, act))
+      return VoiceScreenV2(voice, act, probe = probe)
+    }
+    result != null -> {
+      BackHandler(onBack = act.closeResult)
+      return ResultScreen(result, act, timing)
+    }
+    outcome is WatchModel.Outcome.Halting -> {
+      // Nothing to cancel: the phone's answer is shown when it comes.
+      BackHandler {}
+      return HaltingScreen(outcome.taf)
+    }
   }
   var menu by remember { mutableStateOf(false) }
   var quick by remember { mutableStateOf(false) }
+  // A held call, the hand-off, the calendar or Sign out's question (AccountScreens.kt), over the pages.
+  var over by remember { mutableStateOf<Over?>(null) }
+  over?.let { o -> return OverScreen(o, shown, calendar, act, go = { over = it }, close = { over = null }) }
   if (quick) {
+    BackHandler { quick = false }
     return QuickReplyScreen(pick = {
       quick = false
       act.quick(it)
@@ -102,14 +134,23 @@ internal fun WatchPages(
     menu = false
     pages.indexOf(page).takeIf { it >= 0 }?.let { scope.launch { pager.animateScrollToPage(it) } }
   }
-  if (menu) {
-    return MenuScreen(shown, pages, confirmingHaltAll, act, open = ::goTo, confirm = {
-      menu = false
-      act.confirmHaltAll()
-    }, close = {
-      menu = false
-      act.cancelHaltAll()
+  // Choosing which to halt, over the menu it came from; a taf's page and its settings, over the pages.
+  haltPick?.let {
+    // From the question back to the choice, then to the menu, as Cancel.
+    BackHandler(onBack = act.cancelPick)
+    return HaltPickScreen(it, act)
+  }
+  taf?.let {
+    return TafScreen(it, outcome, act, openInbox = {
+      act.closeTaf()
+      goTo(Page.Inbox)
     })
+  }
+  // Account is read from the phone each time it's the page shown.
+  androidx.compose.runtime.LaunchedEffect(pager.currentPage) { if (pages.getOrNull(pager.currentPage) == Page.Account) act.readAccount() }
+  if (menu) {
+    BackHandler { menu = false }
+    return MenuScreen(shown, pages, act, outcome, open = ::goTo, close = { menu = false })
   }
   Box(Modifier.fillMaxSize()) {
     HorizontalPager(pager, Modifier.fillMaxSize()) { i ->
@@ -117,23 +158,25 @@ internal fun WatchPages(
         Modifier.fillMaxWidth(),
         state = rememberScalingLazyListState(initialCenterItemIndex = 0),
         verticalArrangement = Arrangement.spacedBy(4.dp),
+        // Room under the last item, so it scrolls clear of the page dots at the foot (qa-kiff's device read, #1409).
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 8.dp, bottom = 36.dp),
       ) {
         val page = pages[i]
         if (page == Page.Coach) {
-          coachHome(shown, working, ready, act, kept, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
+          coachHome(shown, working, ready, act, kept, inbox, openInbox = { goTo(Page.Inbox) }, openMenu = { menu = true }, openQuick = { quick = true })
         } else {
           item { ListHeader { Text(page.title) } }
         }
         outcome?.let { item { OutcomeCard(it, act) } }
         when (page) {
           Page.Coach -> Unit
-          Page.Account -> accountPage(act)
+          Page.Account -> accountItems(account, act, signOut = { over = Over.SignOut })
           else -> if (notRead(shown, act)) {
             when (page) {
-              Page.Inbox -> inboxPage(shown as WatchModel.Shown.Read, ready, act)
-              Page.Tafs -> tafsPage(shown as WatchModel.Shown.Read)
-              Page.Brief -> briefPage(shown as WatchModel.Shown.Read, act)
-              else -> Unit
+              Page.Inbox -> if (inbox != null) keptInboxPage(inbox, shown as WatchModel.Shown.Read, act, openCall = { over = Over.HeldCall(it.holdId) })
+                else inboxPage(shown as WatchModel.Shown.Read, ready, act, openCall = { over = Over.HeldCall(it.holdId) })
+              Page.Tafs -> { tafsPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
+              Page.Brief -> { briefPage(shown as WatchModel.Shown.Read, act); calendarDoor { over = Over.Calendar } }
             }
           }
         }
@@ -142,6 +185,12 @@ internal fun WatchPages(
     HorizontalPageIndicator(pager, Modifier.align(Alignment.BottomCenter))
   }
 }
+
+/**
+ * Back on the microphone's screens: Cancel, through the model, so a review's recording is erased (`WatchModel.voiceNow`); while the
+ * words are being sent, nothing, since what tafs cloud answers is shown when it comes.
+ */
+internal fun backOf(voice: WatchModel.Voice, act: Actions): () -> Unit = if (voice is WatchModel.Voice.Sending) ({}) else act.closeVoice
 
 /**
  * Coach's home: the microphone first, named for Coach, with the asks at work under it; Type and Quick reply, which open the review
@@ -154,6 +203,7 @@ private fun ScalingLazyListScope.coachHome(
   ready: List<AskLine>,
   act: Actions,
   kept: WatchModel.Draft?,
+  inbox: List<InboxItem>?,
   openInbox: () -> Unit,
   openMenu: () -> Unit,
   openQuick: () -> Unit,
@@ -181,7 +231,8 @@ private fun ScalingLazyListScope.coachHome(
   if (shown !is WatchModel.Shown.Read) {
     notRead(shown, act)
   } else {
-    val count = unread(shown, ready)
+    // Read means opened, on this watch (step iv); when the Inbox can't be kept, what waits now.
+    val count = inbox?.count { !it.read } ?: unread(shown, ready)
     if (count > 0) item { Button(onClick = openInbox, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.inboxUnread(count)) } }
   }
   item {
@@ -208,24 +259,66 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
 }
 
 /**
- * The Inbox, until it's kept on the watch (step iv): Needs you's held calls, Refuse where the phone allows it and approving on the
- * phone, then each result ready to open. With nothing, the Inbox says what lands there.
+ * The Inbox when it can't be kept on this watch (locked, or no screen lock): what the phone answered now, stored nowhere. Needs
+ * you's held calls, each opening on its own screen (step vi), then each result ready to open. With nothing, what lands there.
  */
-private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions) {
-  for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
+private fun ScalingLazyListScope.inboxPage(shown: WatchModel.Shown.Read, ready: List<AskLine>, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
+  for (call in shown.needsYou.calls) item { HeldCallRow(call) { openCall(call) } }
   for (ask in ready) item {
     Card(onClick = { act.open(ask) }, modifier = Modifier.fillMaxWidth()) { Text(stateLine(ask)) }
   }
   if (shown.needsYou.calls.isEmpty() && ready.isEmpty()) line(Words.Watch.inboxEmpty)
 }
 
-/** Each taf with its state, and nothing else: halting is in the menu and, with step (v), in a taf's settings. */
-private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read) {
+/**
+ * The Inbox kept on the watch (step iv): newest first, each line with a dot while unread, its taf and its words. An answer opens
+ * its result card; a held call Needs you still holds opens whole (step vi), else it says it's already answered. Each has Dismiss;
+ * Clear read takes every read line away.
+ */
+private fun ScalingLazyListScope.keptInboxPage(inbox: List<InboxItem>, shown: WatchModel.Shown.Read, act: Actions, openCall: (bot.tafs.watchlink.HeldLine) -> Unit) {
+  if (inbox.isEmpty()) {
+    line(Words.Watch.inboxEmpty)
+    return
+  }
+  for (entry in inbox) item {
+    val call = if (entry.kind == InboxItem.Kind.HELD) shown.needsYou.calls.firstOrNull { it.holdId == entry.ref } else null
+    // A held call Needs you still holds opens whole (step vi), where Refuse and Approve on your phone are; tapping reads the line.
+    Card(onClick = { act.openItem(entry); call?.let(openCall) }, modifier = Modifier.fillMaxWidth().testTag(INBOX_ITEM + entry.id)) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+          if (!entry.read) {
+            androidx.compose.foundation.Canvas(Modifier.size(6.dp).testTag(UNREAD_DOT + entry.id)) { drawCircle(Look.unread) }
+          }
+          entry.title?.let { Text(it, style = MaterialTheme.typography.titleSmall, maxLines = 1) }
+        }
+        Text(entry.line, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        if (entry.kind == InboxItem.Kind.HELD) {
+          if (call == null) {
+            Text(Words.Watch.alreadyAnswered, style = MaterialTheme.typography.bodySmall)
+          } else {
+            call.amount?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+          }
+        }
+        Button(onClick = { act.dismissItem(entry.id) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.dismiss) }
+      }
+    }
+  }
+  if (inbox.any { it.read }) item { Button(onClick = act.clearRead, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.clearRead) } }
+}
+
+/** Test tags for an Inbox line and its unread dot, by the line's id. */
+internal const val INBOX_ITEM = "inbox-item:"
+internal const val UNREAD_DOT = "unread-dot:"
+
+/** Each taf with its state, and nothing else: a tap opens its page; halting is in the menu and in a taf's settings. */
+private fun ScalingLazyListScope.tafsPage(shown: WatchModel.Shown.Read, act: Actions) {
   val tafs = shown.tafs?.tafs.orEmpty()
   for (taf in tafs) item {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-      Text(taf.name, style = MaterialTheme.typography.titleSmall)
-      Text(taf.state, style = MaterialTheme.typography.bodySmall)
+    Card(onClick = { act.openTaf(taf.tafId) }, modifier = Modifier.fillMaxWidth()) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(taf.name, style = MaterialTheme.typography.titleSmall)
+        Text(taf.state, style = MaterialTheme.typography.bodySmall)
+      }
     }
   }
 }
@@ -240,46 +333,21 @@ private fun ScalingLazyListScope.briefPage(shown: WatchModel.Shown.Read, act: Ac
   }
 }
 
-/** Account, until the account read is drawn (step vi): what this watch holds and can't do, and the way to the phone. */
-private fun ScalingLazyListScope.accountPage(act: Actions) {
-  line(Words.Watch.trust)
-  item { Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) } }
-}
-
 /**
- * The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest. Halt asks once
- * more, for all the tafs, until choosing which to halt comes with step (v).
+ * The menu, from the foot of Coach's home: every page by name, and Halt at the very bottom, apart from the rest, while a taf runs.
+ * Halt opens Choose which to halt (step v), which asks once more before anything is sent.
  */
 @Composable
-private fun MenuScreen(
-  shown: WatchModel.Shown,
-  pages: List<Page>,
-  confirmingHaltAll: Boolean,
-  act: Actions,
-  open: (Page) -> Unit,
-  /** Halt all, confirmed: the menu closes on the halting screen. */
-  confirm: () -> Unit,
-  close: () -> Unit,
-) {
+private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions, outcome: WatchModel.Outcome?, open: (Page) -> Unit, close: () -> Unit) {
   val tafs = (shown as? WatchModel.Shown.Read)?.tafs
   ScalingLazyColumn(Modifier.fillMaxWidth(), state = rememberScalingLazyListState(initialCenterItemIndex = 0), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.menu) } }
+    // A Halt confirmed from here comes back here: what came of it, "set a screen lock" included, is said where it was asked.
+    outcome?.let { item { OutcomeCard(it, act) } }
     for (page in pages) item { Button(onClick = { open(page) }, modifier = Modifier.fillMaxWidth()) { Text(page.title) } }
-    if (tafs != null && tafs.tafs.isNotEmpty() && !tafs.allHalted) {
+    if (tafs != null && !tafs.allHalted && tafs.tafs.any { !it.halted }) {
       item { Spacer(Modifier.height(16.dp)) }
-      item {
-        if (confirmingHaltAll) {
-          Card(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-              Text(Words.HaltAll.title, style = MaterialTheme.typography.titleSmall)
-              Button(onClick = confirm, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
-              Button(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) }
-            }
-          }
-        } else {
-          Button(onClick = act.askHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Taf.Halt.title) }
-        }
-      }
+      item { Button(onClick = act.pickToHalt, modifier = Modifier.fillMaxWidth()) { Text(Words.Taf.Halt.title) } }
     }
     item { Button(onClick = close, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) } }
   }
