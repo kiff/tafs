@@ -298,7 +298,7 @@ export const fr: Words = {
   brief_approve: "Approuver",
   brief_refuse: "Refuser",
   brief_more: (n) => `${n} de plus`,
-  brief_rest_line: (n, form) => (n === 0 ? "Rien d'autre." : form === "one" ? `${n} autre taf : rien ne vous attend.` : `${n} autres tafs : rien ne vous attend.`),
+  brief_rest_line: (n, form) => (n === 0 ? "Rien d'autre." : form === "one" ? `${n} autre taf n'a besoin de rien de votre part.` : `${n} autres tafs n'ont besoin de rien de votre part.`),
   brief_hold_question: (taf) => `${taf} attend votre approbation`,
   brief_hold_meanwhile: "Rien n'est fait tant que vous n'avez pas répondu.",
   brief_step_meanwhile: "Son exécution attend cette étape.",

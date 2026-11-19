@@ -298,7 +298,7 @@ export const nl: Words = {
   brief_approve: "Goedkeuren",
   brief_refuse: "Weigeren",
   brief_more: (n) => `Nog ${n}`,
-  brief_rest_line: (n, form) => (n === 0 ? "Verder niets." : form === "one" ? `Nog ${n} taf: niets wacht op jou.` : `Nog ${n} tafs: niets wacht op jou.`),
+  brief_rest_line: (n, form) => (n === 0 ? "Verder niets." : form === "one" ? `Nog ${n} taf heeft niets van je nodig.` : `Nog ${n} tafs hebben niets van je nodig.`),
   brief_hold_question: (taf) => `${taf} wacht op je goedkeuring`,
   brief_hold_meanwhile: "Er gebeurt niets tot je antwoordt.",
   brief_step_meanwhile: "Zijn run wacht op deze stap.",
