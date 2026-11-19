@@ -10,6 +10,7 @@ import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import bot.tafs.watchlink.Amounts
 
 /**
  * Your brief on the watch (docs/watch-wear.md, Your brief): off. With it off the watch asks and shows exactly what it did before;
@@ -572,7 +573,8 @@ class WatchModel(
     if (before != null && before.updated > ask.updated) return
     _asks.value = _asks.value + (ask.id to ask)
     // An ended ask is a line in the Inbox: Coach's or a taf's answer, kept until dismissed.
-    if (ask.ended) inboxPut(InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, ask.line ?: ask.words, now()))
+    // Kept on the watch, so with no amount (docs/watch-wear.md, "What the watch keeps"): the result shows whole while it's open.
+    if (ask.ended) inboxPut(InboxItem(InboxItem.askId(ask.id), InboxItem.Kind.ASK, ask.tafName, Amounts.strip(ask.line ?: ask.words), now()))
     val at = now()
     if (ask.ended) receivedAt[ask.clientId]?.let { t -> timings[ask.clientId] = (timings[ask.clientId] ?: Timing(null, null, null)).copy(resultMs = at - t) }
     when (val v = _voice.value) {

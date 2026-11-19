@@ -7,6 +7,7 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Money
 import bot.tafs.app.model.Words
+import bot.tafs.watchlink.Amounts
 import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.CardLine
 import bot.tafs.watchlink.EventLine
@@ -262,10 +263,7 @@ class WatchRelay(
     fun withoutAmount(summary: String, amount: Money? = null): String {
       var words = summary
       ownAmount(amount)?.let { words = words.replace(it, " ") }
-      return words.replace(CURRENCY_FIRST, " ").replace(CURRENCY_AFTER, " ")
-        .replace(SPACES, " ")
-        .replace(SPACE_BEFORE_MARK, "$1")
-        .trim { it.isWhitespace() || it in ",;:-–—·" }
+      return Amounts.strip(words)
     }
 
     /** The call's own amount as a pattern: each way its figure is written, longest first, with a currency beside it or none. */
@@ -277,7 +275,7 @@ class WatchRelay(
       for (n in numbers) {
         val whole = n.substringBefore('.')
         val fraction = n.substringAfter('.', "")
-        for (group in GROUPS) {
+        for (group in Amounts.GROUPS) {
           val grouped = whole.reversed().chunked(3).joinToString(group).reversed()
           if (group.isNotEmpty() && grouped == whole) continue
           for (point in listOf(".", ",")) {
@@ -287,19 +285,9 @@ class WatchRelay(
         }
       }
       val any = spellings.filter { it.isNotEmpty() }.sortedByDescending { it.length }.joinToString("|") { Regex.escape(it) }
-      return Regex("""(?<![\d.,])(?:$CURRENCY\s?)?(?:$any)(?:\s?$CURRENCY)?(?![.,]?\d)""", RegexOption.IGNORE_CASE)
+      return Regex("""(?<![\d.,])(?:${Amounts.CURRENCY}\s?)?(?:$any)(?:\s?${Amounts.CURRENCY})?(?![.,]?\d)""", RegexOption.IGNORE_CASE)
     }
 
-    /** How thousands are grouped: none, a comma, a point, a space (plain, no-break or narrow) or an apostrophe. */
-    private val GROUPS = listOf("", ",", ".", " ", " ", " ", "'", "’")
-    private const val FIGURE =
-      """(?<![\d.,'’])(?:\d{1,3}(?:[   ]\d{3})+(?:[.,]\d+)?|\d+(?:[.,'’]\d{3})*(?:[.,]\d+)?)"""
-    private const val CURRENCY =
-      """(?:[€$£¥₹]|(?<![\p{L}])(?:EUR|USD|GBP|CHF|JPY|CAD|AUD|PLN|SEK|NOK|DKK|zł|złot(?:y|e|ych)|kr|Fr\.|euros?|dollars?|dolar(?:y|ów)?|pounds?|francs?|franken)(?![\p{L}]))"""
-    private val CURRENCY_FIRST = Regex("""$CURRENCY\s?$FIGURE""", RegexOption.IGNORE_CASE)
-    private val CURRENCY_AFTER = Regex("""$FIGURE\s?$CURRENCY""", RegexOption.IGNORE_CASE)
-    private val SPACES = Regex("""\s+""")
-    private val SPACE_BEFORE_MARK = Regex("""\s+([,.;:])""")
 
     /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
