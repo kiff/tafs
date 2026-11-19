@@ -34,10 +34,11 @@ release.
 - **Each field is exactly what's in the store,** figures included, so it pastes as it is.
 - **The legal lines close each description.** The App Store description ends with three lines:
   Apple's standard EULA (its URL exactly, `apple.com/legal/internet-services/itunes/dev/stdeula/`),
-  tafs's terms (`kiff.dev/tafs/terms`) and its privacy policy (`kiff.dev/tafs/privacy`). The Play
-  description ends with the two tafs lines, without Apple's. The labels are the app's own words for
+  the terms (`kiff.dev/terms`) and the privacy policy (`kiff.dev/privacy`), as the owner approved the
+  App Store English on 18 Nov. The Play description ends with the two tafs lines, without Apple's. The labels are the app's own words for
   terms of use and privacy; outside English the tafs pages are marked as in English, as the apps mark
-  them. Deleting an account points to `kiff.dev/tafs/privacy#rights`.
+  them. Deleting an account points to `kiff.dev/privacy#delete-account` on the App Store, as approved,
+  and to `kiff.dev/tafs/privacy#rights` on Play until Play's listing is next changed.
 - **App Store lengths:** name up to 30 characters, subtitle up to 30, promotional text up to 170,
   keywords up to 100, description up to 4,000.
 - **Play lengths:** title up to 30 characters, short description up to 80, full description up to
@@ -61,25 +62,25 @@ release.
 
 **Subtitle** (22/30): Get your mornings back
 
-**Promotional text** (168/170):
+**Promotional text** (166/170):
 
 ```
-Refunds, disputes, late invoices, leads waiting for a reply: hand them to a taf and get your mornings back. It works within limits you sign. Anything big waits for you.
+Support tickets, new leads, late parcels: hand them to a taf and get your mornings back. It works within limits you set, and anything that matters waits for your yes.
 ```
 
-**Keywords** (100/100):
+**Keywords** (96/100):
 
 ```
-automation,refunds,disputes,chargebacks,invoices,leads,assistant,teammate,approvals,workflow,routine
+automation,assistant,support,tickets,leads,parcels,customers,approvals,workflow,routine,teammate
 ```
 
-**Description** (2922/4000):
+**Description** (2728/4000):
 
 ```
 They taf. You kiff.
 Automate your business without giving up control.
 
-Every day the same jobs pile up. A refund left overnight can turn into a chargeback, with a fee you may pay even if you win. A dispute nobody answers in time is lost. Late payers stay late. A lead that waits a day buys elsewhere.
+Every day the same jobs pile up. A ticket left overnight becomes an angry customer. A lead that waits a day buys elsewhere. A late parcel nobody mentions turns into a refund request.
 
 With tafs, you hand those jobs off. Tell Coach the job in your own words, or pick a ready-made one. Coach, the AI assistant in tafs, connects your apps and builds a taf: an AI agent, or AI teammate, that does that job every day, so you spend your time on the work you actually enjoy.
 
@@ -87,28 +88,27 @@ WHY YOU CAN LET IT
 Every taf works within a Card you sign: what it does on its own, what it asks you first, and what it never does. Every action is checked against its Card by KIFF, outside the AI, before it reaches your apps. No email trick or clever prompt can push it past your limits. Anything big waits for your yes on your phone, with Face ID or Touch ID. No answer means no.
 
 JOBS YOU CAN HAND OFF TODAY
-• No refund waits overnight: answers refund requests from the support queue and refunds within the Card, for example up to €150 each and €2,000 a day.
-• Stop losing disputes you could win: answers card disputes with the order, delivery proof and the customer's messages before the deadline.
-• Get paid without chasing: reminds customers of overdue invoices on a schedule and moves no money.
+• No ticket waits: acknowledges every support ticket the same day, and passes anything that promises money to you.
 • Never lose a lead to a slow reply: turns each new form entry into a deal and sends a first reply within the hour.
-• Stop answering "where is my order?": answers order questions from the shop and passes anything about money to you.
-More come ready: bookings, receipts and keeping customers who cancel. Every limit is yours to change.
+• Tell customers before they ask: warns them when a parcel runs late. Reships wait for your yes.
+• Keep customers who cancel: offers what your Card allows, and anything more waits for you.
+More are coming: answering order questions from your shop, giving new joiners their apps and removing leavers, bookings and receipts. Every limit is yours to change.
 
 WHAT YOU SEE
 • Needs you: what's waiting for your yes.
 • Record: everything your tafs did, newest first, with a receipt for each action that went through.
 • Chat: ask a taf what it did, or tell it what to do differently, and watch its work as it goes.
-• You decide what really happened: when an app can't confirm a payment went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
+• You decide what really happened: when an app can't confirm an action went through, tafs asks you "Did this happen?" Nothing is counted as done on a guess.
 
 YOUR DATA
-The taf never sees your passwords or tokens. Approvals are signed with a key kept in your phone's secure hardware. Halt stops one taf, or all of them, with one tap. No ads, no trackers. Delete your account in Settings, or see kiff.dev/tafs/privacy#rights.
+The taf never sees your passwords or tokens. Approvals are signed with a key kept in your phone's secure hardware. Halt stops one taf, or all of them, with one tap. No ads, no trackers. Delete your account in Settings, or see kiff.dev/privacy#delete-account.
 
 PLANS
 Solo, with 500 credits a month, and packs of credits that never expire, both bought in the app through the App Store. Each run of a taf uses credits for the AI it used. A quiet check, when nothing is new, costs nothing. Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits. There's no free trial.
 
 Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-tafs terms: https://kiff.dev/tafs/terms
-Privacy: https://kiff.dev/tafs/privacy
+tafs terms: https://kiff.dev/terms
+Privacy: https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -162,25 +162,25 @@ Privacy: https://kiff.dev/tafs/privacy
 
 **Subtitle** (23/30): Deine Vormittage zurück
 
-**Promotional text** (161/170):
+**Promotional text** (164/170):
 
 ```
-Erstattungen, Streitfälle, offene Rechnungen, wartende Leads: Gib sie an einen taf ab. Er arbeitet in Limits, die du unterschreibst. Alles Große wartet auf dich.
+Support-Tickets, neue Leads, verspätete Pakete: Gib sie an einen taf ab und hol dir deine Vormittage zurück. Er hält deine Limits ein, Wichtiges wartet auf dein Ja.
 ```
 
-**Keywords** (85/100):
+**Keywords** (87/100):
 
 ```
-Automatisierung,Erstattungen,Streitfälle,Rechnungen,Leads,Assistent,Freigabe,Workflow
+Automatisierung,Assistent,Support,Tickets,Leads,Pakete,Kunden,Freigabe,Workflow,Routine
 ```
 
-**Description** (3516/4000):
+**Description** (3217/4000):
 
 ```
 They taf. You kiff.
 Automatisiere dein Unternehmen, ohne die Kontrolle abzugeben.
 
-Jeden Tag stapeln sich dieselben Aufgaben. Eine Erstattung, die über Nacht liegen bleibt, kann zur Rückbuchung werden, mit einer Gebühr, die du womöglich sogar zahlst, wenn du gewinnst. Ein Streitfall, den niemand rechtzeitig beantwortet, ist verloren. Wer spät zahlt, zahlt weiter spät. Ein Lead, der einen Tag wartet, kauft woanders.
+Jeden Tag stapeln sich dieselben Aufgaben. Ein Ticket, das über Nacht liegen bleibt, wird zum verärgerten Kunden. Ein Lead, der einen Tag wartet, kauft woanders. Ein verspätetes Paket, das niemand erwähnt, wird zur Erstattungsanfrage.
 
 Mit tafs gibst du diese Aufgaben ab. Sag Coach die Aufgabe in deinen eigenen Worten oder wähle eine fertige. Coach, der KI-Assistent in tafs, verbindet deine Apps und baut einen taf: einen KI-Agenten oder KI-Kollegen, der diese Aufgabe jeden Tag erledigt. So bleibt dir Zeit für die Arbeit, die dir wirklich Freude macht.
 
@@ -188,28 +188,27 @@ WARUM DU IHN MACHEN LASSEN KANNST
 Jeder taf arbeitet mit einer Card, die du unterschreibst: was er selbst macht, was er dich zuerst fragt und was er nie macht. KIFF prüft jede Aktion gegen seine Card, außerhalb der KI, bevor sie deine Apps erreicht. Kein Prompt ändert ein Limit, auch kein Trick in einer E-Mail. Alles Große wartet auf deinem Handy auf dein Ja, mit Face ID oder Touch ID. Keine Antwort heißt Nein.
 
 AUFGABEN, DIE DU HEUTE ABGEBEN KANNST
-• Keine Erstattung wartet über Nacht: beantwortet Erstattungsanfragen aus dem Support und erstattet innerhalb der Card, zum Beispiel bis 150 € pro Fall und 2.000 € am Tag.
-• Verlier keine Streitfälle mehr, die du gewinnen könntest: beantwortet Kartenstreitfälle vor der Frist mit der Bestellung, dem Liefernachweis und den Nachrichten des Kunden.
-• Werde bezahlt, ohne hinterherzulaufen: erinnert Kunden nach Plan an überfällige Rechnungen und bewegt kein Geld.
+• Kein Ticket wartet: bestätigt jedes Support-Ticket noch am selben Tag und gibt alles, was Geld verspricht, an dich weiter.
 • Verlier keinen Lead mehr an eine langsame Antwort: macht aus jedem neuen Formulareintrag einen Deal und schickt innerhalb einer Stunde eine erste Antwort.
-• Schluss mit „Wo ist meine Bestellung?“: beantwortet Fragen zu Bestellungen mit Blick in den Shop und gibt alles, was Geld betrifft, an dich weiter.
-Weitere gibt es auch fertig: Termine, Belege und Kunden halten, die kündigen. Jedes Limit kannst du ändern.
+• Sag es Kunden, bevor sie fragen: warnt sie, wenn sich ein Paket verspätet. Ein Neuversand wartet auf dein Ja.
+• Halte Kunden, die kündigen: bietet an, was deine Card erlaubt, und alles Weitere wartet auf dich.
+Weitere kommen: Fragen zu Bestellungen aus deinem Shop beantworten, neuen Leuten ihre Apps einrichten und sie Ausscheidenden wieder entziehen, Termine und Belege. Jedes Limit kannst du ändern.
 
 WAS DU SIEHST
 • Braucht dich: was auf dein Ja wartet.
 • Protokoll: alles, was deine tafs getan haben, das Neueste zuerst, mit einem Beleg für jede Aktion, die durchging.
 • Chat: Frag einen taf, was er getan hat, oder sag ihm, was er anders machen soll, und verfolge seine Arbeit live.
-• Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
+• Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Aktion durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
 
 DEINE DATEN
-Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/tafs/privacy#rights.
+Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/privacy#delete-account.
 
 TARIFE
 Solo mit 500 Credits im Monat und Credit-Pakete, die nie verfallen, beides in der App über den App Store gekauft. Jeder Lauf eines tafs verbraucht Credits für die KI, die er genutzt hat. Eine ruhige Prüfung, wenn nichts neu ist, kostet nichts. Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits. Es gibt keine kostenlose Testphase.
 
 Nutzungsbedingungen (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-tafs-Bedingungen (auf Englisch): https://kiff.dev/tafs/terms
-Datenschutz (auf Englisch): https://kiff.dev/tafs/privacy
+tafs-Bedingungen (auf Englisch): https://kiff.dev/terms
+Datenschutz (auf Englisch): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -263,25 +262,25 @@ Datenschutz (auf Englisch): https://kiff.dev/tafs/privacy
 
 **Subtitle** (22/30): Retrouvez vos matinées
 
-**Promotional text** (167/170):
+**Promotional text** (164/170):
 
 ```
-Remboursements, litiges, factures impayées, prospects en attente : confiez-les à un taf. Il agit dans les limites que vous signez. Tout ce qui compte attend votre oui.
+Tickets de support, nouveaux prospects, colis en retard : confiez-les à un taf et retrouvez vos matinées. Il agit dans vos limites, et l'important attend votre oui.
 ```
 
-**Keywords** (86/100):
+**Keywords** (92/100):
 
 ```
-automatisation,remboursements,litiges,factures,prospects,assistant,validation,workflow
+automatisation,assistant,support,tickets,prospects,colis,clients,validation,workflow,routine
 ```
 
-**Description** (3610/4000):
+**Description** (3306/4000):
 
 ```
 They taf. You kiff.
 Automatisez votre entreprise sans perdre le contrôle.
 
-Chaque jour, les mêmes tâches s'accumulent. Un remboursement laissé jusqu'au lendemain peut devenir une rétrofacturation, avec des frais que vous payez parfois même si vous gagnez. Un litige auquel personne ne répond à temps est perdu. Les mauvais payeurs restent en retard. Un prospect qui attend un jour achète ailleurs.
+Chaque jour, les mêmes tâches s'accumulent. Un ticket laissé pour la nuit devient un client mécontent. Un prospect qui attend un jour achète ailleurs. Un colis en retard dont personne ne parle devient une demande de remboursement.
 
 Avec tafs, vous confiez ces tâches. Décrivez la tâche à Coach avec vos mots, ou choisissez-en une toute prête. Coach, l'assistant IA de tafs, connecte vos apps et construit un taf : un agent IA, ou coéquipier IA, qui fait cette tâche chaque jour. Vous gardez votre temps pour le travail qui vous plaît vraiment.
 
@@ -289,28 +288,27 @@ POURQUOI VOUS POUVEZ LUI FAIRE CONFIANCE
 Chaque taf travaille avec une Card que vous signez : ce qu'il fait seul, ce qu'il vous demande d'abord, et ce qu'il ne fait jamais. Chaque action est vérifiée par KIFF au regard de sa Card, en dehors de l'IA, avant d'atteindre vos apps. Aucun prompt ne change une limite, pas même une ruse dans un e-mail. Tout ce qui est important attend votre oui sur votre téléphone, avec Face ID ou Touch ID. Pas de réponse veut dire non.
 
 DES TÂCHES À CONFIER DÈS AUJOURD'HUI
-• Aucun remboursement n'attend jusqu'au lendemain : répond aux demandes de remboursement du support et rembourse dans les limites de la Card, par exemple jusqu'à 150 € chacun et 2 000 € par jour.
-• Arrêtez de perdre des litiges que vous pourriez gagner : répond aux litiges sur carte avant l'échéance avec la commande, la preuve de livraison et les messages du client.
-• Soyez payé sans relancer : relance les clients pour les factures en retard selon un calendrier et ne déplace aucun argent.
+• Aucun ticket n'attend : accuse réception de chaque ticket de support le jour même, et vous transmet tout ce qui promet de l'argent.
 • Ne perdez plus un prospect à cause d'une réponse lente : transforme chaque nouvelle entrée de formulaire en affaire et envoie une première réponse dans l'heure.
-• Fini le « où est ma commande ? » : répond aux questions sur les commandes en consultant la boutique, et vous transmet tout ce qui touche à l'argent.
-D'autres sont prêtes aussi : rendez-vous, justificatifs et clients à retenir quand ils résilient. Vous pouvez changer chaque limite.
+• Prévenez les clients avant qu'ils ne demandent : les avertit quand un colis est en retard. Un renvoi attend votre oui.
+• Gardez les clients qui résilient : propose ce que votre Card permet, et tout le reste vous attend.
+D'autres arrivent : répondre aux questions sur les commandes de votre boutique, donner leurs apps aux nouveaux arrivants et les retirer à ceux qui partent, rendez-vous et reçus. Chaque limite se change à votre guise.
 
 CE QUE VOUS VOYEZ
 • Vous attend : ce qui attend votre oui.
 • Registre : tout ce que vos tafs ont fait, du plus récent au plus ancien, avec un reçu pour chaque action passée.
 • Chat : demandez à un taf ce qu'il a fait, ou dites-lui quoi faire autrement, et suivez son travail en direct.
-• Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'un paiement est passé, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
+• Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'une action est passée, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
 
 VOS DONNÉES
-Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/tafs/privacy#rights.
+Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/privacy#delete-account.
 
 FORFAITS
 Solo, avec 500 crédits par mois, et des packs de crédits qui n'expirent jamais, tous deux achetés dans l'app via l'App Store. Chaque exécution d'un taf utilise des crédits pour l'IA qu'elle a utilisée. Une vérification quand rien n'est nouveau ne coûte rien. Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits. Il n'y a pas d'essai gratuit.
 
 Conditions d'utilisation (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Conditions de tafs (en anglais): https://kiff.dev/tafs/terms
-Confidentialité (en anglais): https://kiff.dev/tafs/privacy
+Conditions de tafs (en anglais): https://kiff.dev/terms
+Confidentialité (en anglais): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -364,25 +362,25 @@ Confidentialité (en anglais): https://kiff.dev/tafs/privacy
 
 **Subtitle** (20/30): Recupera tus mañanas
 
-**Promotional text** (158/170):
+**Promotional text** (163/170):
 
 ```
-Reembolsos, disputas, facturas impagadas, leads esperando respuesta: pásaselos a un taf. Trabaja dentro de los límites que firmas. Lo importante espera tu sí.
+Tickets de soporte, contactos nuevos, paquetes con retraso: pásaselos a un taf y recupera tus mañanas. Trabaja dentro de tus límites, y lo importante espera tu sí.
 ```
 
-**Keywords** (76/100):
+**Keywords** (92/100):
 
 ```
-automatización,reembolsos,disputas,facturas,leads,asistente,aprobación,flujo
+automatización,asistente,soporte,tickets,contactos,paquetes,clientes,aprobación,flujo,rutina
 ```
 
-**Description** (3313/4000):
+**Description** (3044/4000):
 
 ```
 They taf. You kiff.
 Automatiza tu negocio sin perder el control.
 
-Cada día se acumulan las mismas tareas. Un reembolso que espera hasta mañana puede acabar en un contracargo, con una comisión que quizá pagues aunque ganes. Una disputa que nadie responde a tiempo se pierde. Quien paga tarde sigue pagando tarde. Un lead que espera un día compra en otra parte.
+Cada día se acumulan las mismas tareas. Un ticket que se queda sin respuesta de un día para otro acaba en un cliente enfadado. Un contacto que espera un día compra en otro sitio. Un paquete con retraso del que nadie avisa acaba en una solicitud de reembolso.
 
 Con tafs, delegas esas tareas. Cuéntale a Coach la tarea con tus palabras o elige una ya hecha. Coach, el asistente de IA de tafs, conecta tus apps y crea un taf: un agente de IA, o compañero de IA, que hace esa tarea cada día. Así dedicas tu tiempo al trabajo que de verdad te gusta.
 
@@ -390,28 +388,27 @@ POR QUÉ PUEDES DEJARLO HACER
 Cada taf trabaja con una Card que tú firmas: lo que hace por su cuenta, lo que te pregunta primero y lo que nunca hace. KIFF comprueba cada acción contra su Card, fuera de la IA, antes de que llegue a tus apps. Ningún prompt cambia un límite, ni siquiera un truco en un correo. Todo lo importante espera tu sí en tu teléfono, con Face ID o Touch ID. Sin respuesta, es un no.
 
 TAREAS QUE PUEDES DELEGAR HOY
-• Ningún reembolso espera hasta mañana: responde las solicitudes de reembolso del servicio de atención y reembolsa dentro de la Card, por ejemplo hasta 150 € cada uno y 2.000 € al día.
-• Deja de perder disputas que podrías ganar: responde las disputas de tarjeta antes del plazo con el pedido, la prueba de entrega y los mensajes del cliente.
-• Cobra sin perseguir a nadie: recuerda a los clientes sus facturas vencidas según un calendario y no mueve dinero.
+• Ningún ticket espera: acusa recibo de cada ticket de soporte el mismo día y te pasa todo lo que prometa dinero.
 • No pierdas ni un contacto por responder tarde: convierte cada nueva entrada del formulario en una oportunidad y envía una primera respuesta en menos de una hora.
-• Deja de responder «¿dónde está mi pedido?»: responde las preguntas sobre pedidos consultando la tienda y te pasa todo lo que tenga que ver con dinero.
-Vienen más ya listas: reservas, recibos y retener a clientes que cancelan. Cada límite lo puedes cambiar tú.
+• Avisa a los clientes antes de que pregunten: les avisa cuando un paquete va con retraso. Un reenvío espera tu sí.
+• Conserva a los clientes que cancelan: ofrece lo que tu Card permite, y todo lo demás te espera.
+Vienen más: responder preguntas sobre pedidos de tu tienda, dar sus apps a quien entra y quitárselas a quien se va, reservas y recibos. Cada límite lo cambias tú.
 
 LO QUE VES
 • Te necesita: lo que espera tu sí.
 • Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
 • Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
-• Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
+• Tú decides qué pasó de verdad: cuando una app no puede confirmar que una acción se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/tafs/privacy#rights.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/privacy#delete-account.
 
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
 
 Condiciones de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Condiciones de tafs (en inglés): https://kiff.dev/tafs/terms
-Privacidad (en inglés): https://kiff.dev/tafs/privacy
+Condiciones de tafs (en inglés): https://kiff.dev/terms
+Privacidad (en inglés): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -468,22 +465,22 @@ Privacidad (en inglés): https://kiff.dev/tafs/privacy
 **Promotional text** (162/170):
 
 ```
-Rimborsi, contestazioni, fatture non pagate, lead in attesa di risposta: affidali a un taf. Lavora nei limiti che firmi tu. Tutto ciò che conta aspetta il tuo sì.
+Ticket di assistenza, nuovi contatti, pacchi in ritardo: affidali a un taf e riprenditi le tue mattine. Lavora nei tuoi limiti, e ciò che conta aspetta il tuo sì.
 ```
 
-**Keywords** (80/100):
+**Keywords** (94/100):
 
 ```
-automazione,rimborsi,contestazioni,fatture,lead,assistente,approvazione,workflow
+automazione,assistente,assistenza,ticket,contatti,pacchi,clienti,approvazione,workflow,routine
 ```
 
-**Description** (3444/4000):
+**Description** (3127/4000):
 
 ```
 They taf. You kiff.
 Automatizza la tua attività senza rinunciare al controllo.
 
-Ogni giorno si accumulano le stesse attività. Un rimborso lasciato fino a domani può diventare un chargeback, con una commissione che potresti pagare anche se vinci. Una contestazione a cui nessuno risponde in tempo è persa. Chi paga in ritardo continua a farlo. Un lead che aspetta un giorno compra altrove.
+Ogni giorno si accumulano le stesse attività. Un ticket lasciato per la notte diventa un cliente arrabbiato. Un contatto che aspetta un giorno compra altrove. Un pacco in ritardo di cui nessuno parla diventa una richiesta di rimborso.
 
 Con tafs, affidi queste attività. Descrivi l'attività a Coach con parole tue, o scegline una pronta. Coach, l'assistente IA di tafs, collega le tue app e crea un taf: un agente IA, o collega IA, che fa quell'attività ogni giorno. Così dedichi il tuo tempo al lavoro che ti piace davvero.
 
@@ -491,28 +488,27 @@ PERCHÉ PUOI LASCIARLO FARE
 Ogni taf lavora con una Card che firmi tu: cosa fa da solo, cosa ti chiede prima e cosa non fa mai. Ogni azione viene verificata da KIFF rispetto alla sua Card, fuori dall'IA, prima che raggiunga le tue app. Nessun prompt cambia un limite, nemmeno un trucco in un'email. Tutto ciò che conta aspetta il tuo sì sul telefono, con Face ID o Touch ID. Nessuna risposta vuol dire no.
 
 ATTIVITÀ DA AFFIDARE GIÀ OGGI
-• Nessun rimborso aspetta fino a domani: risponde alle richieste di rimborso dall'assistenza e rimborsa nei limiti della Card, per esempio fino a 150 € ciascuno e 2.000 € al giorno.
-• Smetti di perdere contestazioni che potresti vincere: risponde alle contestazioni sulle carte entro la scadenza con l'ordine, la prova di consegna e i messaggi del cliente.
-• Fatti pagare senza rincorrere nessuno: ricorda ai clienti le fatture scadute secondo un calendario e non muove denaro.
+• Nessun ticket aspetta: conferma ogni ticket di assistenza in giornata e ti passa tutto ciò che promette soldi.
 • Non perdere più un contatto per una risposta lenta: trasforma ogni nuova compilazione del modulo in un'opportunità e invia una prima risposta entro un'ora.
-• Basta rispondere a «dov'è il mio ordine?»: risponde alle domande sugli ordini controllando il negozio e ti passa tutto ciò che riguarda i soldi.
-Altre sono già pronte: prenotazioni, ricevute e trattenere i clienti che disdicono. Ogni limite lo puoi cambiare tu.
+• Avvisa i clienti prima che chiedano: li avverte quando un pacco è in ritardo. Una nuova spedizione aspetta il tuo sì.
+• Trattieni i clienti che disdicono: offre ciò che la tua Card consente, e tutto il resto aspetta te.
+Altre in arrivo: rispondere alle domande sugli ordini del tuo negozio, dare le app a chi arriva e toglierle a chi se ne va, prenotazioni e ricevute. Ogni limite lo cambi tu.
 
 COSA VEDI
 • Ti aspetta: ciò che aspetta il tuo sì.
 • Registro: tutto ciò che hanno fatto i tuoi tafs, dal più recente, con una ricevuta per ogni azione andata a buon fine.
 • Chat: chiedi a un taf cosa ha fatto, o digli cosa fare in modo diverso, e segui il suo lavoro mentre procede.
-• Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un pagamento è andato a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
+• Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un'azione è andata a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
 
 I TUOI DATI
-Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/tafs/privacy#rights.
+Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/privacy#delete-account.
 
 PIANI
 Solo, con 500 crediti al mese, e pacchetti di crediti che non scadono mai, entrambi acquistati nell'app tramite l'App Store. Ogni esecuzione di un taf usa crediti per l'IA che ha usato. Un controllo tranquillo, quando non c'è niente di nuovo, non costa nulla. Coach è incluso: abbastanza per configurare circa 4 nuovi lavori al mese. Oltre questa soglia, l'aiuto di Coach usa i tuoi crediti. Non c'è una prova gratuita.
 
 Condizioni d'uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Condizioni di tafs (in inglese): https://kiff.dev/tafs/terms
-Privacy (in inglese): https://kiff.dev/tafs/privacy
+Condizioni di tafs (in inglese): https://kiff.dev/terms
+Privacy (in inglese): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -566,25 +562,25 @@ Privacy (in inglese): https://kiff.dev/tafs/privacy
 
 **Subtitle** (23/30): Recupere as suas manhãs
 
-**Promotional text** (168/170):
+**Promotional text** (167/170):
 
 ```
-Reembolsos, disputas, faturas por pagar, contactos à espera de resposta: entregue-os a um taf. Trabalha nos limites que assina. Tudo o que é grande espera pelo seu sim.
+Tickets de suporte, novos contactos, encomendas atrasadas: entregue-os a um taf e recupere as suas manhãs. Trabalha nos seus limites, e o importante aguarda o seu sim.
 ```
 
-**Keywords** (74/100):
+**Keywords** (93/100):
 
 ```
-automatização,reembolsos,disputas,faturas,leads,assistente,aprovação,fluxo
+automatização,assistente,suporte,tickets,contactos,encomendas,clientes,aprovação,fluxo,rotina
 ```
 
-**Description** (3387/4000):
+**Description** (3124/4000):
 
 ```
 They taf. You kiff.
 Automatize o seu negócio sem perder o controlo.
 
-Todos os dias acumulam-se as mesmas tarefas. Um reembolso que fica para o dia seguinte pode acabar num estorno, com uma taxa que pode pagar mesmo que ganhe. Uma disputa a que ninguém responde a tempo está perdida. Quem paga tarde continua a pagar tarde. Um contacto que espera um dia compra noutro lado.
+Todos os dias acumulam-se as mesmas tarefas. Um ticket deixado para o dia seguinte torna-se um cliente zangado. Um contacto que espera um dia compra noutro lado. Uma encomenda atrasada de que ninguém fala torna-se um pedido de reembolso.
 
 Com tafs, entrega essas tarefas. Diga ao Coach a tarefa por palavras suas, ou escolha uma já pronta. O Coach, o assistente de IA do tafs, liga as suas apps e cria um taf: um agente de IA, ou colega de IA, que faz essa tarefa todos os dias. Assim dedica o seu tempo ao trabalho de que realmente gosta.
 
@@ -592,28 +588,27 @@ PORQUE PODE DEIXÁ-LO TRABALHAR
 Cada taf trabalha com um Card que assina: o que faz sozinho, o que lhe pergunta primeiro e o que nunca faz. O KIFF verifica cada ação face ao seu Card, fora da IA, antes de chegar às suas apps. Nenhum prompt muda um limite, nem sequer um truque num email. Tudo o que é importante aguarda o seu sim no seu telemóvel, com Face ID ou Touch ID. Sem resposta, é não.
 
 TAREFAS QUE PODE ENTREGAR HOJE
-• Nenhum reembolso fica para amanhã: responde aos pedidos de reembolso do apoio ao cliente e reembolsa dentro do Card, por exemplo até 150 € cada e 2000 € por dia.
-• Deixe de perder disputas que podia ganhar: responde às disputas de cartão dentro do prazo com a encomenda, a prova de entrega e as mensagens do cliente.
-• Receba sem andar atrás de ninguém: lembra os clientes das faturas em atraso segundo um calendário e não movimenta dinheiro.
+• Nenhum ticket fica à espera: confirma a receção de cada ticket de suporte no próprio dia e passa-lhe tudo o que prometa dinheiro.
 • Nunca perca um contacto por responder tarde: transforma cada novo preenchimento do formulário numa oportunidade e envia uma primeira resposta em menos de uma hora.
-• Deixe de responder a «onde está a minha encomenda?»: responde às perguntas sobre encomendas consultando a loja e passa-lhe tudo o que envolva dinheiro.
-Há mais prontas: marcações, recibos e manter clientes que cancelam. Cada limite pode ser alterado por si.
+• Avise os clientes antes de perguntarem: avisa-os quando uma encomenda se atrasa. Um reenvio aguarda o seu sim.
+• Mantenha os clientes que cancelam: oferece o que o seu Card permite, e tudo o resto aguarda por si.
+Há mais a caminho: responder a perguntas sobre encomendas da sua loja, dar as apps a quem entra e retirá-las a quem sai, marcações e recibos. Cada limite é seu para mudar.
 
 O QUE VÊ
 • Precisa de si: o que espera pelo seu sim.
 • Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
 • Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
-• Decide o que aconteceu mesmo: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
+• Decide o que aconteceu mesmo: quando uma app não consegue confirmar que uma ação foi feita, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
 
 OS SEUS DADOS
-O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/tafs/privacy#rights.
+O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/privacy#delete-account.
 
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através da App Store. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito.
 
 Termos de Utilização (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Termos do tafs (em inglês): https://kiff.dev/tafs/terms
-Privacidade (em inglês): https://kiff.dev/tafs/privacy
+Termos do tafs (em inglês): https://kiff.dev/terms
+Privacidade (em inglês): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -667,25 +662,25 @@ Privacidade (em inglês): https://kiff.dev/tafs/privacy
 
 **Subtitle** (24/30): Krijg je ochtenden terug
 
-**Promotional text** (169/170):
+**Promotional text** (168/170):
 
 ```
-Terugbetalingen, geschillen, onbetaalde facturen, leads die wachten: geef ze aan een taf. Het werkt binnen limieten die jij ondertekent. Alles wat groot is wacht op jou.
+Supporttickets, nieuwe leads, vertraagde pakketten: geef ze aan een taf en krijg je ochtenden terug. Het werkt binnen jouw limieten, en alles wat telt wacht op jouw ja.
 ```
 
-**Keywords** (87/100):
+**Keywords** (93/100):
 
 ```
-automatisering,terugbetalingen,geschillen,facturen,leads,assistent,goedkeuring,workflow
+automatisering,assistent,support,tickets,leads,pakketten,klanten,goedkeuring,workflow,routine
 ```
 
-**Description** (3444/4000):
+**Description** (3105/4000):
 
 ```
 They taf. You kiff.
 Automatiseer je bedrijf zonder de controle uit handen te geven.
 
-Elke dag stapelen dezelfde taken zich op. Een terugbetaling die een nacht blijft liggen, kan een terugboeking worden, met kosten die je soms ook betaalt als je wint. Een geschil dat niemand op tijd beantwoordt, is verloren. Wie laat betaalt, blijft laat betalen. Een lead die een dag wacht, koopt ergens anders.
+Elke dag stapelen dezelfde taken zich op. Een ticket dat een nacht blijft liggen, wordt een boze klant. Een lead die een dag wacht, koopt ergens anders. Een vertraagd pakket waar niemand iets over zegt, wordt een terugbetalingsverzoek.
 
 Met tafs geef je die taken uit handen. Vertel Coach de taak in je eigen woorden, of kies een kant-en-klare. Coach, de AI-assistent in tafs, koppelt je apps en bouwt een taf: een AI-agent, of AI-collega, die die taak elke dag doet. Zo houd je tijd over voor het werk dat je echt leuk vindt.
 
@@ -693,28 +688,27 @@ WAAROM JE HET KUNT LATEN DOEN
 Elk taf werkt met een Card die jij ondertekent: wat het zelf doet, wat het je eerst vraagt en wat het nooit doet. KIFF toetst elke actie aan zijn Card, buiten de AI, voordat die je apps bereikt. Geen prompt verandert een limiet, ook geen truc in een e-mail. Alles wat groot is, wacht op je telefoon op jouw ja, met Face ID of Touch ID. Geen antwoord betekent nee.
 
 TAKEN DIE JE VANDAAG UIT HANDEN KUNT GEVEN
-• Geen terugbetaling wacht tot morgen: beantwoordt terugbetalingsverzoeken uit de helpdesk en betaalt terug binnen de Card, bijvoorbeeld tot € 150 per stuk en € 2.000 per dag.
-• Verlies geen geschillen meer die je kunt winnen: beantwoordt kaartgeschillen voor de deadline met de bestelling, het afleverbewijs en de berichten van de klant.
-• Krijg betaald zonder achter mensen aan te gaan: herinnert klanten volgens een schema aan achterstallige facturen en verplaatst geen geld.
+• Geen ticket blijft liggen: bevestigt elk supportticket nog dezelfde dag en geeft alles wat geld belooft aan jou door.
 • Verlies nooit meer een lead door een trage reactie: maakt van elke nieuwe formulierinzending een deal en stuurt binnen een uur een eerste antwoord.
-• Nooit meer „waar is mijn bestelling?” beantwoorden: beantwoordt vragen over bestellingen door in de winkel te kijken en geeft alles wat met geld te maken heeft aan jou door.
-Er zijn er meer kant-en-klaar: afspraken, bonnetjes en klanten behouden die opzeggen. Elke limiet kun je zelf aanpassen.
+• Vertel het klanten voordat ze het vragen: waarschuwt ze als een pakket te laat is. Opnieuw verzenden wacht op jouw ja.
+• Houd klanten die opzeggen: biedt aan wat je Card toestaat, en al het andere wacht op jou.
+Er komen er meer: vragen over bestellingen uit je winkel beantwoorden, nieuwe mensen hun apps geven en ze weer afnemen van wie vertrekt, afspraken en bonnetjes. Elke limiet pas je zelf aan.
 
 WAT JE ZIET
 • Wacht op jou: wat op jouw ja wacht.
 • Logboek: alles wat je tafs gedaan hebben, het nieuwste eerst, met een bewijs voor elke actie die doorging.
 • Chat: vraag een taf wat het gedaan heeft, of zeg het wat het anders moet doen, en volg zijn werk terwijl het gebeurt.
-• Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een betaling is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
+• Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een actie is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
 
 JE GEGEVENS
-Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/tafs/privacy#rights.
+Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/privacy#delete-account.
 
 ABONNEMENTEN
 Solo, met 500 credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via de App Store. Elke run van een taf gebruikt credits voor de AI die het gebruikte. Een rustige controle, als er niets nieuws is, kost niets. Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits. Er is geen gratis proefperiode.
 
 Gebruiksvoorwaarden (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Voorwaarden van tafs (in het Engels): https://kiff.dev/tafs/terms
-Privacy (in het Engels): https://kiff.dev/tafs/privacy
+Voorwaarden van tafs (in het Engels): https://kiff.dev/terms
+Privacy (in het Engels): https://kiff.dev/privacy
 ```
 
 ### Google Play
@@ -768,25 +762,25 @@ Privacy (in het Engels): https://kiff.dev/tafs/privacy
 
 **Subtitle** (22/30): Odzyskaj swoje poranki
 
-**Promotional text** (156/170):
+**Promotional text** (163/170):
 
 ```
-Zwroty, spory, zaległe faktury, leady czekające na odpowiedź: oddaj je tafowi. Działa w limitach, które podpisujesz. Wszystko, co ważne, czeka na Twoje tak.
+Zgłoszenia do supportu, nowe leady, spóźnione paczki: oddaj je tafowi i odzyskaj swoje poranki. Działa w Twoich limitach, a wszystko, co ważne, czeka na Twoje tak.
 ```
 
-**Keywords** (72/100):
+**Keywords** (92/100):
 
 ```
-automatyzacja,zwroty,spory,faktury,leady,asystent,zatwierdzanie,workflow
+automatyzacja,asystent,support,zgłoszenia,leady,paczki,klienci,zatwierdzanie,workflow,rutyna
 ```
 
-**Description** (3363/4000):
+**Description** (3123/4000):
 
 ```
 They taf. You kiff.
 Automatyzuj firmę, nie oddając kontroli.
 
-Codziennie piętrzą się te same zadania. Zwrot, który czeka do jutra, może skończyć się obciążeniem zwrotnym, z opłatą, którą możesz zapłacić nawet po wygranej. Spór, na który nikt nie odpowie na czas, przepada. Kto płaci z opóźnieniem, dalej płaci z opóźnieniem. Lead, który czeka dzień, kupuje gdzie indziej.
+Każdego dnia piętrzą się te same zadania. Zgłoszenie zostawione na noc zamienia się w zdenerwowanego klienta. Lead, który czeka dzień, kupuje gdzie indziej. Spóźniona paczka, o której nikt nie wspomni, zamienia się w prośbę o zwrot pieniędzy.
 
 Z tafs oddajesz te zadania. Opisz Coachowi zadanie własnymi słowami albo wybierz gotowe. Coach, asystent AI w tafs, łączy Twoje aplikacje i tworzy tafa: agenta AI, czyli współpracownika AI, który codziennie wykonuje to zadanie. Ty poświęcasz czas pracy, którą naprawdę lubisz.
 
@@ -794,28 +788,27 @@ DLACZEGO MOŻESZ MU ZAUFAĆ
 Każdy taf działa według Card, którą podpisujesz: co robi sam, o co najpierw pyta Ciebie i czego nigdy nie robi. KIFF sprawdza każdą akcję względem jego Card, poza AI, zanim dotrze ona do Twoich aplikacji. Żaden prompt nie zmienia limitu, nawet podstęp w e-mailu. Wszystko, co ważne, czeka na Twoje tak na telefonie, za pomocą Face ID lub Touch ID. Brak odpowiedzi oznacza nie.
 
 ZADANIA, KTÓRE ODDASZ JUŻ DZIŚ
-• Żaden zwrot nie czeka do jutra: odpowiada na prośby o zwrot z helpdesku i zwraca pieniądze w ramach Card, na przykład do 150 € każdy i 2000 € dziennie.
-• Przestań przegrywać spory, które możesz wygrać: odpowiada na spory kartowe przed terminem, dołączając zamówienie, dowód dostawy i wiadomości klienta.
-• Dostawaj pieniądze bez ganiania za nikim: przypomina klientom o zaległych fakturach według harmonogramu i nie przelewa pieniędzy.
+• Żadne zgłoszenie nie czeka: potwierdza każde zgłoszenie do supportu tego samego dnia, a wszystko, co obiecuje pieniądze, przekazuje Tobie.
 • Nie trać leadów przez wolną odpowiedź: z każdego nowego zgłoszenia z formularza tworzy szansę sprzedaży i wysyła pierwszą odpowiedź w ciągu godziny.
-• Koniec z odpowiadaniem na „gdzie jest moje zamówienie?”: odpowiada na pytania o zamówienia, sprawdzając sklep, a wszystko, co dotyczy pieniędzy, przekazuje Tobie.
-Kolejne są gotowe: rezerwacje, paragony i zatrzymywanie klientów, którzy rezygnują. Każdy limit możesz zmienić.
+• Uprzedź klientów, zanim zapytają: ostrzega ich, gdy paczka się spóźnia. Ponowna wysyłka czeka na Twoje tak.
+• Zatrzymaj klientów, którzy rezygnują: proponuje to, na co pozwala Twoja Card, a wszystko więcej czeka na Ciebie.
+Kolejne w drodze: odpowiadanie na pytania o zamówienia z Twojego sklepu, nadawanie aplikacji nowym osobom i odbieranie ich odchodzącym, rezerwacje i paragony. Każdy limit zmieniasz sam.
 
 CO WIDZISZ
 • Czeka na Ciebie: to, co czeka na Twoje tak.
 • Rejestr: wszystko, co zrobiły Twoje tafs, od najnowszych, z potwierdzeniem dla każdej akcji, która przeszła.
 • Czat: zapytaj tafa, co zrobił, albo powiedz mu, co ma robić inaczej, i śledź jego pracę na bieżąco.
-• To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
+• To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że akcja przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
 
 TWOJE DANE
-Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/tafs/privacy#rights.
+Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/privacy#delete-account.
 
 PLANY
 Solo z 500 kredytami miesięcznie oraz pakiety kredytów, które nigdy nie wygasają, oba kupowane w aplikacji przez App Store. Każde uruchomienie tafa zużywa kredyty za AI, której użyło. Spokojne sprawdzenie, gdy nie ma nic nowego, nic nie kosztuje. Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów. Nie ma bezpłatnego okresu próbnego.
 
 Warunki korzystania (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Warunki tafs (po angielsku): https://kiff.dev/tafs/terms
-Prywatność (po angielsku): https://kiff.dev/tafs/privacy
+Warunki tafs (po angielsku): https://kiff.dev/terms
+Prywatność (po angielsku): https://kiff.dev/privacy
 ```
 
 ### Google Play

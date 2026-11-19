@@ -4,6 +4,9 @@ import SwiftUI
 /// only takes authority away. Resuming stays on the phone, behind Face ID.
 struct TafsScreen: View {
     @ObservedObject var model: TafsModel
+    /// v1 offers Halt on each taf and Halt all; v2's Tafs page doesn't: halting is in the menu, and with step (v) in a
+    /// taf's settings (docs/watch-app.md, "Version 2").
+    var offersHalt = true
     @State private var confirmingAll = false
 
     var body: some View {
@@ -21,11 +24,11 @@ struct TafsScreen: View {
         case .loaded(let tafs):
             List {
                 ForEach(tafs) { taf in
-                    TafRow(taf: taf, answer: model.halts[taf.id]) {
+                    TafRow(taf: taf, answer: model.halts[taf.id], offersHalt: offersHalt) {
                         Task { await model.halt(taf.id) }
                     }
                 }
-                if !tafs.isEmpty {
+                if offersHalt && !tafs.isEmpty {
                     Section {
                         switch model.halts[TafsModel.all] {
                         case .sending?:
@@ -67,6 +70,7 @@ struct TafsScreen: View {
 private struct TafRow: View {
     let taf: WatchTaf
     let answer: WatchAnswer?
+    var offersHalt = true
     let halt: () -> Void
     @State private var confirming = false
 
@@ -89,7 +93,7 @@ private struct TafRow: View {
                 Button(Words.Common.tryAgain, role: .destructive) { halt() }
                     .buttonStyle(.bordered)
             case nil:
-                if !taf.halted {
+                if !taf.halted && offersHalt {
                     Button(Words.Halt.now, role: .destructive) { confirming = true }
                         .buttonStyle(.bordered)
                         .padding(.top, 4)

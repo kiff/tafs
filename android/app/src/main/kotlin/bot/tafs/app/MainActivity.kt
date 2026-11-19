@@ -442,6 +442,10 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
+  // Files (docs/android-app.md, Files): a model only with its switch on, over the stub store until tafs cloud's routes land.
+  val files = remember { if (bot.tafs.app.files.FilesFeature.on) bot.tafs.app.files.FilesModel(bot.tafs.app.files.StubFilesStore(), bot.tafs.app.model.ErrorWords::of) else null }
+  val filesShowing = files?.state?.collectAsState()?.value?.showing == true
+  var filesFromAccount by rememberSaveable { mutableStateOf(false) }
   var showingConnectApps by rememberSaveable { mutableStateOf(false) }
   var showingPeople by rememberSaveable { mutableStateOf(false) }
   // The Halt screen, of one taf or (with none) of every taf; and Usage, the account's or one taf's.
@@ -757,7 +761,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   ) }
   // What's open beside a tablet's sidebar, highlighted in it.
   val beside = when {
-    showingSettings -> Beside.Account
+    showingSettings || (filesShowing && filesFromAccount) -> Beside.Account
     usageOpen -> Beside.Usage
     showingConnectApps -> Beside.ConnectApps
     haltOpen && haltTaf == null -> Beside.HaltAll
@@ -771,11 +775,19 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     else -> Beside.Overview
   }
   // What the sidebar opened beside it, closed when it opens something else: one screen beside it at a time, as the iPad's.
-  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false }
+  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false; files?.close() }
+  // From a file to the chat it came from: its taf, by tafs cloud's id, on its page.
+  val filesSeeInChat: (bot.tafs.app.files.KeptFile) -> Unit = { f ->
+    state.tafs.firstOrNull { it.cloudId != null && it.cloudId == f.tafId }?.let { taf ->
+      files?.close(); filesFromAccount = false; closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = taf.id
+    }
+  }
   // A taf opened from the sidebar: on the Tafs tab, with nothing else over it.
   val openFromSidebar: (String) -> Unit = { id ->
     closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
   }
+  // Files reaches Account, a taf's page and a taf's chat through LocalFiles: null, and nothing of it drawn, with its switch off.
+  androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.views.LocalFiles provides files) {
   Box(Modifier.fillMaxSize()) {
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the
@@ -860,6 +872,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             )
           }
           val open: (@Composable () -> Unit)? = when {
+            // Files on a tablet: beside the sidebar, over what was open there (a phone has it as a sheet, below).
+            wide && filesShowing -> ({ bot.tafs.app.views.FilesPane(files, onClose = { files.close(); if (filesFromAccount) showingSettings = true; filesFromAccount = false }, seeInChat = filesSeeInChat) })
             trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
             calendarOpen && openTaf == null && !coachOpen && !wide -> ({ calendar(true) })
             missionOpen != null && openTaf == null && !coachOpen -> state.labels.firstNotNullOfOrNull { it.mission?.takeIf { m -> m.id == missionOpen } }?.let { m ->
@@ -948,10 +962,14 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onClose = { showingSettings = false },
         focus = settingsFocus,
         onFocused = { settingsFocus = null },
+        onFiles = { showingSettings = false; filesFromAccount = true; files?.show() },
       )
     }
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
+    if (!wide && filesShowing) {
+      bot.tafs.app.views.FilesSheet(files, onClose = { files.close(); if (filesFromAccount) showingSettings = true; filesFromAccount = false }, seeInChat = filesSeeInChat)
+    }
     if (showingDevices) {
       DevicesSheet(
         state, refresh = { model.refreshDevices(); model.refreshPasskeys() }, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
@@ -1091,6 +1109,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     Box(Modifier.fillMaxSize().imePadding()) {
       CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats, full = full, onToggleFull = toggleFull)
     }
+  }
   }
   }
 }

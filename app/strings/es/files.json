@@ -1,0 +1,42 @@
+{
+  "files.account_row": {
+    "one": "{count} archivo · se guarda 30 días",
+    "other": "{count} archivos · se guardan 30 días"
+  },
+  "files.all": "Todos",
+  "files.all_tafs": "Todos los tafs",
+  "files.by_run": "Por ejecución",
+  "files.by_taf": "Por taf",
+  "files.delete_body": "Se elimina de Archivos para todo el mundo en esta cuenta, ya. No se puede deshacer.",
+  "files.delete_now": "Eliminar ahora",
+  "files.delete_question": "¿Eliminar «{name}» ahora?",
+  "files.deleted": "Eliminado para todos",
+  "files.download": "Descargar",
+  "files.empty": "Aún nada. Cuando un taf hace un informe, una hoja o un documento en una ejecución, se guarda aquí 30 días, para que todo el mundo en esta cuenta lo abra, lo guarde o lo comparta.",
+  "files.everyone": "Todo el mundo en esta cuenta",
+  "files.goes_away": "Se va",
+  "files.goes_in_days": {
+    "one": "se va en {count} día",
+    "other": "se va en {count} días"
+  },
+  "files.goes_on": "{date} (30 días después de su ejecución)",
+  "files.goes_today": "se va hoy",
+  "files.goes_tomorrow": "se va mañana",
+  "files.in_run": "En la ejecución",
+  "files.kept_line": "Cada archivo se guarda 30 días desde su ejecución y luego se va solo. Todo el mundo en esta cuenta ve estos archivos. Los adjuntos de tus chats se quedan con sus mensajes.",
+  "files.kept_until": "Sus archivos se guardan hasta el {date}",
+  "files.made_by": "Hecho por",
+  "files.none_yet": "Aún ninguno · se guardan 30 días",
+  "files.pick_one": "Elige un archivo para verlo aquí.",
+  "files.saved": "Guardado en este dispositivo",
+  "files.see_in_chat": "Verlo en el chat",
+  "files.share": "Compartir",
+  "files.size": "Tamaño",
+  "files.taf_row": {
+    "one": "{count} archivo de sus ejecuciones",
+    "other": "{count} archivos de sus ejecuciones"
+  },
+  "files.title": "Archivos",
+  "files.type": "Tipo",
+  "files.who_sees": "Quién lo ve"
+}

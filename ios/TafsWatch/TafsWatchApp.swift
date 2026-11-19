@@ -16,13 +16,18 @@ struct TafsWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // Needs you first: it's why the wrist is looked at.
-            TabView {
-                NeedsYouScreen(model: needsYou)
-                TafsScreen(model: tafs)
-                CoachScreen(model: coach)
+            if WatchV2.on {
+                // v2 (docs/watch-app.md, "Version 2"): Coach is home, then the Inbox, Your tafs and Account.
+                WatchPagesView(needsYou: needsYou, tafs: tafs, coach: coach)
+            } else {
+                // Needs you first: it's why the wrist is looked at.
+                TabView {
+                    NeedsYouScreen(model: needsYou)
+                    TafsScreen(model: tafs)
+                    CoachScreen(model: coach)
+                }
+                .tabViewStyle(.verticalPage)
             }
-            .tabViewStyle(.verticalPage)
         }
         .onChange(of: scenePhase) { _, phase in
             // In memory only: what was read goes once the app leaves the screen, and is read

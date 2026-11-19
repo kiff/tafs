@@ -1,0 +1,17 @@
+{
+  "about": "GET /v1/files/{id}/download: a URL to the file's bytes for a minute; the app reads them to save or share the file itself. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "id": "fil_00000000000000000000000000000001",
+    "taf": "taf-0bde5000000000000000",
+    "run": "run-1",
+    "chat": "chat-1",
+    "name": "week.csv",
+    "media_type": "text/csv",
+    "size": 22,
+    "created": "2026-11-19T08:00:00.000Z",
+    "expires": "2026-12-19T08:00:00.000Z",
+    "url": "https://s3.test/delivered/fil_00000000000000000000000000000001?signed",
+    "url_expires": "2026-11-19T08:00:00.000Z",
+    "taf_name": "Order rows"
+  }
+}
