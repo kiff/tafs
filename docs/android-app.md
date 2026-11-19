@@ -1519,7 +1519,8 @@ nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
   (Everyone on this account) and Goes away ("{date} (30 days after its run)"), See it in the chat (its taf's page) and **Delete
   now** apart at the end. Download writes the bytes into the phone's Downloads through MediaStore (no permission from Android
   10), then "Saved to this device". Share writes the bytes as a file into the app's cache (`kept-files/`) and offers it through
-  the share sheet by the app's FileProvider: the file itself, never a link. Delete now is asked first ("Delete "{name}" now?"
+  the share sheet by the app's FileProvider: the file itself, never a link. That copy is cleared on sign-out, with opened files
+  and exports (`KeptFilesTest`). Delete now is asked first ("Delete "{name}" now?"
   and what it means), then sent, and the file is off the list with "Deleted for everyone".
 - **A tablet** (600 dp or more for Files, beside the sidebar from `WIDE_DP`): the list and the file side by side, "Pick a file
   to see it here." until one is. On a phone it's a sheet, and the file takes the list's place, with Back.

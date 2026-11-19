@@ -417,7 +417,7 @@ internal fun saveToDownloads(context: Context, file: KeptFile, bytes: ByteArray)
  * so nothing opens from outside the account.
  */
 internal fun shareFile(context: Context, file: KeptFile, bytes: ByteArray) {
-  val dir = File(context.cacheDir, "kept-files/${file.id.filter { it.isLetterOrDigit() || it == '_' || it == '-' }}").apply { mkdirs() }
+  val dir = File(context.cacheDir, "${bot.tafs.app.app.KEPT_FILES}/${file.id.filter { it.isLetterOrDigit() || it == '_' || it == '-' }}").apply { mkdirs() }
   val out = File(dir, shownName(file).replace('/', '_')).apply { writeBytes(bytes) }
   val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", out)
   val send = Intent(Intent.ACTION_SEND).setType(file.mediaType).putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
