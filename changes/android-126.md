@@ -1,0 +1,1 @@
+- **Android 126 (1.41.1): 	he alert that your brief is ready plays the phone's notification sound.** Its channel was quiet, and a quiet brief went unseen; Android never raises a channel's importance, so the old quiet channel is replaced by a new one at default importance, with no pop-up ([android-app.md](docs/android-app.md)).

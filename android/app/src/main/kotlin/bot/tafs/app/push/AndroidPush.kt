@@ -30,7 +30,10 @@ class AlertNotifier(private val context: Context) {
       manager.createNotificationChannel(NotificationChannel(URGENT, Words.Brief.urgent, NotificationManager.IMPORTANCE_HIGH).apply {
         description = Words.Push.Channel.urgentDescription
       })
-      manager.createNotificationChannel(NotificationChannel(BRIEFS, Words.Push.Channel.briefs, NotificationManager.IMPORTANCE_LOW).apply {
+      // Your brief is ready sounds (19 Nov, the owner's phone: a quiet brief went unseen). Android never raises a channel's
+      // importance once made, so it's a new channel, and the old quiet one goes, with the settings it had.
+      manager.deleteNotificationChannel(OLD_BRIEFS)
+      manager.createNotificationChannel(NotificationChannel(BRIEFS, Words.Push.Channel.briefs, BRIEFS_IMPORTANCE).apply {
         description = Words.Push.Channel.briefsDescription
       })
       manager.createNotificationChannel(NotificationChannel(QUIET, Words.Push.Channel.other, NotificationManager.IMPORTANCE_LOW).apply {
@@ -81,7 +84,13 @@ class AlertNotifier(private val context: Context) {
   companion object {
     const val HOLDS = "holds"
     const val URGENT = "urgent"
-    const val BRIEFS = "briefs"
+    const val BRIEFS = "brief"
+
+    /** Your brief's first channel, quiet (Android 118 to 125): deleted, since its importance can't be raised. */
+    const val OLD_BRIEFS = "briefs"
+
+    /** Your brief is ready: the phone's notification sound, in the shade, never popping up over what's on screen. */
+    const val BRIEFS_IMPORTANCE = NotificationManager.IMPORTANCE_DEFAULT
     const val QUIET = "quiet"
 
     /** The channel's id on the phone: Needs you's and the quiet one keep the ids they've always had, and so their settings. */
