@@ -77,11 +77,22 @@ extension DeliveredFile {
     }
 }
 
+extension URLSession {
+    /// For a person's files: nothing of what's read is kept in a disk cache (an ephemeral session's is in memory only and
+    /// goes with the session's process), so Delete now's "no copy kept" holds on the phone.
+    static let noStore: URLSession = {
+        let config = URLSessionConfiguration.ephemeral
+        config.urlCache = nil
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        return URLSession(configuration: config)
+    }()
+}
+
 /// The files from tafs cloud: every page of the list, the bytes through a URL that lasts a minute, and Delete now.
 struct CloudFilesStore: FilesStore {
     let cloud: TafsCloud
     /// Reads a URL's bytes (the download's): the app's own session in use, a stub in tests.
-    var fetch: @Sendable (URL) async throws -> Data = { url in try await URLSession.shared.data(from: url).0 }
+    var fetch: @Sendable (URL) async throws -> Data = { url in try await URLSession.noStore.data(from: url).0 }
 
     /// At most this many pages are read at once: a month of an account's files, well past what a screen shows.
     static let pages = 10

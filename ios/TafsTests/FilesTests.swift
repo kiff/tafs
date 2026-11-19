@@ -191,6 +191,15 @@ final class FilesTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
     }
 
+    /// A file's bytes are read with no disk cache, so nothing of them stays in the app's Caches after Delete now or
+    /// sign-out; a test's own session is still the one used.
+    func testFilesBytesAreReadWithNoDiskCache() {
+        XCTAssertNil(URLSession.noStore.configuration.urlCache)
+        XCTAssertTrue(TafsCloud().bytesSession === URLSession.noStore)
+        let own = URLSession(configuration: .ephemeral)
+        XCTAssertTrue(TafsCloud(session: own).bytesSession === own)
+    }
+
     /// A copy whose screen never closed (the app killed on it) still goes on sign-out and an account switch, with the
     /// opened attachments: Delete now's "no copy kept" holds on the phone.
     func testSignOutClearsACopyLeftBehind() async throws {
