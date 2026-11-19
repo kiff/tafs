@@ -1,0 +1,7 @@
+Versión 2 de tafs en Wear OS.
+- Coach es el inicio: habla, escribe o elige una respuesta rápida, revisa y envía.
+- Lo que dices se convierte en texto, y ves ese texto antes de enviarlo.
+- Guarda un mensaje para luego si tu teléfono no está al alcance.
+- Una Bandeja para respuestas y llamadas retenidas, hasta que las descartes.
+- Página y ajustes de cada taf; elige qué tafs bloquear.
+- El calendario de hoy y tu cuenta. Aprobar sigue en el teléfono.

@@ -1,0 +1,7 @@
+Versione 2 di tafs su Wear OS.
+- Coach come home: parla, scrivi o scegli una risposta rapida, controlla, invia.
+- Ciò che dici diventa testo, e vedi quel testo prima che venga inviato.
+- Tieni un messaggio per dopo se il telefono non è raggiungibile.
+- In arrivo per risposte e chiamate trattenute, finché non le ignori.
+- Pagina e impostazioni di ogni taf; scegli quali bloccare.
+- Calendario di oggi e il tuo account. Le approvazioni restano sul telefono.
