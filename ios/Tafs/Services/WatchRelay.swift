@@ -48,8 +48,11 @@ enum WatchRelay {
         var words = summary
         let figure = #"\d+(?:[.,  ]\d{3})*(?:[.,]\d+)?"#
         let currency = #"(?:[€$£¥₹]|\b(?:EUR|USD|GBP|CHF|JPY|CAD|AUD)\b)"#
-        let money = currency + #"\s?"# + figure + "|" + figure + #"\s?"# + currency
-        words = words.replacingOccurrences(of: money, with: " ", options: [.regularExpression, .caseInsensitive])
+        // A currency before its figure first, then after it: one pattern with both would take "1042 EUR" from
+        // "order 1042 EUR 150.00", leaving the amount and cutting the order's number (dev-android's read).
+        for money in [currency + #"\s?"# + figure, figure + #"\s?"# + currency] {
+            words = words.replacingOccurrences(of: money, with: " ", options: [.regularExpression, .caseInsensitive])
+        }
         words = words.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
         words = words.replacingOccurrences(of: #"\s+([,.;:])"#, with: "$1", options: .regularExpression)
         let edges = CharacterSet.whitespaces.union(CharacterSet(charactersIn: ",;:-–—·"))
