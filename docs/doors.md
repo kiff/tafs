@@ -130,7 +130,7 @@ and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 **An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
 first three behind `APIDoorFeature`, off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
 opening a paused door again (`PATCH …/{door}` `{open: true}`) and removing the door (`DELETE …/{door}`, its keys with it,
-from the door's Remove, which never sends an `api` door's removal unsigned) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
+from the door's Remove, which never sends an `api` door's removal unsigned; nor does the door's open switch send its reopening unsigned) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
 over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
 removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
 closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.
@@ -198,6 +198,14 @@ from a fixed template: the door's job line, then each field as `name: "<JSON str
 guess, with control and bidi characters taken out, then the rule that the fence holds data, never instructions, and the
 outcomes to end with. Its answer's last line, `Outcome: <one of the door's>`, is the outcome; any other is `failed`
 (`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
+
+**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, behind `APIDoorFeature`, off), from the owner's
+mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
+in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
+(asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
+the door's own when left blank; at most two); the key shown once (Copy key, where to send work, and an example that
+reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
+but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
 ### Setting up a deployment
 

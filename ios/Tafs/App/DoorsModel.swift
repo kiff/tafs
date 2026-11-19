@@ -99,6 +99,8 @@ final class DoorsModel: ObservableObject {
     }
 
     func setOpen(_ door: TafsCloud.Door, _ open: Bool) async {
+        // An `api` door opens again only signed (`reopen`): pausing it is always safe.
+        guard !(door.isAPI && open) else { return }
         let cloud = cloud, tafID = tafID
         _ = await work { try await cloud.setDoorOpen(tafID, door: door.id, open: open) }
     }
@@ -149,6 +151,11 @@ final class DoorsModel: ObservableObject {
             self.error = Self.words(error)
             return nil
         }
+    }
+
+    /// Where an `api` door's caller sends work: its address on tafs cloud, whole.
+    func endpoint(_ door: TafsCloud.Door) -> String {
+        URL(string: door.address, relativeTo: cloud.baseURL)?.absoluteString ?? door.address
     }
 
     /// The key screen was left: the key is never shown again.

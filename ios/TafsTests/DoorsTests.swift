@@ -145,6 +145,8 @@ final class DoorsTests: XCTestCase {
 
         await model.remove(door)
         XCTAssertTrue(StubProtocol.sent.isEmpty, "the unsigned remove sends nothing for an api door")
+        await model.setOpen(door, true)
+        XCTAssertTrue(StubProtocol.sent.isEmpty, "nor does opening it again unsigned")
         XCTAssertEqual(model.doors.map(\.id), ["door_ord7"])
 
         await DoorsModel(cloud: cloud, tafID: "taf_r").removeAPI(door, reason: "Remove")
@@ -159,6 +161,30 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(signed.first?.1, "/v1/tafs/taf_r/doors/door_ord7")
         XCTAssertEqual(signed.first?.2, "", "signed over the empty body sent")
         XCTAssertTrue(model.doors.isEmpty)
+    }
+
+    /// The api door's screens: the endpoint is whole, the example never holds a key, and a key is named and dated
+    /// without ever showing more than its last four.
+    func testAnAPIDoorsLinesNeverCarryTheKey() {
+        let cloud = stubbedCloud()
+        let model = DoorsModel(cloud: cloud, tafID: "taf_r")
+        let door = TafsCloud.Door(id: "door_ord7", app: "api", kind: "api", label: "Order system", open: true,
+                                  address: "/v1/doors/api/door_ord7/requests", proof: "proven", how: "", keys: [], today: 0, limit: 100, resting: false)
+        XCTAssertEqual(model.endpoint(door), "https://cloud.test/v1/doors/api/door_ord7/requests")
+        let example = APIDoorText.example(endpoint: model.endpoint(door))
+        XCTAssertTrue(example.contains("$TAFS_API_KEY"))
+        XCTAssertTrue(example.contains("https://cloud.test/v1/doors/api/door_ord7/requests"))
+        XCTAssertFalse(example.contains("tafs_api_"), "the example reads the caller's own secret, never a key")
+
+        XCTAssertEqual(APIDoorText.keyName("  ", door: door), "Order system", "left blank, the door's own name")
+        XCTAssertEqual(APIDoorText.keyName(" ERP staging ", door: door), "ERP staging")
+        XCTAssertEqual(APIDoorText.name(.init(id: "key_1", last4: "iXrW")), "…iXrW")
+        XCTAssertNil(APIDoorText.when("not a time"))
+        XCTAssertNotNil(APIDoorText.when("2026-11-19T09:42:15Z"))
+        XCTAssertNotNil(APIDoorText.when("2026-11-19T09:42:15.120Z"))
+        let line = APIDoorText.keyLine(.init(id: "key_1", name: "ERP", last4: "iXrW", madeAt: "2026-11-19T08:00:00Z"))
+        XCTAssertTrue(line.contains("iXrW"))
+        XCTAssertEqual(APIDoorText.maxKeys, 2)
     }
 
     /// A refused signature (Face ID cancelled) sends nothing and keeps no key.
