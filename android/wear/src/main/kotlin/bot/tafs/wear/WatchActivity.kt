@@ -50,7 +50,8 @@ class WatchActivity : ComponentActivity() {
     )
   }
 
-  private val listener by lazy { Listener(this, model, lifecycleScope) }
+  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2) }
+  private val playback by lazy { FilePlayback() }
   private var speaker: Speaker? = null
 
   /** The ask a Reply continues, kept while the microphone permission is asked. */
@@ -161,16 +162,27 @@ class WatchActivity : ComponentActivity() {
           quick = { model.review(it) },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
+          playback = if (WATCH_V2) playback else null,
         )
+        // Play stops the moment the review is left: its recording is erased then (WatchModel).
+        androidx.compose.runtime.LaunchedEffect(voice is WatchModel.Voice.Review) {
+          if (voice !is WatchModel.Voice.Review) playback.release()
+        }
+        val probe by listener.probe.collectAsState()
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
         val timing = result?.let { r -> if (BuildConfig.TIMING) model.timing(r.clientId)?.let(::readout) else null }
         // v2's pages once every step is in (WatchPages.kt); v1 until then.
-        if (WATCH_V2) WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing)
+        if (WATCH_V2) {
+          WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
+            probe = if (BuildConfig.TIMING) probe else null)
+        }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)
       }
     }
     handle(intent)
+    // A recording left by a crash or a kill: nothing holds it.
+    VoiceFiles.sweep(VoiceFiles.dir(this))
   }
 
   override fun onNewIntent(intent: Intent) {
@@ -205,7 +217,10 @@ class WatchActivity : ComponentActivity() {
     listener.cancel()
     speaker?.close()
     speaker = null
+    playback.release()
+    // Put away: the review and its recording are gone, and any recording left over is swept.
     model.forget()
+    VoiceFiles.sweep(VoiceFiles.dir(this))
   }
 
   override fun onDestroy() {
@@ -279,6 +294,8 @@ internal class Actions(
   val keep: (() -> Unit)? = null,
   /** Deletes the message kept for later. */
   val deleteKept: () -> Unit = {},
+  /** v2's Play and Pause for the review's recording, on the watch. */
+  val playback: Playback? = null,
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

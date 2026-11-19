@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +60,7 @@ internal const val DELETED_SHOWN_MS = 2_000L
  * it arrived and Not sent are v1's.
  */
 @Composable
-internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Long = System::currentTimeMillis) {
+internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Long = System::currentTimeMillis, probe: String? = null) {
   when (voice) {
     is WatchModel.Voice.Ready -> RecordScreen(heard = null, seconds = 0, act = act, start = { act.start(voice.replyTo) })
     is WatchModel.Voice.Listening -> {
@@ -73,7 +74,7 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
       val seconds = (voice.since?.let { ((at - it) / 1000).toInt() } ?: 0).coerceIn(0, (LISTEN_LIMIT_MS / 1000).toInt())
       RecordScreen(heard = voice.heard, seconds = seconds, act = act, start = null)
     }
-    is WatchModel.Voice.Review -> ReviewScreen(voice.text, act)
+    is WatchModel.Voice.Review -> ReviewScreen(voice.text, voice.audio, act, probe)
     WatchModel.Voice.Deleted -> {
       LaunchedEffect(Unit) {
         delay(DELETED_SHOWN_MS)
@@ -156,11 +157,15 @@ internal const val RECORD_STOP = "record-stop"
 
 /** Check before sending: the words in full, scrolled with the crown and never cut, then Re-record, Delete and Send. */
 @Composable
-private fun ReviewScreen(text: String, act: Actions) {
+private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?) {
   ScalingLazyColumn(Modifier.fillMaxSize().background(Color.Black), state = rememberScalingLazyListState(initialCenterItemIndex = 0),
     verticalArrangement = Arrangement.spacedBy(4.dp)) {
     item { ListHeader { Text(Words.Watch.review) } }
     item { Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp)) }
+    // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
+    val playback = act.playback
+    if (audio != null && playback != null) item { PlayRow(audio, playback) }
+    probe?.let { item { Text(it, fontSize = 9.sp, color = Look.faint, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) } }
     item {
       Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally)) {
         Button(onClick = act.rerecord, modifier = Modifier.weight(1f)) { Text(Words.Watch.rerecord, maxLines = 1) }
@@ -170,6 +175,31 @@ private fun ReviewScreen(text: String, act: Actions) {
     item { Button(onClick = act.send, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.send) } }
   }
 }
+
+/** Play ↔ Pause, with the position against the length (0:03 / 0:12). */
+@Composable
+private fun PlayRow(audio: VoiceAudio, playback: Playback) {
+  val playing by playback.playing.collectAsState()
+  var at by remember(audio) { mutableLongStateOf(playback.positionMs()) }
+  LaunchedEffect(playing, audio) {
+    at = playback.positionMs()
+    while (playing) {
+      delay(200)
+      at = playback.positionMs()
+    }
+  }
+  Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
+    Button(onClick = { playback.toggle(audio) }, modifier = Modifier.testTag(if (playing) PLAYBACK_PAUSE else PLAYBACK_PLAY)) {
+      Text(if (playing) Words.Taf.pause else Words.Watch.play, maxLines = 1)
+    }
+    Text("${clock(at)} / ${clock(audio.durationMs)}", fontSize = 12.sp, color = Look.text)
+  }
+}
+
+private fun clock(ms: Long): String = (ms / 1000).let { "%d:%02d".format(it / 60, it % 60) }
+
+internal const val PLAYBACK_PLAY = "playback-play"
+internal const val PLAYBACK_PAUSE = "playback-pause"
 
 /** Quick reply: ready-made lines, each to the review, as words heard are. */
 @Composable

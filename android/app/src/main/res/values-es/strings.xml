@@ -2620,6 +2620,7 @@
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
     <string name="watch_phone_not_reachable">Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo.</string>
+    <string name="watch_play">Reproducir</string>
     <string name="watch_qr_needs_me_today">¿Qué me necesita hoy?</string>
     <string name="watch_qr_not_now">Ahora no</string>
     <string name="watch_qr_tell_me_more">Cuéntame más</string>

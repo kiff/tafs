@@ -196,9 +196,18 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   most once; once taken it's gone from the watch and shows as an ask at work, and anything else leaves it for the next read. It's
   deleted on Delete and when the phone says it's signed out. Putting the app away keeps it, and so does the watch locking, since
   the person asked for it to be sent. v1 offers none (`v1OffersNoKeepForLater`).
-- **Still to come in step (iii):** keeping the recording for Play and Pause: a probe on the owner's watch first, since whether
-  the watch's recognizer takes the app's own audio is the watch's. Until then no audio is kept: the recognizer gives the app
-  text only.
+- **Play and Pause** (`VoiceAudio.kt`, `Listener(keepAudio = true)`). In v2 the app opens the microphone itself (`AudioTap`,
+  16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
+  OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
+  (`files/voice/`), kept beside the review only: **Play** and **Pause** go on from where it was, with "0:03 / 0:12". It never
+  leaves the watch, only the words do. It's erased the moment the review is left, by whatever leaves it (`WatchModel.voiceNow`):
+  Send, Delete, Re-record, Cancel, a lock at Send, put away, and signed out; v1 keeps none, and Keep for later is text only. Any
+  recording no screen holds is swept when the app starts and when it's put away (`VoiceFiles.sweep`).
+- **The probe** (internal builds only, a small line on the review): what the recognizer did with the app's audio, as "audio:
+  kept 7200 ms · peak 9100", "audio: recognizer refused it (error 5)" or "audio: microphone not opened". A recognizer that
+  refuses it before it's ready to listen is noted for the app's life, and the next Start listens with the watch's own microphone
+  as v1 does, with no recording and no Play. Whether the Galaxy Watch 5's recognizer takes it is checked on the owner's watch; if
+  it doesn't, the choice is the owner's (PM 19 Nov 01:19).
 - **v1 is unchanged** with the switch off: what's heard is sent the moment the person stops (`whatsHeardGoesAtOnceWithNothingToConfirm`).
 - **Words:** `watch.type`, `watch.quick_reply`, `watch.qr.*`, `watch.type_hint`, `watch.review`, `watch.rerecord`,
   `watch.deleted_nothing_sent`, `watch.limit`, `watch.recording`, `watch.ready`, `watch.tap_start` and `watch.listening`, in

@@ -2620,6 +2620,7 @@
     <string name="watch_page_brief">Résumé</string>
     <string name="watch_page_inbox">Boîte de réception</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_play">Lire</string>
     <string name="watch_qr_needs_me_today">Qu\'est-ce qui m\'attend aujourd\'hui ?</string>
     <string name="watch_qr_not_now">Pas maintenant</string>
     <string name="watch_qr_tell_me_more">Dites-m\'en plus</string>

@@ -81,9 +81,11 @@ internal fun WatchPages(
   /** The message kept for later, shown on Coach's home with Delete. */
   kept: WatchModel.Draft? = null,
   timing: String? = null,
+  /** The internal build's probe line on the review: what the recognizer did with the app's audio. */
+  probe: String? = null,
 ) {
   when {
-    voice != null -> return VoiceScreenV2(voice, act)
+    voice != null -> return VoiceScreenV2(voice, act, probe = probe)
     result != null -> return ResultScreen(result, act, timing)
     outcome is WatchModel.Outcome.Halting -> return HaltingScreen(outcome.taf)
   }

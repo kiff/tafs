@@ -252,4 +252,37 @@ class WatchPagesTest {
     compose.onNodeWithText(Words.Watch.retry).assertExists()
     compose.onAllNodesWithText(Words.Watch.keepForLater).assertCountEquals(0)
   }
+
+  // MARK: Play and Pause
+
+  private class FakePlayback : Playback {
+    override val playing = kotlinx.coroutines.flow.MutableStateFlow(false)
+    var toggled = 0
+    override fun toggle(audio: VoiceAudio) { toggled++; playing.value = !playing.value }
+    override fun positionMs() = 3_000L
+    override fun release() {}
+  }
+
+  private val recording = object : VoiceAudio {
+    override val durationMs = 12_000L
+    override fun delete() {}
+  }
+
+  @Test fun theReviewPlaysAndPausesItsRecordingFromWhereItWas() {
+    val playback = FakePlayback()
+    compose.setContent { MaterialTheme { VoiceScreenV2(WatchModel.Voice.Review("Move my call", null, recording), Actions(
+      openOnPhone = {}, tryAgain = {}, refuse = {}, halt = {}, askHaltAll = {}, confirmHaltAll = {}, cancelHaltAll = {}, listen = {}, closeVoice = {},
+      retry = {}, open = {}, hear = {}, reply = {}, closeResult = {}, dismiss = {}, playback = playback)) } }
+    compose.onNodeWithText("0:03 / 0:12").assertExists()
+    compose.onNodeWithTag(PLAYBACK_PLAY).assertExists().performClick()
+    compose.onNodeWithTag(PLAYBACK_PAUSE).assertExists()
+    compose.onNodeWithText(Words.Taf.pause).performClick()
+    compose.onNodeWithTag(PLAYBACK_PLAY).assertExists()
+    assertEquals(2, playback.toggled)
+  }
+
+  @Test fun aReviewWithNoRecordingHasNoPlay() {
+    show(read, voice = WatchModel.Voice.Review("What needs me today?", null))
+    compose.onAllNodesWithText(Words.Watch.play).assertCountEquals(0)
+  }
 }

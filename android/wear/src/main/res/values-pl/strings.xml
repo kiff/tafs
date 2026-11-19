@@ -25,6 +25,7 @@
     <string name="needs_you_title">Czeka na Ciebie</string>
     <string name="settings_title">Konto</string>
     <string name="taf_halt_title">Zablokuj</string>
+    <string name="taf_pause">Wstrzymaj</string>
     <string name="taf_state_halted">Zablokowane</string>
     <string name="watch_all_chats">Wszystkie czaty</string>
     <string name="watch_already_answered">Już odpowiedziano albo zakończono.</string>
@@ -75,6 +76,7 @@
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
     <string name="watch_phone_not_reachable">Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.</string>
+    <string name="watch_play">Odtwórz</string>
     <string name="watch_qr_needs_me_today">Co dziś na mnie czeka?</string>
     <string name="watch_qr_not_now">Nie teraz</string>
     <string name="watch_qr_tell_me_more">Powiedz więcej</string>

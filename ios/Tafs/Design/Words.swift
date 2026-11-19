@@ -5211,6 +5211,8 @@ enum Words {
         }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Play
+        static var play: String { Words.line("watch.play") }
         enum Qr {
             /// What needs me today?
             static var needsMeToday: String { Words.line("watch.qr.needs_me_today") }
