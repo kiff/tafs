@@ -308,7 +308,8 @@ to them:
   event in tafs cloud's order with its time, its taf, its words and "×3" when it happens more than once. **Previous day** and
   **Next day** read the day before or after the one shown; the title is Today only for the day the phone answered as today, else
   the date in the watch's language. It's in memory only and forgotten on Close.
-- **Account**, read from the phone (`account`) each time the page is shown: Signed in (the email and the account's name), Plan
+- **Account**, read from the phone (`account`) each time the page is shown: Signed in (the email and the account's name, the
+  name only when it isn't the email itself, as a personal account's is: the phone's `WatchRelay.account` leaves it out), Plan
   (the plan's line as the phone's Account shows it), the watch's language, its version, **Open on phone**, **Sign out** and the
   trust line. With the phone out of reach it says so, with Try again, and Sign out still works: it's the watch's own.
 - **Sign out,** asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats and
