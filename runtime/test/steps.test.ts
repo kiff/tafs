@@ -278,6 +278,13 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     expect(s.connectionRefusal("c5", "read the app's tool catalog before selecting this action")).toBeUndefined();
     expect(coachGuard("read the app's tool catalog before selecting this action")).toBe(true);
     expect(coachGuard("403: missing the organization scope")).toBe(false);
+    // Planque's live refusals of how Coach asked (19 Nov), each a request Coach makes again, never the person's app.
+    expect(coachGuard("tools names the entry's own tools, each once: PIPEDRIVE_GET_ALL_LEADS isn't one; it has getPersons, getPerson, getDeals")).toBe(true);
+    expect(coachGuard("the API description can't be used: none of its security schemes is a key sent as asked; it offers (header x-api-token), (http basic), oauth2 (oauth2, not read)")).toBe(true);
+    expect(coachGuard('{"grant":it,"server":"it match so far; the search is incomplete, so a tool is not known to be absent.","skipped":6}')).toBe(true);
+    // A real failure of the app stays one.
+    expect(coachGuard("the vendor answered 401: the key was revoked")).toBe(false);
+    expect(coachGuard("the sign-in to Pipedrive didn't finish")).toBe(false);
     // A call on a grant that waits for the owner's approval is not a failure of the app.
     expect(coachGuard("Pipedrive waits for the owner's approval: it isn't usable yet")).toBe(true);
     expect(coachGuard("waits_for_approval: Pipedrive waits for the owner's approval")).toBe(true);
