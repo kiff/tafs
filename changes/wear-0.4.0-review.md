@@ -1,0 +1,1 @@
+- **Wear OS 0.4.0 (400,000,005), for Play's review:** v2 on in production builds, as the owner tested it on a Galaxy Watch 5, with no timing or probe line, and no recording kept on the watch (Play and Pause stay in test versions only) ([watch-wear.md](docs/watch-wear.md)).

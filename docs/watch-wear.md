@@ -153,10 +153,9 @@ With it on (`WatchModel(briefOn = true)` in the tests):
 ## Version 2 (behind a switch, being built)
 
 Wear v2 follows the owner-approved mockup v2.1 (kiff/work `watch-v2/`). It's built behind `WATCH_V2`
-(`wear/…/WatchPages.kt`, from `BuildConfig.WATCH_V2`): on only in a test version (a `-test` `versionName`, or
-`TAFS_WATCH_V2=1`) for the owner's watch on Play's internal track, and off in debug builds, the unit tests and any production
-build, where a watch shows v1 whole. It turns on for everyone, as one line in `wear/build.gradle.kts`, once the owner has tried
-it and the server pieces it waits on are in. Steps: (i) the phone's three new reads (`taf`, `calendar`,
+(`wear/…/WatchPages.kt`, from `BuildConfig.WATCH_V2`): **on in every release build from 0.4.0** (400,000,005), the build the
+owner tried on a Galaxy Watch 5 and sends to Play's review, and off in debug builds and the unit tests, which pass it where they
+need it. What waits on a server piece stays behind its own switch (step vii). Steps: (i) the phone's three new reads (`taf`, `calendar`,
 `account`, above); (ii) the pages and Coach's home; (iii) record, review and send, with Type and Quick reply; (iv) the inbox
 kept on the watch; (v) Tafs, a taf's page, its settings and choosing which to halt; (vi) the held call, the calendar day and
 Account; (vii) the switches for what needs a new server piece (a watch ask as a Coach chat, the chats read, the inbox's read and
@@ -197,7 +196,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   most once; once taken it's gone from the watch and shows as an ask at work, and anything else leaves it for the next read. It's
   deleted on Delete and when the phone says it's signed out. Putting the app away keeps it, and so does the watch locking, since
   the person asked for it to be sent. v1 offers none (`v1OffersNoKeepForLater`).
-- **Play and Pause** (`VoiceAudio.kt`, `Listener(keepAudio = true)`). In v2 the app opens the microphone itself (`AudioTap`,
+- **Play and Pause** (`VoiceAudio.kt`, `Listener(keepAudio = true)`), **only in a test version** (`BuildConfig.KEEP_AUDIO`: a
+  `-test` `versionName`, or `TAFS_WATCH_AUDIO=1`). On the owner's Galaxy Watch 5 the app's own recording wasn't the path the
+  watch took, so the probe never ran (#1716, W1), and a production build keeps no recording: its review is the words alone.
+  In a test version the app opens the microphone itself (`AudioTap`,
   16 kHz mono PCM) and hands the same sound to the watch's recognizer through a pipe (`RecognizerIntent.EXTRA_AUDIO_SOURCE`, Wear
   OS 4 and later), so the recording and the words are one capture. The recording is a WAV in the app's private files
   (`files/voice/`), kept beside the review only: **Play** and **Pause** go on from where it was, with "0:03 / 0:12". It never
@@ -323,6 +325,11 @@ the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Vers
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
 
+**400,000,005 (0.4.0)** is v2 for Play's review, the owner's direction after the Galaxy Watch 5 test: v2 on, with no timing
+or probe line and no recording (`KEEP_AUDIO` off), from the same code as the test build. It needs the phone at Android 123 or
+later. It goes to `wear:internal` on merge, as every raise does; the owner sends it to review from Play's console, after the
+privacy text that describes v2 is live.
+
 **400,000,004 (0.4.0-test)** is v2's test build for the owner's Galaxy Watch 5: its `-test` name turns on v2 (`WATCH_V2`) and
 the timing readout, with the Play/Pause probe line on the review. It needs the phone at Android 123 or later, the first with the
 relay for v2's reads (`taf`, `calendar`, `account`). Never promoted to production.
@@ -425,15 +432,16 @@ watch doesn't know is shown as Open on phone, never guessed at.
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.
-  - `files/voice/`: the review's recording, erased when the review is left and swept at start, put-away and sign-out here.
+  - `files/voice/`, in a test version only (`KEEP_AUDIO`): the review's recording, erased when the review is left and swept at
+    start, put-away and sign-out here. A production build keeps no recording.
   - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
 
   In memory only, forgotten when the app is put away: the reads, the asks, an open result, a taf's page, the halt pick, the
   calendar day, and Account's read (email, account name, plan). No tokens or keys, and no amount, merchant or person's name in a
   log on the watch or in the phone's relay.
 - **Voice:** the watch's own speech recognizer makes text, and only the text goes to the phone and tafs cloud, after the AI
-  consent already given on the phone. No audio is sent anywhere; v1 keeps none, and v2 keeps the review's recording on the
-  watch only until it's sent or deleted (Play and Pause, step iii). Speaking is an instruction to a taf, never an
+  consent already given on the phone. No audio is sent anywhere, and a production build keeps none; only a test version keeps
+  the review's recording on the watch, until it's sent or deleted (Play and Pause, step iii). Speaking is an instruction to a taf, never an
   approval: the taf acts under its own Cards.
 - **A locked watch** shows only "A taf needs you" for an alert the phone bridges to it, as a locked phone does.
 - **Words** come from `app/strings` (`watch.*` and the phone's own keys), in all 8 languages.

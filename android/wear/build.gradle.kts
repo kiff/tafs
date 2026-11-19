@@ -33,10 +33,10 @@ android {
     // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
     // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
     // 400,000,001 and the two never meet.
-    versionCode = 400_000_004
+    versionCode = 400_000_005
     // "-test": an internal build for a test on a real watch, with the timing readout (below). A build for production has a
     // plain name, so it never shows it.
-    versionName = "0.4.0-test"
+    versionName = "0.4.0"
   }
 
   buildTypes {
@@ -45,16 +45,22 @@ android {
       buildConfigField("boolean", "TIMING", "true")
       // v2 stays off in debug builds and in the unit tests: they pass it where they need it (docs/watch-wear.md, Version 2).
       buildConfigField("boolean", "WATCH_V2", "false")
+      // The app's own recording (Play and Pause) stays off: the system's recognizer hears the watch's microphone.
+      buildConfigField("boolean", "KEEP_AUDIO", "false")
     }
     release {
       // Only an internal build asks for it: a test version ("-test"), TAFS_WATCH_TIMING=1 or -PwatchTiming. A production build
       // never shows it.
       val timing = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
       buildConfigField("boolean", "TIMING", timing.toString())
-      // Wear v2 (docs/watch-wear.md, Version 2): on only in a test version ("-test") for the owner's watch on Play's internal
-      // track, or with TAFS_WATCH_V2=1; never in a production build.
-      val v2 = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_V2") == "1"
-      buildConfigField("boolean", "WATCH_V2", v2.toString())
+      // Wear v2 (docs/watch-wear.md, Version 2): on in every release build since 0.4.0, the version the owner tested on a
+      // Galaxy Watch 5 and sends to Play's review.
+      buildConfigField("boolean", "WATCH_V2", "true")
+      // The app's own recording, for Play and Pause on the review: only in a test version ("-test") or with TAFS_WATCH_AUDIO=1,
+      // until a watch's probe line shows the recognizer takes the app's audio. Off, the review is the words alone and the watch
+      // keeps no recording (docs/watch-wear.md, "What the watch keeps").
+      val audio = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_AUDIO") == "1"
+      buildConfigField("boolean", "KEEP_AUDIO", audio.toString())
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
       isShrinkResources = true
