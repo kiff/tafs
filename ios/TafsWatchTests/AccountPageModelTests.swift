@@ -16,6 +16,14 @@ final class AccountPageModelTests: XCTestCase {
         }
     }
 
+    /// A personal account is named by its email: Signed in shows it once (mac-air's simulator walk-through, 19 Nov).
+    func testTheAccountsNameShowsOnlyWhenItIsntTheEmail() {
+        XCTAssertNil(AccountPageModel.accountName(WatchAccount(email: "owner@example.com", account: "Owner@Example.com ")))
+        XCTAssertEqual(AccountPageModel.accountName(WatchAccount(email: "owner@example.com", account: "Brio Bikes")), "Brio Bikes")
+        XCTAssertEqual(AccountPageModel.accountName(WatchAccount(email: nil, account: "Brio Bikes")), "Brio Bikes")
+        XCTAssertNil(AccountPageModel.accountName(WatchAccount(email: "owner@example.com", account: "  ")))
+    }
+
     func testTheAccountIsReadFromThePhoneEachTime() async {
         let account = WatchAccount(email: "owner@example.com", account: "Shop", plan: "Solo · 3 tafs")
         let phone = Phone(WatchReply(.ok, account: account))

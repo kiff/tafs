@@ -233,11 +233,22 @@ struct KeptWatchReading: WatchReading {
         return WatchNeedsYou(count: max(count, calls.count), calls: calls, at: now)
     }
 
+    /// Home's state for each taf it lists, by tafs cloud's id, in the iPhone's words.
+    static func homeStates(_ tafs: [TafsCloud.HomeTaf]) -> [String: String] {
+        var words: [String: String] = [:]
+        for taf in tafs {
+            guard let id = taf.id else { continue }
+            words[id] = TafState(cloudState: taf.state, unscheduled: taf.unscheduled).label
+        }
+        return words
+    }
+
     /// Each taf with its state: halted with the account, or on its own, then paused, then its
-    /// next run as tafs cloud words it.
+    /// next run as tafs cloud words it, else its state as Home gives it ("Ready", "Stopped"), as the iPhone shows it.
     func tafs() async throws -> [WatchTaf] {
         let listed = try await cloud.tafs()
         let all = try? await cloud.halted(nil)
+        let states = Self.homeStates((try? await cloud.home())?.tafs ?? [])
         var tafs: [WatchTaf] = []
         for taf in listed {
             // Its own halt, unless the account's covers it: also when the account's couldn't be read.
@@ -246,7 +257,7 @@ struct KeptWatchReading: WatchReading {
             switch halt?.state {
             case .halted: line = Words.Taf.State.halted
             case .halting: line = Words.Taf.Halt.halting
-            case .running, nil: line = taf.paused ? Words.Taf.State.paused : taf.nextRunWords
+            case .running, nil: line = taf.paused ? Words.Taf.State.paused : (taf.nextRunWords ?? states[taf.id])
             }
             tafs.append(WatchTaf(id: taf.id, name: taf.name, line: line, halted: halt.map { $0.state != .running } ?? false))
         }

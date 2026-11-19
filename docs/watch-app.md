@@ -143,7 +143,8 @@ Sign out on this watch was live in 8 languages; turned off, a watch shows v1 who
 - **The menu:** every page by name, and Halt at the very bottom, apart from the rest, offered only while a taf the phone
   listed runs. It opens Choose which to halt (step v).
 - **Until their own steps:** the Inbox is Needs you as v1 reads it (with the brief in its place when that switch is on);
-  Your tafs is each taf with its state and no Halt; Account is the trust line.
+  Your tafs is each taf with its state and no Halt (halted, paused, its next run, else Home's state in the iPhone's words:
+  Ready, Stopped, Working; never no line); Account is the trust line.
 - **Nothing new** reaches the phone, and nothing is stored on the watch. The last chats come with tafs cloud's chats read.
 
 **Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
@@ -236,7 +237,7 @@ Nothing leaves the watch before Send:
   shown; the title is Today only for the day the phone answered as today, else the date in the watch's language. In memory
   only, forgotten on Close, and an answer for a day asked before the last, or after Close, is never drawn.
 - **Account,** read from the phone (`account`) each time the page is shown, in memory only: Signed in (the email and the
-  account's name), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
+  account's name, the name only when it isn't the email itself, as a personal account's is), Plan (the plan's line as the phone's Account shows it), the watch's language and the app's version, and
   the trust line. With the phone out of reach, or signed out, it says so with Try again, and the watch's own lines stay.
 - **Sign out on this watch** (the owner's choice, 19 Nov, as Wear OS's; `WatchSignIn`, tested in `WatchSignInTests`): at the
   foot of Account, asked once more ("Sign out on this watch?", "Your phone stays signed in. This watch forgets your tafs, chats

@@ -60,6 +60,13 @@ final class AccountPageModel: ObservableObject {
         return locale.localizedString(forLanguageCode: code)?.localizedCapitalized ?? code
     }
 
+    /// The account's name as Signed in shows it under the email: none when it's the email itself (a personal account).
+    static func accountName(_ account: WatchAccount) -> String? {
+        guard let name = account.account?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else { return nil }
+        guard let email = account.email?.trimmingCharacters(in: .whitespacesAndNewlines) else { return name }
+        return name.caseInsensitiveCompare(email) == .orderedSame ? nil : name
+    }
+
     /// This watch app's version.
     static func version(_ bundle: Bundle = .main) -> String {
         bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
@@ -95,7 +102,8 @@ struct WatchAccountScreen: View {
                     if account.email != nil || account.account != nil {
                         Section(Words.Watch.signedIn) {
                             if let email = account.email { Text(verbatim: email).font(.footnote) }
-                            if let name = account.account { Text(verbatim: name).font(.footnote) }
+                            // A personal account is named by its email: the name only when it says something more.
+                            if let name = AccountPageModel.accountName(account) { Text(verbatim: name).font(.footnote) }
                         }
                     }
                     if let plan = account.plan {

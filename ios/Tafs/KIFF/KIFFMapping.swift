@@ -429,3 +429,19 @@ enum KIFFMapping {
         }
     }
 }
+
+extension TafState {
+    /// tafs cloud's state for a taf on Home, as the app reads it above: a taf with no schedule is ready, not working,
+    /// and any state the app doesn't know reads as stopped (no active Card).
+    init(cloudState state: String, unscheduled: Bool? = nil) {
+        switch state {
+        case "waiting": self = .waiting
+        case "paused": self = .paused
+        case "halted": self = .halted
+        case "working" where unscheduled == true: self = .idle
+        case "working": self = .working
+        case "idle": self = .idle
+        default: self = .revoked
+        }
+    }
+}

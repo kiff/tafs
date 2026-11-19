@@ -803,4 +803,18 @@ final class WatchRelayTests: XCTestCase {
             XCTAssertEqual(WatchRelay.withoutAmount(summary, amount: amount), kept, summary)
         }
     }
+
+    /// A taf with no next run, not paused or halted, shows Home's state on the watch as the iPhone does (mac-air's
+    /// walk-through, 19 Nov: two rows had no line), in the same mapping as the iPhone's.
+    func testATafsWatchLineFallsBackToHomesState() {
+        XCTAssertEqual(TafState(cloudState: "idle").label, Words.Taf.State.ready)
+        XCTAssertEqual(TafState(cloudState: "stopped").label, Words.Taf.State.stopped)
+        XCTAssertEqual(TafState(cloudState: "working").label, Words.Taf.State.working)
+        XCTAssertEqual(TafState(cloudState: "working", unscheduled: true).label, Words.Taf.State.ready, "no schedule: ready, not working")
+        XCTAssertEqual(TafState(cloudState: "waiting").label, Words.Taf.State.waiting)
+        XCTAssertEqual(TafState(cloudState: "paused").label, Words.Taf.State.paused)
+        XCTAssertEqual(TafState(cloudState: "halted").label, Words.Taf.State.halted)
+        XCTAssertEqual(TafState(cloudState: "something new").label, Words.Taf.State.stopped)
+    }
+
 }
