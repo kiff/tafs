@@ -64,12 +64,25 @@ class CoachChatActions(
   val notNowTools: () -> Unit = {},
 )
 
-/** Coach's earlier conversations, newest first: each reopens; one can be archived, and the archived ones put back. */
+/**
+ * Coach's earlier conversations, newest first: each reopens; one can be archived, and the archived ones put back. Under them,
+ * where its switch is on ([watchDays]), the watch's conversations by day, each opened read only in the sheet's place.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun PreviousConversations(state: AppState, actions: CoachChatActions, onClose: () -> Unit) {
+internal fun PreviousConversations(
+  state: AppState,
+  actions: CoachChatActions,
+  watchDays: bot.tafs.app.watch.WatchDaysStore? = LocalWatchDays.current,
+  watchDaysOn: Boolean = bot.tafs.app.watch.WatchDaysFeature.on,
+  onClose: () -> Unit,
+) {
   val scope = rememberCoroutineScope()
   var archived by remember { mutableStateOf(false) }
+  // A day from the watch, open in the sheet's place: Back comes to the list again.
+  var watchDay by remember { mutableStateOf<bot.tafs.app.watch.WatchDay?>(null) }
+  // The account's today as tafs cloud gave it with the days, for the open day's title.
+  var watchToday by remember { mutableStateOf<java.time.LocalDate?>(null) }
   // The conversation waiting for the owner's yes: archiving takes it off every device's list.
   var archiving by remember { mutableStateOf<TafsCloud.Chat?>(null) }
   // An archived conversation to put back, asked by its title.
@@ -77,6 +90,11 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
   LaunchedEffect(archived) { if (archived) actions.loadArchived() else actions.load() }
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
+      val day = watchDay
+      if (day != null && watchDays != null && watchDaysOn) {
+        WatchDayView(watchDays, day, watchToday, onBack = { watchDay = null }, onClose = onClose)
+        return@Column
+      }
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (archived) {
           Text(Words.Coach.Chats.back, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping { archived = false }.padding(top = 10.dp, end = 12.dp))
@@ -102,6 +120,7 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
         )
       }
       if (!archived) {
+        WatchDaysSection(watchDays, on = watchDaysOn) { day, today -> watchToday = today; watchDay = day }
         Text(Words.Coach.Chats.archived, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { archived = true }.padding(top = 12.dp))
       }
     }

@@ -445,6 +445,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   // Files (docs/android-app.md, Files): a model only with its switch on, over tafs cloud's routes.
   val files = remember { if (bot.tafs.app.files.FilesFeature.on) bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) else null }
   val filesShowing = files?.state?.collectAsState()?.value?.showing == true
+  // From your watch (docs/android-app.md): a store only with its switch on; off, Coach's sheet draws nothing of it and asks nothing.
+  val watchDays = remember { if (bot.tafs.app.watch.WatchDaysFeature.on) model.watchDaysStore else null }
   var filesFromAccount by rememberSaveable { mutableStateOf(false) }
   var showingConnectApps by rememberSaveable { mutableStateOf(false) }
   var showingPeople by rememberSaveable { mutableStateOf(false) }
@@ -787,7 +789,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; overviewOpen = false; calendarOpen = false; missionOpen = null; openTaf = id
   }
   // Files reaches Account, a taf's page and a taf's chat through LocalFiles: null, and nothing of it drawn, with its switch off.
-  androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.views.LocalFiles provides files) {
+  // The watch's days reach Coach's earlier conversations the same way, through LocalWatchDays.
+  androidx.compose.runtime.CompositionLocalProvider(bot.tafs.app.views.LocalFiles provides files, bot.tafs.app.views.LocalWatchDays provides watchDays) {
   Box(Modifier.fillMaxSize()) {
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
     // Landscape and tablets: one sidebar for the whole app, as the iPad's (docs/android-app.md, Tablets); folded away, the

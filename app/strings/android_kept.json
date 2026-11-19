@@ -159,5 +159,8 @@
     "Lead follow-up": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
     "Nord Atelier call notes.txt": "the Files stub's sample file, standing in for tafs cloud's data until its routes land",
     "Call with Nord Atelier, Thursday 10:00.\\nThey want a quote for 40 chairs by Friday.\\n": "the Files stub's sample file, standing in for tafs cloud's data until its routes land"
+  },
+  "views/WatchDaysViews.kt": {
+    "EEEEdMMMM": "a date skeleton for the platform's getBestDateTimePattern (weekday, day, month), not words"
   }
 }

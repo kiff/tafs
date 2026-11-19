@@ -1531,6 +1531,38 @@ nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
   previews cleaned, Delete asked first and gone for everyone), `FilesScreensTest` (the switch off, the entries, the list's
   views, a file, Delete's question, the tablet's two panes).
 
+## From your watch (W11, behind a switch)
+
+The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). Off until
+the owner's yes and tafs cloud's routes: `WatchDaysFeature.on` is `false` (`watch/WatchDays.kt`), so `MainActivity` makes no
+store and `LocalWatchDays` is null, and Coach's Previous conversations draws nothing of it and asks tafs cloud nothing
+(`withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing`).
+
+- **The store** (`WatchDaysStore`) is tafs cloud's two routes and nothing else, with the session, under the same switch as
+  `GET /v1/watch/asks`: `days` (`GET /v1/watch/days`: the days, newest first, each `date` and `count`, and `today`, the
+  account's day) and `day` (`GET /v1/watch/days/{yyyy-mm-dd}`: its `turns`, oldest first). A 404 (`watch_off`) is the switch
+  off: null, nothing drawn. **`TafsCloudWatchDaysStore`** is the real one (`AppModel.watchDaysStore`): `TafsCloud.watchDays`
+  and `watchDay`. Each day and turn is read on its own (`WatchDaysWire`): one that can't be read is left out, never the list,
+  and a date or a time that can't be read is never guessed. `StubWatchDaysStore` holds sample days of the sample tafs (Late
+  parcels, Support replies, Lead follow-up) as tafs cloud's JSON, read the same way, for the tests.
+- **The section:** in Previous conversations, under the chats and above Archived, "From your watch"
+  (`coach.chats.from_your_watch`) and a row per day in tafs cloud's order: its title and how many requests, as a number. A
+  day's title is "Today" (`calendar.today`) when it is the account's today as tafs cloud gives it, else the phone's own today
+  where tafs cloud gives none, so a person in another zone than the account's sees it on the right day; any other day is the
+  platform's weekday, day and month in the app's language (`getBestDateTimePattern`, "EEEEdMMMM"). No section, and never an
+  error, when tafs cloud's switch is off, it has no day, or the read fails.
+- **A day** opens in the sheet's place, with Back (`coach.chats.back`) and Done: its turns in tafs cloud's order. Each is
+  "⌚ Sent from your watch" (`coach.chats.sent_from_your_watch`) and when (the platform's short time, in the account's zone),
+  the person's words (`said`), then the taf that took it, by name, and its `line`, else tafs cloud's `words` for the state,
+  whatever the state: the app never words a state of its own. A turn with `reply_to` is drawn indented under the one before
+  it. A read that fails says "The conversation couldn't be loaded: {why}" (`coach.conversation_not_loaded`, with `ErrorWords`'
+  line) and Try again.
+- **Read only, kept nowhere:** no box and no send on a day (a reply goes on in a Coach chat); the days and turns are read
+  when shown and held only while on screen. Leaving a day cancels its read, so a late answer is never drawn.
+- Tests: `WatchDaysTest` (the switch off, tafs cloud's switch off, no days and a failed read, the days and their counts, the
+  account's Today a day behind the phone, a day's turns, line else words, an unknown state, a reply indented, no reply control,
+  a failed day and Try again, both answers read with and without their optional parts, 404 as off).
+
 ## Illustrations
 
 The owner's approved boards 1–10, drawn as shapes in `design/Illustrations.kt`, never image files, and with **no letter,

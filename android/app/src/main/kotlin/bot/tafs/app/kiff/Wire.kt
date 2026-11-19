@@ -744,3 +744,38 @@ data class WireFiles(val files: List<WireFile> = emptyList(), val next: String? 
 /** `DELETE /v1/files/{id}`'s answer. */
 @Serializable
 data class WireFileDeleted(val deleted: Boolean = false)
+
+/**
+ * The days the person asked from their watch (`GET /v1/watch/days`; docs/android-app.md, From your watch), newest first, and
+ * `today` in the account's zone where tafs cloud gives it. Each day is read on its own ([WireWatchDay]): one that can't be read is
+ * left out, never the list.
+ */
+@Serializable
+data class WireWatchDays(val today: String? = null, val days: List<JsonElement> = emptyList())
+
+/** One watch day: `yyyy-mm-dd` in the account's zone, and how many requests. */
+@Serializable
+data class WireWatchDay(val date: String, val count: Int)
+
+/**
+ * One day's turns from the watch (`GET /v1/watch/days/{date}`), oldest first, each read on its own ([WireWatchTurn]): one that
+ * can't be read is left out, never the day.
+ */
+@Serializable
+data class WireWatchTurns(val date: String? = null, val turns: List<JsonElement> = emptyList())
+
+/**
+ * What was said and when, the taf that took it (none when no taf could), its state, the taf's line where there is one, tafs cloud's
+ * words for the state, and the turn it replies to.
+ */
+@Serializable
+data class WireWatchTurn(
+  val id: String,
+  val said: String,
+  @SerialName("said_at") val saidAt: String = "",
+  val taf: WatchAskTaf? = null,
+  val state: String = "",
+  val line: String? = null,
+  val words: String = "",
+  @SerialName("reply_to") val replyTo: String? = null,
+)

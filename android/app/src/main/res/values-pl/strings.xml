@@ -703,10 +703,12 @@
     <string name="coach_chats_archive_title">Zarchiwizować tę rozmowę?</string>
     <string name="coach_chats_archived">Zarchiwizowane</string>
     <string name="coach_chats_back">‹ Wstecz</string>
+    <string name="coach_chats_from_your_watch">Z Twojego zegarka</string>
     <string name="coach_chats_none">Jeszcze brak rozmów.</string>
     <string name="coach_chats_nothing_archived">Nic nie zarchiwizowano.</string>
     <string name="coach_chats_previous">Poprzednie rozmowy</string>
     <string name="coach_chats_put_back">Przywróć</string>
+    <string name="coach_chats_sent_from_your_watch">⌚ Wysłane z zegarka</string>
     <string name="coach_chats_untitled">Rozmowa</string>
     <string name="coach_checking_sign_in">Sprawdzanie logowania…</string>
     <string name="coach_close_coach_mode">Zamknij tryb Coach</string>
