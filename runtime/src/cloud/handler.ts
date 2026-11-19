@@ -19,7 +19,7 @@ import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
+import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { handedByOf, requestDetail } from "./request.js";
@@ -5966,7 +5966,9 @@ async function goOn(me: KIFFIdentity, taf: Taf, exception: string, deps: Deps): 
 /** The owner's message, 1 to CHAT.maxText characters. */
 /** The person's words: 1 to CHAT.maxText characters, or none when the message is files alone. */
 function chatText(event: HTTPEvent, withFiles = false): string {
-  const text = str(parseBody(event).text).trim();
+  // A line a person types that starts as one of tafs' own ([tafs language], [tafs time zone]) is dropped: only tafs
+  // cloud says those, once, before the person's words (docs/languages.md).
+  const text = withoutTafsLines(str(parseBody(event).text)).trim();
   if ((!text && !withFiles) || text.length > CHAT.maxText) throw new HTTPError(400, `write 1 to ${CHAT.maxText} characters`);
   return text;
 }
