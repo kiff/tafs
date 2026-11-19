@@ -128,17 +128,20 @@ struct WatchMenu: View {
     @State private var confirming = false
 
     var body: some View {
-        List {
-            ForEach(pages) { shown in
-                Button(shown.title) { go(shown) }
-            }
-            if WatchPage.offersHalt(tafs.state) {
-                Section {
-                    Button(Words.Halt.allNow, role: .destructive) { confirming = true }
+        // Its own stack, so its title shows over the sheet (qa-kiff's read).
+        NavigationStack {
+            List {
+                ForEach(pages) { shown in
+                    Button(shown.title) { go(shown) }
+                }
+                if WatchPage.offersHalt(tafs.state) {
+                    Section {
+                        Button(Words.Halt.allNow, role: .destructive) { confirming = true }
+                    }
                 }
             }
+            .navigationTitle(Words.Watch.menu)
         }
-        .navigationTitle(Words.Watch.menu)
         .task { await tafs.load() }
         .confirmationDialog(Words.HaltAll.title, isPresented: $confirming) {
             Button(Words.Halt.allNow, role: .destructive) {
