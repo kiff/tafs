@@ -386,6 +386,38 @@ class WatchModelTest {
     assertTrue(phone.asked.isEmpty())
   }
 
+  /** W3: the answer to an ask sent from this watch opens by itself when it ends with the app elsewhere (back on Coach's home). */
+  @Test fun v2sAnswerOpensByItselfWhenTheAppIsElsewhere() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("Move my call to six")
+    model.sendReviewed()
+    model.closeVoice()
+    model.took(working)
+    assertNull("not before it ends", model.result.value)
+    model.took(done)
+    assertEquals(done, model.result.value)
+  }
+
+  /** ...but never over a new message being recorded, and never for an ask this watch didn't send. */
+  @Test fun v2sAnswerWaitsWhileTheWatchIsBusyAndOthersNeverOpen() = runTest {
+    val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
+    val model = v2(phone)
+    model.listen()
+    model.heard("Move my call to six")
+    model.sendReviewed()
+    model.closeVoice()
+    model.listen()
+    model.took(done)
+    assertNull("a new message is being recorded", model.result.value)
+    model.closeVoice()
+    assertNull("an answer opens once, as it ends", model.result.value)
+    val other = v2(phone)
+    other.took(done)
+    assertNull("not sent from this watch", other.result.value)
+  }
+
   @Test fun v2sWordsHeardGoToTheReviewAndOnlySendOnSend() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }
     val model = v2(phone)

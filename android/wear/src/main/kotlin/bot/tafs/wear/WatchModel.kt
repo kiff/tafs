@@ -411,6 +411,8 @@ class WatchModel(
   private var heardAt: Long? = null
   private val timings = mutableMapOf<String, Timing>()
   private val receivedAt = mutableMapOf<String, Long>()
+  /** Asks this watch sent whose answer hasn't come yet, in memory only: their answer opens by itself when it ends (W3). */
+  private val awaiting = mutableSetOf<String>()
 
   fun timing(clientId: String): Timing? = timings[clientId]
 
@@ -541,6 +543,7 @@ class WatchModel(
           val at = now()
           receivedAt[sending.clientId] = at
           timings[sending.clientId] = Timing(listenMs, heardAt?.let { at - it }, null)
+          awaiting += reply.ask.id
           took(reply.ask)
           Voice.Sent(reply.ask)
         }
@@ -587,6 +590,10 @@ class WatchModel(
       else -> Unit
     }
     if (_result.value?.id == ask.id) _result.value = ask
+    // v2 (W3, the owner's Watch 5 test: the answer came while the app was elsewhere, and they didn't know where it was): an ask
+    // sent from this watch that ends while the app is open opens its answer by itself, unless the person is busy with a new
+    // message or another answer; then it waits in Coach's home and the Inbox, unread.
+    if (ask.ended && awaiting.remove(ask.id) && reviewFirst && _result.value == null && _voice.value == null) open(ask)
   }
 
   /** Opens an ask's result card (from the home screen or its notification). */
@@ -914,6 +921,7 @@ class WatchModel(
     seen.clear()
     timings.clear()
     receivedAt.clear()
+    awaiting.clear()
     today = null
   }
 

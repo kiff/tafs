@@ -24,7 +24,8 @@ object AskResults {
   @Volatile var shown: ((AskLine) -> Unit)? = null
 
   const val EXTRA_ASK = "bot.tafs.wear.ASK"
-  private const val CHANNEL = "results"
+  internal const val CHANNEL = "replies"
+  private const val OLD_CHANNEL = "results"
 
   fun arrived(context: Context, ask: AskLine) {
     val app = shown
@@ -34,9 +35,13 @@ object AskResults {
     if (ask.ended) notify(context, ask)
   }
 
-  private fun notify(context: Context, ask: AskLine) {
+  internal fun notify(context: Context, ask: AskLine) {
     val manager = context.getSystemService(NotificationManager::class.java) ?: return
-    manager.createNotificationChannel(NotificationChannel(CHANNEL, Words.Watch.resultsChannel, NotificationManager.IMPORTANCE_DEFAULT))
+    // High importance, so an answer peeks on the face and buzzes, and stays in the list until it's opened or swiped away (W3:
+    // at the default level it came and went unseen). A channel's importance can't be raised once made, so it's a new channel,
+    // and the old one goes, so Settings lists one.
+    manager.deleteNotificationChannel(OLD_CHANNEL)
+    manager.createNotificationChannel(NotificationChannel(CHANNEL, Words.Watch.resultsChannel, NotificationManager.IMPORTANCE_HIGH))
     val open = PendingIntent.getActivity(
       context, ask.id.hashCode(),
       Intent(context, WatchActivity::class.java).putExtra(EXTRA_ASK, WatchLink.encodeResult(ask)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
@@ -50,6 +55,8 @@ object AskResults {
       .setContentTitle(ask.tafName ?: name)
       .setContentText(ask.line ?: ask.words)
       .setStyle(NotificationCompat.BigTextStyle().bigText(ask.line ?: ask.words))
+      .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+      .setPriority(NotificationCompat.PRIORITY_HIGH)
       .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
       .setPublicVersion(locked)
       .setContentIntent(open)

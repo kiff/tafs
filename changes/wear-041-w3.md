@@ -1,0 +1,1 @@
+- **Wear OS: an answer you can't miss.** With the app open, the answer to what you sent opens by itself when it comes (never over a new message you're recording); it scrolls to its end and closes only with Close; with the app put away it peeks and buzzes as a high-importance alert ([watch-wear.md](docs/watch-wear.md)).
