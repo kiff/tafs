@@ -849,7 +849,16 @@ class TafsCloud(
 
   // MARK: A door "From another application" (`api`, docs/doors.md, kiff/work#16 §2.5): its keys change only signed
 
+  fun doorsPath(id: String) = "/v1/tafs/${escaped(id)}/doors"
   fun doorPath(id: String, door: String) = "/v1/tafs/${escaped(id)}/doors/${escaped(door)}"
+  fun doorDraftPath(id: String, draft: String) = doorsPath(id) + "/drafts/" + escaped(draft)
+
+  /** A door Coach drafted, as the owner approves it; null when tafs cloud's answer holds none the app can draw. */
+  suspend fun doorDraft(id: String, draft: String): DoorDraft? = DoorDraft.read(String(send("GET", doorDraftPath(id, draft))))
+
+  /** Approves Coach's draft: [signature] is over `POST`, the doors' path and the draft's exact `body`, and those same bytes go. */
+  suspend fun approveDoorDraft(id: String, draft: DoorDraft, signature: String): AddedApiDoor =
+    KiffClient.json.decodeFromString(AddedApiDoor.serializer(), String(send("POST", doorsPath(id), draft.body, mapOf("KIFF-Device-Signature" to signature))))
   fun doorKeysPath(id: String, door: String) = doorPath(id, door) + "/keys"
   fun doorKeyPath(id: String, door: String, key: String) = doorKeysPath(id, door) + "/" + escaped(key)
 

@@ -1,0 +1,1 @@
+- **Android, behind a switch (off): Coach's drafted door "From another application" in Coach's chat.** It's drawn from tafs cloud's draft, never Coach's words. Approve, for the taf's manager, signs exactly the draft's body with the fingerprint and opens the door, and its first key is shown once ([doors.md](docs/doors.md)).

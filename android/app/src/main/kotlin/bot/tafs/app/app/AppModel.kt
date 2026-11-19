@@ -74,6 +74,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import bot.tafs.app.kiff.ShownComponent
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.kiff.Door
+import bot.tafs.app.kiff.DoorDraft
+import bot.tafs.app.kiff.AddedApiDoor
 import bot.tafs.app.kiff.DoorApp
 import bot.tafs.app.kiff.DoorKey
 import bot.tafs.app.kiff.Knock
@@ -7496,6 +7498,26 @@ class AppModel(
       updateDoors(tafId) { it.copy(error = if (e is bot.tafs.app.signing.PromptClosed) null else e.message) }
       null
     }
+  }
+
+  /** Coach's drafted door for a taf tafs cloud runs, by its tafs cloud id: read to be drawn, never from Coach's words. */
+  suspend fun doorDraft(cloudTaf: String, draftId: String): DoorDraft? {
+    if (_state.value.mode != Mode.kiff) return null
+    return cloud.doorDraft(cloudTaf, draftId)
+  }
+
+  /**
+   * Approves Coach's drafted door, signed over exactly the draft's `body` (the fingerprint, the approval key): the door opens with
+   * its first key, which the card shows once. Null when the person closed the fingerprint, or isn't the taf's manager: nothing sent.
+   */
+  suspend fun approveDoorDraft(cloudTaf: String, draft: DoorDraft, reason: String): AddedApiDoor? {
+    val taf = _state.value.tafs.firstOrNull { it.cloudId == cloudTaf } ?: return null
+    if (_state.value.mode != Mode.kiff || !_state.value.manages(taf.id)) return null
+    val path = cloud.doorsPath(cloudTaf)
+    val signature = signDoor(taf.id, "POST", path, draft.body, reason) ?: return null
+    val added = cloud.approveDoorDraft(cloudTaf, draft, signature)
+    loadDoors(taf.id)
+    return added
   }
 
   /** New key, named by the owner: the key comes back once, held in [TafDoors.issued] until its screen closes. */

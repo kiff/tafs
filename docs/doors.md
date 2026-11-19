@@ -225,6 +225,14 @@ requests, the fields it sends, what it gets back, the risk of the taf's own word
 signs `POST /v1/tafs/{id}/doors` over `body` in its canonical form (Face ID or Touch ID, `faceid_body`), sends those same bytes,
 and shows the door's first key once, as New key does. A cancelled Face ID sends nothing.
 
+**Android draws Coach's drafted door** (`show {type: "door", taf_id, draft_id}`, `DoorDraftCard` in `views/ApiDoorViews.kt`,
+behind `ApiDoorFeature`, off) as iOS does: it reads `GET /v1/tafs/{id}/doors/drafts/{draft}` (`contracts/doors-api-draft.json`)
+and draws from `body`, never the `draft` copy beside it or Coach's words (`DoorDraft.read`): the application's name, what it may
+do, what the taf does, the fields it sends, the outcomes it gets back, its own words' risk when `text` is on, and the boundary.
+Approve, for whoever manages the taf, signs `POST …/doors` over `body` in its canonical form (RFC 8785, `Jcs`) with the
+fingerprint and sends those same bytes (`AppModel.approveDoorDraft`); the door's first key is then shown once, as New key's
+(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`).
+
 ### Setting up a deployment
 
 Nothing here is on until the deployment sets it up. tafs cloud reads:

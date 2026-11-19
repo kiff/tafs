@@ -413,6 +413,10 @@ class CoachActions(
   /** A taf made with no plan: Plan & usage, where a plan is chosen. */
   val openPlan: () -> Unit = {},
   /** Closes the "What I did" card. */
+  /** Coach's drafted door "From another application": read by taf and draft, approved signed, and where its caller sends work. */
+  val doorDraft: suspend (String, String) -> bot.tafs.app.kiff.DoorDraft? = { _, _ -> null },
+  val approveDoorDraft: suspend (String, bot.tafs.app.kiff.DoorDraft, String) -> bot.tafs.app.kiff.AddedApiDoor? = { _, _, _ -> null },
+  val endpoint: (bot.tafs.app.kiff.Door) -> String = { it.address },
 )
 
 /** One of Coach's cards in its thread. What grants authority is read from planque and KIFF, and signed there. */
@@ -432,6 +436,8 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
     "approval" -> ApprovalCard(c, state, answered, error, actions)
     "sign_in" -> SignInCard(c, state, answered, error, actions)
     "knob" -> KnobDraftCard(c, state, answered, error, actions)
+    // Coach's drafted door "From another application" (ApiDoorViews.kt), behind its switch.
+    "door" -> if (bot.tafs.app.kiff.ApiDoorFeature.on) DoorDraftCard(c, state, actions)
     "drive" -> DriveCard(shown, state, answered, error, actions)
     "result" -> if (c.taf?.improves != null) ImprovementCard(shown, state, actions) else HandOverCard(shown, state, actions)
   }

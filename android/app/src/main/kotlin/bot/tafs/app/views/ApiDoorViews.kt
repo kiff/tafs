@@ -24,6 +24,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.TafDoors
 import bot.tafs.app.design.Eyebrow
+import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
@@ -283,4 +285,89 @@ internal fun copyKeyForAMinute(context: android.content.Context, key: String, af
     kotlinx.coroutines.delay(after)
     runCatching { if (clipboard.primaryClipDescription?.label == API_KEY_CLIP && Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() }
   }
+}
+
+/** A field the application sends, as a developer reads it: its name, then its choices or its type (as iOS's `APIDoorText.field`). */
+internal fun draftField(field: bot.tafs.app.kiff.DoorDraft.Field): String =
+  field.name + " \u00b7 " + (field.values?.takeIf { it.isNotEmpty() }?.joinToString(" | ") ?: field.type)
+
+internal const val DOOR_DRAFT_APPROVE = "door.draft.approve"
+
+/**
+ * Coach's drafted door "From another application" (`show {type: "door", taf_id, draft_id}`, the owner's mockup screen 1), drawn
+ * from tafs cloud's draft, never from Coach's words: the application's name, what it may do, what the taf does, the fields it
+ * sends and what it gets back, its own words' risk when they're on, and the boundary. Approve, for whoever manages the taf, signs
+ * the draft's exact `body` with the fingerprint and opens the door; its first key is then shown once (as iOS's `DoorDraftCard`).
+ */
+@Composable
+internal fun DoorDraftCard(c: bot.tafs.app.kiff.SetupComponent, state: bot.tafs.app.app.AppState, actions: CoachActions) {
+  val cloudTaf = c.tafId ?: c.knobTaf
+  val draftId = c.draftId
+  val taf = cloudTaf?.let { id -> state.tafs.firstOrNull { it.cloudId == id } }
+  val tafName = taf?.name.orEmpty()
+  val scope = rememberCoroutineScope()
+  var draft by remember(cloudTaf, draftId) { mutableStateOf<bot.tafs.app.kiff.DoorDraft?>(null) }
+  var failed by remember(cloudTaf, draftId) { mutableStateOf<String?>(null) }
+  var busy by remember { mutableStateOf(false) }
+  var approved by remember(cloudTaf, draftId) { mutableStateOf(false) }
+  // The door the approval opened and its first key, held only until its screen closes.
+  var added by remember { mutableStateOf<bot.tafs.app.kiff.AddedApiDoor?>(null) }
+  LaunchedEffect(cloudTaf, draftId) {
+    if (cloudTaf == null || draftId == null) return@LaunchedEffect
+    try {
+      draft = actions.doorDraft(cloudTaf, draftId)
+      failed = null
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      failed = bot.tafs.app.model.ErrorWords.of(e)
+    }
+  }
+  // Signs the draft's exact body (the fingerprint) and opens the door; a closed fingerprint sends nothing.
+  fun approve(shown: bot.tafs.app.kiff.DoorDraft) {
+    val taf = cloudTaf ?: return
+    busy = true
+    scope.launch {
+      try {
+        val made = actions.approveDoorDraft(taf, shown, Words.Door.Api.faceidBody(app = shown.draft.name, taf = tafName))
+        if (made != null) { added = made; approved = true; failed = null }
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        failed = bot.tafs.app.model.ErrorWords.of(e)
+      } finally {
+        busy = false
+      }
+    }
+  }
+  Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
+    Eyebrow(Words.Door.Api.draftKind, Theme.amberText)
+    draft?.let { shown ->
+      val d = shown.draft
+      Text(d.name, style = scaled(17, FontWeight.SemiBold, Theme.ink))
+      Text(Words.Door.Api.draftScope(app = d.name, taf = tafName), style = scaled(14, color = Theme.soft))
+      Text(Words.Door.Api.draftWill(taf = tafName, job = d.job), style = scaled(15, color = Theme.ink))
+      if (d.fields.isNotEmpty()) {
+        Eyebrow(Words.Door.Api.draftSends)
+        d.fields.forEach { Text(draftField(it), style = scaled(13, color = Theme.ink, mono = true)) }
+      }
+      if (d.outcomes.isNotEmpty()) Text(Words.Door.Api.draftBack(bot.tafs.app.model.Res.list(d.outcomes)), style = scaled(14, color = Theme.ink))
+      if (d.text) {
+        Text(Words.Door.Api.draftWords(tafName), style = scaled(14, FontWeight.SemiBold, Theme.ink))
+        Text(Words.Door.Api.draftWordsRisk(taf = tafName, app = d.name), style = scaled(13, color = Theme.amberText))
+      }
+      Text(Words.Door.Api.boundary(tafName), style = scaled(13, color = Theme.soft))
+      when {
+        approved -> Text(Words.Door.Status.open, style = scaled(14, FontWeight.SemiBold, Theme.ok))
+        taf != null && state.manages(taf.id) -> PrimaryButton(
+          if (busy) Words.Common.confirming else Words.Approval.approve,
+          { approve(shown) },
+          Modifier.fillMaxWidth().confirms().testTag(DOOR_DRAFT_APPROVE),
+          enabled = !busy,
+        )
+      }
+    }
+    failed?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+  added?.let { a -> ApiKeyShownOnce(a.door, a.key, actions.endpoint(a.door)) { added = null } }
 }

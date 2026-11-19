@@ -317,6 +317,58 @@ class DoorsTest {
     assertTrue(m.state.value.doors["refunds-1"]!!.doors.isEmpty())
   }
 
+  /** contracts/doors-api-draft.json's answer, with the `draft` copy beside the body changed: what's drawn must be the body's. */
+  private val draftAnswer = """{"draft_id":"draft-0123456789abcdef",
+    "draft":{"name":"Not what is signed","fields":[],"job":"Something else","outcomes":["x"],"text":true},
+    "made_at":"2026-10-24T09:00:00.000Z","expires_at":"2026-10-31T09:00:00.000Z",
+    "body":{"kind":"api","draft":{"text":false,"name":"Order system","job":"Check the return and refund it if the Card allows",
+      "fields":[{"name":"order","type":"string","max":40},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]}],
+      "outcomes":["refunded","refused","needs_review"]}}}"""
+
+  @Test fun coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm() {
+    val d = bot.tafs.app.kiff.DoorDraft.read(draftAnswer)!!
+    assertEquals("draft-0123456789abcdef", d.id)
+    assertEquals("Order system", d.draft.name)
+    assertEquals(listOf("order", "reason"), d.draft.fields.map { it.name })
+    assertEquals(listOf("damaged", "late", "wrong_item"), d.draft.fields[1].values)
+    assertEquals(listOf("refunded", "refused", "needs_review"), d.draft.outcomes)
+    assertEquals(false, d.draft.text)
+    // RFC 8785: keys sorted, no spaces; the bytes signed are the bytes sent.
+    assertEquals(
+      """{"draft":{"fields":[{"max":40,"name":"order","type":"string"},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]}],"job":"Check the return and refund it if the Card allows","name":"Order system","outcomes":["refunded","refused","needs_review"],"text":false},"kind":"api"}""",
+      String(d.body),
+    )
+    assertNull("a body that isn't an api door's draws nothing", bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"kind\":\"api\"", "\"kind\":\"email\"")))
+    assertNull("nor one with no job", bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"job\":\"Check the return and refund it if the Card allows\",", "")))
+    assertNull(bot.tafs.app.kiff.DoorDraft.read("not json"))
+    // tafs cloud's draft_id inside body (so POST …/doors takes only the stored draft) is signed with the rest, never dropped.
+    val withId = bot.tafs.app.kiff.DoorDraft.read(draftAnswer.replace("\"body\":{\"kind\":\"api\",", "\"body\":{\"kind\":\"api\",\"draft_id\":\"draft-0123456789abcdef\","))!!
+    assertTrue(String(withId.body), String(withId.body).endsWith(""","draft_id":"draft-0123456789abcdef","kind":"api"}"""))
+  }
+
+  @Test fun approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody(doors = apiDoorJson, knocks = ""))
+    transport.answer("GET $base/drafts/draft-0123456789abcdef", 200, draftAnswer)
+    transport.answer("POST $base", 201, """{"door":$apiDoorJson,"key":{"id":"key_1","name":"Order system","key":"tafs_api_first","last4":"irst","made_at":"2026-11-19T22:00:00Z"}}""")
+    val m = model()
+    m.loadDoors("refunds-1")
+    val draft = m.doorDraft("taf_1", "draft-0123456789abcdef")!!
+    val added = m.approveDoorDraft("taf_1", draft, "Order system will be able to hand Refunds work. Confirm it's you.")
+    assertEquals("tafs_api_first", added?.key?.key)
+    assertEquals(String(draft.body), String(sent("POST $base").single().body!!))
+    assertTrue(signedHeader("POST $base")!!.contains(",v1="))
+  }
+
+  @Test fun onlyTheTafsManagerApprovesCoachsDoorDraft() = runTest {
+    reads(manage = false)
+    transport.answer("GET $base/drafts/draft-0123456789abcdef", 200, draftAnswer)
+    val m = model()
+    val draft = m.doorDraft("taf_1", "draft-0123456789abcdef")!!
+    assertNull(m.approveDoorDraft("taf_1", draft, "Confirm it's you."))
+    assertTrue("nothing goes for someone who doesn't manage the taf", sent("POST $base").isEmpty())
+  }
+
   @Test fun aDoorIsRemovedAndLeavesTheList() = runTest {
     reads()
     transport.answer(doors, 200, doorsBody())
