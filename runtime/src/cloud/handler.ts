@@ -5288,6 +5288,10 @@ async function cardTools(event: HTTPEvent, taf: Taf, deps: Deps): Promise<string
 
 async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf: Taf, deps: Deps, event?: HTTPEvent): Promise<{ version: number; words: string[] }> {
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
+  // A check is the dial's own, beside its wakes: one written inside a wake was dropped without a word, so the version
+  // kept the old read while Coach told the owner it had moved (Nov 2026). It's refused, so the call is made again right.
+  const nested = wakes.findIndex((t) => t !== null && typeof t === "object" && "check" in (t as object));
+  if (nested >= 0) throw new HTTPError(400, `wakes[${nested}] has a check: a taf's check goes beside wakes, as the dial's own check {tool, arguments, items, cursor, id?, first?}, never inside a wake`);
   // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
   const when = (body.when ?? {}) as { busy?: unknown };
   const busy = (when.busy ?? body.busy) === "latest" ? "latest" : "skip";
