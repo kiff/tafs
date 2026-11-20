@@ -1533,6 +1533,10 @@
     <string name="onboarding_kiff_privacy">KIFF Privacy Policy</string>
     <string name="onboarding_kiff_terms">KIFF\'s Terms of Service</string>
     <string name="onboarding_privacy_links">How we handle your data: %1$s · %2$s</string>
+    <string name="onboarding_row_kiff_privacy">KIFF Privacy Policy</string>
+    <string name="onboarding_row_kiff_terms">KIFF Terms of Service</string>
+    <string name="onboarding_row_tafs_privacy">tafs Privacy Policy</string>
+    <string name="onboarding_row_tafs_terms">tafs Terms</string>
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_tafs_lead">A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.</string>
     <string name="onboarding_tafs_privacy">tafs Privacy Policy</string>

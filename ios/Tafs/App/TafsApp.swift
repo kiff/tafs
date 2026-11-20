@@ -91,6 +91,9 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     /// The keyboard is up: the bar keeps off it.
     @State private var keyboardUp = false
+    /// After the celebration, the three cards (docs/onboarding.md), once on this device.
+    @AppStorage(Onboarding.cardsSeenKey) private var cardsSeen = false
+    @State private var showingCards = false
     @State private var tab: Tab = Screenshots.enabled ? Screenshots.tab : .tafs
     /// The tabs opened so far: each is built the first time it's opened, then kept.
     @State private var opened: Set<Tab> = []
@@ -187,9 +190,20 @@ struct RootView: View {
             }
         }
         // Signed in just now, by KIFF or by pairing: the celebration, once, over the home screen.
-        .fullScreenCover(isPresented: Binding(get: { model.justConnected && model.mode == .kiff && !Screenshots.enabled },
-                                              set: { if !$0 { model.justConnected = false } })) {
-            ConnectedView { model.justConnected = false }
+        // With the new onboarding on, the three cards follow it in the same cover, then Home.
+        .fullScreenCover(isPresented: Binding(get: { (model.justConnected && model.mode == .kiff && !Screenshots.enabled) || showingCards },
+                                              set: { if !$0 { model.justConnected = false; showingCards = false } })) {
+            if showingCards {
+                OnboardingCards {
+                    cardsSeen = true
+                    showingCards = false
+                    model.justConnected = false
+                }
+            } else {
+                ConnectedView {
+                    if Onboarding.showsCards(seen: cardsSeen) { showingCards = true } else { model.justConnected = false }
+                }
+            }
         }
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
         // Off while Coach drives the app: a key the person presses then isn't a shortcut.

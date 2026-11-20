@@ -1533,6 +1533,10 @@
     <string name="onboarding_kiff_privacy">Privacybeleid van KIFF</string>
     <string name="onboarding_kiff_terms">de Gebruiksvoorwaarden van KIFF</string>
     <string name="onboarding_privacy_links">Zo gaan we met je gegevens om: %1$s · %2$s</string>
+    <string name="onboarding_row_kiff_privacy">Privacybeleid van KIFF</string>
+    <string name="onboarding_row_kiff_terms">Gebruiksvoorwaarden van KIFF</string>
+    <string name="onboarding_row_tafs_privacy">Privacybeleid van tafs</string>
+    <string name="onboarding_row_tafs_terms">Voorwaarden van tafs</string>
     <string name="onboarding_skip">Overslaan</string>
     <string name="onboarding_tafs_lead">Een taf doet één taak voor je, zoals supportantwoorden, late pakketten of opvolging van leads. Vraag het Coach en die zet er een met je op.</string>
     <string name="onboarding_tafs_privacy">Privacybeleid van tafs</string>

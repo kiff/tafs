@@ -5,6 +5,24 @@ import Foundation
 /// with the owner: while it's off, the welcome and the sign-in are as they ship.
 enum Onboarding {
     static let on = false
+
+    /// The three cards were seen on this device (Get started or Skip): they show once, after the first sign-in here,
+    /// and How tafs works opens them again any time.
+    static let cardsSeenKey = "tafs.onboarding-cards-seen"
+
+    /// Whether the three cards follow the celebration after signing in.
+    static func showsCards(on: Bool = Onboarding.on, seen: Bool) -> Bool { on && !seen }
+
+    /// Whether Home with no taf is the first Home (Ask Coach and How tafs works): with the new onboarding on, for
+    /// someone who may use Coach, whatever tafs cloud says there.
+    static func showsFirstHome(on: Bool = Onboarding.on, mayUseCoach: Bool) -> Bool { on && mayUseCoach }
+
+    /// The first Home's words: tafs cloud's own empty line when it sends one (its words come first), else the app's
+    /// "No tafs yet" and what Coach does.
+    static func firstHomeLines(cloud: String?) -> (title: String, lead: String?) {
+        if let cloud, !cloud.isEmpty { return (cloud, nil) }
+        return (Words.Home.noTafs, Words.Onboarding.homeLead)
+    }
 }
 
 /// The welcome's one tick: the person agrees to KIFF's Terms and the tafs Terms before Continue. Privacy is linked
