@@ -108,7 +108,7 @@ export const it: Words = {
   connect_again_fresh_done: (app: string) => `${app} è di nuovo connesso con il nuovo accesso. Ogni taf che lo usava può usarlo di nuovo.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
-    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 altro taf" : `${n} altri taf`] : [])]);
+    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf che non vedi" : `${n} taf che non vedi`] : [])]);
     return `${app} è di nuovo connesso come ${account}. ${all === 1 ? "Questo taf lo usa" : "Questi taf lo usano"} ora: ${items}. Se non è l'account giusto, connetti di nuovo e accedi con quello giusto.`;
   },
   connect_not_needed: (taf: string) => `${taf} non usa questa app. Coach può configurarla per ${taf}.`,

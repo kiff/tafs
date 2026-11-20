@@ -1027,13 +1027,13 @@ describe("tafs cloud", () => {
     const connected = { status: "connected", account_name: "ana@example.com", used_by: ["Rae", "Win-back offers", "Overdue invoice reminders"] };
     // Only the tafs this person may see are named; the others on the account are counted (Win-back and Overdue aren't tafs here).
     expect((await read(connected)).connected_again).toEqual({ grant: "grt_gmail",
-      words: "Gmail is connected again as ana@example.com. These tafs use it now: Rae and 2 other tafs. If that isn't the right account, connect again and sign in to the right one." });
+      words: "Gmail is connected again as ana@example.com. These tafs use it now: Rae and 2 tafs you don't see. If that isn't the right account, connect again and sign in to the right one." });
     expect((await read({ ...connected, used_by: ["Rae"] })).connected_again?.words).toContain("This taf uses it now: Rae.");
     // Max is another account's taf: counted, never named.
-    expect((await read({ ...connected, used_by: ["Rae", "Max"] })).connected_again?.words).toContain("These tafs use it now: Rae and 1 other taf.");
-    expect((await read({ ...connected, used_by: ["Overdue invoice reminders"] })).connected_again?.words).toContain("This taf uses it now: 1 other taf.");
+    expect((await read({ ...connected, used_by: ["Rae", "Max"] })).connected_again?.words).toContain("These tafs use it now: Rae and 1 taf you don't see.");
+    expect((await read({ ...connected, used_by: ["Overdue invoice reminders"] })).connected_again?.words).toContain("This taf uses it now: 1 taf you don't see.");
     expect((await read(connected, "connected_again=grt_gmail", "fr")).connected_again?.words).toContain("en tant que ana@example.com");
-    expect((await read(connected, "connected_again=grt_gmail", "pl")).connected_again?.words).toContain("Rae i 2 inne tafy");
+    expect((await read(connected, "connected_again=grt_gmail", "pl")).connected_again?.words).toContain("Rae i 2 tafy, których nie widzisz");
     // Not asked, another grant, not connected yet, or no account name: no words.
     expect((await read(connected, "")).connected_again).toBeUndefined();
     expect((await read(connected, "connected_again=grt_other")).connected_again).toBeUndefined();

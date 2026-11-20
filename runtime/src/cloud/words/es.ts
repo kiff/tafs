@@ -108,7 +108,7 @@ export const es: Words = {
   connect_again_fresh_done: (app: string) => `${app} vuelve a estar conectado con el nuevo inicio de sesión. Cada taf que lo usaba puede volver a usarlo.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
-    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf más" : `${n} tafs más`] : [])]);
+    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que no ves" : `${n} tafs que no ves`] : [])]);
     return `${app} vuelve a estar conectado como ${account}. ${all === 1 ? "Este taf lo usa" : "Estos tafs lo usan"} ahora: ${items}. Si no es la cuenta correcta, conecta de nuevo e inicia sesión en la correcta.`;
   },
   connect_not_needed: (taf: string) => `${taf} no usa esta app. Coach puede configurarla para ${taf}.`,
