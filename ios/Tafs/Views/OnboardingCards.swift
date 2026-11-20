@@ -158,9 +158,10 @@ struct OnboardingPicture: View {
             Text(Words.Sample.Deploys.deployApi).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
             Text(Words.Sample.Deploys.deployApiWhy).scaledFont(14).foregroundColor(Theme.soft)
             Text(Words.NeedsYou.nothingSent).scaledFont(13).foregroundColor(Theme.dim)
-            Button(Self.approveLabel) {}.buttonStyle(PrimaryButtonStyle())
+            // As Needs you marks them: a driven touch on either is refused, though the picture takes no taps at all.
+            Button(Self.approveLabel) {}.buttonStyle(PrimaryButtonStyle()).confirming()
             Button(Words.Sample.Deploys.nextStep) {}.buttonStyle(OutlineButtonStyle())
-            Button(Words.NeedsYou.refuse) {}.buttonStyle(OutlineButtonStyle(color: Theme.no))
+            Button(Words.NeedsYou.refuse) {}.buttonStyle(OutlineButtonStyle(color: Theme.no)).confirming()
         }
         .frame(maxWidth: 420)
     }
