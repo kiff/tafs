@@ -17,6 +17,13 @@ import { type Lang, wordsIn } from "./words/index.js";
 /** Opens an owner's message to Coach that carries lines about its tasks before the owner's words. */
 export const COACH_LINES = "[tafs coach lines]";
 
+/**
+ * Ends the lines of a turn tafs cloud starts itself: a task Coach handed over ended once Coach's turn had ended, so
+ * Coach goes on with it in the same chat, with no message from the owner.
+ */
+export const GO_ON = "[tafs go on] Your turn had ended when this came, so tafs started this one: the owner hasn't written. " +
+  "Do now what you told them you'd do once it came back. If you told them nothing would follow, say in one short sentence how it went.";
+
 /** The argument KIFF's gateway fills with the call's operation id, bound into its permit. */
 export const OP_ARG = "tafs_op";
 
@@ -74,8 +81,8 @@ export const TOOLS: ToolDef[] = [
     },
     required: ["taf", "text"],
     description: "Hands a taf a task or a message. A new run answers at once with its id; its result comes back to you when it ends, so never poll: " +
-      "while you're still working, at your next step; once your turn has ended, only at your next turn, which starts when the owner writes again. " +
-      "So never promise to act on it by yourself after your turn ends: tell the owner to say \"go on\" once its answer is in, and act then. " +
+      "while you're still working, at your next step; once your turn has ended, tafs starts your next turn with it in the same chat. " +
+      "So say what you'll do once it's back, and do it then. A few such turns in a row at most: past that, or if one can't start, it waits for the owner's next message. " +
       "With run, the text goes to that run while it works. The task runs under the taf's own Cards.",
   },
   {
