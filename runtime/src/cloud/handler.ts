@@ -32,7 +32,7 @@ import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startS
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
-import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
+import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TRIGGER_KEYS, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
@@ -5290,8 +5290,13 @@ async function dialVersion(body: Record<string, unknown>, me: KIFFIdentity, taf:
   const wakes = Array.isArray(body.wakes) ? body.wakes as Trigger[] : [];
   // A check is the dial's own, beside its wakes: one written inside a wake was dropped without a word, so the version
   // kept the old read while Coach told the owner it had moved (Nov 2026). It's refused, so the call is made again right.
-  const nested = wakes.findIndex((t) => t !== null && typeof t === "object" && "check" in (t as object));
-  if (nested >= 0) throw new HTTPError(400, `wakes[${nested}] has a check: a taf's check goes beside wakes, as the dial's own check {tool, arguments, items, cursor, id?, first?}, never inside a wake`);
+  // So is any other field a trigger doesn't take: tafs cloud refuses what it won't apply, and says so.
+  for (const [i, t] of wakes.entries()) {
+    if (t === null || typeof t !== "object" || Array.isArray(t)) continue;
+    if ("check" in t) throw new HTTPError(400, `wakes[${i}] has a check: a taf's check goes beside wakes, as the dial's own check {tool, arguments, items, cursor, id?, first?}, never inside a wake`);
+    const extra = Object.keys(t).filter((key) => !TRIGGER_KEYS.has(key));
+    if (extra.length) throw new HTTPError(400, `wakes[${i}] has ${extra.join(", ")}, which a wake doesn't take: a wake takes ${[...TRIGGER_KEYS].join(", ")}`);
+  }
   // `when.busy`, or `busy` at the top as a knob's `setting` and each size choice carry it, so a choice is sent back as it is.
   const when = (body.when ?? {}) as { busy?: unknown };
   const busy = (when.busy ?? body.busy) === "latest" ? "latest" : "skip";
@@ -9061,7 +9066,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no dial");
     try {
       const made = await dialVersion(args, { tenantID: call.tenant, subject: call.person?.subject ?? call.coach, apiKey: false, agentID: "", capabilities: [] }, taf, deps);
-      return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words,
+      // What its check reads, as the version stored it: what Coach tells the owner about the check, never what it meant to set.
+      const stored = (await deps.tafs.get(call.tenant, taf.id))?.knobs?.[String(made.version)]?.check;
+      return { taf: taf.name, taf_id: taf.id, version: made.version, words: made.words, check_reads: stored?.tool ?? null,
         next: `show {type: "knob", version: ${made.version}, taf_id: "${taf.id}"}, then version_install ${made.version}: the owner confirms it in tafs` };
     } catch (err) {
       if (err instanceof HTTPError) throw new ToolRefusal(err.message);

@@ -63,6 +63,13 @@ export function checkOf(v: unknown, tools?: readonly string[]): Check {
   return { tool, arguments: args as Record<string, unknown>, items: c.items, cursor, ...(id ? { id } : {}), ...(c.first ? { first: c.first as "new" | "all" } : {}), ...(grant ? { grant } : {}) };
 }
 
+/**
+ * Every field a trigger takes (Trigger's own, as the server writes them and the apps send them back): a wake with any other
+ * is refused, never written with the field dropped (the dial, dialVersion).
+ */
+export const TRIGGER_KEYS: ReadonlySet<string> = new Set(["kind", "form", "at", "days", "times", "every_minutes", "between", "date", "skip",
+  "operation", "args", "items", "cursor", "grant", "event", "config", "subscription", "name"]);
+
 /** A trigger from the dial or Coach's draft. */
 export interface Trigger {
   kind: "schedule" | "app_check" | "door" | "vendor_event" | "before_event" | "app_event";

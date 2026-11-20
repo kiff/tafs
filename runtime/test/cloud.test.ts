@@ -3615,6 +3615,12 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // A − or + on its time sends the check back with it.
     const sized = knob.body.wakes[0].size.choices[0].setting;
     expect(sized.check).toEqual(check);
+    // The wakes the apps send back are taken as they are: the knob's setting's, and a size choice's (no field a wake
+    // doesn't take). Their check stays out here, as this taf names no tools for it to be checked against.
+    for (const { check: _, ...setting } of [knob.body.setting, sized]) {
+      const r = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: setting });
+      expect(r.status, JSON.stringify(r.body)).toBe(200);
+    }
     // Two timetables would hand the same items twice: refused, with one timetable in words, never merged.
     for (const [wakes, nearest] of [
       [[{ kind: "schedule", form: "daily", at: "09:00" }, { kind: "schedule", form: "daily", at: "15:30" }], "the nearest is one list of times on the same minute: every day at 09:00 and 15:00"],
