@@ -476,6 +476,7 @@
     <string name="chat_cap_turns">%1$s se detuvo: esta tarea necesitó más pasos que su límite por tarea. Pide algo más concreto.</string>
     <string name="chat_chats_tafs_exported">Tus chats en tafs, exportados %1$s.\n\n</string>
     <string name="chat_chats_were_not_exported_could">Tus chats no se exportaron: este %1$s no pudo guardar los archivos.</string>
+    <string name="chat_day_yesterday">Ayer</string>
     <string name="chat_delete">Eliminar</string>
     <string name="chat_edit">Editar</string>
     <string name="chat_edit_and_send">Editar y enviar</string>

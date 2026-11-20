@@ -476,6 +476,7 @@
     <string name="chat_cap_turns">%1$s si è fermato: questa attività ha richiesto più passi del suo limite per un\'attività. Chiedi qualcosa di più circoscritto.</string>
     <string name="chat_chats_tafs_exported">Le tue chat in tafs, esportate %1$s.\n\n</string>
     <string name="chat_chats_were_not_exported_could">Le tue chat non sono state esportate: questo %1$s non è riuscito a salvare i file.</string>
+    <string name="chat_day_yesterday">Ieri</string>
     <string name="chat_delete">Elimina</string>
     <string name="chat_edit">Modifica</string>
     <string name="chat_edit_and_send">Modifica e invia</string>

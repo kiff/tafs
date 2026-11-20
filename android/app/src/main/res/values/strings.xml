@@ -476,6 +476,7 @@
     <string name="chat_cap_turns">%1$s stopped: this task took more steps than its limit for one task. Ask for something narrower.</string>
     <string name="chat_chats_tafs_exported">Your chats in tafs, exported %1$s.\n\n</string>
     <string name="chat_chats_were_not_exported_could">Your chats weren\'t exported: this %1$s couldn\'t save the files.</string>
+    <string name="chat_day_yesterday">Yesterday</string>
     <string name="chat_delete">Delete</string>
     <string name="chat_edit">Edit</string>
     <string name="chat_edit_and_send">Edit and send</string>

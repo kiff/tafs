@@ -11,6 +11,7 @@
   "chat.cap.turns": "{taf} is gestopt: deze taak had meer stappen nodig dan de limiet voor één taak. Vraag om iets kleiners.",
   "chat.chats_tafs_exported": "Je chats in tafs, geëxporteerd op {at}.\n\n",
   "chat.chats_were_not_exported_could": "Je chats zijn niet geëxporteerd: deze {device} kon de bestanden niet opslaan.",
+  "chat.day.yesterday": "Gisteren",
   "chat.delete": "Verwijderen",
   "chat.edit": "Bewerken",
   "chat.edit_and_send": "Bewerken en verzenden",

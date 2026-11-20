@@ -450,6 +450,7 @@
     <string name="chat_cap_turns">%1$s이(가) 멈췄습니다: 이 작업은 작업 1건 한도보다 단계가 많았습니다. 범위를 좁혀 요청하세요.</string>
     <string name="chat_chats_tafs_exported">tafs 채팅, %1$s에 내보냄.\n\n</string>
     <string name="chat_chats_were_not_exported_could">채팅을 내보내지 못했습니다: 이 %1$s에서 파일을 저장하지 못했습니다.</string>
+    <string name="chat_day_yesterday">어제</string>
     <string name="chat_delete">삭제</string>
     <string name="chat_edit">편집</string>
     <string name="chat_edit_and_send">편집하고 보내기</string>

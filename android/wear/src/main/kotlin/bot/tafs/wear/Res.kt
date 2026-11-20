@@ -19,7 +19,10 @@ object Res {
   /** The language the lines are in, as Android resolved them: a possessive and a count's number follow it. */
   val language: String get() = resources.getString(R.string.words_language)
 
-  private val locale: Locale get() = Locale.forLanguageTag(language)
+  internal val locale: Locale get() = Locale.forLanguageTag(language)
+
+  /** The watch's 12- or 24-hour setting, for a message's time. */
+  val is24Hour: Boolean get() = android.text.format.DateFormat.is24HourFormat(context ?: error("No context: Res.install"))
 
   /** A count's number as the lines' language writes it. */
   fun number(n: Int): String = java.text.NumberFormat.getIntegerInstance(locale).format(n.toLong())

@@ -44,5 +44,17 @@ fun dayTitle(day: LocalDate, today: LocalDate = LocalDate.now(zone)): String {
   }
 }
 
+/**
+ * A chat message's time, under it (row 44, C; docs/chat.md): the device's 12- or 24-hour setting, in the app's language, in the
+ * account's zone. The rule is `ChatTime`'s, which the watch shares.
+ */
+fun messageTime(at: Instant, is24: Boolean): String = bot.tafs.watchlink.ChatTime.time(at.atZone(zone), is24, Res.locale, ::bestPattern)
+
+/** The header where a chat's day starts: Today, Yesterday, then the date in the language's order ("Wed, Nov 18"). */
+fun chatDay(day: LocalDate, today: LocalDate = LocalDate.now(zone)): String =
+  bot.tafs.watchlink.ChatTime.day(day, today, Words.Calendar.today, Words.Chat.Day.yesterday, Res.locale, ::bestPattern)
+
+private fun bestPattern(skeleton: String): String = android.text.format.DateFormat.getBestDateTimePattern(Res.locale, skeleton)
+
 /** Three months on, as a new Card's end. */
 fun threeMonthsOn(now: Instant): Instant = now.atZone(zone).plusMonths(3).toInstant()

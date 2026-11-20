@@ -13,6 +13,7 @@
     </plurals>
     <string name="calendar_today">Oggi</string>
     <string name="card_its_card">La sua Card</string>
+    <string name="chat_day_yesterday">Ieri</string>
     <string name="chat_delete">Elimina</string>
     <string name="chat_message_taf">Scrivi a %1$s</string>
     <string name="chat_stop">Ferma</string>

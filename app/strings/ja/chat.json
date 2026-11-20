@@ -11,6 +11,7 @@
   "chat.cap.turns": "{taf}が停止しました：このタスクは1タスクあたりの手順の上限を超えました。範囲を絞って依頼してください。",
   "chat.chats_tafs_exported": "tafsのチャット（{at}にエクスポート）\n\n",
   "chat.chats_were_not_exported_could": "チャットはエクスポートされませんでした：この{device}にファイルを保存できませんでした。",
+  "chat.day.yesterday": "昨日",
   "chat.delete": "削除",
   "chat.edit": "編集",
   "chat.edit_and_send": "編集して送信",

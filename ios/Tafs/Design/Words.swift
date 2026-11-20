@@ -867,6 +867,10 @@ enum Words {
         static func chatsTafsExported(at: String) -> String { Words.line("chat.chats_tafs_exported", at) }
         /// Your chats weren't exported: this {device} couldn't save the files.
         static func chatsWereNotExportedCould(device: String) -> String { Words.line("chat.chats_were_not_exported_could", device, Words.demonstrative(device)) }
+        enum Day {
+            /// Yesterday
+            static var yesterday: String { Words.line("chat.day.yesterday") }
+        }
         /// Delete
         static var delete: String { Words.line("chat.delete") }
         /// Edit

@@ -1,0 +1,1 @@
+- **Every chat on Android and Wear OS shows when each message was sent:** a small time under each message, in your phone's 12- or 24-hour setting and the app's language, and a header where a day starts (Today, Yesterday, then the date). On the watch's Coach page the time sits beside each message ([chat.md](docs/chat.md), [watch-wear.md](docs/watch-wear.md)).

@@ -97,9 +97,12 @@ sealed interface WatchReply {
   @Serializable @SerialName("needs_you")
   data class NeedsYou(val count: Int, val words: String, val calls: List<HeldLine>) : WatchReply
 
-  /** Your tafs, each in one line, and whether every taf is halted. */
+  /**
+   * Your tafs, each in one line, and whether every taf is halted. With the account's time zone ([zone], an IANA id), so the
+   * watch shows a chat's times and days as the phone does (row 44, C); none from an older phone, and the watch uses its own.
+   */
   @Serializable @SerialName("tafs")
-  data class Tafs(val tafs: List<TafLine>, @SerialName("all_halted") val allHalted: Boolean) : WatchReply
+  data class Tafs(val tafs: List<TafLine>, @SerialName("all_halted") val allHalted: Boolean, val zone: String? = null) : WatchReply
 
   /** It went through, after KIFF or tafs cloud answered: the phone's own line for the result ("Refused", "Halted"). */
   @Serializable @SerialName("done")
@@ -175,7 +178,7 @@ sealed interface WatchReply {
    */
   /** A taf's chat's last turns, oldest first, as the phone shows them ([WatchRequest.TafChat]). Shown, never kept. */
   @Serializable @SerialName("taf_chat")
-  data class TafChat(val lines: List<ChatLine>) : WatchReply
+  data class TafChat(val lines: List<ChatLine>, val zone: String? = null) : WatchReply
 
   /** A taf's whole answer, for Read more ([WatchRequest.AskFull]): tafs cloud's `text`, checked, at most 16 KB. Shown, never kept. */
   @Serializable @SerialName("ask_full")

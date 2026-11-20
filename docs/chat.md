@@ -685,3 +685,21 @@ kiff/agents marks it; a card from before kiff/agents marked them gets the mark f
 lists were then (`waitsOf`). An app places a card by it, with no list of its own. An app draws `items` as
 they come, and places or folds nothing itself. `messages` and `components` stay, for apps from
 before.
+
+## When each message was sent
+
+Every chat shows when each message was sent (row 44, the owner's review; the placement follows hermes-agent's chat, a time per
+message and a line where a day starts, with none of its code). Coach's chat is the same view as a taf's.
+
+- **Under each message, its time, small:** the person's under their bubble on the right, the taf's or Coach's under its words on
+  the left; a run's kickoff keeps its own line. It's `at` from the thread, in the account's zone, in the device's 12- or 24-hour
+  setting and the app's language ("14:05", "2:05 PM").
+- **A header where a day starts:** over the chat's first message and each first message of a new day: **Today**
+  (`calendar.today`), **Yesterday** (`chat.day.yesterday`), then the date in the language's own order from the platform's
+  skeleton (`EEEMMMd`: "Wed, Nov 18", "Mi., 18. Nov."), with the year (`EEEMMMdy`) when it isn't this one. It replaces the
+  time Android drew between parts of a thread an hour apart.
+- **One rule for the phone and the watch:** `ChatTime` in `android/watchlink` (`ChatTimeTest`), with the patterns from
+  `DateFormat.getBestDateTimePattern`; a pattern `java.time` can't read falls back to the language's short form. Android:
+  `messageTime` and `chatDay` (`model/AccountTime.kt`), drawn in `TafChatView` (`ChatTimesTest`). The watch: docs/watch-wear.md,
+  in the same account's zone, which the phone sends it (`WatchReply.Tafs.zone`), so a message reads the same time on both.
+- **iPhone, iPad, Apple Watch and the Mac follow** (mac12), with `Date.FormatStyle` and `setLocalizedDateFormatFromTemplate`.

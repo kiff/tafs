@@ -124,7 +124,7 @@ class WatchRelay(
     val model = signedIn() ?: return WatchReply.SignedOut
     return try {
       val messages = model.watchTafChat(tafId) ?: return WatchReply.Failed(Words.Watch.openOnPhone)
-      WatchReply.TafChat(chatLines(messages))
+      WatchReply.TafChat(chatLines(messages), zone = bot.tafs.app.model.zone.id)
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (_: Exception) {
@@ -453,6 +453,8 @@ class WatchRelay(
         TafLine(taf.id, taf.name, if (halted) Words.Taf.State.halted else taf.now, halted, paused = taf.paused && !halted)
       },
       allHalted = state.haltOf(null).halted,
+      // The account's zone, the one every time on the phone is in, so the watch's chat times agree with the phone's.
+      zone = bot.tafs.app.model.zone.id,
     )
   }
 }

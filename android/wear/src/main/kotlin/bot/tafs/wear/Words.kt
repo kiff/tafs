@@ -22,6 +22,9 @@ object Words {
     val itsCard: String get() = Res.s(R.string.card_its_card)
   }
   object Chat {
+    object Day {
+      val yesterday: String get() = Res.s(R.string.chat_day_yesterday)
+    }
     val delete: String get() = Res.s(R.string.chat_delete)
     fun messageTaf(taf: String): String = Res.s(R.string.chat_message_taf, taf)
     val stop: String get() = Res.s(R.string.chat_stop)
