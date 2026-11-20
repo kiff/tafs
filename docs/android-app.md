@@ -1601,6 +1601,21 @@ Illustrations):
 `IllustrationsTest` draws each in light and dark (written with `-PphoneScreenshots` for a look beside its board), and
 `IllustrationPlacementTest` checks that each screen draws its board and that the drawings hold no text, string or image.
 
+## Right to left
+
+The app is laid out right to left in a right-to-left language (`supportsRtl`), for Arabic and Hebrew as the global launch adds
+them. Compose mirrors the layout itself: the tablet's sidebar is on the right, rows read from the right, and a switch's on is
+on the left.
+- **Every drawable that points a way mirrors itself** (`android:autoMirrored="true"`: the chevrons Back, the calendar's previous
+  and next, and a Card row use). A `›` written as text needs nothing: Unicode mirrors it in a right-to-left line.
+  `RtlTest` keeps both rules: no directional drawable without the mirror, and no Material arrow that isn't `Icons.AutoMirrored`.
+- **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
+  text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
+  the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.
+- **The pictures:** `RtlScreenshots` draws sign-in, the tafs, a taf's chat, Account, Files and Devices right to left, on a
+  tablet's 1280 × 800 dp window, into `docs/screenshots/android/rtl/` (`-PrtlScreenshots`). With the app's English, so what
+  moves is the layout. Each test checks it was laid out right to left.
+
 ## Any screen
 
 tafs runs in any orientation, on phones held upright and on devices that are only ever landscape (a Chromebook's or a

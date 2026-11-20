@@ -1,0 +1,1 @@
+- **Android, right to left:** the chevrons (Back, the calendar's previous and next, a Card row) point the reader's way, and each line reads in its own words' direction, so an English name or number stays in order on a right-to-left screen; a right-to-left screenshot set and a test keep both ([android-app.md](docs/android-app.md)).
