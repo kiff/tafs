@@ -263,7 +263,10 @@ guardrails. Promoting a release beyond internal (Play review) is the owner's, in
 **To Play's internal track, with no upload by hand.** Once the repository variable
 `PLAY_UPLOAD` is `on`, the release job sends the signed bundle to Play's **internal** track
 (`android/play/play_internal.py`): one edit, the bundle, the internal track's release
-(`completed`, this bundle alone, with its notes), committed. It never touches production,
+(`completed`, this bundle alone, with its notes), committed **without sending anything for review**
+(`changesNotSentForReview=true`): on 20 Nov a plain commit, with managed publishing off, sent every change pending in the
+console for review and restarted production's. Play's managed publishing is on since then, so each internal release waits in
+"Changes ready to publish" until mac-local presses Publish. It never touches production,
 closed or open testing, or a rollout: the track is fixed in the script, and its tests check
 it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
 `PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts

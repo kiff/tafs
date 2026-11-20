@@ -13,10 +13,12 @@ class PlayInternal(unittest.TestCase):
 
     def setUp(self):
         self.calls = []
+        self.urls = []
         self.answers = {}
         self.real = (p.call, p.version_code)
 
         def call(method, url, token, body=None, raw=None, kind="application/json"):
+            self.urls.append(url)
             self.calls.append((method, url.replace(p.API, "").replace(p.UPLOAD, "U").split("?")[0], body))
             for k, v in self.answers.items():
                 if k in url:
@@ -44,6 +46,19 @@ class PlayInternal(unittest.TestCase):
         self.assertEqual(release["versionCodes"], ["130"])
         self.assertEqual(release["status"], "completed")
         self.assertEqual([n["language"] for n in release["releaseNotes"]], p.LOCALES)
+
+    def test_the_commit_sends_nothing_for_review(self):
+        # PM, 20 Nov: a plain commit sent every change pending in Play Console for review (128's review restarted). The
+        # internal upload commits its own edit only, never a review, for the phone and for the watch.
+        p.version_code = lambda wear=False: 400000008 if wear else 131
+        self.answers["/edits/e1/bundles"] = {"versionCode": 131}
+        p.upload(self.bundle.name)
+        self.answers["/edits/e1/bundles"] = {"versionCode": 400000008}
+        p.upload(self.bundle.name, wear=True)
+        commits = [u for u in self.urls if ":commit" in u]
+        self.assertEqual(len(commits), 2)
+        for u in commits:
+            self.assertTrue(u.endswith(":commit?changesNotSentForReview=true"), u)
 
     def test_a_bundle_of_another_version_commits_nothing(self):
         p.version_code = lambda: 130
