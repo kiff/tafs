@@ -1614,6 +1614,11 @@ on the left.
 - **Every drawable that points a way mirrors itself** (`android:autoMirrored="true"`: the chevrons Back, the calendar's previous
   and next, and a Card row use). A `›` written as text needs nothing: Unicode mirrors it in a right-to-left line.
   `RtlTest` keeps both rules: no directional drawable without the mirror, and no Material arrow that isn't `Icons.AutoMirrored`.
+- **No direction character from a server reaches an approval** (`KiffMapping.visible`): U+202A–U+202E, U+2066–U+2069,
+  U+200E/U+200F and U+061C are taken out of what KIFF, a vendor, a taf or tafs cloud sends, wherever it's drawn beside an
+  amount or an answer: a held call's summary, reason and Details (payee, IBAN…), the record's entries, a Card's title and
+  rule labels, a notification's title and body, and the watch's Needs you. So a payee name can't make an amount or an IBAN
+  beside it look reordered. Any other control character is a space; right-to-left letters stay (as iOS's #1547).
 - **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
   text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
   the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.

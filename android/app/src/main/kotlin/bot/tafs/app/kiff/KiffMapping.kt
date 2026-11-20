@@ -143,7 +143,7 @@ object KiffMapping {
   fun taf(h: HomeTaf, owner: String): Taf {
     fun amount(a: HomeAmount?): Money? = a?.let { money(it.minor, it.unit, it.scale) }
     fun rule(r: HomeRule) = CardRule(
-      action = r.action, label = r.label,
+      action = r.action, label = visible(r.label),
       perAction = amount(r.perAction), perWindow = amount(r.perWindow), countPerWindow = r.countPerWindow,
       window = window(r.window), outside = if (r.outside == "refuse") Outside.refuse else Outside.hold,
       extraRoom = amount(r.extraRoom), baseLimit = amount(r.baseLimit), roomEnds = r.roomWindowEnd,
@@ -203,7 +203,7 @@ object KiffMapping {
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
       kiffCards = h.card.cards?.map { c ->
         TafCard(
-          id = c.id, title = c.title, environment = c.environment, live = c.live, active = c.active, expires = c.expires,
+          id = c.id, title = visible(c.title), environment = c.environment, live = c.live, active = c.active, expires = c.expires,
           rules = c.rules.map(::rule),
           total = c.total?.let { t ->
             amount(t.limit)?.let { limit ->
@@ -251,18 +251,18 @@ object KiffMapping {
         "allowed" -> executed(c.toolOutcome, approved = c.held, vendor = vendors[c.actionName], counts = counted(c))
         "owner_required", "approval_required" -> RecordEntry.Kind.held to Words.Record.waitingForYou
         // KIFF's own words for why, when it has them (kiff/tafs#138).
-        else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = it) } ?: Words.Record.notSent)
+        else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = visible(it)) } ?: Words.Record.notSent)
       }
       val refusedByTool = c.outcome == "allowed" && c.toolOutcome?.status == "refused_by_tool"
       // Typed by KIFF as the connection's refusal: KIFF's words, or the plain fact, never the tool's raw message.
       val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
-      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: Words.Record.connectionRefusedBeforeSending else detail
+      val shown = if (byConnection && c.toolOutcome.code != null) c.detail?.let(::visible) ?: Words.Record.connectionRefusedBeforeSending else detail
       RecordEntry(
-        id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
+        id = recordId(c.proposalId), tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
-        entityId = c.entityId, action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
-        madeAt = c.madeAt, reason = c.reason,
+        entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,
+        why = c.reasons?.map(::visible), madeAt = c.madeAt, reason = c.reason?.let(::visible),
         refusedByTool = if (refusedByTool) true else null,
         refusedBy = if (byConnection) Words.Record.theConnection else if (refusedByTool) vendors[c.actionName] else null,
       )
@@ -351,13 +351,13 @@ object KiffMapping {
     val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: countReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
     // A gateway call is filed under its tool call's id, which says nothing to the owner: what it's on is in
     // its arguments, as KIFF keeps them (kiff/tafs#102).
-    val name = says(e.action, e.title)
-    val summary = if (e.arguments == null) "$name ${e.entityId}" else name
+    val name = visible(says(e.action, e.title))
+    val summary = if (e.arguments == null) "$name ${visible(e.entityId)}" else name
     return HeldCall(
       id = heldId(e.id),
       tafId = e.subject,
       proposed = ProposedAction(e.action, summary, amountOf(e)),
-      reason = if (installs != null) "" else reason,
+      reason = if (installs != null) "" else visible(reason),
       heldAt = e.createdAt,
       expiresAt = e.expiresAt ?: e.createdAt.plus(Duration.ofMinutes(10)),
       kiffId = e.id,
@@ -379,6 +379,30 @@ object KiffMapping {
    * more than KIFF keeps ([max]: 280 for the reason, 120 for what it's on). It's drawn as text alone, so a link or markup in it is
    * only words. Blank is none.
    */
+  /**
+   * A line from KIFF, a vendor or a taf as an approval, the record, a notification or the watch draws it (qa-kiff, 20 Nov): no
+   * direction character (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C, the set iOS's `FileText.isDirection` names), so a
+   * payee name can't reorder how an amount or an IBAN beside it looks; any other control character becomes a space. Right-to-left
+   * letters themselves stay.
+   */
+  fun visible(text: String): String {
+    val out = StringBuilder(text.length)
+    var i = 0
+    while (i < text.length) {
+      val c = text.codePointAt(i)
+      when {
+        isDirection(c) -> Unit
+        Character.isISOControl(c) -> out.append(' ')
+        else -> out.appendCodePoint(c)
+      }
+      i += Character.charCount(c)
+    }
+    return out.toString()
+  }
+
+  /** The invisible characters that set or override a line's direction. */
+  fun isDirection(c: Int): Boolean = c in 0x202A..0x202E || c in 0x2066..0x2069 || c == 0x200E || c == 0x200F || c == 0x061C
+
   fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? {
     if (reason == null) return null
     val plain = StringBuilder()
@@ -476,7 +500,7 @@ object KiffMapping {
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
       if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
       val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-      "$key: $text"
+      "${visible(key)}: ${visible(text)}"
     }
   }
 
