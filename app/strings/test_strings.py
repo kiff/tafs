@@ -63,8 +63,11 @@ class SharedWords(unittest.TestCase):
             self.assertGreater(age, table["default"], f"{country}: only a country asking more than the default is listed")
             self.assertLessEqual(age, 21, country)
 
-    def test_the_languages_are_the_eight(self):
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
+    def test_the_languages_are_the_eight_then_japanese_and_korean(self):
+        # The eight ship. Japanese and Korean are being written (global launch, Korea first): not shipped until
+        # every key is there, so no app shows half a language.
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]))
 

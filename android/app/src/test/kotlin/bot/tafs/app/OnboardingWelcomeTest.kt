@@ -17,6 +17,13 @@ import bot.tafs.app.model.Res
 import bot.tafs.app.model.Words
 import bot.tafs.app.views.OnboardingView
 import bot.tafs.app.views.linked
+import bot.tafs.app.views.ContinueOutcome
+import bot.tafs.app.views.continueOutcome
+import bot.tafs.app.app.AppModel
+import bot.tafs.app.kiff.AppSignInRefused
+import bot.tafs.app.kiff.VendorSignInCancelled
+import androidx.compose.ui.test.onAllNodesWithTag
+import org.junit.Assert.fail
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -57,6 +64,118 @@ class OnboardingWelcomeTest {
     compose.onNodeWithText(Words.SignIn.withKiff).assertIsEnabled()
     assertTrue(compose.onAllNodesWithText(Words.Onboarding.age).fetchSemanticsNodes().isEmpty())
     assertTrue(compose.onAllNodesWithText(Words.Common.`continue`).fetchSemanticsNodes().isEmpty())
+  }
+
+  /** Continue signs in inside tafs with the terms version the tick showed, and its button waits while it runs. */
+  @Test fun continueSignsInWithTheTermsTheTickShowed() {
+    val sent = mutableListOf<String?>()
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = { fail("the device-code sheet isn't opened") }, onSample = {}, onboarding = true,
+          signInInApp = { t -> sent += t }, termsVersion = { "2026-11-14" })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    assertEquals(listOf<String?>("2026-11-14"), sent)
+  }
+
+  /** Terms that changed since the tick untick the box and say so; Continue then waits on the new tick, with the new version. */
+  @Test fun termsThatChangedUntickTheBoxAndSaySo() {
+    val sent = mutableListOf<String?>()
+    var version = "2026-11-14"
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true,
+          signInInApp = { t -> sent += t; if (sent.size == 1) { version = "2026-11-20"; throw AppSignInRefused(AppModel.TERMS_OUTDATED) } },
+          termsVersion = { version })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    compose.onNodeWithTag("onboarding.terms_changed").assertExists()
+    compose.onNodeWithText(Words.Onboarding.termsChanged).assertExists()
+    compose.onNodeWithTag("onboarding.continue").assertIsNotEnabled()
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    assertEquals(listOf<String?>("2026-11-14", "2026-11-20"), sent)
+  }
+
+  /** Closing KIFF's page says nothing; anything else says signing in didn't work, and the tick stays. */
+  @Test fun aSignInThatDidntWorkSaysSoAndAClosedPageSaysNothing() {
+    var fail: Exception = VendorSignInCancelled()
+    compose.setContent {
+      TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = { throw fail }, termsVersion = { "v" }) }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    assertTrue(compose.onAllNodesWithTag("onboarding.problem").fetchSemanticsNodes().isEmpty())
+    fail = AppSignInRefused(AppSignInRefused.STATE_MISMATCH)
+    compose.onNodeWithTag("onboarding.continue").assertIsEnabled().performClick()
+    compose.waitForIdle()
+    compose.onNodeWithText(Words.SignIn.didntWork).assertExists()
+    compose.onNodeWithTag("onboarding.continue").assertIsEnabled()
+  }
+
+  /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
+  @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
+    val sent = mutableListOf<String>()
+    var changed: () -> Unit = {}
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "2026-11-14" },
+          onSignInWithPhone = { v, c -> sent += v; changed = c })
+      }
+    }
+    compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.with_phone").assertIsEnabled().performClick()
+    compose.waitForIdle()
+    assertEquals("the pairing carries the version the tick agreed to", listOf("2026-11-14"), sent)
+    // KIFF says the terms changed: the box is unticked and says why.
+    compose.runOnIdle { changed() }
+    compose.waitForIdle()
+    compose.onNodeWithTag("onboarding.terms_changed").assertExists()
+    compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
+    assertTrue("the old way never shows beside Continue", compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
+  }
+
+  /** With no terms version to send, the phone way opens nothing and says it didn't work: consent is never skipped. */
+  @Test fun noTermsVersionNoPhoneWay() {
+    var opened = 0
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { throw java.io.IOException("offline") },
+          onSignInWithPhone = { _, _ -> opened += 1 })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.with_phone").performClick()
+    compose.waitForIdle()
+    assertEquals(0, opened)
+    compose.onNodeWithText(Words.SignIn.didntWork).assertExists()
+  }
+
+  @Test fun aPhoneHasNoPhoneWay() {
+    compose.setContent { TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" }) } }
+    assertTrue(compose.onAllNodesWithTag("onboarding.with_phone").fetchSemanticsNodes().isEmpty())
+    // Nor the old Sign in with KIFF: it would sign in with the box unticked and no consent recorded (qa-kiff, #1532).
+    assertTrue(compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
+    compose.onNodeWithTag("onboarding.continue").assertIsNotEnabled()
+  }
+
+  @Test fun eachEndingHasItsOutcome() {
+    assertEquals(ContinueOutcome.Quiet, continueOutcome(VendorSignInCancelled()))
+    assertEquals(ContinueOutcome.Quiet, continueOutcome(AppSignInRefused("access_denied")))
+    assertEquals(ContinueOutcome.TermsChanged, continueOutcome(AppSignInRefused(AppModel.TERMS_OUTDATED)))
+    assertEquals(ContinueOutcome.Problem, continueOutcome(AppSignInRefused(AppSignInRefused.STATE_MISMATCH)))
+    assertEquals(ContinueOutcome.Problem, continueOutcome(AppSignInRefused("unsupported_client")))
+    assertEquals(ContinueOutcome.Problem, continueOutcome(bot.tafs.app.kiff.KiffError.Server(400, "invalid_grant")))
+    assertEquals(ContinueOutcome.Problem, continueOutcome(java.io.IOException("offline")))
   }
 
   @Test fun theTickAgreesOnlyWhenTicked() {

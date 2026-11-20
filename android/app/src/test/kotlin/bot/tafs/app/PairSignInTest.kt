@@ -139,6 +139,46 @@ class PairSignInTest {
     transport.answer("POST /v1/me/device/approval-key", 409, """{"error":"approval_key_set","fingerprint":"${KiffClient.fingerprint(signer.approvalPublicKeyDER)}"}""")
   }
 
+  // MARK: The welcome's consent (docs/onboarding.md)
+
+  /** Every claim carries the terms version the welcome's tick agreed to, so KIFF records it for this device. */
+  @Test fun everyClaimCarriesTheTickedTermsVersion() = runTest {
+    transport.answer("POST /v1/pair/claim", 400, """{"error":"authorization_pending"}""")
+    signedIn()
+    val m = model()
+    val done = async { m.finishPairSignIn(m.startPairSignIn(), termsVersion = "2026-11-20") }
+    advanceTimeBy(3_100); runCurrent()
+    transport.answer("POST /v1/pair/claim", 200, token)
+    advanceTimeBy(3_100); runCurrent()
+    done.await()
+    val versions = transport.requestsTo("POST /v1/pair/claim").map { Json.parseToJsonElement(String(it.body!!)).jsonObject["terms_version"]?.jsonPrimitive?.content }
+    assertEquals(listOf("2026-11-20", "2026-11-20"), versions)
+  }
+
+  /** With the new welcome off, the claim is today's: no terms version in it. */
+  @Test fun offTheClaimIsTodays() = runTest {
+    signedIn()
+    transport.answer("POST /v1/pair/claim", 200, token)
+    val m = model()
+    val done = async { m.finishPairSignIn(m.startPairSignIn()) }
+    advanceTimeBy(3_100); runCurrent()
+    done.await()
+    val body = Json.parseToJsonElement(String(transport.requestsTo("POST /v1/pair/claim").single().body!!)).jsonObject
+    assertEquals(setOf("nonce", "pub", "proof"), body.keys)
+  }
+
+  /** Terms that changed since the tick: KIFF claims nothing, the claim isn't tried again, and the welcome asks the tick again. */
+  @Test fun changedTermsStopTheClaim() = runTest {
+    transport.answer("POST /v1/pair/claim", 409, """{"error":"terms_outdated","terms_version":"2026-11-20"}""")
+    val m = model()
+    val done = async { runCatching { m.finishPairSignIn(m.startPairSignIn(), termsVersion = "2026-11-14") } }
+    advanceTimeBy(3_100); runCurrent()
+    val failed = done.await().exceptionOrNull()
+    assertTrue("$failed", failed is bot.tafs.app.kiff.AppSignInRefused && failed.error == AppModel.TERMS_OUTDATED)
+    assertEquals(1, transport.requestsTo("POST /v1/pair/claim").size)
+    assertEquals(null, secrets.load(AppModel.TOKEN))
+  }
+
   @Test fun theClaimProvesTheDeviceKeyAndUsesTheSessionOnceApproved() = runTest {
     transport.answer("POST /v1/pair/claim", 400, """{"error":"authorization_pending"}""")
     signedIn()

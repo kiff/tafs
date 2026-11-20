@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** a tablet's Sign in with your phone carries the terms version the tick agreed to, so KIFF records the consent for that tablet; terms that changed untick the box, and with no version nothing opens ([onboarding.md](docs/onboarding.md)).
