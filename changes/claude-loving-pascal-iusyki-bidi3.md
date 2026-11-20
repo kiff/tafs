@@ -1,0 +1,1 @@
+- **iOS and watchOS:** a push's title and body, and every message between the phone and the watch, carry no invisible direction character, as on Android ([approvals.md](docs/approvals.md)).

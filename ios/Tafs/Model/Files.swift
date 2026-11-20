@@ -57,6 +57,12 @@ enum FileText {
         (0x202A...0x202E).contains(s.value) || (0x2066...0x2069).contains(s.value) || [0x200E, 0x200F, 0x061C].contains(s.value)
     }
 
+    /// The text with every direction character taken out and nothing else changed: a push's title and body
+    /// (`NotificationService`), which may hold line breaks of their own.
+    static func withoutDirection(_ text: String) -> String {
+        String(String.UnicodeScalarView(text.unicodeScalars.filter { !isDirection($0) }))
+    }
+
     static func isControl(_ s: Unicode.Scalar) -> Bool {
         s.properties.generalCategory == .control
     }

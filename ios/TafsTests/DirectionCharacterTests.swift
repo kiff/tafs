@@ -77,4 +77,19 @@ final class DirectionCharacterTests: XCTestCase {
         XCTAssertEqual(taf.name, "Rae")
         XCTAssertFalse(hasDirection(taf.job), taf.job)
     }
+
+    /// agentgabo's 17:00: a push on the lock screen and the watch's messages carry none either. The push's text goes
+    /// through `FileText.withoutDirection` (lines kept), and every phone–watch message through `WatchMessage.encode`,
+    /// whose set is the phone's own.
+    func testAPushAndTheWatchsMessagesCarryNone() throws {
+        XCTAssertEqual(FileText.withoutDirection("Pay\u{202E} Acme\nDE89\u{2066} 3704\u{2069}"), "Pay Acme\nDE89 3704")
+        for value in UInt32(0)...0x2FFF {
+            guard let scalar = Unicode.Scalar(value) else { continue }
+            XCTAssertEqual(WatchMessage.isDirection(scalar), FileText.isDirection(scalar), String(value, radix: 16))
+        }
+        struct Line: Codable, Equatable { let payee: String; let amount: String }
+        let data = WatchMessage.encode(Line(payee: "Acme\u{202E}DTL \u{2067}ok\u{2069}", amount: "€150.00"))
+        XCTAssertEqual(WatchMessage.decode(Line.self, from: data), Line(payee: "AcmeDTL ok", amount: "€150.00"))
+        XCTAssertFalse(String(decoding: data, as: UTF8.self).unicodeScalars.contains(where: FileText.isDirection))
+    }
 }
