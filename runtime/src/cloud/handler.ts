@@ -40,7 +40,7 @@ import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -9299,7 +9299,8 @@ export const GO_ON_WINDOW_MS = 30 * 60_000;
 
 /**
  * Starts Coach's next turn in the chat that handed a task over, with the line of how it went: one Coach turn, on the
- * person's own AI consent, at most GO_ON_TURNS in a row per chat in GO_ON_WINDOW_MS. Once per run (its dedup key).
+ * person's own AI consent while they're still on the account, at most GO_ON_TURNS in a row per chat in GO_ON_WINDOW_MS
+ * (counted best effort: two ends at the same moment can each take the last turn). Once per run (its dedup key).
  * False when it starts nothing: the line then waits for the person's next message, as before.
  */
 async function goOnAfterTask(tenant: string, setup: Taf, task: Task, r: Run, line: string, deps: Deps): Promise<boolean> {
@@ -9308,6 +9309,8 @@ async function goOnAfterTask(tenant: string, setup: Taf, task: Task, r: Run, lin
   // The person's own chat, never another's: the run that handed it over is theirs.
   if (!coach.session || coach.requester?.kind !== "member" || coach.requester.id !== task.person) return false;
   if (deps.aiConsent && !(await aiConsentOf(deps.coach, tenant, task.person))) return false;
+  // A person who has left the account since (consent.ts markGone) is never started a turn for.
+  if (await deps.coach.get(consentGoneKey(tenant, task.person)).catch(() => undefined)) return false;
   const now = deps.now?.() ?? new Date();
   const key = `${tenant}#coach-go-on#${coach.session}`;
   const kept = (await deps.coach.get(key)) as { n: number; until: string } | undefined;

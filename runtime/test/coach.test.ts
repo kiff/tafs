@@ -960,6 +960,14 @@ describe("Coach's tools (kiff/tafs#206)", () => {
       expect(await lines(f)).toMatchObject([{ said: "Refunded order 42." }]);
     });
 
+    it("never goes on for a person who has left the account", async () => {
+      const w = world();
+      const { task, ref } = await handedOver(w);
+      await w.coach.put(`${T}#ai-consent-gone#u_ana`, { at: "2026-10-16T12:00:00Z" }, new Date(Date.parse("2026-10-17T12:00:00Z")));
+      await w.send("POST", "/v1/runs/ended", { run: task, agent: RAE, status: "COMPLETED", ref });
+      expect(coachRuns(w)).toHaveLength(1);
+    });
+
     it("never goes on in a chat that isn't the person's own", async () => {
       const w = world();
       const { coach, task, ref } = await handedOver(w);
