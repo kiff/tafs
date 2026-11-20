@@ -283,9 +283,9 @@ struct TafCard: Identifiable, Hashable, Codable {
             return (shown(t.limit), Words.Card.Hero.useUnavailableNote(label: "\(t.window.label)", note: "\(note)"))
         }
         if let c = calls {
-            guard let used = c.used else { return ("\(c.limit)", Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
+            guard let used = c.used else { return (Words.number(c.limit), Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
             let left = max(0, c.limit - used)
-            return ("\(left)", Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: "\(c.limit)"))
+            return (Words.number(left), Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: Words.number(c.limit)))
         }
         return nil
     }
@@ -295,7 +295,7 @@ struct TafCard: Identifiable, Hashable, Codable {
     /// else the figure, then its words.
     var heroLine: String? {
         if total == nil, let c = calls, let used = c.used {
-            return Words.Card.callsLeftLine(count: max(0, c.limit - used), window: c.window.current, limit: "\(c.limit)")
+            return Words.Card.callsLeftLine(count: max(0, c.limit - used), window: c.window.current, limit: Words.number(c.limit))
         }
         return hero.map { "\($0.figure) \($0.words)" }
     }
