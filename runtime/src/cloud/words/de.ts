@@ -264,7 +264,7 @@ export const de: Words = {
   check_why_access: (app) => `${app ?? "Die App"} hat das Lesen abgelehnt: Verbinde sie erneut mit einem Konto, das lesen darf.`,
   check_why_account: (app) => `${app ?? "Die App"} meldet, dass das verbundene Konto dafür nicht eingerichtet ist: Verbinde sie erneut mit dem Konto, das du dafür nutzt.`,
   check_why_busy: (app) => `${app ?? "Die App"} konnte gerade nicht antworten. Er versucht es zum nächsten Termin erneut.`,
-  check_why_no_tool: (tool) => `Die Prüfung liest ${tool}, das keine Verbindung des Tafs mehr hat: Coach kann sie auf das richtige Lesen umstellen.`,
+  check_why_no_tool: (tool) => `Die Prüfung liest ${tool}, das keine Verbindung des tafs mehr hat: Coach kann sie auf den richtigen Lesezugriff umstellen.`,
   check_why_no_items: (app) => `Die Prüfung findet die Liste in der Antwort von ${app ?? "der App"} nicht: Coach kann eine echte Antwort lesen und festlegen, wo die Liste steht.`,
   health_do_limit: "Öffne einen, um zu sehen, welches Limit ihn gestoppt hat.",
   health_too_large: (n) => `Seine letzten ${n} Prüfungen fanden Arbeit, die zu groß für einen Lauf war, also lief nichts`,
