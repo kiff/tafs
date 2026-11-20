@@ -878,8 +878,16 @@ final class AppModel: ObservableObject {
         return PairingStart(offer: offer, proof: proof)
     }
 
+    /// The terms version the welcome's tick agreed to (`Onboarding`), sent with every pairing claim so KIFF records the
+    /// consent for this device; nil while the new onboarding is off, and the claim is as it was.
+    var pairingTermsVersion: String?
+
+    /// The pairing sheet closed (done, Cancel, a swipe or changed terms): no ticked version outlives it.
+    func pairingClosed() { pairingTermsVersion = nil }
+
     /// Claims until the other phone approves (at least 3 s apart, slower when KIFF asks), then uses the
-    /// session, bound to this device's two keys. Throws `expired` when the code runs out first.
+    /// session, bound to this device's two keys. Throws `expired` when the code runs out first, and
+    /// `termsOutdated` when the terms changed since the tick (nothing is claimed then).
     func finishPairingSignIn(_ start: PairingStart) async throws {
         var interval = pairClaimInterval
         while clock() < start.offer.expires {
@@ -889,8 +897,10 @@ final class AppModel: ObservableObject {
                 waited += signInSlice
             }
             do {
-                let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
+                let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof,
+                                                        termsVersion: pairingTermsVersion)
                 try await takeSession(token, stopped: Task.isCancelled)
+                pairingTermsVersion = nil
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue

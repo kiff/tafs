@@ -11,6 +11,9 @@ struct PairSignInView: View {
     var embedded = false
     /// Signed in: the sign-in closes.
     let done: () -> Void
+    /// The terms changed since the welcome's tick (`Onboarding`): the pairing stops, and the welcome asks for the tick
+    /// again. Nil where no tick was shown, and nothing is sent that could be outdated.
+    var termsChanged: (() -> Void)? = nil
     @State private var start: AppModel.PairingStart?
     @State private var problem: String?
     @State private var renewed = false
@@ -89,6 +92,10 @@ struct PairSignInView: View {
                     return
                 } catch KIFFClient.KIFFError.expired {
                     renewed = true
+                } catch KIFFClient.KIFFError.termsOutdated {
+                    start = nil
+                    termsChanged?()
+                    return
                 } catch is CancellationError {
                     return
                 } catch let cannot as AppModel.CannotPair {

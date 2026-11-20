@@ -414,9 +414,15 @@ final class KIFFClient {
     /// The new device's side of pairing (KIFF's pairing contract §5.4): with no session, it claims the
     /// session the other phone approved, proving it holds the device key. Until the approval, KIFF
     /// answers as the device sign-in does: pending, slow down, or expired.
-    func claimPairing(nonce: String, pub: String, proof: String) async throws -> DeviceToken {
+    /// `termsVersion`: the version the welcome's tick agreed to (`Onboarding`), recorded by KIFF in the same step as
+    /// the session, for this device; KIFF answers `terms_outdated` before claiming anything when it's an old one.
+    func claimPairing(nonce: String, pub: String, proof: String, termsVersion: String? = nil) async throws -> DeviceToken {
+        var body = ["nonce": nonce, "pub": pub, "proof": proof]
+        if let termsVersion { body["terms_version"] = termsVersion }
         do {
-            return try await send("POST", "/v1/pair/claim", body: ["nonce": nonce, "pub": pub, "proof": proof], authorized: false)
+            return try await send("POST", "/v1/pair/claim", body: body, authorized: false)
+        } catch KIFFError.server(409, "terms_outdated", _) {
+            throw KIFFError.termsOutdated
         } catch KIFFError.server(400, let message, _) {
             switch message {
             case "authorization_pending": throw KIFFError.authorizationPending
