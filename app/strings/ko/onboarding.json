@@ -1,5 +1,6 @@
 {
   "onboarding.age": "만 16세 이상이어야 하며, 거주 국가의 디지털 동의 연령이 더 높으면 그 연령 이상이어야 합니다.",
+  "onboarding.age_n": "만 {age}세 이상이어야 합니다.",
   "onboarding.card_lead": "각 taf는 내가 발급한 Card 안에서 일합니다. 무엇을, 어떤 앱으로, 얼마까지 할 수 있는지 정하고, 그 이상은 나에게 물어봅니다.",
   "onboarding.card_title": "Card는 나의 허락입니다",
   "onboarding.consent_tick": "{kiff_terms} 및 {tafs_terms}에 동의합니다.",
