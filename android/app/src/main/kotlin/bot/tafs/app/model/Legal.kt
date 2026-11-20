@@ -18,6 +18,14 @@ object Legal {
 
   fun privacy(language: String = Res.language): String = page("privacy", language)
 
+  /** KIFF's own Terms and Privacy, the account's, beside tafs's (docs/onboarding.md): `/de/terms`, English for any other language. */
+  fun kiffTerms(language: String = Res.language): String = kiffPage("terms", language)
+
+  fun kiffPrivacy(language: String = Res.language): String = kiffPage("privacy", language)
+
+  private fun kiffPage(name: String, language: String): String =
+    if (language in SERVED) "$SITE/$language/$name" else "$SITE/$name"
+
   /**
    * A link's words: as they are in English and in a language kiff.dev serves the page in; in any other, saying the page is in
    * English ("… (in English)"), as kiff.dev does.

@@ -10,7 +10,7 @@ import java.util.Base64
 /**
  * Signing in once, inside tafs (row 39, docs/android-app.md "Onboarding"): KIFF's `/oauth/authorize` in a Custom Tab, with
  * PKCE, then `POST /v1/auth/app/token` with the device's keys, as `/v1/auth/device/start` takes them today. Behind
- * [ONBOARDING_ON], off: with it off, nothing here is reached and today's device-code sign-in is the only one.
+ * [bot.tafs.app.model.ONBOARDING_ON], off: with it off, nothing here is reached and today's device-code sign-in is the only one.
  *
  * Only what the app must do itself is here: make the verifier and its S256 challenge, ask with a fresh `state`, and take back
  * only our own redirect carrying that same state. KIFF decides the rest (who the person is, the account, the device's session).
@@ -92,6 +92,3 @@ object AppSignIn {
   private fun b64(bytes: ByteArray): String = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
   private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 }
-
-/** Row 39's sign-in and first run (welcome tick, three cards, first Home). Off until the end-to-end test with the owner. */
-const val ONBOARDING_ON = false

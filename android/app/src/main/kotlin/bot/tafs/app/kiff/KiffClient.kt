@@ -302,7 +302,7 @@ class KiffClient(
   suspend fun pollDeviceToken(deviceCode: String): DeviceToken = pollToken(deviceCode)
 
   /**
-   * Row 39's sign-in, its last step (docs/android-app.md "Onboarding", behind [ONBOARDING_ON]): KIFF's [code] from the Custom Tab,
+   * Row 39's sign-in, its last step (docs/android-app.md "Onboarding", behind [bot.tafs.app.model.ONBOARDING_ON]): KIFF's [code] from the Custom Tab,
    * with this attempt's [verifier] and the terms the person ticked ([termsVersion]), for a session. The device's keys and name go
    * exactly as [startDeviceSignIn] sends them, so KIFF makes the same device as a device-code sign-in: the same first-key rule,
    * new-device email and second-device approval. Answers today's [DeviceToken]. KIFF's refusals come as [KiffError.Server] with

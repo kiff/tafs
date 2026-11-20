@@ -2,7 +2,7 @@ package bot.tafs.app
 
 import bot.tafs.app.kiff.AppSignIn
 import bot.tafs.app.kiff.AppSignIn.Answer
-import bot.tafs.app.kiff.ONBOARDING_ON
+import bot.tafs.app.model.ONBOARDING_ON
 import java.net.URI
 import java.security.SecureRandom
 import org.junit.Assert.assertEquals
