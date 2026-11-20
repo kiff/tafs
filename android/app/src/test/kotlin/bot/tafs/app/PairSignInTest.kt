@@ -127,10 +127,11 @@ class PairSignInTest {
     assertTrue(transport.requestsTo("POST /v1/auth/device/logout").isEmpty())
   }
 
-  // Both ways hand their token over the same way, so neither can keep a token for a way that was stopped.
+  // Every way hands its token over the same way (the device code, pairing, and the in-app sign-in of docs/onboarding.md),
+  // so none can keep a token for a way that was stopped.
   @Test fun bothWaysTakeTheirTokenThroughTakeSession() {
     val model = java.io.File("src/main/kotlin/bot/tafs/app/app/AppModel.kt").readText()
-    assertEquals(2, Regex("""takeSession\(token, stopped = !currentCoroutineContext\(\)\.isActive\)""").findAll(model).count())
+    assertEquals(3, Regex("""takeSession\(token, stopped = !currentCoroutineContext\(\)\.isActive\)""").findAll(model).count())
   }
 
   private fun signedIn() {
