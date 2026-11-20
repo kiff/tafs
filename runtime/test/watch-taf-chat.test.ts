@@ -133,12 +133,19 @@ describe("chatting with a taf from the watch", () => {
     const r = await w.send(MSG);
     expect(r.status).toBe(200);
     expect(r.body.ask).toMatchObject({ client_id: MSG.client_id, state: "working", taf: { id: CAL, name: "Calendar" }, words: "Calendar is answering" });
-    expect(JSON.stringify(r.body)).not.toMatch(/session|taf_run|person|kind/);
+    expect(r.body.ask.kind).toBe("taf");
+    expect(JSON.stringify(r.body)).not.toMatch(/session|taf_run|person/);
     expect(w.starts()).toEqual([`startRun ${CAL} live`]);
     const run = w.agents.runs.at(-1)!;
     expect(run.requester).toEqual({ kind: "member", id: ANA });
     // Its end comes back to the watch request: kiff/agents was given where to say so.
     expect(w.agents.notified.get(run.id)?.url).toBe("https://tafs.test/v1/runs/ended");
+    // The watches tell a taf chat from a Coach request by it, in the list and on the watch days too: Coach's has none.
+    const coach = (await w.send({ client_id: "c_watch_0009", text: "Move my call" })).body.ask;
+    expect(coach.kind).toBeUndefined();
+    const listed = (await w.call("GET", "/v1/watch/asks")).body.asks as Array<{ id: string; kind?: string }>;
+    expect(listed.map((a) => [a.id, a.kind])).toEqual([[coach.id, undefined], [r.body.ask.id, "taf"]]);
+    expect(((await w.call("GET", "/v1/watch/days/2026-11-16")).body.turns as Array<{ kind?: string }>).map((t) => t.kind)).toEqual(["taf", undefined]);
   });
 
   it("is the same 404 for a taf in no account of the person's, one being removed and one they can't use; Coach is asked without taf_id", async () => {

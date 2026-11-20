@@ -58,6 +58,11 @@ export interface ShownAsk {
   state: AskState;
   taf?: { id: string; name: string };
   line?: string;
+  /**
+   * A message to a taf the person chose, not a request to Coach: the watches keep nothing of it (never their Inbox, Coach's
+   * thread or a cache), and draw it only in that taf's chat while it's open.
+   */
+  kind?: "taf";
   /** A taf chat's answer goes on past the line: the rest is on the phone. */
   more?: boolean;
   /** A taf chat's taf waits on the person, on the phone. */
@@ -162,6 +167,7 @@ export function fullAnswer(raw: unknown): string | undefined {
 export function shownAsk(ask: Ask, lang: Lang): ShownAsk {
   return {
     id: ask.id, client_id: ask.client_id, state: ask.state,
+    ...(ask.kind === "taf" ? { kind: "taf" as const } : {}),
     ...(ask.taf ? { taf: ask.taf } : {}),
     ...(ask.line ? { line: ask.line } : {}),
     ...(ask.more ? { more: true } : {}),
@@ -213,6 +219,8 @@ export interface WatchTurn {
   said: string;
   said_at: string;
   taf?: { id: string; name: string };
+  /** A message to a taf the person chose (ShownAsk's `kind`). */
+  kind?: "taf";
   state: AskState;
   line?: string;
   words: string;
@@ -251,7 +259,7 @@ export function dayTurns(said: Array<{ ask: Ask; said: string }>, lang: Lang): W
     placed.add(t.ask.id);
     const shown = shownAsk(t.ask, lang);
     const to = t.ask.reply_to && listed.has(t.ask.reply_to) && t.ask.reply_to !== t.ask.id ? t.ask.reply_to : undefined;
-    out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), state: shown.state,
+    out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), ...(shown.kind ? { kind: shown.kind } : {}), state: shown.state,
       ...(shown.line ? { line: shown.line } : {}), words: shown.words, ...(to ? { reply_to: to } : {}) });
     for (const r of replies.get(t.ask.id) ?? []) place(r);
   };

@@ -117,6 +117,8 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
   characters), at most **400** characters (`tafLine`). `more: true` says it went on, and the rest is on the phone. The watch
   may show an amount on screen and never stores it, as the watch's rule already is. A run that failed or was stopped is
   `failed`. Each change is pushed to the person's Android phones by the request's id alone, as before.
+- **`kind: "taf"`** marks such a request wherever it's read (`{ask}`, the list, the watch days' turns), so the watches
+  tell it from a Coach request a taf handled. They keep nothing of it: never their Inbox, Coach's thread or a cache.
 - **Read more** (the owner's pick, 20 Nov: a long answer is never trimmed, shown partly, then expanded):
   `GET /v1/watch/asks/{id}?full=1` adds `text`, the taf's whole answer.
   - It's read from the run on each tap and kept nowhere. The first read stays small (the line and `more`), and the whole
