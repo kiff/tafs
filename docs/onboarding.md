@@ -11,7 +11,7 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
    privacy as two links, never ticked, and the age line: the person's country's own age where the law asks more
    than 16 (`Onboarding.ageLine`, from the device's region and `MinimumAge.swift`, generated from
    `app/strings/ages.json`). Before the switch is on, today's sign-in screen says a raised age too
-   (`Onboarding.raisedAgeLine` under the agreement: India, Indonesia, Brazil; nothing new anywhere else). **Continue** takes the place of "Sign in with KIFF" and stays
+   (`Onboarding.raisedAgeLine` under the agreement: India, Indonesia, Brazil, Colombia; nothing new anywhere else). **Continue** takes the place of "Sign in with KIFF" and stays
    off until the box is ticked (`ConsentTick`). The box is its own control, so tapping a link opens its page and
    never ticks it. Trying the sample data needs no account, so it never waits on the tick. The AI consent stays its
    own screen (`AIConsentView`).
@@ -40,7 +40,7 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
 
 - **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
   law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`),
-  and, before the switch is on, today's sign-in sheet says a raised age too (`raisedAgeLine`: India, Brazil, Indonesia; nothing
+  and, before the switch is on, today's sign-in sheet says a raised age too (`raisedAgeLine`: India, Brazil, Indonesia, Colombia; nothing
   new anywhere else), so those countries needn't wait for the switch, with `ConsentTick` and **Continue**
   off until the box is ticked. The box is Material's checkbox, so TalkBack reads it as the whole tick line; the links
   in the line are their own targets. `linked` puts each link where the language puts it. `Legal.kiffTerms` and

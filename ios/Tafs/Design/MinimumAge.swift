@@ -4,7 +4,7 @@
 /// or none known, is `standard`.
 enum MinimumAge {
     static let standard = 16
-    static let byCountry: [String: Int] = ["BR": 18, "ID": 18, "IN": 18]
+    static let byCountry: [String: Int] = ["BR": 18, "CO": 18, "ID": 18, "IN": 18]
 
     /// The age for a country code as `Locale.Region` gives it ("IN"), or `standard`.
     static func of(_ country: String?) -> Int {

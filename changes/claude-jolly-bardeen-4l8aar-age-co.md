@@ -1,0 +1,1 @@
+- **Colombia asks 18:** the sign-in says "You must be at least 18." in Colombia too, as in India, Indonesia and Brazil, on iPhone, iPad, Mac and Android ([onboarding](docs/onboarding.md)).

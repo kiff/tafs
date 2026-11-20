@@ -4,7 +4,7 @@ package bot.tafs.app.model
 /** The minimum age to use the app, by country (ISO 3166-1): legal-i18n's table. Any other country, or none known, is [STANDARD]. */
 object MinimumAge {
   const val STANDARD = 16
-  val byCountry: Map<String, Int> = mapOf("BR" to 18, "ID" to 18, "IN" to 18)
+  val byCountry: Map<String, Int> = mapOf("BR" to 18, "CO" to 18, "ID" to 18, "IN" to 18)
 
   /** The age for a country code as the device's region gives it ("IN"), or [STANDARD]. */
   fun of(country: String?): Int = country?.let { byCountry[it.uppercase()] } ?: STANDARD
