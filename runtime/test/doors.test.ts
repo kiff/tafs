@@ -2074,6 +2074,9 @@ describe("an api door's keys and signed steps", () => {
       expect(input).toContain("Job: Check the return and refund it if the Card allows");
       expect(input).toMatch(/----- request data [0-9a-f]{18} -----\norder: "A-1047"\nreason: "damaged"\n----- request data [0-9a-f]{18} -----/);
       expect(input).toContain("When the work is done, answer the request with request_outcome, one of: refunded, refused, needs_review, saying what happened. Your words don't answer it.");
+      // Its first line points at the tool too: no line of the answer is the outcome.
+      expect(input.split("\n")[0]).toMatch(/then answer it with request_outcome\]$/);
+      expect(input).not.toContain("end with your outcome");
       (run as { tally?: unknown }).tally = { "stripe.refund": { sent: 1 }, "stripe.read": { refused: 1 } };
       // The run was started with the door's outcomes, and answered through request_outcome: kiff/agents' record.
       expect((run as { outcomes?: string[] }).outcomes).toEqual(DRAFT.outcomes);

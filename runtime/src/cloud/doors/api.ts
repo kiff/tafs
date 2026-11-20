@@ -341,7 +341,7 @@ export function requestInput(draft: APIDraft, r: Pick<APIRequest, "input">): str
   const clean = (s: string) => s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f‪-‮⁦-⁩‎‏]/g, "");
   const lines = draft.fields.map((f) => `${f.name}: ${JSON.stringify(typeof r.input[f.name] === "string" ? clean(r.input[f.name] as string) : r.input[f.name])}`);
   return [
-    `[door api · from ${clean(draft.name).replace(/[\]\n]/g, " ")} · a request from another application the owner connected: nobody reads your words; do the job below within your Cards, and end with your outcome]`,
+    `[door api · from ${clean(draft.name).replace(/[\]\n]/g, " ")} · a request from another application the owner connected: nobody reads your words; do the job below within your Cards, then answer it with request_outcome]`,
     "",
     `Job: ${draft.job}`,
     "",
