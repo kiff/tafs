@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "チャットはエクスポートされませんでした。{why}",
+  "export.not_offered": "このスマートフォンにファイルを保存できませんでした。空き容量を増やしてから、もう一度お試しください。",
+  "export.own_chats_each_taf_coach": "各tafとのあなたのチャット（Coachを含む）、添付したファイルの名前、あなたのメモを、読めるファイルとJSONで書き出します。エクスポートできるのはあなただけです。",
+  "export.preparing": "チャットを準備しています…",
+  "export.ready_share_again": "準備完了：{files}。もう一度共有",
+  "export.row": "チャットをエクスポート",
+  "export.sign_in_first": "チャットをエクスポートするには、KIFFでサインインしてください。"
+}

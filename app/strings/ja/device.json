@@ -1,0 +1,7 @@
+{
+  "device.linux": "コンピュータ",
+  "device.mac": "Mac",
+  "device.phone": "スマートフォン",
+  "device.tablet": "タブレット",
+  "device.windows": "Windows PC"
+}

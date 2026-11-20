@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name}は添付できません。",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafsはこのファイルを添付できません：対応する種類やサイズではありません。別のファイルを選んでください。",
+  "attachment.photo": "写真",
+  "attachment.photo_could_not_read": "その写真を読み込めませんでした。",
+  "attachment.photo_numbered": "写真{n}",
+  "attachment.too_large": "{name}のサイズは{size}で、上限は{limit}です。",
+  "attachment.wrong_kind": "{name}は添付できません。写真、PDF、テキスト、CSV、Markdown、Word、Excelファイルを添付できます。"
+}
