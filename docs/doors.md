@@ -146,12 +146,22 @@ it, its last four characters and its SHA-256, never the key. `GET /v1/tafs/{id}/
 (100 by default, `API_DOOR`), `counts: {today, waiting}`, `last_request: {status, at, words}` (`words` tafs cloud's, one per
 state) and `keys: [{id, name, last4, made_at, last_used_at?}]` (`contracts/doors-api.json`).
 
+**Coach drafts it** (`taf_door_api {taf, draft}`, behind `TAFS_API_DOORS`): tafs cloud checks the draft as the route
+below does, refuses a second `api` door, and keeps it 7 days (`door-api-draft`), answering its `draft_id` and
+`next: show {type: "door", taf_id, draft_id}`. Nothing is made: Coach's Card for it (`coach-taf-door`, 20 a day) asks
+nothing, since the door is the owner's to make. The apps draw the card from tafs cloud's own copy,
+`GET /v1/tafs/{id}/doors/drafts/{draft}` (`{draft_id, draft, made_at, expires_at, body}`, for the people who manage the
+taf; 404 once lapsed, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`.
+
 **Making one and its keys** (`TAFS_API_DOORS=on`; off, `POST …/doors` with `kind: "api"` is 400): each step is checked
 with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature
 taken once), and is 403 unsigned (`signature_missing`) or signed with the device key (`critical_key_required`, in the
 door's own words):
 
-- `POST /v1/tafs/{id}/doors` `{kind: "api", draft: {name, fields, job, outcomes, text}}` approves Coach's draft. A field
+- `POST /v1/tafs/{id}/doors` `{kind: "api", draft_id, draft: {name, fields, job, outcomes, text}}` approves Coach's draft:
+  only the draft tafs cloud keeps, by its `draft_id` and byte for byte (canonical), and only once. An unknown, lapsed or
+  used `draft_id` is 404, and a `draft` that isn't the kept one is 409, so the owner's signature makes only what Coach
+  drafted and they read. The kept draft is removed once its door is made. A field
   is `{name, type: string (with max ≤ 4000) | number | boolean | enum (with values)}`, 1 to 20 of them, never named like an
   instruction (any `_` part such as `instructions`, `prompt`, `system` or `rules`, so `system_prompt` too); outcomes are 1 to 10 names. Anything else is 400. It answers the door
   and its first key, `{id, name, key, last4, made_at}`, in this answer only. One `api` door a taf (409).

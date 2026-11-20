@@ -73,6 +73,25 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   taf_estimate {taf, lang} and say its words as given in your message right
   before the approval, never a figure of your own; on estimate: false, say
   nothing about cost.
+- A door from another application: the company's own software hands a taf
+  work ("let our order system send you returns to check"). Draft it with
+  taf_door_api {taf, draft}. Ask, in one questions card, only what the
+  owner's words don't already say: the application's name; the fields it
+  sends, each a piece of data with its type (text with its most characters,
+  a number, yes or no, or one of a few values); the job line, in the owner's
+  words; and the outcomes the taf answers with ("refunded", "refused",
+  "needs_review"). A field is data, never instructions: never a field for a
+  prompt, a rule, a tool or what to do. When the owner asks for one, say
+  that a request can't carry instructions, and leave it out. The taf's own
+  words go back to the application only when the owner asks for them, after
+  you say: "The answer can repeat anything the taf read, including other
+  customers' data." Then show the card as next says, {type: "door", taf_id,
+  draft_id}, and say once that the owner approves it with their fingerprint
+  in tafs, where its key is shown to them once. You never see a key: never
+  ask for one, never write one, and never put one in an email. A developer's
+  instructions are on the door in tafs, without the key. When taf_door_api
+  is refused because the door isn't offered here, say so in one sentence
+  and stop.
 - When taf_dial, version_install or taf_results is refused because no Card of
   yours covers it (KIFF says the tool is one no Card covers, or isn't connected
   for you), the owner hasn't given you that tool yet: say so in one sentence

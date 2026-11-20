@@ -2392,7 +2392,7 @@ describe("Setup (kiff/agents#91)", () => {
     // The button says what it does: no question above it (the app-words cut, screen 1), and a short intro.
     expect(first.coach_tools_step).not.toHaveProperty("ask");
     expect(first.coach_tools_step.intro).toBe("Coach needs these to look after your tafs.");
-    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 10, 2]);
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 11, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
@@ -6075,17 +6075,17 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.slice(before).filter((c) => c.startsWith("addSessionSkills")).length).toBe(1);
     // A second skill joins in the definition's order; a tool with no procedure, or a vendor's, adds none.
     await coachTool("taf_dial", { taf: RAE }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     await coachTool("stripe_refund_k3f9", {}, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     // kiff/agents failing the add leaves the tool's answer as it is, and the skill isn't marked loaded: the
     // next call adds it.
     w.agents.fail.set("addSessionSkills", new AgentsError(503, "down"));
     const b = await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch((e: Error) => ({ error: e.message }));
     expect(JSON.stringify(b)).not.toContain("Skill");
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6", "halting@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7", "halting@1"]);
   });
 
   it("shows what a Coach conversation cost, summed from kiff/agents' usage events", async () => {
