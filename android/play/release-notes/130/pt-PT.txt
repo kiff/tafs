@@ -1,1 +1,1 @@
-• Ligar de novo: quando uma app não consegue voltar a iniciar sessão na conta antiga, o tafs vai diretamente para um novo início de sessão, e esse único início traz de volta cada taf que usava a conta.
+• Ligar novamente: quando uma app não consegue voltar a iniciar sessão na conta antiga, o tafs vai diretamente para um novo início de sessão, e esse único início traz de volta cada taf que usava a conta.

@@ -1,1 +1,1 @@
-• Reconnecter : quand une app ne peut plus se reconnecter à son ancien compte, tafs ouvre directement une nouvelle connexion, et cette seule connexion rétablit chaque taf qui utilisait le compte.
+• Se reconnecter : quand une app ne peut plus se reconnecter à son ancien compte, tafs ouvre directement une nouvelle connexion, et cette seule connexion rétablit chaque taf qui utilisait le compte.

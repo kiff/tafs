@@ -1,1 +1,1 @@
-• Volver a conectar: si una app no puede volver a iniciar sesión en su cuenta anterior, tafs va directo a un nuevo inicio de sesión, y ese único inicio recupera cada taf que usaba la cuenta.
+• Conectar de nuevo: si una app no puede volver a iniciar sesión en su cuenta anterior, tafs va directo a un nuevo inicio de sesión, y ese único inicio recupera cada taf que usaba la cuenta.
