@@ -155,6 +155,17 @@ final class AppSignInTests: XCTestCase {
         XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"), "no session yet")
     }
 
+    /// The version read when the welcome showed its tick is the one sent, even if KIFF has another by the sign-in.
+    func testTheVersionSentIsTheOneShownWithTheTick() async throws {
+        let model = model()
+        StubProtocol.responses["POST /v1/auth/app/token"] = (200, Self.token)
+        StubProtocol.responses["GET /v1/auth/app/terms"] = (200, #"{"terms_version":"2026-12-01"}"#)
+        try await model.signInInApp(termsVersion: "2026-11-20", sheet: Sheet())
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: tokenRequests().first?.httpBody ?? Data()) as? [String: String])
+        XCTAssertEqual(body["terms_version"], "2026-11-20", "what the person saw; KIFF answers terms_outdated if it changed")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/auth/app/terms" }, "not read again")
+    }
+
     /// Closing the sheet asks KIFF for nothing more: no code is exchanged, and no session made.
     func testClosingTheSheetSignsNothingIn() async {
         let model = model()

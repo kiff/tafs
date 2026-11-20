@@ -14,6 +14,8 @@ struct OnboardingView: View {
     @State private var termsChanged = false
     /// iPad and Mac: "Sign in with your phone", the pairing QR, beside KIFF's sheet.
     @State private var pairing = false
+    /// The terms version in force, read as the tick is shown: the one sent with the sign-in is the one the person saw.
+    @State private var termsVersion: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -84,6 +86,7 @@ struct OnboardingView: View {
         .screenBackground()
         // Sign-in never waits on Face ID (docs/approvals.md): approvals are set up at Coach's Start.
         .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
+        .task { if Onboarding.on { termsVersion = try? await model.appTermsVersion() } }
         .sheet(isPresented: $pairing) {
             NavigationStack {
                 PairSignInView {
@@ -105,12 +108,14 @@ struct OnboardingView: View {
         Task {
             defer { signingInApp = false }
             do {
-                try await model.signInInApp(sheet: VendorSignIn(callbackScheme: AppSignIn.callbackScheme))
+                try await model.signInInApp(termsVersion: termsVersion, sheet: VendorSignIn(callbackScheme: AppSignIn.callbackScheme))
                 model.justConnected = true
             } catch AppSignIn.Failure.closed {
             } catch KIFFClient.KIFFError.termsOutdated {
                 tick = ConsentTick()
                 termsChanged = true
+                // The new version, for the new tick.
+                termsVersion = try? await model.appTermsVersion()
             } catch is CancellationError {
             } catch {
                 problem = error.localizedDescription

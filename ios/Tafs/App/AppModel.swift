@@ -791,8 +791,11 @@ final class AppModel: ObservableObject {
     /// keys and the terms version the welcome's tick agreed to. Throws `AppSignIn.Failure.closed` when the person closed
     /// the sheet, and `KIFFError.termsOutdated` when the terms changed since the tick. A device without a Secure Enclave
     /// signs in without a key, as `startSignIn` does.
-    func signInInApp(sheet: VendorSigningIn) async throws {
-        let termsVersion = try await kiff.appTermsVersion()
+    func signInInApp(termsVersion shown: String? = nil, sheet: VendorSigningIn) async throws {
+        // The version read when the welcome showed, so the one sent is the one the person saw; read now only if it
+        // couldn't be then.
+        let termsVersion: String
+        if let shown { termsVersion = shown } else { termsVersion = try await appTermsVersion() }
         let pkce = AppSignIn.PKCE.make()
         let state = AppSignIn.makeState()
         let url = AppSignIn.authorizeURL(base: kiff.baseURL, pkce: pkce, state: state, language: KIFFClient.appLanguage)
@@ -813,6 +816,9 @@ final class AppModel: ObservableObject {
                                             kind: ThisDevice.kiffKind)
         try await takeSession(token, stopped: Task.isCancelled)
     }
+
+    /// The terms version in force at KIFF, read when the welcome shows its tick (`AppSignIn`).
+    func appTermsVersion() async throws -> String { try await kiff.appTermsVersion() }
 
     // MARK: Signing in from another phone (KIFF's pairing contract §5.8)
 
