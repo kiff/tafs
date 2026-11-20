@@ -59,13 +59,17 @@ class WatchActivity : ComponentActivity() {
   /** The ask a Reply continues, kept while the microphone permission is asked. */
   private var pendingReply: String? = null
   private var pendingListen = false
+  /** A one-tap start waiting on the permission: its screen shows Ready behind the dialog, and listening starts once allowed. */
+  private var pendingTalk = false
 
   /** The microphone, and on Wear OS 4 and later the result's notification, asked once, at the first ask. */
   private val microphone = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { granted ->
     val mic = granted[android.Manifest.permission.RECORD_AUDIO] == true
-    if (mic && pendingListen) startListening(pendingReply)
+    // A one-tap start begins listening, and its 30 s, only now: never behind the system's dialog.
+    if (mic && pendingListen) { if (!pendingTalk || model.listen(pendingReply)) startListening(pendingReply) }
     else if (!mic) model.notListening(Words.Watch.micNeeded)
     pendingListen = false
+    pendingTalk = false
   }
 
   /** v2's Type: the watch's keyboard; what's typed goes to the review. */
@@ -95,6 +99,11 @@ class WatchActivity : ComponentActivity() {
 
   private fun listen(replyTo: String? = null) {
     if (!model.listen(replyTo)) return
+    withMicrophone(replyTo)
+  }
+
+  /** Listening, once the microphone is allowed: asked for at the first ask, then started. */
+  private fun withMicrophone(replyTo: String?) {
     if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
       pendingReply = replyTo
       pendingListen = true
@@ -149,12 +158,12 @@ class WatchActivity : ComponentActivity() {
           confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
           cancelHaltAll = model::cancelHaltAll,
           // v2 opens the microphone's screen first, and listens on Start.
-          listen = { if (WATCH_V2) model.readyToRecord() else listen() },
+          listen = { if (WATCH_V2) talk() else listen() },
           closeVoice = { listener.cancel(); model.closeVoice() },
           retry = { lifecycleScope.launch { model.retry() } },
           open = model::open,
           hear = { ask -> speaker().say(ask.line ?: ask.words) },
-          reply = { ask -> if (WATCH_V2) model.readyToRecord(ask.id) else listen(ask.id) },
+          reply = { ask -> if (WATCH_V2) talk(ask.id) else listen(ask.id) },
           closeResult = model::closeResult,
           dismiss = model::dismissOutcome,
           start = { replyTo -> listen(replyTo) },
@@ -164,7 +173,7 @@ class WatchActivity : ComponentActivity() {
           delete = model::deleteReviewed,
           type = { typingFor = null; type() },
           quick = { model.review(it) },
-          messageTaf = { taf -> model.readyToRecord(tafId = taf) },
+          messageTaf = { taf -> talk(tafId = taf) },
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
@@ -234,7 +243,26 @@ class WatchActivity : ComponentActivity() {
     intent?.getByteArrayExtra(AskResults.EXTRA_ASK)?.let(WatchLink::decodeResult)?.let { model.took(it); model.open(it) }
     if (intent?.getBooleanExtra(EXTRA_LISTEN, false) == true) {
       intent.removeExtra(EXTRA_LISTEN)
-      listen()
+      if (WATCH_V2) talk() else listen()
+    }
+  }
+
+  /**
+   * One tap to talk (row 44, the owner's Galaxy Watch review): Ask Coach, a taf's microphone, Reply, the tile and the complication
+   * open their screen already listening, with the dictation shown as it comes; no second tap on Start. The screen's own rules
+   * stand: a watch without a screen lock, or locked, gets its line instead (`readyToRecord` → `NeedsLock`), and only a start
+   * that is its own names its taf ([tafId]).
+   */
+  private fun talk(replyTo: String? = null, tafId: String? = null) {
+    if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+      if (model.talk(replyTo, tafId)) startListening(replyTo)
+      return
+    }
+    // The first time: the screen shows Ready while the system asks for the microphone; listening starts once it's allowed.
+    model.readyToRecord(replyTo, tafId)
+    if (model.voice.value is WatchModel.Voice.Ready) {
+      pendingTalk = true
+      withMicrophone(replyTo)
     }
   }
 
