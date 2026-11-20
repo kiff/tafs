@@ -12,7 +12,9 @@ final class WatchDaysTests: XCTestCase {
       "state":"done","line":"Moved your call to 18:00.","words":"Done"},
      {"id":"wa_2","said":"And tell Ana","said_at":"2026-11-19T08:42:10.5Z","state":"working","line":"","words":"Working",
       "reply_to":"wa_1"},
-     {"said":"no id: left out"}]}
+     {"said":"no id: left out"},
+     {"id":"wa_3","said":"Refund A-1052 too","said_at":"2026-11-19T09:00:00Z","taf":{"id":"taf-ref","name":"Refunds"},
+      "state":"done","line":"Refunded.","words":"Done","kind":"taf"}]}
     """#
 
     /// The reads, held or answered as told.
@@ -40,7 +42,8 @@ final class WatchDaysTests: XCTestCase {
                        .init(days: [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)], today: "2026-11-19"),
                        "one without a date is left out; today is the account's")
         let turns = TafsCloud.watchTurns(decoding: Data(dayJSON.utf8))
-        XCTAssertEqual(turns.map(\.id), ["wa_1", "wa_2"], "oldest first, as sent; one without an id is left out")
+        XCTAssertEqual(turns.map(\.id), ["wa_1", "wa_2"],
+                       "oldest first, as sent; one without an id is left out, and a message to a taf (kind taf) is the taf's chat's")
         XCTAssertEqual(turns[0].taf, .init(id: "taf-cal", name: "Calendar"))
         XCTAssertEqual(turns[0].outcome, "Moved your call to 18:00.", "the taf's line when there is one")
         XCTAssertEqual(turns[1].outcome, "Working", "else tafs cloud's words for the state; an empty line is none")
