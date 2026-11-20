@@ -493,7 +493,8 @@ final class WatchRelayTests: XCTestCase {
         StubProtocol.responses["GET /v1/halt"] = (200, #"{"halt":{"state":"running","runtime":false,"kiff":false,"planque":false,"account":false}}"#)
         StubProtocol.responses["GET /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"halted","halted_at":"2026-10-24T12:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":1}}"#)
         let tafs = try await reading.tafs()
-        XCTAssertEqual(tafs, [WatchTaf(id: "depl_1", name: "Rae", line: Words.Taf.State.halted, halted: true)])
+        XCTAssertEqual(tafs, [WatchTaf(id: "depl_1", name: "Rae", line: Words.Taf.State.halted, halted: true, paused: false)],
+                       "halted, so not paused: its chat takes nothing")
     }
 
     func testATafsOwnHaltIsReadWhenTheAccountsCantBe() async throws {
@@ -696,18 +697,18 @@ final class WatchRelayTests: XCTestCase {
     func testReadMoreReadsTheWholeAnswerByTheRequestsId() async {
         let reading = kept(CurrentKeyOnly())
         let long = String(repeating: "Refunded A-1052. ", count: 40)
-        StubProtocol.responses["GET /v1/watch/asks/wa_9"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","text":"\#(long)","words":"Done"}}"#)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","text":"\#(long)","words":"Done"}}"#)
         let whole = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
         XCTAssertEqual(whole.coach?.text, long.trimmingCharacters(in: .whitespaces), "the whole `text`, not the line")
         XCTAssertEqual(whole.coach?.more, false)
         XCTAssertEqual(StubProtocol.sent.last?.url?.query, "full=1")
         // No `text` (the run hasn't finished, or the taf is no longer the person's to use): the rest is on the phone.
-        StubProtocol.responses["GET /v1/watch/asks/wa_9"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","words":"Done"}}"#)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","words":"Done"}}"#)
         let none = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
         XCTAssertEqual(none, WatchReply(.failed, line: Words.Watch.moreOnPhone))
         let coachs = await reading.askFull(WatchCoachTicket(chat: "taf-setup", session: "s1", sent: "m1"))
         XCTAssertEqual(coachs, WatchReply(.refused))
-        StubProtocol.responses["GET /v1/watch/asks/wa_9"] = (503, #"{"error":"unavailable"}"#)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (503, #"{"error":"unavailable"}"#)
         let unread = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
         XCTAssertEqual(unread, WatchReply(.failed, line: Words.Watch.moreOnPhone))
     }
