@@ -63,7 +63,12 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignInSheet(model: AppModel, onClose: () -> Unit) {
+fun SignInSheet(
+  model: AppModel,
+  onClose: () -> Unit,
+  /** Only "Sign in with your phone" (a tablet's second way under the new welcome's Continue, docs/onboarding.md): no KIFF code. */
+  phoneOnly: Boolean = false,
+) {
   // Closed by the person: the code is forgotten. A screen recreated meanwhile isn't closed, and goes on with the same code.
   val close = { model.endSignIn(); onClose() }
   var start by remember { mutableStateOf<DeviceStart?>(null) }
@@ -75,7 +80,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   // the person taps Continue. A phone signs in with KIFF only. One at a time, so a sign-in is never started twice.
   val split = offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)
   // Signing in with your other phone instead: its QR, whether the last one expired, and why it stopped.
-  var pairing by remember { mutableStateOf(split) }
+  var pairing by remember { mutableStateOf(split || phoneOnly) }
   // Signed in, either way: "You're connected." until the person taps Let's go.
   var connected by remember { mutableStateOf(false) }
   var offer by remember { mutableStateOf<bot.tafs.app.kiff.PairOffer?>(null) }
@@ -212,7 +217,13 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           OutlineButton(Words.Common.tryAgain, { attempt += 1 }, Modifier.fillMaxWidth())
         }
         }
-        if (split) {
+        if (phoneOnly) {
+          // Only the phone's way: KIFF's own is the welcome's Continue.
+          PairSignInContent(
+            offer, renewed, pairProblem, onTryAgain = { renewed = false; pairAttempt += 1 }, onKiff = null,
+            title = Words.SignIn.withPhone, lead = Words.SignIn.scanWithTafs,
+          )
+        } else if (split) {
           // A tablet: both halves side by side. The person's phone adds it from the right half, with no browser; KIFF's code is
           // made only once they tap Continue on the left, and going back to the phone forgets that code. A phone always signs in
           // with KIFF itself, so it isn't offered being added from another phone (the owner, 16 Nov), as on the iPhone.
@@ -280,6 +291,21 @@ internal fun SignedInCelebration(onGo: () -> Unit) {
     Text(Words.SignIn.connected, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
     Text(Words.SignIn.connectedLine, style = scaled(16, color = Theme.soft))
     PrimaryButton(Words.SignIn.letsGo, onGo, Modifier.fillMaxWidth())
+  }
+}
+
+/** Signed in inside tafs (docs/onboarding.md): the sign-in sheet's own celebration, in a sheet of its own, closed by Let's go. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun InAppSignedIn(onGo: () -> Unit) {
+  DriveSheet(
+    onDismissRequest = onGo,
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = Theme.background,
+  ) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp)) {
+      SignedInCelebration(onGo = onGo)
+    }
   }
 }
 
