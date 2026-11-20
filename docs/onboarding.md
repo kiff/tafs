@@ -8,7 +8,10 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
 
 1. **The welcome, with one tick.** Today's welcome (board 1, "tafs", the lead and the three points), with one tick
    above the buttons: "I agree to KIFF's Terms of Service and the tafs Terms", each name a link to its page. Below it,
-   privacy as two links, never ticked, and the age line. **Continue** takes the place of "Sign in with KIFF" and stays
+   privacy as two links, never ticked, and the age line: the person's country's own age where the law asks more
+   than 16 (`Onboarding.ageLine`, from the device's region and `MinimumAge.swift`, generated from
+   `app/strings/ages.json`). Before the switch is on, today's sign-in screen says a raised age too
+   (`Onboarding.raisedAgeLine` under the agreement: India, Indonesia, Brazil; nothing new anywhere else). **Continue** takes the place of "Sign in with KIFF" and stays
    off until the box is ticked (`ConsentTick`). The box is its own control, so tapping a link opens its page and
    never ticks it. Trying the sample data needs no account, so it never waits on the tick. The AI consent stays its
    own screen (`AIConsentView`).
