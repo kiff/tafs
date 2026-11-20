@@ -47,4 +47,17 @@ final class DirectionCharacterTests: XCTestCase {
         }
         XCTAssertEqual(entry.reason, "payee blocked")
     }
+
+    /// A Card rule's label can be a vendor's tool name: it's drawn on the Card beside its limit, so it carries none either.
+    func testACardRulesLabelCarriesNone() throws {
+        let entry = HomeJSON.entry(agent: "rae-k3f9", name: "Rae")
+            .replacingOccurrences(of: #""rules":[]"#, with: #""rules":[{"action":"refund","label":"Refund\u202E a payment","outside":"hold","window":"day"}]"#)
+        XCTAssertTrue(entry.contains("u202E"), "the fixture has a rule with a label")
+        let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.list([entry]).utf8))
+        let taf = KIFFMapping.taf(try XCTUnwrap(home.tafs.first), id: UUID(), owner: "You")
+        let labels = taf.card.rules.map(\.label)
+        XCTAssertFalse(labels.isEmpty)
+        XCTAssertTrue(labels.allSatisfy { !hasDirection($0) }, "\(labels)")
+        XCTAssertTrue(labels.contains("Refund a payment"))
+    }
 }

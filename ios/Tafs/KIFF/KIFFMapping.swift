@@ -99,7 +99,7 @@ enum KIFFMapping {
     static func taf(_ h: TafsCloud.HomeTaf, id: UUID, owner: String) -> Taf {
         func amount(_ a: TafsCloud.HomeTaf.Amount?) -> Money? { a.map { money($0.minor, unit: $0.unit, scale: $0.scale) } }
         func rule(_ r: TafsCloud.HomeTaf.Rule) -> CardRule {
-            CardRule(action: r.action, label: r.label, perAction: amount(r.perAction), perWindow: amount(r.perWindow),
+            CardRule(action: r.action, label: visible(r.label), perAction: amount(r.perAction), perWindow: amount(r.perWindow),
                      countPerWindow: r.countPerWindow, window: window(r.window, r.windowWords),
                      outside: r.outside == "refuse" ? .refuse : .hold, extraRoom: amount(r.extraRoom),
                      baseLimit: amount(r.baseLimit), roomEnds: r.roomWindowEnd)
