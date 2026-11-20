@@ -58,6 +58,8 @@ import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Mascot
 import bot.tafs.app.design.Meter
 import bot.tafs.app.design.OutlineButton
+import bot.tafs.app.design.PrimaryButton
+import androidx.compose.ui.platform.testTag
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.design.StateChip
 import bot.tafs.app.design.TafAvatar
@@ -96,6 +98,10 @@ fun HomeView(
   onOwnWords: (() -> Unit)? = null,
   /** A mission's Log, from its row on the list filtered to its label (Missions v2.1); null where there's none to open. */
   onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
+  /** How tafs works (docs/onboarding.md): the three cards again, from the first Home; null with the new onboarding off. */
+  onHowItWorks: (() -> Unit)? = null,
+  /** Whether the new onboarding is on: Home with no taf is then the first Home. */
+  onboarding: Boolean = bot.tafs.app.model.ONBOARDING_ON,
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -250,7 +256,19 @@ fun HomeView(
             } else {
               // No taf and no job listed: the owner's board 2, above Home's own line.
               bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NoTafsArt(it) }
-              Panel {
+              val firstHome = bot.tafs.app.model.showsFirstHome(state.mayUseCoach, onboarding) && onOwnWords != null
+              if (firstHome && onOwnWords != null) {
+                // The first Home (docs/onboarding.md): tafs cloud's line first, else the app's; Ask Coach; the cards again.
+                val (title, lead) = bot.tafs.app.model.firstHomeLines(recipes?.home?.words)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                  Panel {
+                    Text(title, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                    lead?.let { Text(it, style = scaled(14, color = Theme.soft)) }
+                  }
+                  PrimaryButton(Words.Coach.ask, onOwnWords, Modifier.testTag(HOME_ASK_COACH))
+                  onHowItWorks?.let { OutlineButton(Words.Onboarding.howItWorks, it, Modifier.fillMaxWidth().testTag(HOME_HOW_IT_WORKS)) }
+                }
+              } else Panel {
                 val words = recipes?.home?.words?.takeIf { it.isNotBlank() }
                 if (words != null) {
                   // tafs cloud's empty line, whoever reads it: it has no words from the app.
@@ -262,8 +280,9 @@ fun HomeView(
                   Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
                 }
               }
-              // With no job listed, "Say it in your own words" under the line: there's always a way to Coach.
-              onOwnWords?.takeIf { state.mayUseCoach }?.let { open ->
+              // With no job listed, "Say it in your own words" under the line: there's always a way to Coach (the first Home's
+              // Ask Coach is that way).
+              if (!firstHome) onOwnWords?.takeIf { state.mayUseCoach }?.let { open ->
                 Box(Modifier.padding(top = 8.dp)) { OwnWordsRow(recipes?.home, open) }
               }
             }
@@ -491,3 +510,6 @@ fun DiscardSetup(agent: String, words: bot.tafs.app.kiff.HomeDiscardWords, onDis
     )
   }
 }
+
+internal const val HOME_ASK_COACH = "home.ask_coach"
+internal const val HOME_HOW_IT_WORKS = "home.how_it_works"

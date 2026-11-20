@@ -55,3 +55,14 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   device-code sign-in. A link with another state is `AppSignInRefused` `state_mismatch` and never reaches KIFF;
   KIFF's `access_denied` is its own refusal. The welcome's words for each refusal, and Continue calling it, come with
   the three cards and the first Home.
+- **The three cards** (`OnboardingCards`, step 3): Your tafs, A Card is your permission, You stay in control, with
+  Skip, Next and Get started (`OnboardingSteps`). Each picture is Android's own view over the sample's words: Home's
+  `TafRow`s, the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies) and a Needs you card. The
+  pictures are hidden from TalkBack. The last card says the screen lock (`onboarding.control_lead_android`). They
+  show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
+- **The first Home** (`HomeView`, step 4): with no taf and no recipes listed, for anyone who may use Coach. It shows
+  board 2, tafs cloud's empty line alone (the app's "No tafs yet" and `onboarding.home_lead` only when it sends
+  none, `firstHomeLines`), **Ask Coach** and **How tafs works**.
+- **How tafs works** (`HowTafsWorksSheet`), from the first Home and from Account's Legal: the three cards, each
+  opening where it's tapped, and the four legal pages titled as their pages (`onboarding.row_*`, never the tick
+  line's link words).

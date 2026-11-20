@@ -41,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -106,9 +107,13 @@ fun SettingsSheet(
   onFocused: () -> Unit = {},
   /** Files, where it's on (`LocalFiles`): its row opens the account's files. */
   onFiles: () -> Unit = {},
+  /** Whether the new onboarding is on: Legal then opens How tafs works too (docs/onboarding.md). */
+  onboarding: Boolean = bot.tafs.app.model.ONBOARDING_ON,
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
+  var howItWorks by rememberSaveable { mutableStateOf(false) }
+  if (howItWorks) HowTafsWorksSheet(onClose = { howItWorks = false })
   val context = LocalContext.current
   val scroll = rememberScrollState()
   var confirming by remember { mutableStateOf<SignOut?>(null) }
@@ -236,6 +241,8 @@ fun SettingsSheet(
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
           Section(Words.Settings.legal) {
+            // How tafs works (docs/onboarding.md, off): the three cards again, and KIFF's and tafs's pages.
+            if (onboarding && state.mode == Mode.kiff) Action(Words.Onboarding.howItWorks, Theme.amberText) { howItWorks = true }
             Action(bot.tafs.app.model.Legal.label(Words.Settings.terms), Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.terms()) }
             Action(bot.tafs.app.model.Legal.label(Words.Settings.privacyPolicy), Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.privacy()) }
           }
