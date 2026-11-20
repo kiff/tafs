@@ -2959,14 +2959,17 @@ class AppModel(
    */
   suspend fun reconnect(grant: Grant) { signInAgain(grant) }
 
-  /** Signs a connection in again on itself (planque's approve): what came of it, or null when nothing was asked. */
-  private suspend fun signInAgain(grant: Grant): Connected? {
+  /**
+   * Signs a connection in again on itself (planque's approve), or with a new sign-in when planque can't on its old account
+   * ([fresh], or the grant's own `reconnect: fresh`): what came of it, or null when nothing was asked.
+   */
+  private suspend fun signInAgain(grant: Grant, fresh: Boolean = false): Connected? {
     // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
     if (grant.signsInThroughProvider) { note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant)); return null }
     // KIFF's words for its profile, which the approval signs: read now, as the approval card reads them, wherever this starts.
     loadProfileWords(grant.id)
     _state.value.profileWordsErrors[grant.id]?.let { note(grant.id, it); return null }
-    val result = connect(grant.id, grant.id, grant.digest, again = true)
+    val result = connect(grant.id, grant.id, grant.digest, again = true, fresh = fresh || grant.reconnectsFresh)
     if (result is Connected.Failed) note(grant.id, result.why)
     return result
   }
@@ -2982,12 +2985,14 @@ class AppModel(
     if (_state.value.grants.none { it.id == ask.grant }) refreshConnections()
     val grant = _state.value.grants.firstOrNull { it.id == ask.grant }
     if (grant == null) { note(ask.grant, Words.Common.notDoneUnconfirmed); loadTafSetup(tafId); return }
-    signInAgain(grant) ?: return
+    signInAgain(grant, fresh = ask.fresh) ?: return
     refreshConnections()
-    if (_state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true && ask.doneWords.isNotBlank()) {
-      _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to ask.doneWords)) }
-    }
-    loadTafSetup(tafId)
+    val connected = _state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true
+    // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
+    loadTafSetup(tafId, connectedAgain = if (connected && ask.fresh) ask.grant else null)
+    val named = if (connected && ask.fresh) _state.value.tafSetups[tafId]?.connectedAgain?.takeIf { it.grant == ask.grant }?.words else null
+    val words = named ?: ask.doneWords.takeIf { it.isNotBlank() }
+    if (connected && words != null) _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to words)) }
   }
 
   /** Reads again what a live update names (see [changed]). */
@@ -3125,13 +3130,13 @@ class AppModel(
     } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(timeZoneError = ErrorWords.of(e)) } }
   }
 
-  suspend fun loadTafSetup(tafId: String) {
+  suspend fun loadTafSetup(tafId: String, connectedAgain: String? = null) {
     val id = _state.value.taf(tafId)?.cloudId ?: return
     val gen = shownGeneration()
     try {
       planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
       val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
-      val setup = cloud.setupView(id, proof).let { v -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
+      val setup = cloud.setupView(id, proof, connectedAgain).let { v -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
       if (gen == shownGeneration()) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }
@@ -4938,6 +4943,8 @@ class AppModel(
     cardId: String, grantId: String, shownDigest: String?, draftId: String? = null, shownDraft: String? = null,
     /** Sign in again (gap 13): a connected grant goes through its vendor's sign-in again, kept apart until this phone confirms it. */
     again: Boolean = false,
+    /** A new sign-in (`connect-fresh`) for a connection planque can't sign in again on its old account. */
+    fresh: Boolean = false,
   ): Connected {
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) {
@@ -5062,7 +5069,10 @@ class AppModel(
         }
       }
       try {
-        val approved = inWindow { planque.approve(grant, words) } ?: return Connected.Stopped
+        // A connection planque can't sign in again on its old account starts a new sign-in instead, which brings back every
+        // connection signed out on it: never a reconnect it would refuse first.
+        val approved = inWindow { if (fresh || grant.reconnectsFresh) planque.connectFresh(grant, words) else planque.approve(grant, words) }
+          ?: return Connected.Stopped
         val url = approved.signInUrl
         if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
           // Signed in at the provider already (the person's account there is held): no second sign-in, never a failure. This

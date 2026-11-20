@@ -977,23 +977,89 @@ describe("tafs cloud", () => {
   // taf names its own signed-out connection, and the app signs that same grant in again.
   it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
     const w = world();
-    const setup = async (status: string, lang = "en") => {
+    const setup = async (status: string, lang = "en", reconnect?: string) => {
       const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, requestContext: { http: { method: "GET" } },
         headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
         { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
           if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
-            { id: "grt_gmail", status, vendor: "Gmail", request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
+            { id: "grt_gmail", status, vendor: "Gmail", ...(reconnect ? { reconnect } : {}), request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
           ] }), { status: 200 });
           return depsOf(w).fetch!(url, init);
         }) as Deps["fetch"] });
-      return JSON.parse(r.body) as { connect_again?: Record<string, string> };
+      return JSON.parse(r.body) as { connect_again?: Record<string, string>; connections?: Array<Record<string, unknown>> };
     };
     expect((await setup("needs_reconnect")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again",
       words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
     expect((await setup("connected")).connect_again).toBeUndefined();
+    // planque can't sign this one in again on the same account: a new sign-in, which brings back every taf that used it.
+    // The app calls connect-fresh straight away, never a reconnect bound to be refused first.
+    expect((await setup("needs_reconnect", "en", "fresh")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again", fresh: true,
+      words: "Gmail no longer takes the old sign-in, so Rae can't use it. Connect again with a new sign-in: one sign-in brings back every taf that used it.",
+      done_words: "Gmail is connected again on the new sign-in. Every taf that used it can use it again." });
+    expect((await setup("needs_reconnect", "en", "same")).connect_again).not.toHaveProperty("fresh");
+    expect((await setup("needs_reconnect", "de", "fresh")).connect_again?.words).toContain("neuen Anmeldung");
+    // A connected grant planque marks fresh asks nothing, and its row isn't fresh either.
+    const connectedFresh = await setup("connected", "en", "fresh");
+    expect(connectedFresh.connect_again).toBeUndefined();
+    expect(connectedFresh.connections?.[0]).not.toHaveProperty("fresh");
+    expect((await setup("needs_reconnect", "en", "fresh")).connections?.[0]).toMatchObject({ reconnect: true, fresh: true });
     contract("taf-setup-connected", "GET /v1/tafs/{id}/setup for someone who manages the taf, with one app connected (Gmail): its connection as the Setup tab draws it.", await setup("connected"));
     contract("taf-setup-reconnect", "GET /v1/tafs/{id}/setup when the taf's own connection's sign-in has expired: the connection and the taf's Connect again.", await setup("needs_reconnect"));
+    contract("taf-setup-reconnect-fresh", "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true.", await setup("needs_reconnect", "en", "fresh"));
+  });
+
+  // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
+  // sign-in to the wrong mailbox shows at once (PM, 20 Nov). Without the account's name, nothing: the app keeps the done words.
+  it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {
+    const w = world();
+    // failAccessRead: the nth read of the person's access in the request fails (KIFF down then).
+    const read = async (grant: Record<string, unknown>, query = "connected_again=grt_gmail", lang = "en", failAccessRead = 0) => {
+      let accessReads = 0;
+      const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, rawQueryString: query, requestContext: { http: { method: "GET" } },
+        headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
+        { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+          if (url.endsWith("/v1/me/access") && ++accessReads === failAccessRead) return new Response(JSON.stringify({ error: "down" }), { status: 503 });
+          if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
+            { id: "grt_gmail", vendor: "Gmail", request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] }, ...grant },
+          ] }), { status: 200 });
+          return depsOf(w).fetch!(url, init);
+        }) as Deps["fetch"] });
+      return JSON.parse(r.body) as { connected_again?: Record<string, string> };
+    };
+    const connected = { status: "connected", account_name: "ana@example.com", used_by: ["Rae", "Win-back offers", "Overdue invoice reminders"] };
+    // Only the tafs this person may see are named; the others on the account are counted (Win-back and Overdue aren't tafs here).
+    expect((await read(connected)).connected_again).toEqual({ grant: "grt_gmail",
+      words: "Gmail is connected again as ana@example.com. These tafs use it now: Rae and 2 tafs you don't see. If that isn't the right account, remove its access in Connect apps and connect the right one." });
+    expect((await read({ ...connected, used_by: ["Rae"] })).connected_again?.words).toContain("This taf uses it now: Rae.");
+    // Max is another account's taf: counted, never named.
+    expect((await read({ ...connected, used_by: ["Rae", "Max"] })).connected_again?.words).toContain("These tafs use it now: Rae and 1 taf you don't see.");
+    expect((await read({ ...connected, used_by: ["Overdue invoice reminders"] })).connected_again?.words).toContain("This taf uses it now: 1 taf you don't see.");
+    expect((await read(connected, "connected_again=grt_gmail", "fr")).connected_again?.words).toContain("en tant que ana@example.com");
+    expect((await read(connected, "connected_again=grt_gmail", "pl")).connected_again?.words).toContain("Rae i 2 tafy, których nie widzisz");
+    // Of this account: a taf the reader may neither use nor oversee, and one being removed, are counted, never named.
+    const BOOKS = "taf-b00c5000000000000000b", OLD = "taf-01d00000000000000000d";
+    w.tafs.held.set(`t_acme#${BOOKS}`, { id: BOOKS, name: "Books", job: "refunds", kiffAgent: "books", nameClaim: "claim-books", created: "2026-10-15T09:00:00Z" });
+    w.tafs.held.set(`t_acme#${OLD}`, { id: OLD, name: "Old refunds", job: "refunds", kiffAgent: "old", nameClaim: "claim-old", created: "2026-10-15T09:00:00Z", removing: true } as Taf);
+    w.account.access = { rae: { use: true, oversee: true, manage: true }, books: { use: false, oversee: false, manage: false }, old: { use: true, oversee: true, manage: true } };
+    expect((await read({ ...connected, used_by: ["Rae", "Books", "Old refunds"] })).connected_again?.words)
+      .toContain("These tafs use it now: Rae and 2 tafs you don't see.");
+    // The reader's access can't be read: nothing is named, every taf is counted (fail closed).
+    // The reader's access can't be read for the names (the page's own read went through): nothing is named, every taf is
+    // counted. Fails closed.
+    w.account.asked = [];
+    await read({ ...connected, used_by: ["Rae", "Books"] });
+    const reads = w.account.asked.filter((u) => u.endsWith("/v1/me/access")).length;
+    expect((await read({ ...connected, used_by: ["Rae", "Books"] }, "connected_again=grt_gmail", "en", reads)).connected_again?.words)
+      .toContain("These tafs use it now: 2 tafs you don't see.");
+    w.account.asked = undefined;
+    w.account.access = undefined;
+    // Not asked, another grant, not connected yet, or no account name: no words.
+    expect((await read(connected, "")).connected_again).toBeUndefined();
+    expect((await read(connected, "connected_again=grt_other")).connected_again).toBeUndefined();
+    expect((await read({ ...connected, status: "needs_reconnect" })).connected_again).toBeUndefined();
+    expect((await read({ ...connected, account_name: undefined })).connected_again).toBeUndefined();
+    expect((await read({ ...connected, used_by: [] })).connected_again).toBeUndefined();
   });
 
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {

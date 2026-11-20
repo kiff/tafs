@@ -53,7 +53,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
-import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, fullAnswer, tafLine, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
@@ -5152,10 +5152,28 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   // A connection whose sign-in the vendor no longer takes: the taf's own Connect again, naming its grant, so the app
   // signs that same connection in again (planque's approve) and the taf keeps its tools and Card. One job per view:
   // never "go to Connect apps".
+  // One planque can't sign in again on the same account (`reconnect: fresh`) is a new sign-in instead, which brings back
+  // every connection signed out on that account: the app calls planque's connect-fresh, never a reconnect bound to fail.
   const out = setup.connections.find((c) => c.reconnect);
   const w = wordsIn(langOf(event));
+  // Read again after a fresh sign-in (`?connected_again=<grant>`): which account it is now on and which tafs use it, as
+  // planque names them, so a sign-in to the wrong account shows at once. None without the account's name: the app keeps
+  // connect_again's done words.
+  const againID = new URLSearchParams(event.rawQueryString ?? "").get("connected_again");
+  const again = againID ? grants.grants.find((g) => g.id === againID && g.status === "connected") : undefined;
+  const againAccount = again?.account_name?.trim();
+  const againTafs = (again?.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim());
+  // Only the tafs this person may see are named; the others on the account are counted, never named (PM, 20 Nov).
+  const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
+    .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
+  const shownTafs = againTafs.filter((n) => seen.has(n));
   return { ...setup,
-    ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title, words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) } } : {}),
+    ...(again && againAccount && againTafs.length
+      ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, shownTafs, againTafs.length - shownTafs.length) } } : {}),
+    ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
+      ...(out.fresh
+        ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
+        : { words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }

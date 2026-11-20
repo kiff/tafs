@@ -1,0 +1,62 @@
+{
+  "about": "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "connections": [
+      {
+        "id": "grt_gmail",
+        "name": "Gmail",
+        "status": "needs_reconnect",
+        "status_words": "Sign in again",
+        "reconnect": true,
+        "fresh": true,
+        "action_count": 1,
+        "workflow_words": "Ask Coach to set its workflow",
+        "action_words": "1 action",
+        "actions": [
+          {
+            "name": "fetch_emails",
+            "title": "Fetch emails",
+            "limits": [
+              "See its Card"
+            ],
+            "steps": [],
+            "step_words": ""
+          }
+        ],
+        "steps": [],
+        "workflow_steps": [],
+        "running": false,
+        "stats": {
+          "calls": 0,
+          "done": 0,
+          "held": 0,
+          "complete": true,
+          "activity_query": "tools=fetch_emails&from=2026-10-22T10%3A00%3A00.000Z",
+          "words": "0 calls · 0 done · 0 held in the last 7 days"
+        }
+      }
+    ],
+    "workflow": {
+      "title": "Workflow",
+      "summary": "Ask Coach to set its workflow",
+      "steps": []
+    },
+    "memory": {
+      "count": 0,
+      "title": "0 notes"
+    },
+    "versions": {
+      "title": "Changes to how it runs",
+      "summary": "Runs its original definition",
+      "earlier": 0
+    },
+    "connect_again": {
+      "grant": "grt_gmail",
+      "app": "Gmail",
+      "title": "Connect again",
+      "fresh": true,
+      "words": "Gmail no longer takes the old sign-in, so Rae can't use it. Connect again with a new sign-in: one sign-in brings back every taf that used it.",
+      "done_words": "Gmail is connected again on the new sign-in. Every taf that used it can use it again."
+    }
+  }
+}

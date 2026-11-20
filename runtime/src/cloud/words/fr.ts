@@ -104,6 +104,13 @@ export const fr: Words = {
   connect_again_title: "Se reconnecter",
   connect_again_words: (app: string, taf: string) => `La connexion à ${app} a expiré, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous pour vous identifier.`,
   connect_again_done: (app: string, taf: string) => `${app} est de nouveau connecté. ${taf} peut l'utiliser.`,
+  connect_again_fresh_words: (app: string, taf: string) => `${app} n'accepte plus l'ancienne connexion, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous avec une nouvelle connexion : une seule connexion rétablit chaque taf qui l'utilisait.`,
+  connect_again_fresh_done: (app: string) => `${app} est de nouveau connecté avec la nouvelle connexion. Chaque taf qui l'utilisait peut à nouveau s'en servir.`,
+  connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
+    const n = others, all = tafs.length + others;
+    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que vous ne voyez pas" : `${n} tafs que vous ne voyez pas`] : [])]);
+    return `${app} est de nouveau connecté en tant que ${account}. ${all === 1 ? "Ce taf l'utilise" : "Ces tafs l'utilisent"} désormais : ${items}. Si ce n'est pas le bon compte, retirez son accès dans « Connecter des apps » et connectez le bon.`;
+  },
   connect_not_needed: (taf: string) => `${taf} n'utilise pas cette app. Coach peut la configurer pour ${taf}.`,
   connect_tafs_unread: "Vos tafs n'ont pas pu être lus pour l'instant, donc rien n'a été connecté. Réessayez dans un instant.",
   check_key_not_ready: "sa clé n'était pas encore prête ; il vérifie de nouveau la prochaine fois",

@@ -192,6 +192,11 @@ final class PlanqueClient {
         /// The name of the taf it was made for, as planque keeps it: what a removed taf's
         /// connection is still called.
         var agentName: String?
+        /// How planque signs it in again once signed out: `fresh`, a new sign-in that can't be compared with the old
+        /// account and brings back every connection signed out on it (`connect-fresh`); else, or absent, on the same account.
+        var reconnect: String? = nil
+        /// Sign in again is a new sign-in (`connect-fresh`), never a reconnect planque would refuse.
+        var reconnectsFresh: Bool { reconnect == "fresh" }
         /// The Slack bot connection a Slack door listens through.
         var slackBot: Bool { entry == Self.slackBotEntry || (entry == nil && request.connector?.toolkit == "slackbot") }
         static let slackBotEntry = "connector:composio:slackbot"
@@ -203,7 +208,7 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", reconnect }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
@@ -496,6 +501,13 @@ final class PlanqueClient {
     /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
     func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
         try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
+    }
+
+    /// A new sign-in for a signed-out connection planque can't sign in again on its old account (`reconnect: fresh`):
+    /// the first step in place of approve, with the same body, signer and answer. Its confirm brings back every
+    /// connection signed out on that account (`grants`).
+    func connectFresh(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
+        try await send("POST", "grants/\(escaped(grant.id))/connect-fresh", body: try Self.approveBody(grant, words: words))
     }
 
     /// Approves `grantID` with the body tafs cloud built for it (kiff/tafs#413): sent as it is,

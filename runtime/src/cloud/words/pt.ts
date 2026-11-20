@@ -104,6 +104,13 @@ export const pt: Words = {
   connect_again_title: "Ligar novamente",
   connect_again_words: (app: string, taf: string) => `O início de sessão no ${app} expirou, por isso ${taf} não o pode usar. Ligue novamente para iniciar sessão.`,
   connect_again_done: (app: string, taf: string) => `${app} voltou a estar ligado. ${taf} pode usá-lo.`,
+  connect_again_fresh_words: (app: string, taf: string) => `O ${app} já não aceita o início de sessão anterior, por isso ${taf} não o pode usar. Ligue novamente com um novo início de sessão: um só início de sessão recupera cada taf que o usava.`,
+  connect_again_fresh_done: (app: string) => `O ${app} voltou a estar ligado com o novo início de sessão. Cada taf que o usava pode voltar a usá-lo.`,
+  connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
+    const n = others, all = tafs.length + others;
+    const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que não vê" : `${n} tafs que não vê`] : [])]);
+    return `O ${app} voltou a estar ligado como ${account}. ${all === 1 ? "Este taf usa-o" : "Estes tafs usam-no"} agora: ${items}. Se não for a conta certa, remova o acesso em «Ligar apps» e ligue a conta certa.`;
+  },
   connect_not_needed: (taf: string) => `${taf} não usa esta app. O Coach pode configurá-la para ${taf}.`,
   connect_tafs_unread: "Não foi possível ler os seus tafs agora, por isso nada foi ligado. Tente novamente daqui a pouco.",
   check_key_not_ready: "a sua chave ainda não estava pronta; volta a verificar da próxima vez",

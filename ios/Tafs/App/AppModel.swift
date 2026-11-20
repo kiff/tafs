@@ -135,14 +135,14 @@ final class AppModel: ObservableObject {
             if gen == accountGeneration && timeZoneQuery == query { timeZones = choices }
         } catch { if gen == accountGeneration { timeZoneError = error.localizedDescription } }
     }
-    func loadTafSetup(_ id: UUID) async {
+    func loadTafSetup(_ id: UUID, connectedAgain: String? = nil) async {
         guard let taf = cloudTaf(for: id) else { return }
         let gen = accountGeneration, presentation = presentationGeneration
         do {
             let signer = self.signer
             planque.tenant = kiffTenant
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
-            let view = try await cloud.setupView(taf.id, proof: proof)
+            let view = try await cloud.setupView(taf.id, proof: proof, connectedAgain: connectedAgain)
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
             tafSetups[id] = view; tafSetupErrors[id] = nil
         } catch { if gen == accountGeneration, presentation == presentationGeneration { tafSetupErrors[id] = error.localizedDescription } }
@@ -6662,14 +6662,14 @@ final class AppModel: ObservableObject {
     /// approval as Coach's card, behind one Face ID, then the vendor's own page. Signed in
     /// only once planque answers connected; otherwise the connection says why.
     /// Resolve the source id to a freshly read signed grant for the device's approval.
-    func reconnectApp(_ id: String) async {
+    func reconnectApp(_ id: String, fresh: Bool = false) async {
         let gen = accountGeneration
         await refreshConnections()
         guard gen == accountGeneration, let grant = grants.first(where: { $0.id == id }) else { return }
-        await reconnect(grant)
+        await reconnect(grant, fresh: fresh)
     }
 
-    func reconnect(_ grant: PlanqueClient.Grant) async {
+    func reconnect(_ grant: PlanqueClient.Grant, fresh: Bool = false) async {
         lastError = nil
         reconnectErrors[grant.id] = nil
         shownTermsChanged = false
@@ -6686,7 +6686,7 @@ final class AppModel: ObservableObject {
             reconnectErrors[grant.id] = why
             return
         }
-        let done = await connect(grantID: grant.id, shown: grant.digest, again: true)
+        let done = await connect(grantID: grant.id, shown: grant.digest, again: true, fresh: fresh || grant.reconnectsFresh)
         if done?.connected != true {
             reconnectErrors[grant.id] = lastError ?? quietStop ?? Words.Connect.nothingSignedIn
             lastError = nil
@@ -6697,10 +6697,12 @@ final class AppModel: ObservableObject {
     /// reads the taf's page. Once planque says it's connected, the taf shows tafs cloud's `done_words`.
     func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
         connectedAgain[tafID] = nil
-        await reconnectApp(again.grant)
+        await reconnectApp(again.grant, fresh: again.fresh)
         let connected = grants.first { $0.id == again.grant }?.connected == true
-        await loadTafSetup(tafID)
-        if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }
+        // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
+        await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)
+        let named = connected && again.fresh ? tafSetups[tafID]?.connected_again.flatMap { $0.grant == again.grant && !$0.words.isEmpty ? $0.words : nil } : nil
+        if connected, let words = named ?? (again.doneWords.isEmpty ? nil : again.doneWords) { connectedAgain[tafID] = words }
     }
 
     /// tafs cloud's words for a taf whose connection was just connected again, by taf.
@@ -6845,7 +6847,8 @@ final class AppModel: ObservableObject {
     /// signed.
     /// `again`: sign in again (gap 13). A connected grant goes through its vendor's sign-in again,
     /// kept apart by planque until this phone confirms it.
-    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false) async -> PlanqueClient.Grant? {
+    func connect(grantID: String, shown: String?, draftID: String? = nil, shownDraft: String? = nil, again: Bool = false,
+                 fresh: Bool = false) async -> PlanqueClient.Grant? {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")
             return nil
@@ -6995,7 +6998,12 @@ final class AppModel: ObservableObject {
 
         let connected: PlanqueClient.Grant
         do {
-            let approved = try await inWindow { try await planque.approve(grant, words: words) }
+            // A connection planque can't sign in again on its old account starts a new sign-in instead (`connect-fresh`),
+            // which brings back every connection signed out on it: never a reconnect it would refuse first.
+            let approved = try await inWindow { () async throws -> PlanqueClient.Approved in
+                if fresh || grant.reconnectsFresh { return try await planque.connectFresh(grant, words: words) }
+                return try await planque.approve(grant, words: words)
+            }
             guard let signInURL = approved.signInURL else {
                 // planque holds a fresh sign-in and waits for this phone to confirm it with its
                 // one-use code: confirmed here, never a second sign-in, and connected only once

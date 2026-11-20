@@ -67,14 +67,35 @@ import java.net.URLEncoder
   val memory: MemorySummary = MemorySummary(), val versions: VersionSummary = VersionSummary(), @SerialName("connections_error") val connectionsError: String? = null,
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException> = emptyList(),
   /** The taf's own Connect again, when tafs cloud says a connection's sign-in expired (docs/api.md): the connection it names, in its words. */
-  @SerialName("connect_again") @Serializable(with = LenientConnectAgain::class) val connectAgain: ConnectAgain? = null)
+  @SerialName("connect_again") @Serializable(with = LenientConnectAgain::class) val connectAgain: ConnectAgain? = null,
+  /** Read after a fresh sign-in (`?connected_again=`): which account it went to and which tafs use it now, in tafs cloud's words. */
+  @SerialName("connected_again") @Serializable(with = LenientConnectedAgain::class) val connectedAgain: ConnectedAgain? = null)
+
+/** After a fresh sign-in, tafs cloud's words naming the account it went to and the tafs that use it now. */
+@Serializable data class ConnectedAgain(val grant: String = "", val words: String = "")
+
+/** Read leniently: another shape is none, and the app keeps the done words. */
+object LenientConnectedAgain : kotlinx.serialization.KSerializer<ConnectedAgain?> {
+  override val descriptor = kotlinx.serialization.json.JsonElement.serializer().descriptor
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): ConnectedAgain? {
+    val d = decoder as kotlinx.serialization.json.JsonDecoder
+    val e = d.decodeJsonElement()
+    return runCatching { d.json.decodeFromJsonElement(ConnectedAgain.serializer(), e) }.getOrNull()?.takeIf { it.grant.isNotBlank() && it.words.isNotBlank() }
+  }
+  override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: ConnectedAgain?) {
+    val j = encoder as kotlinx.serialization.json.JsonEncoder
+    j.encodeJsonElement(if (value == null) kotlinx.serialization.json.JsonNull else j.json.encodeToJsonElement(ConnectedAgain.serializer(), value))
+  }
+}
 
 /**
  * A taf's own Connect again, as tafs cloud sends it: the connection ([grant]) to sign in again, the app's name, the button's
  * [title], the line above it, and what's said once planque says it's connected again ([doneWords]).
  */
 @Serializable data class ConnectAgain(val grant: String = "", val app: String = "", val title: String = "", val words: String = "",
-  @SerialName("done_words") val doneWords: String = "")
+  @SerialName("done_words") val doneWords: String = "",
+  /** planque can't sign it in again on the same account: a new sign-in (`connect-fresh`), never a reconnect first. */
+  val fresh: Boolean = false)
 
 /** Read leniently: a shape this build doesn't know is no Connect again, never a Setup page that can't be read. */
 object LenientConnectAgain : kotlinx.serialization.KSerializer<ConnectAgain?> {
@@ -103,7 +124,9 @@ suspend fun TafsCloud.runsPage(id: String, cursor: String? = null, etag: String?
   val res = representation("/v1/tafs/${encoded(id)}/work/runs?limit=$limit" + (cursor?.let { "&cursor=${encoded(it)}" } ?: ""), etag)
   return Representation(if (res.status == 304) null else KiffClient.json.decodeFromString<TafRunsPage>(String(res.body)), res.headers["etag"] ?: etag)
 }
-suspend fun TafsCloud.setupView(id: String, proof: String?): TafSetup = KiffClient.json.decodeFromString(String(representation(
-  "/v1/tafs/${encoded(id)}/setup", extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap()).body))
+/** [connectedAgain]: the grant a fresh sign-in just brought back, so the page says which account it's on now. */
+suspend fun TafsCloud.setupView(id: String, proof: String?, connectedAgain: String? = null): TafSetup = KiffClient.json.decodeFromString(String(representation(
+  "/v1/tafs/${encoded(id)}/setup" + (connectedAgain?.let { "?connected_again=${encoded(it)}" } ?: ""),
+  extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap()).body))
 suspend fun TafsCloud.phoneAlerts(token: String): PhoneAlerts = KiffClient.json.decodeFromString(String(representation("/v1/push", extra = mapOf("Tafs-Device-Token" to token)).body))
 suspend fun TafsCloud.timeZones(query: String): List<TimeZoneChoice> = KiffClient.json.decodeFromString<TimeZoneChoices>(String(representation("/v1/time-zones?q=${encoded(query)}").body)).zones

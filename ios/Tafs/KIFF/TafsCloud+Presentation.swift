@@ -72,6 +72,21 @@ extension TafsCloud {
         var card_unit_exceptions: [CardUnitException]? = nil
         /// The taf's own Connect again, when a connection's sign-in expired (docs/api.md).
         var connect_again: ConnectAgain? = nil
+        /// Read after a fresh sign-in (`?connected_again=`): which account it went to and which tafs use it now.
+        var connected_again: ConnectedAgain? = nil
+    }
+    /// After a fresh sign-in, tafs cloud's words naming the account it went to and the tafs that use it now, so a sign-in
+    /// to the wrong account shows at once. Read leniently: another shape reads as none, and the app keeps the done words.
+    struct ConnectedAgain: Decodable, Equatable {
+        var grant = ""
+        var words = ""
+        init(grant: String = "", words: String = "") { self.grant = grant; self.words = words }
+        enum CodingKeys: String, CodingKey { case grant, words }
+        init(from decoder: Decoder) throws {
+            guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+            grant = (((try? c.decodeIfPresent(String.self, forKey: .grant)) ?? nil) ?? "")
+            words = (((try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
     }
     /// A taf's own Connect again (docs/api.md): the connection (`grant`) whose sign-in the vendor no longer
     /// takes, and tafs cloud's words for it. The app signs that same connection in again, so the taf keeps
@@ -83,15 +98,18 @@ extension TafsCloud {
         var title = ""
         var words = ""
         var doneWords = ""
+        /// planque can't sign it in again on the same account: a new sign-in (`connect-fresh`), never a reconnect first.
+        var fresh = false
         var usable: Bool { !grant.isEmpty && !title.isEmpty && !words.isEmpty }
-        init(grant: String = "", app: String = "", title: String = "", words: String = "", doneWords: String = "") {
-            self.grant = grant; self.app = app; self.title = title; self.words = words; self.doneWords = doneWords
+        init(grant: String = "", app: String = "", title: String = "", words: String = "", doneWords: String = "", fresh: Bool = false) {
+            self.grant = grant; self.app = app; self.title = title; self.words = words; self.doneWords = doneWords; self.fresh = fresh
         }
-        enum CodingKeys: String, CodingKey { case grant, app, title, words, doneWords = "done_words" }
+        enum CodingKeys: String, CodingKey { case grant, app, title, words, doneWords = "done_words", fresh }
         init(from decoder: Decoder) throws {
             guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
             func text(_ key: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: key)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
             grant = text(.grant); app = text(.app); title = text(.title); words = text(.words); doneWords = text(.doneWords)
+            fresh = ((try? c.decodeIfPresent(Bool.self, forKey: .fresh)) ?? nil) ?? false
         }
     }
     private func query(_ value: String) -> String {
@@ -107,8 +125,10 @@ extension TafsCloud {
         let (data, tag) = try await representation(path, etag: etag)
         return (try data.map { try KIFFClient.decoder.decode(RunsPage.self, from: $0) }, tag)
     }
-    func setupView(_ id: String, proof: String?) async throws -> SetupView {
-        try await send("GET", "/v1/tafs/\(escaped(id))/setup", headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
+    /// `connectedAgain`: the grant a fresh sign-in just brought back, so the page says which account it's on now.
+    func setupView(_ id: String, proof: String?, connectedAgain: String? = nil) async throws -> SetupView {
+        let again = connectedAgain.map { "?connected_again=\(query($0))" } ?? ""
+        return try await send("GET", "/v1/tafs/\(escaped(id))/setup" + again, headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
     func unregisterPhone(_ token: String, environment: String) async throws {
         struct Body: Encodable { let device_token: String; let environment: String }
