@@ -145,7 +145,6 @@ describe("chatting with a taf from the watch", () => {
     expect(coach.kind).toBeUndefined();
     const listed = (await w.call("GET", "/v1/watch/asks")).body.asks as Array<{ id: string; kind?: string }>;
     expect(listed.map((a) => [a.id, a.kind])).toEqual([[coach.id, undefined], [r.body.ask.id, "taf"]]);
-    expect(((await w.call("GET", "/v1/watch/days/2026-11-16")).body.turns as Array<{ kind?: string }>).map((t) => t.kind)).toEqual(["taf", undefined]);
   });
 
   it("is the same 404 for a taf in no account of the person's, one being removed and one they can't use; Coach is asked without taf_id", async () => {
@@ -234,17 +233,14 @@ describe("chatting with a taf from the watch", () => {
     expect((await w.askOf(r.body.ask.id)).session).toBe((await w.askOf(first)).session);
   });
 
-  it("lists each person's own taf chats on their watch days, never another member's with the same taf", async () => {
+  it("is never a watch day's turn or count: it's in the taf's own chat on the phone", async () => {
     const w = world();
     await w.send(MSG);
-    await w.send({ ...MSG, text: "Did the Ortiz order ship?" }, "bo");
-    const turns = async (who: string) => ((await w.call("GET", "/v1/watch/days/2026-11-16", undefined, who)).body.turns as Array<{ said: string; taf?: { id: string } }>);
-    expect((await turns("ana")).map((t) => [t.said, t.taf?.id])).toEqual([[MSG.text, CAL]]);
-    expect((await turns("bo")).map((t) => [t.said, t.taf?.id])).toEqual([["Did the Ortiz order ship?", CAL]]);
-    // A request whose chat isn't that taf's (a record that names another taf) isn't listed.
-    const id = (await turns("ana")).length && ((await w.coach.get(watchKeys.recent(T, ANA))) as string[])[0]!;
-    await w.coach.put(watchKeys.ask(T, id), { ...(await w.askOf(id)), taf: { id: INBOX, name: "Inbox" } }, new Date(NOW.getTime() + 86400_000));
-    expect(await turns("ana")).toEqual([]);
+    await w.send({ client_id: "c_watch_0002", text: "Move my call" });
+    const days = (await w.call("GET", "/v1/watch/days")).body.days as Array<{ date: string; count: number }>;
+    expect(days).toEqual([{ date: "2026-11-16", count: 1 }]);
+    const turns = (await w.call("GET", "/v1/watch/days/2026-11-16")).body.turns as Array<{ said: string; kind?: string }>;
+    expect(turns.map((t) => [t.said, t.kind])).toEqual([["Move my call", undefined]]);
   });
 
   it("logs the request with its taf and the device's signature, never its words", async () => {

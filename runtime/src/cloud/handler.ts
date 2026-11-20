@@ -11016,7 +11016,8 @@ async function watchDaysRoute(event: HTTPEvent, method: string, parts: string[],
   const zone = me.timeZone && validZone(me.timeZone) ? me.timeZone : "UTC";
   const date = parts.length === 4 ? dateOf(parts[3]) : undefined;
   if (parts.length === 4 && !date) throw new HTTPError(400, "a day is YYYY-MM-DD", { code: "bad_date" });
-  const asks = (await ownAsks(store, me.tenantID, me.subject)).filter((a) => !date || askDay(a, zone) === date);
+  // A message to a taf the person chose is in that taf's own chat on the phone: never a watch day's turn or count.
+  const asks = (await ownAsks(store, me.tenantID, me.subject)).filter((a) => a.kind !== "taf" && (!date || askDay(a, zone) === date));
   const said = await watchSaid(me, asks, store, deps);
   const listed = asks.filter((a) => said.has(a.id));
   if (date) return { date, turns: dayTurns(listed.map((ask) => ({ ask, said: said.get(ask.id)! })), langOf(event)) };
@@ -11032,7 +11033,6 @@ async function watchSaid(me: KIFFIdentity, asks: Ask[], store: CoachStore, deps:
   const out = new Map<string, string>();
   const bySession = new Map<string, Ask[]>();
   for (const a of asks) if (a.session && a.coach_run && a.kind !== "taf") bySession.set(a.session, [...(bySession.get(a.session) ?? []), a]);
-  await tafChatSaid(me, asks, deps, out);
   const sessions = [...bySession.keys()];
   // A few conversations at a time: a month of asking reads each once.
   for (let i = 0; i < sessions.length; i += 8) {
@@ -11055,35 +11055,6 @@ async function watchSaid(me: KIFFIdentity, asks: Ask[], store: CoachStore, deps:
     }));
   }
   return out;
-}
-
-/**
- * What the person said in each of their taf chats from the watch (W11): the first owner message of the request's own
- * run, read as the person from their own chat with that taf. A chat that's gone, another taf's, or not the person's
- * own (kiff/agents reads a chat as its person alone) has none, and isn't listed.
- */
-async function tafChatSaid(me: KIFFIdentity, asks: Ask[], deps: Deps, out: Map<string, string>): Promise<void> {
-  const bySession = new Map<string, Ask[]>();
-  for (const a of asks) if (a.kind === "taf" && a.session && a.taf_run && a.taf && a.person === me.subject) bySession.set(a.session, [...(bySession.get(a.session) ?? []), a]);
-  const sessions = [...bySession.keys()];
-  for (let i = 0; i < sessions.length; i += 8) {
-    await Promise.all(sessions.slice(i, i + 8).map(async (session) => {
-      let read: { session: Session; events: SessionEvent[] };
-      try {
-        read = await deps.agents.session(me.tenantID, session, ownerKey(me));
-      } catch (err) {
-        if (err instanceof AgentsError && (err.status === 404 || err.status === 403)) return;
-        throw agentsFailure(err);
-      }
-      for (const a of bySession.get(session) ?? []) {
-        if (read.session.agent !== a.taf!.id || read.session.kind !== "chat") continue;
-        const first = read.events.find((e) => e.kind === "owner_message" && e.run === a.taf_run);
-        const text = (first?.body as { text?: unknown } | undefined)?.text;
-        const words = typeof text === "string" ? ownerWords(text.trim()) : "";
-        if (words) out.set(a.id, words);
-      }
-    }));
-  }
 }
 
 /** Where a watch conversation's Coach run says it ended. */

@@ -117,7 +117,7 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
   characters), at most **400** characters (`tafLine`). `more: true` says it went on, and the rest is on the phone. The watch
   may show an amount on screen and never stores it, as the watch's rule already is. A run that failed or was stopped is
   `failed`. Each change is pushed to the person's Android phones by the request's id alone, as before.
-- **`kind: "taf"`** marks such a request wherever it's read (`{ask}`, the list, the watch days' turns), so the watches
+- **`kind: "taf"`** marks such a request wherever it's read (`{ask}` and the list), so the watches
   tell it from a Coach request a taf handled. They keep nothing of it: never their Inbox, Coach's thread or a cache.
 - **Read more** (the owner's pick, 20 Nov: a long answer is never trimmed, shown partly, then expanded):
   `GET /v1/watch/asks/{id}?full=1` adds `text`, the taf's whole answer.
@@ -133,8 +133,8 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
   again comes through, and the message key gives back the same run, which reports to the same request (its run-ended ref
   is made from the person and the client id).
 - **Replies** go only to the same taf's request, once it has ended; anything else is 404 `no_ask` or 409 `reply_too_soon`.
-- **Watch days** list a taf chat's request with its words read from the person's own chat with that taf, from that
-  request's run. Another member's chat with the same taf is never read.
+- **Not on the watch days.** A message to a taf is in that taf's own chat on the phone, so `/v1/watch/days` leaves it out
+  of every day's turns and count.
 - **Logged** as `watch_ask` with the taf's id and `signed: "device"`, never the words.
 
 ## Watch days (W11)
