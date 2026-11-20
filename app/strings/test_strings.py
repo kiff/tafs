@@ -277,6 +277,10 @@ class Generator(unittest.TestCase):
         self.assertIn('"de"', files["ios/Tafs/Design/Words.swift"])
         self.assertEqual([f for f in files if f.startswith("android/")], [], "Android isn't written for a preview")
         self.assertNotIn('"de"', self.files["ios/Tafs/Localizable.xcstrings"], "without it, nothing changes")
+        # de has only home.title here: every other key reads in English in de's own catalog, never as the key.
+        catalog = json.loads(files["ios/Tafs/Localizable.xcstrings"])["strings"]
+        self.assertEqual(catalog["usage.all"]["localizations"]["de"]["stringUnit"]["value"], "100% used")
+        self.assertEqual(catalog["home.title"]["localizations"]["de"]["stringUnit"]["value"], "Tafs")
 
     def test_the_age_table_is_written_for_the_welcome(self):
         swift = self.files["ios/Tafs/Design/MinimumAge.swift"]
