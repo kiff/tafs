@@ -40,6 +40,7 @@ final class KIFFClient {
             case .approvalKeyExists: return Words.Error.approvalKeyExists
             // The app's own words: KIFF's `detail` is for the log, never the person.
             case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
+            case .termsOutdated: return Words.Onboarding.termsChanged
             }
         }
     }
