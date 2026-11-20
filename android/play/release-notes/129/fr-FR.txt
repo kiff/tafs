@@ -1,0 +1,1 @@
+• tafs fonctionne maintenant dans toutes les orientations : il s'installe et marche sur les appareils toujours en paysage, comme un Chromebook ou une tablette sur un socle à l'horizontale.

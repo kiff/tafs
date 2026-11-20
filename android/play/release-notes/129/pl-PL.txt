@@ -1,0 +1,1 @@
+• tafs działa teraz w każdej orientacji, więc instaluje się i działa na urządzeniach używanych tylko poziomo, takich jak Chromebook czy tablet w stacji dokującej.

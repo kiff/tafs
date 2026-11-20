@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 128
-    versionName = "1.41.3"
+    versionCode = 129
+    versionName = "1.41.4"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -160,6 +160,6 @@ tasks.withType<Test>().configureEach {
   // The store screenshots are drawn only when asked (`-PphoneScreenshots`), into android/play/phone-screenshots, and the tablet's
   // against the iPad's (`-PtabletScreenshots`), into docs/screenshots/android/tablet; the tests run either way, so a screen that
   // no longer draws fails CI.
-  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots") || project.hasProperty("tabletScreenshots")) "true" else "false")
+  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots") || project.hasProperty("tabletScreenshots") || project.hasProperty("landscapeScreenshots")) "true" else "false")
   systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
 }

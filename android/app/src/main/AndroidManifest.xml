@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Confirms each approval with a strong biometric, never the screen lock. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -13,6 +14,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Dictation is optional: a phone without a microphone still installs tafs, and its mic says it can't dictate. -->
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
+    <!-- Any orientation: tafs runs on phones held upright and on devices that are only ever landscape (a Chromebook, a desktop,
+         a tablet docked sideways). Play would otherwise read an activity locked to portrait as needing a portrait screen. -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false" />
+    <uses-feature android:name="android.hardware.screen.landscape" android:required="false" />
 
     <!-- Finds the phone's own speech recognizer for dictation. -->
     <queries>
@@ -34,6 +39,14 @@
         android:theme="@style/Theme.Tafs">
         <!-- Pairing a computer: Play services fetches its QR scanner as the app installs, not on the first scan. -->
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
+        <!-- ML Kit's scanner delegate is invisible: it starts Play services' scanner and takes its result. ML Kit locks it to
+             portrait only so a rotation can't recreate it mid-scan; it handles those changes itself here instead, so nothing locks
+             the app to portrait and a landscape-only device scans as a phone does (AnyOrientationTest). -->
+        <activity
+            android:name="com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:screenOrientation="unspecified"
+            tools:replace="android:screenOrientation" />
         <!-- adjustResize: the app moves itself above the keyboard (imePadding), so the window must not pan as well. -->
         <activity
             android:name=".MainActivity"
