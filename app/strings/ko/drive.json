@@ -9,7 +9,7 @@
   "drive.card_note_scrolls_pauses": "Coach는 내가 지켜보는 동안 이 앱에서 탭하고, 입력하고, 스크롤합니다. 무엇도 확정하지 않습니다. 일시 중지하려면 앱을 터치하고, 끝내려면 중지를 탭하세요.",
   "drive.card_title": "Coach가 앱 조작을 요청합니다",
   "drive.coach_drove_app": "Coach가 앱을 조작함 · {task}",
-  "drive.declined_line": "나중에: Coach가 앱을 조작하지 않았습니다",
+  "drive.declined_line": "지금은 안 함: Coach가 앱을 조작하지 않았습니다",
   "drive.done": "완료",
   "drive.drive_app": "앱 조작하기",
   "drive.ended.done": "Coach가 끝냈습니다",
