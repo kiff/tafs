@@ -721,6 +721,8 @@ export const de: Words = {
   trial_label: "Test",
   trial_title: (n) => `Version ${n} wird getestet`,
   runs_title: "Seine Läufe",
+  install_no_tool: (n) => `Version ${n} ist nicht installiert: Ihre geplante Prüfung liest etwas, das keine Verbindung dieses tafs jetzt erreicht. Du kannst Coach bitten, die Prüfung auf etwas zu ändern, das der taf lesen kann, und dann diese Version installieren.`,
+  install_not_a_read: (n) => `Version ${n} ist nicht installiert: Ihre geplante Prüfung würde etwas ändern, und eine Prüfung darf nur lesen. Du kannst Coach bitten, die Prüfung auf eine zu ändern, die nur liest, und dann diese Version installieren.`,
   coach_line_raw_result: "Fertig: Öffne seinen Lauf, um seine Antwort zu sehen.",
   runs_more: "Alle Läufe zeigen",
   runs_end: "Nichts Älteres in den aufbewahrten Läufen",

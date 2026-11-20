@@ -721,6 +721,8 @@ export const pt: Words = {
   trial_label: "Experiência",
   trial_title: (n) => `A experimentar a versão ${n}`,
   runs_title: "As suas execuções",
+  install_no_tool: (n) => `A versão ${n} não foi instalada: a sua verificação prevista lê algo que nenhuma ligação deste taf alcança agora. Pode pedir ao Coach para mudar a verificação para algo que o taf consiga ler e depois instalar essa versão.`,
+  install_not_a_read: (n) => `A versão ${n} não foi instalada: a sua verificação prevista alteraria algo, e uma verificação só pode ler. Pode pedir ao Coach para mudar a verificação para uma que só leia e depois instalar essa versão.`,
   coach_line_raw_result: "Terminou: abra a sua execução para ver a resposta.",
   runs_more: "Mostrar todas as execuções",
   runs_end: "Nada mais antigo nas execuções guardadas",

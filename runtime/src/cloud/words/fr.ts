@@ -721,6 +721,8 @@ export const fr: Words = {
   trial_label: "Essai",
   trial_title: (n) => `Essai de la version ${n}`,
   runs_title: "Ses exécutions",
+  install_no_tool: (n) => `La version ${n} n'est pas installée : sa vérification prévue lit quelque chose qu'aucune connexion de ce taf n'atteint plus. Vous pouvez demander à Coach de remplacer la vérification par quelque chose que le taf peut lire, puis installer cette version.`,
+  install_not_a_read: (n) => `La version ${n} n'est pas installée : sa vérification prévue modifierait quelque chose, et une vérification ne peut que lire. Vous pouvez demander à Coach de la remplacer par une vérification qui ne fait que lire, puis installer cette version.`,
   coach_line_raw_result: "Terminé : ouvrez son exécution pour voir sa réponse.",
   runs_more: "Voir toutes les exécutions",
   runs_end: "Rien de plus ancien dans les exécutions conservées",

@@ -160,6 +160,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const trials = new Map<string, Trial>();
   /** Halts by agent, "" for the account itself. */
   const halts = new Map<string, { on: boolean; at: string }>();
+  /** Reads an agent surely hasn't, as kiff/agents' check-tool answers them (no_tool), by agent; "*" for one it can't read. */
+  const missingTools = new Map<string, Set<string>>();
   const halted = (tenant: string, agent?: string) => {
     const own = agent ? halts.get(k(tenant, agent)) : undefined;
     const all = halts.get(k(tenant, ""));
@@ -172,6 +174,15 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!agents.has(k(tenant, id))) throw gone();
       const sw = switching.get(k(tenant, id));
       return { versions: (versions.get(k(tenant, id)) ?? []).map((v) => ({ ...v })), ...(sw ? { switching: { ...sw } } : {}) };
+    },
+    async checkTool(tenant, id, tool) {
+      calls.push(`checkTool ${id} ${tool}`);
+      const missing = missingTools.get(k(tenant, id));
+      if (missing?.has("*")) return { tool, checked: false };
+      // A kiff/agents from before check-tool: the route isn't there.
+      if (missing?.has("404")) throw new AgentsError(404, "not found");
+      if (missing?.has(tool)) throw new AgentsError(409, `the check reads ${tool}, which none of the agent's connections has now: name a read it has`, undefined, "no_tool");
+      return { tool, has: true };
     },
     async switchVersion(tenant, id, n, cards) {
       calls.push(`switchVersion ${id} ${n}`);
@@ -755,7 +766,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
     run.status = "PAUSED";
     run.requirements = [...(run.requirements ?? []), { call_id: `call_${component.id}`, tool: "show", input: component, operation: "", expires: "2026-10-23T12:00:00Z", kind: "card" }];
   };
-  return { api, calls, deliver, delivered, breakFirst, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills };
+  return { api, calls, deliver, delivered, breakFirst, steerLost, byKey, steeredKeys, spent, aiSent, notified, agents, schedules, runs, sessions, events, notes, fail, quiet, outcomes, old, credits, say, show, ask, setupDrafts, access, streamed, resumed, versions, trialWrites, switching, versionDefs, halts, trials, firings, skills, sessionSkills, missingTools };
 }
 
 /** Names claimed atomically for an owner; released only by that owner, or by anyone for a claim without one. */

@@ -721,6 +721,8 @@ export const pl: Words = {
   trial_label: "Próba",
   trial_title: (n) => `Próba wersji ${n}`,
   runs_title: "Jego uruchomienia",
+  install_no_tool: (n) => `Wersja ${n} nie została zainstalowana: jej zaplanowane sprawdzenie odczytuje coś, do czego żadne połączenie tego tafa już nie sięga. Poproś Coacha, by zmienił sprawdzenie na coś, co taf może odczytać, a potem zainstaluj tę wersję.`,
+  install_not_a_read: (n) => `Wersja ${n} nie została zainstalowana: jej zaplanowane sprawdzenie coś by zmieniło, a sprawdzenie może tylko odczytywać. Poproś Coacha, by zmienił je na sprawdzenie, które tylko odczytuje, a potem zainstaluj tę wersję.`,
   coach_line_raw_result: "Zakończono: otwórz jego uruchomienie, aby zobaczyć odpowiedź.",
   runs_more: "Pokaż wszystkie uruchomienia",
   runs_end: "Nic starszego w zachowanych uruchomieniach",

@@ -721,6 +721,8 @@ export const es: Words = {
   trial_label: "Prueba",
   trial_title: (n) => `Probando la versión ${n}`,
   runs_title: "Sus ejecuciones",
+  install_no_tool: (n) => `La versión ${n} no se ha instalado: su revisión prevista lee algo a lo que ya no llega ninguna conexión de este taf. Puedes pedir a Coach que cambie la revisión por algo que el taf pueda leer y luego instalar esa versión.`,
+  install_not_a_read: (n) => `La versión ${n} no se ha instalado: su revisión prevista cambiaría algo, y una revisión solo puede leer. Puedes pedir a Coach que cambie la revisión por una que solo lea y luego instalar esa versión.`,
   coach_line_raw_result: "Ha terminado: abre su ejecución para ver su respuesta.",
   runs_more: "Ver todas las ejecuciones",
   runs_end: "Nada más antiguo en las ejecuciones guardadas",

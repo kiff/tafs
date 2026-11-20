@@ -782,6 +782,8 @@ export const en = {
   trial_label: "Trial",
   trial_title: (n: number) => `Trying version ${n}`,
   runs_title: "Its runs",
+  install_no_tool: (n: number) => `Version ${n} isn't installed: its scheduled check reads something none of this taf's connections reaches now. Ask Coach to change the check to something the taf can read, then install that version.`,
+  install_not_a_read: (n: number) => `Version ${n} isn't installed: its scheduled check would change something, and a check may only read. Ask Coach to change the check to one that only reads, then install that version.`,
   coach_line_raw_result: "It finished: open its run to see its answer.",
   runs_more: "Show all runs",
   runs_end: "Nothing older in the retained runs",

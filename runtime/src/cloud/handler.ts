@@ -223,7 +223,7 @@ export interface HTTPResult {
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
   "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
-  "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
+  "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
   "openTrial" | "openedTrial" | "trialMessage" | "endTrial">;
@@ -5078,11 +5078,36 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
   return true;
 }
 
+/**
+ * A version whose check reads a tool the taf no longer has never goes live: kiff/agents is asked, from the list a firing
+ * reads with, before the switch and with the check that will apply (the version's dial's, as applyKnob writes it, else the
+ * schedule's own). Asked after, it would see the old check and refuse the version that fixes it. A version that kept a
+ * Gmail read after its taf moved to Calendar went live, and every firing failed with no_tool (Nov 2026). Anything but a
+ * sure no (an older kiff/agents, a list that couldn't be read) never stops an install.
+ */
+async function refuseCheckWithoutTool(me: KIFFIdentity, taf: Taf, n: number, deps: Deps, lang: Lang = "en"): Promise<void> {
+  if (taf.unscheduled) return;
+  const dial = taf.knobs?.[String(n)];
+  const check = dial ? dial.check ?? taf.check : (await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined))?.check;
+  if (!check?.tool) return;
+  try {
+    await deps.agents.checkTool(me.tenantID, taf.id, check.tool);
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409 && (err.code === "no_tool" || err.code === "not_a_read")) {
+      throw new HTTPError(409, `version ${n} isn't installed: its check reads ${check.tool}, which ${err.code === "no_tool" ? "none of the taf's connections has now" : "isn't a read"}. ` +
+        "Set its check to a read the taf has (taf_dial's check, beside its wakes), then install that version.",
+        // The person who tapped Install reads why in their language, with no tool's raw name; Coach reads the error.
+        { code: err.code, words: err.code === "no_tool" ? wordsIn(lang).install_no_tool(n) : wordsIn(lang).install_not_a_read(n) });
+    }
+  }
+}
+
 /** Makes version n live, recording the Cards it runs under, and keeps the record in step. */
 async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
   // The version's places, drafted by Coach with no session to check them under: checked now, under the owner's.
   const dial = taf.knobs?.[String(n)];
   await refuseMoneyPlaces(dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults ?? [], event, taf, deps);
+  await refuseCheckWithoutTool(me, taf, n, deps, langOf(event));
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await applyKnob(me, taf, n, deps);
