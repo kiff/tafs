@@ -104,4 +104,13 @@ final class OnboardingTests: XCTestCase {
             XCTAssertEqual(Onboarding.ageLine(region: region), Words.Onboarding.age, region ?? "none")
         }
     }
+
+    /// Today's sign-in screen tells a country that asks for more than 16 its own age, before the switch is on; every
+    /// other country sees the screen as it was.
+    func testTodaysSignInSaysARaisedAgeOnly() {
+        XCTAssertEqual(Onboarding.raisedAgeLine(region: "IN"), Words.Onboarding.ageN(age: "18"))
+        XCTAssertEqual(Onboarding.raisedAgeLine(region: "BR"), Words.Onboarding.ageN(age: "18"))
+        XCTAssertNil(Onboarding.raisedAgeLine(region: "FR"))
+        XCTAssertNil(Onboarding.raisedAgeLine(region: nil))
+    }
 }

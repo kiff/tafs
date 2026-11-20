@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** signing in from a country whose law asks for more than 16 (India, Indonesia, Brazil) now says the country's age under the agreement line; every other country's sign-in reads as it did ([onboarding.md](docs/onboarding.md)).

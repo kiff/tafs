@@ -125,6 +125,12 @@ struct SignInView: View {
             Text(Legal.agreement())
                 .scaledFont(12).foregroundColor(Theme.dim).tint(Theme.amber)
                 .multilineTextAlignment(.center).frame(maxWidth: 420)
+            if let age = Onboarding.raisedAgeLine() {
+                Text(age)
+                    .scaledFont(12).foregroundColor(Theme.dim)
+                    .multilineTextAlignment(.center).frame(maxWidth: 420)
+                    .accessibilityIdentifier("signIn.age")
+            }
         }
         .padding(32)
         .frame(maxWidth: .infinity)
