@@ -199,6 +199,36 @@ final class AppSignInTests: XCTestCase {
         XCTAssertNotEqual(model.mode, .kiff)
     }
 
+    /// KIFF answers `terms_outdated` before spending the code: ticked again within its minute, the same code goes again
+    /// with the new version, and the sheet isn't opened a second time.
+    func testATickAgainSendsTheKeptCodeWithTheNewVersion() async throws {
+        let model = model()
+        let sheet = Sheet()
+        StubProtocol.responses["POST /v1/auth/app/token"] = (409, #"{"error":"terms_outdated"}"#)
+        do { try await model.signInInApp(termsVersion: "2026-11-14", sheet: sheet); XCTFail("outdated") } catch {
+            XCTAssertEqual(error as? KIFFClient.KIFFError, .termsOutdated)
+        }
+        XCTAssertEqual(model.keptAppCode?.code, "c_1")
+        StubProtocol.responses["POST /v1/auth/app/token"] = (200, Self.token)
+        try await model.signInInApp(termsVersion: "2026-11-20", sheet: sheet)
+
+        XCTAssertEqual(sheet.opened.count, 1, "the sheet isn't opened twice")
+        let bodies = tokenRequests().compactMap { try? JSONSerialization.jsonObject(with: $0.httpBody ?? Data()) as? [String: String] }
+        XCTAssertEqual(bodies.map { $0["code"] }, ["c_1", "c_1"])
+        XCTAssertEqual(bodies.map { $0["terms_version"] }, ["2026-11-14", "2026-11-20"])
+        XCTAssertEqual(bodies[0]["code_verifier"], bodies[1]["code_verifier"])
+        XCTAssertNil(model.keptAppCode, "used once")
+        XCTAssertEqual(model.mode, .kiff)
+    }
+
+    /// Any other failure keeps nothing: a spent or wrong code is never sent again.
+    func testOnlyChangedTermsKeepTheCode() async {
+        let model = model()
+        StubProtocol.responses["POST /v1/auth/app/token"] = (400, #"{"error":"invalid_grant"}"#)
+        try? await model.signInInApp(termsVersion: "2026-11-20", sheet: Sheet())
+        XCTAssertNil(model.keptAppCode)
+    }
+
     /// A used or expired code (`invalid_grant`) is a plain failure, never a session.
     func testAnExpiredCodeIsAFailure() async {
         let model = model()

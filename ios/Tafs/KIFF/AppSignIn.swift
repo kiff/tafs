@@ -12,6 +12,8 @@ enum AppSignIn {
     /// The exact redirect KIFF sends the code to: a private-use scheme (RFC 8252 §7.1), which PKCE makes safe.
     static let callbackScheme = "dev.kiff.tafs"
     static let redirectURI = "\(callbackScheme):/oauth"
+    /// How long KIFF's code works: 60 seconds. A code kept after `terms_outdated` is sent again only well within it.
+    static let codeLifetime: TimeInterval = 50
     /// The languages KIFF's sign-in page is written in; any other opens it in English.
     static let pageLanguages: Set<String> = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 

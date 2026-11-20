@@ -796,26 +796,50 @@ final class AppModel: ObservableObject {
         // couldn't be then.
         let termsVersion: String
         if let shown { termsVersion = shown } else { termsVersion = try await appTermsVersion() }
-        let pkce = AppSignIn.PKCE.make()
-        let state = AppSignIn.makeState()
-        let url = AppSignIn.authorizeURL(base: kiff.baseURL, pkce: pkce, state: state, language: KIFFClient.appLanguage)
-        let callback: URL
-        do {
-            callback = try await sheet.signIn(at: url)
-        } catch VendorSignIn.SignInError.cancelled {
-            throw AppSignIn.Failure.closed
+        // Ticked again after `terms_outdated`, within the code's minute: KIFF kept the code, so it's sent again with the
+        // new version and the sheet isn't opened twice.
+        let code: String, verifier: String
+        if let kept = keptAppCode, clock().timeIntervalSince(kept.at) < AppSignIn.codeLifetime {
+            (code, verifier) = (kept.code, kept.verifier)
+        } else {
+            let pkce = AppSignIn.PKCE.make()
+            let state = AppSignIn.makeState()
+            let url = AppSignIn.authorizeURL(base: kiff.baseURL, pkce: pkce, state: state, language: KIFFClient.appLanguage)
+            let callback: URL
+            do {
+                callback = try await sheet.signIn(at: url)
+            } catch VendorSignIn.SignInError.cancelled {
+                throw AppSignIn.Failure.closed
+            }
+            (code, verifier) = (try AppSignIn.code(from: callback, state: state), pkce.verifier)
         }
-        let code = try AppSignIn.code(from: callback, state: state)
+        keptAppCode = nil
         let key = signer.publicKeyDER
         let approvalKey = signer.approvalPublicKeyDER
-        let token = try await kiff.appToken(code: code, verifier: pkce.verifier, termsVersion: termsVersion,
+        let token: KIFFClient.DeviceToken
+        do {
+            token = try await kiff.appToken(code: code, verifier: verifier, termsVersion: termsVersion,
                                             publicKey: key.isEmpty ? nil : key,
                                             approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
                                             deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
                                             platform: key.isEmpty ? nil : ThisDevice.platform,
                                             kind: ThisDevice.kiffKind)
+        } catch KIFFClient.KIFFError.termsOutdated {
+            // KIFF answers this before spending the code: kept, in memory only, for the new tick.
+            keptAppCode = KeptAppCode(code: code, verifier: verifier, at: clock())
+            throw KIFFClient.KIFFError.termsOutdated
+        }
         try await takeSession(token, stopped: Task.isCancelled)
     }
+
+    /// An in-app sign-in's code KIFF kept after `terms_outdated` (it answers that before spending the code), with its
+    /// verifier: in memory only, and for at most the code's minute.
+    struct KeptAppCode: Equatable {
+        let code: String
+        let verifier: String
+        let at: Date
+    }
+    private(set) var keptAppCode: KeptAppCode?
 
     /// The terms version in force at KIFF, read when the welcome shows its tick (`AppSignIn`).
     func appTermsVersion() async throws -> String { try await kiff.appTermsVersion() }
