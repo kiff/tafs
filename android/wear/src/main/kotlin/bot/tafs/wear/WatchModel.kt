@@ -897,6 +897,9 @@ class WatchModel(
    */
   fun keepForLater() {
     val unsure = _voice.value as? Voice.Unsure ?: return
+    // A message to a taf is never kept on the watch (nothing of a taf's chat is), and a kept message is sent as Coach's:
+    // Retry or Cancel only.
+    if (unsure.tafId != null) return
     val draft = Draft(unsure.text, unsure.clientId, unsure.replyTo)
     drafts?.write(draft)
     _kept.value = draft

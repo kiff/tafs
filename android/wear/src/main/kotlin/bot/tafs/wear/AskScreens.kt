@@ -269,8 +269,10 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         T(stateLine(voice.ask), 12.sp, Look.dim, modifier = Modifier.width(150.dp), lines = 1)
       }
       is WatchModel.Voice.Unsure -> Centered {
-        // v2 adds Keep for later; the face makes room for it without the mark.
-        if (act.keep == null) {
+        // v2 adds Keep for later, never for a message to a taf (nothing of a taf's chat is kept on the watch); the face makes
+        // room for it without the mark.
+        val keep = act.keep.takeIf { voice.tafId == null }
+        if (keep == null) {
           Box(Modifier.size(34.dp).border(BorderStroke(2.5.dp, Look.held), CircleShape), contentAlignment = Alignment.Center) {
             Glyph(Modifier.size(18.dp)) { questionGlyph(Look.held) }
           }
@@ -281,7 +283,7 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         T(Words.Watch.checkPhone, 12.sp, Look.dim, modifier = Modifier.width(140.dp), lineHeight = 15.sp)
         Spacer(Modifier.height(10.dp))
         SendButton(Words.Watch.retry, act.retry)
-        act.keep?.let { QuietButton(Words.Watch.keepForLater, it) }
+        keep?.let { QuietButton(Words.Watch.keepForLater, it) }
         QuietButton(Words.Common.cancel, act.closeVoice)
       }
       is WatchModel.Voice.NotSent -> Centered {
