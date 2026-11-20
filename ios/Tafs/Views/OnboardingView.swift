@@ -127,7 +127,7 @@ struct OnboardingView: View {
         Task {
             defer { signingInApp = false }
             do {
-                try await model.signInInApp(termsVersion: termsVersion, sheet: VendorSignIn(callbackScheme: AppSignIn.callbackScheme))
+                try await model.signInInApp(termsVersion: termsVersion, sheet: VendorSignIn.kiffSheet())
                 model.justConnected = true
             } catch AppSignIn.Failure.closed {
             } catch KIFFClient.KIFFError.termsOutdated {
