@@ -804,6 +804,17 @@ apps' sign-ins). Coach never connects one without `uses`: its sign-in would ask 
 
 **What the taf does; what a sign-in allows is the card's** (`connect-an-app@29`). Coach says only what the taf will do with an app ("it reads your sheet's rows"), and never what the app's sign-in allows, either way: never "read-only" or "changes nothing", and never "wider" either. What a sign-in allows is planque's data: tafs cloud draws it on every approval and sign-in card whose grant has `request.connector.usual_access` (`wider.words`, [chat.md](chat.md), `markWider`), the same for every app, so the skill holds no app, scope or access wording. If the owner asks, Coach says the card shows it. Every app that can approve a card draws `wider.words`. Before this, a plan for Google Sheets titled its step "Connect Google Sheets, read-only" and its first card said "it changes nothing", for a sign-in that can write; `@28` then had Coach add its own "wider" sentence, which it sometimes left out (Eval 22b).
 
+**No narrowing, the sign-in's clock and account, and no sign-in again for a tool it lacks** (`connect-an-app@30`). Coach
+never narrows what a taf or its connection can do in words, in any language ("only", "just", "read-only", or the
+language's own forms, such as French *ne … que*, Korean *-만* or Japanese *だけ*): its Card is the limit, and restating
+the Card ("asks you first above €150") is fine. Eval 44806446879's French Sheets plan offered "Il lira seulement des plages
+de cellules". A sign-in ends 15 minutes after the owner's approval, so Coach says so and guides it in one go; before
+Allow, it says which account the vendor's page names, and the wrong one is cancelled, granting nothing. A tool the
+connection says its sign-in doesn't cover ("partly signed in") gets the tools that work, never a new sign-in that would
+answer the same; and a taf that writes never reuses a sign-in made for reads, which Coach says up front (planque's
+rule since its #312). Each app's own steps (Notion's setup, Shopify's protected-data release, Pipedrive's search) are in
+that app's guide in planque, which Coach reads before connecting it.
+
 **An app in two approvals** (`connect-an-app@26`, `name-the-tools@14`, `draft-the-card@18`). The first connects it:
 its sign-in, asked with the taf's planned tools (`uses`) for a managed app and with Coach's own reads in `setup_reads`
 (such as a tool that lists an operation's fields), never in a connection of their own; a vendor's own server gets its
