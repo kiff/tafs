@@ -14,7 +14,7 @@ import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
-import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
+import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
@@ -5635,12 +5635,24 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     recentCalls(token, taf.kiffAgent, deps.fetch, deps.kiffBase),
   ]);
   const card = summary(byHolder(kiff.mandates, kiff.held).cards.get(taf.kiffAgent) ?? []);
-  const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
-    heldCards(kiff.mandates, taf.kiffAgent));
+  const context = (max?: number) => improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
+    heldCards(kiff.mandates, taf.kiffAgent), max);
+  const input = context();
   const ai = await aiBound(event, deps);
   const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
-  const sent = await withCoachSkills(me, setup, at, input, event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, sent, at, ai));
+  let sent = await withCoachSkills(me, setup, at, input, event, deps);
+  // kiff/agents refuses a start past its bound (a taf with long Cards and vendor messages: Overdue, 20 Nov): the context
+  // gives up what Coach's own lines around it leave no room for, never the owner's words.
+  // Coach's own lines go in after the context's first line ("[improve taf …]") and before the owner's words, both the same
+  // either way: what lies between them is swapped.
+  const over = Buffer.byteLength(sent, "utf8") - AGENTS_MAX_INPUT;
+  const owner = `\n\nThe owner says: ${text}`;
+  const between = (t: string) => t.slice(t.indexOf("\n"), t.length - owner.length);
+  if (over > 0 && input.endsWith(owner) && sent.includes(between(input))) {
+    const fit = context(Buffer.byteLength(input, "utf8") - over);
+    sent = sent.replace(between(input), () => between(fit));
+  }
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, sent, at, ai), { tenant: me.tenantID, route: "improve", input_bytes: Buffer.byteLength(sent, "utf8") });
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
@@ -8335,8 +8347,13 @@ async function creditsRead<T>(work: () => Promise<T>, lang: Lang = "en"): Promis
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
-async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
+async function agentsCall<T>(work: () => Promise<T>, about?: Record<string, string | number>): Promise<T> {
   try { return await work(); } catch (err) {
+    // A refusal tafs cloud passes on (not a 404, which reads often get) is logged with kiff/agents' code and words, never
+    // what was sent: the request line says only its status (the Overdue 400, 20 Nov, said nothing of why).
+    if (err instanceof AgentsError && err.status < 500 && err.status !== 404) {
+      console.log(JSON.stringify({ event: "agents_refused", ...(about ?? {}), status: err.status, code: err.code, words: err.message.slice(0, 300) }));
+    }
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "not found");
     if (err instanceof AgentsError && err.status < 500) throw agentsFailure(err);
     throw new HTTPError(502, "the tafs' runtime didn't answer; try again");
