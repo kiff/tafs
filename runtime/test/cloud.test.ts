@@ -3309,6 +3309,40 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.agents.versions.get(`t_acme|${RAE}`)?.find((v) => v.live)?.n).toBe(1);
   });
 
+  // A version that kept a Gmail read after its taf moved to Calendar went live, and every firing failed with no_tool
+  // (Nov 2026). kiff/agents is asked first, with the check the version will apply, so the fixing version still goes live.
+  it("asks kiff/agents for the version's check before it goes live, and refuses a read the taf no longer has", async () => {
+    const w = twoVersions();
+    w.account.drafts = { drf_v2: "confirmed" };
+    const rae = w.tafs.held.get(`t_acme#${RAE}`)!;
+    const old = { tool: "list_emails", arguments: {}, items: "messages", cursor: "messageId" };
+    const fixed = { tool: "list_calendar_events", arguments: {}, items: "items", cursor: "created" };
+    w.tafs.held.set(`t_acme#${RAE}`, { ...rae, check: old, knobs: { "2": { wakes: [{ kind: "schedule", form: "weekdays", at: "08:00" }], busy: "skip", results: [] } } });
+    w.agents.missingTools.set(`t_acme|${RAE}`, new Set(["list_emails"]));
+    // Its dial names no check, so the taf's old read would apply: refused, and nothing switched or written.
+    const refused = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(refused.status).toBe(409);
+    expect(refused.body).toMatchObject({ code: "no_tool" });
+    expect(JSON.stringify(refused.body)).toContain("its check reads list_emails, which none of the taf's connections has now");
+    expect(w.agents.calls).toContain(`checkTool ${RAE} list_emails`);
+    expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);
+    // The fixing version, whose dial reads Calendar: asked with the new read before the switch, so it goes live.
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobs: { "2": { wakes: [{ kind: "schedule", form: "weekdays", at: "08:00" }], busy: "skip", results: [], check: fixed } } });
+    const live = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
+    expect(live).toMatchObject({ status: 200, body: { live: 2 } });
+    const asked = w.agents.calls.lastIndexOf(`checkTool ${RAE} list_calendar_events`);
+    expect(asked).toBeGreaterThanOrEqual(0);
+    expect(asked).toBeLessThan(w.agents.calls.lastIndexOf(`switchVersion ${RAE} 2`));
+    // A list kiff/agents can't read now never stops an install.
+    w.agents.missingTools.set(`t_acme|${RAE}`, new Set(["*", "list_emails"]));
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobs: { "1": { wakes: [{ kind: "schedule", form: "weekdays", at: "08:00" }], busy: "skip", results: [] } } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/1/live`, { token: "ana" })).body).toEqual({ live: 1 });
+    // Nor does a kiff/agents from before check-tool.
+    w.agents.missingTools.set(`t_acme|${RAE}`, new Set(["404", "list_emails"]));
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, knobs: { "2": { wakes: [{ kind: "schedule", form: "weekdays", at: "08:00" }], busy: "skip", results: [] } } });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
+  });
+
   // On #574: a version built before gap 18 carries "for the company", the placeholder it removed.
   // Installing one names no one, so the Upgrade still gives the taf the company's name.
   it("reads no sender from a version's line from before gap 18 when it is installed", async () => {

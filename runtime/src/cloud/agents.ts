@@ -662,6 +662,15 @@ export class Agents {
     return this.call("GET", tenant, ["agents", id, "versions", String(n)]);
   }
 
+  /**
+   * Whether the agent has a read named tool for a schedule's check, from the list a firing reads with (kiff/agents'
+   * check-tool), without making the read: {has: true}, or {checked: false} when the list couldn't be read. A read it surely
+   * hasn't is a 409 AgentsError whose code is no_tool or not_a_read.
+   */
+  async checkTool(tenant: string, id: string, tool: string): Promise<{ tool: string; has?: true; checked?: false }> {
+    return this.call("POST", tenant, ["agents", id, "check-tool"], { tool });
+  }
+
   /** Makes version n live, forward or back, recording the KIFF Cards it runs under, if given. */
   async switchVersion(tenant: string, id: string, n: number, cards?: CardRevision[]): Promise<void> {
     await this.call("POST", tenant, ["agents", id, "versions", String(n), "live"], cards?.length ? { cards } : {});

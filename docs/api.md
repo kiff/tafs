@@ -227,7 +227,7 @@ See [coach.md](coach.md#versions). Not for Coach itself (404).
 | `POST /v1/tafs/{id}/versions` | manages | `{note, notes?, draft?, from?, agent?}`: its next version, as Coach's result made it, once per result. Nothing goes live |
 | `POST /v1/tafs/{id}/versions/{n}/switch` | manages | `{redraft?, stop_blocking?}`: begin the switch to version n, with the Card draft it waits for. Nothing of the taf runs until it ends. A run in the way is 409, naming it (`blocking`), with `words` saying what's in the way for the app to show |
 | `DELETE /v1/tafs/{id}/switching` | manages | Drop a switch whose Card isn't confirmed yet |
-| `POST /v1/tafs/{id}/versions/{n}/live` | manages | Make version n live, once its Card revision is confirmed in KIFF (409 before) |
+| `POST /v1/tafs/{id}/versions/{n}/live` | manages | Make version n live, once its Card revision is confirmed in KIFF (409 before). The check it will apply (its dial's, else the schedule's) is asked of kiff/agents' `check-tool` first: a read the taf no longer has is a 409 `no_tool` (or `not_a_read`) naming it, and nothing switches; a list that can't be read never stops it |
 | `POST /v1/tafs/{id}/versions/{n}/try` | manages | The KIFF draft to confirm as version n's trial Card |
 | `POST /v1/tafs/{id}/versions/{n}/trial` | manages | `{input?}`: a trial run of version n, its writes decided by KIFF, nothing sent |
 | `GET /v1/tafs/{id}/trials/{run}` | manages | That trial so far: its run and what KIFF decided for each write |

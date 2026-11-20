@@ -1,0 +1,1 @@
+- **A version whose check reads a tool the taf no longer has isn't installed.** Before the switch, tafs cloud asks kiff/agents (`check-tool`, the list a firing reads with) about the check that version will apply, and answers 409 `no_tool` naming the read, so it never goes live to fail at every firing. The version that fixes the check still goes live (docs/api.md).
