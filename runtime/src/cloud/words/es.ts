@@ -129,6 +129,7 @@ export const es: Words = {
   approval_rules_missing: (tool: string) => `Las reglas que aceptaste no dicen qué hace «${tool}» pasado su límite. No se aprobó nada. Coach te muestra las reglas otra vez.`,
   approval_rules_unpinned: (tool: string) => `Las reglas que aceptaste dicen que la conexión mantiene una regla para «${tool}», pero no lo hace. No se aprobó nada. Coach te muestra las reglas otra vez.`,
   approval_rules_figures: (tool: string) => `Esta Card tiene un límite para «${tool}» distinto del de las reglas que aceptaste. No se aprobó nada. Coach la redacta de nuevo.`,
+  approval_rules_unsaid: "Las reglas que aceptaste no decían todos los límites de esta Card. No se aprobó nada. Coach vuelve a mostrar las reglas con cada límite para que las aceptes primero.",
   approval_rules_unagreed: "Coach redactó esto antes de que aceptaras las reglas que mostró. No se aprobó nada. Acepta primero las reglas y Coach lo redacta de nuevo.",
   approval_rules_required: "Coach redactó esto sin mostrarte las reglas para aceptarlas. No se aprobó nada. Coach te muestra primero las reglas.",
   setup_every_call_asks: "Cada llamada necesita tu aprobación",

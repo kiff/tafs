@@ -129,6 +129,7 @@ export const de: Words = {
   approval_rules_missing: (tool: string) => `Die Regeln, denen du zugestimmt hast, sagen nicht, was „${tool}“ über seinem Limit tut. Es wurde nichts genehmigt. Coach zeigt dir die Regeln noch einmal.`,
   approval_rules_unpinned: (tool: string) => `Die Regeln, denen du zugestimmt hast, sagen, dass die Verbindung bei „${tool}“ für eine Regel sorgt, aber das tut sie nicht. Es wurde nichts genehmigt. Coach zeigt dir die Regeln noch einmal.`,
   approval_rules_figures: (tool: string) => `Diese Card hat für „${tool}“ ein anderes Limit als die Regeln, denen du zugestimmt hast. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
+  approval_rules_unsaid: "Die Regeln, denen du zugestimmt hast, nannten nicht jedes Limit dieser Card. Es wurde nichts genehmigt. Coach zeigt die Regeln noch einmal mit jedem Limit, damit du zuerst zustimmst.",
   approval_rules_unagreed: "Coach hat das entworfen, bevor du den gezeigten Regeln zugestimmt hast. Es wurde nichts genehmigt. Stimme zuerst den Regeln zu, dann entwirft Coach es neu.",
   approval_rules_required: "Coach hat das entworfen, ohne dir die Regeln zur Zustimmung zu zeigen. Es wurde nichts genehmigt. Coach zeigt dir zuerst die Regeln.",
   setup_every_call_asks: "Jeder Aufruf braucht deine Freigabe",

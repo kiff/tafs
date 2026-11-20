@@ -137,6 +137,7 @@ export const en = {
   approval_rules_missing: (tool: string) => `The rules you agreed say nothing of what "${tool}" does past its limit. Nothing was approved. Coach shows you the rules again.`,
   approval_rules_unpinned: (tool: string) => `The rules you agreed say the connection keeps a rule for "${tool}", but it doesn't. Nothing was approved. Coach shows you the rules again.`,
   approval_rules_figures: (tool: string) => `This Card has a limit for "${tool}" that isn't the one in the rules you agreed. Nothing was approved. Coach drafts it again.`,
+  approval_rules_unsaid: "The rules you agreed didn't say every limit this Card holds. Nothing was approved. Coach shows the rules again with each limit in them, for you to agree first.",
   approval_rules_unagreed: "Coach drafted this before you agreed to the rules it showed. Nothing was approved. Agree to the rules first, and Coach drafts it again.",
   approval_rules_required: "Coach drafted this without showing you the rules to agree to. Nothing was approved. Coach shows you the rules first.",
   setup_every_call_asks: "Needs your approval for every call",
