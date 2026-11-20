@@ -1520,6 +1520,7 @@
     <string name="needs_you_your_step_not_answered_unconfirmed">Niet beantwoord: het is niet bevestigd.</string>
     <string name="needs_you_your_step_set_up_hello">Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon.</string>
     <string name="onboarding_age">Je moet minstens 16 zijn, of de leeftijd voor digitale toestemming in je land als die hoger is.</string>
+    <string name="onboarding_age_n">Je moet minstens %1$s zijn.</string>
     <string name="onboarding_card_lead">Elke taf werkt binnen een Card die jij uitgeeft: wat hij mag, met welke app en hoeveel. Daarbuiten vraagt hij het jou.</string>
     <string name="onboarding_card_title">Een Card is jouw toestemming</string>
     <string name="onboarding_consent_tick">Ik ga akkoord met %1$s en %2$s.</string>

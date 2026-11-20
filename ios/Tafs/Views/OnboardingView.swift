@@ -171,7 +171,7 @@ struct OnboardingView: View {
                               [(Words.Onboarding.kiffPrivacy, Legal.kiffPrivacy), (Words.Onboarding.tafsPrivacy, Legal.privacy)]))
                 .scaledFont(13).foregroundColor(Theme.soft).tint(Theme.amber)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(Words.Onboarding.age)
+            Text(Onboarding.ageLine())
                 .scaledFont(12).foregroundColor(Theme.dim)
                 .fixedSize(horizontal: false, vertical: true)
         }

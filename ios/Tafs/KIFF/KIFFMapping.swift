@@ -99,7 +99,7 @@ enum KIFFMapping {
     static func taf(_ h: TafsCloud.HomeTaf, id: UUID, owner: String) -> Taf {
         func amount(_ a: TafsCloud.HomeTaf.Amount?) -> Money? { a.map { money($0.minor, unit: $0.unit, scale: $0.scale) } }
         func rule(_ r: TafsCloud.HomeTaf.Rule) -> CardRule {
-            CardRule(action: r.action, label: r.label, perAction: amount(r.perAction), perWindow: amount(r.perWindow),
+            CardRule(action: r.action, label: visible(r.label), perAction: amount(r.perAction), perWindow: amount(r.perWindow),
                      countPerWindow: r.countPerWindow, window: window(r.window, r.windowWords),
                      outside: r.outside == "refuse" ? .refuse : .hold, extraRoom: amount(r.extraRoom),
                      baseLimit: amount(r.baseLimit), roomEnds: r.roomWindowEnd)
@@ -178,12 +178,12 @@ enum KIFFMapping {
                 kind = .held; detail = Words.Record.waitingForYou
             default:
                 // KIFF's own words for why, when it has them (kiff/tafs#138).
-                kind = .refused; detail = c.reason.map { Words.Record.notSentBecause(reason: "\($0)") } ?? Words.Record.notSent
+                kind = .refused; detail = c.reason.map { Words.Record.notSentBecause(reason: visible("\($0)")) } ?? Words.Record.notSent
             }
-            var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: name(c.actionName, title: c.title),
+            var entry = RecordEntry(id: recordID(c.proposalID), tafID: tafID, kind: kind, title: visible(name(c.actionName, title: c.title)),
                                     detail: detail, at: c.createdAt)
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool", c.toolOutcome?.refusedBy == "connection", c.toolOutcome?.code != nil {
-                entry.detail = c.detail ?? Words.Record.connectionRefusedBeforeSending
+                entry.detail = c.detail.map(visible) ?? Words.Record.connectionRefusedBeforeSending
             }
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
@@ -192,15 +192,15 @@ enum KIFFMapping {
             }
             entry.amount = c.amount
             entry.readOnly = c.readOnly
-            entry.entityID = c.entityID
+            entry.entityID = c.entityID.map(visible)
             entry.action = c.actionName
             entry.onHash = c.onHash
             entry.onArg = c.onArg
             entry.answer = c.answer
             entry.receipt = c.receipt
-            entry.why = c.reasons
+            entry.why = c.reasons?.map(visible)
             entry.madeAt = c.madeAt
-            entry.reason = c.reason
+            entry.reason = c.reason.map(visible)
             return entry
         }
     }
@@ -294,13 +294,13 @@ enum KIFFMapping {
             ?? reasonBreach(e)?.reason ?? e.reason ?? outcomeText(reasonBreach(e)?.outcome)
         // A gateway call is filed under its tool call's id, which says nothing to the owner:
         // what it's on is in its arguments, as KIFF keeps them (kiff/tafs#102).
-        let name = says(e.action, title: e.title)
-        let summary = e.arguments == nil ? "\(name) \(e.entityID)" : name
+        let name = visible(says(e.action, title: e.title))
+        let summary = e.arguments == nil ? "\(name) \(visible(e.entityID))" : name
         var call = HeldCall(
             id: heldID(e.id),
             tafID: tafID,
             proposed: ProposedAction(action: e.action, summary: summary, amount: amount(of: e)),
-            reason: reason,
+            reason: visible(reason),
             heldAt: e.createdAt,
             expiresAt: e.expiresAt ?? e.createdAt.addingTimeInterval(10 * 60)
         )
@@ -399,8 +399,19 @@ enum KIFFMapping {
         return arguments.keys.sorted().compactMap { key in
             let k = key.lowercased()
             guard !shown.contains(k), !kiffOwnArguments.contains(k), let text = arguments[key]?.text, !text.isEmpty else { return nil }
-            return "\(key): \(text)"
+            return "\(visible(key)): \(visible(text))"
         }
+    }
+
+    /// A line from KIFF, a vendor or a taf as the approval and the record draw it (qa-kiff, 16:12): no direction
+    /// character (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C, `FileText.isDirection`), so a payee name
+    /// can't reorder how an amount or an IBAN beside it looks; any other control character becomes a space.
+    static func visible(_ text: String) -> String {
+        var kept = String.UnicodeScalarView()
+        for scalar in text.unicodeScalars where !FileText.isDirection(scalar) {
+            kept.append(FileText.isControl(scalar) ? " " : scalar)
+        }
+        return String(kept)
     }
 
     /// The amount to show above the answer: a parameter KIFF declares a unit for, in that

@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac (off):** the new welcome's age line says the person's country's age where its law asks for more than 16, from one table both apps read (`app/strings/ages.json`: India, Indonesia and Brazil at 18) ([onboarding.md](docs/onboarding.md)).

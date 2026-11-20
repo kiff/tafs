@@ -1,5 +1,6 @@
 {
   "onboarding.age": "Vous devez avoir au moins 16 ans, ou l'âge du consentement numérique de votre pays s'il est plus élevé.",
+  "onboarding.age_n": "Vous devez avoir au moins {age} ans.",
   "onboarding.card_lead": "Chaque taf travaille dans le cadre d'une Card que vous émettez : ce qu'il peut faire, avec quelle app et pour combien. Au-delà, il vous demande.",
   "onboarding.card_title": "Une Card est votre autorisation",
   "onboarding.consent_tick": "J'accepte {kiff_terms} et {tafs_terms}.",

@@ -1,0 +1,1 @@
+- **Android and Wear OS:** a payee name, an IBAN, a reason or an action's title from KIFF, a vendor, a taf or tafs cloud can no longer carry an invisible direction character onto an approval, the record, a Card, a notification or the watch, so nothing beside an amount can look reordered ([android-app.md](docs/android-app.md)).
