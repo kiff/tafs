@@ -110,7 +110,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **The last turns:** the chat opens on the last six turns of the person's own chat with the taf (`taf_chat`), read
     through the phone from `GET /v1/tafs/{id}/conversation` for a taf it lists, messages only, each cut as an answer is.
     This visit's turns show below them, once. Nothing is kept on the watch.
-  - **"From your watch" on the phone (W11)** leaves out a message to a taf (`kind: "taf"`, the PM's 01:22): it's already in
+  - **"From your watch" on the phone (W11)** leaves out a message to a taf (`kind: "taf"`): it's already in
     that taf's own chat on the phone.
   - **The words:** `watch.paused_still_answers` ("Paused: its schedule is off. It still answers what you send.", true to
     what `message()` does: only the schedule is paused) and `watch.read_more`, legal-i18n's, in 8 languages.
