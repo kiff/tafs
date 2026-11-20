@@ -64,6 +64,8 @@ class WatchRelay(
       is WatchRequest.Coach -> coach(request.text)
       is WatchRequest.Ask -> ask(request)
       is WatchRequest.Asks -> asks(request.since)
+      is WatchRequest.TafChat -> tafChat(request.tafId)
+      is WatchRequest.AskFull -> askFull(request.askId)
       is WatchRequest.Taf -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again within the floor, as Needs you: today's use is KIFF's now, not what the phone last drew.
@@ -114,6 +116,31 @@ class WatchRelay(
     } catch (_: java.io.IOException) {
       // Sent, perhaps, with no answer back: only a retry with the same id tells.
       WatchReply.Unsure
+    }
+  }
+
+  /** A taf's chat's last turns, for a taf this phone lists: read only, as the chat view reads them. */
+  private suspend fun tafChat(tafId: String): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val messages = model.watchTafChat(tafId) ?: return WatchReply.Failed(Words.Watch.openOnPhone)
+      WatchReply.TafChat(chatLines(messages))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      WatchReply.Failed(Words.Watch.openOnPhone)
+    }
+  }
+
+  /** Read more: tafs cloud's whole answer, or, without one, the rest is on the phone. */
+  private suspend fun askFull(askId: String): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      model.watchAskFull(askId)?.let { WatchReply.AskFull(it) } ?: WatchReply.Failed(Words.Watch.moreOnPhone)
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      WatchReply.Failed(Words.Watch.moreOnPhone)
     }
   }
 
@@ -382,6 +409,20 @@ class WatchRelay(
       )
     }
 
+    /**
+     * A taf's chat as the watch shows it: messages with words only (a run's kickoff note isn't a turn), the last
+     * [ChatLine.LAST], each cut as Coach's answer is on the wrist, with whether more is on the phone.
+     */
+    fun chatLines(messages: List<bot.tafs.app.model.ChatMessage>): List<bot.tafs.watchlink.ChatLine> =
+      messages.filter { it.kind == bot.tafs.app.model.ChatMessage.Kind.message && it.text.isNotBlank() }
+        .takeLast(bot.tafs.watchlink.ChatLine.LAST)
+        .map { m ->
+          val words = m.text.trim()
+          val cut = words.length > COACH_SHORT
+          bot.tafs.watchlink.ChatLine(m.id, m.from == bot.tafs.app.model.ChatMessage.From.owner, m.at.toString(),
+            if (cut) words.take(COACH_SHORT).trimEnd() + "\u2026" else words, more = cut)
+        }
+
     /** A calendar day as tafs cloud reads it: its line, and each event on that day with its time and its taf's name. */
     fun calendarDay(day: String, read: bot.tafs.app.kiff.CalendarRead): WatchReply.CalendarDay = WatchReply.CalendarDay(
       day = day,
@@ -408,7 +449,7 @@ class WatchRelay(
     fun tafs(state: AppState): WatchReply.Tafs = WatchReply.Tafs(
       tafs = state.tafs.map { taf ->
         val halted = state.haltOf(taf.id).halted || state.haltOf(null).halted
-        TafLine(taf.id, taf.name, if (halted) Words.Taf.State.halted else taf.now, halted)
+        TafLine(taf.id, taf.name, if (halted) Words.Taf.State.halted else taf.now, halted, paused = taf.paused && !halted)
       },
       allHalted = state.haltOf(null).halted,
     )

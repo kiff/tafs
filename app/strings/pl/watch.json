@@ -65,6 +65,7 @@
   "watch.open_on_phone": "Otwórz na telefonie",
   "watch.page.brief": "Podsumowanie",
   "watch.page.inbox": "Skrzynka",
+  "watch.paused_still_answers": "Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.",
   "watch.phone_not_reachable": "Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.",
   "watch.play": "Odtwórz",
   "watch.qr.needs_me_today": "Co dziś na mnie czeka?",
@@ -72,6 +73,7 @@
   "watch.qr.tell_me_more": "Powiedz więcej",
   "watch.qr.thanks": "Dzięki",
   "watch.quick_reply": "Szybka odpowiedź",
+  "watch.read_more": "Czytaj dalej",
   "watch.ready": "Gotowe",
   "watch.ready_count": {
     "few": "{count} gotowe",

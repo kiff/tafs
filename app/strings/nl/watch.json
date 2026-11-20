@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Openen op telefoon",
   "watch.page.brief": "Overzicht",
   "watch.page.inbox": "Inbox",
+  "watch.paused_still_answers": "Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.",
   "watch.phone_not_reachable": "Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.",
   "watch.play": "Afspelen",
   "watch.qr.needs_me_today": "Wat wacht er vandaag op mij?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Vertel meer",
   "watch.qr.thanks": "Bedankt",
   "watch.quick_reply": "Snel antwoord",
+  "watch.read_more": "Lees verder",
   "watch.ready": "Klaar",
   "watch.ready_count": {
     "one": "{count} klaar",

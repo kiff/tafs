@@ -1,6 +1,7 @@
 package bot.tafs.wear
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.PagerState
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.Button
+import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
@@ -54,7 +56,8 @@ internal fun TafScreen(
   outcome: WatchModel.Outcome?,
   act: Actions,
   openInbox: () -> Unit,
-  pager: PagerState = rememberPagerState { 2 },
+  chat: Boolean = WATCH_TAF_CHAT && WATCH_V2,
+  pager: PagerState = rememberPagerState { if (chat) 3 else 2 },
 ) {
   var confirming by remember(open.tafId) { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
@@ -78,10 +81,12 @@ internal fun TafScreen(
       state = rememberScalingLazyListState(initialCenterItemIndex = 0),
       verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-      if (i == 0) {
-        tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(1) } })
-      } else {
-        tafSettings(open, outcome, act, halt = { confirming = true })
+      // 1A: its chat first, then its page, then its settings; with the switch off, its page and settings as before.
+      val page = if (chat) i - 1 else i
+      when {
+        page < 0 -> tafChat(open, act)
+        page == 0 -> tafPage(open, outcome, act, openInbox, settings = { scope.launch { pager.animateScrollToPage(pager.pageCount - 1) } })
+        else -> tafSettings(open, outcome, act, halt = { confirming = true })
       }
     }
   }
@@ -145,6 +150,96 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
       item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.openOnPhone) } }
     }
     is WatchModel.TafRead.Read -> Unit
+  }
+}
+
+/**
+ * A taf's chat (the owner's 1A): its state, the last turns as the phone shows them, this visit's turns with its answers, then
+ * Message {taf}, Type and Quick reply. Halted, nothing is sent: Resume on your phone. Paused, the message still goes, and it
+ * answers now (2A). A long answer shows its first part with Read more, read whole only on the tap. Nothing here is kept.
+ */
+private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions) {
+  item { ListHeader { Text(open.name, textAlign = TextAlign.Center) } }
+  when {
+    open.halted -> Unit
+    open.paused -> item { Centred(Words.Watch.pausedStillAnswers, Look.held) }
+    else -> (open.read as? WatchModel.TafRead.Read)?.page?.state?.let { item { Centred(it, Look.dim) } }
+  }
+  (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
+    item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null) }
+  }
+  for (turn in open.chat.turns) {
+    item { ChatBubble(turn.said, mine = true) }
+    item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act) }
+  }
+  if (open.halted) {
+    item { Centred(Words.Halt.Explain.halted, Look.danger) }
+    item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
+    return
+  }
+  item {
+    Button(onClick = { act.messageTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Look.send, contentColor = Look.onSend)) {
+      Text(Words.Chat.messageTaf(open.name), maxLines = 2)
+    }
+  }
+  item {
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+      Button(onClick = { act.typeTaf(open.tafId) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.type, maxLines = 1) }
+      for (line in quickReplies().take(1)) {
+        Button(onClick = { act.quickTaf(open.tafId, line) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(line, maxLines = 2) }
+      }
+    }
+  }
+}
+
+/** A line under a taf's name in its chat: its state, the paused line, or why nothing is sent. */
+@Composable
+private fun Centred(words: String, color: androidx.compose.ui.graphics.Color) {
+  Text(words, style = MaterialTheme.typography.bodySmall, color = color, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
+}
+
+/** One turn's words: the person's on the right in their own colours, the taf's on the left, and what follows under them. */
+@Composable
+internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null) {
+  androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp), contentAlignment = if (mine) androidx.compose.ui.Alignment.CenterEnd else androidx.compose.ui.Alignment.CenterStart) {
+    Column(
+      Modifier.background(if (mine) Look.mineGround else Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
+      verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+      Text(text, style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
+      foot?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Look.dim) }
+    }
+  }
+}
+
+/**
+ * The taf's side of a turn: Sent, then "{taf} is answering", then its answer: its first part with Read more while there's more,
+ * the whole once read, "The rest is on your phone" when it can't be; held, Approve on your phone (the watch never approves).
+ */
+@Composable
+internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.Whole?, act: Actions) {
+  val ask = turn.ask
+  if (!ask.ended && !ask.held) {
+    val words = if (ask.state == bot.tafs.watchlink.AskLine.ACCEPTED) Words.Watch.sent else Words.Chat.tafIsAnswering(taf)
+    Text(words, style = MaterialTheme.typography.labelSmall, color = Look.done, modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp))
+    return
+  }
+  val shown = (whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words
+  androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
+    Column(
+      Modifier.background(Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
+      verticalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+      Text(taf, style = MaterialTheme.typography.labelSmall, color = Look.done)
+      Text(shown, style = MaterialTheme.typography.bodySmall, color = Look.text)
+      if (ask.held) Text(Words.Watch.approveOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.held)
+      when (footOf(ask, whole)) {
+        WatchModel.Foot.ReadMore -> Button(onClick = { act.readMore(ask.id) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Watch.readMore) }
+        WatchModel.Foot.Reading -> Text(Words.Common.loading, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+        WatchModel.Foot.OnPhone -> Text(Words.Watch.moreOnPhone, style = MaterialTheme.typography.labelSmall, color = Look.dim)
+        null -> Unit
+      }
+    }
   }
 }
 
@@ -258,4 +353,12 @@ internal fun wordsOf(outcome: WatchModel.Outcome): String? = when (outcome) {
   WatchModel.Outcome.NeedsLock -> Words.Watch.needsLock
   WatchModel.Outcome.PhoneUnreachable -> Words.Watch.phoneNotReachable
   is WatchModel.Outcome.Halting, is WatchModel.Outcome.Several -> null
+}
+
+/** Read more while there's more and it hasn't been read; nothing once it's whole; the rest on the phone if it can't be. */
+internal fun footOf(ask: bot.tafs.watchlink.AskLine, whole: WatchModel.Whole?): WatchModel.Foot? = when (whole) {
+  is WatchModel.Whole.Read -> null
+  WatchModel.Whole.Reading -> WatchModel.Foot.Reading
+  WatchModel.Whole.OnPhone -> WatchModel.Foot.OnPhone
+  null -> if (ask.more) WatchModel.Foot.ReadMore else null
 }

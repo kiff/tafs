@@ -136392,6 +136392,59 @@
         }
       }
     },
+    "watch.paused_still_answers": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paused: its schedule is off. It still answers what you send."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa: su programación está detenida. Aun así responde a lo que envías."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause : son planning est arrêté. Il répond quand même à ce que vous envoyez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em pausa: o agendamento está parado. Ainda assim responde ao que envia."
+          }
+        }
+      }
+    },
     "watch.phone_not_reachable": {
       "extractionState": "manual",
       "localizations": {
@@ -136759,6 +136812,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Resposta rápida"
+          }
+        }
+      }
+    },
+    "watch.read_more": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiterlesen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read more"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lire la suite"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua a leggere"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees verder"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czytaj dalej"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ler mais"
           }
         }
       }

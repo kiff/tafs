@@ -14,7 +14,9 @@
     <string name="calendar_today">Vandaag</string>
     <string name="card_its_card">Zijn Card</string>
     <string name="chat_delete">Verwijderen</string>
+    <string name="chat_message_taf">Bericht aan %1$s</string>
     <string name="chat_stop">Stoppen</string>
+    <string name="chat_taf_is_answering">%1$s antwoordt</string>
     <string name="chat_waiting_for_you">Wacht op jou</string>
     <string name="coach_ask">Coach vragen</string>
     <string name="coach_start">Starten</string>
@@ -104,6 +106,7 @@
     <string name="watch_open_on_phone">Openen op telefoon</string>
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
+    <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
     <string name="watch_play">Afspelen</string>
     <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
@@ -111,6 +114,7 @@
     <string name="watch_qr_tell_me_more">Vertel meer</string>
     <string name="watch_qr_thanks">Bedankt</string>
     <string name="watch_quick_reply">Snel antwoord</string>
+    <string name="watch_read_more">Lees verder</string>
     <string name="watch_ready">Klaar</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s klaar</item>

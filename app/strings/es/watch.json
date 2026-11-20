@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Abrir en el teléfono",
   "watch.page.brief": "Resumen",
   "watch.page.inbox": "Bandeja",
+  "watch.paused_still_answers": "En pausa: su programación está detenida. Aun así responde a lo que envías.",
   "watch.phone_not_reachable": "Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo.",
   "watch.play": "Reproducir",
   "watch.qr.needs_me_today": "¿Qué me necesita hoy?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Cuéntame más",
   "watch.qr.thanks": "Gracias",
   "watch.quick_reply": "Respuesta rápida",
+  "watch.read_more": "Leer más",
   "watch.ready": "Lista",
   "watch.ready_count": {
     "one": "{count} listo",

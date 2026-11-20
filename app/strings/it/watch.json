@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Apri sul telefono",
   "watch.page.brief": "Riepilogo",
   "watch.page.inbox": "In arrivo",
+  "watch.paused_still_answers": "In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.",
   "watch.phone_not_reachable": "Il telefono non è raggiungibile. Avvicinalo, poi riprova.",
   "watch.play": "Riproduci",
   "watch.qr.needs_me_today": "Cosa mi aspetta oggi?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Dimmi di più",
   "watch.qr.thanks": "Grazie",
   "watch.quick_reply": "Risposta rapida",
+  "watch.read_more": "Continua a leggere",
   "watch.ready": "Pronta",
   "watch.ready_count": {
     "one": "{count} pronto",

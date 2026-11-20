@@ -765,6 +765,14 @@ class TafsCloud(
     return KiffClient.json.decodeFromString(WatchAskTaken.serializer(), String(send("POST", path, payload, mapOf("KIFF-Device-Signature" to "t=$signedAt,v1=$signature")))).ask
   }
 
+  /**
+   * Read more on a taf's answer from the watch (`GET /v1/watch/asks/{id}?full=1`): the whole answer, tafs cloud's `text`, read
+   * only on the tap and kept nowhere. Null when tafs cloud gives none (a run not finished, the taf no longer the person's to use).
+   */
+  suspend fun watchAskFull(id: String): String? =
+    KiffClient.json.decodeFromString(WatchAskFull.serializer(), String(send("GET", "/v1/watch/asks/" + java.net.URLEncoder.encode(id, "UTF-8") + "?full=1"))).text
+      ?.takeIf { it.isNotBlank() }
+
   /** One of the watch's asks, as tafs cloud has it, by its id: what a `watch_ask` push names. */
   suspend fun watchAskById(id: String): WatchAsk =
     KiffClient.json.decodeFromString(WatchAskTaken.serializer(), String(send("GET", "/v1/watch/asks/" + java.net.URLEncoder.encode(id, "UTF-8")))).ask
@@ -1220,6 +1228,9 @@ data class WatchAskTaf(val id: String, val name: String)
 
 @kotlinx.serialization.Serializable
 private data class WatchAskTaken(val ask: WatchAsk)
+
+@kotlinx.serialization.Serializable
+private data class WatchAskFull(val text: String? = null)
 
 @kotlinx.serialization.Serializable
 private data class WatchAskList(val asks: List<WatchAsk>)
