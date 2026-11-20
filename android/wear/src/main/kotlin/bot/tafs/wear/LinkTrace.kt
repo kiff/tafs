@@ -11,15 +11,19 @@ import kotlinx.coroutines.flow.StateFlow
  */
 object LinkTrace {
   data class Trace(val request: String, val lookupMs: Long, val sendMs: Long?, val bytes: Int?, val outcome: String) {
-    /** One faint line under a page: "tafs 0.4s + 1.9s · 3.2 kB", or "tafs ✕ no phone (0.1s)". */
+    /**
+     * One faint line under a page: "tafs 0.4s + 1.9s · 3.2 kB". A failure keeps the split, so a timeout while waiting on the
+     * phone reads "tafs ✕ timeout (0.2s + 9.8s)", and one while still looking for it "tafs ✕ timeout (10.0s)".
+     */
     val line: String get() = if (outcome == OK) "$request ${s(lookupMs)} + ${sendMs?.let(::s) ?: "–"} · ${bytes?.let(::kb) ?: "–"}"
-      else "$request ✕ $outcome (${s(lookupMs + (sendMs ?: 0))})"
+      else "$request ✕ $outcome (${s(lookupMs)}${sendMs?.let { " + " + s(it) } ?: ""})"
   }
 
   const val OK = "ok"
   const val NO_PHONE = "no phone"
   const val TIMEOUT = "timeout"
   const val UNREADABLE = "unreadable"
+  const val CANCELLED = "cancelled"
 
   private val last = MutableStateFlow<Trace?>(null)
   val latest: StateFlow<Trace?> get() = last

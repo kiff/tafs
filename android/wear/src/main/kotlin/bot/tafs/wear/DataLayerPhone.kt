@@ -22,11 +22,18 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     val (path, data) = WatchLink.encode(request)
     // Measured for the internal timing builds only (LinkTrace): the lookup, the send and how it ended, never the reply's words.
     val started = android.os.SystemClock.elapsedRealtime()
-    var lookupMs = 0L
+    var lookupMs: Long? = null
     var sendMs: Long? = null
     var bytes: Int? = null
     var outcome = LinkTrace.TIMEOUT
-    val trace = { if (BuildConfig.TIMING) LinkTrace.record(LinkTrace.Trace(LinkTrace.nameOf(path), lookupMs, sendMs, bytes, outcome)) }
+    val trace = {
+      if (BuildConfig.TIMING) {
+        // Whatever ended it, the time goes where it was spent: still looking for the phone, or waiting on its reply.
+        val spent = android.os.SystemClock.elapsedRealtime() - started
+        val lookup = lookupMs ?: spent
+        LinkTrace.record(LinkTrace.Trace(LinkTrace.nameOf(path), lookup, if (lookupMs == null) null else sendMs ?: (spent - lookup), bytes, outcome))
+      }
+    }
     return try {
       withTimeoutOrNull(timeoutMs) {
         val phone = capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
@@ -34,13 +41,15 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
         lookupMs = android.os.SystemClock.elapsedRealtime() - started
         if (phone == null) { outcome = LinkTrace.NO_PHONE; return@withTimeoutOrNull Asked.Unreachable }
         val reply = messages.sendRequest(phone.id, path, data).await()
-        sendMs = android.os.SystemClock.elapsedRealtime() - started - lookupMs
+        sendMs = android.os.SystemClock.elapsedRealtime() - started - (lookupMs ?: 0L)
         bytes = reply.size
         val decoded = WatchLink.decodeReply(reply)
         outcome = if (decoded != null) LinkTrace.OK else LinkTrace.UNREADABLE
         decoded?.let { Asked.Answered(it) } ?: Asked.NotUnderstood
-      } ?: Asked.Unreachable.also { if (lookupMs == 0L) lookupMs = android.os.SystemClock.elapsedRealtime() - started }
+      } ?: Asked.Unreachable
     } catch (e: CancellationException) {
+      // The screen closed or the ask was cancelled: not the link's failure, so not recorded as a timeout.
+      outcome = LinkTrace.CANCELLED
       throw e
     } catch (e: Exception) {
       // The Data Layer's own failures (no connection, the phone app not answering): the same to the person.
