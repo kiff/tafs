@@ -36,6 +36,17 @@ final class ContractTests: XCTestCase {
         XCTAssertNil(TafsCloud.CoachStart.read(try answer("setup-time-zone.json")), "no start in an answer without one")
     }
 
+    /// Coach's drafted door as tafs cloud sends it (`doors-api-draft.json`): drawn from `body`, whose canonical bytes are what
+    /// the owner signs, with the draft's own id inside them.
+    func testCoachsDraftedDoorReadsAsTafsCloudSendsIt() throws {
+        let draft = try XCTUnwrap(TafsCloud.DoorDraft.read(try answer("doors-api-draft.json")), "doors-api-draft.json: no draft read")
+        XCTAssertFalse(draft.draft.name.isEmpty)
+        XCTAssertFalse(draft.draft.job.isEmpty)
+        let body = try JCS.parse(draft.body)
+        XCTAssertEqual(body["kind"]?.string, "api")
+        XCTAssertEqual(body["draft_id"]?.string, draft.id, "the draft's id is signed with it")
+    }
+
     /// Home's part of the recipes answer, for someone who manages the tafs, with no live taf.
     func testHomesRecipesReadAsTafsCloudSendsThem() throws {
         let read = try JSONDecoder().decode(TafsCloud.Recipes.self, from: try answer("recipes-home.json"))

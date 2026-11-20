@@ -203,7 +203,7 @@ final class DoorsTests: XCTestCase {
         {"draft_id":"draft-0123456789abcdef",
          "draft":{"name":"Something else","fields":[],"job":"x","outcomes":[],"text":true},
          "made_at":"2026-10-24T09:00:00.000Z","expires_at":"2026-10-31T09:00:00.000Z",
-         "body":{"kind":"api","draft":{"name":"Order system",
+         "body":{"kind":"api","draft_id":"draft-0123456789abcdef","draft":{"name":"Order system",
            "fields":[{"name":"order","type":"string","max":40},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]},7],
            "job":"Check the return and refund it if the Card allows","outcomes":["refunded","refused","needs_review"],"text":false}}}
         """#
@@ -217,6 +217,8 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(draft.draft.outcomes, ["refunded", "refused", "needs_review"])
         let canonicalBody = try JCS.canonical(try XCTUnwrap(try JCS.parse(Data(answer.utf8))["body"]))
         XCTAssertEqual(draft.body, canonicalBody)
+        // The draft's id is inside the signed body (#1494): the owner's signature names the one draft tafs cloud keeps.
+        XCTAssertEqual(try JCS.parse(draft.body)["draft_id"]?.string, draft.id)
         XCTAssertNil(try TafsCloud.DoorDraft.read(Data(#"{"draft_id":"d","body":{"kind":"email","draft":{"name":"x","job":"y"}}}"#.utf8)),
                      "only an api door's draft")
         XCTAssertNil(try TafsCloud.DoorDraft.read(Data(#"{"draft_id":"d","body":{"kind":"api","draft":{"name":" ","job":"y"}}}"#.utf8)))
