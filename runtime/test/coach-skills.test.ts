@@ -43,7 +43,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are thirteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@29", "did-this-happen@1", "draft-the-card@40", "drive-the-app@3", "halting@1", "improve-a-taf@2", "name-the-tools@17", "set-up-a-taf@13", "the-dial@7", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@29", "did-this-happen@1", "draft-the-card@40", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@17", "set-up-a-taf@13", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -120,7 +120,7 @@ describe("Coach's core", () => {
     expect(body).not.toContain("its text is the notice, never lines or lang;");
   });
 
-  // A door from another application (the-dial@7): Coach drafts it with taf_door_api, asks only what's missing, refuses a
+  // A door from another application (the-dial@7 on): Coach drafts it with taf_door_api, asks only what's missing, refuses a
   // field that carries instructions, says the risk of sending the taf's words back, and never sees or writes a key.
   it("drafts a door from another application with fields that are data, and never handles its key", () => {
     const body = COACH_SKILLS.find((k) => k.name === "the-dial")!.body.replace(/\s+/g, " ");
@@ -431,6 +431,19 @@ describe("Coach's core", () => {
     expect(dial).toContain("A taf with a check keeps one timetable: when taf_dial refuses a second one, offer the nearest it names.");
   });
 
+  // A new check on a taf that had one was read as a second timetable (a separate trigger offered); the check moved to
+  // another app while the runs still read the old one; a schedule's input was put in a wake; and a version's note said
+  // the taf now did something its stored instructions didn't (the-dial@8, improve-a-taf@3).
+  it("replaces a check in place, moves the runs' reads with it, and never claims a change a version doesn't carry", () => {
+    const dial = COACH_SKILLS.find((k) => k.name === "the-dial")!.body.replace(/\s+/g, " ");
+    expect(dial).toContain("A new check is no second timetable: the same wakes with the new check replace it.");
+    expect(dial).toContain("A check moved to another app moves the runs' reads too: a version from improve-a-taf that reads there.");
+    expect(dial).toContain("A wake never takes input: what runs do is in the instructions; change those.");
+    const improve = COACH_SKILLS.find((k) => k.name === "improve-a-taf")!.body.replace(/\s+/g, " ");
+    expect(improve).toContain("When its work moves to another app or connection (its check reads there now), every step that reads or writes the old one is rewritten for the new one's tools: none of the old tools' names stays in them.");
+    expect(improve).toContain("note: what changed in one short sentence in the owner's language, only what this version's notes or draft carry (a summary alone changes no run, so it never says the taf now does something else)");
+  });
+
   // A taf on a large list paged through it until its cost cap, its first check failed, and Coach called it set up:
   // size the job first, and never call a taf working after its check failed.
   it("sizes the job before drafting it, and never calls a taf working after its first check failed", () => {
@@ -495,14 +508,14 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
     expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "improve-a-taf@3", "name-the-tools@17"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
     expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "name-the-tools@17", "set-up-a-taf@13", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "improve-a-taf@2", "name-the-tools@17"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@29", "draft-the-card@40", "halting@1", "improve-a-taf@3", "name-the-tools@17"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
@@ -511,7 +524,7 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
     // planque's and KIFF's tools never reach tafs cloud (KIFF's gateway serves them): their skills come with the start.
     expect(toolSkills("kiff_draft")).toEqual([]);
     expect(toolSkills("catalog")).toEqual([]);
-    expect(toolSkills("taf_dial")).toEqual(["the-dial@7"]);
+    expect(toolSkills("taf_dial")).toEqual(["the-dial@8"]);
     expect(toolSkills("taf_task")).toEqual(["the-tafs@2"]);
     expect(toolSkills("taf_pause")).toEqual(["halting@1"]);
     expect(toolSkills("stripe_refund_k3f9")).toEqual([]);

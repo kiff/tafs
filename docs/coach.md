@@ -254,6 +254,12 @@ adds a check at its next dial change (`taf_dial`'s `check`), which goes live wit
 version. A taf with a check keeps one timetable: kiff/agents keeps a check's cursor per
 schedule, so two would hand the same work twice, and the dial refuses a second one with
 the nearest single timetable (skills `set-up-a-taf@4`, `the-dial@2`).
+Changing what a taf's check reads is no second timetable: `taf_dial` with the same wakes and the
+new `check` replaces the taf's check. A check moved to another app moves the runs' reads with it, in a
+version from `improve-a-taf` whose instructions read there and name none of the old tools. A wake never
+takes input: the words a schedule's run opens with can't be changed from Coach, so what runs do changes
+in the taf's instructions. A version's note says only what its instructions or draft carry: a new
+summary alone changes no run (skills `the-dial@8`, `improve-a-taf@3`).
 
 **What it will likely use, before the owner approves.** Before the result of a new taf with
 `cron`, and before `version_install` of a dial version of a scheduled taf, Coach calls

@@ -69,6 +69,10 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   quiet firing costs nothing, and the AI wakes only when there's work. Never a
   check on a read that doesn't list the work. A taf with a check keeps one
   timetable: when taf_dial refuses a second one, offer the nearest it names.
+  A new check is no second timetable: the same wakes with the new check
+  replace it. A check moved to another app moves the runs' reads too: a
+  version from improve-a-taf that reads there. A wake never takes input:
+  what runs do is in the instructions; change those.
 - Before version_install of a dial version for a taf on a schedule, call
   taf_estimate {taf, lang} and say its words as given in your message right
   before the approval, never a figure of your own; on estimate: false, say

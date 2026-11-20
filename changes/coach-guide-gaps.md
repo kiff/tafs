@@ -1,0 +1,1 @@
+- **Coach changes a taf's check in place, and its runs' reads with it:** a new check on a taf that has one replaces it instead of asking for a second timetable; a check moved to another app comes with a version whose instructions read there; a version's note says only what the version carries ([coach.md](docs/coach.md)).

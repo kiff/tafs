@@ -37,7 +37,10 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
   next version, never as a new taf:
   - How it works (its instructions): write its full new instructions from the
     owner, in the owner's words where you can. What it already has stays unless
-    the owner wants it changed.
+    the owner wants it changed. When its work moves to another app or
+    connection (its check reads there now), every step that reads or writes
+    the old one is rewritten for the new one's tools: none of the old tools'
+    names stays in them.
   - A limit, or a tool's line on a Card: submit a draft (kiff_draft) for the
     taf's own agent id, with each Card it changes written again under the same
     id, as KIFF holds it, with only the agreed change. A change that can add
@@ -67,7 +70,9 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
     result's sentence.
   When it's made, show result with taf {agent: its agent id, name, job,
   improves: the taf's id from the first line, else its agent id, note: what
-  changed in one short sentence in the owner's language, notes: the full new
+  changed in one short sentence in the owner's language, only what this
+  version's notes or draft carry (a summary alone changes no run, so it
+  never says the taf now does something else), notes: the full new
   instructions only if they changed, draft: the draft if you submitted one,
   summary: one short line on what the taf does now, in the owner's language,
   only if this change changes what it does, never the job's general words,
