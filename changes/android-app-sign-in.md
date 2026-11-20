@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** the welcome's one tick for the terms, with KIFF's and tafs's pages linked and Continue off until it's ticked, and the app side of signing in once (PKCE S256, the state check, our redirect only, and the token step) ([onboarding.md](docs/onboarding.md)).

@@ -29,3 +29,20 @@ lines with links (`consent_tick`, `privacy_links`) take their link words as plac
 and each link's words are the title of the page it opens in that language. `Legal.linked` puts each link wherever the
 language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`; tafs's are `Legal.terms` and
 `Legal.privacy`.
+
+## Android
+
+Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
+
+- **The welcome** (`OnboardingView`, step 1): the same tick, links and age line, with `ConsentTick` and **Continue**
+  off until the box is ticked. The box is Material's checkbox, so TalkBack reads it as the whole tick line; the links
+  in the line are their own targets. `linked` puts each link where the language puts it. `Legal.kiffTerms` and
+  `Legal.kiffPrivacy` are KIFF's pages in the app's language (`/de/terms`), English for any other.
+- **The sign-in's app side** (`kiff/AppSignIn.kt`, step 2): a 43-character verifier and its S256 challenge, a fresh
+  `state`, and the authorize link (`client_id=tafs-app`, `redirect_uri=dev.kiff.tafs:/oauth`, `ui_locales` when
+  KIFF speaks the app's language, `login_hint` when given). A link back is taken only when it's
+  `dev.kiff.tafs:/oauth` exactly, with this attempt's `state`. Another state, or one given twice, is never used, not
+  even as a refusal. `KiffClient.appToken` trades the code at `POST /v1/auth/app/token` with its verifier, the terms
+  version and the device exactly as `/v1/auth/device/start` sends it, for today's `DeviceToken`. KIFF's refusals keep
+  their code (`invalid_grant`, `terms_outdated`). The Custom Tab, its intent filter and the token step's place in
+  the sign-in come next, with the three cards and the first Home.
