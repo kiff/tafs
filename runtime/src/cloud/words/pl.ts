@@ -129,7 +129,7 @@ export const pl: Words = {
   approval_rules_missing: (tool: string) => `Zasady, które zaakceptowałeś, nie mówią, co robi „${tool}” po przekroczeniu limitu. Nic nie zostało zatwierdzone. Coach pokaże ci zasady jeszcze raz.`,
   approval_rules_unpinned: (tool: string) => `Zasady, które zaakceptowałeś, mówią, że połączenie pilnuje zasady dla „${tool}”, ale tak nie jest. Nic nie zostało zatwierdzone. Coach pokaże ci zasady jeszcze raz.`,
   approval_rules_figures: (tool: string) => `Ta Card ma dla „${tool}” inny limit niż zasady, które zaakceptowałeś. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
-  approval_rules_unsaid: "Zasady, które zaakceptowałeś, nie podawały każdego limitu tej Card. Nic nie zostało zatwierdzone. Coach pokaże zasady ponownie z każdym limitem, abyś najpierw je zaakceptował.",
+  approval_rules_unsaid: "Zaakceptowane zasady nie podawały każdego limitu tej Card. Nic nie zostało zatwierdzone. Coach pokaże zasady ponownie z każdym limitem, aby najpierw je zaakceptować.",
   approval_rules_unagreed: "Coach przygotował to, zanim zaakceptowałeś pokazane zasady. Nic nie zostało zatwierdzone. Najpierw zaakceptuj zasady, a Coach przygotuje to ponownie.",
   approval_rules_required: "Coach przygotował to, nie pokazując ci zasad do zaakceptowania. Nic nie zostało zatwierdzone. Coach najpierw pokaże ci zasady.",
   setup_every_call_asks: "Każde wywołanie wymaga Twojego zatwierdzenia",
