@@ -21,5 +21,6 @@
   "onboarding.tafs_lead": "A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.",
   "onboarding.tafs_privacy": "tafs Privacy Policy",
   "onboarding.tafs_terms": "the tafs Terms",
-  "onboarding.tafs_title": "Your tafs work for you"
+  "onboarding.tafs_title": "Your tafs work for you",
+  "onboarding.terms_changed": "The Terms changed since you ticked the box. Read them, then tick it again."
 }

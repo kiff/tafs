@@ -1542,6 +1542,7 @@
     <string name="onboarding_tafs_privacy">Política de Privacidade do tafs</string>
     <string name="onboarding_tafs_terms">os Termos do tafs</string>
     <string name="onboarding_tafs_title">Os seus tafs trabalham para si</string>
+    <string name="onboarding_terms_changed">Os termos mudaram desde que marcou a caixa. Leia-os e marque-a novamente.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Ainda nada</string>
     <string name="pair_added">Este %1$s está adicionado.</string>

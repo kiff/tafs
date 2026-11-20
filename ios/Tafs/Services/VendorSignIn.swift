@@ -31,6 +31,14 @@ final class VendorSignIn: NSObject, VendorSigningIn {
 
     private var session: ASWebAuthenticationSession?
     private var anchor: ASPresentationAnchor?
+    /// Where the page sends the browser back to: planque's `tafs://`, or KIFF's own sign-in's `dev.kiff.tafs:`
+    /// (`AppSignIn`), which only this app's session receives.
+    let callbackScheme: String
+
+    init(callbackScheme: String = "tafs") {
+        self.callbackScheme = callbackScheme
+        super.init()
+    }
 
     /// How long to wait for the app to be active before opening the page: just after
     /// Face ID, iOS gives the app back a moment later.
@@ -62,7 +70,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
             // continuation is resumed by whichever comes first, and only once: resuming
             // twice is a crash (TestFlight 175, on tapping an approval).
             let once = ResumeOnce(continuation)
-            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: "tafs") { callback, error in
+            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, error in
                 if let callback {
                     once.resume(.success(callback))
                 } else if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {

@@ -21,5 +21,6 @@
   "onboarding.tafs_lead": "Ein taf erledigt eine Aufgabe für dich, etwa Support-Antworten, verspätete Pakete oder das Nachfassen bei Leads. Frag Coach, und er richtet einen mit dir ein.",
   "onboarding.tafs_privacy": "tafs-Datenschutzerklärung",
   "onboarding.tafs_terms": "den tafs-Nutzungsbedingungen",
-  "onboarding.tafs_title": "Deine tafs arbeiten für dich"
+  "onboarding.tafs_title": "Deine tafs arbeiten für dich",
+  "onboarding.terms_changed": "Die Nutzungsbedingungen haben sich geändert, seit du das Kästchen angehakt hast. Lies sie und hake es dann erneut an."
 }

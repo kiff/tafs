@@ -76879,6 +76879,59 @@
         }
       }
     },
+    "onboarding.terms_changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Nutzungsbedingungen haben sich geändert, seit du das Kästchen angehakt hast. Lies sie und hake es dann erneut an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Terms changed since you ticked the box. Read them, then tick it again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las condiciones han cambiado desde que marcaste la casilla. Léelas y vuelve a marcarla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les conditions ont changé depuis que vous avez coché la case. Lisez-les, puis cochez-la à nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le condizioni sono cambiate da quando hai spuntato la casella. Leggile, poi spuntala di nuovo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De voorwaarden zijn gewijzigd sinds je het vakje aanvinkte. Lees ze en vink het dan opnieuw aan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warunki zmieniły się od zaznaczenia pola. Przeczytaj je i zaznacz pole ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os termos mudaram desde que marcou a caixa. Leia-os e marque-a novamente."
+          }
+        }
+      }
+    },
     "overview.hero": {
       "extractionState": "manual",
       "localizations": {

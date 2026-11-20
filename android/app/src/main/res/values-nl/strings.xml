@@ -1542,6 +1542,7 @@
     <string name="onboarding_tafs_privacy">Privacybeleid van tafs</string>
     <string name="onboarding_tafs_terms">de Voorwaarden van tafs</string>
     <string name="onboarding_tafs_title">Je tafs werken voor je</string>
+    <string name="onboarding_terms_changed">De voorwaarden zijn gewijzigd sinds je het vakje aanvinkte. Lees ze en vink het dan opnieuw aan.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nog niets</string>
     <string name="pair_added">Deze %1$s is toegevoegd.</string>
