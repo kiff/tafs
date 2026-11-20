@@ -977,12 +977,12 @@ describe("tafs cloud", () => {
   // taf names its own signed-out connection, and the app signs that same grant in again.
   it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
     const w = world();
-    const setup = async (status: string, lang = "en") => {
+    const setup = async (status: string, lang = "en", reconnect?: string) => {
       const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, requestContext: { http: { method: "GET" } },
         headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
         { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
           if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
-            { id: "grt_gmail", status, vendor: "Gmail", request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
+            { id: "grt_gmail", status, vendor: "Gmail", ...(reconnect ? { reconnect } : {}), request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
           ] }), { status: 200 });
           return depsOf(w).fetch!(url, init);
         }) as Deps["fetch"] });
@@ -992,8 +992,18 @@ describe("tafs cloud", () => {
       words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
     expect((await setup("connected")).connect_again).toBeUndefined();
+    // planque can't sign this one in again on the same account: a new sign-in, which brings back every taf that used it.
+    // The app calls connect-fresh straight away, never a reconnect bound to be refused first.
+    expect((await setup("needs_reconnect", "en", "fresh")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again", fresh: true,
+      words: "Gmail no longer takes the old sign-in, so Rae can't use it. Connect again with a new sign-in: one sign-in brings back every taf that used it.",
+      done_words: "Gmail is connected again on the new sign-in. Every taf that used it can use it again." });
+    expect((await setup("needs_reconnect", "en", "same")).connect_again).not.toHaveProperty("fresh");
+    expect((await setup("needs_reconnect", "de", "fresh")).connect_again?.words).toContain("neuen Anmeldung");
+    // A connected grant planque marks fresh asks nothing.
+    expect((await setup("connected", "en", "fresh")).connect_again).toBeUndefined();
     contract("taf-setup-connected", "GET /v1/tafs/{id}/setup for someone who manages the taf, with one app connected (Gmail): its connection as the Setup tab draws it.", await setup("connected"));
     contract("taf-setup-reconnect", "GET /v1/tafs/{id}/setup when the taf's own connection's sign-in has expired: the connection and the taf's Connect again.", await setup("needs_reconnect"));
+    contract("taf-setup-reconnect-fresh", "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true.", await setup("needs_reconnect", "en", "fresh"));
   });
 
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {

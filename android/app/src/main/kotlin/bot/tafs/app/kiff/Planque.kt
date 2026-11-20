@@ -149,6 +149,11 @@ data class Grant(
   @SerialName("agent_name") val agentName: String? = null,
   /** The connection's provider, as planque names it; a bot door lists the connections whose provider it names. */
   val provider: String? = null,
+  /**
+   * How planque signs it in again once signed out: `fresh`, a new sign-in that can't be compared with the old account and
+   * brings back every connection signed out on it (`connect-fresh`); else, or absent, on the same account.
+   */
+  val reconnect: String? = null,
   /** The bot a bot connection's token is, once given, as planque shows it: its @username names it. */
   val telegram: BotView? = null,
   /** Whether [digest] is the hash of the request as received: the app shows Approve only then. Set by the client, never read from planque. */
@@ -221,6 +226,9 @@ data class Grant(
    * sign-in at the provider is), so it's disconnected and connected again instead.
    */
   val signsInThroughProvider: Boolean get() = request.connector != null && connected && !takesKey
+
+  /** Sign in again is a new sign-in (`connect-fresh`), never a reconnect planque would refuse. */
+  val reconnectsFresh: Boolean get() = reconnect == "fresh"
 
   /** Reached with a key the owner gives (planque's `api_key`), not a sign-in: it's fixed by a new key. */
   val takesKey: Boolean get() = request.kind == "api_key"
@@ -362,14 +370,23 @@ class PlanqueClient(
    * shown. With [words], KIFF's words for its profile that the owner read, the body carries `kiff_profile` (KIFF's profile contract), so the
    * same signature covers the profile and the words.
    */
-  suspend fun approve(grant: Grant, words: ProfileWords? = null): Approved {
+  suspend fun approve(grant: Grant, words: ProfileWords? = null): Approved = approveAt(grant, words, "approve")
+
+  /**
+   * A new sign-in for a signed-out connection planque can't sign in again on its old account (`reconnect: fresh`): the first
+   * step in place of [approve], with the same body, signature and answer. Its confirm brings back every connection signed out
+   * on that account.
+   */
+  suspend fun connectFresh(grant: Grant, words: ProfileWords? = null): Approved = approveAt(grant, words, "connect-fresh")
+
+  private suspend fun approveAt(grant: Grant, words: ProfileWords?, step: String): Approved {
     if (!grant.digestMatches) throw PlanqueError.DigestMismatch
     val fields = buildMap {
       put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
       words?.let { put("kiff_profile", it.approval()) }
     }
     val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
-    return decode(raw("POST", "grants/${escaped(grant.id)}/approve", body))
+    return decode(raw("POST", "grants/${escaped(grant.id)}/$step", body))
   }
 
   /**

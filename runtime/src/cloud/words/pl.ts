@@ -104,6 +104,8 @@ export const pl: Words = {
   connect_again_title: "Połącz ponownie",
   connect_again_words: (app: string, taf: string) => `Logowanie do ${app} wygasło, więc ${taf} nie może z niego korzystać. Połącz ponownie, aby się zalogować.`,
   connect_again_done: (app: string, taf: string) => `${app} jest znów połączony. ${taf} może z niego korzystać.`,
+  connect_again_fresh_words: (app: string, taf: string) => `${app} nie przyjmuje już starego logowania, więc ${taf} nie może z niego korzystać. Połącz ponownie, logując się od nowa: jedno logowanie przywraca każdy taf, który z niego korzystał.`,
+  connect_again_fresh_done: (app: string) => `${app} jest znów połączony przez nowe logowanie. Każdy taf, który z niego korzystał, może znów z niego korzystać.`,
   connect_not_needed: (taf: string) => `${taf} nie używa tej aplikacji. Coach może ją skonfigurować.`,
   connect_tafs_unread: "Nie udało się teraz odczytać Twoich tafs, więc nic nie zostało połączone. Spróbuj ponownie za chwilę.",
   check_key_not_ready: "jego klucz nie był jeszcze gotowy; sprawdzi ponownie następnym razem",

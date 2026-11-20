@@ -503,6 +503,11 @@ language ("Gmail's sign-in has expired, so Rae can't use it. Connect again to si
 connection server's approve for that `grant` (as Connect apps' Sign in again does), so the same connection is
 signed in again with its tools and the taf's Card, and shows `done_words` once it's connected. It never sends
 the person to a list of every app.
+When planque says the connection can't be signed in again on the same account (its grant's `reconnect: "fresh"`:
+no account name kept for it, or the provider refused the account), `connect_again` also has `fresh: true`, with words
+saying one new sign-in brings back every taf that used it. The app then calls the connection server's
+`connect-fresh` for that `grant` in place of approve, opens its sign-in page and confirms as before. The confirm's
+`grants` lists every connection the one sign-in brought back. It never tries the reconnect that would be refused.
 
 `GET /v1/tafs/{id}/memory?all=true` returns all shared notes and this person's own
 notes, newest first, plus their `summary`. The older request without `all=true`

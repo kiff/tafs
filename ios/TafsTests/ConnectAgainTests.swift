@@ -24,6 +24,24 @@ final class ConnectAgainTests: XCTestCase {
         XCTAssertFalse(try KIFFClient.decoder.decode(TafsCloud.SetupView.self, from: Data((page + #","connect_again":"x"}"#).utf8)).connect_again?.usable ?? false)
     }
 
+    /// planque can't sign the connection in again on its old account (`reconnect: fresh`): tafs cloud says `fresh`, and so
+    /// does planque's grant. Either way the first step is connect-fresh, never an approve planque would refuse.
+    func testAFreshOneStartsANewSignInNeverAReconnectFirst() throws {
+        XCTAssertTrue(try again(#"{"grant":"grt_1","title":"Connect again","words":"w","fresh":true}"#).fresh)
+        XCTAssertFalse(try again(#"{"grant":"grt_1","title":"Connect again","words":"w"}"#).fresh)
+        XCTAssertFalse(try again(#"{"grant":"grt_1","title":"Connect again","words":"w","fresh":"yes"}"#).fresh, "another shape: not fresh")
+        let grant = #"{"id":"g1","status":"needs_reconnect","text":"","digest":"d","request":{"agent":"rae","server":"https://gmail.example/mcp","tools":[]},"events":[]"#
+        XCTAssertTrue(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data((grant + #","reconnect":"fresh"}"#).utf8)).reconnectsFresh)
+        XCTAssertFalse(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data((grant + #","reconnect":"same"}"#).utf8)).reconnectsFresh)
+        XCTAssertFalse(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data((grant + "}").utf8)).reconnectsFresh)
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let client = try String(contentsOf: root.appendingPathComponent("KIFF/PlanqueClient.swift"), encoding: .utf8)
+        XCTAssertTrue(client.contains(#"try await send("POST", "grants/\(escaped(grant.id))/connect-fresh", body: try Self.approveBody(grant, words: words))"#))
+        let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(app.contains("if fresh || grant.reconnectsFresh { return try await planque.connectFresh(grant, words: words) }"))
+        XCTAssertTrue(app.contains("let done = await connect(grantID: grant.id, shown: grant.digest, again: true, fresh: fresh || grant.reconnectsFresh)"))
+    }
+
     /// On the taf's Setup, first, for whoever manages it: that connection signed in again here, and the
     /// taf read again; tafs cloud's done words once planque says connected.
     func testTheTafSignsThatConnectionInAgainItself() throws {
@@ -37,7 +55,7 @@ final class ConnectAgainTests: XCTestCase {
         let start = try XCTUnwrap(app.range(of: "func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {"))
         let body = String(app[start.upperBound...].prefix(420))
         func at(_ s: String) throws -> String.Index { try XCTUnwrap(body.range(of: s), s).lowerBound }
-        XCTAssertTrue(try at("await reconnectApp(again.grant)") < (try at("await loadTafSetup(tafID)")), "that same connection, then the taf read again")
+        XCTAssertTrue(try at("await reconnectApp(again.grant, fresh: again.fresh)") < (try at("await loadTafSetup(tafID)")), "that same connection, then the taf read again")
         XCTAssertTrue(body.contains("if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }"), "done words only once planque says connected")
     }
 }

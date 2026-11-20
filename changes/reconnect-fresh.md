@@ -1,0 +1,1 @@
+- Connect again (on a taf's page, and from Sign in again in the brief) goes straight to a new sign-in when planque can't sign the connection in again on its old account (`reconnect: fresh`). One sign-in brings back every taf that used that account. The phone no longer tries a reconnect first that would be refused. Off until planque sends `fresh`.

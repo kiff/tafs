@@ -104,6 +104,8 @@ export const it: Words = {
   connect_again_title: "Connetti di nuovo",
   connect_again_words: (app: string, taf: string) => `L'accesso a ${app} è scaduto, quindi ${taf} non può usarlo. Connetti di nuovo per accedere.`,
   connect_again_done: (app: string, taf: string) => `${app} è di nuovo connesso. ${taf} può usarlo.`,
+  connect_again_fresh_words: (app: string, taf: string) => `${app} non accetta più il vecchio accesso, quindi ${taf} non può usarlo. Connetti di nuovo con un nuovo accesso: un solo accesso riporta ogni taf che lo usava.`,
+  connect_again_fresh_done: (app: string) => `${app} è di nuovo connesso con il nuovo accesso. Ogni taf che lo usava può usarlo di nuovo.`,
   connect_not_needed: (taf: string) => `${taf} non usa questa app. Coach può configurarla per ${taf}.`,
   connect_tafs_unread: "Non è stato possibile leggere i tuoi taf in questo momento, quindi non è stato collegato nulla. Riprova tra poco.",
   check_key_not_ready: "la sua chiave non era ancora pronta; ricontrolla la prossima volta",

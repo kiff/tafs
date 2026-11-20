@@ -83,15 +83,18 @@ extension TafsCloud {
         var title = ""
         var words = ""
         var doneWords = ""
+        /// planque can't sign it in again on the same account: a new sign-in (`connect-fresh`), never a reconnect first.
+        var fresh = false
         var usable: Bool { !grant.isEmpty && !title.isEmpty && !words.isEmpty }
-        init(grant: String = "", app: String = "", title: String = "", words: String = "", doneWords: String = "") {
-            self.grant = grant; self.app = app; self.title = title; self.words = words; self.doneWords = doneWords
+        init(grant: String = "", app: String = "", title: String = "", words: String = "", doneWords: String = "", fresh: Bool = false) {
+            self.grant = grant; self.app = app; self.title = title; self.words = words; self.doneWords = doneWords; self.fresh = fresh
         }
-        enum CodingKeys: String, CodingKey { case grant, app, title, words, doneWords = "done_words" }
+        enum CodingKeys: String, CodingKey { case grant, app, title, words, doneWords = "done_words", fresh }
         init(from decoder: Decoder) throws {
             guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
             func text(_ key: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: key)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
             grant = text(.grant); app = text(.app); title = text(.title); words = text(.words); doneWords = text(.doneWords)
+            fresh = ((try? c.decodeIfPresent(Bool.self, forKey: .fresh)) ?? nil) ?? false
         }
     }
     private func query(_ value: String) -> String {

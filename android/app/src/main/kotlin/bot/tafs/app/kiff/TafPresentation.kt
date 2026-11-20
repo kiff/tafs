@@ -74,7 +74,9 @@ import java.net.URLEncoder
  * [title], the line above it, and what's said once planque says it's connected again ([doneWords]).
  */
 @Serializable data class ConnectAgain(val grant: String = "", val app: String = "", val title: String = "", val words: String = "",
-  @SerialName("done_words") val doneWords: String = "")
+  @SerialName("done_words") val doneWords: String = "",
+  /** planque can't sign it in again on the same account: a new sign-in (`connect-fresh`), never a reconnect first. */
+  val fresh: Boolean = false)
 
 /** Read leniently: a shape this build doesn't know is no Connect again, never a Setup page that can't be read. */
 object LenientConnectAgain : kotlinx.serialization.KSerializer<ConnectAgain?> {

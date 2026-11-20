@@ -5147,10 +5147,15 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   // A connection whose sign-in the vendor no longer takes: the taf's own Connect again, naming its grant, so the app
   // signs that same connection in again (planque's approve) and the taf keeps its tools and Card. One job per view:
   // never "go to Connect apps".
+  // One planque can't sign in again on the same account (`reconnect: fresh`) is a new sign-in instead, which brings back
+  // every connection signed out on that account: the app calls planque's connect-fresh, never a reconnect bound to fail.
   const out = setup.connections.find((c) => c.reconnect);
   const w = wordsIn(langOf(event));
   return { ...setup,
-    ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title, words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) } } : {}),
+    ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
+      ...(out.fresh
+        ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
+        : { words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }

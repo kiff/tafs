@@ -104,6 +104,8 @@ export const nl: Words = {
   connect_again_title: "Opnieuw verbinden",
   connect_again_words: (app: string, taf: string) => `De aanmelding bij ${app} is verlopen, dus ${taf} kan het niet gebruiken. Verbind opnieuw om je aan te melden.`,
   connect_again_done: (app: string, taf: string) => `${app} is weer verbonden. ${taf} kan het gebruiken.`,
+  connect_again_fresh_words: (app: string, taf: string) => `${app} accepteert de oude aanmelding niet meer, dus ${taf} kan het niet gebruiken. Verbind opnieuw met een nieuwe aanmelding: één aanmelding brengt elke taf terug die het gebruikte.`,
+  connect_again_fresh_done: (app: string) => `${app} is weer verbonden met de nieuwe aanmelding. Elke taf die het gebruikte, kan het weer gebruiken.`,
   connect_not_needed: (taf: string) => `${taf} gebruikt deze app niet. Coach kan hem voor ${taf} instellen.`,
   connect_tafs_unread: "Je tafs konden nu niet worden gelezen, dus er is niets verbonden. Probeer het zo opnieuw.",
   check_key_not_ready: "de sleutel was nog niet klaar; het controleert de volgende keer opnieuw",

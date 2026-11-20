@@ -19,6 +19,11 @@ export interface GrantView {
   request: { agent: string; server?: string; tools?: Array<{ tool: string; name?: string; title?: string; setup_reads?: boolean }> };
   /** The connection's tools as KIFF names them, once planque has connected them: the Card's actions. */
   tools?: string[];
+  /**
+   * How planque signs a signed-out connection in again: `same`, on the same vendor account, or `fresh`, a new sign-in
+   * that can't be compared with the old one, which brings back every connection signed out on that account. Absent: same.
+   */
+  reconnect?: "same" | "fresh";
 }
 
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */
@@ -120,7 +125,7 @@ export function runningTool(events: SessionEvent[], run: Run | undefined): strin
 }
 
 export interface SetupView {
-  connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; action_count: number; action_words: string;
+  connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; fresh?: boolean; action_count: number; action_words: string;
     actions: Array<{ name: string; title: string; limits: string[]; steps: number[]; step_words: string }>;
     /** With no saved workflow, the line the app's sheet shows under its own Workflow heading, once. */
     workflow_words?: string;
@@ -170,7 +175,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
     return { id: g.id, name: names.get(g.id)!, status: g.status,
       status_words: g.status_words || ({ connected: w.setup_status_connected, listed: w.setup_status_listed, signed_in: w.setup_status_signed_in, needs_reconnect: w.setup_status_needs_reconnect, pending: w.setup_status_pending } as Record<string, string>)[g.status] || w.setup_status_unknown,
-      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
+      reconnect: g.status === "needs_reconnect", ...(g.status === "needs_reconnect" && g.reconnect === "fresh" ? { fresh: true } : {}), action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
       ...(custodyWords(g.custody, lang) ? { custody_words: custodyWords(g.custody, lang) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
       ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: siteSignIn(lang) } : {}),
