@@ -63,6 +63,22 @@ export function checkOf(v: unknown, tools?: readonly string[]): Check {
   return { tool, arguments: args as Record<string, unknown>, items: c.items, cursor, ...(id ? { id } : {}), ...(c.first ? { first: c.first as "new" | "all" } : {}), ...(grant ? { grant } : {}) };
 }
 
+/**
+ * Every field a trigger takes (Trigger's own, as the server writes them and the apps send them back): a wake with any other
+ * is refused, never written with the field dropped (the dial, dialVersion).
+ */
+export const TRIGGER_KEYS: ReadonlySet<string> = new Set(["kind", "form", "at", "days", "times", "every_minutes", "between", "date", "skip",
+  "operation", "args", "items", "cursor", "grant", "event", "config", "subscription", "name"]);
+
+/**
+ * A stored wake in a trigger's own form: TRIGGER_KEYS only. A version stored before the dial refused other fields can carry
+ * one (a check written inside a wake, Nov 2026); the knob hands its wakes back in this form, so what the apps send back is
+ * always taken.
+ */
+export function triggerOnly<T extends object>(t: T): T {
+  return Object.fromEntries(Object.entries(t).filter(([key]) => TRIGGER_KEYS.has(key))) as T;
+}
+
 /** A trigger from the dial or Coach's draft. */
 export interface Trigger {
   kind: "schedule" | "app_check" | "door" | "vendor_event" | "before_event" | "app_event";

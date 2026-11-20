@@ -1,0 +1,1 @@
+- **A dial refuses a check written inside a wake**, saying a taf's check goes beside its wakes, as the dial's own check. Before, it was dropped without a word, and the version kept the old read while Coach said it had moved.
