@@ -411,7 +411,7 @@ tarjeta, scheda, mosaico, tegel, karta).
 - **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear
   OS internal track, `wear:internal`, and no other: one edit, the bundle, the track's release with its notes, committed.
   The sign-in is the phone's (workload identity federation). A bundle Play reads as another `versionCode` commits nothing.
-- **Release notes:** `android/play/release-notes/<versionCode>/<locale>.txt`, in the same 8 languages, the watch's codes
+- **Release notes:** `android/play/release-notes/<versionCode>/<locale>.txt`, in the same languages as the phone's (Korean since 0.4.2), the watch's codes
   being in their own band. `test` checks the watch's current ones (`play_internal.py --wear --check`).
 - **Before `WEAR_UPLOAD` goes on:** Play takes a watch bundle only once the listing has the Wear OS form factor (Play
   Console › Test and release › Advanced settings › Form factors), which is a store-listing change and the owner's.
