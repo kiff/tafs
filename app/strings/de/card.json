@@ -9,6 +9,10 @@
     "one": "noch {count} Aufruf",
     "other": "noch {count} Aufrufe"
   },
+  "card.calls_left_line": {
+    "one": "noch {count} Aufruf {window} von {limit}",
+    "other": "noch {count} Aufrufe {window} von {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} von {count} Aufruf {window}",
     "other": "{used} von {count} Aufrufen {window}"

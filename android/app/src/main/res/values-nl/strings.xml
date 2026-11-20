@@ -319,6 +319,10 @@
         <item quantity="one">Nog %1$s aanroep</item>
         <item quantity="other">Nog %1$s aanroepen</item>
     </plurals>
+    <plurals name="card_calls_left_line">
+        <item quantity="one">Nog %1$s aanroep %2$s van %3$s</item>
+        <item quantity="other">Nog %1$s aanroepen %2$s van %3$s</item>
+    </plurals>
     <plurals name="card_calls_used_of">
         <item quantity="one">%2$s van %1$s aanroep %3$s</item>
         <item quantity="other">%2$s van %1$s aanroepen %3$s</item>

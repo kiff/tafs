@@ -343,6 +343,12 @@
         <item quantity="many">Zostało %1$s wywołań</item>
         <item quantity="other">Zostało %1$s wywołania</item>
     </plurals>
+    <plurals name="card_calls_left_line">
+        <item quantity="one">Zostało %1$s wywołanie %2$s z %3$s</item>
+        <item quantity="few">Zostały %1$s wywołania %2$s z %3$s</item>
+        <item quantity="many">Zostało %1$s wywołań %2$s z %3$s</item>
+        <item quantity="other">Zostało %1$s wywołania %2$s z %3$s</item>
+    </plurals>
     <plurals name="card_calls_used_of">
         <item quantity="one">%2$s z %1$s wywołania %3$s</item>
         <item quantity="few">%2$s z %1$s wywołań %3$s</item>

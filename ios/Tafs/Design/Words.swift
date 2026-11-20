@@ -615,6 +615,8 @@ enum Words {
         static func asksYou(formatted: String, sumLabel: String) -> String { Words.line("card.asks_you", formatted, sumLabel) }
         /// {count} calls left
         static func callsLeft(count: Int) -> String { Words.count("card.calls_left", count) }
+        /// {count} calls left {window} of {limit}
+        static func callsLeftLine(count: Int, window: String, limit: String) -> String { Words.count("card.calls_left_line", count, window, limit) }
         /// {used} of {count} calls {window}
         static func callsUsedOf(count: Int, used: String, window: String) -> String { Words.count("card.calls_used_of", count, used, window) }
         /// {count} calls {window}

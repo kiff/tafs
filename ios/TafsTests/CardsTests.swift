@@ -111,6 +111,21 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(last.hero?.words, "call left today of 200")
     }
 
+    /// Where the figure isn't drawn apart (a Card's row, its share line, VoiceOver), calls left are one line in the
+    /// language's own order (`card.calls_left_line`): in English as before, figure first; in Korean "오늘 200회 중
+    /// 180회 남음", never "180 오늘 200회 중 남은 호출". A money Card keeps its figure, then its words.
+    func testCallsLeftReadAsOneLineInTheLanguagesOrder() {
+        let reads = TafCard(id: "r", title: "Read Stripe", rules: [], calls: CardTotal(limit: 200, used: 20, window: .day))
+        XCTAssertEqual(reads.heroLine, "180 calls left today of 200")
+        XCTAssertEqual(reads.heroLine, "\(reads.hero!.figure) \(reads.hero!.words)", "English reads as it did")
+        let last = TafCard(id: "r", title: "Read Stripe", rules: [], calls: CardTotal(limit: 200, used: 199, window: .day))
+        XCTAssertEqual(last.heroLine, "1 call left today of 200")
+        let unread = TafCard(id: "c", title: "Reads", rules: [], calls: CardTotal(limit: 200, used: nil, window: .day))
+        XCTAssertEqual(unread.heroLine, "200 calls a day · use unavailable")
+        let money = TafCard(id: "m", title: "Refunds", rules: [], total: CardTotal(limit: .usd(300), used: .usd(0), window: .day))
+        XCTAssertEqual(money.heroLine, "\(money.hero!.figure) \(money.hero!.words)")
+    }
+
     func testACardWithNeitherShowsItsFirstLines() {
         let card = TafCard(id: "c", title: "Lookups", rules: [
             CardRule(action: "a", label: "Look up", perAction: eur(1000)),

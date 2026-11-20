@@ -15880,6 +15880,134 @@
         }
       }
     },
+    "card.calls_left_line|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostały %1$@ wywołania %2$@ z %3$@"
+          }
+        }
+      }
+    },
+    "card.calls_left_line|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ wywołań %2$@ z %3$@"
+          }
+        }
+      }
+    },
+    "card.calls_left_line|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch %1$@ Aufruf %2$@ von %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ call left %2$@ of %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda %1$@ llamada %2$@ de %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ appel restant %2$@ sur %3$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chiamata rimasta %2$@ su %3$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ aanroep %2$@ van %3$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ wywołanie %2$@ z %3$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chamada por usar %2$@ de %3$@"
+          }
+        }
+      }
+    },
+    "card.calls_left_line|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch %1$@ Aufrufe %2$@ von %3$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ calls left %2$@ of %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quedan %1$@ llamadas %2$@ de %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ appels restants %2$@ sur %3$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chiamate rimaste %2$@ su %3$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ aanroepen %2$@ van %3$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ wywołania %2$@ z %3$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chamadas por usar %2$@ de %3$@"
+          }
+        }
+      }
+    },
     "card.calls_left|few": {
       "extractionState": "manual",
       "localizations": {
