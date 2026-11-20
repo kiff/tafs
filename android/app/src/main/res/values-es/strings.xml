@@ -1533,11 +1533,16 @@
     <string name="onboarding_kiff_privacy">Política de privacidad de KIFF</string>
     <string name="onboarding_kiff_terms">las Condiciones del servicio de KIFF</string>
     <string name="onboarding_privacy_links">Cómo tratamos tus datos: %1$s · %2$s</string>
+    <string name="onboarding_row_kiff_privacy">Política de privacidad de KIFF</string>
+    <string name="onboarding_row_kiff_terms">Condiciones del servicio de KIFF</string>
+    <string name="onboarding_row_tafs_privacy">Política de privacidad de tafs</string>
+    <string name="onboarding_row_tafs_terms">Términos de tafs</string>
     <string name="onboarding_skip">Omitir</string>
     <string name="onboarding_tafs_lead">Un taf hace un trabajo por ti, como respuestas de soporte, paquetes con retraso o seguimiento de contactos. Pídeselo a Coach y lo prepara contigo.</string>
     <string name="onboarding_tafs_privacy">Política de privacidad de tafs</string>
     <string name="onboarding_tafs_terms">los Términos de tafs</string>
     <string name="onboarding_tafs_title">Tus tafs trabajan para ti</string>
+    <string name="onboarding_terms_changed">Las condiciones han cambiado desde que marcaste la casilla. Léelas y vuelve a marcarla.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nada todavía</string>
     <string name="pair_added">Este %1$s está añadido.</string>

@@ -25,6 +25,8 @@ final class KIFFClient {
         /// (the act takes the approval key every time) or `window_required` (the window has ended).
         /// Thrown only where no approval key can sign it again.
         case windowRefused(code: String)
+        /// The terms changed between the welcome's tick and the sign-in: the tick is asked for again.
+        case termsOutdated
 
         var errorDescription: String? {
             switch self {
@@ -38,6 +40,7 @@ final class KIFFClient {
             case .approvalKeyExists: return Words.Error.approvalKeyExists
             // The app's own words: KIFF's `detail` is for the log, never the person.
             case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
+            case .termsOutdated: return Words.Onboarding.termsChanged
             }
         }
     }
@@ -379,6 +382,32 @@ final class KIFFClient {
             case "expired_token": throw KIFFError.expired
             default: throw KIFFError.server(status: 400, message: message)
             }
+        }
+    }
+
+    /// The terms version in force, which the welcome's tick agrees to (`AppSignIn`): sent with the token request, so
+    /// KIFF records the consent in the same step that makes the session.
+    func appTermsVersion() async throws -> String {
+        struct Terms: Decodable { let termsVersion: String; enum CodingKeys: String, CodingKey { case termsVersion = "terms_version" } }
+        let terms: Terms = try await send("GET", "/v1/auth/app/terms", authorized: false)
+        return terms.termsVersion
+    }
+
+    /// Exchanges the in-app sign-in's code (`AppSignIn`) for the device flow's own session, binding this device's
+    /// keys as `startDeviceSignIn` does. Throws `.termsOutdated` when the terms changed since the tick.
+    func appToken(code: String, verifier: String, termsVersion: String, publicKey: Data? = nil, approvalPublicKey: Data? = nil,
+                  deviceName: String? = nil, platform: String? = nil, kind: String? = nil) async throws -> DeviceToken {
+        var body: [String: String] = ["client_id": AppSignIn.clientID, "code": code, "code_verifier": verifier,
+                                      "redirect_uri": AppSignIn.redirectURI, "terms_version": termsVersion]
+        if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
+        if let approvalPublicKey { body["approval_public_key"] = approvalPublicKey.base64EncodedString() }
+        if let deviceName { body["device_name"] = deviceName }
+        if let platform { body["platform"] = platform }
+        if let kind { body["kind"] = kind }
+        do {
+            return try await send("POST", "/v1/auth/app/token", body: body, authorized: false)
+        } catch KIFFError.server(409, "terms_outdated", _) {
+            throw KIFFError.termsOutdated
         }
     }
 

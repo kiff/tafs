@@ -19,8 +19,9 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
 3. **Three cards:** Your tafs, A Card is your permission, You stay in control. Each draws the app's own components
    with the sample's words, so they read in the person's language. The last card names each device's approval:
    Face ID or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`).
-4. **The first Home:** board 2, Ask Coach, and How tafs works, which reopens the cards with the privacy and terms
-   links (Account, or the Mac's sidebar).
+4. **The first Home:** with no taf, for anyone who may use Coach: board 2, tafs cloud's own empty line when it sends
+   one (else the app's "No tafs yet" and what Coach does), Ask Coach, and How tafs works, which reopens the cards with
+   the privacy and terms links (also in Account). Where tafs cloud lists recipes instead, Home is as it ships.
 
 ## Words
 

@@ -13,9 +13,14 @@
   "onboarding.kiff_privacy": "KIFF Privacy Policy",
   "onboarding.kiff_terms": "KIFF's Terms of Service",
   "onboarding.privacy_links": "How we handle your data: {kiff_privacy} · {tafs_privacy}",
+  "onboarding.row_kiff_privacy": "KIFF Privacy Policy",
+  "onboarding.row_kiff_terms": "KIFF Terms of Service",
+  "onboarding.row_tafs_privacy": "tafs Privacy Policy",
+  "onboarding.row_tafs_terms": "tafs Terms",
   "onboarding.skip": "Skip",
   "onboarding.tafs_lead": "A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.",
   "onboarding.tafs_privacy": "tafs Privacy Policy",
   "onboarding.tafs_terms": "the tafs Terms",
-  "onboarding.tafs_title": "Your tafs work for you"
+  "onboarding.tafs_title": "Your tafs work for you",
+  "onboarding.terms_changed": "The Terms changed since you ticked the box. Read them, then tick it again."
 }

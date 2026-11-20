@@ -13,9 +13,14 @@
   "onboarding.kiff_privacy": "Informativa sulla privacy di KIFF",
   "onboarding.kiff_terms": "le Condizioni di servizio di KIFF",
   "onboarding.privacy_links": "Come trattiamo i tuoi dati: {kiff_privacy} · {tafs_privacy}",
+  "onboarding.row_kiff_privacy": "Informativa sulla privacy di KIFF",
+  "onboarding.row_kiff_terms": "Condizioni di servizio di KIFF",
+  "onboarding.row_tafs_privacy": "Informativa sulla privacy di tafs",
+  "onboarding.row_tafs_terms": "Condizioni di tafs",
   "onboarding.skip": "Salta",
   "onboarding.tafs_lead": "Un taf fa un lavoro per te, come le risposte al supporto, i pacchi in ritardo o il seguito dei contatti. Chiedi a Coach e lo prepara con te.",
   "onboarding.tafs_privacy": "Informativa sulla privacy di tafs",
   "onboarding.tafs_terms": "le Condizioni di tafs",
-  "onboarding.tafs_title": "I tuoi taf lavorano per te"
+  "onboarding.tafs_title": "I tuoi taf lavorano per te",
+  "onboarding.terms_changed": "Le condizioni sono cambiate da quando hai spuntato la casella. Leggile, poi spuntala di nuovo."
 }

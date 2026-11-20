@@ -13,9 +13,14 @@
   "onboarding.kiff_privacy": "Política de Privacidade da KIFF",
   "onboarding.kiff_terms": "os Termos de Serviço da KIFF",
   "onboarding.privacy_links": "Como tratamos os seus dados: {kiff_privacy} · {tafs_privacy}",
+  "onboarding.row_kiff_privacy": "Política de Privacidade da KIFF",
+  "onboarding.row_kiff_terms": "Termos de Serviço da KIFF",
+  "onboarding.row_tafs_privacy": "Política de Privacidade do tafs",
+  "onboarding.row_tafs_terms": "Termos do tafs",
   "onboarding.skip": "Ignorar",
   "onboarding.tafs_lead": "Um taf faz um trabalho por si, como respostas de suporte, encomendas atrasadas ou acompanhamento de contactos. Peça ao Coach e ele configura um consigo.",
   "onboarding.tafs_privacy": "Política de Privacidade do tafs",
   "onboarding.tafs_terms": "os Termos do tafs",
-  "onboarding.tafs_title": "Os seus tafs trabalham para si"
+  "onboarding.tafs_title": "Os seus tafs trabalham para si",
+  "onboarding.terms_changed": "Os termos mudaram desde que marcou a caixa. Leia-os e marque-a novamente."
 }

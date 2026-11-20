@@ -1,0 +1,93 @@
+import XCTest
+@testable import Tafs
+
+/// The three cards after signing in (docs/onboarding.md).
+final class OnboardingTests: XCTestCase {
+    /// Next goes card by card; the last card's button ends them, and nothing goes past the last card.
+    func testNextGoesCardByCardThenGetStartedEnds() {
+        var steps = OnboardingSteps()
+        XCTAssertEqual(steps.page, .tafs)
+        XCTAssertFalse(steps.isLast)
+        steps.advance()
+        XCTAssertEqual(steps.page, .card)
+        steps.advance()
+        XCTAssertEqual(steps.page, .control)
+        XCTAssertTrue(steps.isLast, "the last card's button is Get started")
+        XCTAssertFalse(steps.finished)
+        steps.advance()
+        XCTAssertTrue(steps.finished)
+        XCTAssertEqual(steps.page, .control, "Get started ends on the last card, never past it")
+    }
+
+    /// Skip ends the cards from any card.
+    func testSkipEndsFromAnyCard() {
+        for start in OnboardingPage.allCases {
+            var steps = OnboardingSteps(start: start)
+            steps.skip()
+            XCTAssertTrue(steps.finished, "\(start)")
+        }
+    }
+
+    /// Reopened from How tafs works, the cards open on the one tapped.
+    func testHowItWorksOpensOnTheCardTapped() {
+        XCTAssertEqual(OnboardingSteps(start: .card).page, .card)
+        XCTAssertEqual(OnboardingSteps(start: .control).page, .control)
+    }
+
+    /// The last card names each device's own way to approve: a Mac with Touch ID or on the phone, never Face ID.
+    func testTheLastCardNamesThisDevicesWayToApprove() {
+        XCTAssertEqual(OnboardingPage.control.lead(isMac: false), Words.Onboarding.controlLead)
+        XCTAssertEqual(OnboardingPage.control.lead(isMac: true), Words.Onboarding.controlLeadMac)
+        XCTAssertNotEqual(Words.Onboarding.controlLead, Words.Onboarding.controlLeadMac)
+        XCTAssertEqual(OnboardingPage.tafs.lead(isMac: true), OnboardingPage.tafs.lead(isMac: false), "the other cards read the same everywhere")
+    }
+
+    /// The cards follow the celebration once on this device, and only with the new onboarding on.
+    func testTheCardsShowOnceAndOnlyWhenOn() {
+        XCTAssertTrue(Onboarding.showsCards(on: true, seen: false))
+        XCTAssertFalse(Onboarding.showsCards(on: true, seen: true), "seen here: Home at once")
+        XCTAssertFalse(Onboarding.showsCards(on: false, seen: false), "off: the celebration goes straight to Home, as it ships")
+        XCTAssertFalse(Onboarding.showsCards(seen: false), "ships off")
+    }
+
+    /// The first Home shows for anyone who may use Coach with the new onboarding on, whatever tafs cloud says there;
+    /// never with it off, and never for someone who may not use Coach.
+    func testTheFirstHomeShowsWithTheSwitchForWhoeverMayUseCoach() {
+        XCTAssertTrue(Onboarding.showsFirstHome(on: true, mayUseCoach: true))
+        XCTAssertFalse(Onboarding.showsFirstHome(on: true, mayUseCoach: false), "a viewer reads where shared tafs show, as today")
+        XCTAssertFalse(Onboarding.showsFirstHome(on: false, mayUseCoach: true), "off: Home as it ships")
+        XCTAssertFalse(Onboarding.showsFirstHome(mayUseCoach: true), "ships off")
+    }
+
+    /// tafs cloud's own empty line comes first when it sends one; the app's words only when it doesn't.
+    func testTheFirstHomeSaysTafsCloudsLineFirst() {
+        let cloud = Onboarding.firstHomeLines(cloud: "Nothing set up yet. Ask Coach.")
+        XCTAssertEqual(cloud.title, "Nothing set up yet. Ask Coach.")
+        XCTAssertNil(cloud.lead, "the server's words alone, no app line under them")
+        for none in [nil, ""] as [String?] {
+            let own = Onboarding.firstHomeLines(cloud: none)
+            XCTAssertEqual(own.title, Words.Home.noTafs)
+            XCTAssertEqual(own.lead, Words.Onboarding.homeLead)
+        }
+    }
+
+    /// How tafs works titles its four legal rows as their pages, never with the tick line's link words (written to sit
+    /// inside its sentence), and each opens its own page.
+    func testTheLegalRowsUseStandaloneTitles() {
+        let rows = HowTafsWorksView.legalRows
+        XCTAssertEqual(rows.map(\.url), [Legal.kiffPrivacy, Legal.privacy, Legal.kiffTerms, Legal.terms])
+        XCTAssertEqual(rows.map(\.title), [Words.Onboarding.rowKiffPrivacy, Words.Onboarding.rowTafsPrivacy,
+                                           Words.Onboarding.rowKiffTerms, Words.Onboarding.rowTafsTerms])
+        XCTAssertEqual(Set(rows.map(\.title)).count, 4, "four pages, four titles")
+    }
+
+    /// The pictures draw the sample's own tafs, the ones that never move money, and its Card, 28 left of 40.
+    func testThePicturesDrawTheSamplesOwnTafsAndCard() {
+        XCTAssertEqual(OnboardingPicture.sampleTafs.map(\.name),
+                       [TafTemplates.support.name, TafTemplates.parcels.name, TafTemplates.leads.name])
+        let card = OnboardingPicture.sampleCard
+        XCTAssertEqual(card.calls?.limit, 40)
+        XCTAssertEqual(card.calls?.used, 12)
+        XCTAssertEqual(card.title, Words.Sample.Card.refundsStripe)
+    }
+}

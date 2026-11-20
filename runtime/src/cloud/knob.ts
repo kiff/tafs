@@ -5,7 +5,7 @@
  */
 import type { Schedule } from "./agents.js";
 import type { ResultPlace } from "./handler.js";
-import { type Check, plannedOf, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
+import { triggerOnly, type Check, plannedOf, type Trigger, triggerOf, triggerWords, sameAppEvent } from "./triggers.js";
 import { placeWords, type VendorPlace } from "./places.js";
 import { timeIn } from "./work.js";
 import { everyWords, type Lang, plural, wordsIn } from "./words/index.js";
@@ -190,7 +190,10 @@ function placeOf(lang: Lang): Record<ResultPlace, { label: string; words: string
   };
 }
 
-export function knobOf(k: KnobInput): Knob {
+export function knobOf(input: KnobInput): Knob {
+  // Stored wakes in a trigger's own form (triggerOnly): the stops and size choices hand them back, and the dial takes them.
+  const clean = (s: KnobSetting): KnobSetting => ({ ...s, wakes: s.wakes.map((t) => triggerOnly(t)) });
+  const k: KnobInput = { ...input, ...(input.setting ? { setting: clean(input.setting) } : {}), ...(input.draft ? { draft: { ...input.draft, setting: clean(input.draft.setting) } } : {}) };
   const lang = k.lang ?? "en";
   const w = wordsIn(lang);
   const PLACE = placeOf(lang);

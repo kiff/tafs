@@ -21,6 +21,8 @@ struct HomeView: View {
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
     @State private var showingGallery: GalleryMode?
+    /// How tafs works, from the first Home (docs/onboarding.md).
+    @State private var showingHowItWorks = false
     @State private var galleryChoice: GalleryChoice?
 
     private func openHalt(_ tafID: UUID) {
@@ -132,21 +134,39 @@ struct HomeView: View {
                     } else {
                         // Board 2, no tafs yet (docs/ios-app.md › Illustrations), above the empty line.
                         Illustration.noTafs.frame(maxWidth: .infinity)
-                        Panel {
-                            if let words = model.recipes?.homeWords {
-                                // tafs cloud's empty line, whoever reads it: no words of the app's.
-                                Text(words).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                            } else {
-                                // Not read yet, or a tafs cloud from before the line: the app's own.
-                                Text(Words.Home.noTafs).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                                // Setting one up is Coach's: someone who may not use it reads where shared tafs show.
-                                Text(model.mayUseCoach ? Words.Home.Empty.coach : Words.Home.Empty.shared)
-                                    .scaledFont(14).foregroundColor(Theme.soft)
+                        if Onboarding.showsFirstHome(mayUseCoach: model.mayUseCoach) {
+                            // The first Home (docs/onboarding.md): tafs cloud's line, else the app's; Ask Coach; the cards again.
+                            let lines = Onboarding.firstHomeLines(cloud: model.recipes?.homeWords)
+                            Panel {
+                                Text(lines.title).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                if let lead = lines.lead {
+                                    Text(lead).scaledFont(14).foregroundColor(Theme.soft)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
-                        }
-                        // No job listed: "Say it in your own words" still leads to Coach.
-                        if let ownWords, let own = model.recipes?.homeOwnWords {
-                            OwnWordsRow(title: own.title, line: own.line, action: ownWords)
+                            Button(Words.Coach.ask) { model.startNewTaf() }
+                                .buttonStyle(PrimaryButtonStyle())
+                                .accessibilityIdentifier("home.askCoach")
+                            Button(Words.Onboarding.howItWorks) { showingHowItWorks = true }
+                                .buttonStyle(OutlineButtonStyle())
+                                .accessibilityIdentifier("home.howItWorks")
+                        } else {
+                            Panel {
+                                if let words = model.recipes?.homeWords {
+                                    // tafs cloud's empty line, whoever reads it: no words of the app's.
+                                    Text(words).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                } else {
+                                    // Not read yet, or a tafs cloud from before the line: the app's own.
+                                    Text(Words.Home.noTafs).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                                    // Setting one up is Coach's: someone who may not use it reads where shared tafs show.
+                                    Text(model.mayUseCoach ? Words.Home.Empty.coach : Words.Home.Empty.shared)
+                                        .scaledFont(14).foregroundColor(Theme.soft)
+                                }
+                            }
+                            // No job listed: "Say it in your own words" still leads to Coach.
+                            if let ownWords, let own = model.recipes?.homeOwnWords {
+                                OwnWordsRow(title: own.title, line: own.line, action: ownWords)
+                            }
                         }
                     }
                 }
@@ -170,6 +190,7 @@ struct HomeView: View {
         .refreshable { await model.refresh() }
         .screenBackground()
         .navigationDestination(isPresented: $showingCalendar) { CalendarView() }
+        .navigationDestination(isPresented: $showingHowItWorks) { HowTafsWorksView() }
         .navigationDestination(isPresented: $showingHalt) { HaltScreen(tafID: haltTaf) }
         .navigationDestination(isPresented: Binding(get: { namedTaf != nil }, set: { if !$0 { namedTaf = nil } })) {
             // A new page for each taf asked for, which opens on what was asked.

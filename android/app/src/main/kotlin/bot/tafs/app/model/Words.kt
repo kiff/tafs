@@ -1572,11 +1572,16 @@ object Words {
     val kiffPrivacy: String get() = Res.s(R.string.onboarding_kiff_privacy)
     val kiffTerms: String get() = Res.s(R.string.onboarding_kiff_terms)
     fun privacyLinks(kiffPrivacy: String, tafsPrivacy: String): String = Res.s(R.string.onboarding_privacy_links, kiffPrivacy, tafsPrivacy)
+    val rowKiffPrivacy: String get() = Res.s(R.string.onboarding_row_kiff_privacy)
+    val rowKiffTerms: String get() = Res.s(R.string.onboarding_row_kiff_terms)
+    val rowTafsPrivacy: String get() = Res.s(R.string.onboarding_row_tafs_privacy)
+    val rowTafsTerms: String get() = Res.s(R.string.onboarding_row_tafs_terms)
     val skip: String get() = Res.s(R.string.onboarding_skip)
     val tafsLead: String get() = Res.s(R.string.onboarding_tafs_lead)
     val tafsPrivacy: String get() = Res.s(R.string.onboarding_tafs_privacy)
     val tafsTerms: String get() = Res.s(R.string.onboarding_tafs_terms)
     val tafsTitle: String get() = Res.s(R.string.onboarding_tafs_title)
+    val termsChanged: String get() = Res.s(R.string.onboarding_terms_changed)
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
