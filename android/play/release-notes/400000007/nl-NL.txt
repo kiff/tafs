@@ -1,4 +1,4 @@
 Chat met een taf vanaf je horloge.
-- Open een taf om de laatste berichten te zien, en spreek of typ ertegen.
+- Open een taf om de laatste berichten te zien, en spreek of typ je bericht.
 - Een lang antwoord opent helemaal met Lees verder.
 - Goedkeuren blijft op je telefoon, en het horloge bewaart niets van de chat.
