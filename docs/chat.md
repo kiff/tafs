@@ -700,5 +700,6 @@ message and a line where a day starts, with none of its code). Coach's chat is t
   time Android drew between parts of a thread an hour apart.
 - **One rule for the phone and the watch:** `ChatTime` in `android/watchlink` (`ChatTimeTest`), with the patterns from
   `DateFormat.getBestDateTimePattern`; a pattern `java.time` can't read falls back to the language's short form. Android:
-  `messageTime` and `chatDay` (`model/AccountTime.kt`), drawn in `TafChatView` (`ChatTimesTest`). The watch: docs/watch-wear.md.
+  `messageTime` and `chatDay` (`model/AccountTime.kt`), drawn in `TafChatView` (`ChatTimesTest`). The watch: docs/watch-wear.md,
+  in the same account's zone, which the phone sends it (`WatchReply.Tafs.zone`), so a message reads the same time on both.
 - **iPhone, iPad, Apple Watch and the Mac follow** (mac12), with `Date.FormatStyle` and `setLocalizedDateFormatFromTemplate`.

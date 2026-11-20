@@ -34,6 +34,25 @@ class WatchModelTest {
     assertFalse(WatchModel.NeedsYouRead(2, "2 need you", emptyList()).allClear)
   }
 
+  /** Row 44, C: a chat's times are in the account's zone the phone names, as on the phone; signed out, the watch's own again. */
+  @Test fun theWatchsChatTimesAreInTheZoneThePhoneNames() = runTest {
+    var signedIn = true
+    val zoned = tafs.copy(zone = "Pacific/Kiritimati")
+    val model = WatchModel(Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(zoned) }, now = { t })
+    try {
+      model.refresh()
+      assertEquals(java.time.ZoneId.of("Pacific/Kiritimati"), WatchChatTime.zone)
+      // 23:30 in Paris on 19 Nov is already the 20th at 12:30 there: the header moves with the zone.
+      val late = java.time.Instant.parse("2026-11-19T22:30:00Z")
+      assertEquals(java.time.LocalDate.of(2026, 11, 20), WatchChatTime.dayOf(late))
+      signedIn = false
+      model.refresh()
+      assertEquals(java.time.ZoneId.systemDefault(), WatchChatTime.zone)
+    } finally {
+      WatchChatTime.use(null)
+    }
+  }
+
   @Test fun showsNeedsYouAndYourTafsInThePhonesWords() = runTest {
     val phone = Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }
     val model = WatchModel(phone, now = { t })

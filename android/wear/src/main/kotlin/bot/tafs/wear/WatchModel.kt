@@ -269,7 +269,8 @@ class WatchModel(
   /** The last turns of a taf's chat, read from the phone; nothing of them is kept once the chat closes. */
   private suspend fun readTafChat(tafId: String) {
     val history = when (val asked = phone.ask(WatchRequest.TafChat(now(), tafId))) {
-      is Asked.Answered -> (asked.reply as? WatchReply.TafChat)?.let { TafChat.History.Read(it.lines) } ?: TafChat.History.NotRead
+      is Asked.Answered -> (asked.reply as? WatchReply.TafChat)?.also { if (it.zone != null) WatchChatTime.use(it.zone) }
+        ?.let { TafChat.History.Read(it.lines) } ?: TafChat.History.NotRead
       else -> TafChat.History.NotRead
     }
     _taf.update { it?.takeIf { open -> open.tafId == tafId }?.let { open -> open.copy(chat = open.chat.copy(history = history)) } ?: it }
@@ -866,7 +867,8 @@ class WatchModel(
         }
         is WatchReply.SignedOut -> {
           tile?.signedOut()
-          // Signed out: nothing of the account stays on the watch, a kept message and a recording included.
+          // Signed out: nothing of the account stays on the watch, a kept message and a recording included, nor its zone.
+          WatchChatTime.use(null)
           deleteKept()
           clearInbox()
           if (_voice.value is Voice.Review) voiceNow = null
@@ -884,7 +886,8 @@ class WatchModel(
     }
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
-    val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }?.let { TafsRead(it.tafs, it.allHalted) }
+    val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }
+      ?.also { if (it.zone != null) WatchChatTime.use(it.zone) }?.let { TafsRead(it.tafs, it.allHalted) }
     if (_signedOutHere.value) return
     show(Shown.Read(needsYou, tafs, brief))
     // The phone answered: a message kept for later goes now.

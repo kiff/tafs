@@ -166,6 +166,17 @@ class WatchRelayTest {
     assertTrue(all.tafs.all { it.halted })
   }
 
+  /** Row 44, C: the watch shows a chat's times in the account's zone, as the phone does, so Your tafs names it. */
+  @Test fun yourTafsNamesTheAccountsZoneForTheWatchsTimes() {
+    val base = testModel().state.value.copy(mode = Mode.kiff)
+    try {
+      bot.tafs.app.model.AccountTime.use("Asia/Tokyo")
+      assertEquals("Asia/Tokyo", WatchRelay.tafs(base).zone)
+    } finally {
+      bot.tafs.app.model.AccountTime.use(null)
+    }
+  }
+
   /** A personal account is named by its email: the watch's Signed in shows it once, and a company's name under it. */
   @Test fun theWatchsAccountNamesTheAccountOnlyWhenItIsntTheEmail() {
     val base = testModel().state.value.copy(mode = Mode.kiff)

@@ -480,7 +480,7 @@ The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch
 | Path | What the phone does |
 | --- | --- |
 | `needs-you` | Reads Needs you: tafs cloud's count and its words, and each held call (its taf, what it wants, KIFF's amount, the reason) |
-| `tafs` | Reads each taf's state in one line |
+| `tafs` | Reads each taf's state in one line, with the account's time zone (`zone`), which the watch's chat times and days are in |
 | `refuse` | Refuses one held call, by `hold_id` |
 | `halt` | Halts one taf (`taf_id`), or every taf (`all: true`, in so many words: a body without its taf is never every taf) |
 | `coach` | Sends Coach a message as text (a watch from before Ask tafs; this one never sends it) |
@@ -509,7 +509,9 @@ the owner's picks of 20 Nov; `TafScreens.kt` `tafChat`, `WatchModel` `TafChat`; 
 sideways, so "one swipe below" on Apple Watch is one swipe on here). The chat shows its state, its last turns as the phone shows
 them (`taf-chat`, read only, the last 6, each cut as an answer is, with "The rest is on your phone"), this visit's turns (each
 message with its time under it, and a header where a day starts: Today, Yesterday, then the date, as on the phone,
-`WatchChatTime`, `eachDayHasItsHeaderAndEachMessageItsTime`; a line tafs cloud sent no time for has none), then
+`WatchChatTime`, `eachDayHasItsHeaderAndEachMessageItsTime`; a line tafs cloud sent no time for has none; in the account's
+zone, which the phone sends with Your tafs and a taf's chat, so the phone, the Apple Watch and this watch agree, the watch's
+own only from an older phone, and forgotten at sign-out, `theWatchsChatTimesAreInTheZoneThePhoneNames`), then
 the send bar, as in a phone's chat: a round keyboard (**Type**) and a round microphone (named **Message {taf}** for TalkBack),
 then a quick reply in its own words. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
 starts name none, so words never go to a taf by another start. The review is titled "Message {taf}". Sent, the turn shows in
