@@ -1,0 +1,1 @@
+- **A taf never sends a test write to see what KIFF does with it** (tafs cloud's run rules): each write is the item's real one, with its real details. An item left behind a hold still names no limit, now because the taf can't know what KIFF would have done with it, since each tool's description already shows its Card's limits ([docs/coach.md](../docs/coach.md)).
