@@ -1386,14 +1386,20 @@ class AppModel(
    * holds the key; then uses it as any sign-in does. Throws [KiffError.Expired] once the offer's time is up: the screen shows a
    * new one. KIFF decides everything else: whether the claim's proof holds, and what the session may do.
    */
-  suspend fun finishPairSignIn(offer: PairOffer) {
+  suspend fun finishPairSignIn(offer: PairOffer, termsVersion: String? = null) {
     // One signature, by the device key and without a prompt: it names only the nonce and the key, so every poll sends it.
     val proof = signer.signConfirmed(offer.claimMessage)
     val start = DeviceStart(
       deviceCode = offer.nonce, userCode = offer.checkCode, verificationUri = "", verificationUriComplete = "",
       expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
     )
-    val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    val token = try {
+      untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof, termsVersion) }
+    } catch (e: KiffError.Server) {
+      // The terms changed since the welcome's tick: KIFF says so before anything is claimed, so the tick is asked again.
+      if (termsVersion != null && e.status == 409 && e.message == TERMS_OUTDATED) throw AppSignInRefused(TERMS_OUTDATED)
+      throw e
+    }
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
 

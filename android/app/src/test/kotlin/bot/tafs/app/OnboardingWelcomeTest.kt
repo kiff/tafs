@@ -123,15 +123,41 @@ class OnboardingWelcomeTest {
 
   /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
   @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
-    var phone = 0
+    val sent = mutableListOf<String>()
+    var changed: () -> Unit = {}
     compose.setContent {
-      TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" }, onSignInWithPhone = { phone += 1 }) }
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "2026-11-14" },
+          onSignInWithPhone = { v, c -> sent += v; changed = c })
+      }
     }
     compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
     compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
     compose.onNodeWithTag("onboarding.with_phone").assertIsEnabled().performClick()
-    assertEquals(1, phone)
+    compose.waitForIdle()
+    assertEquals("the pairing carries the version the tick agreed to", listOf("2026-11-14"), sent)
+    // KIFF says the terms changed: the box is unticked and says why.
+    compose.runOnIdle { changed() }
+    compose.waitForIdle()
+    compose.onNodeWithTag("onboarding.terms_changed").assertExists()
+    compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
     assertTrue("the old way never shows beside Continue", compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
+  }
+
+  /** With no terms version to send, the phone way opens nothing and says it didn't work: consent is never skipped. */
+  @Test fun noTermsVersionNoPhoneWay() {
+    var opened = 0
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { throw java.io.IOException("offline") },
+          onSignInWithPhone = { _, _ -> opened += 1 })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.with_phone").performClick()
+    compose.waitForIdle()
+    assertEquals(0, opened)
+    compose.onNodeWithText(Words.SignIn.didntWork).assertExists()
   }
 
   @Test fun aPhoneHasNoPhoneWay() {
