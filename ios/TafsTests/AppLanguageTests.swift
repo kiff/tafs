@@ -53,7 +53,7 @@ final class AppLanguageTests: XCTestCase {
     func testThePickerListsTheDeviceThenTheEight() throws {
         XCTAssertEqual(Words.Settings.languageDevice(device: "iPhone"), "This iPhone's language")
         XCTAssertEqual(Words.languages.map { AppLanguage.name(of: $0) },
-                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski"])
+                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어"])
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
         XCTAssertTrue(account.contains("NavigationLink { LanguagePicker() }"), "Change language opens the app's own list")

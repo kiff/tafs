@@ -14,7 +14,7 @@ import bot.tafs.app.model.Words
 import java.util.Locale
 
 /**
- * The language the person picks for tafs in Account › Language (docs/android-app.md, "Words and languages"): one of the 8, or
+ * The language the person picks for tafs in Account › Language (docs/android-app.md, "Words and languages"): one it ships, or
  * the phone's own (none). Android 13+ keeps the choice itself, as the per-app language (`LocaleManager`), and recreates the
  * screen. On Android 11 and 12 it's kept here, in the app's own preferences: each context is made in it before anything reads
  * its resources (`TafsApplication` and `MainActivity`, `attachBaseContext`), and the screen is recreated after a change. Either
@@ -22,8 +22,8 @@ import java.util.Locale
  * `TafsApplication`, so the session and what's open stay.
  */
 object AppLocale {
-  /** The 8 tafs ships, in the languages table's order (docs/languages.md), as `locales_config` lists them. */
-  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl")
+  /** The languages tafs ships (app/strings/languages.json's `shipped`), in its order, as `locales_config` lists them. */
+  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko")
 
   /** Where the choice is kept on Android 11 and 12: a tag, or none for the phone's language. */
   interface Store {
@@ -34,7 +34,7 @@ object AppLocale {
   /** A row of the picker: [tag] null is the phone's language. */
   data class Choice(val tag: String?, val title: String)
 
-  /** The picker's rows: the phone's language first, then each of the 8 named in itself. */
+  /** The picker's rows: the phone's language first, then each it ships, named in itself. */
   fun choices(device: String = ThisDevice.word): List<Choice> =
     listOf(Choice(null, Words.Settings.languageDevice(device))) + TAGS.map { Choice(it, AppLanguage.name(it)) }
 

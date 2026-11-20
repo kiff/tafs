@@ -405,5 +405,30 @@
     "watch.menu",
     "work.duration.minutes",
     "work.duration.seconds"
+  ],
+  "ko": [
+    "app.name",
+    "approval.face_id",
+    "approval.security_key.pin",
+    "approval.touch_id",
+    "card.rule_line",
+    "chat.outcome.not_done",
+    "chat.working_on",
+    "coach.title",
+    "connect.login_placeholder",
+    "device.mac",
+    "device.windows",
+    "home.overview.column_card",
+    "home.overview.column_taf",
+    "home.tagline",
+    "home.title",
+    "overview.hero",
+    "record.on.short",
+    "record.on.whole",
+    "settings.devices.android_device",
+    "sign_in.welcome.title",
+    "taf.section.card",
+    "usage.solo",
+    "version.trial.chat_name"
   ]
 }
