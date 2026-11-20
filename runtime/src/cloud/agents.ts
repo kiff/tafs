@@ -241,12 +241,12 @@ export interface Run {
    * model's words: only a write KIFF allowed and the vendor didn't fail. Absent when there are none.
    */
   done?: Array<{ call_id?: string; tool?: string; resource?: string; input?: unknown }>;
+  /** The outcome the run answered its request with, as request_outcome accepted it (RunAt.outcomes); absent when none. */
+  outcome?: string;
   /**
    * How many writes the run sent, a write whose outcome isn't known included. Absent on a kiff/agents
    * that doesn't count them: then an empty `done` doesn't prove that nothing was done.
    */
-  /** The outcome the run answered its request with, as request_outcome accepted it (RunAt.outcomes); absent when none. */
-  outcome?: string;
   sent?: number;
   /**
    * The run's count of its calls, by tool, from their record (kiff/agents#421): those that act and those KIFF refused,

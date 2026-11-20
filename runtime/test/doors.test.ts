@@ -2031,10 +2031,10 @@ describe("an api door's keys and signed steps", () => {
   // The caller's side: another application hands the taf work with a key, and reads back how it went (design 2.1–3.6).
   describe("the caller's requests", () => {
     /** A world with an api door made, its key, and a way to call the caller's routes as another application. */
-    async function caller() {
+    async function caller(draft: typeof DRAFT = DRAFT) {
       const w = world();
       const s = signing(w);
-      const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
+      const made = await s.call("POST", doorsPath, { body: await apiBody(w, draft), headers: SIG });
       const door = made.body.door.id as string;
       const key = made.body.key.key as string;
       const logs: string[] = [];
@@ -2088,6 +2088,15 @@ describe("an api door's keys and signed steps", () => {
       expect(list.keys[0]).toMatchObject({ id: c.made.body.key.id, last_used_at: NOW.toISOString() });
       // The key never shows in a log line, the request logger's included.
       expect(c.logs.join("\n")).not.toContain(c.key);
+    }));
+
+    it("gives the run's whole answer as text when the owner chose it, its last line included", () => withFlag(async () => {
+      const c = await caller({ ...DRAFT, text: true });
+      const r = await c.submit("k1");
+      // The outcome is the tool's: no line of the answer is an outcome line to drop.
+      await ends(c, "refunded", "Checked A-1047: damaged in transit.\nRefunded €40 to the card.");
+      expect((await c.read(r.body.request_id)).body.result).toMatchObject({ outcome: "refunded",
+        text: "Checked A-1047: damaged in transit.\nRefunded €40 to the card." });
     }));
 
     it("answers bad_outcome for an outcome that isn't the door's, and for words that only claim one", () => withFlag(async () => {
