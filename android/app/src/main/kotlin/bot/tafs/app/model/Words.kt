@@ -1561,6 +1561,7 @@ object Words {
     val age: String get() = Res.s(R.string.onboarding_age)
     val cardLead: String get() = Res.s(R.string.onboarding_card_lead)
     val cardTitle: String get() = Res.s(R.string.onboarding_card_title)
+    fun consentTick(kiffTerms: String, tafsTerms: String): String = Res.s(R.string.onboarding_consent_tick, kiffTerms, tafsTerms)
     val controlLead: String get() = Res.s(R.string.onboarding_control_lead)
     val controlLeadAndroid: String get() = Res.s(R.string.onboarding_control_lead_android)
     val controlLeadMac: String get() = Res.s(R.string.onboarding_control_lead_mac)
@@ -1568,8 +1569,13 @@ object Words {
     val getStarted: String get() = Res.s(R.string.onboarding_get_started)
     val homeLead: String get() = Res.s(R.string.onboarding_home_lead)
     val howItWorks: String get() = Res.s(R.string.onboarding_how_it_works)
+    val kiffPrivacy: String get() = Res.s(R.string.onboarding_kiff_privacy)
+    val kiffTerms: String get() = Res.s(R.string.onboarding_kiff_terms)
+    fun privacyLinks(kiffPrivacy: String, tafsPrivacy: String): String = Res.s(R.string.onboarding_privacy_links, kiffPrivacy, tafsPrivacy)
     val skip: String get() = Res.s(R.string.onboarding_skip)
     val tafsLead: String get() = Res.s(R.string.onboarding_tafs_lead)
+    val tafsPrivacy: String get() = Res.s(R.string.onboarding_tafs_privacy)
+    val tafsTerms: String get() = Res.s(R.string.onboarding_tafs_terms)
     val tafsTitle: String get() = Res.s(R.string.onboarding_tafs_title)
   }
   object Overview {

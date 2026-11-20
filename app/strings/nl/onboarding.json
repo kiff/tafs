@@ -2,6 +2,7 @@
   "onboarding.age": "Je moet minstens 16 zijn, of de leeftijd voor digitale toestemming in je land als die hoger is.",
   "onboarding.card_lead": "Elke taf werkt binnen een Card die jij uitgeeft: wat hij mag, met welke app en hoeveel. Daarbuiten vraagt hij het jou.",
   "onboarding.card_title": "Een Card is jouw toestemming",
+  "onboarding.consent_tick": "Ik ga akkoord met {kiff_terms} en {tafs_terms}.",
   "onboarding.control_lead": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met Face ID of Touch ID, of weigert.",
   "onboarding.control_lead_android": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met je schermvergrendeling, of weigert.",
   "onboarding.control_lead_mac": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed met Touch ID of op je telefoon, of weigert.",
@@ -9,7 +10,12 @@
   "onboarding.get_started": "Aan de slag",
   "onboarding.home_lead": "Vertel Coach in je eigen woorden wat je gedaan wilt hebben. Die zet de taf met je op en laat je de Card zien voordat er iets draait.",
   "onboarding.how_it_works": "Zo werkt tafs",
+  "onboarding.kiff_privacy": "Privacybeleid van KIFF",
+  "onboarding.kiff_terms": "de Gebruiksvoorwaarden van KIFF",
+  "onboarding.privacy_links": "Zo gaan we met je gegevens om: {kiff_privacy} · {tafs_privacy}",
   "onboarding.skip": "Overslaan",
   "onboarding.tafs_lead": "Een taf doet één taak voor je, zoals supportantwoorden, late pakketten of opvolging van leads. Vraag het Coach en die zet er een met je op.",
+  "onboarding.tafs_privacy": "Privacybeleid van tafs",
+  "onboarding.tafs_terms": "de Voorwaarden van tafs",
   "onboarding.tafs_title": "Je tafs werken voor je"
 }

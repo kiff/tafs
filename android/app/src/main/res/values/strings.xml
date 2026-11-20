@@ -1522,6 +1522,7 @@
     <string name="onboarding_age">You must be at least 16, or your country\'s age of digital consent if it\'s higher.</string>
     <string name="onboarding_card_lead">Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.</string>
     <string name="onboarding_card_title">A Card is your permission</string>
+    <string name="onboarding_consent_tick">I agree to %1$s and %2$s.</string>
     <string name="onboarding_control_lead">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.</string>
     <string name="onboarding_control_lead_android">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.</string>
     <string name="onboarding_control_lead_mac">When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.</string>
@@ -1529,8 +1530,13 @@
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_home_lead">Tell Coach what you\'d like done, in your own words. It sets the taf up with you and shows you its Card before anything runs.</string>
     <string name="onboarding_how_it_works">How tafs works</string>
+    <string name="onboarding_kiff_privacy">KIFF Privacy Policy</string>
+    <string name="onboarding_kiff_terms">KIFF\'s Terms of Service</string>
+    <string name="onboarding_privacy_links">How we handle your data: %1$s · %2$s</string>
     <string name="onboarding_skip">Skip</string>
     <string name="onboarding_tafs_lead">A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.</string>
+    <string name="onboarding_tafs_privacy">tafs Privacy Policy</string>
+    <string name="onboarding_tafs_terms">the tafs Terms</string>
     <string name="onboarding_tafs_title">Your tafs work for you</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>

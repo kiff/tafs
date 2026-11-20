@@ -1522,6 +1522,7 @@
     <string name="onboarding_age">Devi avere almeno 16 anni, o l\'età del consenso digitale del tuo paese se è più alta.</string>
     <string name="onboarding_card_lead">Ogni taf lavora entro una Card che emetti tu: cosa può fare, con quale app e quanto. Oltre, ti chiede.</string>
     <string name="onboarding_card_title">Una Card è il tuo permesso</string>
+    <string name="onboarding_consent_tick">Accetto %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con Face ID o Touch ID, oppure rifiuti.</string>
     <string name="onboarding_control_lead_android">Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull\'orologio. Approvi con il blocco schermo, oppure rifiuti.</string>
     <string name="onboarding_control_lead_mac">Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi con Touch ID o sul telefono, oppure rifiuti.</string>
@@ -1529,8 +1530,13 @@
     <string name="onboarding_get_started">Inizia</string>
     <string name="onboarding_home_lead">Di\' a Coach con parole tue cosa vuoi che venga fatto. Prepara il taf con te e ti mostra la sua Card prima che parta qualsiasi cosa.</string>
     <string name="onboarding_how_it_works">Come funziona tafs</string>
+    <string name="onboarding_kiff_privacy">Informativa sulla privacy di KIFF</string>
+    <string name="onboarding_kiff_terms">le Condizioni di servizio di KIFF</string>
+    <string name="onboarding_privacy_links">Come trattiamo i tuoi dati: %1$s · %2$s</string>
     <string name="onboarding_skip">Salta</string>
     <string name="onboarding_tafs_lead">Un taf fa un lavoro per te, come le risposte al supporto, i pacchi in ritardo o il seguito dei contatti. Chiedi a Coach e lo prepara con te.</string>
+    <string name="onboarding_tafs_privacy">Informativa sulla privacy di tafs</string>
+    <string name="onboarding_tafs_terms">le Condizioni di tafs</string>
     <string name="onboarding_tafs_title">I tuoi taf lavorano per te</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Ancora niente</string>

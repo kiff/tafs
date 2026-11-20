@@ -2,6 +2,7 @@
   "onboarding.age": "Musisz mieć co najmniej 16 lat albo tyle, ile wynosi wiek zgody cyfrowej w Twoim kraju, jeśli jest wyższy.",
   "onboarding.card_lead": "Każdy taf działa w ramach Card, którą wydajesz: co może robić, w jakiej aplikacji i za ile. Poza tym pyta Ciebie.",
   "onboarding.card_title": "Card to Twoje pozwolenie",
+  "onboarding.consent_tick": "Akceptuję {kiff_terms} i {tafs_terms}.",
   "onboarding.control_lead": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz.",
   "onboarding.control_lead_android": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz blokadą ekranu albo odrzucasz.",
   "onboarding.control_lead_mac": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz.",
@@ -9,7 +10,12 @@
   "onboarding.get_started": "Zaczynamy",
   "onboarding.home_lead": "Powiedz Coachowi własnymi słowami, co ma zostać zrobione. Skonfiguruje z Tobą tafa i pokaże Ci jego Card, zanim cokolwiek się uruchomi.",
   "onboarding.how_it_works": "Jak działa tafs",
+  "onboarding.kiff_privacy": "Polityka prywatności KIFF",
+  "onboarding.kiff_terms": "Warunki korzystania z usługi KIFF",
+  "onboarding.privacy_links": "Jak przetwarzamy Twoje dane: {kiff_privacy} · {tafs_privacy}",
   "onboarding.skip": "Pomiń",
   "onboarding.tafs_lead": "Taf wykonuje za Ciebie jedno zadanie, np. odpowiedzi dla klientów, spóźnione paczki czy kontakt z potencjalnymi klientami. Poproś Coacha, a skonfiguruje go z Tobą.",
+  "onboarding.tafs_privacy": "Polityka prywatności tafs",
+  "onboarding.tafs_terms": "Regulamin tafs",
   "onboarding.tafs_title": "Twoje tafy pracują dla Ciebie"
 }

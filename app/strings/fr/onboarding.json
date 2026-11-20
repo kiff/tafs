@@ -2,6 +2,7 @@
   "onboarding.age": "Vous devez avoir au moins 16 ans, ou l'âge du consentement numérique de votre pays s'il est plus élevé.",
   "onboarding.card_lead": "Chaque taf travaille dans le cadre d'une Card que vous émettez : ce qu'il peut faire, avec quelle app et pour combien. Au-delà, il vous demande.",
   "onboarding.card_title": "Une Card est votre autorisation",
+  "onboarding.consent_tick": "J'accepte {kiff_terms} et {tafs_terms}.",
   "onboarding.control_lead": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec Face ID ou Touch ID, ou vous refusez.",
   "onboarding.control_lead_android": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec le verrouillage de l'écran, ou vous refusez.",
   "onboarding.control_lead_mac": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez avec Touch ID ou sur votre téléphone, ou vous refusez.",
@@ -9,7 +10,12 @@
   "onboarding.get_started": "Commencer",
   "onboarding.home_lead": "Dites à Coach, avec vos mots, ce que vous voulez faire faire. Il met le taf en place avec vous et vous montre sa Card avant que rien ne tourne.",
   "onboarding.how_it_works": "Comment fonctionne tafs",
+  "onboarding.kiff_privacy": "Politique de confidentialité de KIFF",
+  "onboarding.kiff_terms": "les Conditions d'utilisation de KIFF",
+  "onboarding.privacy_links": "Comment nous traitons vos données : {kiff_privacy} · {tafs_privacy}",
   "onboarding.skip": "Passer",
   "onboarding.tafs_lead": "Un taf fait un travail pour vous, comme les réponses au support, les colis en retard ou le suivi des prospects. Demandez à Coach, il le met en place avec vous.",
+  "onboarding.tafs_privacy": "Politique de confidentialité de tafs",
+  "onboarding.tafs_terms": "les Conditions d'utilisation de tafs",
   "onboarding.tafs_title": "Vos tafs travaillent pour vous"
 }

@@ -2901,6 +2901,8 @@ enum Words {
         static var cardLead: String { Words.line("onboarding.card_lead") }
         /// A Card is your permission
         static var cardTitle: String { Words.line("onboarding.card_title") }
+        /// I agree to {kiff_terms} and {tafs_terms}.
+        static func consentTick(kiffTerms: String, tafsTerms: String) -> String { Words.line("onboarding.consent_tick", kiffTerms, tafsTerms) }
         /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.
         static var controlLead: String { Words.line("onboarding.control_lead") }
         /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.
@@ -2915,10 +2917,20 @@ enum Words {
         static var homeLead: String { Words.line("onboarding.home_lead") }
         /// How tafs works
         static var howItWorks: String { Words.line("onboarding.how_it_works") }
+        /// KIFF Privacy Policy
+        static var kiffPrivacy: String { Words.line("onboarding.kiff_privacy") }
+        /// KIFF's Terms of Service
+        static var kiffTerms: String { Words.line("onboarding.kiff_terms") }
+        /// How we handle your data: {kiff_privacy} · {tafs_privacy}
+        static func privacyLinks(kiffPrivacy: String, tafsPrivacy: String) -> String { Words.line("onboarding.privacy_links", kiffPrivacy, tafsPrivacy) }
         /// Skip
         static var skip: String { Words.line("onboarding.skip") }
         /// A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.
         static var tafsLead: String { Words.line("onboarding.tafs_lead") }
+        /// tafs Privacy Policy
+        static var tafsPrivacy: String { Words.line("onboarding.tafs_privacy") }
+        /// the tafs Terms
+        static var tafsTerms: String { Words.line("onboarding.tafs_terms") }
         /// Your tafs work for you
         static var tafsTitle: String { Words.line("onboarding.tafs_title") }
     }
