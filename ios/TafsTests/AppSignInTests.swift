@@ -98,7 +98,7 @@ final class AppSignInTests: XCTestCase {
     /// KIFF's sheet is private, so every authorize is a fresh sign-in through KIFF's form; a vendor's sheet still shares
     /// Safari's sign-in, and comes back to planque's `tafs:` scheme.
     func testKiffsSheetIsPrivateAndAVendorsIsShared() {
-        let kiff = AppSignIn.sheet()
+        let kiff = VendorSignIn.kiffSheet()
         XCTAssertTrue(kiff.ephemeral)
         XCTAssertEqual(kiff.callbackScheme, "dev.kiff.tafs")
         let vendor = VendorSignIn()

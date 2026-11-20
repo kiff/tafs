@@ -12,10 +12,6 @@ enum AppSignIn {
     /// The exact redirect KIFF sends the code to: a private-use scheme (RFC 8252 §7.1), which PKCE makes safe.
     static let callbackScheme = "dev.kiff.tafs"
     static let redirectURI = "\(callbackScheme):/oauth"
-    /// KIFF's sign-in in the system's sheet: its own redirect scheme, and a private browser session, so no earlier sign-in
-    /// or cookie comes in and every authorize goes through KIFF's form (kiff/cloud#20 §1).
-    @MainActor static func sheet() -> VendorSignIn { VendorSignIn(callbackScheme: callbackScheme, ephemeral: true) }
-
     /// How long KIFF's code works: 60 seconds. A code kept after `terms_outdated` is sent again only well within it.
     static let codeLifetime: TimeInterval = 50
     /// The languages KIFF's sign-in page is written in; any other opens it in English.

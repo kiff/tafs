@@ -35,7 +35,7 @@ final class VendorSignIn: NSObject, VendorSigningIn {
     /// (`AppSignIn`), which only this app's session receives.
     let callbackScheme: String
     /// A private browser session: no cookie or sign-in from Safari or an earlier sheet comes in, so every page is a fresh
-    /// sign-in. KIFF's own sheet (`AppSignIn.sheet()`) is private, so each authorize goes through KIFF's form; a vendor's
+    /// sign-in. KIFF's own sheet (`VendorSignIn.kiffSheet()`) is private, so each authorize goes through KIFF's form; a vendor's
     /// page shares Safari's, so an owner already signed in to the vendor only allows access.
     let ephemeral: Bool
 
@@ -140,6 +140,13 @@ final class VendorSignIn: NSObject, VendorSigningIn {
         }
         return "\(type(of: w)), \(w.isKeyWindow ? "key" : "not key"), \(w.isHidden ? "hidden" : "shown"), \(state)"
     }
+}
+
+extension VendorSignIn {
+    /// KIFF's own sign-in in the system's sheet (`AppSignIn`): its redirect scheme, and a private browser session, so no
+    /// earlier sign-in or cookie comes in and every authorize goes through KIFF's form (kiff/cloud#20 §1). Here, beside
+    /// the sheet, not in `AppSignIn`: the notification extension builds the KIFF folder without the app's services.
+    static func kiffSheet() -> VendorSignIn { VendorSignIn(callbackScheme: AppSignIn.callbackScheme, ephemeral: true) }
 }
 
 // The session asks for its window on the main thread.
