@@ -126,6 +126,17 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(money.heroLine, "\(money.hero!.figure) \(money.hero!.words)")
     }
 
+    /// agentgabo's nit on #1567/#1571: a calls Card's figures are written as the line's language writes numbers, the
+    /// limit too, so a 10,000-call Card never reads "9,999 … of 10000".
+    func testACallsCardsFiguresAreAllWrittenAsNumbers() {
+        let big = TafCard(id: "b", title: "Reads", rules: [], calls: CardTotal(limit: 10000, used: 1, window: .day))
+        XCTAssertEqual(big.heroLine, "\(Words.number(9999)) calls left today of \(Words.number(10000))")
+        XCTAssertEqual(big.hero?.figure, Words.number(9999))
+        XCTAssertEqual(big.hero?.words, "calls left today of \(Words.number(10000))")
+        let unread = TafCard(id: "u", title: "Reads", rules: [], calls: CardTotal(limit: 10000, used: nil, window: .day))
+        XCTAssertEqual(unread.hero?.figure, Words.number(10000))
+    }
+
     func testACardWithNeitherShowsItsFirstLines() {
         let card = TafCard(id: "c", title: "Lookups", rules: [
             CardRule(action: "a", label: "Look up", perAction: eur(1000)),
