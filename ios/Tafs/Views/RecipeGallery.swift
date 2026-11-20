@@ -89,7 +89,7 @@ struct ExploreRow: View {
                     Text(words).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                         .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                    Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                         .accessibilityHidden(true)
                 }
             }
@@ -123,7 +123,7 @@ struct RecipeStrip: View {
                         HStack {
                             Text(words).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                             Spacer()
-                            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                            Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
                         }
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())

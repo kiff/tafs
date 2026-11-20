@@ -308,7 +308,7 @@ struct OverviewView: View {
                         Circle().fill(Theme.amber).frame(width: 8, height: 8)
                         Text(model.needsYouWords).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                         Spacer()
-                        Image(systemName: "chevron.right").scaledFont(12, weight: .semibold).foregroundColor(Theme.soft)
+                        Image(systemName: "chevron.forward").scaledFont(12, weight: .semibold).foregroundColor(Theme.soft)
                     }
                     .padding(12)
                     .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))

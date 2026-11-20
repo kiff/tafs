@@ -193,7 +193,7 @@ struct PanelLink<Destination: View, Label: View>: View {
                 HStack(spacing: 12) {
                     label()
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                    Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                         .accessibilityHidden(true)
                 }
             }
