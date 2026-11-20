@@ -13,7 +13,9 @@ the terms below, so a word on a button is the word in a notification, an email a
   counts against a limit or how an amount is checked.
 - **Amounts and dates format by the phone's locale,** as they do now: `1.240,00 €` in German,
   `1 240,00 €` in French, `€1,240.00` in English.
-- **The binding texts stay in English:** Terms, Privacy and the DPA, until the owner says otherwise.
+- **The binding texts are in English:** Terms, Privacy and the DPA. Their translations, and each country's section,
+  are published in the country's language beside English; the English text binds, except where local law requires
+  the local-language text to bind (Quebec's Charter of the French language). The owner's ruling, 20 Nov.
 - **Developers' words stay in English:** logs, and an API's `error` field. What a person reads comes in
   `words`, `line`, titles and bodies, and those are translated.
 - **Each language is reviewed against this page's glossary,** every catalog and every listing, before it
