@@ -35,7 +35,17 @@ sealed interface WatchRequest {
    * Ask tafs: the words, as text, for tafs cloud to hand to the one taf that can do it. [clientId] is the watch's own id for
    * this ask, the same on every retry, so tafs cloud never starts it twice. [replyTo] continues one of the watch's own asks.
    */
-  data class Ask(override val madeAt: Long, val clientId: String, val text: String, val replyTo: String? = null) : WatchRequest
+  data class Ask(
+    override val madeAt: Long,
+    val clientId: String,
+    val text: String,
+    val replyTo: String? = null,
+    /**
+     * Chatting with a taf (docs/watch-wear.md): the phone's id of the taf the person chose. Its words go into that taf's own
+     * chat, never Coach's. A phone from before it refuses the request (an unknown field), so the words never reach Coach.
+     */
+    val tafId: String? = null,
+  ) : WatchRequest
 
   /** The watch's own asks, as tafs cloud has them, updated after [since] (an ISO-8601 time), or in the last day. */
   data class Asks(override val madeAt: Long, val since: String? = null) : WatchRequest
@@ -215,9 +225,21 @@ data class AskLine(
   /** The state in tafs cloud's words ("Working"). */
   val words: String,
   val updated: String,
+  /** A taf chat's taf waits on the person (an approval, a question): answered on the phone, never on the watch. */
+  val held: Boolean = false,
+  /** A taf chat's answer went on past [line]: the rest is on the phone. */
+  val more: Boolean = false,
+  /**
+   * `taf`: a message to a taf the person chose, never Coach's request. Nothing of it is kept on the watch: no Inbox line, no
+   * place in Coach's conversation (docs/watch-wear.md). Null for Coach's, and from a tafs cloud before it.
+   */
+  val kind: String? = null,
 ) {
   /** Ended: nothing more will come of it. */
   val ended: Boolean get() = state in ENDED
+
+  /** A message to a taf, kept nowhere on the watch. */
+  val tafChat: Boolean get() = kind == TAF
 
   companion object {
     const val ACCEPTED = "accepted"
@@ -226,6 +248,7 @@ data class AskLine(
     const val NO_TAF = "no_taf"
     const val FAILED = "failed"
     val ENDED = setOf(DONE, NO_TAF, FAILED)
+    const val TAF = "taf"
   }
 }
 
@@ -338,6 +361,7 @@ object WatchLink {
     @SerialName("client_id") val clientId: String,
     val text: String,
     @SerialName("reply_to") val replyTo: String? = null,
+    @SerialName("taf_id") val tafId: String? = null,
   )
 
   @Serializable private data class AsksBody(@SerialName("made_at") val madeAt: Long, val since: String? = null)
@@ -358,7 +382,7 @@ object WatchLink {
         if (request.tafId == null) HaltBody(request.madeAt, all = true) else HaltBody(request.madeAt, tafId = request.tafId),
       )
       is WatchRequest.Coach -> COACH to json.encodeToString(CoachBody.serializer(), CoachBody(request.madeAt, request.text))
-      is WatchRequest.Ask -> ASK to json.encodeToString(AskBody.serializer(), AskBody(request.madeAt, request.clientId, request.text, request.replyTo))
+      is WatchRequest.Ask -> ASK to json.encodeToString(AskBody.serializer(), AskBody(request.madeAt, request.clientId, request.text, request.replyTo, request.tafId))
       is WatchRequest.Asks -> ASKS to json.encodeToString(AsksBody.serializer(), AsksBody(request.madeAt, request.since))
       is WatchRequest.Brief -> BRIEF to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Taf -> TAF to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
@@ -393,7 +417,7 @@ object WatchLink {
           }
         }
         COACH -> json.decodeFromString(CoachBody.serializer(), text).let { WatchRequest.Coach(it.madeAt, it.text) }
-        ASK -> json.decodeFromString(AskBody.serializer(), text).let { WatchRequest.Ask(it.madeAt, it.clientId, it.text, it.replyTo) }
+        ASK -> json.decodeFromString(AskBody.serializer(), text).let { WatchRequest.Ask(it.madeAt, it.clientId, it.text, it.replyTo, it.tafId) }
         ASKS -> json.decodeFromString(AsksBody.serializer(), text).let { WatchRequest.Asks(it.madeAt, it.since) }
         BRIEF -> WatchRequest.Brief(json.decodeFromString(Read.serializer(), text).madeAt)
         TAF -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.Taf(it.madeAt, it.tafId) }
@@ -416,7 +440,7 @@ object WatchLink {
     is WatchRequest.Halt -> request.tafId == null || request.tafId.isNotBlank()
     is WatchRequest.Coach -> request.text.isNotBlank() && request.text.length <= MAX_COACH_TEXT
     is WatchRequest.Ask -> CLIENT_ID.matches(request.clientId) && request.text.isNotBlank() && request.text.length <= MAX_ASK_TEXT &&
-      (request.replyTo == null || ID.matches(request.replyTo))
+      (request.replyTo == null || ID.matches(request.replyTo)) && (request.tafId == null || (request.tafId.isNotBlank() && request.tafId.length <= 128))
     is WatchRequest.Asks -> request.since == null || ID.matches(request.since)
     is WatchRequest.Taf -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)

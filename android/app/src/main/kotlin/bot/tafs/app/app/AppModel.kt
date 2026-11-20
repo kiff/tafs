@@ -2589,10 +2589,10 @@ class AppModel(
    * no prompt, as the wrist's Refuse is. Never the approval key: an ask grants nothing, and the taf it goes to acts under its own
    * Cards. Null when the phone isn't signed in.
    */
-  suspend fun watchAsk(clientId: String, text: String, replyTo: String?): bot.tafs.app.kiff.WatchAsk? {
+  suspend fun watchAsk(clientId: String, text: String, replyTo: String?, tafCloudId: String? = null): bot.tafs.app.kiff.WatchAsk? {
     if (_state.value.mode != Mode.kiff) return null
     val tenant = kiffTenant ?: return null
-    return cloud.watchAsk(clientId, text, replyTo, tenant) { signer.signConfirmed(it) }
+    return cloud.watchAsk(clientId, text, replyTo, tenant, tafCloudId) { signer.signConfirmed(it) }
   }
 
   /** One of the watch's asks, by its id; null when the phone isn't signed in. */
