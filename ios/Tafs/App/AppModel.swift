@@ -882,6 +882,9 @@ final class AppModel: ObservableObject {
     /// consent for this device; nil while the new onboarding is off, and the claim is as it was.
     var pairingTermsVersion: String?
 
+    /// The pairing sheet closed (done, Cancel, a swipe or changed terms): no ticked version outlives it.
+    func pairingClosed() { pairingTermsVersion = nil }
+
     /// Claims until the other phone approves (at least 3 s apart, slower when KIFF asks), then uses the
     /// session, bound to this device's two keys. Throws `expired` when the code runs out first, and
     /// `termsOutdated` when the terms changed since the tick (nothing is claimed then).

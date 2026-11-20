@@ -127,6 +127,14 @@ final class PairingOfferTests: XCTestCase {
         XCTAssertNil(model.pairingTermsVersion, "used once")
     }
 
+    /// Closing the pairing sheet without signing in drops the ticked version, so a stale one never goes with a later claim.
+    func testClosingThePairingSheetDropsTheTickedVersion() {
+        let model = pairingModel()
+        model.pairingTermsVersion = "2026-11-20"
+        model.pairingClosed()
+        XCTAssertNil(model.pairingTermsVersion)
+    }
+
     /// Terms that changed since the tick: KIFF claims nothing, and the welcome asks for the tick again.
     func testChangedTermsStopTheClaim() async {
         let model = pairingModel()

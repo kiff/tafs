@@ -88,7 +88,8 @@ struct OnboardingView: View {
         // Sign-in never waits on Face ID (docs/approvals.md): approvals are set up at Coach's Start.
         .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
         .task { if Onboarding.on { termsVersion = try? await model.appTermsVersion() } }
-        .sheet(isPresented: $pairing) {
+        // However the pairing sheet closes, the ticked version goes with it: the next claim reads a fresh one.
+        .sheet(isPresented: $pairing, onDismiss: { model.pairingClosed() }) {
             NavigationStack {
                 PairSignInView(done: {
                     pairing = false
