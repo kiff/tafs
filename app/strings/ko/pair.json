@@ -15,7 +15,7 @@
   "pair.refused_key_registered": "휴대폰에 따르면 이 {device}은(는) 이미 내 계정과 페어링되어 있습니다. 새 코드를 표시하고 다시 스캔하세요.",
   "pair.refused_other": "휴대폰이 이 {device}을(를) 추가하지 못했습니다. 새 코드를 표시하고 다시 스캔하세요.",
   "pair.refused_title": "휴대폰이 이 {device}을(를) 추가하지 않았습니다",
-  "pair.steps": "휴대폰에서 tafs를 열고 {account}, {devices}, {pair}로 이동하세요. 이 코드를 스캔하세요.",
+  "pair.steps": "휴대폰에서 tafs를 열고 {account}, {devices}, {pair}(으)로 이동하세요. 이 코드를 스캔하세요.",
   "pair.title": "휴대폰으로 이 {device} 추가",
   "pair.view_only.add": "이 {device} 추가",
   "pair.view_only.lead": "이 {device}에는 tafs, 확인 필요, 기록이 표시됩니다. 휴대폰으로 추가하기 전까지는 승인할 수 없습니다.",
