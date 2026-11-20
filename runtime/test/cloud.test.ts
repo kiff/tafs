@@ -986,7 +986,7 @@ describe("tafs cloud", () => {
           ] }), { status: 200 });
           return depsOf(w).fetch!(url, init);
         }) as Deps["fetch"] });
-      return JSON.parse(r.body) as { connect_again?: Record<string, string> };
+      return JSON.parse(r.body) as { connect_again?: Record<string, string>; connections?: Array<Record<string, unknown>> };
     };
     expect((await setup("needs_reconnect")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again",
       words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
@@ -999,8 +999,11 @@ describe("tafs cloud", () => {
       done_words: "Gmail is connected again on the new sign-in. Every taf that used it can use it again." });
     expect((await setup("needs_reconnect", "en", "same")).connect_again).not.toHaveProperty("fresh");
     expect((await setup("needs_reconnect", "de", "fresh")).connect_again?.words).toContain("neuen Anmeldung");
-    // A connected grant planque marks fresh asks nothing.
-    expect((await setup("connected", "en", "fresh")).connect_again).toBeUndefined();
+    // A connected grant planque marks fresh asks nothing, and its row isn't fresh either.
+    const connectedFresh = await setup("connected", "en", "fresh");
+    expect(connectedFresh.connect_again).toBeUndefined();
+    expect(connectedFresh.connections?.[0]).not.toHaveProperty("fresh");
+    expect((await setup("needs_reconnect", "en", "fresh")).connections?.[0]).toMatchObject({ reconnect: true, fresh: true });
     contract("taf-setup-connected", "GET /v1/tafs/{id}/setup for someone who manages the taf, with one app connected (Gmail): its connection as the Setup tab draws it.", await setup("connected"));
     contract("taf-setup-reconnect", "GET /v1/tafs/{id}/setup when the taf's own connection's sign-in has expired: the connection and the taf's Connect again.", await setup("needs_reconnect"));
     contract("taf-setup-reconnect-fresh", "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true.", await setup("needs_reconnect", "en", "fresh"));
