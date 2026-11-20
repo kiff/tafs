@@ -206,7 +206,7 @@ fun SignInSheet(
                 if (copied) Words.Common.copied else Words.Common.copy,
                 style = scaled(13, FontWeight.SemiBold, Theme.amber),
                 modifier = Modifier.heightIn(min = 44.dp).tapping {
-                  scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF sign-in link", s.verificationUriComplete))) }
+                  scope.launch { clipboard.setClipEntry(ClipEntry(bot.tafs.app.model.Res.clip("KIFF sign-in link", s.verificationUriComplete))) }
                   copied = true
                 }.padding(horizontal = 4.dp),
               )

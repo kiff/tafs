@@ -83,7 +83,7 @@ fun AnswerWithActions(text: String, onReport: (suspend (String, String?) -> Repo
           .heightIn(min = 40.dp)
           .tapping(onClickLabel = AnswerWords.COPY_LABEL) {
             scope.launch {
-              clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("answer", text)))
+              clipboard.setClipEntry(ClipEntry(bot.tafs.app.model.Res.clip("answer", text)))
               copied = true
               delay(2_000)
               copied = false

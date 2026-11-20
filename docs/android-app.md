@@ -1620,6 +1620,11 @@ on the left.
   rule labels, a notification's title and body, and the watch's Needs you; and every line `KiffMapping` builds from a server
   value: a vendor's quoted message, a tool's or vendor's name in words, and a taf's name, job and status lines. So a payee name can't make an amount or an IBAN
   beside it look reordered. Any other control character is a space; right-to-left letters stay (as iOS's #1547).
+- **A value inside a right-to-left line is set apart** (`Res.isolated`): in Arabic, Hebrew and the other right-to-left
+  languages, each text value `Res.s` and `Res.p` fill in is wrapped in U+2068 … U+2069 with its own direction characters
+  taken out, so a Latin name or an amount keeps its direction without turning the sentence (as iOS's #1557). Left to
+  right, values are as passed. **What the app copies** (`Res.clip`: a key, an address, a receipt, a sign-in link, a
+  message, an answer) carries no direction character.
 - **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
   text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
   the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.

@@ -253,7 +253,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
         if (copied) Words.Common.copied else Words.Door.copyAddress,
         {
           scope.launch {
-            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("address", door.address)))
+            clipboard.setClipEntry(ClipEntry(bot.tafs.app.model.Res.clip("address", door.address)))
             copied = true
             kotlinx.coroutines.delay(1_400)
             copied = false

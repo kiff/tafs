@@ -1,0 +1,1 @@
+- **Android, right to left:** in a right-to-left language each value in a line is set apart, so a Latin name or an amount keeps its own direction; and what the app copies carries no direction character ([android-app.md](docs/android-app.md)).
