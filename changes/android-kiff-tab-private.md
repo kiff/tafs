@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** KIFF's sign-in tab is a private browsing session where the browser offers one, as iOS's private sheet; a vendor's tab stays shared ([onboarding.md](docs/onboarding.md)).

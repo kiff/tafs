@@ -28,7 +28,15 @@ import java.lang.ref.WeakReference
  * authenticator for a code) and comes back to tafs from the launcher comes back to the vendor's tab, not to tafs's screen, which
  * would read as the tab closed (the owner on Android 97). Only with no screen to open it from does it take a task of its own.
  */
-class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
+class BrowserVendorSignIn(
+  private val context: Context,
+  /**
+   * KIFF's own sign-in tab (docs/onboarding.md): a private browsing session where the browser offers one, so no cookie or earlier
+   * sign-in comes in and every authorize goes through KIFF's form, as iOS's private sheet. A vendor's tab stays shared, so an
+   * owner already signed in to the vendor only allows access. A browser without it shares its cookies, and KIFF's server holds.
+   */
+  private val privateBrowsing: Boolean = false,
+) : VendorSignIn {
   private val wait = VendorWait()
   @Volatile private var url: String? = null
   @Volatile private var screen: WeakReference<Activity>? = null
@@ -70,7 +78,8 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   override fun replace() = wait.replace()
 
   private fun open(url: String) {
-    val tab = CustomTabsIntent.Builder().build()
+    val browser = if (privateBrowsing) androidx.browser.customtabs.CustomTabsClient.getPackageName(context, null) else null
+    val tab = tabIntent(browser?.takeIf { androidx.browser.customtabs.CustomTabsClient.isEphemeralBrowsingSupported(context, it) })
     val from = screen?.get()?.takeIf { !it.isFinishing && !it.isDestroyed }
     val forResult = launch
     if (from != null && forResult != null) forResult(tab.intent.setData(Uri.parse(url)))
@@ -110,6 +119,16 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
  * screen while waiting counts: the fingerprint's dialog before the tab opens doesn't. A resume with no link marks the sign-in
  * [left] and keeps waiting: the owner reopens the page or cancels, and 15 minutes end it.
  */
+/**
+ * The tab's intent: private in [privateBrowser], the browser that said it offers private browsing, and opened in that same
+ * browser so it is the one that keeps the session private; else an ordinary tab in the person's browser.
+ */
+internal fun tabIntent(privateBrowser: String?): CustomTabsIntent {
+  val builder = CustomTabsIntent.Builder()
+  if (privateBrowser != null) builder.setEphemeralBrowsingEnabled(true)
+  return builder.build().also { tab -> privateBrowser?.let { tab.intent.setPackage(it) } }
+}
+
 class VendorWait {
   @Volatile private var waiting: CompletableDeferred<String>? = null
   @Volatile private var away = false

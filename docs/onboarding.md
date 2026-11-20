@@ -47,7 +47,10 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   version and the device exactly as `/v1/auth/device/start` sends it, for today's `DeviceToken`. KIFF's refusals keep
   their code as KIFF's `error` (`invalid_grant`, `terms_outdated`); `appTerms` reads the version in force.
 - **The tab** (`AppModel.signInInApp`): KIFF's page opens in a Custom Tab from tafs's own screen, in its task, the
-  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). So leaving for the mail app for an email code
+  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). It's a **private browsing session** where the browser offers one
+  (`isEphemeralBrowsingSupported`, opened in that browser), as iOS's private sheet: no cookie or earlier sign-in
+  comes in, so every authorize goes through KIFF's form. A vendor's tab stays shared. A browser without private tabs
+  shares its cookies, and KIFF's server is the guard there (kiff/cloud#23). So leaving for the mail app for an email code
   and coming back from the launcher returns to the tab. A tab closed with no link is left, with Open again and
   Cancel. The manifest takes `dev.kiff.tafs:` links (Android matches a link with no host by its scheme only), and
   `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
