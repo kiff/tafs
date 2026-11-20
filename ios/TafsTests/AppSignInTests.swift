@@ -95,6 +95,17 @@ final class AppSignInTests: XCTestCase {
         XCTAssertTrue(hinted.absoluteString.contains("login_hint=a@b.example"))
     }
 
+    /// KIFF's sheet is private, so every authorize is a fresh sign-in through KIFF's form; a vendor's sheet still shares
+    /// Safari's sign-in, and comes back to planque's `tafs:` scheme.
+    func testKiffsSheetIsPrivateAndAVendorsIsShared() {
+        let kiff = VendorSignIn.kiffSheet()
+        XCTAssertTrue(kiff.ephemeral)
+        XCTAssertEqual(kiff.callbackScheme, "dev.kiff.tafs")
+        let vendor = VendorSignIn()
+        XCTAssertFalse(vendor.ephemeral, "an owner already signed in to the vendor only allows access")
+        XCTAssertEqual(vendor.callbackScheme, "tafs")
+    }
+
     // MARK: What comes back
 
     /// Only a redirect to the app's own scheme with this sign-in's state gives its code; anything else is refused
