@@ -2866,7 +2866,8 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
   });
 
   // invoices-3 replayed in each language: create_invoice at 10 a day and 1 per order. A notice that says neither is
-  // refused; one that says 10 in digits and 1 as its language's word for one, next to its per word, is signed.
+  // refused; one that says 10 in digits and 1 in digits, or in words where the word for one is never an article (en, nl,
+  // pl), is signed.
   describe("the figures said in the notice's words, in each language (rules_unsaid)", () => {
     const INVOICE_TOOLS = [{ tool: "create_invoice", name: "create_invoice_k3", title: "Create a draft invoice", resource_argument: "order_id" },
       { tool: "list_orders", name: "list_orders_k3", title: "List orders", read_only: true }];
@@ -2878,16 +2879,16 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     }
     const SAYS: Record<string, { neither: string; both: string }> = {
       en: { neither: "Every hour, Invoices lists your fulfilled orders and makes a draft invoice for each one.", both: "Every hour, Invoices makes one draft invoice per fulfilled order, at most 10 a day." },
-      fr: { neither: "Chaque heure, Invoices liste vos commandes livrées et crée un brouillon de facture pour chacune.", both: "Chaque heure, Invoices crée une facture brouillon par commande livrée, 10 par jour au plus." },
-      de: { neither: "Jede Stunde listet Invoices deine erfüllten Bestellungen und erstellt für jede einen Rechnungsentwurf.", both: "Jede Stunde erstellt Invoices einen Rechnungsentwurf pro erfüllter Bestellung, höchstens 10 am Tag." },
-      es: { neither: "Cada hora, Invoices lista tus pedidos completados y crea un borrador de factura para ellos.", both: "Cada hora, Invoices crea una factura borrador por pedido completado, como máximo 10 al día." },
-      it: { neither: "Ogni ora, Invoices elenca i tuoi ordini evasi e ne prepara le bozze delle fatture.", both: "Ogni ora, Invoices crea una bozza di fattura per ogni ordine evaso, al massimo 10 al giorno." },
+      fr: { neither: "Chaque heure, Invoices liste vos commandes livrées et crée un brouillon de facture pour chacune.", both: "Chaque heure, Invoices crée 1 facture brouillon par commande livrée, 10 par jour au plus." },
+      de: { neither: "Jede Stunde listet Invoices deine erfüllten Bestellungen und erstellt für jede einen Rechnungsentwurf.", both: "Jede Stunde erstellt Invoices 1 Rechnungsentwurf pro erfüllter Bestellung, höchstens 10 am Tag." },
+      es: { neither: "Cada hora, Invoices lista tus pedidos completados y crea un borrador de factura para ellos.", both: "Cada hora, Invoices crea 1 factura borrador por pedido completado, como máximo 10 al día." },
+      it: { neither: "Ogni ora, Invoices elenca i tuoi ordini evasi e ne prepara le bozze delle fatture.", both: "Ogni ora, Invoices crea 1 bozza di fattura per ogni ordine evaso, al massimo 10 al giorno." },
       nl: { neither: "Elk uur zet Invoices je afgeronde bestellingen op een rij en maakt er een conceptfactuur van.", both: "Elk uur maakt Invoices één conceptfactuur per afgeronde bestelling, hooguit 10 per dag." },
       pl: { neither: "Co godzinę Invoices sprawdza zrealizowane zamówienia i tworzy dla nich szkice faktur.", both: "Co godzinę Invoices tworzy jedną fakturę roboczą na każde zrealizowane zamówienie, najwyżej 10 dziennie." },
-      pt: { neither: "A cada hora, o Invoices lista as suas encomendas concluídas e cria um rascunho de fatura para elas.", both: "A cada hora, o Invoices cria uma fatura rascunho por encomenda concluída, no máximo 10 por dia." },
+      pt: { neither: "A cada hora, o Invoices lista as suas encomendas concluídas e cria um rascunho de fatura para elas.", both: "A cada hora, o Invoices cria 1 fatura rascunho por encomenda concluída, no máximo 10 por dia." },
     };
     for (const [lang, says] of Object.entries(SAYS)) {
-      it(`${lang}: neither figure said is refused; 10 in digits and 1 in words is signed`, async () => {
+      it(`${lang}: neither figure said is refused; both said is signed`, async () => {
         const off = await setUp("refuse", INVOICE_TOOLS);
         setInvoices(off.s);
         off.rules("rules-1", INVOICES, true, says.neither);

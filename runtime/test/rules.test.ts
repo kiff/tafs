@@ -311,17 +311,21 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
   });
 
-  it("1 is said in words only as its language's one beside its per word; anything unsure is unsaid", () => {
+  it("1 is said in words only as a one that is never an article, beside its language's per word; anything unsure is unsaid", () => {
     const once = [{ tool: "create_invoice", over: "refuse" as const, limits: [{ quantity: "count", window: "lifetime", limit: 1, per: "order_id" }] }];
     const unsaid = ["create_invoice count lifetime 1 per order_id"];
-    for (const text of ["One invoice per order, ever.", "Une facture par commande.", "Eine Rechnung pro Bestellung.", "Einen Entwurf je Bestellung.",
-      "Una factura por cada pedido.", "Una bozza di fattura per ogni ordine.", "Één factuur per bestelling.", "Een factuur voor elke bestelling.",
-      "Jedna faktura na zamówienie.", "Uma fatura por encomenda.", "Invoices makes 1 draft per order."]) {
+    for (const text of ["One invoice per order, ever.", "Één factuur per bestelling.", "Één factuur voor elke bestelling.", "Eins pro Bestellung.",
+      "Jedna faktura dla każdego zamówienia.", "Jedna faktura robocza na każde zamówienie.", "Invoices makes 1 draft per order.", "1 facture par commande."]) {
       expect(rulesUnsaid(once, text), text).toEqual([]);
     }
-    // An article, "for each one", a one with no per word, a per word too far, or a pair from two languages: unsaid.
+    // An article, which doubles as "one" in most languages, never says 1: nor "for each one", a one with no per word, a
+    // per word too far, a per word that is a preposition, or a pair from two languages.
     for (const text of ["A draft invoice for each order.", "An invoice per order.", "A draft invoice for each one.", "Makes one draft invoice.",
-      "One draft invoice from the shop and so on per run.", "Un rapport que je relis.", "Uno entwurf pro Bestellung.", "Every order gets its invoice."]) {
+      "One draft invoice from the shop and so on per run.", "Un rapport que je relis.", "Uno entwurf pro Bestellung.", "Every order gets its invoice.",
+      "Une facture par commande.", "Eine Rechnung pro Bestellung.", "Ein Entwurf pro Bestellung.", "Eins je nach Bedarf.", "Una factura por cada pedido.", "Uma fatura por encomenda.", "Een factuur per bestelling.",
+      // mac-local's five: the article and a preposition ("by", "for", "on", "depending on").
+      "Una factura borrador enviada por correo, hasta 10 al día.", "Una bozza di fattura per il cliente, fino a 10 al giorno.",
+      "Jedna wersja robocza na koncie, do 10 dziennie.", "Ein Entwurf je nach Bedarf, bis zu 10 am Tag.", "Een conceptfactuur per e-mail, tot 10 per dag."]) {
       expect(rulesUnsaid(once, text), text).toEqual(unsaid);
     }
     // One said in words is 1, never 10: the day's 10 still has to be written.

@@ -444,20 +444,18 @@ export function rulesUnsaid(rules: readonly AgreedRule[], text: string): string[
 }
 
 /**
- * "One" in each language tafs speaks, and its words for "each" or "per" after it, as a notice says a limit of 1 for each
- * item ("one invoice per order", "une facture par commande", "eine Rechnung pro Bestellung"). The word for one counts only
- * with its own language's per word at most three words after it, never alone: "a"/"an" never counts, and "un", "ein"
- * or "een" are articles too. A pair from two languages ("un rapport que je…") isn't read as one.
+ * "One" where it can't be an article, in the languages that have such a word, and their words for "each" or "per" after
+ * it, as a notice says a limit of 1 for each item ("one invoice per order", "één factuur per bestelling"). The word for
+ * one counts only with its own language's per word at most three words after it. Articles never count ("a", "un",
+ * "una", "ein", "een", "um"…: "una factura enviada por correo" says no limit), nor a per word that is mostly a
+ * preposition ("na", "za", "je"): those languages write 1 in digits, as draft-the-card says. A pair from two languages
+ * isn't read as one either.
  */
 const ONE_PER_WORDS: Record<string, { one: string[]; per: string[] }> = {
   en: { one: ["one"], per: ["per", "each", "every", "for each", "for every"] },
-  fr: { one: ["un", "une"], per: ["par", "pour chaque", "chaque"] },
-  de: { one: ["ein", "eine", "einen", "einem", "einer", "eins"], per: ["pro", "je", "für jede", "für jeden", "für jedes", "jede", "jeden", "jedes"] },
-  es: { one: ["un", "uno", "una"], per: ["por", "por cada", "para cada", "cada"] },
-  it: { one: ["un", "uno", "una"], per: ["per", "per ogni", "ogni"] },
-  nl: { one: ["één", "een"], per: ["per", "voor elke", "voor ieder", "voor iedere", "elke", "iedere"] },
-  pl: { one: ["jeden", "jedna", "jedno", "jedną"], per: ["na", "za", "dla każdego", "dla każdej", "każdy", "każda", "każde", "każdego", "każdej"] },
-  pt: { one: ["um", "uma"], per: ["por", "por cada", "para cada", "cada"] },
+  de: { one: ["eins"], per: ["pro", "für jede", "für jeden", "für jedes", "jede", "jeden", "jedes"] },
+  nl: { one: ["één"], per: ["per", "voor elke", "voor ieder", "voor iedere", "elke", "iedere"] },
+  pl: { one: ["jeden", "jedna", "jedno", "jedną"], per: ["dla każdego", "dla każdej", "każdy", "każda", "każde", "każdego", "każdej"] },
 };
 const alt = (words: readonly string[]) => words.map((w) => w.replace(/ /g, "\\s+")).sort((a, b) => b.length - a.length).join("|");
 const ONE_PER = Object.values(ONE_PER_WORDS).map(({ one, per }) =>
