@@ -55,6 +55,10 @@ struct TafChatPage: View {
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
             }
+            // The last turns from before this visit, as the phone shows them.
+            ForEach(chat.history) { line in
+                TafChatLineRow(line: line)
+            }
             ForEach(chat.turns) { turn in
                 TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id]) {
                     Task { await chat.readMore(turn.id) }
@@ -81,9 +85,31 @@ struct TafChatPage: View {
             }
         }
         .defaultScrollAnchor(.bottom)
+        .task { await chat.loadHistory() }
         .sheet(isPresented: $asking) {
             CoachAsk(model: chat, title: Words.Chat.messageTaf(taf: taf.name), answerer: taf.name)
         }
+    }
+}
+
+/// A turn from before this visit: yours orange on the right, the taf's green on the left, the rest on the phone if cut.
+struct TafChatLineRow: View {
+    let line: WatchChatLine
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: line.text)
+                .font(.footnote)
+            if line.more {
+                Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .foregroundStyle(line.mine ? WatchLook.onMineGround : WatchLook.onTafGround)
+        .background(line.mine ? WatchLook.mineGround : WatchLook.tafGround, in: RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity, alignment: line.mine ? .trailing : .leading)
+        .listRowBackground(Color.clear)
     }
 }
 

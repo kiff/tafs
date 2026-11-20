@@ -62,6 +62,9 @@ final class CoachModel: ObservableObject {
     /// v2 (W4): Ask Coach as one conversation, oldest first: what was said from this watch since the app was opened, each with
     /// Coach's answer. In memory only, forgotten when the app is put away or signed out here: nothing new is kept on the watch.
     @Published private(set) var turns: [Turn] = []
+    /// A taf's chat: its last turns from before this visit, read through the phone when the chat opens. Forgotten with the
+    /// turns; never kept on the watch.
+    @Published private(set) var history: [WatchChatLine] = []
     /// Read more, by turn: each whole answer read on a tap. Forgotten with the turns.
     @Published private(set) var whole: [String: Whole] = [:]
     /// The last request this visit sent: the next Send replies to it (`reply_to`, docs/watch-ask.md), so Coach keeps the
@@ -235,6 +238,18 @@ final class CoachModel: ObservableObject {
         turns[i].answer = answer
     }
 
+    /// A taf's chat opened: its last turns, read through the phone. Nothing for Coach, whose home shows this visit's turns.
+    /// A read that fails leaves what's shown.
+    func loadHistory() async {
+        guard let taf else { return }
+        let visit = self.visit
+        let reply = await phone.ask(WatchRequest(.tafChat, made: clock(), taf: taf))
+        guard visit == self.visit, let reply, reply.outcome == .ok, let chat = reply.chat else { return }
+        // This visit's turns are shown below them: only what came before the first is history, so none shows twice.
+        guard let first = turns.first?.at else { history = chat; return }
+        history = chat.filter { $0.at < first }
+    }
+
     /// Read more: the whole answer to a turn, read through the phone only now, and shown in place. A phone or a tafs cloud that
     /// can't give it leaves the fallback, "The rest is on your phone."
     func readMore(_ turn: String) async {
@@ -282,6 +297,7 @@ final class CoachModel: ObservableObject {
         asked = nil
         turns = []
         whole = [:]
+        history = []
         lastTicket = nil
         draft = ""
         sending = nil

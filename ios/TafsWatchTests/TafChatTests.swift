@@ -14,6 +14,7 @@ final class TafChatTests: XCTestCase {
     private final class Phone: PhoneAsking {
         var asked: [WatchRequest] = []
         var full: WatchReply?
+        var history: [WatchChatLine] = []
         init(full: WatchReply?) { self.full = full }
         func ask(_ request: WatchRequest) async -> WatchReply? {
             asked.append(request)
@@ -21,6 +22,7 @@ final class TafChatTests: XCTestCase {
             case .coachSend: return WatchReply(.ok, ticket: TafChatTests.ticket)
             case .coachRead: return WatchReply(.ok, coach: TafChatTests.part, answering: false)
             case .askFull: return full
+            case .tafChat: return WatchReply(.ok, chat: history)
             default: return WatchReply(.refused)
             }
         }
@@ -102,6 +104,29 @@ final class TafChatTests: XCTestCase {
         XCTAssertEqual(chat.taf, Self.tafID)
         model.leave()
         XCTAssertFalse(chat === model.chat(taf), "a new visit, a new chat")
+    }
+
+    /// A taf's chat opens on its last turns, read through the phone for that taf; what this visit said shows once, below
+    /// them. Coach's model reads none. They go when the app leaves.
+    func testATafsChatOpensOnItsLastTurns() async {
+        let phone = Phone(full: nil)
+        let earlier = WatchChatLine(id: "m1", mine: false, at: now.addingTimeInterval(-3600), text: "Morning run: 6 refunds paid.", more: false)
+        let later = WatchChatLine(id: "m2", mine: true, at: now.addingTimeInterval(60), text: "What did you do this week?", more: false)
+        phone.history = [earlier, later]
+        let model = CoachModel(phone: phone, taf: Self.tafID, clock: { self.now }, lock: Unlocked(), pause: {})
+        await model.loadHistory()
+        XCTAssertEqual(phone.asked.last, WatchRequest(.tafChat, made: now, taf: Self.tafID))
+        XCTAssertEqual(model.history, [earlier, later])
+        model.review("What did you do this week?")
+        await model.sendReviewed()
+        await model.loadHistory()
+        XCTAssertEqual(model.history, [earlier], "this visit's turn shows once, as a turn")
+        model.leave()
+        XCTAssertTrue(model.history.isEmpty)
+        let coach = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked(), pause: {})
+        let before = phone.asked.count
+        await coach.loadHistory()
+        XCTAssertEqual(phone.asked.count, before, "Coach's model reads no taf's chat")
     }
 
     /// Off until tafs cloud's switch, the words and the privacy paragraph are live.

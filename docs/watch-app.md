@@ -107,8 +107,11 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **Read more (the owner's 01:10):** a long answer shows its first part with Read more. Only the tap reads the whole
     answer (`ask_full`, `GET /v1/watch/asks/{id}?full=1`, its `text`), shown in place and forgotten with the turns. If it can't be
     read, "The rest is on your phone."
+  - **The last turns:** the chat opens on the last six turns of the person's own chat with the taf (`taf_chat`), read
+    through the phone from `GET /v1/tafs/{id}/conversation` for a taf it lists, messages only, each cut as an answer is.
+    This visit's turns show below them, once. Nothing is kept on the watch.
   - **Before it goes on:** the paused line and the Read more word in 8 languages (legal-i18n; the screens show
-    `taf.state.paused` and `common.more` until then), and the last turns of the taf's chat read through the phone.
+    `taf.state.paused` and `common.more` until then).
 
 ## Coach
 

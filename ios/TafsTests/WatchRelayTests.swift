@@ -712,6 +712,28 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(unread, WatchReply(.failed, line: Words.Watch.moreOnPhone))
     }
 
+    /// A taf's chat's last turns: messages only, with words, the last six, each cut as an answer is; a taf's chat with no
+    /// taf named is refused before anything is read.
+    func testATafsChatsLastTurnsAreItsMessagesCut() async {
+        let at = Date(timeIntervalSince1970: 1_763_600_000)
+        func m(_ i: Int, _ from: TafsCloud.ChatMessage.From, _ text: String, kind: TafsCloud.ChatMessage.Kind = .message) -> TafsCloud.ChatMessage {
+            TafsCloud.ChatMessage(at: at.addingTimeInterval(Double(i)), from: from, kind: kind, text: text, session: "s1", serverID: "m\(i)")
+        }
+        var messages = [m(0, .taf, "Kickoff", kind: .kickoff), m(1, .owner, "  ")]
+        for i in 2..<10 { messages.append(m(i, i % 2 == 0 ? .owner : .taf, "Turn \(i)")) }
+        messages.append(m(10, .taf, String(repeating: "word ", count: 100)))
+        let lines = KeptWatchReading.chatLines(messages)
+        XCTAssertEqual(lines.count, WatchChatLine.last)
+        XCTAssertEqual(lines.first?.text, "Turn 5")
+        XCTAssertEqual(lines.map(\.mine), [false, true, false, true, false, false])
+        XCTAssertEqual(lines.last?.more, true)
+        XCTAssertLessThanOrEqual(lines.last?.text.count ?? 0, WatchCoachAnswer.wristLength + 1)
+        let reading = Reading(at: now)
+        let none = await send(WatchRequest(.tafChat, made: now, taf: " "), reading: reading)
+        XCTAssertEqual(none, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched)
+    }
+
     /// Read more names a watch request's ticket, or it's refused before anything is read.
     func testReadMoreNamesARequest() async {
         let reading = Reading(at: now)
