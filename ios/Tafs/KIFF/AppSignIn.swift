@@ -66,9 +66,17 @@ enum AppSignIn {
     /// The code from KIFF's redirect, once its `state` is checked; or how the sheet ended. A redirect whose `state`
     /// isn't this sign-in's is refused before anything else is read from it, an error included.
     static func code(from callback: URL, state: String) throws -> String {
-        let items = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        func value(_ name: String) -> String? { items.first { $0.name == name }?.value }
-        guard callback.scheme == callbackScheme, value("state") == state else { throw Failure.wrongState }
+        let parts = URLComponents(url: callback, resolvingAgainstBaseURL: false)
+        let items = parts?.queryItems ?? []
+        // A name given twice is never read: which one counts would be a guess.
+        func value(_ name: String) -> String? {
+            let found = items.filter { $0.name == name }
+            return found.count == 1 ? found[0].value : nil
+        }
+        // Only KIFF's exact redirect, `dev.kiff.tafs:/oauth`, with this sign-in's state once.
+        guard parts?.scheme == callbackScheme, parts?.host == nil, parts?.path == "/oauth",
+              value("state") == state else { throw Failure.wrongState }
+        guard items.filter({ $0.name == "code" }).count <= 1 else { throw Failure.refused("duplicate_code") }
         if let error = value("error") {
             switch error {
             case "access_denied": throw Failure.closed

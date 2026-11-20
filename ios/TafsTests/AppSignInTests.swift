@@ -115,6 +115,20 @@ final class AppSignInTests: XCTestCase {
         }
     }
 
+    /// Only KIFF's exact redirect, path included; a state or a code given twice is refused, whichever comes first.
+    func testOnlyTheExactRedirectWithOneStateAndOneCode() {
+        func failure(_ url: String) -> AppSignIn.Failure? {
+            do { _ = try AppSignIn.code(from: URL(string: url)!, state: "s_1"); return nil }
+            catch { return error as? AppSignIn.Failure }
+        }
+        XCTAssertEqual(failure("dev.kiff.tafs:/elsewhere?code=c_1&state=s_1"), .wrongState, "another path")
+        XCTAssertEqual(failure("dev.kiff.tafs://oauth?code=c_1&state=s_1"), .wrongState, "a host, not KIFF's path")
+        XCTAssertEqual(failure("dev.kiff.tafs:/oauth?code=c_1&state=s_1&state=s_1"), .wrongState, "a state twice")
+        XCTAssertEqual(failure("dev.kiff.tafs:/oauth?code=c_1&state=s_2&state=s_1"), .wrongState)
+        XCTAssertEqual(failure("dev.kiff.tafs:/oauth?code=c_1&code=c_2&state=s_1"), .refused("duplicate_code"), "a code twice")
+        XCTAssertNil(failure("dev.kiff.tafs:/oauth?code=c_1&state=s_1"))
+    }
+
     /// KIFF's errors on the redirect, each its own way: closed says nothing, unavailable can be tried again.
     func testKiffsRedirectErrorsAreTold() {
         func failure(_ query: String) -> AppSignIn.Failure? {
