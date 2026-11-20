@@ -15,6 +15,9 @@ struct CalendarView: View {
     private static let hourHeight: CGFloat = 44
     /// The Mac's date picker is open (`datePicker`).
     @State private var choosingDate = false
+    /// `UnitPoint.leading` is the left edge whatever the language, so the strip's week start is anchored by direction.
+    @Environment(\.layoutDirection) private var direction
+    private var stripStart: UnitPoint { direction == .rightToLeft ? .trailing : .leading }
 
     private var today: String { CalendarMath.today(in: AccountTime.zone) }
     /// Until a choice is made here, a screenshot's `-screen calendar` or `calendar-week` (Screenshots.calendar).
@@ -90,9 +93,9 @@ struct CalendarView: View {
             .accessibilityIdentifier("calendar.title")
         let nav = HStack(spacing: 10) {
             todayPill
-            Button { show(CalendarMath.step(state, by: -1)) } label: { Image(systemName: "chevron.left") }
+            Button { show(CalendarMath.step(state, by: -1)) } label: { Image(systemName: "chevron.backward") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.previousDay : state.mode == .week ? Words.Calendar.previousWeek : Words.Calendar.previousMonth)
-            Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.right") }
+            Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.forward") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.nextDay : state.mode == .week ? Words.Calendar.nextWeek : Words.Calendar.nextMonth)
             // On a phone the range has a line of its own, above: beside the buttons it was cut
             // to "9 – 15 No…".
@@ -216,9 +219,9 @@ struct CalendarView: View {
                 Text(CalendarMath.title(CalendarState(mode: .month, selected: state.selected)))
                     .scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                 Spacer()
-                Button { select(CalendarMath.plusMonths(state.selected, -1)) } label: { Image(systemName: "chevron.left") }
+                Button { select(CalendarMath.plusMonths(state.selected, -1)) } label: { Image(systemName: "chevron.backward") }
                     .accessibilityLabel(Words.Calendar.previousMonth)
-                Button { select(CalendarMath.plusMonths(state.selected, 1)) } label: { Image(systemName: "chevron.right") }
+                Button { select(CalendarMath.plusMonths(state.selected, 1)) } label: { Image(systemName: "chevron.forward") }
                     .accessibilityLabel(Words.Calendar.nextMonth)
             }
             .tint(Theme.amberText)
@@ -303,9 +306,9 @@ struct CalendarView: View {
                     }
                     .padding(.vertical, 2)
                 }
-                .onAppear { proxy.scrollTo(CalendarMath.weekStart(state.selected), anchor: .leading) }
+                .onAppear { proxy.scrollTo(CalendarMath.weekStart(state.selected), anchor: stripStart) }
                 .onChange(of: state.selected) { day in
-                    withMotion(.easeInOut(duration: 0.2)) { proxy.scrollTo(CalendarMath.weekStart(day), anchor: .leading) }
+                    withMotion(.easeInOut(duration: 0.2)) { proxy.scrollTo(CalendarMath.weekStart(day), anchor: stripStart) }
                 }
             }
             .accessibilityIdentifier("calendar.strip")

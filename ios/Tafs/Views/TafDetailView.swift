@@ -253,7 +253,7 @@ struct TafDetailView: View {
                             .accessibilityHidden(true)
                         Text(live.map { Words.Version.liveNumber(version: "\($0)") } ?? Words.Version.title)
                             .scaledFont(13, weight: .semibold).oneLineUnlessLarge()
-                        Image(systemName: "chevron.right").scaledFont(11, weight: .semibold).foregroundColor(Theme.dim)
+                        Image(systemName: "chevron.forward").scaledFont(11, weight: .semibold).foregroundColor(Theme.dim)
                             .accessibilityHidden(true)
                     }
                     .foregroundColor(Theme.soft)
@@ -1334,7 +1334,7 @@ struct CardBar: View {
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 4)
-                Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
             }
             .padding(.horizontal, 14).padding(.vertical, 9)
             .background(Theme.panel)

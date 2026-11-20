@@ -159,7 +159,7 @@ struct CreditsRunRow: View {
             NavigationLink { KnobRequestDetail(tafID: tafID, run: run.run).environmentObject(model) } label: {
                 HStack(spacing: 8) {
                     line
-                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                    Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
                 }
             }
             .buttonStyle(.drivablePlain)

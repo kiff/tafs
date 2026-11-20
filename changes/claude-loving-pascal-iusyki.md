@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac, right to left:** row chevrons, Back and the calendar's previous and next now point the way the reading goes in a right-to-left language, and the iPad's day strip opens on the selected week. A manual `rtl` screenshot set shows the main screens laid out right to left ([onboarding.md](docs/onboarding.md)).
