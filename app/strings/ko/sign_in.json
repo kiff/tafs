@@ -20,7 +20,7 @@
   "sign_in.open_kiff": "KIFF를 열어 승인",
   "sign_in.other_browser": "또는 다른 브라우저에서 이 링크를 여세요:",
   "sign_in.pair_check": "이 {device}에 {code} 코드가 표시되는지 물어봅니다.",
-  "sign_in.pair_how": "이미 tafs를 쓰는 휴대폰에서 {account} → {devices} → {add}를 열고 이 코드를 스캔하세요.",
+  "sign_in.pair_how": "이미 tafs를 쓰는 휴대폰에서 {account} → {devices} → {add}을(를) 열고 이 코드를 스캔하세요.",
   "sign_in.pair_new_code": "코드가 만료되어 새 코드를 표시합니다.",
   "sign_in.pair_no_key": "이 {device}에는 키를 보관할 수 없어 페어링할 수 없습니다. 대신 KIFF로 로그인하세요.",
   "sign_in.pair_prompt": "이 {device}을(를) 다른 휴대폰과 페어링",
