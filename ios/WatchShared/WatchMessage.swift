@@ -363,8 +363,16 @@ struct WatchNeedsYou: Codable, Equatable, Sendable {
 
 /// The bytes on the wire: JSON, the same on both sides.
 enum WatchMessage {
+    /// Every message between the phone and the watch, with no direction character in any of its text (U+202A–U+202E,
+    /// U+2066–U+2069, U+200E, U+200F, U+061C: the phone's `FileText.isDirection`), so a payee or taf name can't reorder an
+    /// amount on the watch's approval. The encoder writes them as themselves, never escaped, and none is ever JSON's own.
     static func encode<T: Encodable>(_ value: T) -> Data {
-        (try? JSONEncoder().encode(value)) ?? Data()
+        guard let data = try? JSONEncoder().encode(value), let text = String(data: data, encoding: .utf8) else { return Data() }
+        return Data(String(String.UnicodeScalarView(text.unicodeScalars.filter { !isDirection($0) })).utf8)
+    }
+
+    static func isDirection(_ s: Unicode.Scalar) -> Bool {
+        (0x202A...0x202E).contains(s.value) || (0x2066...0x2069).contains(s.value) || [0x200E, 0x200F, 0x061C].contains(s.value)
     }
 
     static func decode<T: Decodable>(_ type: T.Type, from data: Data) -> T? {
