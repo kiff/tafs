@@ -658,7 +658,7 @@ private fun MessageBody(
           DropdownMenuItem(text = { Text(Words.Chat.editAndSend) }, onClick = { menu = false; onEdit(message.text) })
           DropdownMenuItem(text = { Text(Words.Common.copy) }, onClick = {
             menu = false
-            scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("message", message.text))) }
+            scope.launch { clipboard.setClipEntry(ClipEntry(bot.tafs.app.model.Res.clip("message", message.text))) }
           })
         }
       }

@@ -278,7 +278,7 @@ internal const val API_KEY_CLIP = "tafs.api.key"
 @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
 internal fun copyKeyForAMinute(context: android.content.Context, key: String, after: Long = 60_000) {
   val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
-  val clip = ClipData.newPlainText(API_KEY_CLIP, key)
+  val clip = bot.tafs.app.model.Res.clip(API_KEY_CLIP, key)
   if (Build.VERSION.SDK_INT >= 33) clip.description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
   clipboard.setPrimaryClip(clip)
   kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {

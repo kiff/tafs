@@ -241,7 +241,7 @@ private fun ReceiptButtons(raw: ByteArray?, share: Boolean) {
   val context = LocalContext.current
   val scope = rememberCoroutineScope()
   Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-    OutlineButton(Words.Receipt.copy, { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF receipt", text))) } }, Modifier.weight(1f))
+    OutlineButton(Words.Receipt.copy, { scope.launch { clipboard.setClipEntry(ClipEntry(bot.tafs.app.model.Res.clip("KIFF receipt", text))) } }, Modifier.weight(1f))
     if (share) OutlineButton(Words.Receipt.share, {
       val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
       context.startActivity(Intent.createChooser(send, Words.Receipt.kiffReceipt).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
