@@ -5078,6 +5078,72 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }
   });
 
+  // A Stripe setup on a phone: the result came before its Card was approved and was answered at once; the owner approved,
+  // and Coach showed the result again under the same id. The hold was per card id, so that note was skipped with no
+  // word and nothing tried it again: Coach waited on the card for good. A result shown again is its own hand-over.
+  it("hands over a result Coach shows again under the same id once its Card is approved, at the first note", async () => {
+    const { w, run, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    expect(answer()).toEqual({ answer: { failed: "The Card for Refunds was never approved, so Refunds isn't set up yet: approve its Card to finish" }, answered_by: "tafs cloud" });
+    // The owner approves the Card, and Coach shows the result again: a new call, the same card id, a minute on.
+    w.agents.fail.delete("claimTafDraft");
+    w.now = new Date(w.now.getTime() + 60_000);
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    stored.requirements!.push({ call_id: "s2", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" });
+    stored.updated = w.now.toISOString();
+    const again = () => stored.requirements!.find((q) => q.call_id === "s2")!.result;
+    const logged: string[] = [];
+    const log = console.log;
+    console.log = (...a: unknown[]) => { logged.push(a.join(" ")); };
+    try {
+      await note();
+      expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds", kiffAgent: "refunds-x" });
+      expect(again()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+      // A repeat note for that call is still held, and says so: nothing is made or answered twice.
+      const answered = w.agents.calls.filter((c) => c.startsWith("answerResult")).length;
+      stored.requirements!.find((q) => q.call_id === "s2")!.answered = undefined;
+      await note();
+      expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
+      expect(logged.some((l) => l.includes('"event":"handover_held"') && l.includes('"card":"done"'))).toBe(true);
+      await sweepHandOvers(deps);
+      expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    } finally {
+      console.log = log;
+    }
+  });
+
+  // The same result shown again, its Card still waiting on an approval card: its 15 minutes start again, never counted
+  // from the first showing's try, which would answer it "never approved" at once while the owner approves.
+  it("gives a result shown again under the same id its own wait for the Card", async () => {
+    const { w, run, note, answer, approvalBeside } = await paused();
+    approvalBeside();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    const warn = console.warn;
+    console.warn = () => undefined;
+    try {
+      notReady();
+      await note();
+      w.now = new Date(w.now.getTime() + 15 * 60_000);
+      notReady();
+      await note();
+      expect(answer()).toMatchObject({ answer: { failed: expect.stringContaining("never approved") } });
+      // Coach shows the result again, and a new approval card beside it, at once.
+      const stored = w.agents.runs.find((r) => r.id === run)!;
+      stored.requirements!.push({ call_id: "s2", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" });
+      approvalBeside();
+      stored.updated = w.now.toISOString();
+      w.now = new Date(w.now.getTime() + 60_000);
+      notReady();
+      await note();
+      expect(stored.requirements!.find((q) => q.call_id === "s2")!.result).toBeUndefined();
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it("counts only an approval card still waiting as one the owner may be approving on", () => {
     const card = (input: unknown, more: Record<string, unknown> = {}) => ({ call_id: "c", tool: "show", input, operation: "", expires: "", kind: "card", ...more });
     expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" })] })).toBe(true);
