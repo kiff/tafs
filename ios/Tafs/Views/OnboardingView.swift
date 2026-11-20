@@ -6,6 +6,14 @@ struct OnboardingView: View {
     @State private var signingIn = false
     /// The one tick for the terms (`Onboarding`): Continue waits on it.
     @State private var tick = ConsentTick()
+    /// KIFF's sign-in is open in the system's sheet, or its session is being made.
+    @State private var signingInApp = false
+    /// Why the last sign-in didn't work; nil when the sheet was closed, or nothing went wrong.
+    @State private var problem: String?
+    /// KIFF said the terms changed since the tick: the box is unticked, and this says why.
+    @State private var termsChanged = false
+    /// iPad and Mac: "Sign in with your phone", the pairing QR, beside KIFF's sheet.
+    @State private var pairing = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -35,10 +43,22 @@ struct OnboardingView: View {
 
             VStack(spacing: 10) {
                 if Onboarding.on {
-                    Button(Words.Common.continue) { signingIn = true }
-                        .buttonStyle(PrimaryButtonStyle())
-                        .disabled(!tick.canContinue)
-                        .accessibilityIdentifier("onboarding.continue")
+                    if let problem {
+                        Text(problem).scaledFont(14).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Button { signInInApp() } label: {
+                        if signingInApp { ProgressView().tint(Theme.ink) } else { Text(Words.Common.continue) }
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(!tick.canContinue || signingInApp)
+                    .accessibilityIdentifier("onboarding.continue")
+                    if SignInView.offersPhone() {
+                        Button(Words.SignIn.withPhone) { pairing = true }
+                            .buttonStyle(OutlineButtonStyle())
+                            .disabled(!tick.canContinue || signingInApp)
+                            .accessibilityIdentifier("onboarding.withPhone")
+                    }
                 } else {
                     Button(Words.SignIn.withKiff) { signingIn = true }
                         .buttonStyle(PrimaryButtonStyle())
@@ -64,12 +84,48 @@ struct OnboardingView: View {
         .screenBackground()
         // Sign-in never waits on Face ID (docs/approvals.md): approvals are set up at Coach's Start.
         .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
+        .sheet(isPresented: $pairing) {
+            NavigationStack {
+                PairSignInView {
+                    pairing = false
+                    model.justConnected = true
+                }
+                .environmentObject(model)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { pairing = false } } }
+            }
+        }
+    }
+
+    /// Continue: KIFF's sign-in in the system's sheet (`AppSignIn`), then the celebration and the three cards.
+    /// Closing the sheet leaves the welcome as it was; terms that changed since the tick untick the box.
+    private func signInInApp() {
+        problem = nil
+        termsChanged = false
+        signingInApp = true
+        Task {
+            defer { signingInApp = false }
+            do {
+                try await model.signInInApp(sheet: VendorSignIn(callbackScheme: AppSignIn.callbackScheme))
+                model.justConnected = true
+            } catch AppSignIn.Failure.closed {
+            } catch KIFFClient.KIFFError.termsOutdated {
+                tick = ConsentTick()
+                termsChanged = true
+            } catch is CancellationError {
+            } catch {
+                problem = error.localizedDescription
+            }
+        }
     }
 
     /// One tick for the terms, with both Terms linked in it; privacy as links below it, never ticked; and the age line.
     /// The box is its own control, so tapping a link opens its page and never ticks the box.
     private var consent: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if termsChanged {
+                Text(Words.Onboarding.termsChanged).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Button { tick.toggle() } label: {
                     Image(systemName: tick.agreed ? "checkmark.square.fill" : "square")

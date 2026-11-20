@@ -785,6 +785,35 @@ final class AppModel: ObservableObject {
         throw KIFFClient.KIFFError.expired
     }
 
+    // MARK: Signing in inside the app (docs/onboarding.md)
+
+    /// KIFF's sign-in in the system's own sheet (`AppSignIn`), then the device flow's own session with this device's
+    /// keys and the terms version the welcome's tick agreed to. Throws `AppSignIn.Failure.closed` when the person closed
+    /// the sheet, and `KIFFError.termsOutdated` when the terms changed since the tick. A device without a Secure Enclave
+    /// signs in without a key, as `startSignIn` does.
+    func signInInApp(sheet: VendorSigningIn) async throws {
+        let termsVersion = try await kiff.appTermsVersion()
+        let pkce = AppSignIn.PKCE.make()
+        let state = AppSignIn.makeState()
+        let url = AppSignIn.authorizeURL(base: kiff.baseURL, pkce: pkce, state: state, language: KIFFClient.appLanguage)
+        let callback: URL
+        do {
+            callback = try await sheet.signIn(at: url)
+        } catch VendorSignIn.SignInError.cancelled {
+            throw AppSignIn.Failure.closed
+        }
+        let code = try AppSignIn.code(from: callback, state: state)
+        let key = signer.publicKeyDER
+        let approvalKey = signer.approvalPublicKeyDER
+        let token = try await kiff.appToken(code: code, verifier: pkce.verifier, termsVersion: termsVersion,
+                                            publicKey: key.isEmpty ? nil : key,
+                                            approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
+                                            deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
+                                            platform: key.isEmpty ? nil : ThisDevice.platform,
+                                            kind: ThisDevice.kiffKind)
+        try await takeSession(token, stopped: Task.isCancelled)
+    }
+
     // MARK: Signing in from another phone (KIFF's pairing contract §5.8)
 
     /// How long between two claims: at least 3 s (§5.4), longer when KIFF says to slow down.
