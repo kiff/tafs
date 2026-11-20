@@ -59,13 +59,17 @@ class WatchActivity : ComponentActivity() {
   /** The ask a Reply continues, kept while the microphone permission is asked. */
   private var pendingReply: String? = null
   private var pendingListen = false
+  /** A one-tap start waiting on the permission: its screen shows Ready behind the dialog, and listening starts once allowed. */
+  private var pendingTalk = false
 
   /** The microphone, and on Wear OS 4 and later the result's notification, asked once, at the first ask. */
   private val microphone = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { granted ->
     val mic = granted[android.Manifest.permission.RECORD_AUDIO] == true
-    if (mic && pendingListen) startListening(pendingReply)
+    // A one-tap start begins listening, and its 30 s, only now: never behind the system's dialog.
+    if (mic && pendingListen) { if (!pendingTalk || model.listen(pendingReply)) startListening(pendingReply) }
     else if (!mic) model.notListening(Words.Watch.micNeeded)
     pendingListen = false
+    pendingTalk = false
   }
 
   /** v2's Type: the watch's keyboard; what's typed goes to the review. */
@@ -249,7 +253,16 @@ class WatchActivity : ComponentActivity() {
    * that is its own names its taf ([tafId]).
    */
   private fun talk(replyTo: String? = null, tafId: String? = null) {
-    if (model.talk(replyTo, tafId)) withMicrophone(replyTo)
+    if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+      if (model.talk(replyTo, tafId)) startListening(replyTo)
+      return
+    }
+    // The first time: the screen shows Ready while the system asks for the microphone; listening starts once it's allowed.
+    model.readyToRecord(replyTo, tafId)
+    if (model.voice.value is WatchModel.Voice.Ready) {
+      pendingTalk = true
+      withMicrophone(replyTo)
+    }
   }
 
   override fun onStart() {

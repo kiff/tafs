@@ -403,6 +403,20 @@ class WatchModelTest {
     assertEquals(WatchModel.Voice.NeedsLock, locked.voice.value)
   }
 
+  /**
+   * The first time, the system asks for the microphone: the start's screen shows Ready behind its dialog, and listening, with its
+   * 30 s, starts only once it's allowed (WatchActivity.talk: readyToRecord, then listen on the grant).
+   */
+  @Test fun aFirstTimeStartIsReadyUntilTheMicrophoneIsAllowed() = runTest {
+    var clock = t
+    val model = WatchModel(asker { Asked.Answered(WatchReply.AskTaken(taken)) }, now = { clock }, unlocked = { true }, newClientId = { "w_00000001" }, reviewFirst = true)
+    model.readyToRecord(tafId = "taf_1")
+    assertEquals(WatchModel.Voice.Ready(null), model.voice.value)
+    clock += 4_000 // the person reads the dialog and allows it
+    assertTrue(model.listen())
+    assertEquals("the 30 s count from the grant, not the tap", WatchModel.Voice.Listening("", null, since = t + 4_000), model.voice.value)
+  }
+
   /** W3: the answer to an ask sent from this watch opens by itself when it ends with the app elsewhere (back on Coach's home). */
   @Test fun v2sAnswerOpensByItselfWhenTheAppIsElsewhere() = runTest {
     val phone = asker { Asked.Answered(WatchReply.AskTaken(taken)) }

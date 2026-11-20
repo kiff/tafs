@@ -203,7 +203,8 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   not two): Ask Coach, a taf's microphone, Reply, the tile's Ask tafs and the watch-face complication all go straight to
   listening, with the words shown as they come. A watch without a screen lock, or locked, gets its line instead, and never
   listens. The ready screen (`Voice.Ready`: **Start**, a round button in the brand's colours with the microphone,
-  "Ready · 30 s", and what to do) is shown only while the microphone's permission is asked, the first time. Listening, the screen shows "● Recording · 30 s" in red, the timer against
+  "Ready · 30 s", and what to do) is shown only while the microphone's permission is asked, the first time: listening, and its
+  30 s, start once it's allowed, never behind the system's dialog (`WatchActivity.talk`). Listening, the screen shows "● Recording · 30 s" in red, the timer against
   0:30, a ring that fills to the limit, the words as they're heard (two lines, 68% of the face's width up to 150 dp, so on the 40 mm Watch 5 they stay clear of
   the curve, `theHeardWordsStayInsideTheFaceAt40mm`; the review has them all), and **Stop**: another
   control, not Start relabelled, a solid red button with a white square and a halo, as mockup v2.1 draws it (`RECORD_START`,
