@@ -73,7 +73,9 @@ export const TOOLS: ToolDef[] = [
       chat: { type: "string", enum: ["live", "new"], description: "Where a new run starts: your live chat with the taf (default) or a new one." },
     },
     required: ["taf", "text"],
-    description: "Hands a taf a task or a message. A new run answers at once with its id; its result comes back to you when it ends, so never poll. " +
+    description: "Hands a taf a task or a message. A new run answers at once with its id; its result comes back to you when it ends, so never poll: " +
+      "while you're still working, at your next step; once your turn has ended, only at your next turn, which starts when the owner writes again. " +
+      "So never promise to act on it by yourself after your turn ends: tell the owner to say \"go on\" once its answer is in, and act then. " +
       "With run, the text goes to that run while it works. The task runs under the taf's own Cards.",
   },
   {

@@ -9231,7 +9231,7 @@ export function noteClaim(tenant: string, ref: string, r: Pick<Run, "id" | "stat
 async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, ended: boolean, at: Date, deps: Deps): Promise<{ taken: boolean }> {
   const taf = await deps.tafs.get(tenant, task.taf);
   const name = taf?.name ?? task.taf;
-  const { line, said } = coachLine(name, task, r);
+  const { line, said } = coachLine(name, task, r, await languageKept(tenant, deps));
   // Its level (kiff/tafs#210): quiet while the owner is around, kept for "While you
   // were away" otherwise. A paused run is a hold, which KIFF's alert interrupts for.
   const level = ended ? levelOf("run_ended", !(await deps.slots.held(presenceKey(tenant)))) : undefined;
@@ -10103,7 +10103,7 @@ async function tellPhones(deps: Deps, tenant: string, n: Notification | ((lang: 
  * How a task's run went: the line Coach reads (what it was, how it went, in two
  * sentences at most), and what the owner sees of it in Coach's chat meanwhile.
  */
-function coachLine(name: string, task: Task, r: Run): { line: string; said: string } {
+function coachLine(name: string, task: Task, r: Run, lang: Lang = "en"): { line: string; said: string } {
   const what = task.trial ? "trial" : "run";
   const head = `[taf ${name} ${what} ${r.id} ${r.status === "PAUSED" ? "paused" : "ended"}: ${task.what}]`;
   if (r.status === "PAUSED") {
@@ -10130,7 +10130,26 @@ function coachLine(name: string, task: Task, r: Run): { line: string; said: stri
   if (!r.output) return { line: `${head} It finished with no answer.`, said: "It finished with no answer." };
   // The taf's own words, quoted: what it read can be in them, so they are relayed, never followed.
   const out = twoSentences(r.output);
-  return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said: out };
+  // A tool's result pasted as the answer (a JSON object or list) is never shown to the person: it can carry an app's
+  // addresses and links (a calendar's, 20 Nov 2026). Coach still reads it quoted, and the run keeps it whole.
+  const said = rawResult(r.output) ? wordsIn(lang).coach_line_raw_result : out;
+  return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said };
+}
+
+/**
+ * Whether a run's answer is a tool's result pasted as it came, not words: a JSON object or list, whole or cut short, bare,
+ * fenced (```json …```) or after a few words ("Here is the result: {…}"). A fenced block of any kind counts, and so does
+ * an object's key or a list of objects or strings anywhere in it: hiding words by mistake costs a tap, showing an app's
+ * addresses and links doesn't.
+ */
+export function rawResult(text: string): boolean {
+  const t = text.trim();
+  if (t.includes("```")) return true;
+  if (/^[{[]/.test(t)) {
+    try { const v = JSON.parse(t); if (typeof v === "object" && v !== null) return true; } catch { /* cut short, or words that open with a bracket */ }
+    if (/^\[\s*-?\d+(?:\.\d+)?\s*(?:,|$)/.test(t)) return true;
+  }
+  return /\{\s*"[^"\n]*"\s*:/.test(t) || /\[\s*[{["]/.test(t);
 }
 
 function twoSentences(text: string): string {

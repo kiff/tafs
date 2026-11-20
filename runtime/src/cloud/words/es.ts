@@ -721,6 +721,7 @@ export const es: Words = {
   trial_label: "Prueba",
   trial_title: (n) => `Probando la versión ${n}`,
   runs_title: "Sus ejecuciones",
+  coach_line_raw_result: "Ha terminado: abre su ejecución para ver su respuesta.",
   runs_more: "Ver todas las ejecuciones",
   runs_end: "Nada más antiguo en las ejecuciones guardadas",
   tz_words: (zone) => `Horas en ${zone}`,

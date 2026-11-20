@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, keys as coachKeys, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, type Deps, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, rawResult, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { readMissions } from "../src/cloud/missions.js";
@@ -838,6 +838,60 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const again = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { op: "op_retry" });
     expect(again.isError).toBe(false);
     expect(again.json).toMatchObject({ taf: "Refunds" });
+  });
+
+  // A taf that pastes a tool's result as its answer never shows it to the person: a calendar's raw answer, with an address
+  // and a link, reached the owner's Coach chat (20 Nov 2026). Coach still reads it quoted; the run keeps it whole.
+  it("never shows the person a task's answer that is a tool's raw result, and still gives it to Coach", async () => {
+    const w = world();
+    const raw = `{"accessRole":"owner","items":[{"creator":{"email":"ana@example.com"},"htmlLink":"https://calendar.example/e/1","summary":"Team review"}]}`;
+    for (const [output, shown] of [
+      [raw, "It finished: open its run to see its answer."],
+      [raw.slice(0, 60), "It finished: open its run to see its answer."],
+      ["```json\n" + raw + "\n```", "It finished: open its run to see its answer."],
+      ["3 events today: the team review at 10, lunch at 12 and the 1:1 at 4.", "3 events today: the team review at 10, lunch at 12 and the 1:1 at 4."],
+    ] as const) {
+      const task = await w.tool("taf_task", { taf: RAE, text: "List today's events, read only" }, { act: "u_ana" });
+      const ref = w.agents.notified.get(task.json.run)!.ref;
+      Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output });
+      await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+      const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
+      expect(lines.at(-1)).toMatchObject({ taf: "Refunds", said: shown });
+      expect(JSON.stringify(lines.at(-1))).not.toContain("ana@example.com");
+      // Coach's own line quotes the answer, whatever it is.
+      const notes = [...w.coach.held.values()].flatMap((v) => Array.isArray(v.value) ? v.value : []) as Array<{ text?: string }>;
+      expect(notes.some((n) => n.text?.includes(task.json.run) && n.text.includes(output.replace(/\s+/g, " ").slice(0, 20).replace(/"/g, '\\"')))).toBe(true);
+    }
+  });
+
+  // Coach promised to act when a task's answer came back, then its turn ended and nothing started it again (20 Nov 2026).
+  it("tells Coach a task's answer waits for its next turn once its turn has ended, and to ask the owner to go on", () => {
+    const d = TOOLS.find((t) => t.name === "taf_task")!.description;
+    expect(d).toContain("once your turn has ended, only at your next turn, which starts when the owner writes again");
+    expect(d).toContain("never promise to act on it by yourself after your turn ends");
+    expect(d).toContain("go on");
+  });
+
+  it("says a hidden raw result in the account's language", async () => {
+    const w = world();
+    await w.coach.put(`${T}#lang`, "de", new Date(Date.now() + 3600_000));
+    const task = await w.tool("taf_task", { taf: RAE, text: "List today's events, read only" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: '{"items":[{"creator":{"email":"ana@example.com"}}]}' });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+    const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
+    expect(lines.at(-1)).toMatchObject({ said: wordsIn("de").coach_line_raw_result });
+    for (const lang of LANGUAGES) expect(wordsIn(lang).coach_line_raw_result, lang).toMatch(/\S/);
+  });
+
+  it("tells a raw result from words", () => {
+    for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]",
+      // Fenced, or after a few words: how a model pastes a result most often (qa-kiff's rows).
+      '```json\n{"items":[{"creator":{"email":"ana@example.com"}}]}\n```', '```\n[{"id":1}]\n```',
+      'Here is the result: {"items":[{"htmlLink":"https://calendar.example/e/1"}]}', 'Result:\n{"a":1}',
+      // A fenced block of anything, a table of rows included.
+      '```\nid,email\n1,ana@example.com\n```']) expect(rawResult(t), t).toBe(true);
+    for (const t of ["3 events today.", "[Draft] Reply to Ana: thanks!", "{not json} it says", "No events today", "[1] is the first item: done."]) expect(rawResult(t), t).toBe(false);
   });
 
   it("a paused task tells Coach it waits for the owner, and keeps its ref for the end", async () => {

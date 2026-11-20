@@ -140,6 +140,8 @@ describe("jobs", () => {
       // A deadline as time left, never in UTC (item 26).
       expect(prompt.replace(/\s+/g, " ")).toContain("no clock times or time zones, a deadline included");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
+      // A taf pasted a calendar's raw answer, with an address and a link, as its answer to Coach's task (20 Nov 2026).
+      expect(prompt.replace(/\s+/g, " ")).toContain("words, never a tool's result pasted as it came (its JSON, its list of fields): say what you read");
       // A report named a $100 limit it never read, and counted an item it never
       // acted on as a call (kiff/tafs#1512).
       expect(prompt.replace(/\s+/g, " ")).toContain("An item you made no call on is named as an item (\"A-1047: not done, because …\"), never counted among calls.");

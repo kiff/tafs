@@ -721,6 +721,7 @@ export const nl: Words = {
   trial_label: "Proef",
   trial_title: (n) => `Versie ${n} wordt uitgeprobeerd`,
   runs_title: "Zijn runs",
+  coach_line_raw_result: "Klaar: open zijn run om het antwoord te zien.",
   runs_more: "Alle runs tonen",
   runs_end: "Niets ouders in de bewaarde runs",
   tz_words: (zone) => `Tijden in ${zone}`,

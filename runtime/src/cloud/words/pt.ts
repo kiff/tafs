@@ -721,6 +721,7 @@ export const pt: Words = {
   trial_label: "Experiência",
   trial_title: (n) => `A experimentar a versão ${n}`,
   runs_title: "As suas execuções",
+  coach_line_raw_result: "Terminou: abra a sua execução para ver a resposta.",
   runs_more: "Mostrar todas as execuções",
   runs_end: "Nada mais antigo nas execuções guardadas",
   tz_words: (zone) => `Horas em ${zone}`,

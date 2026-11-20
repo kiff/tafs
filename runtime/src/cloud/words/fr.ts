@@ -721,6 +721,7 @@ export const fr: Words = {
   trial_label: "Essai",
   trial_title: (n) => `Essai de la version ${n}`,
   runs_title: "Ses exécutions",
+  coach_line_raw_result: "Terminé : ouvrez son exécution pour voir sa réponse.",
   runs_more: "Voir toutes les exécutions",
   runs_end: "Rien de plus ancien dans les exécutions conservées",
   tz_words: (zone) => `Heures en ${zone}`,
