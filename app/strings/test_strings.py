@@ -51,8 +51,11 @@ class SharedWords(unittest.TestCase):
         self.source = generate.load("en")
         self.lines = {lang: generate.load(lang) for lang in self.langs["all"]}
 
-    def test_the_languages_are_the_eight(self):
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
+    def test_the_languages_are_the_eight_then_japanese_and_korean(self):
+        # The eight ship. Japanese and Korean are being written (global launch, Korea first): not shipped until
+        # every key is there, so no app shows half a language.
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]))
 
