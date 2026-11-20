@@ -1,0 +1,1 @@
+- **Play (Android and Wear OS):** each release's "What's new" is in Korean too, for Korea's testers; the release script requires a Korean note beside the eight ([android-app.md](docs/android-app.md)).
