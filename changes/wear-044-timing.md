@@ -1,0 +1,1 @@
+- **Wear OS 0.4.4-timing (400,000,009), to Play's internal track only:** a test build that shows how long the watch waits for the phone on each screen, to find why it sometimes says the phone isn't reachable. It keeps timings, never messages; never sent to production ([watch-wear.md](docs/watch-wear.md)).

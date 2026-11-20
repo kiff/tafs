@@ -1,0 +1,1 @@
+Versión de prueba de tafs en Wear OS: muestra cuánto espera el reloj a tu teléfono en cada pantalla. Guarda los tiempos, no tus mensajes.

@@ -1,0 +1,1 @@
+Test build of tafs on Wear OS: shows how long the watch waits for your phone on each screen. It keeps timings, not your messages.
