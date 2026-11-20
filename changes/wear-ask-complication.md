@@ -1,0 +1,1 @@
+- **Wear OS:** Ask tafs on the watch face. A complication shows a microphone that opens the watch app listening, in one tap; it shows nothing else, so a locked face reveals nothing ([watch-wear.md](docs/watch-wear.md)).
