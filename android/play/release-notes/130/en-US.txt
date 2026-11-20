@@ -1,0 +1,1 @@
+• Connect again: when an app can't sign back in to its old account, tafs goes straight to a new sign-in, and that one sign-in brings back every taf that used the account.

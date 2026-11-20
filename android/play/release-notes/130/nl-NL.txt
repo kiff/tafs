@@ -1,0 +1,1 @@
+• Opnieuw verbinden: kan een app niet meer inloggen op het oude account, dan gaat tafs meteen naar een nieuwe aanmelding, en die ene aanmelding brengt elke taf terug die het account gebruikte.

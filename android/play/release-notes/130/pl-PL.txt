@@ -1,0 +1,1 @@
+• Połącz ponownie: gdy aplikacja nie może znów zalogować się na stare konto, tafs od razu przechodzi do nowego logowania, a to jedno logowanie przywraca każdego tafa, który używał tego konta.

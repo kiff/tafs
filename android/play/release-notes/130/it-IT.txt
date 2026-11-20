@@ -1,0 +1,1 @@
+• Connetti di nuovo: se un'app non riesce più ad accedere al suo vecchio account, tafs passa subito a un nuovo accesso, e quell'unico accesso riporta ogni taf che usava l'account.
