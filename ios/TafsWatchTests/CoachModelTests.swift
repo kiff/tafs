@@ -411,12 +411,12 @@ final class CoachModelTests: XCTestCase {
     /// the watch keeps nothing of a taf's chat.
     func testATafChatsSendNamesTheTafAndKeepsNothing() async {
         let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
-        let model = CoachModel(phone: phone, taf: "depl_1", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
         var told = 0
         model.onAnswer = { _, _ in told += 1 }
         model.review("Refund A-1052 too")
         await model.sendReviewed()
-        XCTAssertEqual(phone.asked.first, WatchRequest(.coachSend, made: now, taf: "depl_1", text: "Refund A-1052 too",
+        XCTAssertEqual(phone.asked.first, WatchRequest(.coachSend, made: now, taf: "taf-0a1b2c3d4e5f60718293", text: "Refund A-1052 too",
                                                        message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"))
         XCTAssertEqual(model.state, .answered(Self.rae))
         XCTAssertEqual(model.turns.map(\.said), ["Refund A-1052 too"])
@@ -426,7 +426,7 @@ final class CoachModelTests: XCTestCase {
     /// A phone from before chatting with a taf: the words stay in the review, and never go to Coach by v1's send.
     func testATafChatNeverFallsBackToCoachOnAnOlderPhone() async {
         let phone = V1Phone(refusing: .coachSend, answer: WatchReply(.ok, coach: Self.rae))
-        let model = CoachModel(phone: phone, taf: "depl_1", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        let model = CoachModel(phone: phone, taf: "taf-0a1b2c3d4e5f60718293", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
         model.review("Hi")
         await model.sendReviewed()
         XCTAssertEqual(model.state, .failed(Words.Watch.openOnPhone))

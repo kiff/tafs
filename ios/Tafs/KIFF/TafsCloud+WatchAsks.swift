@@ -76,10 +76,11 @@ extension TafsCloud {
         return try KIFFClient.decoder.decode(Answer.self, from: data).ask
     }
 
-    /// One of the person's own watch requests, by its id.
-    func watchAsk(_ id: String) async throws -> WatchAsk {
+    /// One of the person's own watch requests, by its id; `full`, its whole answer (Read more), cleaned as the line is but not
+    /// cut, at most 16 KB.
+    func watchAsk(_ id: String, full: Bool = false) async throws -> WatchAsk {
         struct Answer: Decodable { let ask: WatchAsk }
-        let r: Answer = try await send("GET", "\(Self.watchAsksPath)/\(escaped(id))")
+        let r: Answer = try await send("GET", "\(Self.watchAsksPath)/\(escaped(id))" + (full ? "?full=1" : ""))
         return r.ask
     }
 }

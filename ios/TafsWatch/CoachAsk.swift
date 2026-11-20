@@ -5,6 +5,10 @@ import SwiftUI
 /// it's v1's send: the same words, the same id on a retry, the same lock.
 struct CoachAsk: View {
     @ObservedObject var model: CoachModel
+    /// The ask's title: Coach's, or "Message {taf}" in a taf's chat.
+    var title = Words.Coach.title
+    /// Who answers: Coach, or the taf.
+    var answerer = Words.Coach.title
     @Environment(\.dismiss) private var dismiss
     /// What the system's input hands back, before it's checked.
     @State private var input = ""
@@ -43,7 +47,7 @@ struct CoachAsk: View {
                 }
             }
         }
-        .navigationTitle(Words.Coach.title)
+        .navigationTitle(title)
     }
 
     /// Check before sending: the words in full, scrolled with the crown, and under them, pinned at the foot in one row,
@@ -57,7 +61,7 @@ struct CoachAsk: View {
                 Text(why).font(.footnote).foregroundStyle(WatchLook.held)
             }
         }
-        .navigationTitle(Words.Watch.review)
+        .navigationTitle(model.taf == nil ? Words.Watch.review : title)
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
                 // Neither Delete nor Re-record acts while the words are in flight: they may already have reached Coach.
@@ -106,7 +110,7 @@ struct CoachAsk: View {
                     HStack(spacing: 6) {
                         ProgressView()
                             .frame(width: 18, height: 18)
-                        Text(Words.Chat.tafIsAnswering(taf: Words.Coach.title))
+                        Text(Words.Chat.tafIsAnswering(taf: answerer))
                             .font(.footnote)
                             .foregroundStyle(WatchLook.coach)
                     }
@@ -130,7 +134,7 @@ struct CoachAsk: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .navigationTitle(Words.Coach.title)
+        .navigationTitle(answerer)
     }
 
     /// "Deleted. Nothing was sent.", which closes by itself.

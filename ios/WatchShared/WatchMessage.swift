@@ -29,6 +29,9 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case coachSend = "coach_send"
         /// v2 (W2): Coach's answer so far to the words a ticket names, and whether Coach is still at it. Read only.
         case coachRead = "coach_read"
+        /// Chatting with a taf, Read more: the whole answer to the watch request a ticket names, read only on the tap.
+        /// Read only.
+        case askFull = "ask_full"
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -88,6 +91,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .coachSend:
             return given(text) && (text ?? "").count <= Self.coachLimit && (taf.map { given($0) && $0.count <= Self.tafIDLimit } ?? true)
         case .coachRead: return ticket?.isComplete ?? false
+        case .askFull: return (ticket?.isComplete ?? false) && ticket?.askID != nil
         }
     }
 }
@@ -267,6 +271,15 @@ struct WatchCoachAnswer: Codable, Equatable, Sendable {
     /// The answer holds a card or a step: "Approve on your phone", and nothing of it here.
     var approveOnPhone: Bool
 
+    /// The most of a whole answer (Read more) the wrist takes: tafs cloud caps it at 16 KB, and the watch never holds more.
+    static let wholeLength = 16_000
+
+    /// A whole answer, for Read more: never cut at `wristLength`, only at `wholeLength`.
+    static func whole(_ words: String, approveOnPhone: Bool) -> WatchCoachAnswer {
+        let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        return WatchCoachAnswer(text: String(text.prefix(wholeLength)), more: false, approveOnPhone: approveOnPhone)
+    }
+
     /// Coach's words as the wrist shows them, cut at a word where it can be.
     static func cut(_ words: String, more: Bool, approveOnPhone: Bool) -> WatchCoachAnswer {
         let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -287,6 +300,8 @@ struct WatchTaf: Codable, Equatable, Sendable, Identifiable {
     var line: String?
     /// Halted, or halting: Halt isn't offered again.
     var halted: Bool
+    /// Paused (and not halted): its chat still takes a message, which it reads when it's back. Nil from a phone from before.
+    var paused: Bool? = nil
 }
 
 /// Needs you, as the phone reads it: the count, and each held call in the phone's words.

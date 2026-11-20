@@ -22,6 +22,9 @@ final class TafsModel: ObservableObject {
     /// Sending needs a passcode on this watch (`WristLock`).
     let lock: WristLock
     private var asking = false
+    /// Each taf's chat opened this visit (chatting with a taf), by tafs cloud's id: its turns stay while the app is open, and go
+    /// with `leave`. Nothing of them is kept on the watch.
+    private var chats: [String: CoachModel] = [:]
 
     init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
         self.phone = phone
@@ -61,8 +64,18 @@ final class TafsModel: ObservableObject {
         if reply?.outcome == .ok { await load() }
     }
 
+    /// A taf's chat: the same one each time it's opened this visit.
+    func chat(_ taf: WatchTaf) -> CoachModel {
+        if let open = chats[taf.id] { return open }
+        let made = CoachModel(phone: phone, taf: taf.id, clock: clock, lock: lock)
+        chats[taf.id] = made
+        return made
+    }
+
     func leave() {
         state = .loading
         halts = [:]
+        chats.values.forEach { $0.leave() }
+        chats = [:]
     }
 }

@@ -97,6 +97,18 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   chat.
   On the wrist, `CoachModel` takes the taf's id: its Send names it, a phone from before it never sends the words to
   Coach by v1's send, and its answers never go to the Inbox.
+- **The wrist's screens (the owner's picks 1A and 2A, behind `WatchTafChat.on`, off).**
+  - **1A:** Your tafs opens a taf's own chat (`TafChatScreen`), with its page one swipe below. Each taf's chat is one
+    `CoachModel` for the visit (`TafsModel.chat`), gone when the app leaves the screen.
+  - **The chat:** the taf's state, this visit's turns (your words orange, the taf's green, `WatchLook.taf`), then "Message
+    {taf}", which opens the same ask as Coach's (Speak, Type, Quick reply, Check before sending) titled for the taf.
+  - **2A:** a paused taf (`WatchTaf.paused`, sent by the phone) still takes the message; a halted one takes none and says
+    "Resume on your phone".
+  - **Read more (the owner's 01:10):** a long answer shows its first part with Read more. Only the tap reads the whole
+    answer (`ask_full`, `GET /v1/watch/asks/{id}?full=1`), shown in place and forgotten with the turns. If it can't be
+    read, "The rest is on your phone."
+  - **Before it goes on:** the paused line and the Read more word in 8 languages (legal-i18n; the screens show
+    `taf.state.paused` and `common.more` until then), and the last turns of the taf's chat read through the phone.
 
 ## Coach
 

@@ -1,0 +1,181 @@
+import SwiftUI
+
+/// Chatting with a taf from the wrist (docs/watch-app.md, "Chatting with a taf"; the owner's picks 1A and 2A). Your tafs opens
+/// a taf's own chat, with its page one swipe below. The words go into that taf's chat as the person, through the phone, never
+/// to Coach. Approvals stay on the phone, and nothing of the chat is kept on the watch.
+enum WatchTafChat {
+    /// Off until tafs cloud's `TAFS_WATCH_TAF_CHAT` is on, the paused line and Read more are in 8 languages, and the privacy
+    /// paragraph is live.
+    static let on = false
+}
+
+/// What a taf's chat lets the person do, by its state: halted, nothing runs, so nothing is sent ("Resume on your phone");
+/// paused, the message is taken and read when it's back (2A); otherwise, Speak, Type and Quick reply.
+enum TafChatSend: Equatable {
+    case open
+    case paused
+    case halted
+
+    static func of(_ taf: WatchTaf) -> TafChatSend {
+        if taf.halted { return .halted }
+        return taf.paused == true ? .paused : .open
+    }
+}
+
+/// A taf's chat, then its page one swipe below (1A).
+struct TafChatScreen: View {
+    let taf: WatchTaf
+    @ObservedObject var chat: CoachModel
+    let page: () -> TafPageModel
+    let openInbox: () -> Void
+
+    var body: some View {
+        TabView {
+            TafChatPage(taf: taf, chat: chat)
+            TafPageScreen(model: page(), openInbox: openInbox)
+        }
+        .tabViewStyle(.verticalPage)
+        .navigationTitle(taf.name)
+    }
+}
+
+/// The chat itself: the taf's state, this visit's turns with the taf's answers, then the microphone (or, halted, "Resume on
+/// your phone"). The newest turn sits just over the microphone, as Coach's do.
+struct TafChatPage: View {
+    let taf: WatchTaf
+    @ObservedObject var chat: CoachModel
+    @State private var asking = false
+
+    var body: some View {
+        List {
+            if let line = taf.line {
+                Text(line)
+                    .font(.footnote)
+                    .foregroundStyle(TafChatSend.of(taf) == .halted ? WatchLook.danger : TafChatSend.of(taf) == .paused ? WatchLook.held : WatchLook.taf)
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+            }
+            ForEach(chat.turns) { turn in
+                TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id]) {
+                    Task { await chat.readMore(turn.id) }
+                }
+            }
+            switch TafChatSend.of(taf) {
+            case .halted:
+                Label(Words.Watch.resumeOnPhone, systemImage: "iphone")
+                    .font(.footnote)
+                    .foregroundStyle(WatchLook.danger)
+                    .listRowBackground(Color.clear)
+            case .paused, .open:
+                if TafChatSend.of(taf) == .paused {
+                    // 2A: it still takes the message. The line's own words come with legal-i18n's key.
+                    Text(Words.Taf.State.paused)
+                        .font(.footnote)
+                        .foregroundStyle(WatchLook.held)
+                        .listRowBackground(Color.clear)
+                }
+                Button { asking = true } label: {
+                    Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
+                        .font(.headline)
+                }
+            }
+        }
+        .defaultScrollAnchor(.bottom)
+        .sheet(isPresented: $asking) {
+            CoachAsk(model: chat, title: Words.Chat.messageTaf(taf: taf.name), answerer: taf.name)
+        }
+    }
+}
+
+/// One turn of a taf's chat: your words, then the taf's answer in green. A long answer shows its first part with Read more,
+/// and the tap opens the whole answer in place, read only then (the owner's 01:10); if it can't be read, the rest is on the
+/// phone.
+struct TafTurnRow: View {
+    let turn: CoachModel.Turn
+    let taf: String
+    let whole: CoachModel.Whole?
+    let readMore: () -> Void
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(turn.at, style: .time)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(verbatim: turn.said)
+                .font(.footnote)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .foregroundStyle(WatchLook.onMineGround)
+                .background(WatchLook.mineGround, in: RoundedRectangle(cornerRadius: 12))
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            tafSide
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .listRowBackground(Color.clear)
+    }
+
+    @ViewBuilder private var tafSide: some View {
+        switch turn.answer {
+        case .sent:
+            Label(Words.Watch.sent, systemImage: "checkmark")
+                .font(.caption2)
+                .foregroundStyle(WatchLook.done)
+        case .answering:
+            HStack(spacing: 4) {
+                ProgressView().frame(width: 14, height: 14)
+                Text(Words.Chat.tafIsAnswering(taf: taf)).font(.caption2).foregroundStyle(WatchLook.taf)
+            }
+            .accessibilityElement(children: .combine)
+        case .answered(let answer):
+            VStack(alignment: .leading, spacing: 4) {
+                if let text = Self.shown(answer, whole: whole), !text.isEmpty {
+                    Text(verbatim: text)
+                        .font(.footnote)
+                        .foregroundStyle(WatchLook.onTafGround)
+                }
+                if answer?.approveOnPhone == true {
+                    Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                        .font(.caption2)
+                        .foregroundStyle(WatchLook.held)
+                }
+                switch Self.foot(answer, whole: whole) {
+                case .readMore:
+                    Button(Words.Common.more, action: readMore)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(WatchLook.coach)
+                        .buttonStyle(.plain)
+                case .reading:
+                    ProgressView().frame(width: 14, height: 14)
+                case .onPhone:
+                    Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
+                case nil:
+                    EmptyView()
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(WatchLook.tafGround, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+
+    enum Foot: Equatable { case readMore, reading, onPhone }
+
+    /// The answer's words as shown: the whole once Read more has it, else the first part.
+    static func shown(_ answer: WatchCoachAnswer?, whole: CoachModel.Whole?) -> String? {
+        if case .read(let all)? = whole { return all.text }
+        return answer?.text
+    }
+
+    /// Under the answer: Read more while there's more and it hasn't been read, the wait while it's read, "The rest is on your
+    /// phone" when it couldn't be (or there's no answer yet), nothing once it's whole.
+    static func foot(_ answer: WatchCoachAnswer?, whole: CoachModel.Whole?) -> Foot? {
+        switch whole {
+        case .read?: return nil
+        case .reading?: return .reading
+        case .onPhone?: return .onPhone
+        case nil:
+            guard let answer else { return .onPhone }
+            return answer.more ? .readMore : nil
+        }
+    }
+}

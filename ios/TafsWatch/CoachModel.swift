@@ -35,6 +35,16 @@ final class CoachModel: ObservableObject {
         let said: String
         let at: Date
         var answer: Answer
+        /// Where its answer is: a watch request's ticket, for Read more.
+        var ticket: WatchCoachTicket? = nil
+    }
+
+    /// Read more (a taf's chat): the whole answer, fetched only on the tap and held only while the chat is open.
+    enum Whole: Equatable {
+        case reading
+        case read(WatchCoachAnswer)
+        /// Not read: the rest is on the phone.
+        case onPhone
     }
 
     /// v2's Quick reply (docs/watch-app.md, "Step (iii)"): four ready-made lines, each to Check before sending, in Wear OS's
@@ -52,6 +62,8 @@ final class CoachModel: ObservableObject {
     /// v2 (W4): Ask Coach as one conversation, oldest first: what was said from this watch since the app was opened, each with
     /// Coach's answer. In memory only, forgotten when the app is put away or signed out here: nothing new is kept on the watch.
     @Published private(set) var turns: [Turn] = []
+    /// Read more, by turn: each whole answer read on a tap. Forgotten with the turns.
+    @Published private(set) var whole: [String: Whole] = [:]
     /// The last request this visit sent: the next Send replies to it (`reply_to`, docs/watch-ask.md), so Coach keeps the
     /// conversation. Gone when the app leaves the screen, as the turns are.
     private var lastTicket: WatchCoachTicket?
@@ -162,7 +174,7 @@ final class CoachModel: ObservableObject {
             reviewing = false
             asked = text
             state = .sent
-            turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .sent))
+            turns.append(Turn(id: id.uuidString.lowercased(), said: text, at: clock(), answer: .sent, ticket: ticket))
             await read(ticket, message: id.uuidString.lowercased())
         case .notYet where taf != nil, .refused where taf != nil:
             // A phone from before chatting with a taf: the words stay, and never go to Coach.
@@ -223,6 +235,23 @@ final class CoachModel: ObservableObject {
         turns[i].answer = answer
     }
 
+    /// Read more: the whole answer to a turn, read through the phone only now, and shown in place. A phone or a tafs cloud that
+    /// can't give it leaves the fallback, "The rest is on your phone."
+    func readMore(_ turn: String) async {
+        guard let ticket = turns.first(where: { $0.id == turn })?.ticket, ticket.askID != nil else { whole[turn] = .onPhone; return }
+        if case .reading? = whole[turn] { return }
+        if case .read? = whole[turn] { return }
+        let visit = self.visit
+        whole[turn] = .reading
+        let reply = await phone.ask(WatchRequest(.askFull, made: clock(), ticket: ticket))
+        guard visit == self.visit else { return }
+        if let reply, reply.outcome == .ok, let answer = reply.coach, !answer.text.isEmpty {
+            whole[turn] = .read(answer)
+        } else {
+            whole[turn] = .onPhone
+        }
+    }
+
     /// v2: the ask closed with the app still open. Words not sent go; a Send on its way carries on, and its answer lands in
     /// the conversation (W4).
     func closeAsk() {
@@ -252,6 +281,7 @@ final class CoachModel: ObservableObject {
         visit += 1
         asked = nil
         turns = []
+        whole = [:]
         lastTicket = nil
         draft = ""
         sending = nil
