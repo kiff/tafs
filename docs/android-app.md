@@ -1617,7 +1617,8 @@ on the left.
 - **No direction character from a server reaches an approval** (`KiffMapping.visible`): U+202A–U+202E, U+2066–U+2069,
   U+200E/U+200F and U+061C are taken out of what KIFF, a vendor, a taf or tafs cloud sends, wherever it's drawn beside an
   amount or an answer: a held call's summary, reason and Details (payee, IBAN…), the record's entries, a Card's title and
-  rule labels, a notification's title and body, and the watch's Needs you. So a payee name can't make an amount or an IBAN
+  rule labels, a notification's title and body, and the watch's Needs you; and every line `KiffMapping` builds from a server
+  value: a vendor's quoted message, a tool's or vendor's name in words, and a taf's name, job and status lines. So a payee name can't make an amount or an IBAN
   beside it look reordered. Any other control character is a space; right-to-left letters stay (as iOS's #1547).
 - **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
   text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
