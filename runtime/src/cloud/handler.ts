@@ -37,10 +37,10 @@ import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./cal
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
-import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
+import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentGoneKey, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -9283,6 +9283,15 @@ async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, end
   if (setup && task.coachRun) {
     told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
   }
+  // Coach's turn had ended: the task's end starts its next turn in the same chat, so what it said it would do once the
+  // answer came back, it does, and the person sees it there. Not for a taf removed meanwhile, nor a pause (a hold is
+  // the owner's to answer).
+  if (!told && ended && setup && task.coachRun && task.person && taf && !taf.removing) {
+    told = await goOnAfterTask(tenant, setup, task, r, line, deps).catch((err) => {
+      console.error(`go on ${task.coachRun}: ${(err as Error).message}`);
+      return false;
+    });
+  }
   // A taf removed meanwhile is forgotten, its last result too: nothing of it reaches Coach.
   if (!told && task.person && taf && !taf.removing) {
     // The person reads the taf and how it went; their Coach reads the whole line. A task
@@ -9293,6 +9302,36 @@ async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, end
   if (level === "quiet") await tellPhones(deps, tenant, (lang) => endedNotification(name, r, lang));
   if (ended) await deps.coach!.remove(key);
   return { taken: true };
+}
+
+/** How many turns tafs cloud starts in a row in one chat (goOnAfterTask), and over how long: a task's turn may hand over another. */
+export const GO_ON_TURNS = 3;
+export const GO_ON_WINDOW_MS = 30 * 60_000;
+
+/**
+ * Starts Coach's next turn in the chat that handed a task over, with the line of how it went: one Coach turn, on the
+ * person's own AI consent while they're still on the account, at most GO_ON_TURNS in a row per chat in GO_ON_WINDOW_MS
+ * (counted best effort: two ends at the same moment can each take the last turn). Once per run (its dedup key).
+ * False when it starts nothing: the line then waits for the person's next message, as before.
+ */
+async function goOnAfterTask(tenant: string, setup: Taf, task: Task, r: Run, line: string, deps: Deps): Promise<boolean> {
+  if (!deps.coach || !task.coachRun || !task.person) return false;
+  const coach = await deps.agents.getRun(tenant, setup.id, task.coachRun);
+  // The person's own chat, never another's: the run that handed it over is theirs.
+  if (!coach.session || coach.requester?.kind !== "member" || coach.requester.id !== task.person) return false;
+  if (deps.aiConsent && !(await aiConsentOf(deps.coach, tenant, task.person))) return false;
+  // A person who has left the account since (consent.ts markGone) is never started a turn for.
+  if (await deps.coach.get(consentGoneKey(tenant, task.person)).catch(() => undefined)) return false;
+  const now = deps.now?.() ?? new Date();
+  const key = `${tenant}#coach-go-on#${coach.session}`;
+  const kept = (await deps.coach.get(key)) as { n: number; until: string } | undefined;
+  const fresh = kept && Date.parse(kept.until) > now.getTime() ? kept : undefined;
+  if ((fresh?.n ?? 0) >= GO_ON_TURNS) return false;
+  const until = fresh ? new Date(fresh.until) : new Date(now.getTime() + GO_ON_WINDOW_MS);
+  await deps.coach.put(key, { n: (fresh?.n ?? 0) + 1, until: until.toISOString() }, until);
+  await deps.agents.startRun(tenant, setup.id, `${COACH_LINES}\n${line}\n${GO_ON}`,
+    { session: coach.session, requester: { kind: "member", id: task.person }, dedupKey: `go-on:${r.id}`, source: "go-on" });
+  return true;
 }
 
 /**

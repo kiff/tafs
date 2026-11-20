@@ -1,10 +1,10 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, keys as coachKeys, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_LINES, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, GO_ON, keys as coachKeys, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, type Deps, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, rawResult, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, GO_ON_TURNS, GO_ON_WINDOW_MS, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, rawResult, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { readMissions } from "../src/cloud/missions.js";
@@ -894,11 +894,117 @@ describe("Coach's tools (kiff/tafs#206)", () => {
   });
 
   // Coach promised to act when a task's answer came back, then its turn ended and nothing started it again (20 Nov 2026).
-  it("tells Coach a task's answer waits for its next turn once its turn has ended, and to ask the owner to go on", () => {
+  it("tells Coach a task's end starts its next turn once its turn has ended, a few in a row at most", () => {
     const d = TOOLS.find((t) => t.name === "taf_task")!.description;
-    expect(d).toContain("once your turn has ended, only at your next turn, which starts when the owner writes again");
-    expect(d).toContain("never promise to act on it by yourself after your turn ends");
-    expect(d).toContain("go on");
+    expect(d).toContain("once your turn has ended, tafs starts your next turn with it in the same chat");
+    expect(d).toContain("A few such turns in a row at most");
+    // Negative: the old way, asking the owner to say "go on", is gone.
+    expect(d).not.toContain("say \"go on\"");
+  });
+
+  describe("a task that ends once Coach's turn has ended", () => {
+    /** Ana's Coach hands Refunds a task, then its turn ends; Refunds' run then ends with `output`. */
+    const handedOver = async (w: ReturnType<typeof world>, output = "Refunded order 42.") => {
+      const coach = await w.agents.api.startRun(T, SETUP, "Have Refunds refund order 42", { requester: { kind: "member", id: "u_ana" } });
+      const run = w.agents.runs.find((r) => r.id === coach.id)!;
+      run.status = "RUNNING";
+      const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+      run.status = "COMPLETED";
+      const ref = w.agents.notified.get(task.json.run)!.ref;
+      Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output });
+      return { coach: run, task: task.json.run as string, ref };
+    };
+    /** Coach's runs, oldest first (the fake keeps them newest first). */
+    const coachRuns = (w: ReturnType<typeof world>) => w.agents.runs.filter((r) => r.agent === SETUP).sort((a, b) => Number(a.id.slice(3)) - Number(b.id.slice(3)));
+    const lines = async (w: ReturnType<typeof world>) => ((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines ?? []) as unknown[];
+
+    it("starts Coach's next turn in the same chat, as Ana, with how it went, and keeps no line for later", async () => {
+      const w = world();
+      const { coach, task, ref } = await handedOver(w);
+      expect((await w.send("POST", "/v1/runs/ended", { run: task, agent: RAE, status: "COMPLETED", ref })).body).toEqual({ taken: true });
+      const next = coachRuns(w).at(-1)!;
+      expect(next.id).not.toBe(coach.id);
+      expect(next.session).toBe(coach.session);
+      expect(next.requester).toEqual({ kind: "member", id: "u_ana" });
+      const input = (w.agents.events.get(next.session)!.at(-1)!.body as { text: string }).text;
+      expect(input).toBe(`${COACH_LINES}\n[taf Refunds run ${task} ended: Refund order 42] It finished. answer: "Refunded order 42."\n${GO_ON}`);
+      // Told once, in the turn: no line waits to go before Ana's next message too.
+      expect(await lines(w)).toEqual([]);
+      // Nothing of tafs' own shows as Ana's message.
+      const thread = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body as { messages?: Array<{ from: string; text: string }> };
+      expect((thread.messages ?? []).filter((m) => m.from === "owner").map((m) => m.text)).toEqual(["Have Refunds refund order 42"]);
+    });
+
+    it("starts at most a few turns in a row in one chat; past that the line waits for Ana's next message", async () => {
+      const w = world();
+      const first = await handedOver(w);
+      await w.send("POST", "/v1/runs/ended", { run: first.task, agent: RAE, status: "COMPLETED", ref: first.ref });
+      for (let i = 1; i <= GO_ON_TURNS; i++) {
+        // Each turn it started hands over another task, in the same chat, and ends.
+        const coach = coachRuns(w).at(-1)!;
+        coach.status = "RUNNING";
+        const task = await w.tool("taf_task", { taf: RAE, text: `Refund order ${42 + i}` }, { act: "u_ana" });
+        coach.status = "COMPLETED";
+        const ref = w.agents.notified.get(task.json.run)!.ref;
+        Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: `Refunded order ${42 + i}.` });
+        await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+      }
+      // The first task's turn, then two more: the third task's end waits.
+      expect(coachRuns(w)).toHaveLength(1 + GO_ON_TURNS);
+      expect(await lines(w)).toMatchObject([{ taf: "Refunds", said: `Refunded order ${42 + GO_ON_TURNS}.` }]);
+      // Once the window has passed, a task's end starts a turn again.
+      const coach = coachRuns(w).at(-1)!;
+      coach.status = "RUNNING";
+      const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 99" }, { act: "u_ana" });
+      coach.status = "COMPLETED";
+      Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 99." });
+      const later = new Date(Date.parse("2026-10-16T12:00:00Z") + GO_ON_WINDOW_MS + 1);
+      w.deps.now = () => later;
+      await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref: w.agents.notified.get(task.json.run)!.ref });
+      expect(coachRuns(w)).toHaveLength(2 + GO_ON_TURNS);
+    });
+
+    it("starts nothing without Ana's AI consent, for a pause, or when kiff/agents won't start it: the line waits as before", async () => {
+      // No consent given: nothing of hers reaches the model.
+      const w = world();
+      const a = await handedOver(w);
+      w.deps.aiConsent = true;
+      await w.send("POST", "/v1/runs/ended", { run: a.task, agent: RAE, status: "COMPLETED", ref: a.ref });
+      expect(coachRuns(w)).toHaveLength(1);
+      expect(await lines(w)).toMatchObject([{ said: "Refunded order 42." }]);
+
+      // A pause is a hold: the owner answers it, Coach never goes on with it.
+      const p = world();
+      const b = await handedOver(p);
+      Object.assign(p.agents.runs.find((r) => r.id === b.task)!, { status: "PAUSED", output: "", requirements: [{ call_id: "c1", tool: "stripe_refund", input: {}, operation: "op", expires: "2026-10-16T13:00:00Z" }] });
+      await p.send("POST", "/v1/runs/ended", { run: b.task, agent: RAE, status: "PAUSED", ref: b.ref });
+      expect(coachRuns(p)).toHaveLength(1);
+      expect(await lines(p)).toMatchObject([{ said: "Waits for your answer." }]);
+
+      // kiff/agents refuses the turn (out of credits, down): told as before.
+      const f = world();
+      const c = await handedOver(f);
+      f.agents.fail.set("startRun", new Error("kiff/agents is down"));
+      expect((await f.send("POST", "/v1/runs/ended", { run: c.task, agent: RAE, status: "COMPLETED", ref: c.ref })).body).toEqual({ taken: true });
+      expect(await lines(f)).toMatchObject([{ said: "Refunded order 42." }]);
+    });
+
+    it("never goes on for a person who has left the account", async () => {
+      const w = world();
+      const { task, ref } = await handedOver(w);
+      await w.coach.put(`${T}#ai-consent-gone#u_ana`, { at: "2026-10-16T12:00:00Z" }, new Date(Date.parse("2026-10-17T12:00:00Z")));
+      await w.send("POST", "/v1/runs/ended", { run: task, agent: RAE, status: "COMPLETED", ref });
+      expect(coachRuns(w)).toHaveLength(1);
+    });
+
+    it("never goes on in a chat that isn't the person's own", async () => {
+      const w = world();
+      const { coach, task, ref } = await handedOver(w);
+      coach.requester = { kind: "member", id: "u_bo" };
+      await w.send("POST", "/v1/runs/ended", { run: task, agent: RAE, status: "COMPLETED", ref });
+      expect(coachRuns(w)).toHaveLength(1);
+      expect(await lines(w)).toMatchObject([{ said: "Refunded order 42." }]);
+    });
   });
 
   it("says a hidden raw result in the account's language", async () => {
