@@ -120,6 +120,21 @@ class TafChatModelTest {
     assertNull((m.voice.value as WatchModel.Voice.Review).tafId)
   }
 
+  /** One tap on a taf's microphone opens it already listening, and the words go to that taf, never Coach (row 44). */
+  @Test fun oneTapOnATafsMicrophoneListensForThatTaf() = runTest {
+    val m = model(Phone(::reads))
+    m.openTaf("taf_1")
+    assertTrue(m.talk(tafId = "taf_1"))
+    assertTrue(m.voice.value is WatchModel.Voice.Listening)
+    m.heard("What's due this week?")
+    assertEquals("taf_1", (m.voice.value as WatchModel.Voice.Review).tafId)
+    // Then Coach's own one tap: never the taf's.
+    m.closeVoice()
+    assertTrue(m.talk())
+    m.heard("Move my call")
+    assertNull((m.voice.value as WatchModel.Voice.Review).tafId)
+  }
+
   /** A taf chat's request read back (after a relaunch, say) is marked by tafs cloud and kept nowhere either. */
   @Test fun aTafChatsRequestReadBackIsKeptNowhere() = runTest {
     val m = model(Phone(::reads))

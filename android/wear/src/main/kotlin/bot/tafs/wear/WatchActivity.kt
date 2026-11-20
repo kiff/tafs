@@ -95,6 +95,11 @@ class WatchActivity : ComponentActivity() {
 
   private fun listen(replyTo: String? = null) {
     if (!model.listen(replyTo)) return
+    withMicrophone(replyTo)
+  }
+
+  /** Listening, once the microphone is allowed: asked for at the first ask, then started. */
+  private fun withMicrophone(replyTo: String?) {
     if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
       pendingReply = replyTo
       pendingListen = true
@@ -149,12 +154,12 @@ class WatchActivity : ComponentActivity() {
           confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
           cancelHaltAll = model::cancelHaltAll,
           // v2 opens the microphone's screen first, and listens on Start.
-          listen = { if (WATCH_V2) model.readyToRecord() else listen() },
+          listen = { if (WATCH_V2) talk() else listen() },
           closeVoice = { listener.cancel(); model.closeVoice() },
           retry = { lifecycleScope.launch { model.retry() } },
           open = model::open,
           hear = { ask -> speaker().say(ask.line ?: ask.words) },
-          reply = { ask -> if (WATCH_V2) model.readyToRecord(ask.id) else listen(ask.id) },
+          reply = { ask -> if (WATCH_V2) talk(ask.id) else listen(ask.id) },
           closeResult = model::closeResult,
           dismiss = model::dismissOutcome,
           start = { replyTo -> listen(replyTo) },
@@ -164,7 +169,7 @@ class WatchActivity : ComponentActivity() {
           delete = model::deleteReviewed,
           type = { typingFor = null; type() },
           quick = { model.review(it) },
-          messageTaf = { taf -> model.readyToRecord(tafId = taf) },
+          messageTaf = { taf -> talk(tafId = taf) },
           typeTaf = { taf -> typingFor = taf; type() },
           quickTaf = { taf, text -> model.review(text, tafId = taf) },
           readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
@@ -233,8 +238,18 @@ class WatchActivity : ComponentActivity() {
     intent?.getByteArrayExtra(AskResults.EXTRA_ASK)?.let(WatchLink::decodeResult)?.let { model.took(it); model.open(it) }
     if (intent?.getBooleanExtra(EXTRA_LISTEN, false) == true) {
       intent.removeExtra(EXTRA_LISTEN)
-      listen()
+      if (WATCH_V2) talk() else listen()
     }
+  }
+
+  /**
+   * One tap to talk (row 44, the owner's Galaxy Watch review): Ask Coach, a taf's microphone, Reply, the tile and the complication
+   * open their screen already listening, with the dictation shown as it comes; no second tap on Start. The screen's own rules
+   * stand: a watch without a screen lock, or locked, gets its line instead (`readyToRecord` → `NeedsLock`), and only a start
+   * that is its own names its taf ([tafId]).
+   */
+  private fun talk(replyTo: String? = null, tafId: String? = null) {
+    if (model.talk(replyTo, tafId)) withMicrophone(replyTo)
   }
 
   override fun onStart() {

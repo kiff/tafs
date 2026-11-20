@@ -530,6 +530,16 @@ class WatchModel(
   }
 
   /**
+   * One tap to talk (row 44): the start's screen ([readyToRecord]: its taf, the watch's lock) and listening at once, so the
+   * screen opens already listening. Returns whether to start the recognizer: not on a locked watch or one without a screen lock,
+   * which get their line, as before.
+   */
+  fun talk(replyTo: String? = null, tafId: String? = null): Boolean {
+    readyToRecord(replyTo, tafId)
+    return _voice.value is Voice.Ready && listen(replyTo)
+  }
+
+  /**
    * The taf the words being recorded go to, set at every start ([readyToRecord], [review]): Coach's starts set it to null, a
    * taf's chat to its id, so words never go to a taf by a start that wasn't its own.
    */

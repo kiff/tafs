@@ -1,0 +1,1 @@
+- **Wear OS:** one tap to talk. Ask Coach, a taf's microphone, Reply, the tile and the watch-face complication open already listening, with the words shown as they come; no second tap on Start ([watch-wear.md](docs/watch-wear.md)).
