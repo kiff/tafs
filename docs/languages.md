@@ -129,15 +129,16 @@ Halted and Stopped are different words in every language: a halt blocks a taf in
 through, while a stopped request is one run that ended. A word not in this table is translated in the voice above, the same way every time it appears. A new
 term that recurs is added here first, then used.
 
-## Korean and Japanese (being written)
+## Korean and Japanese (apart from the Terms table)
 
-`ko` and `ja` are in `all`, not `shipped` (app/strings/README.md): their lines are written feature by feature, and
-neither app shows them until every key is there. Their terms are kept here, apart from the Terms table above,
-which KIFF checks by its digest; they join it when they ship.
+`ko` ships (tafs#1572); `ja` has every line but is in `all`, not `shipped` (app/strings/README.md), so neither app
+shows it yet. Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
+`test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
 | Language | Code | Address | Notes |
 |---|---|---|---|
 | Korean | `ko` | 합니다 / 하세요 | Statements end in -습니다/-ㅂ니다, requests in -세요, as Korean business apps do. "나" for the person in labels ("내 코드"). A particle after a placeholder that may end in a consonant is written 을(를), 이(가), 은(는). |
+| Japanese | `ja` | です / ます | Polite です/ます throughout, as Japanese business apps write; buttons are plain verbs or nouns (承認, 拒否, 今すぐ実行). No "you" (あなた) where the sentence reads without it. A Mac sentence may end with 。 as well as a stop. Numbers with their counter after the figure ({count}回, {count}件). |
 
 | English | Korean |
 |---|---|
@@ -157,9 +158,33 @@ which KIFF checks by its digest; they join it when they ship.
 | Connect apps / connection | 앱 연결 / 연결 |
 | Sign in again / Sign in with KIFF | 다시 로그인 / KIFF로 로그인 |
 | Try again | 다시 시도 |
+| Not now / Later | 지금은 안 함 / 나중에 |
 | Ask Coach | Coach에게 묻기 |
 | Settings / Home / Activity | 설정 / 홈 / 활동 |
 | Terms of Service / Privacy Policy | 서비스 약관 / 개인정보처리방침 |
+
+| English | Japanese |
+|---|---|
+| Needs you | 要確認 |
+| Approve / Approve once | 承認 / 1回だけ承認 |
+| Refuse | 拒否 |
+| held | 保留中 |
+| Halt / Halted | 遮断 / 遮断済み |
+| Stopped (one run that ended) | 中止 |
+| Pause / Paused | 一時停止 / 一時停止中 |
+| Resume | 再開 |
+| Run now | 今すぐ実行 |
+| credits | クレジット |
+| door | 窓口 |
+| Record | 記録 |
+| Connect apps | アプリを接続 |
+| Sign in again / Sign in with KIFF | もう一度サインイン / KIFFでサインイン |
+| Try again | もう一度試す |
+| Not now / Later | 今はしない / 後で |
+| Ask Coach | Coachに質問 |
+| Setup | セットアップ |
+| Activity | アクティビティ |
+| Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
 
 ## The AI disclosure
 
