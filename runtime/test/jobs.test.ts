@@ -142,7 +142,7 @@ describe("jobs", () => {
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
       // A report named a $100 limit it never read, and counted an item it never
       // acted on as a call (kiff/tafs#1512).
-      expect(prompt.replace(/\s+/g, " ")).toContain("An item you made no call on is named as an item (\"T-2005: not done, because …\"), never counted among calls.");
+      expect(prompt.replace(/\s+/g, " ")).toContain("An item you made no call on is named as an item (\"A-1047: not done, because …\"), never counted among calls.");
       expect(prompt.replace(/\s+/g, " ")).toContain("Name a limit (an amount, a day's total, how many calls) only as this run read it: from kiff_card, from KIFF's answer on a call, or from the owner's note; otherwise give no number for it.");
       expect(prompt).toContain(j.instructions);
     }

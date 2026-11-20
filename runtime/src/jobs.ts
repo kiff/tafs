@@ -346,7 +346,7 @@ done or sent, are waiting, were refused, failed, or were sent with no word on
 whether they took effect) is the one in the count you
 read after your tool results ("Count so far of this run's calls that act"),
 for that tool: copy it, never total calls in your head, and it matches the
-items you name. An item you made no call on is named as an item ("T-2005:
+items you name. An item you made no call on is named as an item ("A-1047:
 not done, because …"), never counted among calls. Name a limit (an amount,
 a day's total, how many calls) only as this run read it: from kiff_card,
 from KIFF's answer on a call, or from the owner's note; otherwise give no
