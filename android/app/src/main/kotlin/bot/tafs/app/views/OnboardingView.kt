@@ -121,11 +121,16 @@ fun OnboardingView(
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       problem?.let { Text(it, style = scaled(14, color = Theme.no), modifier = Modifier.testTag(ONBOARDING_PROBLEM)) }
-      if (onboarding) PrimaryButton(Words.Common.`continue`, onContinue, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue && !busy)
-      if (onboarding && onSignInWithPhone != null) {
-        OutlineButton(Words.SignIn.withPhone, onSignInWithPhone, Modifier.fillMaxWidth().testTag(ONBOARDING_WITH_PHONE), enabled = consent.canContinue && !busy)
+      // With the new onboarding, Continue (and a tablet's phone way) in Sign in with KIFF's place, both waiting on the tick:
+      // the old way never shows beside them, or it would sign in with no consent recorded.
+      if (onboarding) {
+        PrimaryButton(Words.Common.`continue`, onContinue, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue && !busy)
+        if (onSignInWithPhone != null) {
+          OutlineButton(Words.SignIn.withPhone, onSignInWithPhone, Modifier.fillMaxWidth().testTag(ONBOARDING_WITH_PHONE), enabled = consent.canContinue && !busy)
+        }
+      } else {
+        PrimaryButton(Words.SignIn.withKiff, onSignIn)
       }
-      else PrimaryButton(Words.SignIn.withKiff, onSignIn)
       OutlineButton(Words.Sample.tryIt, onSample, Modifier.fillMaxWidth())
     }
   }
