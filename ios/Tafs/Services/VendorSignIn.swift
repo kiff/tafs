@@ -34,9 +34,14 @@ final class VendorSignIn: NSObject, VendorSigningIn {
     /// Where the page sends the browser back to: planque's `tafs://`, or KIFF's own sign-in's `dev.kiff.tafs:`
     /// (`AppSignIn`), which only this app's session receives.
     let callbackScheme: String
+    /// A private browser session: no cookie or sign-in from Safari or an earlier sheet comes in, so every page is a fresh
+    /// sign-in. KIFF's own sheet (`AppSignIn.sheet()`) is private, so each authorize goes through KIFF's form; a vendor's
+    /// page shares Safari's, so an owner already signed in to the vendor only allows access.
+    let ephemeral: Bool
 
-    init(callbackScheme: String = "tafs") {
+    init(callbackScheme: String = "tafs", ephemeral: Bool = false) {
         self.callbackScheme = callbackScheme
+        self.ephemeral = ephemeral
         super.init()
     }
 
@@ -80,7 +85,8 @@ final class VendorSignIn: NSObject, VendorSigningIn {
                 }
             }
             session.presentationContextProvider = self
-            // Shares Safari's sign-in, so an owner already signed in to the vendor only
+            session.prefersEphemeralWebBrowserSession = ephemeral
+            // A vendor's page shares Safari's sign-in, so an owner already signed in to the vendor only
             // allows access. What binds the sign-in to this phone is planque's code.
             self.session = session
             if !session.start() { once.resume(.failure(SignInError.noCallback)) }
