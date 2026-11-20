@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** a tablet's changed-terms answer on Sign in with your phone survives a rotation, and an answer already handled never unticks the box again ([onboarding.md](docs/onboarding.md)).

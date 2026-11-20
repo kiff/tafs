@@ -344,7 +344,8 @@ fun RootView(model: AppModel) {
   var signingInWithPhone by rememberSaveable { mutableStateOf(false) }
   // The terms version the welcome's tick agreed to, which the pairing claim carries, and the welcome's way to ask again.
   var phoneTerms by rememberSaveable { mutableStateOf<String?>(null) }
-  var phoneTermsChanged by remember { mutableStateOf<() -> Unit>({}) }
+  // How many times KIFF said the terms changed on the phone way: saved, so a rotation keeps it (the welcome unticks for each new one).
+  var phoneTermsChanged by rememberSaveable { mutableStateOf(0) }
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
   var confirmingSignInAgain by rememberSaveable { mutableStateOf(false) }
@@ -366,11 +367,11 @@ fun RootView(model: AppModel) {
         // The new onboarding (docs/onboarding.md, off): Continue signs in inside tafs, then the celebration.
         signInInApp = { shown -> model.signInInApp(shown ?: model.appTermsVersion()); celebrating = true },
         termsVersion = model::appTermsVersion,
-        onSignInWithPhone = if (bot.tafs.app.views.offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)) ({ version, changed ->
+        onSignInWithPhone = if (bot.tafs.app.views.offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)) ({ version ->
           phoneTerms = version
-          phoneTermsChanged = changed
           signingInWithPhone = true
         }) else null,
+        phoneTermsChanged = phoneTermsChanged,
       )
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
@@ -410,7 +411,7 @@ fun RootView(model: AppModel) {
   // However the sheet closes, the ticked version goes with it.
   if (signingInWithPhone) SignInSheet(
     model, onClose = { signingInWithPhone = false; phoneTerms = null }, phoneOnly = true,
-    termsVersion = phoneTerms, onTermsChanged = { phoneTermsChanged() },
+    termsVersion = phoneTerms, onTermsChanged = { phoneTermsChanged += 1 },
   )
   if (celebrating && state.signedIn) bot.tafs.app.views.InAppSignedIn(onGo = { celebrating = false })
   // Alerts were on for this account before this phone signed out, and didn't come back on: said once, with the way back.

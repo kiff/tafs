@@ -72,7 +72,9 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   carries the terms version the tick agreed to (`terms_version` on `/v1/pair/claim`, kiff/cloud#24), and KIFF
   records it for this tablet with the session. It's read when the phone way is tapped if the welcome couldn't, and
   with none, nothing opens and the welcome says signing in didn't work, so consent is never skipped. Terms that
-  changed (409 `terms_outdated`, before anything is claimed) close the sheet and untick the box, as Continue does.
+  changed (409 `terms_outdated`, before anything is claimed) close the sheet and untick the box, as Continue does. The
+  welcome counts KIFF's changed-terms answers (saved with the screen), so a rotation while the sheet is open neither loses
+  one nor unticks the box again after it was ticked anew.
   However the sheet closes, the ticked version goes with it. Off, the claim is today's.
 - **The three cards** (`OnboardingCards`, step 3): Your tafs, A Card is your permission, You stay in control, with
   Skip, Next and Get started (`OnboardingSteps`). Each picture is Android's own view over the sample's words: Home's
