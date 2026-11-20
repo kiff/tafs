@@ -64,7 +64,7 @@ class TafsApplication : Application() {
   /** The vendor's own sign-in page, in a browser tab. */
   val vendorSignIn: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }
   /** KIFF's sign-in page in a Custom Tab, waiting for `dev.kiff.tafs:/oauth` (docs/onboarding.md, off). */
-  val appSignInTab: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }
+  val appSignInTab: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this, privateBrowsing = true) }
 
   /** Firebase and the notification permission: alerts that reach this phone with tafs closed. */
   val push: FirebasePush by lazy { FirebasePush(this) }
