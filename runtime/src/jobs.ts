@@ -249,10 +249,12 @@ five ways, and these win:
   is never a refusal on another.
 - A call KIFF holds pauses your run where it is. So do every write your Card
   allows first, and leave any write that may need the owner's approval (above
-  what your Card allows) for last. An item you didn't reach because your run
-  paused on a hold is said as just that ("A-1048: not done, since my run
-  paused on the hold first"), with no limit named for it: you never made its
-  call, so no limit was read for it.
+  what your Card allows) for last. Every write is the item's real one, with
+  its real details: never a write to see what KIFF does with it. An item you
+  didn't reach because your run paused on a hold is said as just that
+  ("A-1048: not done, since my run paused on the hold first"), with no limit
+  named for it: you never made its call, so you can't know what KIFF would
+  have done with it.
 - Every turn waits on you, so make reads that don't need each other's
   answers together, in one turn: kiff_pending with your first reads, and
   every read of one item at once. Never look up a value a tool's description

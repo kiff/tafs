@@ -579,6 +579,15 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
   // The calendar of the tafs' scheduled work (kiff/tafs#534): from the Overview on a tablet, from the home's header on a phone.
   var calendarOpen by rememberSaveable { mutableStateOf(false) }
+  // The three cards (docs/onboarding.md, off): once after the first sign-in on this device, and again from How tafs works.
+  val cardsPrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences(ONBOARDING_FILE, android.content.Context.MODE_PRIVATE)
+  var howItWorksOpen by rememberSaveable { mutableStateOf(false) }
+  var cardsOpen by rememberSaveable {
+    mutableStateOf(
+      if (state.mode == Mode.kiff && bot.tafs.app.model.showsOnboardingCards(cardsPrefs.getBoolean(bot.tafs.app.model.CARDS_SEEN_KEY, false)))
+        bot.tafs.app.model.OnboardingPage.Tafs else null,
+    )
+  }
   // A mission's log, open over the tafs list (Missions v2.1): its label's mission, found again by id.
   var missionOpen by rememberSaveable { mutableStateOf<String?>(null) }
   // Another account (signed in from the sample, or switched): the Tafs tab opens on its list, nothing of the last one left open.
@@ -885,6 +894,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
               onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
               onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
+              onHowItWorks = if (state.mode == Mode.kiff) ({ howItWorksOpen = true }) else null,
             )
           }
           val detail: @Composable (String) -> Unit = { id ->
@@ -1148,9 +1158,27 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats, full = full, onToggleFull = toggleFull)
     }
   }
+  // The three cards over the whole app, full screen; Skip and Get started end them, seen on this device from then on.
+  if (howItWorksOpen) bot.tafs.app.views.HowTafsWorksSheet(onClose = { howItWorksOpen = false })
+  // Back is Skip.
+  cardsOpen?.let { start ->
+    val finish = {
+      cardsPrefs.edit().putBoolean(bot.tafs.app.model.CARDS_SEEN_KEY, true).apply()
+      cardsOpen = null
+    }
+    bot.tafs.app.drive.DriveDialog(
+      onDismissRequest = finish,
+      properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+    ) {
+      bot.tafs.app.views.OnboardingCards(start, done = finish)
+    }
+  }
   }
   }
 }
+
+/** Where the new onboarding keeps what this device has seen (docs/onboarding.md): the three cards, once. */
+internal const val ONBOARDING_FILE = "tafs.onboarding"
 
 /** The bar under every screen: Account, the three tabs, and Coach. 56 dp, above the system's gesture bar, as iOS's tab bar. */
 @Composable

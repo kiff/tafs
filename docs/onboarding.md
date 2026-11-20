@@ -15,7 +15,7 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
 2. **One sign-in, in the system's sheet.** KIFF's `/oauth/authorize` with PKCE, in `ASWebAuthenticationSession`
    (Apple, Google or an email code), replacing the code-matching device flow. The contract is kiff/cloud's
    `api/internal/appsignin/README.md`; the tick's terms version goes with the token request, and KIFF records the
-   consent in the same step that makes the session. iPad and Mac keep "Sign in with your phone".
+   consent in the same step that makes the session. The sheet is a private browser session (`VendorSignIn.kiffSheet()`): no earlier sign-in or cookie comes in, so every authorize goes through KIFF's form. A vendor's sheet still shares Safari's sign-in. iPad and Mac keep "Sign in with your phone".
 3. **Three cards:** Your tafs, A Card is your permission, You stay in control. Each draws the app's own components
    with the sample's words, so they read in the person's language. The last card names each device's approval:
    Face ID or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`).
@@ -47,7 +47,10 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   version and the device exactly as `/v1/auth/device/start` sends it, for today's `DeviceToken`. KIFF's refusals keep
   their code as KIFF's `error` (`invalid_grant`, `terms_outdated`); `appTerms` reads the version in force.
 - **The tab** (`AppModel.signInInApp`): KIFF's page opens in a Custom Tab from tafs's own screen, in its task, the
-  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). So leaving for the mail app for an email code
+  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). It's a **private browsing session** where the browser offers one
+  (`isEphemeralBrowsingSupported`, opened in that browser), as iOS's private sheet: no cookie or earlier sign-in
+  comes in, so every authorize goes through KIFF's form. A vendor's tab stays shared. A browser without private tabs
+  shares its cookies, and KIFF's server is the guard there (kiff/cloud#23). So leaving for the mail app for an email code
   and coming back from the launcher returns to the tab. A tab closed with no link is left, with Open again and
   Cancel. The manifest takes `dev.kiff.tafs:` links (Android matches a link with no host by its scheme only), and
   `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
@@ -68,3 +71,14 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   sign-in sheet's phone half only (`SignInSheet(phoneOnly = true)`), with no KIFF code. That way goes through
   pairing, which sends no terms version yet; KIFF recording it on the pairing claim is asked for before the switch
   goes on.
+- **The three cards** (`OnboardingCards`, step 3): Your tafs, A Card is your permission, You stay in control, with
+  Skip, Next and Get started (`OnboardingSteps`). Each picture is Android's own view over the sample's words: Home's
+  `TafRow`s, the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies) and a Needs you card. The
+  pictures are hidden from TalkBack. The last card says the screen lock (`onboarding.control_lead_android`). They
+  show full screen once per device after signing in (`CARDS_SEEN_KEY`), and Back is Skip.
+- **The first Home** (`HomeView`, step 4): with no taf and no recipes listed, for anyone who may use Coach. It shows
+  board 2, tafs cloud's empty line alone (the app's "No tafs yet" and `onboarding.home_lead` only when it sends
+  none, `firstHomeLines`), **Ask Coach** and **How tafs works**.
+- **How tafs works** (`HowTafsWorksSheet`), from the first Home and from Account's Legal: the three cards, each
+  opening where it's tapped, and the four legal pages titled as their pages (`onboarding.row_*`, never the tick
+  line's link words).
