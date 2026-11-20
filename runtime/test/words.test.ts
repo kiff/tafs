@@ -43,6 +43,9 @@ const ARGS: Record<string, unknown[][]> = {
   ],
   counted_line: [[{ sent: 5, held: 1, refused: 2, failed: 1, unknown: 1 }], [{ sent: 0, held: 0, refused: 2, failed: 0, unknown: 0 }]],
   removal_goes: [[["Qonto"]], [["Qonto", "Gmail"]]],
+  // One taf, several, some counted only, and only counted: each language's singular, plural and "N other tafs" forms.
+  connected_again_as: [["Gmail", "ana@example.com", ["Rae"], 0], ["Gmail", "ana@example.com", ["Rae", "Max"], 0],
+    ["Gmail", "ana@example.com", ["Rae"], 2], ["Gmail", "ana@example.com", [], 1], ["Gmail", "ana@example.com", ["Rae"], 5]],
   brief_by: [[{ hm: "12:00" }], [{ hm: "12:00", day: "Fri" }]],
   removal_stays: [["Stripe", ["Chargebacks"]], ["Stripe", ["Chargebacks", "Refunds"]]],
 };
