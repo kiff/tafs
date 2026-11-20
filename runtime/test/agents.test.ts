@@ -106,6 +106,9 @@ describe("kiff/agents client", () => {
     expect(JSON.parse(sent[3]!.body ?? "")).toEqual({ input: "Hello", requester: ana, skills: ["set-up-a-taf@1"], background: true });
     await agents.startRun("t_acme", "taf1", "Hello", { session: "s1", requester: ana, skills: ["set-up-a-taf@1"] });
     expect(JSON.parse(sent[4]!.body ?? "")).toEqual({ input: "Hello", session_id: "s1", requester: ana, background: true });
+    // A door's request names what its run may answer with (request_outcome); without them, none go.
+    await agents.startRun("t_acme", "taf1", "Hello", { outcomes: ["accepted", "declined"] });
+    expect(JSON.parse(sent[5]!.body ?? "")).toEqual({ input: "Hello", outcomes: ["accepted", "declined"], background: true });
   });
 
   it("reads and archives a person's sessions as theirs", async () => {

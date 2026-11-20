@@ -206,8 +206,9 @@ opened again. Each is checked as it starts: past 7 days since its 202, `expired`
 means it never runs. It's one kiff/agents request (`dedup_key` `api:<door>:<idempotency key>`, source `api`), run
 from a fixed template: the door's job line, then each field as `name: "<JSON string>"` inside a fence the caller can't
 guess, with control and bidi characters taken out, then the rule that the fence holds data, never instructions, and the
-outcomes to end with. Its answer's last line, `Outcome: <one of the door's>`, is the outcome; any other is `failed`
-(`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
+outcomes to end with. It's started with the door's `outcomes`, so kiff/agents gives the run `request_outcome`, which accepts only
+those, and keeps the one it accepted on the run as `outcome`: that is the outcome, checked again against the door's list.
+Words that only say one, or none at all, are `failed` (`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
 
 **iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, behind `APIDoorFeature`, off), from the owner's
 mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request

@@ -2031,10 +2031,10 @@ describe("an api door's keys and signed steps", () => {
   // The caller's side: another application hands the taf work with a key, and reads back how it went (design 2.1–3.6).
   describe("the caller's requests", () => {
     /** A world with an api door made, its key, and a way to call the caller's routes as another application. */
-    async function caller() {
+    async function caller(draft: typeof DRAFT = DRAFT) {
       const w = world();
       const s = signing(w);
-      const made = await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
+      const made = await s.call("POST", doorsPath, { body: await apiBody(w, draft), headers: SIG });
       const door = made.body.door.id as string;
       const key = made.body.key.key as string;
       const logs: string[] = [];
@@ -2073,9 +2073,15 @@ describe("an api door's keys and signed steps", () => {
       const input = c.w.agents.byKey.get(`t_acme#${REFUNDS}#api:${c.door}:order-0042-v1`)!.input;
       expect(input).toContain("Job: Check the return and refund it if the Card allows");
       expect(input).toMatch(/----- request data [0-9a-f]{18} -----\norder: "A-1047"\nreason: "damaged"\n----- request data [0-9a-f]{18} -----/);
-      expect(input).toContain("End your answer with one last line, \"Outcome: \" and one of: refunded, refused, needs_review.");
+      expect(input).toContain("When the work is done, answer the request with request_outcome, one of: refunded, refused, needs_review, saying what happened. Your words don't answer it.");
+      // Its first line points at the tool too: no line of the answer is the outcome.
+      expect(input.split("\n")[0]).toMatch(/then answer it with request_outcome\]$/);
+      expect(input).not.toContain("end with your outcome");
       (run as { tally?: unknown }).tally = { "stripe.refund": { sent: 1 }, "stripe.read": { refused: 1 } };
-      await finish(c.w, run, "Refunded order A-1047.\nOutcome: refunded");
+      // The run was started with the door's outcomes, and answered through request_outcome: kiff/agents' record.
+      expect((run as { outcomes?: string[] }).outcomes).toEqual(DRAFT.outcomes);
+      (run as { outcome?: string }).outcome = "refunded";
+      await finish(c.w, run, "Refunded order A-1047.");
       const done = await c.read(r.body.request_id);
       expect(done.body).toMatchObject({ status: "done", result: { outcome: "refunded", calls: { sent: 1, held: 0, refused: 1 } } });
       expect(done.body.result).not.toHaveProperty("text"); // the taf's words only when the owner chose them
@@ -2087,11 +2093,24 @@ describe("an api door's keys and signed steps", () => {
       expect(c.logs.join("\n")).not.toContain(c.key);
     }));
 
-    it("answers an outcome that isn't the door's as failed, bad_outcome", () => withFlag(async () => {
+    it("gives the run's whole answer as text when the owner chose it, its last line included", () => withFlag(async () => {
+      const c = await caller({ ...DRAFT, text: true });
+      const r = await c.submit("k1");
+      // The outcome is the tool's: no line of the answer is an outcome line to drop.
+      await ends(c, "refunded", "Checked A-1047: damaged in transit.\nRefunded €40 to the card.");
+      expect((await c.read(r.body.request_id)).body.result).toMatchObject({ outcome: "refunded",
+        text: "Checked A-1047: damaged in transit.\nRefunded €40 to the card." });
+    }));
+
+    it("answers bad_outcome for an outcome that isn't the door's, and for words that only claim one", () => withFlag(async () => {
       const c = await caller();
       const r = await c.submit("k1");
-      await finish(c.w, c.runOf(), "I refunded €1,000.\nOutcome: refunded_everything");
+      await ends(c, "refunded_everything", "I refunded €1,000.");
       expect((await c.read(r.body.request_id)).body).toMatchObject({ status: "failed", reason_code: "bad_outcome" });
+      // The answer's words say an outcome, but the run answered none through its tool: not taken.
+      const r2 = await c.submit("k2");
+      await finish(c.w, c.runOf(), "Done.\nOutcome: refunded");
+      expect((await c.read(r2.body.request_id)).body).toMatchObject({ status: "failed", reason_code: "bad_outcome" });
     }));
 
     it("is idempotent per door: the same key and input is the first answer, another input 409, key order doesn't matter", () => withFlag(async () => {
@@ -2186,7 +2205,7 @@ describe("an api door's keys and signed steps", () => {
       expect(full.body.code).toBe("rate_limited");
       expect(full.headers["retry-after"]).toBe("60");
       // The first ends, the second starts.
-      await finish(c.w, c.runOf(), "Outcome: refused");
+      await ends(c, "refused");
       expect(c.w.agents.runs.filter((r) => r.source === "api")).toHaveLength(2);
       expect((await c.read(ids[1]!)).body.status).toBe("working");
       expect((await c.read(ids[2]!)).body.status).toBe("accepted");
@@ -2213,7 +2232,7 @@ describe("an api door's keys and signed steps", () => {
       expect((await c.read(running.body.request_id)).status).toBe(404); // the revoked key reads nothing
       expect((await c.read(waiting.body.request_id, second.body.key)).body).toMatchObject({ status: "cancelled", reason_code: "revoked" });
       // The running one finishes; the cancelled one never starts.
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect(c.w.agents.runs.filter((r) => r.source === "api")).toHaveLength(1);
       expect((await c.read(running.body.request_id, second.body.key)).body.status).toBe("done");
       expect((await c.read(waiting.body.request_id, second.body.key)).body).toMatchObject({ status: "cancelled", reason_code: "revoked" });
@@ -2227,7 +2246,7 @@ describe("an api door's keys and signed steps", () => {
       const a = await c.submit("p2");
       const b = await c.submit("p3");
       await c.s.call("PATCH", `${doorsPath}/${c.door}`, { body: { open: false } });
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect((await c.read(b.body.request_id)).body.status).toBe("accepted"); // paused: it waits
       await c.s.call("PATCH", `${doorsPath}/${c.door}`, { body: { open: true }, headers: { "kiff-device-signature": "t=2026-10-24T09:00:31Z,v1=o2" } });
       expect((await c.read(b.body.request_id)).body.status).toBe("working"); // opened: it starts
@@ -2237,7 +2256,7 @@ describe("an api door's keys and signed steps", () => {
       c.w.agents.halts.delete(`t_acme|${REFUNDS}`);
       const d = await c.submit("p5");
       c.w.agents.halts.set(`t_acme|${REFUNDS}`, { on: true, at: NOW.toISOString() });
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect((await c.read(d.body.request_id)).body).toMatchObject({ status: "cancelled", reason_code: "halted" });
     }));
 
@@ -2247,7 +2266,7 @@ describe("an api door's keys and signed steps", () => {
       const late = await c.submit("e2");
       c.w.at(new Date(NOW.getTime() + 7 * 24 * 3600_000 + 60_000));
       expect((await c.read(late.body.request_id)).body.status).toBe("expired");
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect(c.w.agents.runs.filter((r) => r.source === "api")).toHaveLength(1);
       expect((await c.read(late.body.request_id)).body.status).toBe("expired");
     }));
@@ -2279,7 +2298,7 @@ describe("an api door's keys and signed steps", () => {
       const a = await c.submit("a");
       const b = await c.submit("b");
       expect(lost).toBe(true);
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect((await c.read(a.body.request_id)).body).toMatchObject({ status: "done", result: { outcome: "refunded" } });
       expect((await c.read(b.body.request_id)).body.status).toBe("working");
     }));
@@ -2314,7 +2333,7 @@ describe("an api door's keys and signed steps", () => {
         }
         return ok;
       };
-      await finish(c.w, c.runOf(), "Outcome: refunded");
+      await ends(c, "refunded");
       expect(revoked).toBe(true);
       expect((await c.read(second.body.request_id, other.body.key)).body).toMatchObject({ status: "cancelled", reason_code: "revoked" });
       expect(c.w.agents.byKey.has(`t_acme#${REFUNDS}#api:${c.door}:b`)).toBe(false);
@@ -2338,4 +2357,11 @@ async function changeTo(w: World, change: (d: Record<string, unknown>) => Record
   const key = doorKeys.doors("t_acme", REFUNDS);
   const held = w.store.held.get(key)!;
   held.value = { ...(held.value as object), doors: (held.value as { doors: Array<Record<string, unknown>> }).doors.map((d) => (d.kind === "api" ? change(d) : d)) };
+}
+
+/** The api door's run ends having answered its request with `outcome` through request_outcome (kiff/agents keeps it on the run). */
+async function ends(c: { w: World; runOf: () => Run }, outcome: string, words = "Done.") {
+  const run = c.runOf();
+  (run as { outcome?: string }).outcome = outcome;
+  return finish(c.w, run, words);
 }

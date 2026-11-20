@@ -1,0 +1,1 @@
+- **A door From another application: the outcome comes from a checked tool (off):** a request's run is started with the door's outcomes and answers with kiff/agents' `request_outcome`, which accepts only those. tafs cloud reads the outcome from the run and checks it again; the answer's words never count ([doors.md](docs/doors.md)).
