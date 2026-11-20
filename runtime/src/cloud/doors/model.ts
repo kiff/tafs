@@ -257,6 +257,8 @@ export const doorKeys = {
   route: (route: string) => `door#${route}`,
   /** An `api` door's key, by its SHA-256: the account, taf, door and key it is. Removed when the key is revoked. */
   apiKey: (hash: string) => `door-api-key#${hash}`,
+  /** An api door Coach drafted for the owner's yes: kept 7 days, read back by the apps to show it. */
+  apiDraft: (tenant: string, taf: string, id: string) => `${tenant}#door-api-draft#${taf}#${id}`,
   doors: (tenant: string, taf: string) => `${tenant}#doors#${taf}`,
   seen: (tenant: string, hash: string) => `${tenant}#door-seen#${hash}`,
   day: (tenant: string, taf: string, door: string, day: string, who: "keys" | "others") => `${tenant}#door-day#${taf}#${door}#${day}#${who}`,

@@ -13,7 +13,7 @@ import { headlineOf, windowWords } from "../src/cloud/home.js";
 import { coachWaitingClear } from "../src/cloud/coachwaiting.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { firings } from "../src/cloud/calendar.js";
-import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
+import { type ActivityCall, AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
 import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
@@ -2392,7 +2392,7 @@ describe("Setup (kiff/agents#91)", () => {
     // The button says what it does: no question above it (the app-words cut, screen 1), and a short intro.
     expect(first.coach_tools_step).not.toHaveProperty("ask");
     expect(first.coach_tools_step.intro).toBe("Coach needs these to look after your tafs.");
-    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 10, 2]);
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 11, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
@@ -3052,6 +3052,79 @@ describe("improving a taf (kiff/tafs#107)", () => {
     expect((await call(v, "POST", `/v1/tafs/${RAE}/improve`, { token: "viewer", body: { text: "x" } })).status).toBe(403);
     expect((await call(v, "POST", `/v1/tafs/${SETUP}/improve`, { token: "ana", body: { text: "x" } })).status).toBe(400);
     expect((await call(v, "POST", `/v1/tafs/${MAX}/improve`, { token: "ana", body: { text: "x" } })).status).toBe(404);
+  });
+
+  // Overdue, 20 Nov: its Cards and its calls' vendor messages took the improve past kiff/agents' bound, a bare 400.
+  const longCard = (id: string, n: number): Mandate => ({ ...raeCard, id,
+    grants: [{ action: "create_refund_k3f9", title: "Refund a charge", resources: { parameter: "customer", values: Array.from({ length: n }, (_, i) => `cus_${id}_${String(i).padStart(6, "0")}`) } }] });
+  const longCalls = (n: number) => Array.from({ length: n }, (_, i) => ({ actor_id: "rae", action_name: "create_refund_k3f9", title: "Refund a charge", outcome: "allowed",
+    created_at: `2026-10-19T${String(i % 24).padStart(2, "0")}:00:00Z`, tool_outcome: { status: "failed", message: `Vendor said ${i}: ${"no such charge, ".repeat(120)}` } }));
+
+  it("fits kiff/agents' bound: vendor messages shortened, then the oldest calls, then whole Cards, never the owner's words", () => {
+    const taf = { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", ownerNotes: "Offer store credit first." };
+    const summaryOf = { tools: ["Refund a charge"], rules: [] };
+    const calls = longCalls(20);
+    const big = heldCards([longCard("card_big", 1500)], "rae")[0]!;
+    const small = heldCards([longCard("card_small", 3)], "rae")[0]!;
+    const whole = improveContext(taf, summaryOf, calls, "Fix the reminders.", [big, small]);
+    expect(Buffer.byteLength(whole)).toBeGreaterThan(AGENTS_MAX_INPUT);
+    // Within the bound, as it was when it fits.
+    expect(improveContext(taf, summaryOf, calls.slice(0, 2), "Fix the reminders.", [small], AGENTS_MAX_INPUT))
+      .toBe(improveContext(taf, summaryOf, calls.slice(0, 2), "Fix the reminders.", [small]));
+    // Messages first: every call stays, each message short.
+    const shortened = improveContext(taf, summaryOf, calls, "Fix the reminders.", [small], 12_000);
+    expect(Buffer.byteLength(shortened)).toBeLessThanOrEqual(12_000);
+    expect(shortened).toContain("Vendor said 19:");
+    expect(shortened).toContain("the vendor's messages on its calls are shortened");
+    expect(shortened).not.toContain("oldest calls are left out");
+    // Then the oldest calls: the newest stay.
+    const fewer = improveContext(taf, summaryOf, calls, "Fix the reminders.", [small], 4_000);
+    expect(Buffer.byteLength(fewer)).toBeLessThanOrEqual(4_000);
+    expect(fewer).toContain("Vendor said 0:");
+    expect(fewer).not.toContain("Vendor said 19:");
+    expect(fewer).toMatch(/its \d+ oldest calls are left out/);
+    expect(fewer).toContain(`- ${JSON.stringify(small)}`);
+    // Then the largest Card, whole or not at all: Setup drafts a Card again as it reads it.
+    const fit = improveContext(taf, summaryOf, calls, "Fix the reminders.", [big, small], AGENTS_MAX_INPUT);
+    expect(Buffer.byteLength(fit)).toBeLessThanOrEqual(AGENTS_MAX_INPUT);
+    expect(fit).not.toContain("card_big_");
+    expect(fit).toContain("its Cards card_big are left out: don't draft any of them again here");
+    expect(fit).toContain(`- ${JSON.stringify(small)}`);
+    for (const t of [shortened, fewer, fit]) {
+      expect(t.startsWith(`[improve taf ${RAE}]`)).toBe(true);
+      expect(t).toContain("Its instructions from the owner, as its live version has them: Offer store credit first.");
+      expect(t.endsWith("The owner says: Fix the reminders.")).toBe(true);
+    }
+  });
+
+  it("starts the improve within kiff/agents' bound, Coach's own lines and all", async () => {
+    const w = withSetup();
+    w.account.mandates = [longCard("card_rae", 1500)];
+    w.account.calls = longCalls(20);
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "Fix the reminders." } });
+    expect(r.status).toBe(200);
+    const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
+    expect(Buffer.byteLength(first)).toBeLessThanOrEqual(AGENTS_MAX_INPUT);
+    expect(first.startsWith(`[improve taf ${RAE}]`)).toBe(true);
+    expect(first).toContain("its Cards card_rae are left out");
+    expect(first.endsWith("The owner says: Fix the reminders.")).toBe(true);
+  });
+
+  it("logs kiff/agents' refusal with its code and words, never what was sent", async () => {
+    const w = withSetup();
+    w.agents.fail.set("startRun", new AgentsError(400, "the input is 1 to 32000 bytes", undefined, "bad_request"));
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: unknown) => { logged.push(String(line)); });
+    try {
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "It can't find the payments to refund." } });
+      expect(r.status).toBe(400);
+    } finally {
+      spy.mockRestore();
+    }
+    const refusal = logged.map((l) => { try { return JSON.parse(l); } catch { return undefined; } }).find((l) => l?.event === "agents_refused");
+    expect(refusal).toMatchObject({ tenant: "t_acme", route: "improve", status: 400, code: "bad_request", words: "the input is 1 to 32000 bytes" });
+    expect(refusal.input_bytes).toBeGreaterThan(0);
+    expect(logged.join("\n")).not.toContain("It can't find the payments to refund.");
   });
 });
 
@@ -6075,17 +6148,17 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.slice(before).filter((c) => c.startsWith("addSessionSkills")).length).toBe(1);
     // A second skill joins in the definition's order; a tool with no procedure, or a vendor's, adds none.
     await coachTool("taf_dial", { taf: RAE }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     await coachTool("stripe_refund_k3f9", {}, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     // kiff/agents failing the add leaves the tool's answer as it is, and the skill isn't marked loaded: the
     // next call adds it.
     w.agents.fail.set("addSessionSkills", new AgentsError(503, "down"));
     const b = await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch((e: Error) => ({ error: e.message }));
     expect(JSON.stringify(b)).not.toContain("Skill");
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7"]);
     await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6", "halting@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@7", "halting@1"]);
   });
 
   it("shows what a Coach conversation cost, summed from kiff/agents' usage events", async () => {

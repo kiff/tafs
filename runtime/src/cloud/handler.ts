@@ -14,7 +14,7 @@ import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
 import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, relevantNow, stateOf, summary } from "./home.js";
-import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
+import { AGENTS_MAX_INPUT, heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
@@ -44,9 +44,11 @@ import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPa
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
-import { addAPIDoor, addDoor, answerKnock, DoorError, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
+import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
+import { type APIDraft, doorKeys } from "./doors/model.js";
+import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
@@ -54,7 +56,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
+import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, fullAnswer, tafLine, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -187,7 +189,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   POST /v1/runs/ended                 kiff/agents' note that a task Coach handed a taf, or a door's run, paused or ended (no sign-in: an unknown ref is dropped, and the run is read back)
  *   GET  /v1/tafs/{id}/doors            the taf's doors, the apps a door can open on here, and its open knocks
  *   POST /v1/tafs/{id}/doors            {app, code?, phone_number_id?, waba_id?}: turn a door on (a taf has none until then)
- *                                       or {kind: "api", draft}: a door from another application and its first key, signed (TAFS_API_DOORS)
+ *                                       or {kind: "api", draft_id, draft}: a door from another application and its first key, signed, from the draft Coach made and tafs cloud keeps, once (TAFS_API_DOORS)
  *   PATCH /v1/tafs/{id}/doors/{door}    {open}
  *   DELETE /v1/tafs/{id}/doors/{door}
  *   POST /v1/tafs/{id}/doors/{door}/keys  {id, name?}: pair a sender; an api door's: {name}, a new key, signed (its DELETE revokes, signed)
@@ -287,6 +289,11 @@ export interface Deps {
    * A list of accounts: on for those alone, as for the owner's test on a real watch before it's on for all.
    */
   watchAsk?: boolean | readonly string[];
+  /**
+   * Chatting with a taf from the watch (TAFS_WATCH_TAF_CHAT, docs/watch-ask.md): a watch request with `taf_id` goes into
+   * that taf's own chat. Read only once watchAsk is on; off or missing, such a request is 404 `watch_taf_chat_off`.
+   */
+  watchTafChat?: boolean | readonly string[];
   /** How logos are fetched and drawn (logos.ts): the real ones when missing. */
   logos?: LogoDeps;
   /** KIFF's permit keys, by kid; missing, the ones KIFF publishes. */
@@ -3685,7 +3692,7 @@ interface Steering {
  * the conversation in mind; otherwise it starts a new chat. Either way the
  * taf has only its Card's tools, and remembers what its notes say.
  */
-async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps, notify?: Notify): Promise<unknown> {
   // Before a message answers a card the old way, too.
   await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
@@ -3705,7 +3712,7 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     const held = waiting ? await holdForApproval(me, taf, waiting, lines.text(owner), deps, key) : undefined;
     steering = false;
     if (held) return { session: held.session, new_session: false, run: held.id, held: "approval" };
-    return await startMessage(event, me, taf, lines.text(owner), deps, key);
+    return await startMessage(event, me, taf, lines.text(owner), deps, key, notify);
   } catch (err) {
     // The message didn't start: Coach reads its lines with the next one. With the app's id, only when
     // nothing was made of it: otherwise the lines are that message's, and go with it when it's sent again.
@@ -4727,7 +4734,7 @@ export async function sweepConsent(deps: Deps): Promise<Array<{ tenant: string; 
   return out;
 }
 
-async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps, key?: string): Promise<unknown> {
+async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps, key?: string, notify?: Notify): Promise<unknown> {
   await requireAIConsent(event, me, deps);
   const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
   const attached = files(event);
@@ -4735,7 +4742,7 @@ async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: 
   if (key) Object.assign(at, { dedupKey: key, source: APP_SOURCE });
   if (deps.doors) await keepBound(deps.doors, me.tenantID, ai, deps.now?.() ?? new Date());
   const input = await withCoachSkills(me, taf, at, text, event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai));
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, taf.id, input, at, ai, notify));
   return { session: run.session, new_session: newSession(at, run), run: run.id, message: { id: inputID(run.id), at: run.created } };
 }
 
@@ -5633,12 +5640,24 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
     recentCalls(token, taf.kiffAgent, deps.fetch, deps.kiffBase),
   ]);
   const card = summary(byHolder(kiff.mandates, kiff.held).cards.get(taf.kiffAgent) ?? []);
-  const input = improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
-    heldCards(kiff.mandates, taf.kiffAgent));
+  const context = (max?: number) => improveContext({ id: taf.id, name: taf.name, job: taf.job, kiffAgent: taf.kiffAgent, ownerNotes: taf.ownerNotes }, card, calls, text,
+    heldCards(kiff.mandates, taf.kiffAgent), max);
+  const input = context();
   const ai = await aiBound(event, deps);
   const at = await granted(event, setup.kiffAgent, { requester: member(me) }, deps);
-  const sent = await withCoachSkills(me, setup, at, input, event, deps);
-  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, sent, at, ai));
+  let sent = await withCoachSkills(me, setup, at, input, event, deps);
+  // kiff/agents refuses a start past its bound (a taf with long Cards and vendor messages: Overdue, 20 Nov): the context
+  // gives up what Coach's own lines around it leave no room for, never the owner's words.
+  // Coach's own lines go in after the context's first line ("[improve taf …]") and before the owner's words, both the same
+  // either way: what lies between them is swapped.
+  const over = Buffer.byteLength(sent, "utf8") - AGENTS_MAX_INPUT;
+  const owner = `\n\nThe owner says: ${text}`;
+  const between = (t: string) => t.slice(t.indexOf("\n"), t.length - owner.length);
+  if (over > 0 && input.endsWith(owner) && sent.includes(between(input))) {
+    const fit = context(Buffer.byteLength(input, "utf8") - over);
+    sent = sent.replace(between(input), () => between(fit));
+  }
+  const run = await agentsCall(() => deps.agents.startRun(me.tenantID, setup.id, sent, at, ai), { tenant: me.tenantID, route: "improve", input_bytes: Buffer.byteLength(sent, "utf8") });
   return { setup: setup.id, session: run.session, new_session: true };
 }
 
@@ -8333,8 +8352,13 @@ async function creditsRead<T>(work: () => Promise<T>, lang: Lang = "en"): Promis
 }
 
 /** A kiff/agents call a route depends on: its 404 is the taf's, anything else says the runtime didn't answer. */
-async function agentsCall<T>(work: () => Promise<T>): Promise<T> {
+async function agentsCall<T>(work: () => Promise<T>, about?: Record<string, string | number>): Promise<T> {
   try { return await work(); } catch (err) {
+    // A refusal tafs cloud passes on (not a 404, which reads often get) is logged with kiff/agents' code and words, never
+    // what was sent: the request line says only its status (the Overdue 400, 20 Nov, said nothing of why).
+    if (err instanceof AgentsError && err.status < 500 && err.status !== 404) {
+      console.log(JSON.stringify({ event: "agents_refused", ...(about ?? {}), status: err.status, code: err.code, words: err.message.slice(0, 300) }));
+    }
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "not found");
     if (err instanceof AgentsError && err.status < 500) throw agentsFailure(err);
     throw new HTTPError(502, "the tafs' runtime didn't answer; try again");
@@ -8986,6 +9010,27 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     try { places = resultPlaces(args.places); } catch (err) { throw new ToolRefusal((err as Error).message); }
     await deps.tafs.put(call.tenant, { ...taf, results: places });
     return { taf: taf.name, results: places };
+  }
+  if (name === "taf_door_api") {
+    // A door from another application, drafted: it makes nothing. The owner reads it in tafs and makes it with their
+    // signed approval (POST …/doors {kind: "api", draft}), and its key is shown to them once, never to Coach.
+    if (process.env.TAFS_API_DOORS !== "on" || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
+    if (may && !may.manage) throw new ToolRefusal(`${taf.name}'s doors are for the people who manage it`);
+    if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no doors");
+    let draft: APIDraft;
+    try { draft = apiDraftOf(args.draft); } catch (err) {
+      if (err instanceof DoorError) throw new ToolRefusal(err.message);
+      throw err;
+    }
+    if ((await doorsOf(deps.doors.store, call.tenant, taf.id)).some((d) => d.kind === "api")) {
+      throw new ToolRefusal(`${taf.name} already has a door from another application: a taf has one, and its keys are changed in tafs`);
+    }
+    const id = `draft-${randomBytes(8).toString("hex")}`;
+    const now = deps.now?.() ?? new Date();
+    const expires = new Date(now.getTime() + 7 * 24 * 3600_000);
+    await deps.doors.store.put(doorKeys.apiDraft(call.tenant, taf.id, id), { draft, made: now.toISOString(), expires: expires.toISOString() }, expires);
+    return { taf: taf.name, taf_id: taf.id, draft_id: id, draft,
+      next: `show {type: "door", taf_id: "${taf.id}", draft_id: "${id}"}: the owner reads it in tafs and approves it with their fingerprint; the key is shown to them once, never to you` };
   }
   if (name === "taf_dial") {
     // Coach's draft of the dial: the taf's next version, nothing running from it. Installing it is
@@ -10352,6 +10397,15 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     say: (text) => startMessage(event, me, taf, text, deps),
   };
   const [, , , , a, b, c] = parts;
+  // A door Coach drafted, read back to show the owner what they'd approve (`show {type: "door", draft_id}`): the draft as
+  // tafs cloud checked and keeps it, for the people who manage the taf. The apps sign and send exactly this draft.
+  if (parts.length === 6 && method === "GET" && a === "drafts" && b) {
+    if (!await managesTaf(event, me, taf, deps)) throw new HTTPError(404, "not found");
+    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as { draft: APIDraft; made: string; expires: string } | undefined;
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again");
+    return { draft_id: b, draft: kept.draft, made_at: kept.made, expires_at: kept.expires,
+      body: { kind: "api", draft_id: b, draft: kept.draft } };
+  }
   if (parts.length === 4 && method === "GET") {
     // The bound the owner's session can read now, kept for the door's runs.
     await keepBound(ctx.doors, me.tenantID, await aiBound(event, deps).catch(() => undefined), ctx.now);
@@ -10368,7 +10422,17 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   if (parts.length === 4 && method === "POST" && body.kind === "api") {
     if (process.env.TAFS_API_DOORS !== "on") throw new HTTPError(400, "that door isn't offered here");
     await doorSigned(event, me, deps);
-    return addAPIDoor(ctx, owner, taf, body);
+    // Only the draft Coach made and tafs cloud keeps (design 4): the signed body names it by draft_id, its draft is that
+    // draft byte for byte (canonical), and it's used once. A body made elsewhere, changed, lapsed or replayed makes nothing.
+    const draft = apiDraftOf(body.draft);
+    const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
+    const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
+    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as { draft: APIDraft; expires: string } | undefined : undefined;
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
+    const added = await addAPIDoor(ctx, owner, taf, body);
+    await ctx.doors.store.remove(draftKey).catch((err) => console.error("api door draft not removed:", err instanceof Error ? err.message : "error"));
+    return added;
   }
   if (kind === "api") {
     if (parts.length === 5 && method === "PATCH" && body.open === false) return setOpen(ctx, owner, taf, a!, false);
@@ -10820,17 +10884,21 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   if (parts.length === 4 && method === "GET") {
     const ask = await ownAsk(store, me.tenantID, me.subject, parts[3] ?? "");
     if (!ask) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
-    return { ask: shownAsk(ask, lang) };
+    const full = new URLSearchParams(event.rawQueryString ?? "").get("full") === "1";
+    return { ask: shownAsk(ask, lang), ...(full ? await watchFullAnswer(event, me, ask, deps) : {}) };
   }
   if (parts.length !== 3 || method !== "POST") throw new HTTPError(404, "not found");
   const body = parseBody(event);
-  const extra = Object.keys(body).filter((k) => !["client_id", "text", "reply_to"].includes(k));
+  const extra = Object.keys(body).filter((k) => !["client_id", "text", "reply_to", "taf_id"].includes(k));
+  // A message to a taf the person chose: only where TAFS_WATCH_TAF_CHAT is on for the account.
+  const tafID = body.taf_id === undefined ? undefined : str(body.taf_id);
+  if (tafID !== undefined && !onFor(deps.watchTafChat, me.tenantID)) throw new HTTPError(404, "chatting with a taf from the watch isn't on yet", { code: "watch_taf_chat_off" });
   const client = str(body.client_id);
   // A typed ask can't carry a line of tafs' own either: only tafs cloud says those (docs/languages.md).
   const text = withoutTafsLines(str(body.text)).trim();
   const replyTo = body.reply_to === undefined ? "" : str(body.reply_to);
-  if (extra.length || !CLIENT_ID.test(client) || !text || text.length > MAX_ASK_TEXT || (body.reply_to !== undefined && !replyTo)) {
-    throw new HTTPError(400, "a watch request is {client_id, text, reply_to?}");
+  if (extra.length || !CLIENT_ID.test(client) || !text || text.length > MAX_ASK_TEXT || (body.reply_to !== undefined && !replyTo) || (tafID !== undefined && !TAF_ID.test(tafID))) {
+    throw new HTTPError(400, "a watch request is {client_id, text, reply_to?, taf_id?}");
   }
   // The phone's device key signed it (checks 2 and 5): a removed phone's key is refused by KIFF.
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
@@ -10844,6 +10912,7 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
     if (kept) return { ask: shownAsk(kept, lang) };
   }
   await requireAIConsent(event, me, deps);
+  if (tafID !== undefined) return watchTafMessage(event, me, store, { client, text, replyTo, tafID }, deps);
   const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
   if (!setup) throw new HTTPError(404, "start Coach on the phone first", { code: "no_coach" });
   const before = replyTo ? await ownAsk(store, me.tenantID, me.subject, replyTo) : undefined;
@@ -10893,8 +10962,109 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
 async function watchPerson(event: HTTPEvent, deps: Deps): Promise<{ me: KIFFIdentity; store: CoachStore }> {
   if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
   const me = await person(event, deps);
-  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  if (!onFor(deps.watchAsk, me.tenantID)) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
   return { me, store: deps.coach };
+}
+
+/** A switch read as TAFS_WATCH_ASK is: on for every account, for the accounts listed, or off. */
+function onFor(on: boolean | readonly string[] | undefined, tenant: string): boolean {
+  return on === true || (Array.isArray(on) && on.includes(tenant));
+}
+
+/**
+ * A message from the watch to a taf the person chose (TAFS_WATCH_TAF_CHAT, docs/watch-ask.md). The route has checked
+ * its shape, the phone's device signature, its client id and the person's AI consent. The words go into the taf's own
+ * chat as the person, through the phone's own path (`message()`), so the watch can do nothing a phone's message can't:
+ * held for an approval that waits, else the taf's run in the person's live chat, its client id the message's key so a
+ * resend starts nothing new. Coach and its watch conversation aren't involved, and the watch never approves.
+ */
+async function watchTafMessage(event: HTTPEvent, me: KIFFIdentity, store: CoachStore, req: { client: string; text: string; replyTo: string; tafID: string }, deps: Deps): Promise<unknown> {
+  const now = deps.now?.() ?? new Date();
+  const lang = langOf(event);
+  // One answer for a taf in another account, one being removed and one the person can't use (KIFF's run grant, as the
+  // phone's message is held to): nothing says which.
+  const noTaf = () => new HTTPError(404, "no taf of yours by that id", { code: "no_taf" });
+  const taf = await owned(me, req.tafID, deps).catch(() => undefined);
+  if (!taf) throw noTaf();
+  if (taf.job === SETUP_JOB) throw new HTTPError(400, "Coach is asked without taf_id", { code: "coach_taf" });
+  if (taf.kiffAgent && (await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase)) === "no_access") throw noTaf();
+  const before = req.replyTo ? await ownAsk(store, me.tenantID, me.subject, req.replyTo) : undefined;
+  if (req.replyTo && (!before || before.kind !== "taf" || before.taf?.id !== taf.id || !before.session)) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
+  if (before && !ASK_FINAL.includes(before.state)) throw new HTTPError(409, "wait for its result before replying", { code: "reply_too_soon" });
+  const claim = `${watchKeys.client(me.tenantID, me.subject, req.client)}#claim`;
+  if (!(await store.once(claim, new Date(now.getTime() + ASK_KEPT_MS)))) {
+    const id = (await store.get(watchKeys.client(me.tenantID, me.subject, req.client))) as string | undefined;
+    const kept = id ? await ownAsk(store, me.tenantID, me.subject, id) : undefined;
+    if (kept) return { ask: shownAsk(kept, lang) };
+    throw new HTTPError(409, "this request is already on its way: ask again in a moment");
+  }
+  // The same for a Send again of the same message, so the run its first send started still reports to this request.
+  const ref = watchTafRef(me.tenantID, me.subject, req.client);
+  // The phone's message, as the phone would send it: the person's live chat, or the chat of the request it replies to.
+  const sent: HTTPEvent = {
+    ...event, isBase64Encoded: false,
+    body: JSON.stringify({ text: req.text, client_message_id: watchMessageID(me.subject, req.client), ...(before?.session ? { session: before.session } : {}) }),
+  };
+  let out: { session: string; run: string; held?: string };
+  try {
+    out = (await message(sent, me, taf, deps, watchNotify(event, ref, deps))) as typeof out;
+  } catch (err) {
+    await store.remove(claim).catch(() => undefined);
+    throw err;
+  }
+  const id = newAskID(deps.newID ?? (() => randomUUID()));
+  const at = now.toISOString();
+  // Held for an approval that waits: the person answers it on the phone, and this request is done with that.
+  const ask: Ask = { id, client_id: req.client, person: me.subject, kind: "taf", taf: { id: taf.id, name: taf.name }, session: out.session, taf_run: out.run,
+    state: out.held ? "done" : "working", ...(out.held ? { held: true } : {}), at, updated: at, ...(before ? { reply_to: before.id } : {}) };
+  const until = new Date(now.getTime() + ASK_KEPT_MS);
+  try {
+    await keepAsk(store, me.tenantID, ask, now);
+    await Promise.all([
+      store.put(watchKeys.client(me.tenantID, me.subject, req.client), id, until),
+      ...(out.held ? [] : [store.put(watchKeys.ref(me.tenantID, ref), id, until)]),
+    ]);
+  } catch (err) {
+    // Not kept: the claim goes, so the watch's Send again comes through. Its message key gives back the same run, never a second.
+    await store.remove(claim).catch(() => undefined);
+    throw err;
+  }
+  console.log(JSON.stringify({ event: "watch_ask", tenant: me.tenantID, ask: id, taf: taf.id, signed: "device", reply: Boolean(before) }));
+  return { ask: shownAsk(ask, lang) };
+}
+
+/**
+ * "Read more" on a taf chat's answer (`?full=1`): the whole answer, read from the taf's run on each tap and kept nowhere,
+ * checked paragraph by paragraph (fullAnswer). Only for the person's own finished taf chat, and only while KIFF still lets
+ * them use the taf; anything else has no `text`, and the watch shows the line, then "the rest is on your phone".
+ */
+async function watchFullAnswer(event: HTTPEvent, me: KIFFIdentity, ask: Ask, deps: Deps): Promise<{ text?: string }> {
+  // Only a finished answer: a run at work, held or paused on the person, or failed, has none (its status is read back below).
+  if (ask.kind !== "taf" || !ask.taf || !ask.taf_run) return {};
+  const taf = await owned(me, ask.taf.id, deps).catch(() => undefined);
+  if (!taf) return {};
+  // Fails closed: only KIFF's run grant for the person lets the whole answer out. KIFF refusing, unreachable or giving none
+  // leaves the line, and the rest on the phone.
+  const grant = taf.kiffAgent ? await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase) : undefined;
+  if (typeof grant !== "string" || grant === "no_access") return {};
+  const r = await deps.agents.getRun(me.tenantID, taf.id, ask.taf_run).catch(() => undefined);
+  const text = r && r.status === "COMPLETED" ? fullAnswer(r.output) : undefined;
+  return text ? { text } : {};
+}
+
+/**
+ * A taf chat request's run-ended ref, by person and client id: a Send again after the request wasn't kept gets the first
+ * send's run back (its message key), which reports to the ref it was started with. A note is unsigned either way: tafs
+ * cloud reads the run back from kiff/agents, and takes it only for the request's own run (watchCoachEnded).
+ */
+function watchTafRef(tenant: string, person: string, client: string): string {
+  return `${Buffer.from(tenant).toString("base64url")}.${createHash("sha256").update(`watch-taf-ref:${tenant}:${person}:${client}`).digest("base64url").slice(0, 24)}`;
+}
+
+/** The phone's message id for a watch request to a taf: one per person and client id, so a resend is the same message. */
+function watchMessageID(person: string, client: string): string {
+  const h = createHash("sha256").update(`watch-taf-chat:${person}:${client}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-4${h.slice(13, 16)}-8${h.slice(17, 20)}-${h.slice(20, 32)}`;
 }
 
 /**
@@ -10909,7 +11079,8 @@ async function watchDaysRoute(event: HTTPEvent, method: string, parts: string[],
   const zone = me.timeZone && validZone(me.timeZone) ? me.timeZone : "UTC";
   const date = parts.length === 4 ? dateOf(parts[3]) : undefined;
   if (parts.length === 4 && !date) throw new HTTPError(400, "a day is YYYY-MM-DD", { code: "bad_date" });
-  const asks = (await ownAsks(store, me.tenantID, me.subject)).filter((a) => !date || askDay(a, zone) === date);
+  // A message to a taf the person chose is in that taf's own chat on the phone: never a watch day's turn or count.
+  const asks = (await ownAsks(store, me.tenantID, me.subject)).filter((a) => a.kind !== "taf" && (!date || askDay(a, zone) === date));
   const said = await watchSaid(me, asks, store, deps);
   const listed = asks.filter((a) => said.has(a.id));
   if (date) return { date, turns: dayTurns(listed.map((ask) => ({ ask, said: said.get(ask.id)! })), langOf(event)) };
@@ -10924,7 +11095,7 @@ async function watchDaysRoute(event: HTTPEvent, method: string, parts: string[],
 async function watchSaid(me: KIFFIdentity, asks: Ask[], store: CoachStore, deps: Deps): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   const bySession = new Map<string, Ask[]>();
-  for (const a of asks) if (a.session && a.coach_run) bySession.set(a.session, [...(bySession.get(a.session) ?? []), a]);
+  for (const a of asks) if (a.session && a.coach_run && a.kind !== "taf") bySession.set(a.session, [...(bySession.get(a.session) ?? []), a]);
   const sessions = [...bySession.keys()];
   // A few conversations at a time: a month of asking reads each once.
   for (let i = 0; i < sessions.length; i += 8) {
@@ -11015,8 +11186,20 @@ async function watchCoachEnded(tenant: string, id: string, note: { run: string; 
   if (!deps.coach) return false;
   const ask = (await deps.coach.get(watchKeys.ask(tenant, id))) as Ask | undefined;
   if (!ask) return false;
+  if (ask.kind === "taf" && (ask.taf_run !== note.run || ask.taf?.id !== note.agent)) return false;
   const r = await deps.agents.getRun(tenant, note.agent, note.run).catch(() => undefined);
   if (!r || !["COMPLETED", "ERROR", "CANCELLED", "PAUSED"].includes(r.status)) return false;
+  if (ask.kind === "taf") {
+    // A taf chat's run: its own answer, checked and cut (the rest is on the phone); paused, it waits on the person there.
+    if (r.status === "PAUSED") Object.assign(ask, { state: "done", held: true });
+    else if (r.status !== "COMPLETED") ask.state = "failed";
+    else {
+      const said = tafLine(r.output);
+      Object.assign(ask, { state: "done", ...(said.line ? { line: said.line } : {}), ...(said.more ? { more: true } : {}) });
+    }
+    await watchChanged(tenant, ask, deps);
+    return true;
+  }
   const line = r.status === "COMPLETED" ? checkedLine(r.output) : undefined;
   if (ask.turn === "result") {
     Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line } : {}) });

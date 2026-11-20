@@ -748,7 +748,7 @@ class TafsCloud(
    * phone sent it; tafs cloud alone marks it as the watch's. [clientId] is the watch's own id for the ask: the same id again
    * gets the same ask back, and nothing is started twice.
    */
-  suspend fun watchAsk(clientId: String, text: String, replyTo: String?, tenant: String, sign: (ByteArray) -> String): WatchAsk {
+  suspend fun watchAsk(clientId: String, text: String, replyTo: String?, tenant: String, tafId: String? = null, sign: (ByteArray) -> String): WatchAsk {
     val path = "/v1/watch/asks"
     val payload = KiffClient.json.encodeToString(
       kotlinx.serialization.json.JsonObject.serializer(),
@@ -756,6 +756,8 @@ class TafsCloud(
         put("client_id", clientId)
         put("text", text)
         replyTo?.let { put("reply_to", it) }
+        // A taf the person chose: inside the signed bytes, so it can't be changed after.
+        tafId?.let { put("taf_id", it) }
       },
     ).toByteArray()
     val signedAt = signingTime.next()
@@ -1205,6 +1207,12 @@ data class WatchAsk(
   val line: String? = null,
   val words: String,
   val updated: String,
+  /** A taf chat's taf waits on the person, on the phone (TAFS_WATCH_TAF_CHAT). */
+  val held: Boolean = false,
+  /** A taf chat's answer goes on past [line]: the rest is on the phone. */
+  val more: Boolean = false,
+  /** `taf`: a message to a taf the person chose, not Coach's request. */
+  val kind: String? = null,
 )
 
 @kotlinx.serialization.Serializable

@@ -35,9 +35,9 @@ class WatchAskTest {
   private fun consent(given: Boolean) =
     """{"consent":{"given":$given,"version":"1","words":{"title":"Your data and the AI","lines":["tafs uses AI."],"allow":"Allow","not_now":"Not now","withdraw":"Withdraw","given":"AI use: allowed"}}}"""
 
-  private fun reads(given: Boolean = true) {
+  private fun reads(given: Boolean = true, home: String = """{"tafs":[],"others":[],"removing":[]}""") {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["cards.manage"]}""")
-    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/ai-consent", 200, consent(given))
@@ -120,6 +120,61 @@ class WatchAskTest {
   }
 
   /** tafs cloud checks the AI consent and says so by its code: the watch gets its own words for it, as for asking not being on. */
+  // MARK: Chatting with a taf (TAFS_WATCH_TAF_CHAT)
+
+  private val withRefunds = """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}"""
+
+  /** The watch names the phone's taf; tafs cloud gets its own id, inside the bytes the device key signs. */
+  @Test fun aMessageToATafNamesItsTafsCloudIdInsideTheSignedBody() = runTest {
+    reads(home = withRefunds)
+    val m = model()
+    transport.answer("POST /v1/watch/asks", 200, """{"ask":{"id":"wa_02","client_id":"w_7f3a9c23","state":"done","taf":{"id":"taf_1","name":"Refunds"},"line":"Refunded 31 EUR to the customer, as the Card allows","more":true,"kind":"taf","words":"Done","updated":"2026-11-16T19:00:00Z"}}""")
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c23", "Refund order 1182", tafId = "refunds-1"))
+    val sent = transport.requests.last { it.method == "POST" && it.url.endsWith("/v1/watch/asks") }
+    val body = kotlinx.serialization.json.Json.parseToJsonElement(String(sent.body!!)) as kotlinx.serialization.json.JsonObject
+    assertEquals(setOf("client_id", "text", "taf_id"), body.keys)
+    assertEquals("taf_1", (body["taf_id"] as kotlinx.serialization.json.JsonPrimitive).content)
+    assertTrue(sent.headers["KIFF-Device-Signature"].orEmpty().matches(Regex("^t=[^,]+,v1=.+$")))
+    // The rest is on the phone: passed on as tafs cloud says it.
+    assertTrue((reply as WatchReply.AskTaken).ask.more)
+    // Marked as a taf's chat, so the watch keeps none of it.
+    assertTrue(reply.ask.tafChat)
+    assertEquals("Refunds", reply.ask.tafName)
+  }
+
+  @Test fun aTafWaitingOnThePersonIsSaidHeldAndTheWatchNeverApproves() = runTest {
+    reads(home = withRefunds)
+    val m = model()
+    transport.answer("POST /v1/watch/asks", 200, """{"ask":{"id":"wa_03","client_id":"w_7f3a9c24","state":"done","held":true,"words":"Done","updated":"2026-11-16T19:00:00Z"}}""")
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c24", "Refund order 1183", tafId = "refunds-1"))
+    assertTrue((reply as WatchReply.AskTaken).ask.held)
+  }
+
+  /** A taf the phone doesn't list sends nothing, and the words never go to Coach. */
+  @Test fun aTafThePhoneDoesntListSendsNothing() = runTest {
+    reads()
+    val m = model()
+    val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c25", "Hello", tafId = "gone-1"))
+    assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone), reply)
+    assertTrue(transport.requests.none { it.method == "POST" && it.url.endsWith("/v1/watch/asks") })
+  }
+
+  /** tafs cloud's switch off, a taf not the person's to use, or Coach named as a taf: Open on phone, never Coach's chat. */
+  @Test fun aRefusedMessageToATafSaysOpenOnPhoneNeverCoach() = runTest {
+    for (refusal in listOf("""404 {"error":"off","code":"watch_taf_chat_off"}""", """404 {"error":"no","code":"no_taf"}""", """400 {"error":"coach","code":"coach_taf"}""", """404 {"error":"off","code":"watch_off"}""")) {
+      reads(home = withRefunds)
+      val m = model()
+      val (status, json) = refusal.split(" ", limit = 2)
+      val posted = transport.requests.count { it.method == "POST" && it.url.endsWith("/v1/watch/asks") }
+      transport.answer("POST /v1/watch/asks", status.toInt(), json)
+      assertEquals(refusal, WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone),
+        WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c26", "Hello", tafId = "refunds-1")))
+      assertEquals("$refusal reached tafs cloud", posted + 1, transport.requests.count { it.method == "POST" && it.url.endsWith("/v1/watch/asks") })
+    }
+    // The rest as for an ask: the AI consent in the watch's words.
+    assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNeedsConsent), WatchRelay.refusedTafMessage(bot.tafs.app.kiff.CloudError(403, "Allow AI use first", code = "ai_consent_required")))
+  }
+
   @Test fun tafsCloudsRefusalsReachTheWatchInItsWords() {
     assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNeedsConsent), WatchRelay.refusedAsk(bot.tafs.app.kiff.CloudError(403, "Allow AI use first", code = "ai_consent_required")))
     assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNotOn), WatchRelay.refusedAsk(bot.tafs.app.kiff.CloudError(404, "watch_off", code = "watch_off")))

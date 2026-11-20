@@ -1,0 +1,1 @@
+- **Coach drafts a door From another application (off):** behind `TAFS_API_DOORS`, Coach's `taf_door_api` checks the door the owner asked for and keeps it 7 days, with nothing made. The apps read the draft back to show it, and the owner makes the door with their signed approval ([doors.md](docs/doors.md), `contracts/doors-api-draft.json`).

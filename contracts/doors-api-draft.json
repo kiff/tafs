@@ -1,0 +1,64 @@
+{
+  "about": "GET /v1/tafs/{id}/doors/drafts/{draft}: the door Coach drafted, as the owner approves it; body is what the apps sign and POST to …/doors. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "draft_id": "draft-0123456789abcdef",
+    "draft": {
+      "name": "Order system",
+      "fields": [
+        {
+          "name": "order",
+          "type": "string",
+          "max": 40
+        },
+        {
+          "name": "reason",
+          "type": "enum",
+          "values": [
+            "damaged",
+            "late",
+            "wrong_item"
+          ]
+        }
+      ],
+      "job": "Check the return and refund it if the Card allows",
+      "outcomes": [
+        "refunded",
+        "refused",
+        "needs_review"
+      ],
+      "text": false
+    },
+    "made_at": "2026-10-24T09:00:00.000Z",
+    "expires_at": "2026-10-31T09:00:00.000Z",
+    "body": {
+      "kind": "api",
+      "draft_id": "draft-0123456789abcdef",
+      "draft": {
+        "name": "Order system",
+        "fields": [
+          {
+            "name": "order",
+            "type": "string",
+            "max": 40
+          },
+          {
+            "name": "reason",
+            "type": "enum",
+            "values": [
+              "damaged",
+              "late",
+              "wrong_item"
+            ]
+          }
+        ],
+        "job": "Check the return and refund it if the Card allows",
+        "outcomes": [
+          "refunded",
+          "refused",
+          "needs_review"
+        ],
+        "text": false
+      }
+    }
+  }
+}
