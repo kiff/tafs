@@ -45,6 +45,36 @@ def glossary():
     return terms
 
 
+def glossary_being_written():
+    """The tables under "Korean and Japanese" (docs/languages.md): a language that ships before its column joins the
+    Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
+    with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
+        md = f.read()
+    start = md.index("\n## Korean and Japanese")
+    end = md.find("\n## ", start + 1)
+    codes = {"Korean": "ko", "Japanese": "ja"}
+    tables, rows = [], []
+    for line in md[start:end if end > 0 else len(md)].split("\n") + [""]:
+        if line.startswith("|"):
+            rows.append(line)
+        elif rows:
+            tables.append(rows)
+            rows = []
+    terms = {}
+    for rows in tables:
+        head = [c.strip() for c in rows[0].split("|")[1:-1]]
+        if len(head) != 2 or head[0] != "English" or head[1] not in codes:
+            continue
+        for row in rows[2:]:
+            english, word = [c.strip() for c in row.split("|")[1:-1]]
+            english = re.sub(r"\s*\(.*?\)", "", english)
+            pairs = list(zip(english.split(" / "), word.split(" / ")))
+            assert len(english.split(" / ")) == len(word.split(" / ")), row
+            for e, w in pairs:
+                terms.setdefault(e.strip(), {})[codes[head[1]]] = w.strip()
+    return terms
+
+
 class SharedWords(unittest.TestCase):
     def setUp(self):
         self.langs = generate.languages()
@@ -64,10 +94,10 @@ class SharedWords(unittest.TestCase):
             self.assertLessEqual(age, 21, country)
 
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
-        # The eight ship. Japanese and Korean are being written (global launch, Korea first): not shipped until
+        # The eight ship, and Korean with them (complete, PM 20 Nov). Japanese is being written: not shipped until
         # every key is there, so no app shows half a language.
         self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]))
 
@@ -184,7 +214,7 @@ class SharedWords(unittest.TestCase):
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).strip()
                     self.assertTrue(bare[:1].isupper(), f"{lang} {key} doesn't open a sentence: {text!r}")
-                    self.assertTrue(bare.endswith((".", "!", "?")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    self.assertTrue(bare.endswith((".", "!", "?", "。")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
                         self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")
@@ -222,11 +252,19 @@ class SharedWords(unittest.TestCase):
     def test_a_line_that_is_a_glossary_term_is_that_term_in_every_language(self):
         terms = glossary()
         self.assertIn("Approve once", terms)
+        # A shipped language not yet in the Terms table (ko) is held to its table under "Korean and Japanese".
+        for english, words in glossary_being_written().items():
+            for lang, word in words.items():
+                if lang in self.langs["shipped"]:
+                    terms.setdefault(english, {}).setdefault(lang, word)
+        for lang in self.langs["shipped"]:
+            self.assertTrue(any(lang in words for words in terms.values()), f"{lang} ships with no glossary")
         for key, english in self.source.items():
             if isinstance(english, dict) or english not in terms:
                 continue
-            for lang, lines in self.lines.items():
-                if key in lines and lang in terms[english]:  # ja, ko: their terms join the table when they ship
+            for lang in self.langs["shipped"]:
+                lines = self.lines[lang]
+                if key in lines and lang in terms[english]:
                     want = TERM_AS_PLURAL.get(key, {}).get(lang, terms[english][lang])
                     self.assertEqual(lines[key].lower(), want.lower(), f"{lang} {key}")
 

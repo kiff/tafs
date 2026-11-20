@@ -33,10 +33,10 @@ android {
     // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
     // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
     // 400,000,001 and the two never meet.
-    versionCode = 400_000_007
+    versionCode = 400_000_008
     // "-test": an internal build for a test on a real watch, with the timing readout (below). A build for production has a
     // plain name, so it never shows it.
-    versionName = "0.4.2"
+    versionName = "0.4.3"
   }
 
   buildTypes {
@@ -97,6 +97,7 @@ dependencies {
   implementation(libs.androidx.wear.compose.material3)
   implementation(libs.androidx.wear.compose.foundation)
   implementation(libs.androidx.wear.tiles)
+  implementation(libs.androidx.wear.complications.data.source)
   implementation(libs.androidx.concurrent.futures)
   implementation(libs.play.services.wearable)
   // Play services brings Fragment 1.1, older than the speech input's registerForActivityResult needs (1.3); the release

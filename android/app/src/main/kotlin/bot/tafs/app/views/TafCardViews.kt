@@ -67,7 +67,7 @@ private fun faded(card: TafCard, revoked: Boolean) = revoked || !card.active
 /** The Card as TalkBack reads it: what's left, then its name, its limits, who issued it and until when. */
 fun spokenCard(card: TafCard, issuedBy: String, revoked: Boolean): String {
   val parts = mutableListOf<String>()
-  card.hero?.let { parts += "${it.figure} ${it.words}" }
+  card.heroLine?.let { parts += it }
   parts += listOfNotNull(card.title, card.environmentLabel).joinToString(", ")
   parts += card.facts
   if (card.rules.isEmpty()) parts += Words.Card.noActions
@@ -226,7 +226,7 @@ fun CardBar(card: TafCard, count: Int, color: Color, revoked: Boolean = false, o
     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
       // Up to two lines each, so a long Card's name reads whole, as iOS's.
       Text(
-        card.hero?.let { "${it.figure} ${it.words}" } ?: card.title,
+        card.heroLine ?: card.title,
         style = scaled(15, FontWeight.SemiBold, Theme.ink).copy(fontFeatureSettings = "tnum"),
         maxLines = 2, overflow = TextOverflow.Ellipsis,
       )

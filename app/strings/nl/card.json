@@ -9,6 +9,10 @@
     "one": "Nog {count} aanroep",
     "other": "Nog {count} aanroepen"
   },
+  "card.calls_left_line": {
+    "one": "Nog {count} aanroep {window} van {limit}",
+    "other": "Nog {count} aanroepen {window} van {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} van {count} aanroep {window}",
     "other": "{used} van {count} aanroepen {window}"

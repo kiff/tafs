@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFFに問い合わせています：{title}…",
+  "kiff.did_not_reach_kiff_try": "KIFFに届きませんでした。もう一度お試しください。",
+  "kiff.kiff_can_not_do_sign": "KIFFはまだこれを実行できません。この{device}から承認するには、設定からもう一度サインインしてください。",
+  "kiff.kiff_did_not_answer_expected": "KIFFが想定どおりに応答しませんでした。もう一度お試しください。",
+  "kiff.kiff_words_do_not_match": "KIFFの説明が確認値と一致しません。何も承認できません。"
+}

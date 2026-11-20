@@ -1,0 +1,4 @@
+Vraag tafs vanaf je wijzerplaat.
+- Voeg de complicatie Vraag tafs toe: één tik opent tafs, klaar om te luisteren.
+- Die toont alleen een microfoon, dus een vergrendelde wijzerplaat verraadt niets.
+- tafs op het horloge is nu in het Koreaans.

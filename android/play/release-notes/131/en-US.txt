@@ -1,0 +1,5 @@
+• Korean: tafs is now in Korean.
+• Sign-in states the minimum age of 18 in India, Brazil, Indonesia and Colombia.
+• A sign-in from where KIFF isn't offered says so in KIFF's own words.
+• Right to left: arrows point the reader's way, and English names and numbers stay in order.
+• Calls left on a Card read in each language's own order.

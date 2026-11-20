@@ -1253,7 +1253,7 @@ struct TafCardFace: View {
     /// and until when.
     static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
         var parts: [String] = []
-        if let hero = card.hero { parts.append("\(hero.figure) \(hero.words)") }
+        if let line = card.heroLine { parts.append(line) }
         parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
         if card.rules.isEmpty { parts.append(Words.Card.noActions) }
@@ -1327,7 +1327,7 @@ struct CardBar: View {
                 VStack(alignment: .leading, spacing: 1) {
                     // Up to two lines each, so a long Card's name reads whole ("Lister vos litiges
                     // Stripe (mode test)" was cut).
-                    Text(card.hero.map { "\($0.figure) \($0.words)" } ?? card.title)
+                    Text(card.heroLine ?? card.title)
                         .scaledFont(15, weight: .semibold).monospacedDigit().foregroundColor(Theme.ink)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Text(details).scaledFont(12).foregroundColor(Theme.dim)

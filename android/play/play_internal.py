@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Uploads the signed release bundle to Google Play's internal track, with its release notes in the eight languages
+Uploads the signed release bundle to Google Play's internal track, with its release notes in the listing's languages (LOCALES)
 (docs/android-app.md, "Releases to Play"). Only the internal track, ever: never production, closed or open testing, and
 never a rollout change. With --wear, the Wear OS watch's bundle goes to the watch's own internal track (`wear:internal`),
 with its own notes (docs/watch-wear.md, Versions). The token is a short-lived one from Google's workload identity federation (the release job's
 `google-github-actions/auth`), passed in PLAY_ACCESS_TOKEN; no key file exists anywhere.
 
-  play_internal.py --check                 the release notes of the current versionCode: all eight, each short enough; none fails
+  play_internal.py --check                 the release notes of the current versionCode: one per language in LOCALES, each short enough; none fails
   play_internal.py --upload BUNDLE.aab     one edit: the bundle, the internal track's release with its notes, committed
   play_internal.py --wear --check          the same, for the watch's versionCode and notes
   play_internal.py --wear --upload BUNDLE.aab
@@ -23,7 +23,8 @@ import urllib.request
 PACKAGE = "dev.kiff.tafs"
 TRACK = "internal"  # The only track this script ever writes for the phone.
 WEAR_TRACK = "wear:internal"  # And for the watch: Play's internal track for the Wear OS form factor, never another.
-LOCALES = ["en-US", "de-DE", "fr-FR", "es-ES", "it-IT", "pt-PT", "nl-NL", "pl-PL"]
+# The listing's languages: the app's shipped ones (app/strings/languages.json), each as Play names it. Korean from 20 Nov.
+LOCALES = ["en-US", "de-DE", "fr-FR", "es-ES", "it-IT", "pt-PT", "nl-NL", "pl-PL", "ko-KR"]
 NOTES_MAX = 500  # Play's limit for a release note, per language.
 API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/" + PACKAGE
 UPLOAD = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/" + PACKAGE
@@ -47,7 +48,7 @@ def version_code(wear: bool = False) -> int:
 
 
 def notes(code: int, required: bool) -> list:
-    """The release notes for `code`, from play/release-notes/<code>/<locale>.txt: all eight, or none when not required."""
+    """The release notes for `code`, from play/release-notes/<code>/<locale>.txt: one for each of LOCALES, or none when not required."""
     folder = os.path.join(HERE, "release-notes", str(code))
     if not os.path.isdir(folder):
         if required:
@@ -68,7 +69,7 @@ def notes(code: int, required: bool) -> list:
         out.append({"language": locale, "text": text})
     extra = sorted(set(n[:-4] for n in os.listdir(folder) if n.endswith(".txt")) - set(LOCALES))
     if extra:
-        problems.append(f"not one of the eight: {', '.join(extra)}")
+        problems.append(f"not one of the listing's languages: {', '.join(extra)}")
     if problems:
         sys.exit(f"release notes for versionCode {code}: " + "; ".join(problems))
     return out

@@ -319,6 +319,10 @@
         <item quantity="one">%1$s call left</item>
         <item quantity="other">%1$s calls left</item>
     </plurals>
+    <plurals name="card_calls_left_line">
+        <item quantity="one">%1$s call left %2$s of %3$s</item>
+        <item quantity="other">%1$s calls left %2$s of %3$s</item>
+    </plurals>
     <plurals name="card_calls_used_of">
         <item quantity="one">%2$s of %1$s calls %3$s</item>
         <item quantity="other">%2$s of %1$s calls %3$s</item>

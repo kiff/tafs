@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "파일 {count}개 · 30일 보관"
+  },
+  "files.all": "전체",
+  "files.all_tafs": "모든 taf",
+  "files.by_run": "실행별",
+  "files.by_taf": "taf별",
+  "files.delete_body": "이 계정의 모든 사람에게서 즉시 파일이 사라집니다. 되돌릴 수 없습니다.",
+  "files.delete_now": "지금 삭제",
+  "files.delete_question": "“{name}”을(를) 지금 삭제할까요?",
+  "files.deleted": "모든 사람에게서 삭제됨",
+  "files.download": "다운로드",
+  "files.empty": "아직 없습니다. taf가 실행 중에 보고서, 시트 또는 문서를 만들면 30일 동안 여기에 보관되며, 이 계정의 모든 사람이 열고 저장하고 공유할 수 있습니다.",
+  "files.everyone": "이 계정의 모든 사람",
+  "files.goes_away": "삭제 예정",
+  "files.goes_in_days": {
+    "other": "{count}일 후 삭제"
+  },
+  "files.goes_on": "{date}(실행 후 30일)",
+  "files.goes_today": "오늘 삭제",
+  "files.goes_tomorrow": "내일 삭제",
+  "files.in_run": "실행",
+  "files.kept_line": "각 파일은 실행일로부터 30일 동안 보관된 후 자동으로 삭제됩니다. 이 계정의 모든 사람이 이 파일을 볼 수 있습니다. 내 채팅 첨부 파일은 해당 메시지와 함께 남습니다.",
+  "files.kept_until": "파일 보관 기한: {date}",
+  "files.made_by": "만든 taf",
+  "files.none_yet": "아직 없음 · 30일 보관",
+  "files.pick_one": "여기에서 볼 파일을 선택하세요.",
+  "files.preview_start": "앞부분만 표시됩니다. 전체를 읽으려면 파일을 다운로드하세요.",
+  "files.saved": "이 기기에 저장됨",
+  "files.see_in_chat": "채팅에서 보기",
+  "files.share": "공유",
+  "files.size": "크기",
+  "files.taf_row": {
+    "other": "실행에서 만든 파일 {count}개"
+  },
+  "files.title": "파일",
+  "files.type": "종류",
+  "files.who_sees": "볼 수 있는 사람"
+}

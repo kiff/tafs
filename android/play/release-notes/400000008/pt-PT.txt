@@ -1,0 +1,4 @@
+Pedir ao tafs a partir do mostrador do relógio.
+- Adicione a complicação Pedir ao tafs: um toque abre o tafs a ouvir.
+- Mostra apenas um microfone, por isso um mostrador bloqueado não revela nada.
+- O tafs no relógio já está disponível em coreano.

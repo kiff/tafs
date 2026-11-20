@@ -1,0 +1,4 @@
+Demander à tafs depuis le cadran de votre montre.
+- Ajoutez la complication Demander à tafs : un appui ouvre tafs à l'écoute.
+- Elle n'affiche qu'un micro, donc un cadran verrouillé ne révèle rien.
+- tafs sur la montre est désormais disponible en coréen.

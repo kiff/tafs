@@ -1,0 +1,1 @@
+- **Android:** a Card's row and TalkBack read the calls left as one line in each language's own order, so Korean puts the count where it belongs; English reads as before ([android-app.md](docs/android-app.md)).

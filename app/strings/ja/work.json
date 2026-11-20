@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "回答期限",
+  "work.answer_within_days": {
+    "other": "{count}日"
+  },
+  "work.answer_within_hours": {
+    "other": "{count}時間"
+  },
+  "work.answer_within_line": "案件がこれより長く待つとお知らせします。",
+  "work.answer_within_none": "未設定",
+  "work.answer_within_not_set": "設定できませんでした。{why}",
+  "work.asking_kiff_run": "KIFFに{tool}の実行を依頼しています…",
+  "work.did_not_stop": "停止しませんでした：{why}",
+  "work.duration.minutes": "{minutes}分{seconds}秒",
+  "work.duration.seconds": "{seconds}秒",
+  "work.its_runs": "実行",
+  "work.not_read": "作業内容を読み込めませんでした。{why}",
+  "work.not_sent_again": "再送信されませんでした。{why}",
+  "work.request.try_reply_now": "今すぐ返信を試す",
+  "work.requests_need_you": {
+    "other": "依頼{count}件が確認を待っています"
+  },
+  "work.send_again": "もう一度送信",
+  "work.sending_again": "再送信しています…",
+  "work.stop_run": "実行を停止",
+  "work.stopped_part_way_before_finished": "{taf}は完了する前に途中で停止しました。"
+}

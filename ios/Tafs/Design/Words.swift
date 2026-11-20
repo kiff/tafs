@@ -615,6 +615,8 @@ enum Words {
         static func asksYou(formatted: String, sumLabel: String) -> String { Words.line("card.asks_you", formatted, sumLabel) }
         /// {count} calls left
         static func callsLeft(count: Int) -> String { Words.count("card.calls_left", count) }
+        /// {count} calls left {window} of {limit}
+        static func callsLeftLine(count: Int, window: String, limit: String) -> String { Words.count("card.calls_left_line", count, window, limit) }
         /// {used} of {count} calls {window}
         static func callsUsedOf(count: Int, used: String, window: String) -> String { Words.count("card.calls_used_of", count, used, window) }
         /// {count} calls {window}
@@ -5528,7 +5530,7 @@ enum Words {
 
     /// The languages the app's screens are written in, as `languages.json` ships them: what it
     /// asks the servers for, never a language only Siri's phrases are in.
-    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"]
 
     /// The catalog the lines are read from: the system's pick for the app, or the language picked
     /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.

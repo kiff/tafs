@@ -1,0 +1,5 @@
+• Koreański: tafs jest teraz po koreańsku.
+• Logowanie podaje minimalny wiek 18 lat w Indiach, Brazylii, Indonezji i Kolumbii.
+• Logowanie z miejsca, gdzie KIFF nie jest oferowany, mówi o tym słowami KIFF.
+• Od prawej do lewej: strzałki wskazują kierunek czytania, a angielskie nazwy i liczby zachowują kolejność.
+• Pozostałe wywołania Card wyświetlają się w kolejności właściwej dla każdego języka.

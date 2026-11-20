@@ -1,0 +1,17 @@
+{
+  "report.already": "この回答はすでに報告済みです。",
+  "report.cant_from_here": "ここからはこの回答を報告できません。",
+  "report.menu": "この回答を報告",
+  "report.not_sent": "報告は送信されませんでした。{why}",
+  "report.not_sent_why": "未送信：{failed}",
+  "report.note_hint": "メモを追加（任意）",
+  "report.note_most_characters": "メモは1,000文字以内です。",
+  "report.person_kiff_reads_your_report": "KIFFの担当者が、書かれたままの回答とともにあなたの報告を読みます。",
+  "report.reason.harmful": "有害",
+  "report.reason.offensive": "不快",
+  "report.reason.other": "その他",
+  "report.reason.wrong": "誤り",
+  "report.runs_not_loaded": "実行を読み込めませんでした。{why}",
+  "report.thanks": "ありがとうございます。KIFFの担当者が報告を読みます。",
+  "report.what_wrong": "何が問題ですか？"
+}

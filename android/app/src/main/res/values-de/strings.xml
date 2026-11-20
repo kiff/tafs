@@ -319,6 +319,10 @@
         <item quantity="one">noch %1$s Aufruf</item>
         <item quantity="other">noch %1$s Aufrufe</item>
     </plurals>
+    <plurals name="card_calls_left_line">
+        <item quantity="one">Noch %1$s Aufruf %2$s von %3$s</item>
+        <item quantity="other">Noch %1$s Aufrufe %2$s von %3$s</item>
+    </plurals>
     <plurals name="card_calls_used_of">
         <item quantity="one">%2$s von %1$s Aufruf %3$s</item>
         <item quantity="other">%2$s von %1$s Aufrufen %3$s</item>

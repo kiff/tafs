@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "채팅을 내보내지 못했습니다. {why}",
+  "export.not_offered": "이 휴대폰에 파일을 저장할 수 없습니다. 공간을 확보한 후 다시 시도하세요.",
+  "export.own_chats_each_taf_coach": "각 taf와 나눈 내 채팅(Coach 포함), 첨부한 파일의 이름, 내 메모를 읽을 수 있는 파일과 JSON으로 내보냅니다. 나만 내보낼 수 있습니다.",
+  "export.preparing": "채팅을 준비하는 중…",
+  "export.ready_share_again": "준비됨: {files}. 다시 공유",
+  "export.row": "내 채팅 내보내기",
+  "export.sign_in_first": "채팅을 내보내려면 KIFF로 로그인하세요."
+}

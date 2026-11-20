@@ -271,7 +271,7 @@ the run: no key file, and no secret holds a key. A bundle Play reads as another 
 than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
-  it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
+  it-IT, pt-PT, nl-NL, pl-PL and, since 130, ko-KR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
@@ -780,6 +780,8 @@ answered:
 - **The Card bar** (`CardBar`, on the taf's main tab) is the Cards in one line: a small Card in the taf's colour **with the Card's
   mark on it** (`ic_card`, never an empty coloured block: the owner's phone, 19 Nov), the front Card's balance and its name, each
   on up to two lines, as iOS's (`aCardBarsSmallCardHasItsMark`). A tap opens the Card tab.
+  What's left reads as one line in the language's own order (`TafCard.heroLine`): with a calls total, `card.calls_left_line`
+  ("180 calls left today of 200"; Korean puts the count last), else the figure then its words. TalkBack reads the Card the same way.
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
   iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.

@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "ファイル{count}件・30日間保存"
+  },
+  "files.all": "すべて",
+  "files.all_tafs": "すべてのtaf",
+  "files.by_run": "実行別",
+  "files.by_taf": "taf別",
+  "files.delete_body": "このアカウントの全員のファイルからすぐに削除されます。元に戻すことはできません。",
+  "files.delete_now": "今すぐ削除",
+  "files.delete_question": "「{name}」を今すぐ削除しますか？",
+  "files.deleted": "全員から削除しました",
+  "files.download": "ダウンロード",
+  "files.empty": "まだありません。tafが実行中にレポート、シート、文書を作成すると、ここに30日間保存され、このアカウントの全員が開いたり保存したり共有したりできます。",
+  "files.everyone": "このアカウントの全員",
+  "files.goes_away": "削除予定",
+  "files.goes_in_days": {
+    "other": "{count}日後に削除"
+  },
+  "files.goes_on": "{date}（実行の30日後）",
+  "files.goes_today": "今日削除",
+  "files.goes_tomorrow": "明日削除",
+  "files.in_run": "実行",
+  "files.kept_line": "各ファイルは実行から30日間保存され、その後自動的に削除されます。このアカウントの全員がこれらのファイルを見られます。あなた自身のチャットの添付ファイルはメッセージとともに残ります。",
+  "files.kept_until": "ファイルの保存期限：{date}",
+  "files.made_by": "作成したtaf",
+  "files.none_yet": "まだなし・30日間保存",
+  "files.pick_one": "ここで表示するファイルを選んでください。",
+  "files.preview_start": "先頭部分だけを表示しています。全体を読むにはファイルをダウンロードしてください。",
+  "files.saved": "このデバイスに保存しました",
+  "files.see_in_chat": "チャットで見る",
+  "files.share": "共有",
+  "files.size": "サイズ",
+  "files.taf_row": {
+    "other": "実行で作成したファイル{count}件"
+  },
+  "files.title": "ファイル",
+  "files.type": "種類",
+  "files.who_sees": "見られる人"
+}
