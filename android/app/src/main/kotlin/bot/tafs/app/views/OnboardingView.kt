@@ -63,6 +63,8 @@ fun OnboardingView(
   signInInApp: (suspend (termsVersion: String?) -> Unit)? = null,
   /** The terms version in force, read as the tick shows (`AppModel.appTermsVersion`). */
   termsVersion: (suspend () -> String)? = null,
+  /** A tablet's second way, under Continue and waiting on the same tick: added from the person's phone (pairing); null on a phone. */
+  onSignInWithPhone: (() -> Unit)? = null,
 ) {
   var tick by rememberSaveable { mutableStateOf(false) }
   val consent = ConsentTick(tick)
@@ -120,6 +122,9 @@ fun OnboardingView(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       problem?.let { Text(it, style = scaled(14, color = Theme.no), modifier = Modifier.testTag(ONBOARDING_PROBLEM)) }
       if (onboarding) PrimaryButton(Words.Common.`continue`, onContinue, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue && !busy)
+      if (onboarding && onSignInWithPhone != null) {
+        OutlineButton(Words.SignIn.withPhone, onSignInWithPhone, Modifier.fillMaxWidth().testTag(ONBOARDING_WITH_PHONE), enabled = consent.canContinue && !busy)
+      }
       else PrimaryButton(Words.SignIn.withKiff, onSignIn)
       OutlineButton(Words.Sample.tryIt, onSample, Modifier.fillMaxWidth())
     }
@@ -192,4 +197,5 @@ internal fun continueOutcome(e: Throwable): ContinueOutcome = when {
 internal const val ONBOARDING_TICK = "onboarding.tick"
 internal const val ONBOARDING_TERMS_CHANGED = "onboarding.terms_changed"
 internal const val ONBOARDING_PROBLEM = "onboarding.problem"
+internal const val ONBOARDING_WITH_PHONE = "onboarding.with_phone"
 internal const val ONBOARDING_CONTINUE = "onboarding.continue"

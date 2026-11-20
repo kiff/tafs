@@ -121,6 +121,23 @@ class OnboardingWelcomeTest {
     compose.onNodeWithTag("onboarding.continue").assertIsEnabled()
   }
 
+  /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
+  @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
+    var phone = 0
+    compose.setContent {
+      TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" }, onSignInWithPhone = { phone += 1 }) }
+    }
+    compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.with_phone").assertIsEnabled().performClick()
+    assertEquals(1, phone)
+  }
+
+  @Test fun aPhoneHasNoPhoneWay() {
+    compose.setContent { TafsTheme { OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" }) } }
+    assertTrue(compose.onAllNodesWithTag("onboarding.with_phone").fetchSemanticsNodes().isEmpty())
+  }
+
   @Test fun eachEndingHasItsOutcome() {
     assertEquals(ContinueOutcome.Quiet, continueOutcome(VendorSignInCancelled()))
     assertEquals(ContinueOutcome.Quiet, continueOutcome(AppSignInRefused("access_denied")))

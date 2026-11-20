@@ -340,6 +340,8 @@ fun RootView(model: AppModel) {
   var signingIn by rememberSaveable { mutableStateOf(false) }
   // Signed in inside tafs (docs/onboarding.md): the same celebration as the sign-in sheet's, once.
   var celebrating by rememberSaveable { mutableStateOf(false) }
+  // A tablet's "Sign in with your phone" under the new welcome's Continue: the sign-in sheet's phone half only.
+  var signingInWithPhone by rememberSaveable { mutableStateOf(false) }
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
   var confirmingSignInAgain by rememberSaveable { mutableStateOf(false) }
@@ -361,6 +363,7 @@ fun RootView(model: AppModel) {
         // The new onboarding (docs/onboarding.md, off): Continue signs in inside tafs, then the celebration.
         signInInApp = { shown -> model.signInInApp(shown ?: model.appTermsVersion()); celebrating = true },
         termsVersion = model::appTermsVersion,
+        onSignInWithPhone = if (bot.tafs.app.views.offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)) ({ signingInWithPhone = true }) else null,
       )
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
@@ -397,6 +400,7 @@ fun RootView(model: AppModel) {
     }
   }
   if (signingIn) SignInSheet(model, onClose = { signingIn = false })
+  if (signingInWithPhone) SignInSheet(model, onClose = { signingInWithPhone = false }, phoneOnly = true)
   if (celebrating && state.signedIn) bot.tafs.app.views.InAppSignedIn(onGo = { celebrating = false })
   // Alerts were on for this account before this phone signed out, and didn't come back on: said once, with the way back.
   if (state.alertsOffSinceSignOut && state.lastError == null) {
