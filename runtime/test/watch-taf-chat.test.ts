@@ -44,6 +44,8 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
   const signedBodies = new Set<string>();
   // KIFF's run grants taken away since: "<subject>:<agent>".
   const noUse = new Set<string>();
+  // KIFF unreachable for run grants (a 5xx).
+  let kiffDown = false;
   const deps: Deps = {
     agents: agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs, names: memoryNames(), slots: memorySlots(), claims: memoryClaims(),
     removals: memoryRemovals(), archived: memoryArchived(), aiConsent: false, watchAsk: true, watchTafChat: opts.chat ?? true,
@@ -59,6 +61,7 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
         const ok = opts.signed !== false && signedBodies.has(sent.body_sha256);
         return ok ? new Response(JSON.stringify({ signed: true, key: "device" })) : new Response(JSON.stringify({ error: { code: "signature_invalid" } }), { status: 403 });
       }
+      if (url.endsWith("/v1/me/run-grants") && kiffDown) return new Response("{}", { status: 503 });
       if (url.endsWith("/v1/me/run-grants")) {
         // Bo can see Inbox but not use it: KIFF gives him no run grant for it.
         const { agent } = JSON.parse(String(init?.body)) as { agent: string };
@@ -93,7 +96,7 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
     await ended(agents.notified.get(run.id)!.ref, run.id, CAL, status);
   };
   const starts = () => agents.calls.filter((c) => c.startsWith("startRun"));
-  return { agents, deps, coach, call, send, signedBodies, noUse, ended, askOf, end, starts, pushed, tick: (ms: number) => { clock = new Date(clock.getTime() + ms); } };
+  return { agents, deps, coach, call, send, signedBodies, noUse, kiffDown: (down: boolean) => { kiffDown = down; }, ended, askOf, end, starts, pushed, tick: (ms: number) => { clock = new Date(clock.getTime() + ms); } };
 }
 
 const MSG = { client_id: "c_watch_0001", text: "Anything new on the Brio account?", taf_id: CAL };
@@ -289,14 +292,26 @@ describe("Read more on a taf's answer (the owner's pick: never trimmed, shown pa
     // KIFF no longer lets Ana use the taf: the line stays, the whole answer doesn't come.
     w.noUse.add(`${ANA}:agent_cal`);
     expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body.text).toBeUndefined();
-    // A paused one waits on the person: there's no answer to read.
+    // KIFF can't be reached for the grant: it fails closed, and the whole answer doesn't come either.
     w.noUse.clear();
+    w.kiffDown(true);
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body.text).toBeUndefined();
+    w.kiffDown(false);
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body.text).toBeTruthy();
+    // A paused one waits on the person: there's no answer to read.
     const held = (await w.send({ ...MSG, client_id: "c_watch_0002" })).body.ask.id as string;
     await w.end(held, "PAUSED", "Half an answer");
     expect((await w.call("GET", `/v1/watch/asks/${held}?full=1`)).body.text).toBeUndefined();
     // Coach's own watch requests have no whole answer to read.
     const coach = (await w.send({ client_id: "c_watch_0003", text: "Move my call" })).body.ask.id as string;
     expect((await w.call("GET", `/v1/watch/asks/${coach}?full=1`)).body.text).toBeUndefined();
+    // Nor does one Coach handed to a taf, though it names the taf and the taf's run finished: it's Coach's, with no kind.
+    const tafRun = (await w.askOf(id)).taf_run!;
+    await w.coach.put(watchKeys.ask(T, coach), { ...(await w.askOf(coach)), taf: { id: CAL, name: "Calendar" }, taf_run: tafRun, state: "done" }, new Date(NOW.getTime() + 86400_000));
+    const handed = (await w.call("GET", `/v1/watch/asks/${coach}?full=1`)).body;
+    expect(handed.text).toBeUndefined();
+    expect(handed.ask.kind).toBeUndefined();
+    expect(handed.ask.taf).toEqual({ id: CAL, name: "Calendar" });
   });
 
   it("is cut at 16 KB of UTF-8, at a word", () => {

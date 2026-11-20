@@ -125,8 +125,8 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
     answer is fetched only on the tap.
   - Each paragraph is checked as the line is, none is cut, paragraphs are kept apart by a blank line, and it's at most
     16 KB of UTF-8.
-  - It's only for the person's own taf chat whose run finished, and only while KIFF still gives them a run grant for the
-    taf. Anything else has no `text`, and the watch keeps the line and "the rest is on your phone".
+  - It's only for the person's own taf chat whose run finished, and only while KIFF gives them a run grant for the
+    taf, read on the tap. It fails closed: KIFF refusing, unreachable or giving none means no `text`. Anything else has no `text`, and the watch keeps the line and "the rest is on your phone".
 - **A paused taf takes the message.** Paused, its schedules are off, but a message from the phone or the watch starts its
   run now, as in its chat on the phone. A halted taf or account refuses as the phone's message is refused.
 - **Not kept, not stuck.** If the request can't be written after its message went, the client id is freed: the watch's Send

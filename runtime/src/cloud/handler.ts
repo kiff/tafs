@@ -10983,7 +10983,11 @@ async function watchFullAnswer(event: HTTPEvent, me: KIFFIdentity, ask: Ask, dep
   // Only a finished answer: a run at work, held or paused on the person, or failed, has none (its status is read back below).
   if (ask.kind !== "taf" || !ask.taf || !ask.taf_run) return {};
   const taf = await owned(me, ask.taf.id, deps).catch(() => undefined);
-  if (!taf || (taf.kiffAgent && (await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase)) === "no_access")) return {};
+  if (!taf) return {};
+  // Fails closed: only KIFF's run grant for the person lets the whole answer out. KIFF refusing, unreachable or giving none
+  // leaves the line, and the rest on the phone.
+  const grant = taf.kiffAgent ? await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase) : undefined;
+  if (typeof grant !== "string" || grant === "no_access") return {};
   const r = await deps.agents.getRun(me.tenantID, taf.id, ask.taf_run).catch(() => undefined);
   const text = r && r.status === "COMPLETED" ? fullAnswer(r.output) : undefined;
   return text ? { text } : {};
