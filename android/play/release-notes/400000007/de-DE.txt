@@ -1,0 +1,4 @@
+Schreib einem taf von deiner Uhr aus.
+- Öffne einen taf, um seine letzten Nachrichten zu sehen, und sprich oder tippe ihm.
+- Eine lange Antwort öffnet sich ganz mit Weiterlesen.
+- Genehmigungen bleiben auf deinem Telefon, und die Uhr bewahrt nichts vom Chat auf.

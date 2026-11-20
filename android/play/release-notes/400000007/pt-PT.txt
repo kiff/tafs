@@ -1,0 +1,4 @@
+Converse com um taf a partir do relógio.
+- Abra um taf para ver as últimas mensagens e fale ou escreva-lhe.
+- Uma resposta longa abre-se por inteiro com Ler mais.
+- As aprovações ficam no telemóvel e o relógio não guarda nada da conversa.

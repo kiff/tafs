@@ -61,6 +61,12 @@ class TafChatModelTest {
       it.refresh()
     }
 
+  /** On since Wear 0.4.2, once the privacy paragraph was live (kiff/cloud#19); tafs cloud's own switch still decides per account. */
+  @Test fun theWatchTafChatShipsOn() {
+    assertTrue(WATCH_TAF_CHAT)
+    assertTrue(WatchModel(Phone(::reads), now = { t }).tafChatOn)
+  }
+
   @Test fun openingATafReadsItsLastTurnsFromThePhone() = runTest {
     val phone = Phone(::reads)
     val m = model(phone)

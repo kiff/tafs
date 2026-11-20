@@ -1,0 +1,4 @@
+Chatea con un taf desde tu reloj.
+- Abre un taf para ver sus últimos mensajes y háblale o escríbele.
+- Una respuesta larga se abre entera con Leer más.
+- Las aprobaciones se quedan en tu teléfono y el reloj no guarda nada del chat.

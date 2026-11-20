@@ -1,0 +1,1 @@
+- **Wear OS 0.4.2 (400,000,007): chat with a taf from your watch.** A taf opens its chat, its last messages, then speak or type to it; a long answer opens in full with Read more; approvals stay on the phone and the watch keeps nothing of the chat. tafs cloud's switch still decides per account ([watch-wear.md](docs/watch-wear.md)).

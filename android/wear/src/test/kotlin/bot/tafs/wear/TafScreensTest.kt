@@ -59,7 +59,8 @@ class TafModelTest {
     else -> Asked.Answered(tafsNow)
   }
 
-  private suspend fun model(phone: Phone, unlocked: Boolean = true) = WatchModel(phone, now = { t }, unlocked = { unlocked }).also { it.refresh() }
+  // The page alone: a taf's chat, read first with the switch on, has its own tests (TafChatTest).
+  private suspend fun model(phone: Phone, unlocked: Boolean = true) = WatchModel(phone, now = { t }, unlocked = { unlocked }).also { it.tafChatOn = false; it.refresh() }
 
   // MARK: A taf's page
 
