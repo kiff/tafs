@@ -1,0 +1,138 @@
+{
+  "card.all_of": {
+    "other": "すべてのCard"
+  },
+  "card.amount_window": "{window}{amount}",
+  "card.asks_you": "{formatted} {sum_label}、それを超えるとあなたに確認します",
+  "card.calls_left": {
+    "other": "残り{count}回"
+  },
+  "card.calls_used_of": {
+    "other": "{window}{count}回中{used}回"
+  },
+  "card.calls_window": {
+    "other": "{window}{count}回"
+  },
+  "card.card_confirmed_kiff": "Card・KIFFが確認済み",
+  "card.card_draft_kiff": "Card・下書き・KIFF作成",
+  "card.card_got_room_call_needed": "合計がリセットされるまで、この呼び出しに必要な枠がCardに追加されました",
+  "card.card_not_issued": "Cardは発行されませんでした。",
+  "card.card_revoked": "Card取り消し済み",
+  "card.check.always_asks": "{rule}：常にあなたに確認",
+  "card.check.never_allowed": "{rule}：許可されません",
+  "card.check.not_on_card": "このtafのCardにありません",
+  "card.check.over_count": {
+    "other": "{window}{count}回を超過"
+  },
+  "card.check.over_each": "1件あたり{amount}を超過",
+  "card.check.over_total": "{window}{amount}を超過",
+  "card.count": {
+    "other": "Card {count}枚"
+  },
+  "card.ended": "終了",
+  "card.ended_on": "{date}に終了",
+  "card.ends": "終了日",
+  "card.extra_room": "{window}追加枠 +{extra}",
+  "card.extra_room_prefix": "追加枠 +{formatted} ",
+  "card.extra_room_until": "{ends}まで追加枠 +{extra}",
+  "card.figure_left": "残り{figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{window}{count}回{each}：これが{nth}回目になります{item}"
+  },
+  "card.held.each_call_asks": "呼び出しのたびに、まずあなたに確認します",
+  "card.held.for_each": "（{name}ごと）",
+  "card.held.for_each_join": "・",
+  "card.held.for_item": "（{item}）",
+  "card.held.over_count": {
+    "other": "上限{count}回を超過：これが{nth}回目になります"
+  },
+  "card.held.over_one_call": "{amount}は1回の呼び出しの上限{cap}を超えています",
+  "card.held.over_total": "{amount}で合計{cap}を超えます",
+  "card.hero.calls_left_of": {
+    "other": "{window}{limit}回中の残り"
+  },
+  "card.hero.calls_use_unavailable": "{window}の呼び出し・使用状況を確認できません",
+  "card.hero.left_of": "{window}{limit}中の残り",
+  "card.hero.left_of_extra": "{window}{base}＋追加枠{extra}中の残り",
+  "card.hero.left_of_extra_until": "{window}{base}＋{ends}までの追加枠{extra}中の残り",
+  "card.hero.left_of_note": "{window}{limit}中の残り{note}",
+  "card.hero.no_currency": "通貨なし",
+  "card.hero.no_currency_suffix": "・通貨なし",
+  "card.hero.use_unavailable": "{window}・使用状況を確認できません",
+  "card.hero.use_unavailable_note": "{label}・使用状況を確認できません{note}",
+  "card.how_counted": "カウント方法",
+  "card.issue_prompt": "{taf}のCardを発行",
+  "card.issued_by": "発行者",
+  "card.issued_by_account": "アカウント",
+  "card.issued_by_named": "発行者：{who}",
+  "card.its_card": "このtafのCard",
+  "card.kiff_did_not_revoke_cards": "KIFFはCardのうち{cards_left}枚を取り消しませんでした。KIFFで取り消してください。",
+  "card.left": "{window}残り{amount}",
+  "card.left_extra_room": "{own}＋追加枠{extra}{until}中、残り{current}{note}",
+  "card.limit_can_not_raised_right": "現在、ここから上限を引き上げることはできません。",
+  "card.limit_raised_read_balance_again": "上限を引き上げました。もう一度引き上げる前に残高を再確認してください。",
+  "card.line.calls_in_window": {
+    "other": "{window}{count}回{then}"
+  },
+  "card.line.more_asks": "、それ以上はまずあなたに確認します",
+  "card.line.then_asks": "、それを超えるとあなたに確認します",
+  "card.line.total_in_window": "{window}合計{amount}{then}",
+  "card.line.up_to_each": "1件あたり最大{amount}",
+  "card.more": {
+    "other": "他{count}件"
+  },
+  "card.no_actions": "まだ操作はありません",
+  "card.no_actions_short": "まだ操作なし",
+  "card.no_currency": "{amount}（通貨なし）",
+  "card.no_end_date": "終了日なし",
+  "card.outcome.not_a_resource": "Cardのリソースではありません",
+  "card.outcome.outside": "Cardの範囲外",
+  "card.outcome.over_one_action": "Cardの1回あたりの上限を超過",
+  "card.outcome.over_total": "Cardの合計を超過",
+  "card.outside_held": "範囲外：あなたのために保留中",
+  "card.outside_refused": "範囲外：拒否",
+  "card.over_limit_calls_would": "上限{limit}回を超過：これが{nth}回目になります",
+  "card.revoke_failed": "KIFFはCardを取り消しませんでした。{why}",
+  "card.revoked": "取り消し済み",
+  "card.rule.always_asks": "常にあなたに確認",
+  "card.rule.at_most_each": "1件あたり≤ {amount}",
+  "card.rule.at_most_each_refused_above": "1件あたり≤ {amount}・超えると拒否",
+  "card.rule.calls": {
+    "other": "{window}{count}回"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{window}{count}回、それを超えるとあなたに確認します"
+  },
+  "card.rule.in_total": "{window}合計{amount}",
+  "card.rule.never": "許可しない",
+  "card.rule.total_then_asks": "{window}合計{amount}、それを超えるとあなたに確認します",
+  "card.rule.up_to_each": "1件あたり最大{amount}、それ以上はまずあなたに確認します",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "tafのCard",
+  "card.tools": {
+    "other": "ツール{count}個"
+  },
+  "card.until": "期限",
+  "card.until_date": "{date}まで",
+  "card.until_ends": "（{ends}まで）",
+  "card.used_of": "{window}{limit}中{used}",
+  "card.window.a_day": "1日",
+  "card.window.a_month": "1か月",
+  "card.window.a_week": "1週間",
+  "card.window.any_day": "任意の24時間で",
+  "card.window.any_hour": "任意の1時間で",
+  "card.window.any_week": "任意の7日間で",
+  "card.window.in_total": "合計",
+  "card.window.in_total_window": "{window}合計",
+  "card.window.last_day": "過去24時間",
+  "card.window.last_hour": "過去1時間",
+  "card.window.last_week": "過去7日間",
+  "card.window.so_far": "これまで",
+  "card.window.this_month": "今月",
+  "card.window.this_week": "今週",
+  "card.window.today": "今日",
+  "card.within_card": "Cardの範囲内"
+}
