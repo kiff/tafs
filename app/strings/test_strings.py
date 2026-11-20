@@ -214,7 +214,7 @@ class SharedWords(unittest.TestCase):
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).strip()
                     self.assertTrue(bare[:1].isupper(), f"{lang} {key} doesn't open a sentence: {text!r}")
-                    self.assertTrue(bare.endswith((".", "!", "?")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    self.assertTrue(bare.endswith((".", "!", "?", "。")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
                         self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")

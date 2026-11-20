@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "ブリーフィング",
+  "push.channel.briefs_description": "設定した時刻に届くブリーフィング。",
+  "push.channel.holds_description": "呼び出しがあなたの回答を待って保留されています。承認するまで何も送信されません。",
+  "push.channel.other": "その他の通知",
+  "push.channel.other_description": "タスクの依頼とその回答（音なし）。",
+  "push.channel.urgent_description": "次のブリーフィングまで待てないもの（音あり）。",
+  "push.open_needs_you": "要確認を開いて回答してください。",
+  "push.open_taf": "tafを開いて確認してください。",
+  "push.open_usage": "プランと使用状況を開いて確認してください。"
+}
