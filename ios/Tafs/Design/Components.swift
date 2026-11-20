@@ -288,6 +288,15 @@ enum Legal {
 
     static var terms: URL { page("terms") }
     static var privacy: URL { page("privacy") }
+    /// KIFF's own Terms and Privacy: the account's, beside tafs's.
+    static var kiffTerms: URL { kiffPage("terms") }
+    static var kiffPrivacy: URL { kiffPage("privacy") }
+
+    /// A KIFF page in `language` where it's served, else in English.
+    static func kiffPage(_ name: String, language: String = Legal.language) -> URL {
+        let prefix = translated.contains(language) ? "/\(language)" : ""
+        return URL(string: "https://kiff.dev\(prefix)/\(name)")!
+    }
 
     /// A page in `language` where it's served, else in English.
     static func page(_ name: String, language: String = Legal.language) -> URL {
@@ -310,13 +319,20 @@ enum Legal {
     /// "By signing in, you agree to KIFF's Terms … and its Privacy policy.", in the line's
     /// language, with the two names linked wherever that language puts them.
     static func agreement(_ line: String = Words.SignIn.agree(terms: "\u{1}", privacy: "\u{2}")) -> AttributedString {
+        linked(line, [(Words.Settings.terms, terms), (Words.Settings.privacyPolicy, privacy)])
+    }
+
+    /// A line whose placeholders were filled with the markers `\u{1}`, `\u{2}`… in order, with each marker replaced by
+    /// its link's words, linked: the line's language puts the links wherever it needs them.
+    static func linked(_ line: String, _ links: [(words: String, url: URL)]) -> AttributedString {
         var out = AttributedString()
         var rest = Substring(line)
-        while let i = rest.firstIndex(where: { $0 == "\u{1}" || $0 == "\u{2}" }) {
+        let markers = links.indices.map { Character(UnicodeScalar(UInt8($0 + 1))) }
+        while let i = rest.firstIndex(where: { markers.contains($0) }) {
             out += AttributedString(String(rest[..<i]))
-            let isTerms = rest[i] == "\u{1}"
-            var link = AttributedString(isTerms ? Words.Settings.terms : Words.Settings.privacyPolicy)
-            link.link = isTerms ? terms : privacy
+            let (words, url) = links[markers.firstIndex(of: rest[i])!]
+            var link = AttributedString(words)
+            link.link = url
             out += link
             rest = rest[rest.index(after: i)...]
         }

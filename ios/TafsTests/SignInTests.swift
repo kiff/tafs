@@ -137,6 +137,44 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(Set(Words.languages).subtracting(["en"]), Legal.translated, "every language the app ships has its page")
     }
 
+    /// KIFF's own Terms and Privacy, the account's, beside tafs's: in the app's language where kiff.dev serves it.
+    func testKiffsOwnLegalPagesOpenInTheAppsLanguage() {
+        XCTAssertEqual(Legal.kiffPage("terms", language: "en").absoluteString, "https://kiff.dev/terms")
+        XCTAssertEqual(Legal.kiffPage("privacy", language: "en").absoluteString, "https://kiff.dev/privacy")
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt"] {
+            XCTAssertEqual(Legal.kiffPage("terms", language: language).absoluteString, "https://kiff.dev/\(language)/terms")
+            XCTAssertEqual(Legal.kiffPage("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/privacy")
+        }
+        XCTAssertEqual(Legal.kiffPage("terms", language: "ja").absoluteString, "https://kiff.dev/terms")
+        XCTAssertEqual(Legal.kiffTerms, Legal.kiffPage("terms", language: Legal.language))
+        XCTAssertNotEqual(Legal.kiffTerms, Legal.terms, "KIFF's Terms and tafs's are two pages")
+    }
+
+    /// A line with any number of links puts each where the line's language says, in the order of its markers.
+    func testALinkedLineLinksEachMarkerWhereverTheLanguagePutsIt() {
+        let a = URL(string: "https://kiff.dev/terms")!, b = URL(string: "https://kiff.dev/tafs/terms")!
+        let line = Legal.linked("Ich stimme \u{2} und \u{1} zu.", [("KIFF", a), ("tafs", b)])
+        XCTAssertEqual(String(line.characters), "Ich stimme tafs und KIFF zu.")
+        XCTAssertEqual(line.runs.compactMap { $0.link }, [b, a])
+        XCTAssertEqual(String(Legal.linked("No link here.", [("x", a)]).characters), "No link here.")
+    }
+
+    /// The welcome's one tick: Continue opens the sign-in only once the terms are agreed to, and a second tap takes it back.
+    func testContinueWaitsOnTheTermsTick() {
+        var tick = ConsentTick()
+        XCTAssertFalse(tick.canContinue, "nothing is agreed to before the tick")
+        tick.toggle()
+        XCTAssertTrue(tick.agreed)
+        XCTAssertTrue(tick.canContinue)
+        tick.toggle()
+        XCTAssertFalse(tick.canContinue, "untapped, Continue waits again")
+    }
+
+    /// The welcome ships as it is until the end-to-end test with the owner.
+    func testTheNewOnboardingShipsOff() {
+        XCTAssertFalse(Onboarding.on)
+    }
+
     /// A row says the page is in English only when it opens in English from another language.
     func testALegalRowSaysInEnglishOnlyWhenThePageIs() {
         XCTAssertEqual(Legal.label("Terms", language: "en"), "Terms")
