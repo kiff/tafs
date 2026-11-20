@@ -216,9 +216,13 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   dropped, ready again for the same ask). Each is named for TalkBack in the shared words (`chat.delete`, `common.send`,
   `watch.rerecord`). The last line of a long message rests above them (`REVIEW_FOOT`), so it's readable to its end.
 - **Type** opens the system's text input (`RemoteInput`: keyboard, handwriting or voice typing) and **Quick reply** four
-  ready-made lines; each goes to the same review. Blank is nothing; the words are cut at 2,000 characters, as an ask is.
+  ready-made lines; each goes to the same review. On Coach's home each is its icon over its word (a keyboard, a speech bubble
+  with a bolt; `IconOverWord`), the word on two lines at most and never broken inside: when a word is wider than its button
+  (German's "Schnellantwort" on the 40 mm face) its size steps down from 12 sp, to 9 sp at least (`WholeWords`). `IconsTest`
+  holds all nine languages to it on the 40 mm face. Everywhere else on the watch a keyboard types, a microphone talks and ↻
+  retries, icons only, each named for TalkBack in its word (row 44, B). Blank is nothing; the words are cut at 2,000 characters, as an ask is.
 - **Send** sends what v1 sends (`ask`, a new id), checked against the watch's lock again, since it may have locked while the
-  words were read; from there Sending, Not sure it arrived (Retry, the same id) and Not sent are v1's. **Sent stays until the answer** (W2, the owner's Watch 5 test: a Sent that closed after 2.5 s left nothing showing Coach had it): tafs cloud's state for the ask in its own words ("Support replies · Working"), a ring turning round the check while it's at work, and the answer in its place the moment the ask ends; a tap goes back to Coach's home, and the answer then comes as the result's alert (`SentScreenV2`). v1's Sent still closes after 2.5 s.
+  words were read; from there Sending, Not sure it arrived (Retry, the same id, a round ↻) and Not sent are v1's. **Sent stays until the answer** (W2, the owner's Watch 5 test: a Sent that closed after 2.5 s left nothing showing Coach had it): tafs cloud's state for the ask in its own words ("Support replies · Working"), a ring turning round the check while it's at work, and the answer in its place the moment the ask ends; a tap goes back to Coach's home, and the answer then comes as the result's alert (`SentScreenV2`). v1's Sent still closes after 2.5 s.
 - **Keep for later** (`WatchModel.keepForLater`, `PreferencesDraftStore`), on "Not sure it arrived", where the phone may not
   have got it. One message, **text only**: its words, its ask id and the ask it continues, in the watch's private preferences
   (`tafs.draft`). Coach's home shows it with "Kept on this watch. It's sent when your phone is in reach again." and **Delete**.
@@ -360,7 +364,8 @@ v2.1's red (`Look.recording`) and Start the brand's colours.
 the watch's theme, in English with the sample tafs (Late parcels, Support replies, Lead follow-up), at the Galaxy Watch 5's two
 sizes, 40 mm (396 × 396 px) and 44 mm (450 × 450 px), as xhdpi round faces of 198 and 225 dp: Coach, the Inbox with an unread
 line, Tafs, a taf's page, its settings, Choose which to halt, a held call, the calendar day, Account, the review with a long
-transcript (its actions pinned at the foot), Recording, Sent while Coach works, an answer's card, and Halt asked once more. 28
+transcript (its actions pinned at the foot), Recording, Sent while Coach works, an answer's card, Halt asked once more, a taf's
+chat with its send bar, Not sure it arrived with ↻, and Type and Quick reply under their icons in English and German. 36
 images, into `android/play/wear-screenshots-v2/<40mm|44mm>/`, only when asked, so the store screenshots stay as
 they are; otherwise each screen is still drawn:
 
@@ -492,7 +497,8 @@ the owner's picks of 20 Nov; `TafScreens.kt` `tafChat`, `WatchModel` `TafChat`; 
 `TafChatScreenTest`). **1A:** a taf opens its own chat, then its page, then its settings, in its pager (Wear's pager is
 sideways, so "one swipe below" on Apple Watch is one swipe on here). The chat shows its state, its last turns as the phone shows
 them (`taf-chat`, read only, the last 6, each cut as an answer is, with "The rest is on your phone"), this visit's turns, then
-**Message {taf}**, **Type** and a quick reply. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
+the send bar, as in a phone's chat: a round keyboard (**Type**) and a round microphone (named **Message {taf}** for TalkBack),
+then a quick reply in its own words. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
 starts name none, so words never go to a taf by another start. The review is titled "Message {taf}". Sent, the turn shows in
 the chat: "Sent", then "{taf} is answering", then its answer; held, **Approve on your phone** (the watch never approves).
 **2A:** a paused taf still takes the message, with "Paused: its schedule is off. It still answers what you send." Halted,

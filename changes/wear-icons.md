@@ -1,0 +1,1 @@
+- **Wear OS: icons over words.** On Coach's home, Type and Quick reply show their icons above their words, and no language's word breaks inside on the 40 mm face (German's "Schnellantwort" steps its size down). A taf's chat sends from a round keyboard and a round microphone, and Retry is a round ↻, each named for TalkBack ([watch-wear.md](docs/watch-wear.md)).

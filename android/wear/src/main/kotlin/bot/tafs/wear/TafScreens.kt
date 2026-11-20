@@ -177,18 +177,17 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions)
     item { Button(onClick = { act.openOnPhone(ON_PHONE) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text("↗ ${Words.Watch.resumeOnPhone}") } }
     return
   }
+  // The send bar, as in a phone's chat: a round keyboard and a round microphone, named for TalkBack ("Message {taf}"); the quick
+  // reply under it is its own words, so it stays a line of text.
   item {
-    Button(onClick = { act.messageTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = Look.send, contentColor = Look.onSend)) {
-      Text(Words.Chat.messageTaf(open.name), maxLines = 2)
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, androidx.compose.ui.Alignment.CenterHorizontally),
+      verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+      RoundIcon(Words.Watch.type, { act.typeTaf(open.tafId) }, TAF_TYPE, size = 44.dp) { keyboardGlyph(it) }
+      RoundIcon(Words.Chat.messageTaf(open.name), { act.messageTaf(open.tafId) }, TAF_TALK, size = 52.dp, container = Look.send, content = Look.onSend) { micGlyph(it) }
     }
   }
-  item {
-    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-      Button(onClick = { act.typeTaf(open.tafId) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.type, maxLines = 1) }
-      for (line in quickReplies().take(1)) {
-        Button(onClick = { act.quickTaf(open.tafId, line) }, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(line, maxLines = 2) }
-      }
-    }
+  for (line in quickReplies().take(1)) item {
+    Button(onClick = { act.quickTaf(open.tafId, line) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(line, maxLines = 2) }
   }
 }
 

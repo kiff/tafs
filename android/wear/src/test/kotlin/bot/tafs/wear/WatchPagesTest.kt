@@ -317,7 +317,7 @@ class WatchPagesTest {
 
   @Test fun notSureItArrivedOffersKeepForLater() {
     show(read, voice = WatchModel.Voice.Unsure("Move my call", "w_00000001", null))
-    compose.onNodeWithText(Words.Watch.retry).assertExists()
+    compose.onNodeWithContentDescription(Words.Watch.retry).assertExists()
     compose.onNodeWithText(Words.Watch.keepForLater).performClick()
     assertEquals(listOf("keep"), did)
   }
@@ -337,7 +337,7 @@ class WatchPagesTest {
 
   @Test fun v1OffersNoKeepForLater() {
     compose.setContent { MaterialTheme { VoiceScreen(WatchModel.Voice.Unsure("Move my call", "w_00000001", null), Actions.none) } }
-    compose.onNodeWithText(Words.Watch.retry).assertExists()
+    compose.onNodeWithContentDescription(Words.Watch.retry).assertExists()
     compose.onAllNodesWithText(Words.Watch.keepForLater).assertCountEquals(0)
   }
 

@@ -2,7 +2,9 @@ package bot.tafs.wear
 
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -213,20 +215,20 @@ class TafChatScreenTest {
     compose.onNodeWithText("Anything late today?").assertExists()
     compose.onNodeWithText("Two parcels were late…").assertExists()
     compose.onNodeWithText(Words.Watch.readMore).performScrollTo().performClick()
-    compose.onNodeWithText(Words.Chat.messageTaf("Late parcels")).performScrollTo().performClick()
-    compose.onNodeWithText(Words.Watch.type).performScrollTo().performClick()
+    compose.onNodeWithContentDescription(Words.Chat.messageTaf("Late parcels")).performScrollTo().performClick()
+    compose.onNodeWithContentDescription(Words.Watch.type).performScrollTo().performClick()
     assertEquals(listOf("more wa_1", "message taf_1", "type taf_1"), did)
   }
 
   @Test fun aPausedTafSaysItStillAnswersAndAHaltedOneSendsNothing() {
     show(WatchModel.OpenTaf("taf_2", TafLine("taf_2", "Overdue reminders", "Paused", halted = false, paused = true), WatchModel.TafRead.Asking))
     compose.onNodeWithText(Words.Watch.pausedStillAnswers).assertExists()
-    compose.onNodeWithText(Words.Chat.messageTaf("Overdue reminders")).assertExists()
+    compose.onNodeWithContentDescription(Words.Chat.messageTaf("Overdue reminders")).assertExists()
   }
 
   @Test fun aHaltedTafsChatSendsNothing() {
     show(WatchModel.OpenTaf("taf_3", TafLine("taf_3", "Deploys", "Halted", halted = true), WatchModel.TafRead.Asking))
-    compose.onAllNodesWithText(Words.Chat.messageTaf("Deploys")).assertCountEquals(0)
+    compose.onAllNodesWithContentDescription(Words.Chat.messageTaf("Deploys")).assertCountEquals(0)
     compose.onNodeWithText("↗ ${Words.Watch.resumeOnPhone}").assertExists()
   }
 }
