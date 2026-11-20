@@ -5592,6 +5592,15 @@ enum Words {
 
     private static func filled(_ key: String, _ values: [String]) -> String {
         let format = bundle.localizedString(forKey: key, value: nil, table: nil)
-        return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)
+        return values.isEmpty ? format : String(format: format, locale: locale, arguments: isolated(values, in: locale))
+    }
+
+    /// In a right-to-left language each value is set apart (U+2068 FIRST STRONG ISOLATE … U+2069 POP DIRECTIONAL
+    /// ISOLATE), so a taf's or person's name in Latin letters takes its own direction without turning the sentence
+    /// around it. Left to right, values are as they are. A server's own value can't close the isolate early: the app
+    /// takes direction characters out of everything it's sent (KIFFMapping.visible, WatchMessage.encode).
+    static func isolated(_ values: [String], in locale: Locale) -> [String] {
+        guard Locale.characterDirection(forLanguage: locale.identifier) == .rightToLeft else { return values }
+        return values.map { "\u{2068}\($0)\u{2069}" }
     }
 }
