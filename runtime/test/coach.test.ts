@@ -888,7 +888,9 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]",
       // Fenced, or after a few words: how a model pastes a result most often (qa-kiff's rows).
       '```json\n{"items":[{"creator":{"email":"ana@example.com"}}]}\n```', '```\n[{"id":1}]\n```',
-      'Here is the result: {"items":[{"htmlLink":"https://calendar.example/e/1"}]}', 'Result:\n{"a":1}']) expect(rawResult(t), t).toBe(true);
+      'Here is the result: {"items":[{"htmlLink":"https://calendar.example/e/1"}]}', 'Result:\n{"a":1}',
+      // A fenced block of anything, a table of rows included.
+      '```\nid,email\n1,ana@example.com\n```']) expect(rawResult(t), t).toBe(true);
     for (const t of ["3 events today.", "[Draft] Reply to Ana: thanks!", "{not json} it says", "No events today", "[1] is the first item: done."]) expect(rawResult(t), t).toBe(false);
   });
 
