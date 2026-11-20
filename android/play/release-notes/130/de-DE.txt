@@ -1,0 +1,1 @@
+• Erneut verbinden: Kann sich eine App nicht mehr beim alten Konto anmelden, führt tafs direkt zu einer neuen Anmeldung, und diese eine Anmeldung bringt jeden taf zurück, der das Konto genutzt hat.

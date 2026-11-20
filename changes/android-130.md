@@ -1,0 +1,1 @@
+- **Android 130 (1.41.5): Connect again goes straight to a new sign-in** when the app can't sign back in to its old account, and one sign-in brings back every taf that used it (tafs#1511 on Android, with planque's `reconnect: fresh`; changes/reconnect-fresh.md). Internal first, for the owner's Win-back test.
