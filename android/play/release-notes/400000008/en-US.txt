@@ -1,0 +1,4 @@
+Ask tafs from your watch face.
+- Add the Ask tafs complication: one tap opens tafs listening.
+- It shows only a microphone, so a locked face reveals nothing.
+- tafs on the watch is now in Korean.

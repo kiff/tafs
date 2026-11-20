@@ -1,0 +1,4 @@
+Pedir a tafs desde la esfera de tu reloj.
+- Añade la complicación Pedir a tafs: un toque abre tafs escuchando.
+- Solo muestra un micrófono, así que una esfera bloqueada no revela nada.
+- tafs en el reloj ya está en coreano.

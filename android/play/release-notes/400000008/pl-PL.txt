@@ -1,0 +1,4 @@
+Zapytaj tafs prosto z tarczy zegarka.
+- Dodaj komplikację Zapytaj tafs: jedno stuknięcie otwiera tafs gotowy do słuchania.
+- Pokazuje tylko mikrofon, więc zablokowana tarcza niczego nie zdradza.
+- tafs na zegarku jest teraz po koreańsku.

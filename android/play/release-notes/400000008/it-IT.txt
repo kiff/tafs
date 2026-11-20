@@ -1,0 +1,4 @@
+Chiedi a tafs dal quadrante dell'orologio.
+- Aggiungi la complicazione Chiedi a tafs: un tocco apre tafs in ascolto.
+- Mostra solo un microfono, quindi un quadrante bloccato non rivela nulla.
+- tafs sull'orologio ora è disponibile in coreano.
