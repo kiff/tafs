@@ -1,0 +1,1 @@
+- A scheduled run's report names a limit only as the run read it (its Card, KIFF's answer on a call, or the owner's note), and names an item it made no call on as an item, never counted among calls. After a "No such …" answer, a taf finds the id again in what it read before it tries once more.

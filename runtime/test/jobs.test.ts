@@ -128,6 +128,8 @@ describe("jobs", () => {
       // A write sent beside another on the same item outran KIFF's refusal of it
       // (Chargebacks, 21 Oct 15:52: close_dispute refused, update_dispute sent with it).
       expect(prompt.replace(/\s+/g, " ")).toContain("Writes are not batched: make one write on an item, read KIFF's answer, then decide the next");
+      // A retry on "No such dispute" typed the id from memory again (Chargebacks, 20 Nov run 1).
+      expect(prompt.replace(/\s+/g, " ")).toContain("When a tool answers that an item doesn't exist (\"No such …\"), find its id again in what you read, or read the item again, before you call once more: never a second try with an id typed from memory.");
       // A list says what's needed of each item: reading one again costs a turn (kiff/tafs#206).
       expect(prompt.replace(/\s+/g, " ")).toContain("Never look up a value a tool's description says KIFF always sends, or read an item again for what a list you just read already says of it");
       // KIFF decides the Card, not the taf: it decided a hold itself, so the call
@@ -138,6 +140,10 @@ describe("jobs", () => {
       // A deadline as time left, never in UTC (item 26).
       expect(prompt.replace(/\s+/g, " ")).toContain("no clock times or time zones, a deadline included");
       expect(prompt).toContain("Name each item by its reference and what\nbecame of it");
+      // A report named a $100 limit it never read, and counted an item it never
+      // acted on as a call (kiff/tafs#1512).
+      expect(prompt.replace(/\s+/g, " ")).toContain("An item you made no call on is named as an item (\"T-2005: not done, because …\"), never counted among calls.");
+      expect(prompt.replace(/\s+/g, " ")).toContain("Name a limit (an amount, a day's total, how many calls) only as this run read it: from kiff_card, from KIFF's answer on a call, or from the owner's note; otherwise give no number for it.");
       expect(prompt).toContain(j.instructions);
     }
   });

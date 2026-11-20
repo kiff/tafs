@@ -72,7 +72,8 @@ describe("a taf's definition on kiff/agents", () => {
   // The count is kiff/agents' (agent.TallyNote opens it): the runner counts the run's calls, by tool, after each
   // turn that acted, so the number is one the taf read, not one it made.
   it("tells every taf to take a report's numbers of calls from the runner's count", () => {
-    expect(SHARED_INSTRUCTIONS).toContain("is the one in the count you\nread after your tool results (\"Count so far of this run's calls that act\"),\nfor that tool: copy it, never total calls in your head, and it matches the\nitems you name. A run with no such count changed nothing.");
+    expect(SHARED_INSTRUCTIONS).toContain("is the one in the count you\nread after your tool results (\"Count so far of this run's calls that act\"),\nfor that tool: copy it, never total calls in your head, and it matches the\nitems you name.");
+    expect(SHARED_INSTRUCTIONS).toContain("A run with no such count changed nothing.");
     // A run that changed nothing says what it checked, never that it made no calls: its reads are calls, and the
     // record has them (Eval: "No calls were made" after three reads).
     expect(SHARED_INSTRUCTIONS).toContain("When nothing\nchanged, say what you checked and that you changed nothing");
