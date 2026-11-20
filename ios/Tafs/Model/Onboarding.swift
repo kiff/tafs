@@ -26,6 +26,13 @@ enum Onboarding {
 
     /// The welcome's age line for the person's country (the device's region): its own age where the law asks for more
     /// than 16 (`MinimumAge`, legal-i18n's table: India, Indonesia, Brazil…), else the line every country reads.
+    /// Today's sign-in screen (the switch off): the country's own age only where it's above 16 (India, Indonesia,
+    /// Brazil…), so a country that asks for more is told before signing in; anywhere else, nothing new is shown.
+    static func raisedAgeLine(region: String? = Locale.current.region?.identifier) -> String? {
+        let age = MinimumAge.of(region)
+        return age > MinimumAge.standard ? Words.Onboarding.ageN(age: "\(age)") : nil
+    }
+
     static func ageLine(region: String? = Locale.current.region?.identifier) -> String {
         let age = MinimumAge.of(region)
         return age > MinimumAge.standard ? Words.Onboarding.ageN(age: "\(age)") : Words.Onboarding.age
