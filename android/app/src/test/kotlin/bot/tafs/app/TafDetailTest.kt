@@ -59,6 +59,19 @@ class TafDetailTest {
     assertEquals("7 calls left", card.leftLine)
   }
 
+  /**
+   * A Card's row and TalkBack read the calls left as one line in the language's own order (`card.calls_left_line`, as iOS's
+   * #1567): English reads as before, one call is singular, and a money Card is its figure then its words, unchanged.
+   */
+  @Test fun theRowReadsCallsLeftAsOneLine() {
+    val seven = TafCard.merged("c", "Deploys", TafTemplates.deploys.rules, null, counted = mapOf("deploy" to 3))
+    assertEquals("7 calls left today of 10", seven.heroLine)
+    val one = TafCard.merged("c", "Deploys", TafTemplates.deploys.rules, null, counted = mapOf("deploy" to 9))
+    assertEquals("1 call left today of 10", one.heroLine)
+    val money = TafCard.merged("c", "Refunds", refunds.rules, null, used = mapOf("refund" to Money.eur(40.0)))
+    assertEquals("${Money.eur(1_960.0).formatted} left today of ${Money.eur(2_000.0).formatted}", money.heroLine)
+  }
+
   @Test fun useKiffCouldNotReadIsNeverShownAsZero() {
     val card = TafCard.merged("c", "Refunds", refunds.rules, null, unknown = setOf("refund"))
     assertEquals("a day · use unavailable", card.hero!!.words)

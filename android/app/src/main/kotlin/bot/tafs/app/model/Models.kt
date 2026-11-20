@@ -294,6 +294,20 @@ data class TafCard(
       return null
     }
 
+  /**
+   * The hero as one line, for where its figure isn't drawn apart (a Card's row, TalkBack): with a calls total whose use was read,
+   * `card.calls_left_line`, so each language puts the count where it belongs ("180 calls left today of 200"; Korean puts it
+   * last); otherwise the figure, then its words, as before (as iOS's `TafCard.heroLine`, #1567).
+   */
+  val heroLine: String?
+    get() {
+      val hero = hero ?: return null
+      val c = calls?.takeIf { total == null }
+      val used = c?.used ?: return "${hero.figure} ${hero.words}"
+      val left = maxOf(0, c.limit - used)
+      return Words.Card.callsLeftLine(count = left, window = c.window.current, limit = c.limit.toString())
+    }
+
   /** What's left, short enough for a Card's edge in the stack: "US$170 left", "998 calls left". */
   val leftLine: String?
     get() {
