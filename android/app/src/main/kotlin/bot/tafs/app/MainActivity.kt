@@ -265,6 +265,12 @@ class MainActivity : FragmentActivity() {
   override fun onStart() {
     super.onStart()
     app.vendorSignIn.attach(this) { tab -> vendorTab.launch(tab) }
+    app.appSignInTab.attach(this) { tab -> kiffTab.launch(tab) }
+  }
+
+  /** KIFF's sign-in tab (docs/onboarding.md, off), opened for a result the same way: gone with no link, it's left (Open again, Cancel). */
+  private val kiffTab = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
+    app.appSignInTab.closed(lifecycleScope)
   }
 
   /** The vendor's tab, opened for a result: it answers once the tab is gone, which marks the sign-in left (Open again, Cancel). */
@@ -275,11 +281,13 @@ class MainActivity : FragmentActivity() {
   override fun onPause() {
     super.onPause()
     app.vendorSignIn.paused()
+    app.appSignInTab.paused()
   }
 
   override fun onResume() {
     super.onResume()
     app.vendorSignIn.resumed(lifecycleScope)
+    app.appSignInTab.resumed(lifecycleScope)
     // A newer tafs on the track is offered on Home; Play answers "none" for a build it didn't install.
     runCatching { updates?.check() }
   }
@@ -291,10 +299,14 @@ class MainActivity : FragmentActivity() {
     deliverSignIn(intent)
   }
 
-  /** A vendor's sign-in came back (`tafs://planque/signed-in?...`): the step waiting on it goes on. */
+  /**
+   * A vendor's sign-in came back (`tafs://planque/signed-in?...`), or KIFF's (`dev.kiff.tafs:/oauth?...`): the step waiting on it
+   * goes on. KIFF's link is handed over as it came; `AppSignIn.answer` takes it only if it's exactly ours, with the attempt's state.
+   */
   private fun deliverSignIn(intent: Intent?) {
     val link = intent?.data ?: return
     if (link.scheme == "tafs" && link.host == "planque") app.vendorSignIn.deliver(link.toString())
+    if (link.scheme == "dev.kiff.tafs") app.appSignInTab.deliver(link.toString())
   }
 
   override fun onDestroy() {
@@ -302,6 +314,7 @@ class MainActivity : FragmentActivity() {
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
     app.vendorSignIn.detach(this)
+    app.appSignInTab.detach(this)
     app.push.askPermission = null
     runCatching { updates?.close() }
     super.onDestroy()

@@ -305,8 +305,9 @@ class KiffClient(
    * Row 39's sign-in, its last step (docs/android-app.md "Onboarding", behind [bot.tafs.app.model.ONBOARDING_ON]): KIFF's [code] from the Custom Tab,
    * with this attempt's [verifier] and the terms the person ticked ([termsVersion]), for a session. The device's keys and name go
    * exactly as [startDeviceSignIn] sends them, so KIFF makes the same device as a device-code sign-in: the same first-key rule,
-   * new-device email and second-device approval. Answers today's [DeviceToken]. KIFF's refusals come as [KiffError.Server] with
-   * their code: `invalid_grant` (the code expired or was used), `terms_outdated` (the tick is asked again), and the device flow's own.
+   * new-device email and second-device approval. Answers today's [DeviceToken]. KIFF's refusals come as [KiffError.Server] whose
+   * message is KIFF's `error`: `invalid_grant` (the code expired or was used), `terms_outdated` (the tick is asked again), and
+   * the device flow's own.
    */
   suspend fun appToken(
     code: String,
@@ -332,6 +333,12 @@ class KiffClient(
     }
     return call("POST", "/v1/auth/app/token", body, authorized = false)
   }
+
+  /** The terms' version in force (`GET /v1/auth/app/terms`): read when the welcome shows, so the version sent is the one the person saw. */
+  suspend fun appTerms(): String = call<AppTerms>("GET", "/v1/auth/app/terms", authorized = false).termsVersion
+
+  @Serializable
+  private data class AppTerms(@SerialName("terms_version") val termsVersion: String)
 
   // MARK: Approving again
 

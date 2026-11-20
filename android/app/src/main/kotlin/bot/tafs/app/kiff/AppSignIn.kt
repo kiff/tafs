@@ -92,3 +92,11 @@ object AppSignIn {
   private fun b64(bytes: ByteArray): String = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
   private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
 }
+
+/** The in-app sign-in ended without a code: KIFF's refusal on the way back (`access_denied`…), or [STATE_MISMATCH]. */
+class AppSignInRefused(val error: String) : Exception(error) {
+  companion object {
+    /** A link back that wasn't this attempt's: never used. */
+    const val STATE_MISMATCH = "state_mismatch"
+  }
+}

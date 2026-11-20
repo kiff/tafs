@@ -63,6 +63,8 @@ class TafsApplication : Application() {
 
   /** The vendor's own sign-in page, in a browser tab. */
   val vendorSignIn: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }
+  /** KIFF's sign-in page in a Custom Tab, waiting for `dev.kiff.tafs:/oauth` (docs/onboarding.md, off). */
+  val appSignInTab: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }
 
   /** Firebase and the notification permission: alerts that reach this phone with tafs closed. */
   val push: FirebasePush by lazy { FirebasePush(this) }
@@ -97,7 +99,7 @@ class TafsApplication : Application() {
   val model: bot.tafs.app.app.AppModel by lazy {
     bot.tafs.app.app.AppModel(
       bot.tafs.app.app.SampleStore(java.io.File(filesDir, "sample.json")), signer, kiff, cloud, secrets, deviceName = deviceName,
-      push = push, planque = planque, vendorSignIn = vendorSignIn, purchases = purchases, playBilling = playBilling,
+      push = push, planque = planque, vendorSignIn = vendorSignIn, appSignInTab = appSignInTab, purchases = purchases, playBilling = playBilling,
       openedFiles = java.io.File(cacheDir, "attachments"),
     )
   }

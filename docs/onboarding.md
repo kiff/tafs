@@ -44,5 +44,13 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   `dev.kiff.tafs:/oauth` exactly, with this attempt's `state`. Another state, or one given twice, is never used, not
   even as a refusal. `KiffClient.appToken` trades the code at `POST /v1/auth/app/token` with its verifier, the terms
   version and the device exactly as `/v1/auth/device/start` sends it, for today's `DeviceToken`. KIFF's refusals keep
-  their code (`invalid_grant`, `terms_outdated`). The Custom Tab, its intent filter and the token step's place in
-  the sign-in come next, with the three cards and the first Home.
+  their code as KIFF's `error` (`invalid_grant`, `terms_outdated`); `appTerms` reads the version in force.
+- **The tab** (`AppModel.signInInApp`): KIFF's page opens in a Custom Tab from tafs's own screen, in its task, the
+  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). So leaving for the mail app for an email code
+  and coming back from the launcher returns to the tab. A tab closed with no link is left, with Open again and
+  Cancel. The manifest takes `dev.kiff.tafs:` links (Android matches a link with no host by its scheme only), and
+  `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
+  code goes to `appToken`, then to today's `takeSession`: the same approval key, account and celebration as the
+  device-code sign-in. A link with another state is `AppSignInRefused` `state_mismatch` and never reaches KIFF;
+  KIFF's `access_denied` is its own refusal. The welcome's words for each refusal, and Continue calling it, come with
+  the three cards and the first Home.

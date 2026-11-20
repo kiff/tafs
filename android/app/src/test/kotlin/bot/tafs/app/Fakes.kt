@@ -145,10 +145,11 @@ fun testModel(
   scope: kotlinx.coroutines.CoroutineScope? = null,
   push: bot.tafs.app.push.PushPlatform = bot.tafs.app.push.NoPush,
   vendorSignIn: bot.tafs.app.kiff.VendorSignIn = bot.tafs.app.kiff.NoVendorSignIn,
+  appSignInTab: bot.tafs.app.kiff.VendorSignIn = bot.tafs.app.kiff.NoVendorSignIn,
   /** Where files opened full size go: a test's own folder. */
   openedFiles: java.io.File = java.nio.file.Files.createTempDirectory("opened").toFile(),
 ) = AppModel(
   store, signer, KiffClient(transport), TafsCloud(transport), secrets,
   clock = clock, sampleReplyDelayMs = sampleReplyDelayMs, followScope = scope, push = push,
-  planque = bot.tafs.app.kiff.PlanqueClient(transport), vendorSignIn = vendorSignIn, openedFiles = openedFiles,
+  planque = bot.tafs.app.kiff.PlanqueClient(transport), vendorSignIn = vendorSignIn, appSignInTab = appSignInTab, openedFiles = openedFiles,
 ).also { if (start) it.startSample() }

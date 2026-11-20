@@ -41,13 +41,20 @@ class AppTokenTest {
   }
 
   @Test fun kiffsRefusalKeepsItsCode() = runTest {
-    transport.answer("POST /v1/auth/app/token", 409, """{"error":"terms_outdated","code":"terms_outdated"}""")
+    // KIFF's own shape (kiff/cloud's app sign-in README): the code is `error`.
+    transport.answer("POST /v1/auth/app/token", 409, """{"error":"terms_outdated","terms_version":"2026-11-14"}""")
     try {
       client.appToken("c_1", "v".repeat(43), "2025-01")
       fail("a refusal answers no session")
     } catch (e: KiffError.Server) {
       assertEquals(409, e.status)
-      assertEquals("terms_outdated", e.code)
+      assertEquals("terms_outdated", e.message)
     }
+  }
+
+  @Test fun theTermsInForceAreRead() = runTest {
+    transport.answer("GET /v1/auth/app/terms", 200, """{"terms_version":"2026-11-14"}""")
+    assertEquals("2026-11-14", client.appTerms())
+    assertNull(transport.requests.single().headers["Authorization"])
   }
 }
