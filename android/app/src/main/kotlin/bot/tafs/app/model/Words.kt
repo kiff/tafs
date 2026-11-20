@@ -337,6 +337,7 @@ object Words {
     fun amountWindow(amount: String, window: String): String = Res.s(R.string.card_amount_window, amount, window)
     fun asksYou(formatted: String, sumLabel: String): String = Res.s(R.string.card_asks_you, formatted, sumLabel)
     fun callsLeft(count: Int): String = Res.p(R.plurals.card_calls_left, count, Res.number(count))
+    fun callsLeftLine(count: Int, window: String, limit: String): String = Res.p(R.plurals.card_calls_left_line, count, Res.number(count), window, limit)
     fun callsUsedOf(count: Int, used: String, window: String): String = Res.p(R.plurals.card_calls_used_of, count, Res.number(count), used, window)
     fun callsWindow(count: Int, window: String): String = Res.p(R.plurals.card_calls_window, count, Res.number(count), window)
     val cardConfirmedKiff: String get() = Res.s(R.string.card_card_confirmed_kiff)

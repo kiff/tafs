@@ -9,6 +9,10 @@
     "one": "{count} call left",
     "other": "{count} calls left"
   },
+  "card.calls_left_line": {
+    "one": "{count} call left {window} of {limit}",
+    "other": "{count} calls left {window} of {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} of {count} calls {window}",
     "other": "{used} of {count} calls {window}"

@@ -9,6 +9,10 @@
     "one": "Queda {count} llamada",
     "other": "Quedan {count} llamadas"
   },
+  "card.calls_left_line": {
+    "one": "Queda {count} llamada {window} de {limit}",
+    "other": "Quedan {count} llamadas {window} de {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} de {count} llamada {window}",
     "other": "{used} de {count} llamadas {window}"

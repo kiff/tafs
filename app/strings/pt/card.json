@@ -9,6 +9,10 @@
     "one": "{count} chamada por usar",
     "other": "{count} chamadas por usar"
   },
+  "card.calls_left_line": {
+    "one": "{count} chamada por usar {window} de {limit}",
+    "other": "{count} chamadas por usar {window} de {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} de {count} chamada {window}",
     "other": "{used} de {count} chamadas {window}"

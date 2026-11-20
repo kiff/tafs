@@ -394,7 +394,7 @@ struct OverviewView: View {
     /// else its calls.
     static func cardLine(_ taf: Taf) -> String? {
         guard let card = taf.shownCards.first else { return nil }
-        if let hero = card.hero { return "\(hero.figure) \(hero.words)" }
+        if let line = card.heroLine { return line }
         if let t = card.total {
             guard let used = t.used else { return "\(t.limit.formatted) \(t.window.label)" }
             return "\(used.formatted) of \(t.limit.formatted) \(t.window.current)"
