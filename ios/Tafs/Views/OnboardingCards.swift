@@ -144,7 +144,8 @@ struct OnboardingPicture: View {
         .frame(maxWidth: 420)
     }
 
-    /// A taf's Card as its Card tab draws it: the sample's Support replies Card, 28 left of 40 today, issued by you.
+    /// A taf's Card as its Card tab draws it: the sample's "Support replies · Zendesk" Card (`sample.card.refunds_stripe`,
+    /// a key older than its words), 28 replies left of 40 today, issued by you.
     private var card: some View {
         TafCardFace(card: Self.sampleCard, issuedBy: Words.Common.you, color: Theme.tafColor(0))
             .frame(maxWidth: TafCardFace.width)
@@ -177,7 +178,8 @@ struct OnboardingPicture: View {
         }
     }
 
-    /// The Card the screenshots show (`Screenshots.cards`): Support replies, 12 of 40 replies used today.
+    /// The Card the screenshots show (`Screenshots.cards`): "Support replies · Zendesk" with Support replies' own rules,
+    /// 12 of 40 replies used today, so its title and its rules are one Card.
     static var sampleCard: TafCard {
         TafCard(id: "onboarding-support", title: Words.Sample.Card.refundsStripe, rules: TafTemplates.support.rules,
                 calls: CardTotal(limit: 40, used: 12, window: .day))

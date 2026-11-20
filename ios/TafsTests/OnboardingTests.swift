@@ -50,6 +50,27 @@ final class OnboardingTests: XCTestCase {
         XCTAssertFalse(Onboarding.showsCards(seen: false), "ships off")
     }
 
+    /// The first Home shows for anyone who may use Coach with the new onboarding on, whatever tafs cloud says there;
+    /// never with it off, and never for someone who may not use Coach.
+    func testTheFirstHomeShowsWithTheSwitchForWhoeverMayUseCoach() {
+        XCTAssertTrue(Onboarding.showsFirstHome(on: true, mayUseCoach: true))
+        XCTAssertFalse(Onboarding.showsFirstHome(on: true, mayUseCoach: false), "a viewer reads where shared tafs show, as today")
+        XCTAssertFalse(Onboarding.showsFirstHome(on: false, mayUseCoach: true), "off: Home as it ships")
+        XCTAssertFalse(Onboarding.showsFirstHome(mayUseCoach: true), "ships off")
+    }
+
+    /// tafs cloud's own empty line comes first when it sends one; the app's words only when it doesn't.
+    func testTheFirstHomeSaysTafsCloudsLineFirst() {
+        let cloud = Onboarding.firstHomeLines(cloud: "Nothing set up yet. Ask Coach.")
+        XCTAssertEqual(cloud.title, "Nothing set up yet. Ask Coach.")
+        XCTAssertNil(cloud.lead, "the server's words alone, no app line under them")
+        for none in [nil, ""] as [String?] {
+            let own = Onboarding.firstHomeLines(cloud: none)
+            XCTAssertEqual(own.title, Words.Home.noTafs)
+            XCTAssertEqual(own.lead, Words.Onboarding.homeLead)
+        }
+    }
+
     /// The pictures draw the sample's own tafs, the ones that never move money, and its Card, 28 left of 40.
     func testThePicturesDrawTheSamplesOwnTafsAndCard() {
         XCTAssertEqual(OnboardingPicture.sampleTafs.map(\.name),
