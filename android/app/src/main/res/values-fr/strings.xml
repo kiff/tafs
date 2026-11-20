@@ -1520,6 +1520,7 @@
     <string name="needs_you_your_step_not_answered_unconfirmed">Pas de réponse envoyée : cela n\'a pas été confirmé.</string>
     <string name="needs_you_your_step_set_up_hello">Configurez Windows Hello (un code PIN suffit) pour répondre ici, ou répondez depuis votre téléphone.</string>
     <string name="onboarding_age">Vous devez avoir au moins 16 ans, ou l\'âge du consentement numérique de votre pays s\'il est plus élevé.</string>
+    <string name="onboarding_age_n">Vous devez avoir au moins %1$s ans.</string>
     <string name="onboarding_card_lead">Chaque taf travaille dans le cadre d\'une Card que vous émettez : ce qu\'il peut faire, avec quelle app et pour combien. Au-delà, il vous demande.</string>
     <string name="onboarding_card_title">Une Card est votre autorisation</string>
     <string name="onboarding_consent_tick">J\'accepte %1$s et %2$s.</string>

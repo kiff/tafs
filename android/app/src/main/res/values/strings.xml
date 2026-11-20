@@ -1520,6 +1520,7 @@
     <string name="needs_you_your_step_not_answered_unconfirmed">Not answered: it wasn\'t confirmed.</string>
     <string name="needs_you_your_step_set_up_hello">Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone.</string>
     <string name="onboarding_age">You must be at least 16, or your country\'s age of digital consent if it\'s higher.</string>
+    <string name="onboarding_age_n">You must be at least %1$s.</string>
     <string name="onboarding_card_lead">Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.</string>
     <string name="onboarding_card_title">A Card is your permission</string>
     <string name="onboarding_consent_tick">I agree to %1$s and %2$s.</string>
