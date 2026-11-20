@@ -1557,6 +1557,21 @@ object Words {
       val setUpHello: String get() = Res.s(R.string.needs_you_your_step_set_up_hello)
     }
   }
+  object Onboarding {
+    val age: String get() = Res.s(R.string.onboarding_age)
+    val cardLead: String get() = Res.s(R.string.onboarding_card_lead)
+    val cardTitle: String get() = Res.s(R.string.onboarding_card_title)
+    val controlLead: String get() = Res.s(R.string.onboarding_control_lead)
+    val controlLeadAndroid: String get() = Res.s(R.string.onboarding_control_lead_android)
+    val controlLeadMac: String get() = Res.s(R.string.onboarding_control_lead_mac)
+    val controlTitle: String get() = Res.s(R.string.onboarding_control_title)
+    val getStarted: String get() = Res.s(R.string.onboarding_get_started)
+    val homeLead: String get() = Res.s(R.string.onboarding_home_lead)
+    val howItWorks: String get() = Res.s(R.string.onboarding_how_it_works)
+    val skip: String get() = Res.s(R.string.onboarding_skip)
+    val tafsLead: String get() = Res.s(R.string.onboarding_tafs_lead)
+    val tafsTitle: String get() = Res.s(R.string.onboarding_tafs_title)
+  }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
     val nothingYet: String get() = Res.s(R.string.overview_nothing_yet)

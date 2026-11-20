@@ -1,0 +1,15 @@
+{
+  "onboarding.age": "You must be at least 16, or your country's age of digital consent if it's higher.",
+  "onboarding.card_lead": "Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.",
+  "onboarding.card_title": "A Card is your permission",
+  "onboarding.control_lead": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.",
+  "onboarding.control_lead_android": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.",
+  "onboarding.control_lead_mac": "When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.",
+  "onboarding.control_title": "You stay in control",
+  "onboarding.get_started": "Get started",
+  "onboarding.home_lead": "Tell Coach what you'd like done, in your own words. It sets the taf up with you and shows you its Card before anything runs.",
+  "onboarding.how_it_works": "How tafs works",
+  "onboarding.skip": "Skip",
+  "onboarding.tafs_lead": "A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.",
+  "onboarding.tafs_title": "Your tafs work for you"
+}

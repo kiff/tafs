@@ -75660,6 +75660,695 @@
         }
       }
     },
+    "onboarding.age": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du musst mindestens 16 sein, oder so alt wie das Alter für digitale Einwilligung in deinem Land, wenn es höher ist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You must be at least 16, or your country's age of digital consent if it's higher."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debes tener al menos 16 años, o la edad de consentimiento digital de tu país si es mayor."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devez avoir au moins 16 ans, ou l'âge du consentement numérique de votre pays s'il est plus élevé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devi avere almeno 16 anni, o l'età del consenso digitale del tuo paese se è più alta."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je moet minstens 16 zijn, of de leeftijd voor digitale toestemming in je land als die hoger is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Musisz mieć co najmniej 16 lat albo tyle, ile wynosi wiek zgody cyfrowej w Twoim kraju, jeśli jest wyższy."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior."
+          }
+        }
+      }
+    },
+    "onboarding.card_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder taf arbeitet innerhalb einer Card, die du ausstellst: was er darf, mit welcher App und wie viel. Darüber hinaus fragt er dich."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada taf trabaja dentro de una Card que tú emites: qué puede hacer, con qué app y cuánto. Más allá, te pregunta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque taf travaille dans le cadre d'une Card que vous émettez : ce qu'il peut faire, avec quelle app et pour combien. Au-delà, il vous demande."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni taf lavora entro una Card che emetti tu: cosa può fare, con quale app e quanto. Oltre, ti chiede."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke taf werkt binnen een Card die jij uitgeeft: wat hij mag, met welke app en hoeveel. Daarbuiten vraagt hij het jou."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Każdy taf działa w ramach Card, którą wydajesz: co może robić, w jakiej aplikacji i za ile. Poza tym pyta Ciebie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada taf trabalha dentro de uma Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe."
+          }
+        }
+      }
+    },
+    "onboarding.card_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Card ist deine Erlaubnis"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A Card is your permission"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una Card es tu permiso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une Card est votre autorisation"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una Card è il tuo permesso"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een Card is jouw toestemming"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Card to Twoje pozwolenie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma Card é a sua autorização"
+          }
+        }
+      }
+    },
+    "onboarding.control_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braucht dich ein taf, wartet er in „Braucht dich“ und, falls du eine hast, auf deiner Uhr. Du genehmigst mit Face ID oder Touch ID oder lehnst ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando un taf te necesita, espera en «Te necesita» y, si tienes uno, en tu reloj. Apruebas con Face ID o Touch ID, o rechazas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec Face ID ou Touch ID, ou vous refusez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull'orologio. Approvi con Face ID o Touch ID, oppure rifiuti."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met Face ID of Touch ID, of weigert."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa."
+          }
+        }
+      }
+    },
+    "onboarding.control_lead_android": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braucht dich ein taf, wartet er in „Braucht dich“ und, falls du eine hast, auf deiner Uhr. Du genehmigst mit deiner Displaysperre oder lehnst ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando un taf te necesita, espera en «Te necesita» y, si tienes uno, en tu reloj. Apruebas con el bloqueo de pantalla, o rechazas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec le verrouillage de l'écran, ou vous refusez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull'orologio. Approvi con il blocco schermo, oppure rifiuti."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met je schermvergrendeling, of weigert."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz blokadą ekranu albo odrzucasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com o bloqueio de ecrã, ou recusa."
+          }
+        }
+      }
+    },
+    "onboarding.control_lead_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst mit Touch ID oder auf deinem Handy oder lehnst ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando un taf te necesita, espera en «Te necesita». Apruebas con Touch ID o en tu teléfono, o rechazas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez avec Touch ID ou sur votre téléphone, ou vous refusez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi con Touch ID o sul telefono, oppure rifiuti."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed met Touch ID of op je telefoon, of weigert."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando um taf precisa de si, espera em «Precisa de si». Aprova com Touch ID ou no telemóvel, ou recusa."
+          }
+        }
+      }
+    },
+    "onboarding.control_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du behältst die Kontrolle"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You stay in control"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú tienes el control"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous gardez le contrôle"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il controllo resta a te"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jij houdt de controle"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrola zostaje przy Tobie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O controlo é seu"
+          }
+        }
+      }
+    },
+    "onboarding.get_started": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los geht's"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inizia"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan de slag"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaczynamy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Começar"
+          }
+        }
+      }
+    },
+    "onboarding.home_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag Coach in deinen eigenen Worten, was erledigt werden soll. Er richtet den taf mit dir ein und zeigt dir seine Card, bevor etwas läuft."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tell Coach what you'd like done, in your own words. It sets the taf up with you and shows you its Card before anything runs."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dile a Coach con tus palabras qué quieres que se haga. Prepara el taf contigo y te enseña su Card antes de que nada se ejecute."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dites à Coach, avec vos mots, ce que vous voulez faire faire. Il met le taf en place avec vous et vous montre sa Card avant que rien ne tourne."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di' a Coach con parole tue cosa vuoi che venga fatto. Prepara il taf con te e ti mostra la sua Card prima che parta qualsiasi cosa."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vertel Coach in je eigen woorden wat je gedaan wilt hebben. Die zet de taf met je op en laat je de Card zien voordat er iets draait."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Powiedz Coachowi własnymi słowami, co ma zostać zrobione. Skonfiguruje z Tobą tafa i pokaże Ci jego Card, zanim cokolwiek się uruchomi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf consigo e mostra-lhe a Card antes de qualquer coisa correr."
+          }
+        }
+      }
+    },
+    "onboarding.how_it_works": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So funktioniert tafs"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How tafs works"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo funciona tafs"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment fonctionne tafs"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come funziona tafs"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zo werkt tafs"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jak działa tafs"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como funciona o tafs"
+          }
+        }
+      }
+    },
+    "onboarding.skip": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salta"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overslaan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomiń"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorar"
+          }
+        }
+      }
+    },
+    "onboarding.tafs_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein taf erledigt eine Aufgabe für dich, etwa Support-Antworten, verspätete Pakete oder das Nachfassen bei Leads. Frag Coach, und er richtet einen mit dir ein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un taf hace un trabajo por ti, como respuestas de soporte, paquetes con retraso o seguimiento de contactos. Pídeselo a Coach y lo prepara contigo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un taf fait un travail pour vous, comme les réponses au support, les colis en retard ou le suivi des prospects. Demandez à Coach, il le met en place avec vous."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un taf fa un lavoro per te, come le risposte al supporto, i pacchi in ritardo o il seguito dei contatti. Chiedi a Coach e lo prepara con te."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een taf doet één taak voor je, zoals supportantwoorden, late pakketten of opvolging van leads. Vraag het Coach en die zet er een met je op."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taf wykonuje za Ciebie jedno zadanie, np. odpowiedzi dla klientów, spóźnione paczki czy kontakt z potencjalnymi klientami. Poproś Coacha, a skonfiguruje go z Tobą."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um taf faz um trabalho por si, como respostas de suporte, encomendas atrasadas ou acompanhamento de contactos. Peça ao Coach e ele configura um consigo."
+          }
+        }
+      }
+    },
+    "onboarding.tafs_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine tafs arbeiten für dich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your tafs work for you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus tafs trabajan para ti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos tafs travaillent pour vous"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I tuoi taf lavorano per te"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je tafs werken voor je"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twoje tafy pracują dla Ciebie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os seus tafs trabalham para si"
+          }
+        }
+      }
+    },
     "overview.hero": {
       "extractionState": "manual",
       "localizations": {
