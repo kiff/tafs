@@ -1,0 +1,1 @@
+- **Wear OS, behind tafs cloud's switch (off): the phone's half of chatting with a taf from the watch.** A message names its taf, signed inside the body; a refusal says Open on phone and never reaches Coach; `held` and `more` reach the watch ([watch-wear.md](docs/watch-wear.md)).

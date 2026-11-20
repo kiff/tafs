@@ -439,12 +439,23 @@ The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch
 | `refuse` | Refuses one held call, by `hold_id` |
 | `halt` | Halts one taf (`taf_id`), or every taf (`all: true`, in so many words: a body without its taf is never every taf) |
 | `coach` | Sends Coach a message as text (a watch from before Ask tafs; this one never sends it) |
-| `ask` | Ask tafs: `client_id`, `text`, `reply_to`; signed with the device key and sent to tafs cloud, which answers its receipt |
+| `ask` | Ask tafs: `client_id`, `text`, `reply_to`, and `taf_id` to chat with a taf; signed with the device key and sent to tafs cloud, which answers its receipt |
 | `asks` | Reads the watch's asks as tafs cloud has them, updated after `since` (or in the last day) |
 | `brief` | Reads Your brief as the phone shows it, or says there's none (`no_brief`); asked only with the watch's switch on (below) |
 | `taf` | One taf's page (Wear v2), by `taf_id`: its state and job, each Card's title, face (figure and line) and rules as the phone's Card tab draws them, and how many of its calls wait on the person (`taf`); read again within the same floor as Needs you |
 | `calendar` | A calendar day (Wear v2), `day` as `YYYY-MM-DD` or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day alone, its line and that day's events in time order with each taf's name (`calendar`); the phone's own calendar screen keeps its read |
 | `account` | Who is signed in, the account's name and the plan's line as Account shows it (`account`) |
+
+**Chatting with a taf, the phone's half** (behind tafs cloud's `TAFS_WATCH_TAF_CHAT`, off; the wrist's screens follow the
+owner's picks; docs/watch-ask.md). An `ask` with `taf_id` names the phone's taf: the phone sends that taf's tafs cloud id as
+`taf_id`, inside the bytes its device key signs (`TafsCloud.watchAsk`), so it can't be changed after. The words go only into
+that taf's own chat. A taf the phone doesn't list sends nothing, and tafs cloud's refusals that say the phone has it (its switch
+off, `watch_taf_chat_off` or `watch_off`; `no_taf`; `coach_taf`) are Open on phone (`WatchRelay.refusedTafMessage`): never
+Coach's chat. The rest are an ask's (a view-only phone's line, the AI consent, a 5xx's "may have arrived"). The receipt carries
+tafs cloud's `held` (the taf waits on the person, on the phone; the watch never approves) and `more` (the rest is on the phone),
+which an older watch ignores, and `kind: "taf"`, so the watch keeps none of a taf's chat (no Inbox line, no place in Coach's
+conversation); a phone from before refuses an `ask` with `taf_id` (an unknown field), so the words never reach
+Coach. Nothing of a taf's chat is kept on the watch (`WatchAskTest`, `WatchLinkTest.onlyAMessageToATafCarriesItsTaf`).
 
 And the phone sends the watch one message, never a request it answers: **`ask-result`**, an ask's new state, when tafs
 cloud's push says it changed.

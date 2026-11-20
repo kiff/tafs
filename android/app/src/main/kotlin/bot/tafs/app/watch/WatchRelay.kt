@@ -98,14 +98,19 @@ class WatchRelay(
    */
   private suspend fun ask(request: WatchRequest.Ask): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
+    // Chatting with a taf (docs/watch-wear.md): the watch names the phone's taf, tafs cloud takes its own id. One the phone
+    // doesn't list, or has no tafs cloud id for, is the phone's to open: never Coach's chat.
+    val tafCloudId = request.tafId?.let { id ->
+      model.state.value.tafs.firstOrNull { it.id == id }?.cloudId ?: return WatchReply.Failed(Words.Watch.openOnPhone)
+    }
     // The AI consent is tafs cloud's to check: it refuses with `ai_consent_required`, said in the watch's words below.
     return try {
-      val ask = model.watchAsk(request.clientId, request.text, request.replyTo) ?: return WatchReply.SignedOut
+      val ask = model.watchAsk(request.clientId, request.text, request.replyTo, tafCloudId) ?: return WatchReply.SignedOut
       WatchReply.AskTaken(lineOf(ask))
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: bot.tafs.app.kiff.CloudError) {
-      refusedAsk(e)
+      if (tafCloudId != null) refusedTafMessage(e) else refusedAsk(e)
     } catch (_: java.io.IOException) {
       // Sent, perhaps, with no answer back: only a retry with the same id tells.
       WatchReply.Unsure
@@ -199,12 +204,20 @@ class WatchRelay(
   companion object {
     /** An ask as the watch draws it: tafs cloud's state and words, the taf's name, and the checked line, as they come. */
     fun lineOf(ask: bot.tafs.app.kiff.WatchAsk): AskLine =
-      AskLine(ask.id, ask.clientId, ask.state, ask.taf?.name, ask.line, ask.words, ask.updated)
+      AskLine(ask.id, ask.clientId, ask.state, ask.taf?.name, ask.line, ask.words, ask.updated, held = ask.held, more = ask.more, kind = ask.kind)
 
     /**
      * tafs cloud's refusal of an ask, in its words: asking from the watch not on yet says so; 5xx, which may have come after the
      * ask was taken, is "may have arrived", so the watch retries with the same id; anything else, tafs cloud's own words.
      */
+    /**
+     * tafs cloud's refusal of a message to a taf: its switch off (`watch_taf_chat_off`), the taf not the person's to use
+     * (`no_taf`), Coach named as a taf (`coach_taf`), or the watch's own switch off: the phone has it, Open on phone. Never a
+     * fallback to Coach. The rest is as for an ask ([refusedAsk]): a view-only phone, the AI consent, a 5xx.
+     */
+    fun refusedTafMessage(e: bot.tafs.app.kiff.CloudError): WatchReply =
+      if (e.status == 404 || e.code == "coach_taf") WatchReply.Failed(Words.Watch.openOnPhone) else refusedAsk(e)
+
     fun refusedAsk(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
       e.code == "watch_off" -> WatchReply.Failed(Words.Watch.askNotOn)
       e.code == "ai_consent_required" -> WatchReply.Failed(Words.Watch.askNeedsConsent)

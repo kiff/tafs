@@ -23,6 +23,7 @@ class WatchLinkTest {
       WatchRequest.Coach(now, "Pause refunds until Monday"),
       WatchRequest.Ask(now, "w_7f3a9c21", "Move my four o'clock call to six"),
       WatchRequest.Ask(now, "w_7f3a9c22", "Make it seven", replyTo = "wa_01"),
+      WatchRequest.Ask(now, "w_7f3a9c23", "Refund order 1182", tafId = "refunds-1"),
       WatchRequest.Asks(now),
       WatchRequest.Asks(now, since = "2026-11-16T19:00:00.000Z"),
       WatchRequest.Brief(now),
@@ -182,5 +183,13 @@ class WatchLinkTest {
     for (reply in listOf(WatchReply.AskTaken(line), WatchReply.AskList(listOf(line, line.copy(id = "wa_02", state = AskLine.WORKING, tafName = "Inbox"))))) {
       assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
     }
+  }
+
+  /** Coach's ask carries no `taf_id`, so a phone from before chatting with a taf still takes it; a taf's message names its taf. */
+  @org.junit.Test fun onlyAMessageToATafCarriesItsTaf() {
+    val coach = String(WatchLink.encode(WatchRequest.Ask(1L, "w_7f3a9c21", "Hello")).second)
+    org.junit.Assert.assertFalse(coach, coach.contains("taf_id"))
+    val taf = String(WatchLink.encode(WatchRequest.Ask(1L, "w_7f3a9c21", "Hello", tafId = "refunds-1")).second)
+    org.junit.Assert.assertTrue(taf, taf.contains("\"taf_id\":\"refunds-1\""))
   }
 }
