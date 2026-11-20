@@ -14,6 +14,11 @@ enum WatchLook {
     /// Under your words in the conversation, and the words on it (W4).
     static let mineGround = Color(hex: 0x3A2A22)
     static let onMineGround = Color(hex: 0xFFE6D6)
+    /// A taf's own words in its chat (chatting with a taf): green, so Coach's blue and yours stay apart. The mockup's values,
+    /// for Wear OS to take too.
+    static let taf = Color(hex: 0x8FE0B0)
+    static let tafGround = Color(hex: 0x17271F)
+    static let onTafGround = Color(hex: 0xDDF5E6)
     /// Held, waits for you: "Needs you", Approve on your phone.
     static let held = Color(hex: 0xFFB547)
     /// Done: the Sent check.

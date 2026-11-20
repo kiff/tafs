@@ -40,9 +40,11 @@ extension TafsCloud {
         var words: String
         /// The request this one replies to, shown under it.
         var replyTo: String?
+        /// `taf`: a message to a taf the person chose (chatting with a taf), not a request to Coach. Nil for Coach's.
+        var kind: String? = nil
 
         enum CodingKeys: String, CodingKey {
-            case id, said, taf, state, line, words
+            case id, said, taf, state, line, words, kind
             case saidAt = "said_at", replyTo = "reply_to"
         }
 
@@ -62,6 +64,7 @@ extension TafsCloud {
             line = (try? c.decode(String.self, forKey: .line)).flatMap { $0.isEmpty ? nil : $0 }
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
             replyTo = try? c.decode(String.self, forKey: .replyTo)
+            kind = try? c.decode(String.self, forKey: .kind)
         }
 
         /// What came of it, as the watch shows it: tafs cloud's line when there is one, else its words for the state.
@@ -91,9 +94,10 @@ extension TafsCloud {
         return WatchDayList(days: (read?.days ?? []).compactMap(\.value), today: read?.today)
     }
 
-    /// The turns from tafs cloud's answer, oldest first as it sends them; one this app can't read is left out.
+    /// The turns from tafs cloud's answer, oldest first as it sends them; one this app can't read is left out, and so is a
+    /// message to a taf (`kind: "taf"`, chatting with a taf): it's in that taf's own chat on the phone, not Coach's.
     static func watchTurns(decoding data: Data) -> [WatchTurn] {
         struct Response: Decodable { let turns: [LenientItem<WatchTurn>]? }
-        return ((try? JSONDecoder().decode(Response.self, from: data))?.turns ?? []).compactMap(\.value)
+        return ((try? JSONDecoder().decode(Response.self, from: data))?.turns ?? []).compactMap(\.value).filter { $0.kind != "taf" }
     }
 }

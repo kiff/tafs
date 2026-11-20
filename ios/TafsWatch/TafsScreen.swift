@@ -27,7 +27,14 @@ struct TafsScreen: View {
         case .loaded(let tafs):
             List {
                 ForEach(tafs) { taf in
-                    if opensPages {
+                    if opensPages && WatchTafChat.on {
+                        // 1A: a taf opens its chat, with its page one swipe below.
+                        NavigationLink {
+                            TafChatScreen(taf: taf, chat: model.chat(taf), page: { model.page(taf) }, openInbox: openInbox)
+                        } label: {
+                            TafRow(taf: taf, answer: nil, offersHalt: false) {}
+                        }
+                    } else if opensPages {
                         NavigationLink {
                             TafPageScreen(model: model.page(taf), openInbox: openInbox)
                         } label: {

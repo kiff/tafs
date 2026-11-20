@@ -29,6 +29,11 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case coachSend = "coach_send"
         /// v2 (W2): Coach's answer so far to the words a ticket names, and whether Coach is still at it. Read only.
         case coachRead = "coach_read"
+        /// Chatting with a taf, Read more: the whole answer to the watch request a ticket names, read only on the tap.
+        /// Read only.
+        case askFull = "ask_full"
+        /// Chatting with a taf: the last turns of the person's own chat with the taf in `taf`, as the phone shows it. Read only.
+        case tafChat = "taf_chat"
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -88,6 +93,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .coachSend:
             return given(text) && (text ?? "").count <= Self.coachLimit && (taf.map { given($0) && $0.count <= Self.tafIDLimit } ?? true)
         case .coachRead: return ticket?.isComplete ?? false
+        case .askFull: return (ticket?.isComplete ?? false) && ticket?.askID != nil
+        case .tafChat: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
         }
     }
 }
@@ -130,10 +137,12 @@ struct WatchReply: Codable, Equatable, Sendable {
     var ticket: WatchCoachTicket?
     /// `coachRead`: Coach is still at it (its chat says it's working).
     var answering: Bool?
+    /// `tafChat`: the last turns of the person's chat with the taf, oldest first.
+    var chat: [WatchChatLine]?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
-         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil) {
+         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -145,7 +154,23 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.line = line
         self.ticket = ticket
         self.answering = answering
+        self.chat = chat
     }
+}
+
+/// One turn of a taf's chat as the wrist shows it (chatting with a taf): who said it, when, and its words cut as an answer is.
+/// Shown while the chat is open and never kept on the watch.
+struct WatchChatLine: Codable, Equatable, Sendable, Identifiable {
+    var id: String
+    /// The person (true) or the taf.
+    var mine: Bool
+    var at: Date
+    var text: String
+    /// Cut: the rest is on the phone.
+    var more: Bool
+
+    /// The most turns the wrist shows from before this visit.
+    static let last = 6
 }
 
 /// Where Coach's answer to the words the watch sent will be (v2's Send, W2): Coach's chat, the conversation the words
@@ -267,6 +292,15 @@ struct WatchCoachAnswer: Codable, Equatable, Sendable {
     /// The answer holds a card or a step: "Approve on your phone", and nothing of it here.
     var approveOnPhone: Bool
 
+    /// The most of a whole answer (Read more) the wrist takes: tafs cloud caps it at 16 KB, and the watch never holds more.
+    static let wholeLength = 16_000
+
+    /// A whole answer, for Read more: never cut at `wristLength`, only at `wholeLength`.
+    static func whole(_ words: String, approveOnPhone: Bool) -> WatchCoachAnswer {
+        let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        return WatchCoachAnswer(text: String(text.prefix(wholeLength)), more: false, approveOnPhone: approveOnPhone)
+    }
+
     /// Coach's words as the wrist shows them, cut at a word where it can be.
     static func cut(_ words: String, more: Bool, approveOnPhone: Bool) -> WatchCoachAnswer {
         let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -287,6 +321,8 @@ struct WatchTaf: Codable, Equatable, Sendable, Identifiable {
     var line: String?
     /// Halted, or halting: Halt isn't offered again.
     var halted: Bool
+    /// Paused (and not halted): its chat still takes a message, which it reads when it's back. Nil from a phone from before.
+    var paused: Bool? = nil
 }
 
 /// Needs you, as the phone reads it: the count, and each held call in the phone's words.

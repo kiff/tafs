@@ -22,6 +22,9 @@ extension TafsCloud {
         var waitsOnPerson: Bool = false
         /// The taf's answer went on past its 400 characters: the rest is on the phone.
         var more: Bool = false
+        /// Read more (`?full=1` only): the taf's whole answer, cleaned as the line is and never cut, at most 16 KB. tafs cloud
+        /// sends it beside `ask`, not in it; none when the run hasn't finished or the person may no longer use the taf.
+        var text: String? = nil
 
         enum CodingKeys: String, CodingKey { case id, state, taf, line, words, held, more }
 
@@ -76,10 +79,14 @@ extension TafsCloud {
         return try KIFFClient.decoder.decode(Answer.self, from: data).ask
     }
 
-    /// One of the person's own watch requests, by its id.
-    func watchAsk(_ id: String) async throws -> WatchAsk {
-        struct Answer: Decodable { let ask: WatchAsk }
-        let r: Answer = try await send("GET", "\(Self.watchAsksPath)/\(escaped(id))")
-        return r.ask
+    /// One of the person's own watch requests, by its id; `full`, its whole answer (Read more), cleaned as the line is but not
+    /// cut, at most 16 KB.
+    func watchAsk(_ id: String, full: Bool = false) async throws -> WatchAsk {
+        // `{ask, text?}`: the whole answer is beside the request, never in it.
+        struct Answer: Decodable { let ask: WatchAsk; let text: String? }
+        let r: Answer = try await send("GET", "\(Self.watchAsksPath)/\(escaped(id))" + (full ? "?full=1" : ""))
+        var asked = r.ask
+        if full { asked.text = r.text.flatMap { $0.isEmpty ? nil : $0 } }
+        return asked
     }
 }

@@ -27,6 +27,10 @@ protocol WatchReading {
     /// Chatting with a taf (docs/watch-ask.md): the words into that taf's own chat, as the person, answered as soon as
     /// tafs cloud has them, with the ticket. Never Coach's chat, whatever tafs cloud answers.
     func tafSend(taf: String, text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply
+    /// Read more: the whole answer to the watch request the ticket names, read only on the tap.
+    func askFull(_ ticket: WatchCoachTicket) async -> WatchReply
+    /// A taf's chat: its last turns as the phone shows them, for a taf the phone lists; nil for one it doesn't.
+    func tafChat(_ id: String) async throws -> [WatchChatLine]?
     /// v2 (W2): Coach's answer so far to the words the ticket names, read once, and whether Coach is still at it.
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply
     /// Your brief, as tafs cloud sends it; nil when the account has none.
@@ -47,6 +51,10 @@ extension WatchReading {
     /// A Send that replies to nothing.
     func coachSend(text: String, messageID: UUID) async -> WatchReply { await coachSend(text: text, messageID: messageID, after: nil) }
     func coachRead(_ ticket: WatchCoachTicket) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader from before Read more: nothing is read.
+    func askFull(_ ticket: WatchCoachTicket) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader from before a taf's chat: no turns.
+    func tafChat(_ id: String) async throws -> [WatchChatLine]? { [] }
     /// A reader from before chatting with a taf: nothing is sent.
     func tafSend(taf: String, text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply { WatchReply(.notYet) }
 }
@@ -155,6 +163,17 @@ enum WatchRelay {
         case .coachRead:
             guard let ticket = request.ticket else { return WatchReply(.refused) }
             return await reading.coachRead(ticket)
+        case .askFull:
+            guard let ticket = request.ticket else { return WatchReply(.refused) }
+            return await reading.askFull(ticket)
+        case .tafChat:
+            // Read only: the person's own chat with a taf the phone lists.
+            do {
+                guard let chat = try await reading.tafChat(request.taf ?? "") else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
+                return WatchReply(.ok, chat: chat)
+            } catch {
+                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            }
         case .brief:
             // Read only: nothing is answered or signed from the brief, on the phone or the wrist.
             do {
@@ -268,7 +287,8 @@ struct KeptWatchReading: WatchReading {
             case .halting: line = Words.Taf.Halt.halting
             case .running, nil: line = taf.paused ? Words.Taf.State.paused : (taf.nextRunWords ?? states[taf.id])
             }
-            tafs.append(WatchTaf(id: taf.id, name: taf.name, line: line, halted: halt.map { $0.state != .running } ?? false))
+            let halted = halt.map { $0.state != .running } ?? false
+            tafs.append(WatchTaf(id: taf.id, name: taf.name, line: line, halted: halted, paused: !halted && taf.paused))
         }
         return tafs
     }
@@ -550,6 +570,33 @@ struct KeptWatchReading: WatchReading {
     func readAsk(_ id: String) async -> WatchReply {
         guard let asked = try? await cloud.watchAsk(id) else { return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff) }
         return Self.reply(asked)
+    }
+
+    /// Read more: a watch request's whole answer, read once by its id, the person's own only, only on the tap. Never Coach's
+    /// chat: a ticket that names no request is refused unread.
+    func askFull(_ ticket: WatchCoachTicket) async -> WatchReply {
+        guard let id = ticket.askID else { return WatchReply(.refused) }
+        // tafs cloud's whole answer is `text`, given only for a finished run the person may still use: without it, the rest is
+        // on the phone.
+        guard let asked = try? await cloud.watchAsk(id, full: true), let all = asked.text else {
+            return WatchReply(.failed, line: Words.Watch.moreOnPhone)
+        }
+        return WatchReply(.ok, coach: WatchCoachAnswer.whole(all, approveOnPhone: asked.held), answering: false)
+    }
+
+    /// A taf's chat's last turns: only for a taf the phone lists, from the person's own chat with it, as the phone's chat view
+    /// reads it. Messages only, with words; each cut as an answer is on the wrist.
+    func tafChat(_ id: String) async throws -> [WatchChatLine]? {
+        guard try await cloud.tafs().contains(where: { $0.id == id }) else { return nil }
+        return Self.chatLines(try await cloud.conversation(id).messages)
+    }
+
+    nonisolated static func chatLines(_ messages: [TafsCloud.ChatMessage]) -> [WatchChatLine] {
+        let said = messages.filter { $0.kind == .message && !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        return said.suffix(WatchChatLine.last).map { m in
+            let cut = WatchCoachAnswer.cut(m.text, more: false, approveOnPhone: false)
+            return WatchChatLine(id: m.id, mine: m.from == .owner, at: m.at, text: cut.text, more: cut.more)
+        }
     }
 
     nonisolated static func reply(_ asked: TafsCloud.WatchAsk) -> WatchReply {
