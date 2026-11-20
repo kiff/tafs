@@ -5,6 +5,13 @@ import Foundation
 /// with the owner: while it's off, the welcome and the sign-in are as they ship.
 enum Onboarding {
     static let on = false
+
+    /// The three cards were seen on this device (Get started or Skip): they show once, after the first sign-in here,
+    /// and How tafs works opens them again any time.
+    static let cardsSeenKey = "tafs.onboarding-cards-seen"
+
+    /// Whether the three cards follow the celebration after signing in.
+    static func showsCards(on: Bool = Onboarding.on, seen: Bool) -> Bool { on && !seen }
 }
 
 /// The welcome's one tick: the person agrees to KIFF's Terms and the tafs Terms before Continue. Privacy is linked
