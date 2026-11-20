@@ -511,6 +511,7 @@ saying one new sign-in brings back every taf that used it. The app then calls th
 Once the fresh sign-in is connected, the app reads the Setup page again with `?connected_again=<grant>`. When planque
 names the account it's on now (the grant's `account_name`) and the tafs that use it (`used_by`), the page answers
 `connected_again: {grant, words}`, for example "Gmail is connected again as name@example.com. These tafs use it now: …".
+Only the tafs the reader may see are named. Any others on the connection are counted ("and 2 other tafs"), never named.
 The app shows those words in place of `done_words`, so a sign-in to the wrong account shows at once. With no account
 name, there's no `connected_again`.
 

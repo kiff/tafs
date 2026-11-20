@@ -5158,9 +5158,13 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const again = againID ? grants.grants.find((g) => g.id === againID && g.status === "connected") : undefined;
   const againAccount = again?.account_name?.trim();
   const againTafs = (again?.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim());
+  // Only the tafs this person may see are named; the others on the account are counted, never named (PM, 20 Nov).
+  const seen = again && againAccount && againTafs.length ? await Promise.all([deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase)])
+    .then(([records, access]) => new Set(records.filter((t) => !t.removing && listable(access, t.kiffAgent)).map((t) => t.name)), () => new Set<string>()) : new Set<string>();
+  const shownTafs = againTafs.filter((n) => seen.has(n));
   return { ...setup,
     ...(again && againAccount && againTafs.length
-      ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, againTafs) } } : {}),
+      ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, shownTafs, againTafs.length - shownTafs.length) } } : {}),
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
       ...(out.fresh
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
