@@ -214,7 +214,7 @@ struct HowTafsWorksView: View {
                         HStack {
                             Text(page.title).foregroundColor(Theme.ink)
                             Spacer()
-                            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                            Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                         }
                     }
                     .accessibilityIdentifier("howItWorks.\(page.rawValue)")

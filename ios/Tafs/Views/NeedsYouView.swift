@@ -45,7 +45,7 @@ struct NeedsYouView: View {
                                             .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                                     }
                                     Spacer()
-                                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                                    Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                                 }
                                 .contentShape(Rectangle())
                             }

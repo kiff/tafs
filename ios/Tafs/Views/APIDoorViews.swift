@@ -82,7 +82,7 @@ struct APIDoorPanel: View {
                     HStack {
                         Text(Words.Door.Api.instructions).scaledFont(15, weight: .medium).foregroundColor(Theme.ink)
                         Spacer()
-                        Image(systemName: "chevron.right").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                        Image(systemName: "chevron.forward").scaledFont(12, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
                     }
                     .frame(minHeight: 44)
                 }

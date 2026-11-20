@@ -27,6 +27,9 @@ final class KIFFClient {
         case windowRefused(code: String)
         /// The terms changed between the welcome's tick and the sign-in: the tick is asked for again.
         case termsOutdated
+        /// A new sign-in from where KIFF isn't offered (`region_unsupported`): KIFF's own words, in the app's language,
+        /// shown as sent. Nothing the person can change from the app, so nothing says to try again.
+        case regionUnsupported(words: String)
 
         var errorDescription: String? {
             switch self {
@@ -41,6 +44,7 @@ final class KIFFClient {
             // The app's own words: KIFF's `detail` is for the log, never the person.
             case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
             case .termsOutdated: return Words.Onboarding.termsChanged
+            case .regionUnsupported(let words): return words
             }
         }
     }
@@ -90,6 +94,8 @@ final class KIFFClient {
     nonisolated static let windowMessage = "kiff.window.v1"
     /// KIFF's refusals inside a window: the act takes the approval key every time, or the window has ended.
     nonisolated static let criticalKeyRequired = "critical_key_required"
+    /// KIFF's code for a new sign-in from where it isn't offered.
+    nonisolated static let regionUnsupported = "region_unsupported"
     nonisolated static let windowRequired = "window_required"
 
     /// What the device key signs inside an approval window: `kiff.request.v1`'s lines under
@@ -1716,6 +1722,10 @@ final class KIFFClient {
             }
             if status == 409, base == nil, path == "/v1/me/device/approval-key" {
                 throw KIFFError.approvalKeyExists(fingerprint: fields?["fingerprint"])
+            }
+            // Where KIFF isn't offered: its words, by its stable code, never "You're not allowed" over them.
+            if status == 403, fields?["code"] == Self.regionUnsupported, let words = fields?["message"], !words.isEmpty {
+                throw KIFFError.regionUnsupported(words: words)
             }
             // A pairing's refusal: KIFF's own words for the person, with its code as the reason.
             if path == Self.pairingsPath, let code = fields?["error"] {

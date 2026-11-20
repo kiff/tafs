@@ -214,7 +214,7 @@ class SharedWords(unittest.TestCase):
             if isinstance(english, dict) or english not in terms:
                 continue
             for lang, lines in self.lines.items():
-                if key in lines:
+                if key in lines and lang in terms[english]:  # ja, ko: their terms join the table when they ship
                     want = TERM_AS_PLURAL.get(key, {}).get(lang, terms[english][lang])
                     self.assertEqual(lines[key].lower(), want.lower(), f"{lang} {key}")
 

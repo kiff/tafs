@@ -15,7 +15,7 @@ struct CoachToolsRow: View {
                         .scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                         .lineLimit(1)
                     Spacer(minLength: 0)
-                    Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
+                    Image(systemName: "chevron.forward").scaledFont(13).foregroundColor(Theme.dim)
                         .accessibilityHidden(true)
                 }
                 .padding(.horizontal, 16)

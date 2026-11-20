@@ -118,7 +118,8 @@ fun OnboardingView(
         when (continueOutcome(e)) {
           ContinueOutcome.Quiet -> Unit
           ContinueOutcome.TermsChanged -> untick()
-          ContinueOutcome.Problem -> problem = Words.SignIn.didntWork
+          // KIFF's own words where it refuses for good (not offered where the person is), else ours.
+          ContinueOutcome.Problem -> problem = bot.tafs.app.model.ErrorWords.kiffWords(e) ?: Words.SignIn.didntWork
         }
       } finally {
         busy = false

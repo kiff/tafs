@@ -88,7 +88,7 @@ struct OwnWordsRow: View {
                         }
                     }
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                    Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
                         .accessibilityHidden(true)
                 }
             }
