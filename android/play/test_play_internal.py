@@ -17,13 +17,20 @@ class PlayInternal(unittest.TestCase):
         self.answers = {}
         self.real = (p.call, p.version_code)
 
-        def call(method, url, token, body=None, raw=None, kind="application/json"):
+        def call(method, url, token, body=None, raw=None, kind="application/json", raising=False):
             self.urls.append(url)
             self.calls.append((method, url.replace(p.API, "").replace(p.UPLOAD, "U").split("?")[0], body))
+            refusal = self.refusals.pop(url.replace(p.API, ""), None)
+            if refusal is not None:
+                if raising:
+                    raise refusal
+                sys.exit(str(refusal))
             for k, v in self.answers.items():
                 if k in url:
                     return v
             return {}
+
+        self.refusals = {}
 
         p.call = call
         self.answers = {"/edits/e1/bundles": {"versionCode": 130}, "/edits": {"id": "e1"}}
@@ -59,6 +66,24 @@ class PlayInternal(unittest.TestCase):
         self.assertEqual(len(commits), 2)
         for u in commits:
             self.assertTrue(u.endswith(":commit?changesNotSentForReview=true"), u)
+
+    def test_with_managed_publishing_on_the_refused_parameter_is_dropped_and_the_edit_committed(self):
+        # Play, 21 Nov 00:04, with managed publishing on: the parameter is refused, since a commit's changes wait for Publish.
+        p.version_code = lambda wear=False: 400000009
+        self.answers["/edits/e1/bundles"] = {"versionCode": 400000009}
+        self.refusals["/edits/e1:commit?changesNotSentForReview=true"] = p.PlayError(
+            400, '{"error": {"message": "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set."}}', "400")
+        p.upload(self.bundle.name, wear=True)
+        commits = [u.replace(p.API, "") for u in self.urls if ":commit" in u]
+        self.assertEqual(commits, ["/edits/e1:commit?changesNotSentForReview=true", "/edits/e1:commit"])
+
+    def test_any_other_refusal_of_the_commit_commits_nothing_else(self):
+        p.version_code = lambda wear=False: 400000009
+        self.answers["/edits/e1/bundles"] = {"versionCode": 400000009}
+        self.refusals["/edits/e1:commit?changesNotSentForReview=true"] = p.PlayError(400, '{"error": {"message": "Something else."}}', "400")
+        with self.assertRaises(SystemExit):
+            p.upload(self.bundle.name, wear=True)
+        self.assertEqual([u.replace(p.API, "") for u in self.urls if ":commit" in u], ["/edits/e1:commit?changesNotSentForReview=true"])
 
     def test_a_bundle_of_another_version_commits_nothing(self):
         p.version_code = lambda: 130
