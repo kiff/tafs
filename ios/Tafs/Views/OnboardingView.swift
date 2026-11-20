@@ -56,7 +56,8 @@ struct OnboardingView: View {
                     .disabled(!tick.canContinue || signingInApp)
                     .accessibilityIdentifier("onboarding.continue")
                     if SignInView.offersPhone() {
-                        Button(Words.SignIn.withPhone) { pairing = true }
+                        // The pairing claim carries the version the tick agreed to, so KIFF records it for this device.
+                        Button(Words.SignIn.withPhone) { pairWithPhone() }
                             .buttonStyle(OutlineButtonStyle())
                             .disabled(!tick.canContinue || signingInApp)
                             .accessibilityIdentifier("onboarding.withPhone")
@@ -89,13 +90,31 @@ struct OnboardingView: View {
         .task { if Onboarding.on { termsVersion = try? await model.appTermsVersion() } }
         .sheet(isPresented: $pairing) {
             NavigationStack {
-                PairSignInView {
+                PairSignInView(done: {
                     pairing = false
                     model.justConnected = true
-                }
+                }, termsChanged: {
+                    // As the sheet does: unticked, why, and the new version for the new tick.
+                    pairing = false
+                    tick = ConsentTick()
+                    termsChanged = true
+                    Task { termsVersion = try? await model.appTermsVersion() }
+                })
                 .environmentObject(model)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(Words.Common.cancel) { pairing = false } } }
             }
+        }
+    }
+
+    /// "Sign in with your phone": the pairing claim carries the version the tick agreed to, read now if it couldn't be
+    /// when the welcome showed, so the consent is recorded however the person signs in; without it, nothing opens.
+    private func pairWithPhone() {
+        problem = nil
+        Task {
+            if termsVersion == nil { termsVersion = try? await model.appTermsVersion() }
+            guard let termsVersion else { problem = Words.SignIn.didntWork; return }
+            model.pairingTermsVersion = termsVersion
+            pairing = true
         }
     }
 
