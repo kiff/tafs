@@ -258,6 +258,13 @@ class Generator(unittest.TestCase):
         })
         self.files = {os.path.relpath(p, REPO): t for p, t in generate.generated(self.folder).items()}
 
+    def test_a_preview_puts_an_unshipped_language_in_the_ios_catalog_only(self):
+        files = {os.path.relpath(p, REPO): t for p, t in generate.generated(self.folder, preview=["de"]).items()}
+        self.assertIn('"de"', files["ios/Tafs/Localizable.xcstrings"])
+        self.assertIn('"de"', files["ios/Tafs/Design/Words.swift"])
+        self.assertEqual([f for f in files if f.startswith("android/")], [], "Android isn't written for a preview")
+        self.assertNotIn('"de"', self.files["ios/Tafs/Localizable.xcstrings"], "without it, nothing changes")
+
     def test_only_shipped_languages_are_written(self):
         self.assertEqual(sorted(f for f in self.files if f.startswith("ios/")),
                          ["ios/Tafs/Design/Words.swift", "ios/Tafs/Localizable.xcstrings"])

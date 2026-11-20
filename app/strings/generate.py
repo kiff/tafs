@@ -394,14 +394,16 @@ def ios_swift(source, lines=None, shipped=("en",)):
 
 # ---------------------------------------------------------------- the files
 
-def generated(folder=HERE):
-    """Every generated file: its path and what it holds."""
+def generated(folder=HERE, preview=()):
+    """Every generated file: its path and what it holds. `preview`: languages in `all` but not shipped yet, written
+    into the iOS catalog for a screenshot run only (ios.yml's `preview` set), never committed; a key they lack reads
+    in English, as the catalog falls back. Android's files aren't written then."""
     langs = languages(folder)
     source = load("en", folder)
     lines = {lang: load(lang, folder) for lang in langs["all"]}
-    shipped = langs["shipped"]
+    shipped = langs["shipped"] + [lang for lang in preview if lang in langs["all"] and lang not in langs["shipped"]]
     files = {IOS_CATALOG: ios_catalog(source, shipped, lines), IOS_SWIFT: ios_swift(source, lines, shipped)}
-    android = android_emitter()
+    android = None if preview else android_emitter()
     if android:
         files.update(android.generated(source, lines, langs))
     return files
@@ -424,8 +426,17 @@ def resource_name(key):
 
 def main(argv):
     check = "--check" in argv
+    # `--preview ko`: a screenshot run's catalog with an unshipped language in it (never with --check, never committed).
+    preview = argv[argv.index("--preview") + 1].split(",") if "--preview" in argv else []
+    if preview and check:
+        print("--preview writes a screenshot run's catalog; it can't be checked")
+        return 2
+    unknown = [lang for lang in preview if lang not in languages()["all"]]
+    if unknown:
+        print("--preview takes languages from languages.json's all:", *unknown)
+        return 2
     stale = []
-    for path, text in generated().items():
+    for path, text in generated(preview=preview).items():
         current = None
         if os.path.exists(path):
             with open(path, encoding="utf-8") as f:
