@@ -76,7 +76,15 @@ def notes(code: int, required: bool) -> list:
     return out
 
 
-def call(method: str, url: str, token: str, body=None, raw: bytes = None, kind: str = "application/json") -> dict:
+class PlayError(Exception):
+    """Play's refusal, for a caller that answers one itself (`raising=True`): its code and its own words."""
+
+    def __init__(self, code: int, words: str, said: str):
+        super().__init__(said)
+        self.code, self.words = code, words
+
+
+def call(method: str, url: str, token: str, body=None, raw: bytes = None, kind: str = "application/json", raising: bool = False) -> dict:
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
     req = urllib.request.Request(url, data=data, method=method, headers={"Authorization": f"Bearer {token}", **({"Content-Type": kind} if data is not None else {})})
     try:
@@ -85,7 +93,32 @@ def call(method: str, url: str, token: str, body=None, raw: bytes = None, kind: 
             return json.loads(text)
     except urllib.error.HTTPError as e:
         # Play's own answer, for the log: never the token.
-        sys.exit(f"Play answered {e.code} to {method} {url.split('?')[0].replace(API, '').replace(UPLOAD, '') or '/'}: {e.read().decode(errors='replace')[:2000]}")
+        words = e.read().decode(errors="replace")[:2000]
+        said = f"Play answered {e.code} to {method} {url.split('?')[0].replace(API, '').replace(UPLOAD, '') or '/'}: {words}"
+        if raising:
+            raise PlayError(e.code, words, said)
+        sys.exit(said)
+
+
+# Play's words when managed publishing is on: a commit's changes already wait for the console's Publish, and the parameter is refused.
+MANAGED = "changesNotSentForReview must not be set"
+
+
+def commit(edit: str, token: str) -> str:
+    """
+    Commits the edit without sending anything for review, and says how. With managed publishing off, a plain commit sent every
+    change pending in the console for review (PM, 20 Nov: 128's review restarted), so the commit asks for none. With it on, Play
+    refuses that parameter (400, 21 Nov) because nothing it commits goes out before the console's Publish: then, and only on
+    those words, the edit is committed plainly. Any other refusal stops here, committing nothing.
+    """
+    try:
+        call("POST", f"{API}/edits/{edit}:commit?changesNotSentForReview=true", token, raising=True)
+        return "sending nothing for review"
+    except PlayError as e:
+        if e.code != 400 or MANAGED not in e.words:
+            sys.exit(str(e))
+    call("POST", f"{API}/edits/{edit}:commit", token)
+    return "under managed publishing, waiting for the console's Publish"
 
 
 def upload(bundle: str, wear: bool = False) -> None:
@@ -105,13 +138,10 @@ def upload(bundle: str, wear: bool = False) -> None:
         "track": track,
         "releases": [{"versionCodes": [str(code)], "status": "completed", "releaseNotes": release_notes}],
     })
-    # Committed without sending anything for review (PM, 20 Nov): with Play's managed publishing off, a plain commit sent every
-    # change pending in the console for review, a production release and a saved listing included, and so restarted 128's
-    # review. This edit goes to the internal track only; anything to review is sent from the console, by the person who
-    # owns the listing. With managed publishing on (since 20 Nov), the release waits there for Publish.
-    call("POST", f"{API}/edits/{edit}:commit?changesNotSentForReview=true", token)
+    # This edit goes to the internal track only; anything to review is sent from the console, by the person who owns the listing.
+    how = commit(edit, token)
     print(f"versionCode {code} is committed to Play's {track} track, with release notes in {len(release_notes)} languages, "
-          "sending nothing for review: it reaches testers once it's published in Play Console")
+          f"{how}: it reaches testers once it's published in Play Console")
 
 
 def main(argv: list) -> None:

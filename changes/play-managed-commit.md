@@ -1,0 +1,1 @@
+- **Play uploads work with managed publishing on:** when Play refuses `changesNotSentForReview` because its changes already wait for Publish, the release script commits the internal edit plainly, on those words only; any other refusal commits nothing ([android-app.md](docs/android-app.md)).
