@@ -115,7 +115,7 @@ export const en = {
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf you don't see" : `${n} tafs you don't see`] : [])]);
-    return `${app} is connected again as ${account}. ${all === 1 ? "This taf uses" : "These tafs use"} it now: ${items}. If that isn't the right account, connect again and sign in to the right one.`;
+    return `${app} is connected again as ${account}. ${all === 1 ? "This taf uses" : "These tafs use"} it now: ${items}. If that isn't the right account, remove its access in Connect apps and connect the right one.`;
   },
   /** Connect apps: a connection started for a taf that doesn't use the app (not_needed), and the tafs unread (tafs_unread). */
   connect_not_needed: (taf: string) => `${taf} doesn't use this app. Coach can set it up for ${taf}.`,

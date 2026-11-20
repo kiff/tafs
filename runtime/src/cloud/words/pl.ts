@@ -109,7 +109,7 @@ export const pl: Words = {
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf, którego nie widzisz" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? `${n} tafy, których nie widzisz` : `${n} tafów, których nie widzisz`] : [])]);
-    return `Połączenie z ${app} znów działa na koncie ${account}. ${all === 1 ? "Korzysta z niego teraz ten taf" : "Korzystają z niego teraz te tafy"}: ${items}. Jeśli to nie to konto, połącz ponownie i zaloguj się na właściwe.`;
+    return `Połączenie z ${app} znów działa na koncie ${account}. ${all === 1 ? "Korzysta z niego teraz ten taf" : "Korzystają z niego teraz te tafy"}: ${items}. Jeśli to nie to konto, usuń jego dostęp w „Połącz aplikacje” i połącz właściwe.`;
   },
   connect_not_needed: (taf: string) => `${taf} nie używa tej aplikacji. Coach może ją skonfigurować.`,
   connect_tafs_unread: "Nie udało się teraz odczytać Twoich tafs, więc nic nie zostało połączone. Spróbuj ponownie za chwilę.",

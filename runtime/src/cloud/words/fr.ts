@@ -109,7 +109,7 @@ export const fr: Words = {
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que vous ne voyez pas" : `${n} tafs que vous ne voyez pas`] : [])]);
-    return `${app} est de nouveau connecté en tant que ${account}. ${all === 1 ? "Ce taf l'utilise" : "Ces tafs l'utilisent"} désormais : ${items}. Si ce n'est pas le bon compte, reconnectez-vous avec le bon.`;
+    return `${app} est de nouveau connecté en tant que ${account}. ${all === 1 ? "Ce taf l'utilise" : "Ces tafs l'utilisent"} désormais : ${items}. Si ce n'est pas le bon compte, retirez son accès dans « Connecter des apps » et connectez le bon.`;
   },
   connect_not_needed: (taf: string) => `${taf} n'utilise pas cette app. Coach peut la configurer pour ${taf}.`,
   connect_tafs_unread: "Vos tafs n'ont pas pu être lus pour l'instant, donc rien n'a été connecté. Réessayez dans un instant.",
