@@ -564,9 +564,12 @@ struct KeptWatchReading: WatchReading {
     /// chat: a ticket that names no request is refused unread.
     func askFull(_ ticket: WatchCoachTicket) async -> WatchReply {
         guard let id = ticket.askID else { return WatchReply(.refused) }
-        guard let asked = try? await cloud.watchAsk(id, full: true) else { return WatchReply(.failed, line: Words.Watch.moreOnPhone) }
-        guard asked.ended || asked.held else { return WatchReply(.ok, answering: true) }
-        return WatchReply(.ok, coach: WatchCoachAnswer.whole(asked.shown, approveOnPhone: asked.held), answering: false)
+        // tafs cloud's whole answer is `text`, given only for a finished run the person may still use: without it, the rest is
+        // on the phone.
+        guard let asked = try? await cloud.watchAsk(id, full: true), let all = asked.text else {
+            return WatchReply(.failed, line: Words.Watch.moreOnPhone)
+        }
+        return WatchReply(.ok, coach: WatchCoachAnswer.whole(all, approveOnPhone: asked.held), answering: false)
     }
 
     nonisolated static func reply(_ asked: TafsCloud.WatchAsk) -> WatchReply {

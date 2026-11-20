@@ -105,7 +105,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **2A:** a paused taf (`WatchTaf.paused`, sent by the phone) still takes the message; a halted one takes none and says
     "Resume on your phone".
   - **Read more (the owner's 01:10):** a long answer shows its first part with Read more. Only the tap reads the whole
-    answer (`ask_full`, `GET /v1/watch/asks/{id}?full=1`), shown in place and forgotten with the turns. If it can't be
+    answer (`ask_full`, `GET /v1/watch/asks/{id}?full=1`, its `text`), shown in place and forgotten with the turns. If it can't be
     read, "The rest is on your phone."
   - **Before it goes on:** the paused line and the Read more word in 8 languages (legal-i18n; the screens show
     `taf.state.paused` and `common.more` until then), and the last turns of the taf's chat read through the phone.
