@@ -287,9 +287,9 @@ data class TafCard(
         return Hero(shown(t.limit), Words.Card.Hero.useUnavailable(t.window.label) + note)
       }
       calls?.let { c ->
-        val used = c.used ?: return Hero("${c.limit}", Words.Card.Hero.callsUseUnavailable(c.window.label))
+        val used = c.used ?: return Hero(Res.number(c.limit), Words.Card.Hero.callsUseUnavailable(c.window.label))
         val left = maxOf(0, c.limit - used)
-        return Hero("$left", Words.Card.Hero.callsLeftOf(count = left, window = c.window.current, limit = c.limit.toString()))
+        return Hero(Res.number(left), Words.Card.Hero.callsLeftOf(count = left, window = c.window.current, limit = Res.number(c.limit)))
       }
       return null
     }
@@ -305,7 +305,7 @@ data class TafCard(
       val c = calls?.takeIf { total == null }
       val used = c?.used ?: return "${hero.figure} ${hero.words}"
       val left = maxOf(0, c.limit - used)
-      return Words.Card.callsLeftLine(count = left, window = c.window.current, limit = c.limit.toString())
+      return Words.Card.callsLeftLine(count = left, window = c.window.current, limit = Res.number(c.limit))
     }
 
   /** What's left, short enough for a Card's edge in the stack: "US$170 left", "998 calls left". */
