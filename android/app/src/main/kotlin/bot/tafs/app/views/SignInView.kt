@@ -284,6 +284,7 @@ internal fun SignedInCelebration(onGo: () -> Unit) {
 }
 
 /** Signed in inside tafs (docs/onboarding.md): the sign-in sheet's own celebration, in a sheet of its own, closed by Let's go. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun InAppSignedIn(onGo: () -> Unit) {
   DriveSheet(
