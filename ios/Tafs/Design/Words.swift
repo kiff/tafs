@@ -2894,6 +2894,46 @@ enum Words {
             static var setUpHello: String { Words.line("needs_you.your_step.set_up_hello") }
         }
     }
+    enum Onboarding {
+        /// You must be at least 16, or your country's age of digital consent if it's higher.
+        static var age: String { Words.line("onboarding.age") }
+        /// Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.
+        static var cardLead: String { Words.line("onboarding.card_lead") }
+        /// A Card is your permission
+        static var cardTitle: String { Words.line("onboarding.card_title") }
+        /// I agree to {kiff_terms} and {tafs_terms}.
+        static func consentTick(kiffTerms: String, tafsTerms: String) -> String { Words.line("onboarding.consent_tick", kiffTerms, tafsTerms) }
+        /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.
+        static var controlLead: String { Words.line("onboarding.control_lead") }
+        /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.
+        static var controlLeadAndroid: String { Words.line("onboarding.control_lead_android") }
+        /// When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.
+        static var controlLeadMac: String { Words.line("onboarding.control_lead_mac") }
+        /// You stay in control
+        static var controlTitle: String { Words.line("onboarding.control_title") }
+        /// Get started
+        static var getStarted: String { Words.line("onboarding.get_started") }
+        /// Tell Coach what you'd like done, in your own words. It sets the taf up with you and shows you its Card before anything runs.
+        static var homeLead: String { Words.line("onboarding.home_lead") }
+        /// How tafs works
+        static var howItWorks: String { Words.line("onboarding.how_it_works") }
+        /// KIFF Privacy Policy
+        static var kiffPrivacy: String { Words.line("onboarding.kiff_privacy") }
+        /// KIFF's Terms of Service
+        static var kiffTerms: String { Words.line("onboarding.kiff_terms") }
+        /// How we handle your data: {kiff_privacy} · {tafs_privacy}
+        static func privacyLinks(kiffPrivacy: String, tafsPrivacy: String) -> String { Words.line("onboarding.privacy_links", kiffPrivacy, tafsPrivacy) }
+        /// Skip
+        static var skip: String { Words.line("onboarding.skip") }
+        /// A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.
+        static var tafsLead: String { Words.line("onboarding.tafs_lead") }
+        /// tafs Privacy Policy
+        static var tafsPrivacy: String { Words.line("onboarding.tafs_privacy") }
+        /// the tafs Terms
+        static var tafsTerms: String { Words.line("onboarding.tafs_terms") }
+        /// Your tafs work for you
+        static var tafsTitle: String { Words.line("onboarding.tafs_title") }
+    }
     enum Overview {
         /// {figure} {words}
         static func hero(figure: String, words: String) -> String { Words.line("overview.hero", figure, words) }

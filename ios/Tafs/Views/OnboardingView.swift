@@ -4,6 +4,8 @@ struct OnboardingView: View {
     @EnvironmentObject private var model: AppModel
     @State private var loading = false
     @State private var signingIn = false
+    /// The one tick for the terms (`Onboarding`): Continue waits on it.
+    @State private var tick = ConsentTick()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -29,9 +31,18 @@ struct OnboardingView: View {
 
             Spacer()
 
+            if Onboarding.on { consent }
+
             VStack(spacing: 10) {
-                Button(Words.SignIn.withKiff) { signingIn = true }
-                    .buttonStyle(PrimaryButtonStyle())
+                if Onboarding.on {
+                    Button(Words.Common.continue) { signingIn = true }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .disabled(!tick.canContinue)
+                        .accessibilityIdentifier("onboarding.continue")
+                } else {
+                    Button(Words.SignIn.withKiff) { signingIn = true }
+                        .buttonStyle(PrimaryButtonStyle())
+                }
 
                 Button {
                     loading = true
@@ -53,6 +64,36 @@ struct OnboardingView: View {
         .screenBackground()
         // Sign-in never waits on Face ID (docs/approvals.md): approvals are set up at Coach's Start.
         .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
+    }
+
+    /// One tick for the terms, with both Terms linked in it; privacy as links below it, never ticked; and the age line.
+    /// The box is its own control, so tapping a link opens its page and never ticks the box.
+    private var consent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Button { tick.toggle() } label: {
+                    Image(systemName: tick.agreed ? "checkmark.square.fill" : "square")
+                        .scaledFont(20)
+                        .foregroundColor(tick.agreed ? Theme.amber : Theme.dim)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Words.Onboarding.consentTick(kiffTerms: Words.Onboarding.kiffTerms,
+                                                                 tafsTerms: Words.Onboarding.tafsTerms))
+                .accessibilityAddTraits(tick.agreed ? .isSelected : [])
+                .accessibilityIdentifier("onboarding.tick")
+                Text(Legal.linked(Words.Onboarding.consentTick(kiffTerms: "\u{1}", tafsTerms: "\u{2}"),
+                                  [(Words.Onboarding.kiffTerms, Legal.kiffTerms), (Words.Onboarding.tafsTerms, Legal.terms)]))
+                    .scaledFont(14).foregroundColor(Theme.ink).tint(Theme.amber)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(Legal.linked(Words.Onboarding.privacyLinks(kiffPrivacy: "\u{1}", tafsPrivacy: "\u{2}"),
+                              [(Words.Onboarding.kiffPrivacy, Legal.kiffPrivacy), (Words.Onboarding.tafsPrivacy, Legal.privacy)]))
+                .scaledFont(13).foregroundColor(Theme.soft).tint(Theme.amber)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(Words.Onboarding.age)
+                .scaledFont(12).foregroundColor(Theme.dim)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func point(_ lead: String, _ rest: String, _ color: Color) -> some View {
