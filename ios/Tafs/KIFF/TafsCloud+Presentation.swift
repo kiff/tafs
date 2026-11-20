@@ -127,8 +127,8 @@ extension TafsCloud {
     }
     /// `connectedAgain`: the grant a fresh sign-in just brought back, so the page says which account it's on now.
     func setupView(_ id: String, proof: String?, connectedAgain: String? = nil) async throws -> SetupView {
-        let query = connectedAgain.map { "?connected_again=\(query($0))" } ?? ""
-        return try await send("GET", "/v1/tafs/\(escaped(id))/setup" + query, headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
+        let again = connectedAgain.map { "?connected_again=\(query($0))" } ?? ""
+        return try await send("GET", "/v1/tafs/\(escaped(id))/setup" + again, headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
     func unregisterPhone(_ token: String, environment: String) async throws {
         struct Body: Encodable { let device_token: String; let environment: String }
