@@ -129,8 +129,8 @@ final class TafChatTests: XCTestCase {
         XCTAssertEqual(phone.asked.count, before, "Coach's model reads no taf's chat")
     }
 
-    /// Off until tafs cloud's switch, the words and the privacy paragraph are live.
-    func testTheSwitchIsOff() {
-        XCTAssertFalse(WatchTafChat.on)
+    /// On once the privacy paragraph is live; tafs cloud's switch still gates each account.
+    func testTheSwitchIsOn() {
+        XCTAssertTrue(WatchTafChat.on)
     }
 }

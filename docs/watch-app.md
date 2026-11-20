@@ -97,7 +97,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   chat.
   On the wrist, `CoachModel` takes the taf's id: its Send names it, a phone from before it never sends the words to
   Coach by v1's send, and its answers never go to the Inbox.
-- **The wrist's screens (the owner's picks 1A and 2A, behind `WatchTafChat.on`, off).**
+- **The wrist's screens (the owner's picks 1A and 2A, behind `WatchTafChat.on`, on since 20 Nov once the privacy paragraph was live; tafs cloud's
+  `TAFS_WATCH_TAF_CHAT` still gates each account).**
   - **1A:** Your tafs opens a taf's own chat (`TafChatScreen`), with its page one swipe below. Each taf's chat is one
     `CoachModel` for the visit (`TafsModel.chat`), gone when the app leaves the screen.
   - **The chat:** the taf's state, this visit's turns (your words orange, the taf's green, `WatchLook.taf`), then "Message

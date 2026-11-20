@@ -4,8 +4,9 @@ import SwiftUI
 /// a taf's own chat, with its page one swipe below. The words go into that taf's chat as the person, through the phone, never
 /// to Coach. Approvals stay on the phone, and nothing of the chat is kept on the watch.
 enum WatchTafChat {
-    /// Off until tafs cloud's `TAFS_WATCH_TAF_CHAT` is on and the privacy paragraph is live.
-    static let on = false
+    /// On since the privacy paragraph went live (20 Nov). tafs cloud's `TAFS_WATCH_TAF_CHAT` still gates each account: where
+    /// it's off, Send answers "Open on your phone" and nothing goes to Coach.
+    static let on = true
 }
 
 /// What a taf's chat lets the person do, by its state: halted, nothing runs, so nothing is sent ("Resume on your phone");
