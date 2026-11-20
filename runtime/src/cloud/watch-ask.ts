@@ -37,6 +37,12 @@ export interface Ask {
   taf_run?: string;
   /** The request it replies to: the same conversation goes on. */
   reply_to?: string;
+  /** A message to a taf the person chose (TAFS_WATCH_TAF_CHAT): it went into that taf's own chat, never through Coach. */
+  kind?: "taf";
+  /** The taf's answer was longer than the watch shows: the rest is on the phone. */
+  more?: boolean;
+  /** The taf waits on the person (an approval, a question): they answer it on the phone, never on the watch. */
+  held?: boolean;
   /** Which of Coach's turns is at work: routing the request, or writing the taf's result as a line. */
   turn?: "route" | "result";
   /** The state the result turn's line ends the request in. */
@@ -52,6 +58,15 @@ export interface ShownAsk {
   state: AskState;
   taf?: { id: string; name: string };
   line?: string;
+  /**
+   * A message to a taf the person chose, not a request to Coach: the watches keep nothing of it (never their Inbox, Coach's
+   * thread or a cache), and draw it only in that taf's chat while it's open.
+   */
+  kind?: "taf";
+  /** A taf chat's answer goes on past the line: the rest is on the phone. */
+  more?: boolean;
+  /** A taf chat's taf waits on the person, on the phone. */
+  held?: boolean;
   words: string;
   at: string;
   updated: string;
@@ -63,6 +78,8 @@ export const CLIENT_ID = /^[A-Za-z0-9_-]{8,64}$/;
 export const MAX_ASK_TEXT = 2000;
 /** The result line the watch shows and says. */
 export const LINE_MAX = 140;
+/** A taf's own answer in a chat from the watch: longer than Coach's line, and cut the same way past it. */
+export const TAF_LINE_MAX = 400;
 /** A request's claims (its client id, its hand-over, its runs' refs) are kept a week, as a task Coach hands over is. */
 export const ASK_KEPT_MS = 7 * 24 * 3600_000;
 /**
@@ -97,7 +114,7 @@ export const watchKeys = {
  * links' targets and control characters go; a longer line is cut at a word, with an ellipsis. Undefined when
  * nothing is left, and the state's own words stand in.
  */
-export function checkedLine(raw: unknown): string | undefined {
+export function checkedLine(raw: unknown, max = LINE_MAX): string | undefined {
   if (typeof raw !== "string") return undefined;
   let s = raw
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
@@ -107,10 +124,42 @@ export function checkedLine(raw: unknown): string | undefined {
     .replace(/\s+/g, " ")
     .trim();
   if (!s) return undefined;
-  if ([...s].length <= LINE_MAX) return s;
-  const cut = [...s].slice(0, LINE_MAX - 1).join("");
+  if ([...s].length <= max) return s;
+  const cut = [...s].slice(0, max - 1).join("");
   const at = cut.lastIndexOf(" ");
-  s = (at > LINE_MAX / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.–-]+$/, "");
+  s = (at > max / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.–-]+$/, "");
+  return `${s}…`;
+}
+
+/**
+ * A taf's own answer as the watch shows it: checked as Coach's line is (one line, no markdown, links' targets or
+ * control characters), at most TAF_LINE_MAX, and whether there was more than that (the rest is on the phone).
+ */
+export function tafLine(raw: unknown): { line?: string; more: boolean } {
+  const line = checkedLine(raw, TAF_LINE_MAX);
+  return { ...(line ? { line } : {}), more: line !== undefined && line !== checkedLine(raw, Number.MAX_SAFE_INTEGER) };
+}
+
+/** The most of a taf's whole answer the watch is sent on "Read more": its paragraphs, checked, never more than 16 KB. */
+export const FULL_MAX_BYTES = 16 * 1024;
+
+/**
+ * A taf's whole answer, for the watch's "Read more" (the owner's 20 Nov pick: never trimmed, shown partly, then expanded).
+ * Each paragraph is checked as the line is (no markdown, links' targets or control characters) and none is cut; paragraphs
+ * are kept apart by a blank line. Past FULL_MAX_BYTES of UTF-8 it's cut at a word, with an ellipsis. Undefined when nothing is left.
+ */
+export function fullAnswer(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const paras = raw.split(/\n\s*\n/).map((p) => checkedLine(p, Number.MAX_SAFE_INTEGER)).filter((p): p is string => !!p);
+  let s = paras.join("\n\n");
+  if (!s) return undefined;
+  if (Buffer.byteLength(s, "utf8") <= FULL_MAX_BYTES) return s;
+  const chars = [...s];
+  let bytes = 0, n = 0;
+  while (n < chars.length && bytes + Buffer.byteLength(chars[n]!, "utf8") <= FULL_MAX_BYTES - 3) bytes += Buffer.byteLength(chars[n++]!, "utf8");
+  const cut = chars.slice(0, n).join("");
+  const at = cut.lastIndexOf(" ");
+  s = (at > cut.length / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.–-]+$/, "");
   return `${s}…`;
 }
 
@@ -118,8 +167,11 @@ export function checkedLine(raw: unknown): string | undefined {
 export function shownAsk(ask: Ask, lang: Lang): ShownAsk {
   return {
     id: ask.id, client_id: ask.client_id, state: ask.state,
+    ...(ask.kind === "taf" ? { kind: "taf" as const } : {}),
     ...(ask.taf ? { taf: ask.taf } : {}),
     ...(ask.line ? { line: ask.line } : {}),
+    ...(ask.more ? { more: true } : {}),
+    ...(ask.held ? { held: true } : {}),
     // {name}: who holds the request now, its taf once there's one, else Coach (the same word in every language).
     words: wordsIn(lang).watch_ask[ask.state].replace("{name}", ask.taf?.name ?? "Coach"),
     at: ask.at, updated: ask.updated,
@@ -167,6 +219,8 @@ export interface WatchTurn {
   said: string;
   said_at: string;
   taf?: { id: string; name: string };
+  /** A message to a taf the person chose (ShownAsk's `kind`). */
+  kind?: "taf";
   state: AskState;
   line?: string;
   words: string;
@@ -205,7 +259,7 @@ export function dayTurns(said: Array<{ ask: Ask; said: string }>, lang: Lang): W
     placed.add(t.ask.id);
     const shown = shownAsk(t.ask, lang);
     const to = t.ask.reply_to && listed.has(t.ask.reply_to) && t.ask.reply_to !== t.ask.id ? t.ask.reply_to : undefined;
-    out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), state: shown.state,
+    out.push({ id: shown.id, said: t.said, said_at: t.ask.at, ...(shown.taf ? { taf: shown.taf } : {}), ...(shown.kind ? { kind: shown.kind } : {}), state: shown.state,
       ...(shown.line ? { line: shown.line } : {}), words: shown.words, ...(to ? { reply_to: to } : {}) });
     for (const r of replies.get(t.ask.id) ?? []) place(r);
   };

@@ -29,7 +29,8 @@ Only the route marks a conversation as the watch's: it is where the request came
 message carries.
 
 - `POST /v1/watch/asks` is the only way a conversation opens with the watch's skill. Its body is exactly
-  `{client_id, text, reply_to?}`: anything else is 400.
+  `{client_id, text, reply_to?}`, plus `taf_id` where chatting with a taf is on (below): anything else is 400. A request with
+  `taf_id` never opens a Coach conversation.
 - The conversation's entry point is set by the route. The entry point read from a phone message's text (`entryOf`)
   is never `watch`, so no message, whatever it says, loads `ask-a-taf`.
 - `ask-a-taf` is **named-only** in Coach's definition. Coach's map of skills never lists it, `read_skill` never reads it in
@@ -86,6 +87,55 @@ over a full answer (W5, the owner's Galaxy Watch 5 test). Requests kept from bef
 **The line** is at most 140 characters of plain text on one line: markdown marks, links' targets and control characters
 go, and a longer line is cut at a word with an ellipsis (`checkedLine`). With no line from Coach, the state's words stand
 in; if Coach's turn can't be started, the taf's own two sentences, checked the same way, are the line.
+
+## Chatting with a taf (TAFS_WATCH_TAF_CHAT)
+
+A watch can also send its words to **a taf the person chose**, into that taf's own chat, without Coach routing them.
+It's the same route, signature and receipt, with `taf_id` added: `{client_id, text, reply_to?, taf_id?}`.
+
+- **Behind its own switch.** `TAFS_WATCH_TAF_CHAT` is read as `TAFS_WATCH_ASK` is, and only once that switch is on. Off for the
+  account, a request with `taf_id` is 404 `watch_taf_chat_off`, and one without it goes to Coach as before.
+- **Checked in this order:**
+  1. the body's shape: `taf_id` is a taf's id, and any other key is still 400;
+  2. the phone's device signature, over the whole body with its `taf_id` (KIFF checks the body's sha256, so a body changed
+     after signing is refused), and a view-only phone is refused as before;
+  3. once per person and `client_id`;
+  4. the person's AI consent;
+  5. the taf.
+- **Only a taf the person may use.** The taf must be in the person's account and not being removed, and KIFF must give the
+  person a run grant for it: the same check the phone's own message to that taf meets. Any of those failing is the same
+  404 `no_taf`, so the answer never says which. Coach's own taf is 400 `coach_taf`: Coach is asked without `taf_id`.
+- **The phone's own path.** The words go through what `POST /v1/tafs/{id}/messages` does, as the person:
+  - held for an approval the taf waits on, if there is one;
+  - otherwise the taf's run, in the person's live chat with it (a reply goes on in its request's chat).
+  
+  The watch's `client_id` becomes the message's key, so the same message sent again never starts a second run, even
+  after its claim lapsed. The words show in the person's chat with the taf on the phone as any message of theirs does.
+- **The watch never approves.** A taf that waits on the person (a held call, a question, a paused run) ends the request
+  `done` with `held: true`. The apps say to answer it on the phone.
+- **The answer** is the taf's own, checked as Coach's line is (one line, no markdown, links' targets or control
+  characters), at most **400** characters (`tafLine`). `more: true` says it went on, and the rest is on the phone. The watch
+  may show an amount on screen and never stores it, as the watch's rule already is. A run that failed or was stopped is
+  `failed`. Each change is pushed to the person's Android phones by the request's id alone, as before.
+- **`kind: "taf"`** marks such a request wherever it's read (`{ask}` and the list), so the watches
+  tell it from a Coach request a taf handled. They keep nothing of it: never their Inbox, Coach's thread or a cache.
+- **Read more** (the owner's pick, 20 Nov: a long answer is never trimmed, shown partly, then expanded):
+  `GET /v1/watch/asks/{id}?full=1` adds `text`, the taf's whole answer.
+  - It's read from the run on each tap and kept nowhere. The first read stays small (the line and `more`), and the whole
+    answer is fetched only on the tap.
+  - Each paragraph is checked as the line is, none is cut, paragraphs are kept apart by a blank line, and it's at most
+    16 KB of UTF-8.
+  - It's only for the person's own taf chat whose run finished, and only while KIFF gives them a run grant for the
+    taf, read on the tap. It fails closed: KIFF refusing, unreachable or giving none means no `text`. Anything else has no `text`, and the watch keeps the line and "the rest is on your phone".
+- **A paused taf takes the message.** Paused, its schedules are off, but a message from the phone or the watch starts its
+  run now, as in its chat on the phone. A halted taf or account refuses as the phone's message is refused.
+- **Not kept, not stuck.** If the request can't be written after its message went, the client id is freed: the watch's Send
+  again comes through, and the message key gives back the same run, which reports to the same request (its run-ended ref
+  is made from the person and the client id).
+- **Replies** go only to the same taf's request, once it has ended; anything else is 404 `no_ask` or 409 `reply_too_soon`.
+- **Not on the watch days.** A message to a taf is in that taf's own chat on the phone, so `/v1/watch/days` leaves it out
+  of every day's turns and count.
+- **Logged** as `watch_ask` with the taf's id and `signed: "device"`, never the words.
 
 ## Watch days (W11)
 
