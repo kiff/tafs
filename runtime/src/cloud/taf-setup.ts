@@ -24,6 +24,8 @@ export interface GrantView {
    * that can't be compared with the old one, which brings back every connection signed out on that account. Absent: same.
    */
   reconnect?: "same" | "fresh";
+  /** The tafs on the connection, by their names, as planque reads them. */
+  used_by?: string[];
 }
 
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */

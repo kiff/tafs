@@ -508,6 +508,11 @@ no account name kept for it, or the provider refused the account), `connect_agai
 saying one new sign-in brings back every taf that used it. The app then calls the connection server's
 `connect-fresh` for that `grant` in place of approve, opens its sign-in page and confirms as before. The confirm's
 `grants` lists every connection the one sign-in brought back. It never tries the reconnect that would be refused.
+Once the fresh sign-in is connected, the app reads the Setup page again with `?connected_again=<grant>`. When planque
+names the account it's on now (the grant's `account_name`) and the tafs that use it (`used_by`), the page answers
+`connected_again: {grant, words}`, for example "Gmail is connected again as name@example.com. These tafs use it now: …".
+The app shows those words in place of `done_words`, so a sign-in to the wrong account shows at once. With no account
+name, there's no `connected_again`.
 
 `GET /v1/tafs/{id}/memory?all=true` returns all shared notes and this person's own
 notes, newest first, plus their `summary`. The older request without `all=true`

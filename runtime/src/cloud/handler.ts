@@ -53,7 +53,7 @@ import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
 import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
-import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
+import { appCalls, appDisplayName, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
@@ -5151,7 +5151,16 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   // every connection signed out on that account: the app calls planque's connect-fresh, never a reconnect bound to fail.
   const out = setup.connections.find((c) => c.reconnect);
   const w = wordsIn(langOf(event));
+  // Read again after a fresh sign-in (`?connected_again=<grant>`): which account it is now on and which tafs use it, as
+  // planque names them, so a sign-in to the wrong account shows at once. None without the account's name: the app keeps
+  // connect_again's done words.
+  const againID = new URLSearchParams(event.rawQueryString ?? "").get("connected_again");
+  const again = againID ? grants.grants.find((g) => g.id === againID && g.status === "connected") : undefined;
+  const againAccount = again?.account_name?.trim();
+  const againTafs = (again?.used_by ?? []).filter((n): n is string => typeof n === "string" && n.trim() !== "").map((n) => n.trim());
   return { ...setup,
+    ...(again && againAccount && againTafs.length
+      ? { connected_again: { grant: again.id, words: w.connected_again_as(appDisplayName(again, langOf(event)), againAccount, againTafs) } } : {}),
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
       ...(out.fresh
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }

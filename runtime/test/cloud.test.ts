@@ -1009,6 +1009,34 @@ describe("tafs cloud", () => {
     contract("taf-setup-reconnect-fresh", "GET /v1/tafs/{id}/setup when the taf's connection can only come back with a new sign-in (planque's reconnect: fresh): Connect again with fresh: true.", await setup("needs_reconnect", "en", "fresh"));
   });
 
+  // After a fresh sign-in the owner sees which account it went to and which tafs use it now, as planque names them, so a
+  // sign-in to the wrong mailbox shows at once (PM, 20 Nov). Without the account's name, nothing: the app keeps the done words.
+  it("says which account a fresh sign-in went to, and which tafs use it now, when asked after it", async () => {
+    const w = world();
+    const read = async (grant: Record<string, unknown>, query = "connected_again=grt_gmail", lang = "en") => {
+      const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, rawQueryString: query, requestContext: { http: { method: "GET" } },
+        headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
+        { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+          if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
+            { id: "grt_gmail", vendor: "Gmail", request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] }, ...grant },
+          ] }), { status: 200 });
+          return depsOf(w).fetch!(url, init);
+        }) as Deps["fetch"] });
+      return JSON.parse(r.body) as { connected_again?: Record<string, string> };
+    };
+    const connected = { status: "connected", account_name: "ana@example.com", used_by: ["Rae", "Win-back offers", "Overdue invoice reminders"] };
+    expect((await read(connected)).connected_again).toEqual({ grant: "grt_gmail",
+      words: "Gmail is connected again as ana@example.com. These tafs use it now: Rae, Win-back offers, and Overdue invoice reminders. If that isn't the right account, connect again and sign in to the right one." });
+    expect((await read({ ...connected, used_by: ["Rae"] })).connected_again?.words).toContain("This taf uses it now: Rae.");
+    expect((await read(connected, "connected_again=grt_gmail", "fr")).connected_again?.words).toContain("en tant que ana@example.com");
+    // Not asked, another grant, not connected yet, or no account name: no words.
+    expect((await read(connected, "")).connected_again).toBeUndefined();
+    expect((await read(connected, "connected_again=grt_other")).connected_again).toBeUndefined();
+    expect((await read({ ...connected, status: "needs_reconnect" })).connected_again).toBeUndefined();
+    expect((await read({ ...connected, account_name: undefined })).connected_again).toBeUndefined();
+    expect((await read({ ...connected, used_by: [] })).connected_again).toBeUndefined();
+  });
+
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
     const w = world(); w.account.status = 503;
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);

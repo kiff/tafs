@@ -135,14 +135,14 @@ final class AppModel: ObservableObject {
             if gen == accountGeneration && timeZoneQuery == query { timeZones = choices }
         } catch { if gen == accountGeneration { timeZoneError = error.localizedDescription } }
     }
-    func loadTafSetup(_ id: UUID) async {
+    func loadTafSetup(_ id: UUID, connectedAgain: String? = nil) async {
         guard let taf = cloudTaf(for: id) else { return }
         let gen = accountGeneration, presentation = presentationGeneration
         do {
             let signer = self.signer
             planque.tenant = kiffTenant
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
-            let view = try await cloud.setupView(taf.id, proof: proof)
+            let view = try await cloud.setupView(taf.id, proof: proof, connectedAgain: connectedAgain)
             guard gen == accountGeneration, presentation == presentationGeneration else { return }
             tafSetups[id] = view; tafSetupErrors[id] = nil
         } catch { if gen == accountGeneration, presentation == presentationGeneration { tafSetupErrors[id] = error.localizedDescription } }
@@ -6699,8 +6699,10 @@ final class AppModel: ObservableObject {
         connectedAgain[tafID] = nil
         await reconnectApp(again.grant, fresh: again.fresh)
         let connected = grants.first { $0.id == again.grant }?.connected == true
-        await loadTafSetup(tafID)
-        if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }
+        // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
+        await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)
+        let named = connected && again.fresh ? tafSetups[tafID]?.connected_again.flatMap { $0.grant == again.grant && !$0.words.isEmpty ? $0.words : nil } : nil
+        if connected, let words = named ?? (again.doneWords.isEmpty ? nil : again.doneWords) { connectedAgain[tafID] = words }
     }
 
     /// tafs cloud's words for a taf whose connection was just connected again, by taf.

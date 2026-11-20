@@ -105,11 +105,30 @@ class ConnectAgainTest {
     m.loadTafSetup("mail-1")
     assertTrue(m.state.value.tafSetups["mail-1"]?.connectAgain?.fresh == true)
     transport.answer(grants, 200, """{"grants":[${grant("connected")}]}""")
-    transport.answer(setup, 200, "{}")
+    // Read again after it, tafs cloud names the account it went to and the tafs on it.
+    val named = "Gmail is connected again as ana@example.com. These tafs use it now: Mail and Win-back. If that isn't the right account, connect again and sign in to the right one."
+    transport.answer(setup, 200, """{"connected_again":{"grant":"g1","words":"$named"}}""")
     m.connectAgain("mail-1")
     assertEquals(1, transport.requestsTo(connectFresh).size)
     assertTrue("never a reconnect first", transport.requestsTo(approve).isEmpty())
     assertEquals(1, transport.requestsTo(confirm).size)
+    assertEquals("connected_again=g1", java.net.URI.create(transport.requestsTo(setup).last().url).query)
+    assertEquals(named, m.state.value.connectedAgain["mail-1"])
+  }
+
+  // Without tafs cloud's named words (no account name from planque), the fresh done words stay.
+  @Test fun aFreshSignInWithoutTheAccountsNameKeepsTheDoneWords() = runTest {
+    val fresh = """"connect_again":{"grant":"g1","app":"Gmail","title":"Connect again","fresh":true,"words":"w","done_words":"Gmail is connected again on the new sign-in. Every taf that used it can use it again."}"""
+    reads("{$fresh}")
+    transport.answer(grants, 200, """{"grants":[${grant("needs_reconnect")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/connect-fresh", 200, """{"status":"approved","sign_in_url":"https://accounts.example/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("connected"))
+    val m = model()
+    m.refresh()
+    m.loadTafSetup("mail-1")
+    transport.answer(grants, 200, """{"grants":[${grant("connected")}]}""")
+    transport.answer(setup, 200, """{"connected_again":7}""")
+    m.connectAgain("mail-1")
     assertEquals("Gmail is connected again on the new sign-in. Every taf that used it can use it again.", m.state.value.connectedAgain["mail-1"])
   }
 

@@ -30,6 +30,10 @@ final class ConnectAgainTests: XCTestCase {
         XCTAssertTrue(try again(#"{"grant":"grt_1","title":"Connect again","words":"w","fresh":true}"#).fresh)
         XCTAssertFalse(try again(#"{"grant":"grt_1","title":"Connect again","words":"w"}"#).fresh)
         XCTAssertFalse(try again(#"{"grant":"grt_1","title":"Connect again","words":"w","fresh":"yes"}"#).fresh, "another shape: not fresh")
+        let page = #"{"connections":[],"workflow":{"title":"t","summary":"s","steps":[]},"memory":{"count":0,"title":"m"},"versions":{"title":"v","summary":"s","earlier":0},"connections_error":null"#
+        let named = try KIFFClient.decoder.decode(TafsCloud.SetupView.self, from: Data((page + #","connected_again":{"grant":"grt_1","words":"Gmail is connected again as ana@example.com."}}"#).utf8))
+        XCTAssertEqual(named.connected_again, TafsCloud.ConnectedAgain(grant: "grt_1", words: "Gmail is connected again as ana@example.com."))
+        XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.SetupView.self, from: Data((page + #","connected_again":7}"#).utf8)).connected_again?.words ?? "", "", "another shape: no words")
         let grant = #"{"id":"g1","status":"needs_reconnect","text":"","digest":"d","request":{"agent":"rae","server":"https://gmail.example/mcp","tools":[]},"events":[]"#
         XCTAssertTrue(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data((grant + #","reconnect":"fresh"}"#).utf8)).reconnectsFresh)
         XCTAssertFalse(try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data((grant + #","reconnect":"same"}"#).utf8)).reconnectsFresh)
@@ -53,9 +57,11 @@ final class ConnectAgainTests: XCTestCase {
         XCTAssertFalse(panel.contains("ConnectAppsView"), "never a trip through every app")
         let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
         let start = try XCTUnwrap(app.range(of: "func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {"))
-        let body = String(app[start.upperBound...].prefix(420))
+        let body = String(app[start.upperBound...].prefix(1000))
         func at(_ s: String) throws -> String.Index { try XCTUnwrap(body.range(of: s), s).lowerBound }
-        XCTAssertTrue(try at("await reconnectApp(again.grant, fresh: again.fresh)") < (try at("await loadTafSetup(tafID)")), "that same connection, then the taf read again")
-        XCTAssertTrue(body.contains("if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }"), "done words only once planque says connected")
+        XCTAssertTrue(try at("await reconnectApp(again.grant, fresh: again.fresh)") < (try at("await loadTafSetup(tafID, connectedAgain:")), "that same connection, then the taf read again")
+        XCTAssertTrue(body.contains("if connected, let words = named ?? (again.doneWords.isEmpty ? nil : again.doneWords) { connectedAgain[tafID] = words }"), "done words only once planque says connected")
+        // After a fresh sign-in, tafs cloud's words naming the account it went to, when it sent them for that grant.
+        XCTAssertTrue(body.contains("await loadTafSetup(tafID, connectedAgain: connected && again.fresh ? again.grant : nil)"))
     }
 }

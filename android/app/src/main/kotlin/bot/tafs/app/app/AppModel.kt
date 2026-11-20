@@ -2974,10 +2974,12 @@ class AppModel(
     if (grant == null) { note(ask.grant, Words.Common.notDoneUnconfirmed); loadTafSetup(tafId); return }
     signInAgain(grant, fresh = ask.fresh) ?: return
     refreshConnections()
-    if (_state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true && ask.doneWords.isNotBlank()) {
-      _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to ask.doneWords)) }
-    }
-    loadTafSetup(tafId)
+    val connected = _state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true
+    // After a fresh sign-in, the page says which account it went to and which tafs use it now, when planque names it.
+    loadTafSetup(tafId, connectedAgain = if (connected && ask.fresh) ask.grant else null)
+    val named = if (connected && ask.fresh) _state.value.tafSetups[tafId]?.connectedAgain?.takeIf { it.grant == ask.grant }?.words else null
+    val words = named ?: ask.doneWords.takeIf { it.isNotBlank() }
+    if (connected && words != null) _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to words)) }
   }
 
   /** Reads again what a live update names (see [changed]). */
@@ -3115,13 +3117,13 @@ class AppModel(
     } catch (e: Exception) { if (gen == accountGeneration) _state.update { it.copy(timeZoneError = ErrorWords.of(e)) } }
   }
 
-  suspend fun loadTafSetup(tafId: String) {
+  suspend fun loadTafSetup(tafId: String, connectedAgain: String? = null) {
     val id = _state.value.taf(tafId)?.cloudId ?: return
     val gen = shownGeneration()
     try {
       planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
       val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
-      val setup = cloud.setupView(id, proof).let { v -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
+      val setup = cloud.setupView(id, proof, connectedAgain).let { v -> v.copy(cardUnitExceptions = v.cardUnitExceptions.filterNot { it.id in _state.value.dismissedCardUnits }) }
       if (gen == shownGeneration()) _state.update { it.copy(tafSetups = it.tafSetups + (tafId to setup), tafSetupErrors = it.tafSetupErrors - tafId) }
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) { if (gen == shownGeneration()) _state.update { it.copy(tafSetupErrors = it.tafSetupErrors + (tafId to ErrorWords.of(e))) } }

@@ -112,6 +112,7 @@ export const en = {
   connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} no longer takes the old sign-in, so ${taf} can't use it. Connect again with a new sign-in: one sign-in brings back every taf that used it.`,
   connect_again_fresh_done: (app: string) => `${app} is connected again on the new sign-in. Every taf that used it can use it again.`,
+  connected_again_as: (app: string, account: string, tafs: string[]) => `${app} is connected again as ${account}. ${tafs.length === 1 ? "This taf uses" : "These tafs use"} it now: ${list(tafs)}. If that isn't the right account, connect again and sign in to the right one.`,
   /** Connect apps: a connection started for a taf that doesn't use the app (not_needed), and the tafs unread (tafs_unread). */
   connect_not_needed: (taf: string) => `${taf} doesn't use this app. Coach can set it up for ${taf}.`,
   connect_tafs_unread: "Your tafs couldn't be read just now, so nothing was connected. Try again in a moment.",
