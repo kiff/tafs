@@ -97,6 +97,7 @@ dependencies {
   implementation(libs.androidx.wear.compose.material3)
   implementation(libs.androidx.wear.compose.foundation)
   implementation(libs.androidx.wear.tiles)
+  implementation(libs.androidx.wear.complications.data.source)
   implementation(libs.androidx.concurrent.futures)
   implementation(libs.play.services.wearable)
   // Play services brings Fragment 1.1, older than the speech input's registerForActivityResult needs (1.3); the release
