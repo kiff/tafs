@@ -127,6 +127,37 @@ Halted and Stopped are different words in every language: a halt blocks a taf in
 through, while a stopped request is one run that ended. A word not in this table is translated in the voice above, the same way every time it appears. A new
 term that recurs is added here first, then used.
 
+## Korean and Japanese (being written)
+
+`ko` and `ja` are in `all`, not `shipped` (app/strings/README.md): their lines are written feature by feature, and
+neither app shows them until every key is there. Their terms are kept here, apart from the Terms table above,
+which KIFF checks by its digest; they join it when they ship.
+
+| Language | Code | Address | Notes |
+|---|---|---|---|
+| Korean | `ko` | 합니다 / 하세요 | Statements end in -습니다/-ㅂ니다, requests in -세요, as Korean business apps do. "나" for the person in labels ("내 코드"). A particle after a placeholder that may end in a consonant is written 을(를), 이(가), 은(는). |
+
+| English | Korean |
+|---|---|
+| Needs you | 확인 필요 |
+| Approve / Approve once | 승인 / 한 번 승인 |
+| Refuse | 거절 |
+| held | 보류됨 |
+| Halt / Halted | 모두 중지 / 중지됨 |
+| Pause / Paused | 일시 중지 / 일시 중지됨 |
+| Resume | 재개 |
+| Run now | 지금 실행 |
+| run / scheduled run | 실행 / 예약 실행 |
+| credits / spend limit | 크레딧 / 지출 한도 |
+| door | 창구 |
+| Record | 기록 |
+| Connect apps / connection | 앱 연결 / 연결 |
+| Sign in again / Sign in with KIFF | 다시 로그인 / KIFF로 로그인 |
+| Try again | 다시 시도 |
+| Ask Coach | Coach에게 묻기 |
+| Settings / Home / Activity | 설정 / 홈 / 활동 |
+| Terms of Service / Privacy Policy | 서비스 약관 / 개인정보처리방침 |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
