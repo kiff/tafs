@@ -39,6 +39,7 @@ import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.design.tapping
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.CardTotal
 import bot.tafs.app.model.OnboardingPage
@@ -102,10 +103,10 @@ internal fun OnboardingPicture(page: OnboardingPage) {
       Text(Words.Sample.Deploys.deployApi, style = scaled(16, FontWeight.SemiBold, Theme.ink))
       Text(Words.Sample.Deploys.deployApiWhy, style = scaled(14, color = Theme.soft))
       Text(Words.NeedsYou.nothingSent, style = scaled(13, color = Theme.dim))
-      // As Needs you words them on this phone; the picture takes no taps.
-      PrimaryButton(Words.NeedsYou.approveOnceWith(LocalBiometry.current), {}, Modifier.padding(top = 8.dp))
+      // As Needs you words and marks them on this phone (a driven touch on either is refused); the picture takes no taps.
+      PrimaryButton(Words.NeedsYou.approveOnceWith(LocalBiometry.current), {}, Modifier.padding(top = 8.dp).confirms())
       OutlineButton(Words.Sample.Deploys.nextStep, {}, Modifier.fillMaxWidth())
-      OutlineButton(Words.NeedsYou.refuse, {}, Modifier.fillMaxWidth(), color = Theme.no)
+      OutlineButton(Words.NeedsYou.refuse, {}, Modifier.fillMaxWidth().confirms(), color = Theme.no)
     }
   }
 }
