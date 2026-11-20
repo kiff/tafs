@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -109,6 +110,8 @@ internal fun WatchPages(
   account: WatchModel.Reading<bot.tafs.watchlink.WatchReply.AccountPage>? = null,
   /** Today's conversation with Coach from this watch, oldest first (W4). */
   thread: List<Pair<WatchModel.Said, AskLine>> = emptyList(),
+  /** The internal timing build's last link measurement (LinkTrace), drawn faint above the page dots; null elsewhere. */
+  linkTrace: String? = null,
 ) {
   if (signedOutHere) return SignedOutHereScreen(act)
   // The system's back (a swipe from the left edge) closes what's drawn over the pages, as its own Cancel or Close does, and never
@@ -197,6 +200,9 @@ internal fun WatchPages(
           }
         }
       }
+    }
+    linkTrace?.let {
+      Text(it, fontSize = 8.sp, color = Look.faint, maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp))
     }
     HorizontalPageIndicator(pager, Modifier.align(Alignment.BottomCenter))
   }

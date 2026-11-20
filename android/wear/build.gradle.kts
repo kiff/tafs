@@ -49,9 +49,10 @@ android {
       buildConfigField("boolean", "KEEP_AUDIO", "false")
     }
     release {
-      // Only an internal build asks for it: a test version ("-test"), TAFS_WATCH_TIMING=1 or -PwatchTiming. A production build
-      // never shows it.
-      val timing = defaultConfig.versionName.orEmpty().endsWith("-test") || System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
+      // Only an internal build asks for it: a test version ("-test"), a timing version ("-timing": the timings and the link's
+      // measurements, LinkTrace, with no recording kept), TAFS_WATCH_TIMING=1 or -PwatchTiming. A production build never shows it.
+      val name = defaultConfig.versionName.orEmpty()
+      val timing = name.endsWith("-test") || name.endsWith("-timing") || System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
       buildConfigField("boolean", "TIMING", timing.toString())
       // Wear v2 (docs/watch-wear.md, Version 2): on in every release build since 0.4.0, the version the owner tested on a
       // Galaxy Watch 5 and sends to Play's review.
