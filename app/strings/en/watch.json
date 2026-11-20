@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Open on phone",
   "watch.page.brief": "Brief",
   "watch.page.inbox": "Inbox",
+  "watch.paused_still_answers": "Paused: its schedule is off. It still answers what you send.",
   "watch.phone_not_reachable": "Your phone isn't in reach. Bring it closer, then try again.",
   "watch.play": "Play",
   "watch.qr.needs_me_today": "What needs me today?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Tell me more",
   "watch.qr.thanks": "Thanks",
   "watch.quick_reply": "Quick reply",
+  "watch.read_more": "Read more",
   "watch.ready": "Ready",
   "watch.ready_count": {
     "one": "{count} ready",

@@ -10,6 +10,7 @@ import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import bot.tafs.watchlink.Amounts
 
 /**
@@ -218,9 +219,37 @@ class WatchModel(
    * The taf whose page is open: its id, and its line in Your tafs when it was opened, for its name and whether it's halted until
    * the phone's page comes and says them itself.
    */
-  data class OpenTaf(val tafId: String, val listed: TafLine?, val read: TafRead) {
+  data class OpenTaf(val tafId: String, val listed: TafLine?, val read: TafRead, val chat: TafChat = TafChat()) {
     val name: String get() = (read as? TafRead.Read)?.page?.name ?: listed?.name.orEmpty()
     val halted: Boolean get() = (read as? TafRead.Read)?.page?.halted ?: listed?.halted ?: false
+    /** Its schedule is paused: a message still goes, and it answers it now (the owner's 2A). */
+    val paused: Boolean get() = !halted && listed?.paused == true
+  }
+
+  /**
+   * A taf's chat while it's open (docs/watch-wear.md, chatting with a taf): its last turns as the phone shows them, this visit's
+   * turns with the taf's answers, and the answers read in full. In memory only: gone when the chat closes, never in the Inbox.
+   */
+  data class TafChat(val history: History = History.Reading, val turns: List<TafTurn> = emptyList(), val whole: Map<String, Whole> = emptyMap()) {
+    sealed interface History {
+      data object Reading : History
+      data class Read(val lines: List<bot.tafs.watchlink.ChatLine>) : History
+      /** The phone couldn't give them: the chat starts from this visit. */
+      data object NotRead : History
+    }
+  }
+
+  /** One message sent from this chat: the words, when, and the taf's request as tafs cloud says it. */
+  data class TafTurn(val said: String, val at: Long, val ask: AskLine)
+
+  /** What's under a taf's answer: Read more, the read under way, the rest on the phone, or nothing once it's whole. */
+  enum class Foot { ReadMore, Reading, OnPhone }
+
+  /** Read more on an answer: being read, read whole, or the rest is on the phone. */
+  sealed interface Whole {
+    data object Reading : Whole
+    data class Read(val text: String) : Whole
+    data object OnPhone : Whole
   }
 
   private val _taf = MutableStateFlow<OpenTaf?>(null)
@@ -233,7 +262,36 @@ class WatchModel(
     if (_signedOutHere.value) return
     val listed = (_shown.value as? Shown.Read)?.tafs?.tafs?.firstOrNull { it.tafId == tafId }
     _taf.value = OpenTaf(tafId, listed, TafRead.Asking)
+    if (tafChatOn) readTafChat(tafId)
     readTaf(tafId)
+  }
+
+  /** The last turns of a taf's chat, read from the phone; nothing of them is kept once the chat closes. */
+  private suspend fun readTafChat(tafId: String) {
+    val history = when (val asked = phone.ask(WatchRequest.TafChat(now(), tafId))) {
+      is Asked.Answered -> (asked.reply as? WatchReply.TafChat)?.let { TafChat.History.Read(it.lines) } ?: TafChat.History.NotRead
+      else -> TafChat.History.NotRead
+    }
+    _taf.update { it?.takeIf { open -> open.tafId == tafId }?.let { open -> open.copy(chat = open.chat.copy(history = history)) } ?: it }
+  }
+
+  /** The asks sent from a taf's chat this session: never Coach's, never in the Inbox. */
+  private val tafAsks = mutableSetOf<String>()
+
+  /** Read more on a taf's answer: the whole of it, read from tafs cloud only now, shown in place and kept nowhere. */
+  suspend fun readMore(askId: String) {
+    val open = _taf.value ?: return
+    if (open.chat.whole[askId] is Whole.Read) return
+    setWhole(askId, Whole.Reading)
+    val whole = when (val asked = phone.ask(WatchRequest.AskFull(now(), askId))) {
+      is Asked.Answered -> (asked.reply as? WatchReply.AskFull)?.let { Whole.Read(it.text) } ?: Whole.OnPhone
+      else -> Whole.OnPhone
+    }
+    setWhole(askId, whole)
+  }
+
+  private fun setWhole(askId: String, whole: Whole) {
+    _taf.update { open -> open?.takeIf { o -> o.chat.turns.any { t -> t.ask.id == askId } }?.let { o -> o.copy(chat = o.chat.copy(whole = o.chat.whole + (askId to whole))) } ?: open }
   }
 
   fun closeTaf() {
@@ -354,19 +412,26 @@ class WatchModel(
     data class Listening(val heard: String, val replyTo: String?, val since: Long? = null) : Voice
 
     /** v2: the words heard, typed or picked, to check before Send. Nothing has left the watch. */
-    data class Review(val text: String, val replyTo: String?, val audio: VoiceAudio? = null) : Voice
+    data class Review(
+      val text: String,
+      val replyTo: String?,
+      val audio: VoiceAudio? = null,
+      /** Chatting with a taf: the phone's taf the words go to, and its name for the title; null for Coach. */
+      val tafId: String? = null,
+      val tafName: String? = null,
+    ) : Voice
 
     /** v2: deleted from the review; nothing was sent. */
     data object Deleted : Voice
 
     /** Sending the words, as text, through the phone. */
-    data class Sending(val text: String, val clientId: String, val replyTo: String?) : Voice
+    data class Sending(val text: String, val clientId: String, val replyTo: String?, val tafId: String? = null) : Voice
 
     /** tafs cloud took it: its receipt, then the taf it went to and its state as they change. */
     data class Sent(val ask: AskLine) : Voice
 
     /** No receipt: it may have arrived. Retry sends the same words with the same id, so nothing is started twice. */
-    data class Unsure(val text: String, val clientId: String, val replyTo: String?) : Voice
+    data class Unsure(val text: String, val clientId: String, val replyTo: String?, val tafId: String? = null) : Voice
 
     /** Not sent, in the phone's words (no AI consent, asking not on yet, the phone signed out…); null: Open on phone. */
     data class NotSent(val words: String?) : Voice
@@ -453,8 +518,9 @@ class WatchModel(
    * v2: the microphone tapped (or Reply, with [replyTo]): its screen, ready for Start. From an unlocked watch with a screen lock
    * only, as [listen].
    */
-  fun readyToRecord(replyTo: String? = null) {
+  fun readyToRecord(replyTo: String? = null, tafId: String? = null) {
     if (_signedOutHere.value) return
+    messaging = tafId
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
@@ -463,16 +529,31 @@ class WatchModel(
     voiceNow = Voice.Ready(replyTo)
   }
 
+  /**
+   * The taf the words being recorded go to, set at every start ([readyToRecord], [review]): Coach's starts set it to null, a
+   * taf's chat to its id, so words never go to a taf by a start that wasn't its own.
+   */
+  private var messaging: String? = null
+
+  /** The switch for chatting with a taf, as [reviewFirst]: off, a taf's page opens as before and no chat is read. */
+  var tafChatOn: Boolean = WATCH_TAF_CHAT
+
+  private fun reviewOf(text: String, replyTo: String?, audio: VoiceAudio? = null): Voice.Review {
+    val taf = messaging?.let { id -> _taf.value?.takeIf { it.tafId == id } }
+    return Voice.Review(text.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo, audio, tafId = taf?.tafId, tafName = taf?.name)
+  }
+
   /** v2: words typed or a quick reply picked, to check before Send, as words heard are. Blank is nothing. */
-  fun review(text: String, replyTo: String? = null) {
+  fun review(text: String, replyTo: String? = null, tafId: String? = null) {
     val words = text.trim()
     if (words.isEmpty() || _signedOutHere.value) return
+    messaging = tafId
     if (!unlocked()) {
       voiceNow = Voice.NeedsLock
       return
     }
     _result.value = null
-    voiceNow = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), replyTo)
+    voiceNow = reviewOf(words, replyTo)
   }
 
   /** v2: Send, from the review. The watch is checked again: it may have locked while the words were read. */
@@ -482,13 +563,13 @@ class WatchModel(
       voiceNow = Voice.NeedsLock
       return
     }
-    send(Voice.Sending(review.text, newClientId(), review.replyTo))
+    send(Voice.Sending(review.text, newClientId(), review.replyTo, review.tafId))
   }
 
   /** v2: Re-record, from the review: the words are dropped and the microphone is ready again, for the same chat. */
   fun rerecord() {
     val review = _voice.value as? Voice.Review ?: return
-    readyToRecord(review.replyTo)
+    readyToRecord(review.replyTo, review.tafId)
   }
 
   /** v2: Delete, from the review: the words are dropped, and nothing was sent. */
@@ -530,7 +611,7 @@ class WatchModel(
     if (words.isEmpty()) return heardNothing()
     heardAt = now()
     if (reviewFirst) {
-      voiceNow = Voice.Review(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), listening.replyTo, audio)
+      voiceNow = reviewOf(words, listening.replyTo, audio)
       return
     }
     send(Voice.Sending(words.take(bot.tafs.watchlink.WatchLink.MAX_ASK_TEXT), newClientId(), listening.replyTo))
@@ -543,14 +624,24 @@ class WatchModel(
       voiceNow = Voice.NeedsLock
       return
     }
-    send(Voice.Sending(unsure.text, unsure.clientId, unsure.replyTo))
+    send(Voice.Sending(unsure.text, unsure.clientId, unsure.replyTo, unsure.tafId))
   }
 
   private suspend fun send(sending: Voice.Sending) {
     voiceNow = sending
-    val asked = phone.ask(WatchRequest.Ask(now(), sending.clientId, sending.text, sending.replyTo))
+    val asked = phone.ask(WatchRequest.Ask(now(), sending.clientId, sending.text, sending.replyTo, tafId = sending.tafId))
     // Only while this ask is still the one shown: a cancel meanwhile isn't undone by its answer.
     if (_voice.value != sending) return
+    // A taf's chat: the turn shows in that chat, back from the microphone's screen; nothing of it goes to Coach's conversation or
+    // the Inbox.
+    val taken = ((asked as? Asked.Answered)?.reply as? WatchReply.AskTaken)?.ask
+    if (sending.tafId != null && taken != null) {
+      tafAsks += taken.id
+      val turn = TafTurn(sending.text, now(), taken)
+      _taf.update { open -> open?.takeIf { it.tafId == sending.tafId }?.let { it.copy(chat = it.chat.copy(turns = it.chat.turns + turn)) } ?: open }
+      voiceNow = null
+      return
+    }
     voiceNow = when (asked) {
       is Asked.Answered -> when (val reply = asked.reply) {
         is WatchReply.AskTaken -> {
@@ -562,7 +653,7 @@ class WatchModel(
           took(reply.ask)
           Voice.Sent(reply.ask)
         }
-        WatchReply.Unsure -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo)
+        WatchReply.Unsure -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
         is WatchReply.Failed -> Voice.NotSent(reply.words)
         WatchReply.SignedOut -> Voice.NotSent(Words.Watch.signInOnPhone)
         // A phone with an older tafs doesn't know the ask.
@@ -570,7 +661,7 @@ class WatchModel(
         else -> Voice.NotSent(null)
       }
       // No answer in the watch's time: the phone may have sent it.
-      Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo)
+      Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
       Asked.NotUnderstood -> Voice.NotSent(null)
     }
   }
@@ -586,6 +677,14 @@ class WatchModel(
    */
   fun took(ask: AskLine) {
     if (_signedOutHere.value) return
+    if (ask.tafChat || ask.id in tafAsks) {
+      // A taf's chat: its open chat's turn, if it's there; never Coach's asks, the Inbox or a result card.
+      _taf.update { open ->
+        open?.takeIf { o -> o.chat.turns.any { it.ask.id == ask.id && it.ask.updated <= ask.updated } }
+          ?.let { o -> o.copy(chat = o.chat.copy(turns = o.chat.turns.map { if (it.ask.id == ask.id) it.copy(ask = ask) else it })) } ?: open
+      }
+      return
+    }
     val before = _asks.value[ask.id]
     // An older state never replaces a newer one (two messages crossing).
     if (before != null && before.updated > ask.updated) return

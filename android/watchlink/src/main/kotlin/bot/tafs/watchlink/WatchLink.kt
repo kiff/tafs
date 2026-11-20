@@ -59,6 +59,15 @@ sealed interface WatchRequest {
   /** One taf's page (Wear v2): its job, its Cards with today's use, and what of it waits on the person, by its id on the phone. */
   data class Taf(override val madeAt: Long, val tafId: String) : WatchRequest
 
+  /**
+   * Chatting with a taf (docs/watch-wear.md): the last turns of the person's own chat with the phone's taf [tafId], as the phone
+   * shows them. Read only, and kept nowhere on the watch.
+   */
+  data class TafChat(override val madeAt: Long, val tafId: String) : WatchRequest
+
+  /** Read more on a taf's answer: the whole answer to the watch's request [askId], read from tafs cloud only on the tap. */
+  data class AskFull(override val madeAt: Long, val askId: String) : WatchRequest
+
   /** The calendar's [day] (`YYYY-MM-DD`, in the account's zone), or today there with [day] null: what the tafs will do then. */
   data class Calendar(override val madeAt: Long, val day: String? = null) : WatchRequest
 
@@ -164,6 +173,14 @@ sealed interface WatchReply {
    * One taf's page, in the phone's words: its state, its job, each of its Cards with today's use, as the phone's Card tab shows it,
    * and how many of its calls wait on the person ([waiting]). Nothing on it is changed from the wrist but Halt.
    */
+  /** A taf's chat's last turns, oldest first, as the phone shows them ([WatchRequest.TafChat]). Shown, never kept. */
+  @Serializable @SerialName("taf_chat")
+  data class TafChat(val lines: List<ChatLine>) : WatchReply
+
+  /** A taf's whole answer, for Read more ([WatchRequest.AskFull]): tafs cloud's `text`, checked, at most 16 KB. Shown, never kept. */
+  @Serializable @SerialName("ask_full")
+  data class AskFull(val text: String) : WatchReply
+
   @Serializable @SerialName("taf")
   data class TafPage(
     @SerialName("taf_id") val tafId: String,
@@ -286,7 +303,23 @@ data class HeldLine(
 
 /** A taf in one line: its name, its state in tafs cloud's words, and whether it is halted. */
 @Serializable
-data class TafLine(@SerialName("taf_id") val tafId: String, val name: String, val state: String, val halted: Boolean)
+data class TafLine(
+  @SerialName("taf_id") val tafId: String,
+  val name: String,
+  val state: String,
+  val halted: Boolean,
+  /** Its schedule is paused: a message still goes, and it answers it now (the owner's 2A). False from a phone before it. */
+  val paused: Boolean = false,
+)
+
+/** One turn of a taf's chat as the watch shows it: the person's or the taf's, when, its words cut as an answer is, and whether more is on the phone. */
+@Serializable
+data class ChatLine(val id: String, val mine: Boolean, val at: String, val text: String, val more: Boolean = false) {
+  companion object {
+    /** The most turns the watch shows from before this visit, as Apple Watch's. */
+    const val LAST = 6
+  }
+}
 
 object WatchLink {
   /** Every path is under this one: a newer version gets a new prefix, and this phone refuses it as unknown. */
@@ -306,6 +339,8 @@ object WatchLink {
   const val ASK_RESULT = PREFIX + "ask-result"
   const val BRIEF = PREFIX + "brief"
   const val TAF = PREFIX + "taf"
+  const val TAF_CHAT = PREFIX + "taf-chat"
+  const val ASK_FULL = PREFIX + "ask-full"
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
 
@@ -368,6 +403,8 @@ object WatchLink {
 
   @Serializable private data class TafBody(@SerialName("made_at") val madeAt: Long, @SerialName("taf_id") val tafId: String)
 
+  @Serializable private data class AskFullBody(@SerialName("made_at") val madeAt: Long, @SerialName("ask_id") val askId: String)
+
   @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
 
   /** The watch's side: the path and body for [request]. */
@@ -386,6 +423,8 @@ object WatchLink {
       is WatchRequest.Asks -> ASKS to json.encodeToString(AsksBody.serializer(), AsksBody(request.madeAt, request.since))
       is WatchRequest.Brief -> BRIEF to json.encodeToString(Read.serializer(), Read(request.madeAt))
       is WatchRequest.Taf -> TAF to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
+      is WatchRequest.TafChat -> TAF_CHAT to json.encodeToString(TafBody.serializer(), TafBody(request.madeAt, request.tafId))
+      is WatchRequest.AskFull -> ASK_FULL to json.encodeToString(AskFullBody.serializer(), AskFullBody(request.madeAt, request.askId))
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
     }
@@ -421,6 +460,8 @@ object WatchLink {
         ASKS -> json.decodeFromString(AsksBody.serializer(), text).let { WatchRequest.Asks(it.madeAt, it.since) }
         BRIEF -> WatchRequest.Brief(json.decodeFromString(Read.serializer(), text).madeAt)
         TAF -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.Taf(it.madeAt, it.tafId) }
+        TAF_CHAT -> json.decodeFromString(TafBody.serializer(), text).let { WatchRequest.TafChat(it.madeAt, it.tafId) }
+        ASK_FULL -> json.decodeFromString(AskFullBody.serializer(), text).let { WatchRequest.AskFull(it.madeAt, it.askId) }
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
         else -> return Accepted.No(NotAccepted.UNKNOWN_PATH)
@@ -443,6 +484,8 @@ object WatchLink {
       (request.replyTo == null || ID.matches(request.replyTo)) && (request.tafId == null || (request.tafId.isNotBlank() && request.tafId.length <= 128))
     is WatchRequest.Asks -> request.since == null || ID.matches(request.since)
     is WatchRequest.Taf -> request.tafId.isNotBlank() && request.tafId.length <= 128
+    is WatchRequest.TafChat -> request.tafId.isNotBlank() && request.tafId.length <= 128
+    is WatchRequest.AskFull -> ID.matches(request.askId)
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
     is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account -> true
   }

@@ -14,7 +14,9 @@
     <string name="calendar_today">Oggi</string>
     <string name="card_its_card">La sua Card</string>
     <string name="chat_delete">Elimina</string>
+    <string name="chat_message_taf">Scrivi a %1$s</string>
     <string name="chat_stop">Ferma</string>
+    <string name="chat_taf_is_answering">%1$s sta rispondendo</string>
     <string name="chat_waiting_for_you">Ti aspetta</string>
     <string name="coach_ask">Chiedi a Coach</string>
     <string name="coach_start">Avvia</string>
@@ -104,6 +106,7 @@
     <string name="watch_open_on_phone">Apri sul telefono</string>
     <string name="watch_page_brief">Riepilogo</string>
     <string name="watch_page_inbox">In arrivo</string>
+    <string name="watch_paused_still_answers">In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.</string>
     <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
     <string name="watch_play">Riproduci</string>
     <string name="watch_qr_needs_me_today">Cosa mi aspetta oggi?</string>
@@ -111,6 +114,7 @@
     <string name="watch_qr_tell_me_more">Dimmi di più</string>
     <string name="watch_qr_thanks">Grazie</string>
     <string name="watch_quick_reply">Risposta rapida</string>
+    <string name="watch_read_more">Continua a leggere</string>
     <string name="watch_ready">Pronta</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s pronto</item>

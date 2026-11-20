@@ -5333,6 +5333,8 @@ enum Words {
             /// Inbox
             static var inbox: String { Words.line("watch.page.inbox") }
         }
+        /// Paused: its schedule is off. It still answers what you send.
+        static var pausedStillAnswers: String { Words.line("watch.paused_still_answers") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
         /// Play
@@ -5349,6 +5351,8 @@ enum Words {
         }
         /// Quick reply
         static var quickReply: String { Words.line("watch.quick_reply") }
+        /// Read more
+        static var readMore: String { Words.line("watch.read_more") }
         /// Ready
         static var ready: String { Words.line("watch.ready") }
         /// {count} ready

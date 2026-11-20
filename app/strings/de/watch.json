@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Auf dem Handy öffnen",
   "watch.page.brief": "Briefing",
   "watch.page.inbox": "Eingang",
+  "watch.paused_still_answers": "Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem.",
   "watch.phone_not_reachable": "Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.",
   "watch.play": "Abspielen",
   "watch.qr.needs_me_today": "Was braucht mich heute?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Erzähl mir mehr",
   "watch.qr.thanks": "Danke",
   "watch.quick_reply": "Schnellantwort",
+  "watch.read_more": "Weiterlesen",
   "watch.ready": "Fertig",
   "watch.ready_count": {
     "one": "{count} fertig",

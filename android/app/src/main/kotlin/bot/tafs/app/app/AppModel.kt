@@ -2595,6 +2595,19 @@ class AppModel(
     return cloud.watchAsk(clientId, text, replyTo, tenant, tafCloudId) { signer.signConfirmed(it) }
   }
 
+  /** Read more on a taf's answer from the watch: tafs cloud's whole answer, or null; null too when the phone isn't signed in. */
+  suspend fun watchAskFull(id: String): String? = if (_state.value.mode != Mode.kiff) null else cloud.watchAskFull(id)
+
+  /**
+   * A taf's chat for the watch: the person's own thread with a taf this phone lists, as the chat view reads it (tafs cloud's
+   * conversation). Null for a taf it doesn't list or when the phone isn't signed in. Read for the watch only, never kept.
+   */
+  suspend fun watchTafChat(tafId: String): List<bot.tafs.app.model.ChatMessage>? {
+    if (_state.value.mode != Mode.kiff) return null
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return null
+    return cloud.conversation(cloudId).messages
+  }
+
   /** One of the watch's asks, by its id; null when the phone isn't signed in. */
   suspend fun watchAskById(id: String): bot.tafs.app.kiff.WatchAsk? =
     if (_state.value.mode != Mode.kiff) null else cloud.watchAskById(id)

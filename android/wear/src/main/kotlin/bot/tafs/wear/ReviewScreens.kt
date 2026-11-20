@@ -97,7 +97,7 @@ internal fun VoiceScreenV2(voice: WatchModel.Voice, act: Actions, now: () -> Lon
       val seconds = (voice.since?.let { ((at - it) / 1000).toInt() } ?: 0).coerceIn(0, (LISTEN_LIMIT_MS / 1000).toInt())
       RecordScreen(heard = voice.heard, seconds = seconds, act = act, start = null)
     }
-    is WatchModel.Voice.Review -> ReviewScreen(voice.text, voice.audio, act, probe)
+    is WatchModel.Voice.Review -> ReviewScreen(voice.text, voice.audio, act, probe, title = voice.tafName?.let { Words.Chat.messageTaf(it) } ?: Words.Watch.review)
     WatchModel.Voice.Deleted -> {
       LaunchedEffect(Unit) {
         delay(DELETED_SHOWN_MS)
@@ -206,7 +206,7 @@ internal const val REVIEW_AGAIN = "review-again"
  * long message rests above the buttons. Each button is named for TalkBack in the watch's words.
  */
 @Composable
-private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?) {
+private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: String?, title: String = Words.Watch.review) {
   BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
     val top = maxHeight * TOP_INSET_SHARE
     ScalingLazyColumn(
@@ -216,7 +216,7 @@ private fun ReviewScreen(text: String, audio: VoiceAudio?, act: Actions, probe: 
       contentPadding = PaddingValues(top = top, bottom = REVIEW_FOOT),
       verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-      item { ListHeader { Text(Words.Watch.review) } }
+      item { ListHeader { Text(title) } }
       // The recording, on the watch only: Play and Pause from where it stopped, and where it is.
       val playback = act.playback
       if (audio != null && playback != null) item { PlayRow(audio, playback) }

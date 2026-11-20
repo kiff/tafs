@@ -2695,6 +2695,7 @@
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
     <string name="watch_page_brief">Résumé</string>
     <string name="watch_page_inbox">Boîte de réception</string>
+    <string name="watch_paused_still_answers">En pause : son planning est arrêté. Il répond quand même à ce que vous envoyez.</string>
     <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
     <string name="watch_play">Lire</string>
     <string name="watch_qr_needs_me_today">Qu\'est-ce qui m\'attend aujourd\'hui ?</string>
@@ -2702,6 +2703,7 @@
     <string name="watch_qr_tell_me_more">Dites-m\'en plus</string>
     <string name="watch_qr_thanks">Merci</string>
     <string name="watch_quick_reply">Réponse rapide</string>
+    <string name="watch_read_more">Lire la suite</string>
     <string name="watch_ready">Prêt</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s prêt</item>

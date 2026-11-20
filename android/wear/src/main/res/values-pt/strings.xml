@@ -14,7 +14,9 @@
     <string name="calendar_today">Hoje</string>
     <string name="card_its_card">O seu Card</string>
     <string name="chat_delete">Eliminar</string>
+    <string name="chat_message_taf">Mensagem para %1$s</string>
     <string name="chat_stop">Parar</string>
+    <string name="chat_taf_is_answering">%1$s está a responder</string>
     <string name="chat_waiting_for_you">Precisa de si</string>
     <string name="coach_ask">Perguntar ao Coach</string>
     <string name="coach_start">Começar</string>
@@ -104,6 +106,7 @@
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
+    <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
     <string name="watch_play">Reproduzir</string>
     <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
@@ -111,6 +114,7 @@
     <string name="watch_qr_tell_me_more">Diga-me mais</string>
     <string name="watch_qr_thanks">Obrigado</string>
     <string name="watch_quick_reply">Resposta rápida</string>
+    <string name="watch_read_more">Ler mais</string>
     <string name="watch_ready">Pronta</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s pronto</item>

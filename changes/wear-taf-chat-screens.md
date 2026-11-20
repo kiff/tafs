@@ -1,0 +1,1 @@
+- **Wear OS, behind a switch (off): chatting with a taf from the watch.** A taf opens its own chat (its last turns, then Message, Type and a quick reply); a paused taf still takes the message; a long answer opens whole on Read more; approvals stay on the phone; nothing of the chat is kept on the watch ([watch-wear.md](docs/watch-wear.md)).

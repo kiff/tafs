@@ -71,8 +71,11 @@ class WatchActivity : ComponentActivity() {
   /** v2's Type: the watch's keyboard; what's typed goes to the review. */
   private val typed = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
     val text = result.data?.let { android.app.RemoteInput.getResultsFromIntent(it) }?.getCharSequence(TYPED)?.toString()
-    if (text != null) model.review(text)
+    if (text != null) model.review(text, tafId = typingFor)
   }
+
+  /** The taf the keyboard's words go to: set at each Type, Coach's to null. */
+  private var typingFor: String? = null
 
   private fun type() {
     // The system's text input (what androidx.wear.input's RemoteInputIntentHelper builds): keyboard, handwriting or voice typing.
@@ -159,8 +162,12 @@ class WatchActivity : ComponentActivity() {
           send = { lifecycleScope.launch { model.sendReviewed() } },
           rerecord = model::rerecord,
           delete = model::deleteReviewed,
-          type = ::type,
+          type = { typingFor = null; type() },
           quick = { model.review(it) },
+          messageTaf = { taf -> model.readyToRecord(tafId = taf) },
+          typeTaf = { taf -> typingFor = taf; type() },
+          quickTaf = { taf, text -> model.review(text, tafId = taf) },
+          readMore = { id -> lifecycleScope.launch { model.readMore(id) } },
           keep = if (WATCH_V2) model::keepForLater else null,
           deleteKept = model::deleteKept,
           playback = if (WATCH_V2) playback else null,
@@ -369,6 +376,15 @@ internal class Actions(
   val signOut: () -> Unit = {},
   /** Sign in on this watch again. */
   val signIn: () -> Unit = {},
+  // Chatting with a taf (TafScreens.kt): each start names its taf, so words never go to one by another's start.
+  /** Speak to the taf open now: the microphone's screen, for that taf. */
+  val messageTaf: (String) -> Unit = {},
+  /** Type to the taf open now: the watch's keyboard, for that taf. */
+  val typeTaf: (String) -> Unit = {},
+  /** A quick reply picked for the taf open now: to the review, for that taf. */
+  val quickTaf: (String, String) -> Unit = { _, _ -> },
+  /** Read more on a taf's answer, by its request's id. */
+  val readMore: (String) -> Unit = {},
 ) {
   companion object {
     /** Nothing happens: for a screen drawn on its own (the store screenshots). */

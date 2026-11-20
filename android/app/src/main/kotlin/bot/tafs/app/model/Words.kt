@@ -2877,6 +2877,7 @@ object Words {
       val brief: String get() = Res.s(R.string.watch_page_brief)
       val inbox: String get() = Res.s(R.string.watch_page_inbox)
     }
+    val pausedStillAnswers: String get() = Res.s(R.string.watch_paused_still_answers)
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
     val play: String get() = Res.s(R.string.watch_play)
     object Qr {
@@ -2886,6 +2887,7 @@ object Words {
       val thanks: String get() = Res.s(R.string.watch_qr_thanks)
     }
     val quickReply: String get() = Res.s(R.string.watch_quick_reply)
+    val readMore: String get() = Res.s(R.string.watch_read_more)
     val ready: String get() = Res.s(R.string.watch_ready)
     fun readyCount(count: Int): String = Res.p(R.plurals.watch_ready_count, count, Res.number(count))
     val recentChats: String get() = Res.s(R.string.watch_recent_chats)

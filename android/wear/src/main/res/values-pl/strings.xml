@@ -16,7 +16,9 @@
     <string name="calendar_today">Dziś</string>
     <string name="card_its_card">Jego Card</string>
     <string name="chat_delete">Usuń</string>
+    <string name="chat_message_taf">Napisz do %1$s</string>
     <string name="chat_stop">Zatrzymaj</string>
+    <string name="chat_taf_is_answering">%1$s odpowiada</string>
     <string name="chat_waiting_for_you">Czeka na Ciebie</string>
     <string name="coach_ask">Zapytaj Coacha</string>
     <string name="coach_start">Start</string>
@@ -114,6 +116,7 @@
     <string name="watch_open_on_phone">Otwórz na telefonie</string>
     <string name="watch_page_brief">Podsumowanie</string>
     <string name="watch_page_inbox">Skrzynka</string>
+    <string name="watch_paused_still_answers">Wstrzymane: harmonogram jest wyłączony. Taf nadal odpowiada na to, co wysyłasz.</string>
     <string name="watch_phone_not_reachable">Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.</string>
     <string name="watch_play">Odtwórz</string>
     <string name="watch_qr_needs_me_today">Co dziś na mnie czeka?</string>
@@ -121,6 +124,7 @@
     <string name="watch_qr_tell_me_more">Powiedz więcej</string>
     <string name="watch_qr_thanks">Dzięki</string>
     <string name="watch_quick_reply">Szybka odpowiedź</string>
+    <string name="watch_read_more">Czytaj dalej</string>
     <string name="watch_ready">Gotowe</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s gotowy</item>
