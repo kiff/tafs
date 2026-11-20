@@ -7,6 +7,9 @@
   "card.calls_left": {
     "other": "残り{count}回"
   },
+  "card.calls_left_line": {
+    "other": "{window}{limit}回中、残り{count}回"
+  },
   "card.calls_used_of": {
     "other": "{window}{count}回中{used}回"
   },
