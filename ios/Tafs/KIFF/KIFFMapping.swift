@@ -47,7 +47,7 @@ enum KIFFMapping {
     /// in words (`DraftCard.lines`, `says`); planque refuses two titles alike (kiff/planque#38).
     static func name(_ action: String, title: String?) -> String {
         let t = (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return t.isEmpty ? toolWords(action) : t
+        return t.isEmpty ? toolWords(action) : visible(t)
     }
 
     /// A held call's name, which the owner approves alone, without the Card's other lines:
@@ -81,7 +81,7 @@ enum KIFFMapping {
             name = String(name[r.upperBound...])
         }
         let words = name.split(whereSeparator: { $0 == "_" || $0 == "-" }).joined(separator: " ")
-        return words.isEmpty ? tool : words
+        return visible(words.isEmpty ? tool : words)
     }
 
     /// A vendor as people say it: "stripe-mcp" or "mcp.stripe.com" → "Stripe" (item 52).
@@ -90,8 +90,8 @@ enum KIFFMapping {
         if v.hasPrefix("mcp.") { v.removeFirst(4) }
         for suffix in ["-mcp", "_mcp", ".mcp"] where v.hasSuffix(suffix) { v.removeLast(suffix.count) }
         if let dot = v.firstIndex(of: ".") { v = String(v[..<dot]) }
-        guard let first = v.first else { return vendor }
-        return first.uppercased() + v.dropFirst().replacingOccurrences(of: "-", with: " ")
+        guard let first = v.first else { return visible(vendor) }
+        return visible(first.uppercased() + v.dropFirst().replacingOccurrences(of: "-", with: " "))
     }
 
     /// A taf as tafs cloud lists it (#91), for the screen: its state in the app's words, its
@@ -108,7 +108,7 @@ enum KIFFMapping {
         let count = h.card.ids.count
         // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run
         // has none, and is described by its Cards.
-        var taf = Taf(id: id, name: h.name, job: h.jobSummary ?? Words.Taf.worksUnderCards(count: count),
+        var taf = Taf(id: id, name: visible(h.name), job: h.jobSummary.map(visible) ?? Words.Taf.worksUnderCards(count: count),
                       tools: h.card.tools, colorIndex: h.color,
                       card: Card(rules: rules, issuedBy: owner, expires: h.card.expires, revoked: !h.card.active))
         switch h.state {
@@ -122,7 +122,7 @@ enum KIFFMapping {
         // tafs cloud's words when it sent them ("Next run Mon 08:00", with the day): a bare time read
         // as tomorrow. The app's own only from a tafs cloud that sends none.
         case "working": taf.state = .working
-            taf.now = h.nextRunWords ?? h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
+            taf.now = h.nextRunWords.map(visible) ?? h.nextRun.map { Words.Taf.Now.nextRun(time: "\($0.shortTime)") } ?? Words.Taf.Now.running
         case "idle": taf.state = .idle; taf.now = Words.Taf.Now.actingUnderKiff
         default: taf.state = .revoked; taf.now = Words.Taf.Now.cardNotActive
         }
@@ -146,7 +146,7 @@ enum KIFFMapping {
         // taf that isn't healthy says it too.
         if let work = h.work, work.attention || (work.status == "idle" && h.health?.needsAttention == true),
            !work.line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            taf.healthNow = work.line
+            taf.healthNow = visible(work.line)
             taf.attention = work.attention
         }
         taf.used = h.card.used.compactMapValues { amount($0) }
@@ -230,7 +230,7 @@ enum KIFFMapping {
               !text.contains(where: \.isNewline) else { return nil }
         if text.hasPrefix("{") || text.hasPrefix("[") || text.contains("{\"") || text.contains("\":") { return nil }
         if text.range(of: #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#, options: .regularExpression) != nil { return nil }
-        return text
+        return visible(text)
     }
 
     /// What the tool did with an allowed call: its kind and the words for it. approved: the

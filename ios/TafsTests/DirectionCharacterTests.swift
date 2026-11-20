@@ -61,6 +61,23 @@ final class DirectionCharacterTests: XCTestCase {
         XCTAssertTrue(labels.contains("Refund a payment"))
     }
 
+    /// agentgabo's read of #1547: a vendor's own message quoted into the record, a tool's or vendor's name in words, and a
+    /// taf's name and job from tafs cloud carry none either, so every line `KIFFMapping` builds from a server value is clean.
+    func testQuotedMessagesNamesAndTafsCarryNone() throws {
+        XCTAssertEqual(KIFFMapping.quotable("Card\u{202E} declined"), "Card declined")
+        XCTAssertEqual(KIFFMapping.toolWords("stripe.create\u{2066}_refund"), "create refund")
+        XCTAssertEqual(KIFFMapping.vendorWords("mcp.str\u{202E}ipe.com"), "Stripe")
+        XCTAssertEqual(KIFFMapping.name("x", title: "Pay\u{202E} now"), "Pay now")
+        let (_, words) = KIFFMapping.executed(.init(status: "not_sent", message: "Bank\u{202E} said no"), approved: false)
+        XCTAssertFalse(hasDirection(words), words)
+
+        let entry = HomeJSON.entry(agent: "rae-k3f9", name: "Ra\u{202E}e")
+        let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.list([entry]).utf8))
+        let taf = KIFFMapping.taf(try XCTUnwrap(home.tafs.first), id: UUID(), owner: "You")
+        XCTAssertEqual(taf.name, "Rae")
+        XCTAssertFalse(hasDirection(taf.job), taf.job)
+    }
+
     /// agentgabo's 17:00: a push on the lock screen and the watch's messages carry none either. The push's text goes
     /// through `FileText.withoutDirection` (lines kept), and every phone–watch message through `WatchMessage.encode`,
     /// whose set is the phone's own.

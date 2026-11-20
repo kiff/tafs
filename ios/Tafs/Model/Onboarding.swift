@@ -23,6 +23,13 @@ enum Onboarding {
         if let cloud, !cloud.isEmpty { return (cloud, nil) }
         return (Words.Home.noTafs, Words.Onboarding.homeLead)
     }
+
+    /// The welcome's age line for the person's country (the device's region): its own age where the law asks for more
+    /// than 16 (`MinimumAge`, legal-i18n's table: India, Indonesia, Brazil…), else the line every country reads.
+    static func ageLine(region: String? = Locale.current.region?.identifier) -> String {
+        let age = MinimumAge.of(region)
+        return age > MinimumAge.standard ? Words.Onboarding.ageN(age: "\(age)") : Words.Onboarding.age
+    }
 }
 
 /// The welcome's one tick: the person agrees to KIFF's Terms and the tafs Terms before Continue. Privacy is linked

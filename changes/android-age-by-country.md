@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** the welcome's age line says the person's country's age where its law asks more than 16 (India, Indonesia, Brazil), from the same table as iOS ([onboarding.md](docs/onboarding.md)).

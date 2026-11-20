@@ -159,6 +159,8 @@ targets:
       - Tafs/Services/BiometryName.swift
       # The app's words: Model and KIFF read them, and the extension's own bundle needs the catalog.
       - Tafs/Design/Words.swift
+      # The age table the welcome's age line reads (Onboarding.ageLine, in Model).
+      - Tafs/Design/MinimumAge.swift
       - Tafs/Localizable.xcstrings
     dependencies:
       - package: swift-secp256k1

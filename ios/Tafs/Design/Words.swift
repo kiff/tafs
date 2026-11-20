@@ -2897,6 +2897,8 @@ enum Words {
     enum Onboarding {
         /// You must be at least 16, or your country's age of digital consent if it's higher.
         static var age: String { Words.line("onboarding.age") }
+        /// You must be at least {age}.
+        static func ageN(age: String) -> String { Words.line("onboarding.age_n", age) }
         /// Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.
         static var cardLead: String { Words.line("onboarding.card_lead") }
         /// A Card is your permission

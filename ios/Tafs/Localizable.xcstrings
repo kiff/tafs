@@ -75713,6 +75713,59 @@
         }
       }
     },
+    "onboarding.age_n": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du musst mindestens %1$@ sein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You must be at least %1$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debes tener al menos %1$@ años."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous devez avoir au moins %1$@ ans."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devi avere almeno %1$@ anni."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je moet minstens %1$@ zijn."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Musisz mieć co najmniej %1$@ lat."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tem de ter pelo menos %1$@ anos."
+          }
+        }
+      }
+    },
     "onboarding.card_lead": {
       "extractionState": "manual",
       "localizations": {

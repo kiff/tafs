@@ -35,7 +35,8 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 
 Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
 
-- **The welcome** (`OnboardingView`, step 1): the same tick, links and age line, with `ConsentTick` and **Continue**
+- **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
+  law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`), with `ConsentTick` and **Continue**
   off until the box is ticked. The box is Material's checkbox, so TalkBack reads it as the whole tick line; the links
   in the line are their own targets. `linked` puts each link where the language puts it. `Legal.kiffTerms` and
   `Legal.kiffPrivacy` are KIFF's pages in the app's language (`/de/terms`), English for any other.

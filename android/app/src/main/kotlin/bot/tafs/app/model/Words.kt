@@ -1559,6 +1559,7 @@ object Words {
   }
   object Onboarding {
     val age: String get() = Res.s(R.string.onboarding_age)
+    fun ageN(age: String): String = Res.s(R.string.onboarding_age_n, age)
     val cardLead: String get() = Res.s(R.string.onboarding_card_lead)
     val cardTitle: String get() = Res.s(R.string.onboarding_card_title)
     fun consentTick(kiffTerms: String, tafsTerms: String): String = Res.s(R.string.onboarding_consent_tick, kiffTerms, tafsTerms)

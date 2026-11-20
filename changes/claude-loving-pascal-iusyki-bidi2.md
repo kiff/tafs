@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** a vendor's quoted message in the record, a tool's or vendor's name in words, and a taf's name, job and status line from tafs cloud carry no invisible direction character either ([approvals.md](docs/approvals.md)).
