@@ -68,6 +68,10 @@ fun SignInSheet(
   onClose: () -> Unit,
   /** Only "Sign in with your phone" (a tablet's second way under the new welcome's Continue, docs/onboarding.md): no KIFF code. */
   phoneOnly: Boolean = false,
+  /** With [phoneOnly]: the terms version the welcome showed ticked, sent with the claim so KIFF records it for this device. */
+  termsVersion: String? = null,
+  /** With [phoneOnly]: KIFF said the terms changed since the tick; the sheet closes and the welcome asks the tick again. */
+  onTermsChanged: () -> Unit = {},
 ) {
   // Closed by the person: the code is forgotten. A screen recreated meanwhile isn't closed, and goes on with the same code.
   val close = { model.endSignIn(); onClose() }
@@ -130,8 +134,12 @@ fun SignInSheet(
       }
       offer = o
       try {
-        model.finishPairSignIn(o)
+        model.finishPairSignIn(o, termsVersion.takeIf { phoneOnly })
         connected = true
+        return@LaunchedEffect
+      } catch (e: bot.tafs.app.kiff.AppSignInRefused) {
+        // Terms that changed since the tick: nothing was claimed; the sheet closes and the welcome asks the tick again.
+        if (e.error == AppModel.TERMS_OUTDATED) { close(); onTermsChanged() } else pairProblem = Words.SignIn.didntWork
         return@LaunchedEffect
       } catch (e: CancellationException) {
         throw e

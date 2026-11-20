@@ -63,8 +63,11 @@ fun OnboardingView(
   signInInApp: (suspend (termsVersion: String?) -> Unit)? = null,
   /** The terms version in force, read as the tick shows (`AppModel.appTermsVersion`). */
   termsVersion: (suspend () -> String)? = null,
-  /** A tablet's second way, under Continue and waiting on the same tick: added from the person's phone (pairing); null on a phone. */
-  onSignInWithPhone: (() -> Unit)? = null,
+  /**
+   * A tablet's second way, under Continue and waiting on the same tick: added from the person's phone (pairing); null on a phone.
+   * It's given the terms version the tick agreed to, which the pairing claim carries, and what to do if KIFF says it changed.
+   */
+  onSignInWithPhone: ((termsVersion: String, termsChanged: () -> Unit) -> Unit)? = null,
 ) {
   var tick by rememberSaveable { mutableStateOf(false) }
   val consent = ConsentTick(tick)
@@ -74,6 +77,24 @@ fun OnboardingView(
   var shownTerms by rememberSaveable { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
   if (onboarding && termsVersion != null) LaunchedEffect(Unit) { shownTerms = runCatching { termsVersion() }.getOrNull() }
+  // Terms that changed since the tick, from either way: the box is unticked and says why; the new version is for the new tick.
+  val untick: () -> Unit = {
+    tick = false
+    termsChanged = true
+    if (termsVersion != null) scope.launch { shownTerms = runCatching { termsVersion() }.getOrNull() }
+  }
+  // The phone way carries the version the tick agreed to, read now if it couldn't be when the welcome showed; without one,
+  // nothing opens, so consent is never skipped (as iPad).
+  val onPhone: (() -> Unit)? = onSignInWithPhone?.let { open ->
+    {
+      problem = null
+      termsChanged = false
+      scope.launch {
+        val version = shownTerms ?: termsVersion?.let { read -> runCatching { read() }.getOrNull() }?.also { shownTerms = it }
+        if (version == null) problem = Words.SignIn.didntWork else open(version, untick)
+      }
+    }
+  }
   val onContinue: () -> Unit = if (!onboarding || signInInApp == null) onSignIn else ({
     problem = null
     termsChanged = false
@@ -86,12 +107,7 @@ fun OnboardingView(
       } catch (e: Exception) {
         when (continueOutcome(e)) {
           ContinueOutcome.Quiet -> Unit
-          ContinueOutcome.TermsChanged -> {
-            // The box is unticked and says why; the new version is for the new tick.
-            tick = false
-            termsChanged = true
-            if (termsVersion != null) shownTerms = runCatching { termsVersion() }.getOrNull()
-          }
+          ContinueOutcome.TermsChanged -> untick()
           // KIFF's own words where it refuses for good (not offered where the person is), else ours.
           ContinueOutcome.Problem -> problem = bot.tafs.app.model.ErrorWords.kiffWords(e) ?: Words.SignIn.didntWork
         }
@@ -126,8 +142,8 @@ fun OnboardingView(
       // the old way never shows beside them, or it would sign in with no consent recorded.
       if (onboarding) {
         PrimaryButton(Words.Common.`continue`, onContinue, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue && !busy)
-        if (onSignInWithPhone != null) {
-          OutlineButton(Words.SignIn.withPhone, onSignInWithPhone, Modifier.fillMaxWidth().testTag(ONBOARDING_WITH_PHONE), enabled = consent.canContinue && !busy)
+        if (onPhone != null) {
+          OutlineButton(Words.SignIn.withPhone, onPhone, Modifier.fillMaxWidth().testTag(ONBOARDING_WITH_PHONE), enabled = consent.canContinue && !busy)
         }
       } else {
         PrimaryButton(Words.SignIn.withKiff, onSignIn)

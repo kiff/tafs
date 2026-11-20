@@ -383,9 +383,11 @@ class KiffClient(
    * proving with [proof] (the device key's signature over [PairOffer.claimMessage], base64 DER) that it holds the key. Until the
    * approval KIFF answers as the device sign-in does: pending, slow down, or expired.
    */
-  suspend fun claimPairing(nonce: String, pub: String, proof: String): DeviceToken {
+  suspend fun claimPairing(nonce: String, pub: String, proof: String, termsVersion: String? = null): DeviceToken {
+    // The terms the welcome showed ticked (docs/onboarding.md): KIFF records them against this device as the session is made.
+    val body = buildMap { put("nonce", nonce); put("pub", pub); put("proof", proof); termsVersion?.let { put("terms_version", it) } }
     try {
-      return call("POST", "/v1/pair/claim", mapOf("nonce" to nonce, "pub" to pub, "proof" to proof), authorized = false)
+      return call("POST", "/v1/pair/claim", body, authorized = false)
     } catch (e: KiffError.Server) {
       if (e.status != 400) throw e
       throw when (e.message) {
