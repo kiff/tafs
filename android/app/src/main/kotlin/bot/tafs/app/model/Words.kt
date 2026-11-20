@@ -474,6 +474,9 @@ object Words {
     }
     fun chatsTafsExported(at: String): String = Res.s(R.string.chat_chats_tafs_exported, at)
     fun chatsWereNotExportedCould(device: String): String = Res.s(R.string.chat_chats_were_not_exported_could, device, Words.demonstrative(device))
+    object Day {
+      val yesterday: String get() = Res.s(R.string.chat_day_yesterday)
+    }
     val delete: String get() = Res.s(R.string.chat_delete)
     val edit: String get() = Res.s(R.string.chat_edit)
     val editAndSend: String get() = Res.s(R.string.chat_edit_and_send)

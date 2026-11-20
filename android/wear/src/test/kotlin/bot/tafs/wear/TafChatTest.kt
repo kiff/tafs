@@ -3,6 +3,7 @@ package bot.tafs.wear
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -233,6 +234,28 @@ class TafChatScreenTest {
     compose.onNodeWithContentDescription(Words.Chat.messageTaf("Late parcels")).performScrollTo().performClick()
     compose.onNodeWithContentDescription(Words.Watch.type).performScrollTo().performClick()
     assertEquals(listOf("more wa_1", "message taf_1", "type taf_1"), did)
+  }
+
+  /** Row 44, C: a header where a day starts, and each message's time under it; a line with no time from tafs cloud has none. */
+  @Test fun eachDayHasItsHeaderAndEachMessageItsTime() {
+    val zone = java.time.ZoneId.systemDefault()
+    val today = java.time.LocalDate.now(zone)
+    fun iso(day: java.time.LocalDate, h: Int) = day.atTime(h, 5).atZone(zone).toInstant()
+    val yesterday = iso(today.minusDays(1), 20)
+    val earlier = iso(today, 9)
+    val now = System.currentTimeMillis()
+    val lines = listOf(
+      ChatLine("m1", true, yesterday.toString(), "Anything late today?"),
+      ChatLine("m2", false, earlier.toString(), "Two parcels, both reshipped."),
+      ChatLine("m3", false, "not a time", "An older line"),
+    )
+    val sent = turn.copy(at = now, ask = turn.ask.copy(updated = java.time.Instant.ofEpochMilli(now).toString()))
+    show(WatchModel.OpenTaf("taf_1", null, WatchModel.TafRead.Read(page), WatchModel.TafChat(WatchModel.TafChat.History.Read(lines), listOf(sent))))
+    val headers = compose.onAllNodesWithTag(DAY_HEADER).fetchSemanticsNodes().map { it.config[androidx.compose.ui.semantics.SemanticsProperties.Text].joinToString() }
+    assertEquals(listOf(Words.Chat.Day.yesterday, Words.Calendar.today), headers)
+    // Yesterday's, this morning's, the turn sent now and its answer: four times; the line with no time has none.
+    assertEquals(4, compose.onAllNodesWithTag(MESSAGE_TIME).fetchSemanticsNodes().size)
+    compose.onNodeWithText(WatchChatTime.time(yesterday)).assertExists()
   }
 
   @Test fun aPausedTafSaysItStillAnswersAndAHaltedOneSendsNothing() {

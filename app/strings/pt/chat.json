@@ -11,6 +11,7 @@
   "chat.cap.turns": "{taf} parou: esta tarefa precisou de mais passos do que o seu limite por tarefa. Peça algo mais restrito.",
   "chat.chats_tafs_exported": "Os seus chats no tafs, exportados {at}.\n\n",
   "chat.chats_were_not_exported_could": "Os seus chats não foram exportados: este {device} não conseguiu guardar os ficheiros.",
+  "chat.day.yesterday": "Ontem",
   "chat.delete": "Eliminar",
   "chat.edit": "Editar",
   "chat.edit_and_send": "Editar e enviar",

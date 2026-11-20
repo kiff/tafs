@@ -12,6 +12,7 @@
     </plurals>
     <string name="calendar_today">오늘</string>
     <string name="card_its_card">이 taf의 Card</string>
+    <string name="chat_day_yesterday">어제</string>
     <string name="chat_delete">삭제</string>
     <string name="chat_message_taf">%1$s에게 메시지</string>
     <string name="chat_stop">멈추기</string>

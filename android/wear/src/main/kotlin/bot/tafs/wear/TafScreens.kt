@@ -165,11 +165,22 @@ private fun ScalingLazyListScope.tafChat(open: WatchModel.OpenTaf, act: Actions)
     open.paused -> item { Centred(Words.Watch.pausedStillAnswers, Look.held) }
     else -> (open.read as? WatchModel.TafRead.Read)?.page?.state?.let { item { Centred(it, Look.dim) } }
   }
+  // Each message's time under it, and a header where a day starts (row 44, C). A line tafs cloud sent no time for has none.
+  var previous: java.time.LocalDate? = null
+  fun header(at: java.time.Instant) {
+    val day = WatchChatTime.dayOf(at)
+    if (bot.tafs.watchlink.ChatTime.startsDay(previous, day)) item { DayHeader(WatchChatTime.day(day)) }
+    previous = day
+  }
   (open.chat.history as? WatchModel.TafChat.History.Read)?.lines?.forEach { line ->
-    item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null) }
+    val at = WatchChatTime.instantOf(line.at)
+    at?.let(::header)
+    item { ChatBubble(line.text, mine = line.mine, foot = if (line.more) Words.Watch.moreOnPhone else null, time = at?.let { WatchChatTime.time(it) }) }
   }
   for (turn in open.chat.turns) {
-    item { ChatBubble(turn.said, mine = true) }
+    val at = java.time.Instant.ofEpochMilli(turn.at)
+    header(at)
+    item { ChatBubble(turn.said, mine = true, time = WatchChatTime.time(at)) }
     item { TafAnswer(turn, open.name, open.chat.whole[turn.ask.id], act) }
   }
   if (open.halted) {
@@ -199,8 +210,8 @@ private fun Centred(words: String, color: androidx.compose.ui.graphics.Color) {
 
 /** One turn's words: the person's on the right in their own colours, the taf's on the left, and what follows under them. */
 @Composable
-internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null) {
-  androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp), contentAlignment = if (mine) androidx.compose.ui.Alignment.CenterEnd else androidx.compose.ui.Alignment.CenterStart) {
+internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null, time: String? = null) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp), horizontalAlignment = if (mine) androidx.compose.ui.Alignment.End else androidx.compose.ui.Alignment.Start) {
     Column(
       Modifier.background(if (mine) Look.mineGround else Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -208,6 +219,7 @@ internal fun ChatBubble(text: String, mine: Boolean, foot: String? = null) {
       Text(text, style = MaterialTheme.typography.bodySmall, color = if (mine) Look.onMineGround else Look.text)
       foot?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = Look.dim) }
     }
+    time?.let { MessageTime(it) }
   }
 }
 
@@ -224,7 +236,7 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
     return
   }
   val shown = (whole as? WatchModel.Whole.Read)?.text ?: ask.line ?: ask.words
-  androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
+  Column(Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
     Column(
       Modifier.background(Look.neutral, androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 5.dp),
       verticalArrangement = Arrangement.spacedBy(3.dp),
@@ -239,6 +251,8 @@ internal fun TafAnswer(turn: WatchModel.TafTurn, taf: String, whole: WatchModel.
         null -> Unit
       }
     }
+    // When the answer came, under it (row 44, C).
+    WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it)) }
   }
 }
 

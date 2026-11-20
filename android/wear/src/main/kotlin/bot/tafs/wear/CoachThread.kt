@@ -22,9 +22,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
 import androidx.wear.compose.material3.Text
 import bot.tafs.watchlink.AskLine
 import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
+import bot.tafs.watchlink.ChatTime
 
 /**
  * W4, Ask Coach as one conversation (the owner-approved Watch Coach mockup): today's turns from this watch, oldest first, above
@@ -33,23 +31,47 @@ import java.time.format.FormatStyle
  * state for it while it's at work. Memory only (WatchModel.thread).
  */
 internal fun ScalingLazyListScope.coachThread(turns: List<Pair<WatchModel.Said, AskLine>>, act: Actions) {
-  turns.forEach { (said, ask) -> item(key = ask.id) { CoachTurn(said, ask, onOpen = { act.open(ask) }) } }
+  var previous: java.time.LocalDate? = null
+  turns.forEach { (said, ask) ->
+    // A header where a day starts (row 44, C).
+    val day = WatchChatTime.dayOf(Instant.ofEpochMilli(said.at))
+    if (ChatTime.startsDay(previous, day)) item(key = "day-$day") { DayHeader(WatchChatTime.day(day)) }
+    previous = day
+    item(key = ask.id) { CoachTurn(said, ask, onOpen = { act.open(ask) }) }
+  }
+}
+
+/** How many rows the thread takes above the microphone: each turn, and each day's header. */
+internal fun threadItems(turns: List<Pair<WatchModel.Said, AskLine>>): Int {
+  var previous: java.time.LocalDate? = null
+  return turns.size + turns.count { (said, _) ->
+    val day = WatchChatTime.dayOf(Instant.ofEpochMilli(said.at))
+    ChatTime.startsDay(previous, day).also { previous = day }
+  }
 }
 
 @Composable
 internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) {
   Column(Modifier.fillMaxWidth().testTag(THREAD_TURN + ask.id), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-    Text(timeOf(said.at), fontSize = 10.sp, color = Look.faint, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
-    Text(
-      said.text, fontSize = 13.sp, lineHeight = 16.sp, color = Look.onMineGround, maxLines = 4, overflow = TextOverflow.Ellipsis,
-      modifier = Modifier.align(Alignment.End).widthIn(max = 150.dp)
-        .background(Look.mineGround, RoundedCornerShape(14.dp, 14.dp, 4.dp, 14.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
-    )
+    // Each message's time (row 44, C), beside it at its foot: the words' on their left, the answer's on its right once it ended.
+    // Beside, not under, so a turn takes no more height and the newest stays in sight over the microphone
+    // (aNewTurnBringsThePageBackToTheMicrophone).
+    androidx.compose.foundation.layout.Row(
+      Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalAlignment = Alignment.Bottom,
+    ) {
+      MessageTime(WatchChatTime.time(Instant.ofEpochMilli(said.at)), inset = 0.dp)
+      Text(
+        said.text, fontSize = 13.sp, lineHeight = 16.sp, color = Look.onMineGround, maxLines = 4, overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.weight(1f, fill = false).widthIn(max = 150.dp)
+          .background(Look.mineGround, RoundedCornerShape(14.dp, 14.dp, 4.dp, 14.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+      )
+    }
     val answer = if (ask.ended) (ask.line ?: ask.words).ifBlank { Words.Watch.moreOnPhone } else stateLine(ask)
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
     Text(
       answer, fontSize = 13.sp, lineHeight = 16.sp, color = if (ask.ended) Look.onCoachGround else Look.coach, maxLines = 5,
       overflow = TextOverflow.Ellipsis,
-      modifier = Modifier.align(Alignment.Start).widthIn(max = 156.dp)
+      modifier = Modifier.weight(1f, fill = false).widthIn(max = 156.dp)
         .background(Look.coachGround, RoundedCornerShape(14.dp, 14.dp, 14.dp, 4.dp))
         .then(if (ask.ended) Modifier.clickable(onClick = onOpen) else Modifier)
         .padding(horizontal = 10.dp, vertical = 6.dp)
@@ -58,12 +80,10 @@ internal fun CoachTurn(said: WatchModel.Said, ask: AskLine, onOpen: () -> Unit) 
         // While it works, the state line already names whose turn it is: TalkBack hears it once (mac12's 0.4.1 note).
         .semantics { contentDescription = if (ask.ended) Words.Coach.title + ": " + answer else answer },
     )
+    if (ask.ended) WatchChatTime.instantOf(ask.updated)?.let { MessageTime(WatchChatTime.time(it), inset = 0.dp) }
+    }
   }
 }
-
-/** When something was said, in the watch's own short time ("09:14"). */
-internal fun timeOf(at: Long, zone: ZoneId = ZoneId.systemDefault()): String =
-  DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withZone(zone).format(Instant.ofEpochMilli(at))
 
 internal const val THREAD_TURN = "thread-turn-"
 internal const val THREAD_ANSWER = "thread-answer-"

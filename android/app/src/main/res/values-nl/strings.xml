@@ -476,6 +476,7 @@
     <string name="chat_cap_turns">%1$s is gestopt: deze taak had meer stappen nodig dan de limiet voor één taak. Vraag om iets kleiners.</string>
     <string name="chat_chats_tafs_exported">Je chats in tafs, geëxporteerd op %1$s.\n\n</string>
     <string name="chat_chats_were_not_exported_could">Je chats zijn niet geëxporteerd: deze %1$s kon de bestanden niet opslaan.</string>
+    <string name="chat_day_yesterday">Gisteren</string>
     <string name="chat_delete">Verwijderen</string>
     <string name="chat_edit">Bewerken</string>
     <string name="chat_edit_and_send">Bewerken en verzenden</string>

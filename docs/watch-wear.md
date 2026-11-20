@@ -183,8 +183,10 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
   Inbox"), which goes there; the line that Coach gets words, never a voice; and **Menu** at the foot.
 - **Ask Coach as one conversation** (W4, the owner-approved Watch Coach mockup; `CoachThread.kt`, `WatchModel.thread`): above the
   microphone, today's turns from this watch, oldest first, so the page opens on the microphone with the newest turn just above
-  it. Each turn is the person's words on the right, with when they were sent, and Coach's answer on the left: its line once the
-  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. TalkBack
+  it. Each turn is the person's words on the right, with when they were sent beside them, and Coach's answer on the left: its line once the
+  ask has ended (a tap opens the answer card, with Hear and Reply), or tafs cloud's state for it while it's at work. Once it ended, the answer
+  has its time beside it too: beside, not under, so a turn is no taller and the newest stays in sight over the microphone; and a
+  header goes where a day starts (row 44, C; "When each message was sent" in docs/chat.md). TalkBack
   hears an answer as "Coach: …"; a turn at work is heard as its state line alone, which already names Coach. **Memory
   only:** what was said is held with the asks and forgotten with them, when the app is put away and on sign-out, so the watch
   keeps nothing new ("What the watch keeps"). Until tafs cloud keeps the watch's conversation (for the phone's "From your
@@ -505,7 +507,9 @@ tafs cloud's `TAFS_WATCH_TAF_CHAT` still decides per account, and where it's off
 the owner's picks of 20 Nov; `TafScreens.kt` `tafChat`, `WatchModel` `TafChat`; tested in `TafChatModelTest`,
 `TafChatScreenTest`). **1A:** a taf opens its own chat, then its page, then its settings, in its pager (Wear's pager is
 sideways, so "one swipe below" on Apple Watch is one swipe on here). The chat shows its state, its last turns as the phone shows
-them (`taf-chat`, read only, the last 6, each cut as an answer is, with "The rest is on your phone"), this visit's turns, then
+them (`taf-chat`, read only, the last 6, each cut as an answer is, with "The rest is on your phone"), this visit's turns (each
+message with its time under it, and a header where a day starts: Today, Yesterday, then the date, as on the phone,
+`WatchChatTime`, `eachDayHasItsHeaderAndEachMessageItsTime`; a line tafs cloud sent no time for has none), then
 the send bar, as in a phone's chat: a round keyboard (**Type**) and a round microphone (named **Message {taf}** for TalkBack),
 then a quick reply in its own words. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
 starts name none, so words never go to a taf by another start. The review is titled "Message {taf}". Sent, the turn shows in

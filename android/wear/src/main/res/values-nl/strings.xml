@@ -13,6 +13,7 @@
     </plurals>
     <string name="calendar_today">Vandaag</string>
     <string name="card_its_card">Zijn Card</string>
+    <string name="chat_day_yesterday">Gisteren</string>
     <string name="chat_delete">Verwijderen</string>
     <string name="chat_message_taf">Bericht aan %1$s</string>
     <string name="chat_stop">Stoppen</string>

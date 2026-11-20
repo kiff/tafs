@@ -100,7 +100,9 @@ import bot.tafs.app.model.Work
 import bot.tafs.app.kiff.KiffMapping
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.Taf
-import bot.tafs.app.model.endsWords
+import bot.tafs.app.model.chatDay
+import bot.tafs.app.model.localDate
+import bot.tafs.app.model.messageTime
 import bot.tafs.app.model.shortTime
 import java.time.Duration
 import java.time.LocalDate
@@ -347,13 +349,13 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
           val item = items[i]
           item(key = row.key) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-              // A time between parts of the thread that are far apart, not on every line.
-              if (i == 0 || Duration.between(items[i - 1].at, item.at) >= Duration.ofHours(1)) {
+              // A header where a day starts (row 44, C): Today, Yesterday, then the date; each message has its time under it.
+              if (bot.tafs.watchlink.ChatTime.startsDay(if (i == 0) null else localDate(items[i - 1].at), localDate(item.at))) {
                 Text(
-                  endsWords(item.at),
-                  style = scaled(12, color = Theme.dim),
+                  chatDay(localDate(item.at)),
+                  style = scaled(12, FontWeight.Medium, Theme.dim),
                   textAlign = TextAlign.Center,
-                  modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                  modifier = Modifier.fillMaxWidth().padding(top = 6.dp).testTag(DAY_HEADER),
                 )
               }
               when (item) {
@@ -666,6 +668,7 @@ private fun MessageBody(
       if (message.attachments.isNotEmpty()) MessageFiles(message.attachments, tafId, files)
       // Written while a card waited: these words were the card's answer (`answers`).
       if (message.answers != null) Text(Chat.ANSWERED_CARD, style = scaled(12, color = Theme.dim))
+      MessageTime(message)
     }
   } else if (message.kind == ChatMessage.Kind.kickoff) {
     // A run's kickoff shows as a small note, not a bubble.
@@ -685,9 +688,20 @@ private fun MessageBody(
       AnswerWithActions(message.text, onReport?.takeIf { message.serverId != null }) {
         MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
       }
+      MessageTime(message)
     }
   }
 }
+
+/** When a message was sent, small, under it (row 44, C): in the device's 12- or 24-hour setting, the app's language. */
+@Composable
+private fun MessageTime(message: ChatMessage) {
+  val is24 = android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)
+  Text(messageTime(message.at, is24), style = scaled(11, color = Theme.dim), modifier = Modifier.testTag(MESSAGE_TIME))
+}
+
+internal const val DAY_HEADER = "day-header"
+internal const val MESSAGE_TIME = "message-time"
 
 /** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */
 @Composable

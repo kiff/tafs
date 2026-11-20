@@ -528,6 +528,7 @@
     <string name="chat_cap_turns">%1$s zatrzymał się: to zadanie wymagało więcej kroków niż jego limit na jedno zadanie. Poproś o coś węższego.</string>
     <string name="chat_chats_tafs_exported">Twoje czaty w tafs, wyeksportowane %1$s.\n\n</string>
     <string name="chat_chats_were_not_exported_could">Twoje czaty nie zostały wyeksportowane: ten %1$s nie mógł zapisać plików.</string>
+    <string name="chat_day_yesterday">Wczoraj</string>
     <string name="chat_delete">Usuń</string>
     <string name="chat_edit">Edytuj</string>
     <string name="chat_edit_and_send">Edytuj i wyślij</string>
