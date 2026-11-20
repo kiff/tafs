@@ -10123,13 +10123,20 @@ function coachLine(name: string, task: Task, r: Run, lang: Lang = "en"): { line:
   return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said };
 }
 
-/** Whether a run's answer is a tool's result pasted as it came: a JSON object or list, whole or cut short, not words. */
+/**
+ * Whether a run's answer is a tool's result pasted as it came, not words: a JSON object or list, whole or cut short, bare,
+ * fenced (```json …```) or after a few words ("Here is the result: {…}"). A fenced block of any kind counts, and so does
+ * an object's key or a list of objects or strings anywhere in it: hiding words by mistake costs a tap, showing an app's
+ * addresses and links doesn't.
+ */
 export function rawResult(text: string): boolean {
   const t = text.trim();
-  if (!/^[{[]/.test(t)) return false;
-  try { const v = JSON.parse(t); return typeof v === "object" && v !== null; } catch { /* cut short, or words that open with a bracket */ }
-  // Cut short: it opens as an object or list does, with a key or a value straight after.
-  return /^\{\s*"[^"]*"\s*:/.test(t) || /^\[\s*(?:[{[]|"|-?\d+(?:\.\d+)?\s*(?:,|$))/.test(t);
+  if (t.includes("```")) return true;
+  if (/^[{[]/.test(t)) {
+    try { const v = JSON.parse(t); if (typeof v === "object" && v !== null) return true; } catch { /* cut short, or words that open with a bracket */ }
+    if (/^\[\s*-?\d+(?:\.\d+)?\s*(?:,|$)/.test(t)) return true;
+  }
+  return /\{\s*"[^"\n]*"\s*:/.test(t) || /\[\s*[{["]/.test(t);
 }
 
 function twoSentences(text: string): string {

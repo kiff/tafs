@@ -848,6 +848,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     for (const [output, shown] of [
       [raw, "It finished: open its run to see its answer."],
       [raw.slice(0, 60), "It finished: open its run to see its answer."],
+      ["```json\n" + raw + "\n```", "It finished: open its run to see its answer."],
       ["3 events today: the team review at 10, lunch at 12 and the 1:1 at 4.", "3 events today: the team review at 10, lunch at 12 and the 1:1 at 4."],
     ] as const) {
       const task = await w.tool("taf_task", { taf: RAE, text: "List today's events, read only" }, { act: "u_ana" });
@@ -859,7 +860,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
       expect(JSON.stringify(lines.at(-1))).not.toContain("ana@example.com");
       // Coach's own line quotes the answer, whatever it is.
       const notes = [...w.coach.held.values()].flatMap((v) => Array.isArray(v.value) ? v.value : []) as Array<{ text?: string }>;
-      expect(notes.some((n) => n.text?.includes(task.json.run) && n.text.includes(output.slice(0, 20).replace(/"/g, '\\"')))).toBe(true);
+      expect(notes.some((n) => n.text?.includes(task.json.run) && n.text.includes(output.replace(/\s+/g, " ").slice(0, 20).replace(/"/g, '\\"')))).toBe(true);
     }
   });
 
@@ -884,7 +885,10 @@ describe("Coach's tools (kiff/tafs#206)", () => {
   });
 
   it("tells a raw result from words", () => {
-    for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]"]) expect(rawResult(t), t).toBe(true);
+    for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]",
+      // Fenced, or after a few words: how a model pastes a result most often (qa-kiff's rows).
+      '```json\n{"items":[{"creator":{"email":"ana@example.com"}}]}\n```', '```\n[{"id":1}]\n```',
+      'Here is the result: {"items":[{"htmlLink":"https://calendar.example/e/1"}]}', 'Result:\n{"a":1}']) expect(rawResult(t), t).toBe(true);
     for (const t of ["3 events today.", "[Draft] Reply to Ana: thanks!", "{not json} it says", "No events today", "[1] is the first item: done."]) expect(rawResult(t), t).toBe(false);
   });
 
