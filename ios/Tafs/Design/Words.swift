@@ -2923,6 +2923,14 @@ enum Words {
         static var kiffTerms: String { Words.line("onboarding.kiff_terms") }
         /// How we handle your data: {kiff_privacy} · {tafs_privacy}
         static func privacyLinks(kiffPrivacy: String, tafsPrivacy: String) -> String { Words.line("onboarding.privacy_links", kiffPrivacy, tafsPrivacy) }
+        /// KIFF Privacy Policy
+        static var rowKiffPrivacy: String { Words.line("onboarding.row_kiff_privacy") }
+        /// KIFF Terms of Service
+        static var rowKiffTerms: String { Words.line("onboarding.row_kiff_terms") }
+        /// tafs Privacy Policy
+        static var rowTafsPrivacy: String { Words.line("onboarding.row_tafs_privacy") }
+        /// tafs Terms
+        static var rowTafsTerms: String { Words.line("onboarding.row_tafs_terms") }
         /// Skip
         static var skip: String { Words.line("onboarding.skip") }
         /// A taf does one job for you, like support replies, late parcels or lead follow-ups. Ask Coach and it sets one up with you.

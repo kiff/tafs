@@ -71,6 +71,16 @@ final class OnboardingTests: XCTestCase {
         }
     }
 
+    /// How tafs works titles its four legal rows as their pages, never with the tick line's link words (written to sit
+    /// inside its sentence), and each opens its own page.
+    func testTheLegalRowsUseStandaloneTitles() {
+        let rows = HowTafsWorksView.legalRows
+        XCTAssertEqual(rows.map(\.url), [Legal.kiffPrivacy, Legal.privacy, Legal.kiffTerms, Legal.terms])
+        XCTAssertEqual(rows.map(\.title), [Words.Onboarding.rowKiffPrivacy, Words.Onboarding.rowTafsPrivacy,
+                                           Words.Onboarding.rowKiffTerms, Words.Onboarding.rowTafsTerms])
+        XCTAssertEqual(Set(rows.map(\.title)).count, 4, "four pages, four titles")
+    }
+
     /// The pictures draw the sample's own tafs, the ones that never move money, and its Card, 28 left of 40.
     func testThePicturesDrawTheSamplesOwnTafsAndCard() {
         XCTAssertEqual(OnboardingPicture.sampleTafs.map(\.name),

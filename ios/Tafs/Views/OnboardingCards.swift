@@ -192,6 +192,20 @@ struct OnboardingPicture: View {
 struct HowTafsWorksView: View {
     @State private var opened: OnboardingPage?
 
+    /// The four legal pages as rows, each titled as its page is: standalone titles (`onboarding.row_*`), never the
+    /// tick line's link words, which are written to sit inside its sentence ("the tafs Terms", German's dative).
+    struct LegalRow: Hashable {
+        let title: String
+        let url: URL
+    }
+
+    static var legalRows: [LegalRow] {
+        [LegalRow(title: Words.Onboarding.rowKiffPrivacy, url: Legal.kiffPrivacy),
+         LegalRow(title: Words.Onboarding.rowTafsPrivacy, url: Legal.privacy),
+         LegalRow(title: Words.Onboarding.rowKiffTerms, url: Legal.kiffTerms),
+         LegalRow(title: Words.Onboarding.rowTafsTerms, url: Legal.terms)]
+    }
+
     var body: some View {
         List {
             Section {
@@ -207,10 +221,9 @@ struct HowTafsWorksView: View {
                 }
             }
             Section {
-                Link(Legal.label(Words.Onboarding.kiffPrivacy), destination: Legal.kiffPrivacy)
-                Link(Legal.label(Words.Onboarding.tafsPrivacy), destination: Legal.privacy)
-                Link(Legal.label(Words.Onboarding.kiffTerms), destination: Legal.kiffTerms)
-                Link(Legal.label(Words.Onboarding.tafsTerms), destination: Legal.terms)
+                ForEach(Self.legalRows, id: \.url) { row in
+                    Link(Legal.label(row.title), destination: row.url)
+                }
             }
         }
         .navigationTitle(Words.Onboarding.howItWorks)
