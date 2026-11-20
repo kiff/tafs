@@ -40,10 +40,14 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, light and dark, no keyboard focus: docs/screenshots/ipad/) or rtl (the main screens laid out right to left, with English words, and the iPad's Overview and Calendar). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
+        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, light and dark, no keyboard focus: docs/screenshots/ipad/) or rtl (the main screens laid out right to left, with English words, and the iPad's Overview and Calendar) or preview (the main screens in a language not shipped yet, from the preview input: its missing lines read in English). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
         type: choice
-        options: [none, full, key, languages, reference, rtl]
+        options: [none, full, key, languages, reference, rtl, preview]
         default: none
+      preview:
+        description: "For screenshots: preview, the language to show before it ships (in app/strings/languages.json's all, not shipped): ko, ja."
+        type: string
+        default: ko
       external:
         description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
         type: boolean
@@ -427,9 +431,18 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      # The preview set: the catalog for this run only, with a language that isn't shipped yet in it, so its lines are
+      # seen on the screens (cut off, wrapped, too long) before it ships. Nothing is committed.
+      - name: Put the preview language in this run's catalog
+        if: needs.changes.outputs.shots == 'preview'
+        env:
+          PREVIEW: ${{ inputs.preview || 'ko' }}
+        run: python3 app/strings/generate.py --preview "$PREVIEW"
+
       - name: Run the app and take screenshots
         env:
           SET: ${{ needs.changes.outputs.shots }}
+          PREVIEW: ${{ inputs.preview || 'ko' }}
         run: |
           cd ios
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
@@ -668,6 +681,40 @@ jobs:
             xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
             shoot rtl-ipad-overview -screenshots YES -tab tafs -signedIn YES "${rtl[@]}"
             shoot rtl-ipad-calendar -screenshots YES -tab tafs -screen calendar -signedIn YES "${rtl[@]}"
+            ls -la "$RUNNER_TEMP/shots"
+            exit 0
+          fi
+          # The preview set: the main screens in a language not shipped yet (the step before put it in this run's catalog),
+          # light, then the 13-inch iPad's Overview and Calendar. A line it hasn't got yet reads in English. The region is
+          # the language's main country (ar is Saudi Arabia, never AR, Argentina).
+          if [ "$SET" = preview ]; then
+            case "$PREVIEW" in ko) region=KR ;; ja) region=JP ;; ar) region=SA ;; he) region=IL ;; *) region=$(echo "$PREVIEW" | tr a-z A-Z) ;; esac
+            loc=(-AppleLanguages "($PREVIEW)" -AppleLocale "${PREVIEW}_${region}")
+            shoot "$PREVIEW-1-welcome" "${loc[@]}"
+            shoot "$PREVIEW-2-tafs" -screenshots YES -tab tafs "${loc[@]}"
+            shoot "$PREVIEW-3-needs-you" -screenshots YES -tab needs-you "${loc[@]}"
+            shoot "$PREVIEW-4-record" -screenshots YES -tab record "${loc[@]}"
+            shoot "$PREVIEW-5-taf" -screenshots YES -tab tafs -screen taf "${loc[@]}"
+            shoot "$PREVIEW-5b-cards" -screenshots YES -tab tafs -screen card "${loc[@]}"
+            shoot "$PREVIEW-7-chat" -screenshots YES -tab tafs -screen chat "${loc[@]}"
+            shoot "$PREVIEW-8-setup" -screenshots YES -tab tafs -screen setup "${loc[@]}"
+            shoot "$PREVIEW-9-account" -screenshots YES -tab account "${loc[@]}"
+            shoot "$PREVIEW-9b-alerts" -screenshots YES -tab account -screen alerts "${loc[@]}"
+            shoot "$PREVIEW-iap-pack" -screenshots YES -screen buy-credits -pack vonk "${loc[@]}"
+            xcrun simctl shutdown "$DEVICE_ID" || true
+            DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
+          print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
+          ')
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl bootstatus "$DEVICE_ID" -b
+            xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+            shoot "$PREVIEW-ipad-overview" -screenshots YES -tab tafs -signedIn YES "${loc[@]}"
+            shoot "$PREVIEW-ipad-calendar" -screenshots YES -tab tafs -screen calendar -signedIn YES "${loc[@]}"
             ls -la "$RUNNER_TEMP/shots"
             exit 0
           fi
