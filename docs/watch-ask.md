@@ -117,6 +117,19 @@ It's the same route, signature and receipt, with `taf_id` added: `{client_id, te
   characters), at most **400** characters (`tafLine`). `more: true` says it went on, and the rest is on the phone. The watch
   may show an amount on screen and never stores it, as the watch's rule already is. A run that failed or was stopped is
   `failed`. Each change is pushed to the person's Android phones by the request's id alone, as before.
+- **Read more** (the owner's pick, 20 Nov: a long answer is never trimmed, shown partly, then expanded):
+  `GET /v1/watch/asks/{id}?full=1` adds `text`, the taf's whole answer.
+  - It's read from the run on each tap and kept nowhere. The first read stays small (the line and `more`), and the whole
+    answer is fetched only on the tap.
+  - Each paragraph is checked as the line is, none is cut, paragraphs are kept apart by a blank line, and it's at most
+    16 KB of UTF-8.
+  - It's only for the person's own taf chat whose run finished, and only while KIFF still gives them a run grant for the
+    taf. Anything else has no `text`, and the watch keeps the line and "the rest is on your phone".
+- **A paused taf takes the message.** Paused, its schedules are off, but a message from the phone or the watch starts its
+  run now, as in its chat on the phone. A halted taf or account refuses as the phone's message is refused.
+- **Not kept, not stuck.** If the request can't be written after its message went, the client id is freed: the watch's Send
+  again comes through, and the message key gives back the same run, which reports to the same request (its run-ended ref
+  is made from the person and the client id).
 - **Replies** go only to the same taf's request, once it has ended; anything else is 404 `no_ask` or 409 `reply_too_soon`.
 - **Watch days** list a taf chat's request with its words read from the person's own chat with that taf, from that
   request's run. Another member's chat with the same taf is never read.

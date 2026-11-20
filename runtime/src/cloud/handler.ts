@@ -54,7 +54,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, tafLine, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
+import { type Ask, type AskState, askDay, askOfSession, ASK_DAYS_KEPT_MS, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, dayTurns, fullAnswer, tafLine, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, ownAsks, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchDaysOf, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, askedInSession, checkDraft, checkSigned, type Connected, connectedKey, decideCoded, readGrants, withoutCode, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, stepWithWaiting, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -10825,7 +10825,8 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   if (parts.length === 4 && method === "GET") {
     const ask = await ownAsk(store, me.tenantID, me.subject, parts[3] ?? "");
     if (!ask) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
-    return { ask: shownAsk(ask, lang) };
+    const full = new URLSearchParams(event.rawQueryString ?? "").get("full") === "1";
+    return { ask: shownAsk(ask, lang), ...(full ? await watchFullAnswer(event, me, ask, deps) : {}) };
   }
   if (parts.length !== 3 || method !== "POST") throw new HTTPError(404, "not found");
   const body = parseBody(event);
@@ -10938,7 +10939,8 @@ async function watchTafMessage(event: HTTPEvent, me: KIFFIdentity, store: CoachS
     if (kept) return { ask: shownAsk(kept, lang) };
     throw new HTTPError(409, "this request is already on its way: ask again in a moment");
   }
-  const ref = newRef(me.tenantID);
+  // The same for a Send again of the same message, so the run its first send started still reports to this request.
+  const ref = watchTafRef(me.tenantID, me.subject, req.client);
   // The phone's message, as the phone would send it: the person's live chat, or the chat of the request it replies to.
   const sent: HTTPEvent = {
     ...event, isBase64Encoded: false,
@@ -10957,13 +10959,43 @@ async function watchTafMessage(event: HTTPEvent, me: KIFFIdentity, store: CoachS
   const ask: Ask = { id, client_id: req.client, person: me.subject, kind: "taf", taf: { id: taf.id, name: taf.name }, session: out.session, taf_run: out.run,
     state: out.held ? "done" : "working", ...(out.held ? { held: true } : {}), at, updated: at, ...(before ? { reply_to: before.id } : {}) };
   const until = new Date(now.getTime() + ASK_KEPT_MS);
-  await keepAsk(store, me.tenantID, ask, now);
-  await Promise.all([
-    store.put(watchKeys.client(me.tenantID, me.subject, req.client), id, until),
-    ...(out.held ? [] : [store.put(watchKeys.ref(me.tenantID, ref), id, until)]),
-  ]);
+  try {
+    await keepAsk(store, me.tenantID, ask, now);
+    await Promise.all([
+      store.put(watchKeys.client(me.tenantID, me.subject, req.client), id, until),
+      ...(out.held ? [] : [store.put(watchKeys.ref(me.tenantID, ref), id, until)]),
+    ]);
+  } catch (err) {
+    // Not kept: the claim goes, so the watch's Send again comes through. Its message key gives back the same run, never a second.
+    await store.remove(claim).catch(() => undefined);
+    throw err;
+  }
   console.log(JSON.stringify({ event: "watch_ask", tenant: me.tenantID, ask: id, taf: taf.id, signed: "device", reply: Boolean(before) }));
   return { ask: shownAsk(ask, lang) };
+}
+
+/**
+ * "Read more" on a taf chat's answer (`?full=1`): the whole answer, read from the taf's run on each tap and kept nowhere,
+ * checked paragraph by paragraph (fullAnswer). Only for the person's own finished taf chat, and only while KIFF still lets
+ * them use the taf; anything else has no `text`, and the watch shows the line, then "the rest is on your phone".
+ */
+async function watchFullAnswer(event: HTTPEvent, me: KIFFIdentity, ask: Ask, deps: Deps): Promise<{ text?: string }> {
+  // Only a finished answer: a run at work, held or paused on the person, or failed, has none (its status is read back below).
+  if (ask.kind !== "taf" || !ask.taf || !ask.taf_run) return {};
+  const taf = await owned(me, ask.taf.id, deps).catch(() => undefined);
+  if (!taf || (taf.kiffAgent && (await runGrant(bearer(event), taf.kiffAgent, deps.fetch, deps.kiffBase)) === "no_access")) return {};
+  const r = await deps.agents.getRun(me.tenantID, taf.id, ask.taf_run).catch(() => undefined);
+  const text = r && r.status === "COMPLETED" ? fullAnswer(r.output) : undefined;
+  return text ? { text } : {};
+}
+
+/**
+ * A taf chat request's run-ended ref, by person and client id: a Send again after the request wasn't kept gets the first
+ * send's run back (its message key), which reports to the ref it was started with. A note is unsigned either way: tafs
+ * cloud reads the run back from kiff/agents, and takes it only for the request's own run (watchCoachEnded).
+ */
+function watchTafRef(tenant: string, person: string, client: string): string {
+  return `${Buffer.from(tenant).toString("base64url")}.${createHash("sha256").update(`watch-taf-ref:${tenant}:${person}:${client}`).digest("base64url").slice(0, 24)}`;
 }
 
 /** The phone's message id for a watch request to a taf: one per person and client id, so a resend is the same message. */

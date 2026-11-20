@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
-import { type Ask, tafLine, TAF_LINE_MAX, watchKeys } from "../src/cloud/watch-ask.js";
+import { type Ask, FULL_MAX_BYTES, fullAnswer, tafLine, TAF_LINE_MAX, watchKeys } from "../src/cloud/watch-ask.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 /**
@@ -42,6 +42,8 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
   ];
   // What the phone signed, by the body's digest: KIFF refuses a body that isn't the one signed (method, path, sha256).
   const signedBodies = new Set<string>();
+  // KIFF's run grants taken away since: "<subject>:<agent>".
+  const noUse = new Set<string>();
   const deps: Deps = {
     agents: agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs, names: memoryNames(), slots: memorySlots(), claims: memoryClaims(),
     removals: memoryRemovals(), archived: memoryArchived(), aiConsent: false, watchAsk: true, watchTafChat: opts.chat ?? true,
@@ -60,14 +62,14 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
       if (url.endsWith("/v1/me/run-grants")) {
         // Bo can see Inbox but not use it: KIFF gives him no run grant for it.
         const { agent } = JSON.parse(String(init?.body)) as { agent: string };
-        if (subject === BO && agent === "agent_inbox") return new Response(JSON.stringify({ error: "no_access" }), { status: 403 });
+        if ((subject === BO && agent === "agent_inbox") || noUse.has(`${subject}:${agent}`)) return new Response(JSON.stringify({ error: "no_access" }), { status: 403 });
         return new Response(JSON.stringify({ grant: `krg_${subject}` }));
       }
       return new Response("{}", { status: 404 });
     }) as unknown as typeof fetch,
   };
   const event = (method: string, path: string, body: unknown, who: string, headers: Record<string, string>): HTTPEvent => ({
-    rawPath: path, requestContext: { http: { method } },
+    rawPath: path.split("?")[0]!, ...(path.includes("?") ? { rawQueryString: path.split("?")[1] } : {}), requestContext: { http: { method } },
     headers: { authorization: `Bearer ${who}`, "accept-language": "en", ...headers }, body: body === undefined ? undefined : JSON.stringify(body),
   });
   const call = async (method: string, path: string, body?: unknown, who = "ana", headers: Record<string, string> = SIGNED) => {
@@ -91,7 +93,7 @@ function world(opts: { chat?: boolean | string[]; signed?: boolean } = {}) {
     await ended(agents.notified.get(run.id)!.ref, run.id, CAL, status);
   };
   const starts = () => agents.calls.filter((c) => c.startsWith("startRun"));
-  return { agents, deps, coach, call, send, signedBodies, ended, askOf, end, starts, pushed, tick: (ms: number) => { clock = new Date(clock.getTime() + ms); } };
+  return { agents, deps, coach, call, send, signedBodies, noUse, ended, askOf, end, starts, pushed, tick: (ms: number) => { clock = new Date(clock.getTime() + ms); } };
 }
 
 const MSG = { client_id: "c_watch_0001", text: "Anything new on the Brio account?", taf_id: CAL };
@@ -251,6 +253,73 @@ describe("chatting with a taf from the watch", () => {
     const line = logs.find((l) => l.includes("watch_ask"))!;
     expect(JSON.parse(line)).toMatchObject({ event: "watch_ask", taf: CAL, signed: "device" });
     expect(logs.join("\n")).not.toContain("Brio");
+  });
+});
+
+describe("Read more on a taf's answer (the owner's pick: never trimmed, shown partly, then expanded)", () => {
+  const LONG = `**Brio** paid [the invoice](https://evil.test/x) today.\n\n${"They also asked about next month's order and the delivery window. ".repeat(10)}\n\nThat's all.`;
+
+  it("gives the whole answer on ?full=1, read from the run each time: checked, its paragraphs kept, none cut", async () => {
+    const w = world();
+    const id = (await w.send(MSG)).body.ask.id as string;
+    await w.end(id, "COMPLETED", LONG);
+    // The first read stays small: the line, with more.
+    const first = (await w.call("GET", `/v1/watch/asks/${id}`)).body;
+    expect(first.text).toBeUndefined();
+    expect(first.ask.more).toBe(true);
+    const full = (await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body;
+    expect(full.ask).toEqual(first.ask);
+    expect(full.text).toBe(`Brio paid the invoice today.\n\n${"They also asked about next month's order and the delivery window. ".repeat(10).trim()}\n\nThat's all.`);
+    expect(full.text).not.toMatch(/\*|https?:|evil/);
+    // Nothing of it is kept: the request holds the line alone.
+    expect(JSON.stringify(await w.askOf(id))).not.toContain("That's all");
+  });
+
+  it("is only for the person's own finished taf chat that they may still use", async () => {
+    const w = world();
+    const id = (await w.send(MSG)).body.ask.id as string;
+    // Still working: no text yet.
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body.text).toBeUndefined();
+    await w.end(id, "COMPLETED", LONG);
+    // Another member's read of it is no request of theirs.
+    expect(await w.call("GET", `/v1/watch/asks/${id}?full=1`, undefined, "bo")).toMatchObject({ status: 404, body: { code: "no_ask" } });
+    // KIFF no longer lets Ana use the taf: the line stays, the whole answer doesn't come.
+    w.noUse.add(`${ANA}:agent_cal`);
+    expect((await w.call("GET", `/v1/watch/asks/${id}?full=1`)).body.text).toBeUndefined();
+    // A paused one waits on the person: there's no answer to read.
+    w.noUse.clear();
+    const held = (await w.send({ ...MSG, client_id: "c_watch_0002" })).body.ask.id as string;
+    await w.end(held, "PAUSED", "Half an answer");
+    expect((await w.call("GET", `/v1/watch/asks/${held}?full=1`)).body.text).toBeUndefined();
+    // Coach's own watch requests have no whole answer to read.
+    const coach = (await w.send({ client_id: "c_watch_0003", text: "Move my call" })).body.ask.id as string;
+    expect((await w.call("GET", `/v1/watch/asks/${coach}?full=1`)).body.text).toBeUndefined();
+  });
+
+  it("is cut at 16 KB of UTF-8, at a word", () => {
+    const huge = fullAnswer("é".repeat(FULL_MAX_BYTES) + " end");
+    expect(Buffer.byteLength(huge!, "utf8")).toBeLessThanOrEqual(FULL_MAX_BYTES);
+    expect(huge!.endsWith("…")).toBe(true);
+    expect(fullAnswer("One.\n\n\n\nTwo [x](https://a.test).\n")).toBe("One.\n\nTwo x.");
+    expect(fullAnswer("  ")).toBeUndefined();
+  });
+});
+
+describe("a request that wasn't kept", () => {
+  it("leaves its client id free: the Send again comes through with the same run, and its end still reaches the watch", async () => {
+    const w = world();
+    const put = w.coach.put.bind(w.coach);
+    let failOnce = true;
+    w.coach.put = (async (key: string, ...rest: unknown[]) => {
+      if (failOnce && key.includes("#watch-ask#")) { failOnce = false; throw new Error("table unavailable"); }
+      return (put as (...a: unknown[]) => Promise<void>)(key, ...rest);
+    }) as typeof w.coach.put;
+    expect((await w.send(MSG)).status).toBe(500);
+    const again = await w.send(MSG);
+    expect(again.status).toBe(200);
+    expect(new Set(w.agents.runs.filter((r) => r.agent === CAL).map((r) => r.id)).size).toBe(1);
+    await w.end(again.body.ask.id as string, "COMPLETED", "Paid today.");
+    expect(await w.askOf(again.body.ask.id as string)).toMatchObject({ state: "done", line: "Paid today." });
   });
 });
 

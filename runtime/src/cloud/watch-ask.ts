@@ -135,6 +135,29 @@ export function tafLine(raw: unknown): { line?: string; more: boolean } {
   return { ...(line ? { line } : {}), more: line !== undefined && line !== checkedLine(raw, Number.MAX_SAFE_INTEGER) };
 }
 
+/** The most of a taf's whole answer the watch is sent on "Read more": its paragraphs, checked, never more than 16 KB. */
+export const FULL_MAX_BYTES = 16 * 1024;
+
+/**
+ * A taf's whole answer, for the watch's "Read more" (the owner's 20 Nov pick: never trimmed, shown partly, then expanded).
+ * Each paragraph is checked as the line is (no markdown, links' targets or control characters) and none is cut; paragraphs
+ * are kept apart by a blank line. Past FULL_MAX_BYTES of UTF-8 it's cut at a word, with an ellipsis. Undefined when nothing is left.
+ */
+export function fullAnswer(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const paras = raw.split(/\n\s*\n/).map((p) => checkedLine(p, Number.MAX_SAFE_INTEGER)).filter((p): p is string => !!p);
+  let s = paras.join("\n\n");
+  if (!s) return undefined;
+  if (Buffer.byteLength(s, "utf8") <= FULL_MAX_BYTES) return s;
+  const chars = [...s];
+  let bytes = 0, n = 0;
+  while (n < chars.length && bytes + Buffer.byteLength(chars[n]!, "utf8") <= FULL_MAX_BYTES - 3) bytes += Buffer.byteLength(chars[n++]!, "utf8");
+  const cut = chars.slice(0, n).join("");
+  const at = cut.lastIndexOf(" ");
+  s = (at > cut.length / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.–-]+$/, "");
+  return `${s}…`;
+}
+
 /** The request as the phone and the watch read it, in their language. */
 export function shownAsk(ask: Ask, lang: Lang): ShownAsk {
   return {
