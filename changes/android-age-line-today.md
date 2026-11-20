@@ -1,0 +1,1 @@
+- **Android:** today's sign-in tells a country that asks for more than 16 its own age (India, Brazil, Indonesia), before the new welcome's switch is on; anywhere else the sheet is as it was ([onboarding.md](docs/onboarding.md)).

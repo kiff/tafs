@@ -73,6 +73,15 @@ fun ageLine(region: String? = deviceRegion()): String {
   return if (age > MinimumAge.STANDARD) Words.Onboarding.ageN(age = age.toString()) else Words.Onboarding.age
 }
 
+/**
+ * Today's sign-in (the new welcome's switch off): the country's own age only where it's above [MinimumAge.STANDARD] (India,
+ * Indonesia, Brazil…), so a country that asks for more is told before signing in; anywhere else, nothing new is shown (as iOS).
+ */
+fun raisedAgeLine(region: String? = deviceRegion()): String? {
+  val age = MinimumAge.of(region)
+  return if (age > MinimumAge.STANDARD) Words.Onboarding.ageN(age = age.toString()) else null
+}
+
 /** The device's region as the system has it ("IN"), or null when none is set. */
 fun deviceRegion(): String? =
   android.content.res.Resources.getSystem().configuration.locales.takeIf { !it.isEmpty }?.get(0)?.country?.takeIf { it.isNotEmpty() }

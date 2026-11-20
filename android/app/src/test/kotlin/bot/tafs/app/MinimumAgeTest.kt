@@ -5,6 +5,8 @@ import bot.tafs.app.model.MinimumAge
 import bot.tafs.app.model.Res
 import bot.tafs.app.model.Words
 import bot.tafs.app.model.ageLine
+import bot.tafs.app.model.raisedAgeLine
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -35,5 +37,13 @@ class MinimumAgeTest {
     assertEquals(Words.Onboarding.age, ageLine("DE"))
     assertEquals(Words.Onboarding.age, ageLine("KR"))
     assertEquals(Words.Onboarding.age, ageLine(null))
+  }
+
+  /** Today's sign-in says a raised age only: India and Brazil before the switch; every other country sees the sheet as it was. */
+  @Test fun todaysSignInSaysARaisedAgeOnly() {
+    assertEquals(Words.Onboarding.ageN(age = "18"), raisedAgeLine("IN"))
+    assertEquals(Words.Onboarding.ageN(age = "18"), raisedAgeLine("BR"))
+    assertNull(raisedAgeLine("FR"))
+    assertNull(raisedAgeLine(null))
   }
 }
