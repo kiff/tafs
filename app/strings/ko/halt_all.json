@@ -1,0 +1,15 @@
+{
+  "halt_all.description": "모든 taf를 한 번에 멈춥니다. tafs에서 재개할 때까지 새로 보내는 것은 없습니다.",
+  "halt_all.failed": "tafs가 tafs를 차단하지 못했습니다. {why} tafs를 열어 차단하세요.",
+  "halt_all.halted": {
+    "other": "taf {count}개를 차단했습니다. 재개할 때까지 새로 보내는 것은 없습니다."
+  },
+  "halt_all.halted_all": "tafs를 차단했습니다. 재개할 때까지 새로 보내는 것은 없습니다.",
+  "halt_all.halting": {
+    "other": "taf {count}개를 차단하는 중: 새 실행은 시작되지 않습니다. KIFF가 아직 모든 부분을 확인하지 않았으며, 확인되면 tafs에 표시됩니다."
+  },
+  "halt_all.halting_all": "tafs를 차단하는 중: 새 실행은 시작되지 않습니다. KIFF가 아직 모든 부분을 확인하지 않았으며, 확인되면 tafs에 표시됩니다.",
+  "halt_all.running": "tafs가 tafs를 차단하지 못했습니다. tafs를 열어 차단하세요.",
+  "halt_all.signed_out": "tafs에서 로그아웃되었습니다. 로그인해 tafs를 차단하세요.",
+  "halt_all.title": "모든 tafs 차단"
+}

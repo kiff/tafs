@@ -143,7 +143,8 @@ which KIFF checks by its digest; they join it when they ship.
 | Approve / Approve once | 승인 / 한 번 승인 |
 | Refuse | 거절 |
 | held | 보류됨 |
-| Halt / Halted | 모두 중지 / 중지됨 |
+| Halt / Halted | 차단 / 차단됨 |
+| Stopped (one run that ended) | 멈춤 |
 | Pause / Paused | 일시 중지 / 일시 중지됨 |
 | Resume | 재개 |
 | Run now | 지금 실행 |
