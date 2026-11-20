@@ -1533,6 +1533,10 @@
     <string name="onboarding_kiff_privacy">Política de Privacidade da KIFF</string>
     <string name="onboarding_kiff_terms">os Termos de Serviço da KIFF</string>
     <string name="onboarding_privacy_links">Como tratamos os seus dados: %1$s · %2$s</string>
+    <string name="onboarding_row_kiff_privacy">Política de Privacidade da KIFF</string>
+    <string name="onboarding_row_kiff_terms">Termos de Serviço da KIFF</string>
+    <string name="onboarding_row_tafs_privacy">Política de Privacidade do tafs</string>
+    <string name="onboarding_row_tafs_terms">Termos do tafs</string>
     <string name="onboarding_skip">Ignorar</string>
     <string name="onboarding_tafs_lead">Um taf faz um trabalho por si, como respostas de suporte, encomendas atrasadas ou acompanhamento de contactos. Peça ao Coach e ele configura um consigo.</string>
     <string name="onboarding_tafs_privacy">Política de Privacidade do tafs</string>

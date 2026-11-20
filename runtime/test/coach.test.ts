@@ -466,6 +466,35 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect((await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], check })).isError).toBeFalsy();
   });
 
+  // Coach wrote the check inside the schedule's wake, the dial dropped it without a word, and the version kept the old
+  // read while Coach told the owner it had moved (Nov 2026). A check inside a wake is refused; beside the wakes it's kept.
+  it("taf_dial refuses a check written inside a wake, and makes no version", async () => {
+    const w = world();
+    w.agents.versions.set(`${T}|${RAE}`, []);
+    const old = { tool: "list_emails", arguments: {}, items: "messages", cursor: "messageId" };
+    w.tafs.held.set(`${T}#${RAE}`, { ...w.tafs.held.get(`${T}#${RAE}`)!, check: old });
+    const check = { tool: "list_calendar_events", arguments: {}, items: "items", cursor: "created", first: "new" };
+    const before = Object.keys(w.tafs.held.get(`${T}#${RAE}`)!.knobs ?? {}).length;
+    for (const wake of [{ kind: "schedule", form: "weekdays", at: "08:00", check }, { kind: "door", check }]) {
+      const r = await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "door" }, wake].slice(wake.kind === "door" ? 1 : 0) });
+      expect(r).toMatchObject({ isError: true, text: expect.stringContaining("a taf's check goes beside wakes, as the dial's own check") });
+    }
+    // Any other field a wake doesn't take is refused too, named, never dropped.
+    for (const wake of [{ kind: "schedule", form: "every", every_minute: 30 }, { kind: "app_check", operation: "list_events", tool: "list_events", items: "items", cursor: "id" }]) {
+      const r = await w.tool("taf_dial", { taf: RAE, wakes: [wake] });
+      const extra = Object.keys(wake).find((key) => !["kind", "form", "operation", "items", "cursor"].includes(key))!;
+      expect(r, extra).toMatchObject({ isError: true, text: expect.stringContaining(`wakes[0] has ${extra}, which a wake doesn't take`) });
+    }
+    expect(Object.keys(w.tafs.held.get(`${T}#${RAE}`)!.knobs ?? {}).length).toBe(before);
+    // Beside the wakes, the version carries it, not the old read, and Coach is told what the version stored.
+    const made = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "08:00" }], check })).json as { version: number; check_reads: string | null };
+    expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]?.check).toEqual(check);
+    expect(made.check_reads).toBe("list_calendar_events");
+    // A dial with no check keeps the read it had, and says so: what Coach tells the owner can't be a move that didn't happen.
+    const kept = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }] })).json as { check_reads: string | null };
+    expect(kept.check_reads).toBe("list_calendar_events");
+  });
+
   // The phone retest, 18 Nov: a taf switched to a new connection of the same app kept reading with the old one's
   // tools, because both are among the taf's tools and nothing ties a tool to its connection. A tool's name ends in
   // its connection's suffix (rules.ts grantSuffix), so the dial can tell them apart without reading planque.

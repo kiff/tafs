@@ -379,6 +379,11 @@ struct SettingsView: View {
                 Section(Words.SignIn.howWorks) {
                     Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
                         .scaledFont(14).foregroundColor(Theme.soft)
+                    // The three cards again, with the privacy and terms pages (docs/onboarding.md).
+                    if Onboarding.on {
+                        NavigationLink(Words.Onboarding.howItWorks) { HowTafsWorksView() }
+                            .accessibilityIdentifier("howItWorks")
+                    }
                 }
                 // tafs's own pages, in English only for now: outside English the rows say so (Android 1.27.8).
                 Section(Words.Settings.legal) {
