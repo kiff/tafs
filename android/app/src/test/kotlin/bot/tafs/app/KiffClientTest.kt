@@ -36,6 +36,23 @@ class KiffClientTest {
 
   // MARK: Signing in
 
+  /** Where KIFF isn't offered, a new sign-in is refused in KIFF's own words, by its code; any other 403 keeps the app's. */
+  @Test fun aRegionRefusalShowsKiffsWordsAndNoOther403Does() = runTest {
+    val words = "KIFF isn't available where you are right now. We offer it only in the countries and regions where Anthropic's Claude is available."
+    transport.answer("POST /v1/auth/device/start", 403, """{"error":"region_unsupported","code":"region_unsupported","message":"$words"}""")
+    val keys = SoftwareKeys()
+    val refused = runCatching { client(token = null).startDeviceSignIn(keys.publicKeyDER, keys.approvalPublicKeyDER, "tafs on Android phone", "android") }.exceptionOrNull()
+    assertTrue("$refused", refused is KiffError.Server && refused.status == 403 && refused.code == "region_unsupported")
+    assertEquals(words, bot.tafs.app.model.ErrorWords.of(refused!!))
+    assertEquals(words, bot.tafs.app.model.ErrorWords.kiffWords(refused))
+    // Only that code: another refusal's text never reaches the screen.
+    val other = KiffError.Server(403, "forbidden", code = "plan_required", words = "Some server text")
+    assertEquals(bot.tafs.app.model.ErrorWords.NOT_ALLOWED, bot.tafs.app.model.ErrorWords.of(other))
+    assertNull(bot.tafs.app.model.ErrorWords.kiffWords(other))
+    // Without words, the code alone says nothing of its own.
+    assertEquals(bot.tafs.app.model.ErrorWords.NOT_ALLOWED, bot.tafs.app.model.ErrorWords.of(KiffError.Server(403, "region_unsupported", code = "region_unsupported")))
+  }
+
   @Test fun startingSignInSendsTheKeysTheDeviceAndThePlatformWithNoSession() = runTest {
     transport.answer(
       "POST /v1/auth/device/start", 200,
