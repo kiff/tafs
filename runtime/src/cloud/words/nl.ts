@@ -109,7 +109,7 @@ export const nl: Words = {
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf die je niet ziet" : `${n} tafs die je niet ziet`] : [])]);
-    return `${app} is weer verbonden als ${account}. ${all === 1 ? "Deze taf gebruikt" : "Deze tafs gebruiken"} het nu: ${items}. Is dit niet het juiste account, verwijder dan de toegang in "Apps koppelen" en koppel het juiste.`;
+    return `${app} is weer verbonden als ${account}. ${all === 1 ? "Deze taf gebruikt" : "Deze tafs gebruiken"} het nu: ${items}. Is dit niet het juiste account, trek dan de toegang in bij ‘Apps koppelen’ en koppel het juiste.`;
   },
   connect_not_needed: (taf: string) => `${taf} gebruikt deze app niet. Coach kan hem voor ${taf} instellen.`,
   connect_tafs_unread: "Je tafs konden nu niet worden gelezen, dus er is niets verbonden. Probeer het zo opnieuw.",
