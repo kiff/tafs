@@ -871,6 +871,18 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(d).toContain("go on");
   });
 
+  it("says a hidden raw result in the account's language", async () => {
+    const w = world();
+    await w.coach.put(`${T}#lang`, "de", new Date(Date.now() + 3600_000));
+    const task = await w.tool("taf_task", { taf: RAE, text: "List today's events, read only" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: '{"items":[{"creator":{"email":"ana@example.com"}}]}' });
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+    const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
+    expect(lines.at(-1)).toMatchObject({ said: wordsIn("de").coach_line_raw_result });
+    for (const lang of LANGUAGES) expect(wordsIn(lang).coach_line_raw_result, lang).toMatch(/\S/);
+  });
+
   it("tells a raw result from words", () => {
     for (const t of ['{"items":[]}', '[{"id":1}]', ' {"accessRole":"owner","items":[{"crea', '[1, 2', '["a"', "[]"]) expect(rawResult(t), t).toBe(true);
     for (const t of ["3 events today.", "[Draft] Reply to Ana: thanks!", "{not json} it says", "No events today", "[1] is the first item: done."]) expect(rawResult(t), t).toBe(false);

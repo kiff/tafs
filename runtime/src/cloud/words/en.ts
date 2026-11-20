@@ -777,6 +777,7 @@ export const en = {
   trial_label: "Trial",
   trial_title: (n: number) => `Trying version ${n}`,
   runs_title: "Its runs",
+  coach_line_raw_result: "It finished: open its run to see its answer.",
   runs_more: "Show all runs",
   runs_end: "Nothing older in the retained runs",
   tz_words: (zone: string) => `Times in ${zone}`,

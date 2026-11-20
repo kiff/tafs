@@ -716,6 +716,7 @@ export const de: Words = {
   trial_label: "Test",
   trial_title: (n) => `Version ${n} wird getestet`,
   runs_title: "Seine Läufe",
+  coach_line_raw_result: "Fertig: Öffne seinen Lauf, um seine Antwort zu sehen.",
   runs_more: "Alle Läufe zeigen",
   runs_end: "Nichts Älteres in den aufbewahrten Läufen",
   tz_words: (zone) => `Zeiten in ${zone}`,
