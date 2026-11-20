@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.style.TextDirection
 
 /**
  * The tafs palette, taken from the mascot: a warm cream ground, deep ink, and the mascot's
@@ -119,6 +120,9 @@ fun scaled(
     else -> null
   },
   letterSpacing = tracking,
+  // Each line reads in its own words' direction, as Android's own text does (first strong character), so an English name, a
+  // ticket number or a chat in English stays in order on a right-to-left screen; a line with none follows the screen.
+  textDirection = TextDirection.Content,
 )
 
 /**
@@ -132,7 +136,8 @@ const val BASE_TYPE = 0.9f
  * a field's text) matches the screens' own.
  */
 private val iosTypography = Typography().run {
-  fun TextStyle.ios(size: Int, line: Int) = copy(fontSize = (size * BASE_TYPE).sp, lineHeight = (line * BASE_TYPE).sp, letterSpacing = 0.sp)
+  fun TextStyle.ios(size: Int, line: Int) =
+    copy(fontSize = (size * BASE_TYPE).sp, lineHeight = (line * BASE_TYPE).sp, letterSpacing = 0.sp, textDirection = TextDirection.Content)
   copy(
     displayLarge = displayLarge.ios(34, 41), displayMedium = displayMedium.ios(28, 34), displaySmall = displaySmall.ios(22, 28),
     headlineLarge = headlineLarge.ios(34, 41), headlineMedium = headlineMedium.ios(28, 34), headlineSmall = headlineSmall.ios(22, 28),
