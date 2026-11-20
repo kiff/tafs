@@ -234,7 +234,9 @@ then shows its plan. Then, each step behind the owner's yes:
    on plain timing, at most once an hour, and `check` says so: Coach fixes the check with `taf_dial`. A result whose Card the owner hasn't
    approved yet (KIFF's `draft_not_ready`) with no approval or sign-in card waiting beside it in the same run is answered at
    once, in the words below: nothing asks the owner for that Card (a redraft shown with no approval of its own), so
-   Coach shows its approval, and the result once the owner approved it. With one waiting beside it, the
+   Coach shows its approval, and the result once the owner approved it. That result, shown again under the same id, is a
+   hand-over of its own: each is held per call (10 minutes, so a repeat note or a second phone makes one taf), never
+   per card id, and its wait for the Card starts again; a note a hold skips is logged (`handover_held`). With one waiting beside it, the
    result isn't answered at first: it waits, and the taf is made once they
    approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
    its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still

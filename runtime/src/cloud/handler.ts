@@ -9327,13 +9327,13 @@ export function cardNeverApproved(name: string | undefined): string {
 /**
  * Whether this result has waited HANDOVER_CARD_WAIT_MS for its Card: counted from the run's pause on it (its last
  * change, as kiff/agents keeps it), so a result already waiting is answered at its first try after this; else from
- * its first try, which this notes.
+ * its first try, which this notes: per call, as the hand-over's hold is, so a result shown again starts its own wait.
  */
-async function waitedForCard(tenant: string, r: Run, card: string, deps: Deps): Promise<boolean> {
+async function waitedForCard(tenant: string, r: Run, call: string, deps: Deps): Promise<boolean> {
   const now = deps.now?.() ?? new Date();
   const paused = Date.parse(r.updated);
   if (Number.isFinite(paused) && now.getTime() - paused >= HANDOVER_CARD_WAIT_MS) return true;
-  const key = `handover-card#${tenant}#${r.id}#${card}`;
+  const key = `handover-card#${tenant}#${r.id}#${call}`;
   const first = await deps.coach!.get(key).catch(() => undefined);
   if (typeof first !== "string") {
     await deps.coach!.put(key, now.toISOString(), new Date(now.getTime() + HANDOVER_KEPT_MS)).catch(() => undefined);
@@ -9389,8 +9389,13 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
   for (const q of r.requirements ?? []) {
     const card = q.input as { type?: string; id?: string; taf?: ImprovedTaf & NewTaf; tools?: unknown } | undefined;
     if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.id || !card.taf) continue;
-    const held = `handover#${tenant}#${r.id}#${card.id}`;
-    if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
+    // Held per call, not per card id: Coach shows a result again under the same id once its first answer came back
+    // (an unapproved Card, approved since), and that one is a new hand-over, never one already tried (20 Nov).
+    const held = `handover#${tenant}#${r.id}#${q.call_id}`;
+    if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) {
+      console.log(JSON.stringify({ event: "handover_held", run: r.id, card: card.id }));
+      continue;
+    }
     took = true;
     // Every try is said, so a result that waits is never silent (13 Nov).
     console.log(JSON.stringify({ event: "handover_try", run: r.id, card: card.id, draft: card.taf.draft ?? null }));
@@ -9416,7 +9421,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
           console.log(JSON.stringify({ event: "handover_unconfirmed", run: r.id, card: card.id }));
           return { failed: cardNeverApproved(card.taf?.name) };
         }
-        if (await waitedForCard(tenant, r, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
+        if (await waitedForCard(tenant, r, q.call_id, deps)) return { failed: cardNeverApproved(card.taf?.name) };
         console.warn(`handover ${r.id} ${card.id}: waiting for the Card's approval (draft ${card.taf?.draft ?? "none"})`);
       } else console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
       // Not told: it may still pass. The hold goes, and the sweep tries again.

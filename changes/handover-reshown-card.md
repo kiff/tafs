@@ -1,0 +1,1 @@
+- **A taf is made when Coach shows its result again after the Card is approved:** tafs cloud held a result's hand-over per card id, so the same result shown again once the owner approved its Card was skipped and Coach waited on it; each showing is now its own hand-over ([coach.md](docs/coach.md)).
