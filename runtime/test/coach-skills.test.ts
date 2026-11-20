@@ -187,7 +187,7 @@ describe("Coach's core", () => {
     expect(body).toContain("two options only, Agree (value agree) and Change something");
     // The rules and the figures go on the notice as data, and the confirm names it, so Approve holds the Card to
     // what the owner agreed: what happens past each limit, and each call's and the day's figures (rules.ts).
-    expect(body).toContain("with rules: per tool, its over (or each figure's) and only the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id");
+    expect(body).toContain(`with rules: per tool, its over (or each figure's) and only the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id`);
     expect(body).toContain("never another rule as an option: ask it as its own question first, and put the answer in the rules.");
     // The Card follows the rule's over, and the line says it, so words, rule and Card agree (19 Nov, a Pipedrive check:
     // a read's line said nothing past its count, its rule asked, and the first Card refused) (draft-the-card@39).
