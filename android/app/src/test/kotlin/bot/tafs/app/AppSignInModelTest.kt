@@ -33,13 +33,72 @@ class AppSignInModelTest {
   /** KIFF's tab, standing in: it keeps the page asked for and comes back with [back] for its state. */
   private class Tab(val back: (state: String) -> String) : VendorSignIn {
     var asked: String? = null
+    var opened = 0
     override suspend fun signIn(url: String): String {
+      opened += 1
       asked = url
       return back(query(url).getValue("state"))
     }
   }
 
-  private fun model(tab: Tab) = testModel(transport = transport, secrets = secrets, signer = signer, start = false, appSignInTab = tab)
+  private var now = java.time.Instant.parse("2026-11-20T13:00:00Z")
+  private fun model(tab: Tab) = testModel(transport = transport, secrets = secrets, signer = signer, start = false, appSignInTab = tab, clock = { now })
+
+  private fun signedIn() {
+    transport.answer("POST /v1/auth/app/token", 200, token)
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("POST /v1/me/device/approval-key", 200, """{"fingerprint":"${KiffClient.fingerprint(signer.approvalPublicKeyDER)}"}""")
+  }
+
+  private fun tokenBodies() = transport.requestsTo("POST /v1/auth/app/token").map {
+    (Json.parseToJsonElement(String(it.body!!)) as JsonObject).mapValues { v -> v.value.jsonPrimitive.content }
+  }
+
+  /** KIFF refuses the terms before it spends the code: ticked again within the code's minute, the same code goes with the new version. */
+  @Test fun termsThatChangedKeepTheCodeForTheNewTick() = runTest {
+    transport.answer("POST /v1/auth/app/token", 409, """{"error":"terms_outdated","terms_version":"2026-11-20"}""")
+    val tab = Tab { state -> "dev.kiff.tafs:/oauth?code=c_1&state=$state" }
+    val m = model(tab)
+    refused(AppModel.TERMS_OUTDATED) { m.signInInApp("2026-11-14") }
+    assertNull(secrets.load(AppModel.TOKEN))
+    now = now.plusSeconds(30)
+    signedIn()
+    m.signInInApp("2026-11-20")
+    assertEquals("the tab isn't opened twice", 1, tab.opened)
+    val (first, second) = tokenBodies()
+    assertEquals(first["code"], second["code"])
+    assertEquals(first["code_verifier"], second["code_verifier"])
+    assertEquals("2026-11-20", second["terms_version"])
+    assertEquals("at_1", secrets.load(AppModel.TOKEN))
+  }
+
+  /** Past 50 of its 60 seconds the kept code is dropped, and the next Continue opens KIFF's page again with a new attempt. */
+  @Test fun aKeptCodePastItsMinuteIsNeverSent() = runTest {
+    transport.answer("POST /v1/auth/app/token", 409, """{"error":"terms_outdated","terms_version":"2026-11-20"}""")
+    var n = 0
+    val tab = Tab { state -> n += 1; "dev.kiff.tafs:/oauth?code=c_$n&state=$state" }
+    val m = model(tab)
+    refused(AppModel.TERMS_OUTDATED) { m.signInInApp("2026-11-14") }
+    now = now.plusSeconds(50)
+    signedIn()
+    m.signInInApp("2026-11-20")
+    assertEquals(2, tab.opened)
+    val (first, second) = tokenBodies()
+    assertEquals("c_1", first["code"])
+    assertEquals("c_2", second["code"])
+    assertTrue(first["code_verifier"] != second["code_verifier"])
+  }
+
+  /** Any other refusal of the code keeps nothing: the next Continue is a new attempt. */
+  @Test fun anotherRefusalKeepsNoCode() = runTest {
+    transport.answer("POST /v1/auth/app/token", 400, """{"error":"invalid_grant"}""")
+    val tab = Tab { state -> "dev.kiff.tafs:/oauth?code=c_1&state=$state" }
+    val m = model(tab)
+    try { m.signInInApp("2026-11-14"); fail() } catch (e: bot.tafs.app.kiff.KiffError.Server) { assertEquals("invalid_grant", e.message) }
+    signedIn()
+    m.signInInApp("2026-11-14")
+    assertEquals(2, tab.opened)
+  }
 
   @Test fun kiffsCodeIsTradedForTodaysSession() = runTest {
     transport.answer("POST /v1/auth/app/token", 200, token)

@@ -124,6 +124,8 @@ struct WorkSummary: View {
     /// test), and without what it showed, as while it works.
     var coach = false
     @State private var open = false
+    /// Right to left, the closed chevron points left, so it turns the other way to point down.
+    @Environment(\.layoutDirection) private var direction
 
     var body: some View {
         let steps = coach ? work.steps.filter { AppModel.activityWords($0.tool) != nil } : work.steps
@@ -132,7 +134,7 @@ struct WorkSummary: View {
             Button { withMotion(.easeOut(duration: 0.25)) { open.toggle() } } label: {
                 HStack(spacing: 4) {
                     Text(Words.Chat.Work.workedFor(ms: "\(WorkLog.duration(ms: work.ms))"))
-                    Image(systemName: "chevron.right").rotationEffect(.degrees(open ? 90 : 0))
+                    Image(systemName: "chevron.forward").rotationEffect(.degrees(open ? (direction == .rightToLeft ? -90 : 90) : 0))
                 }
                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }

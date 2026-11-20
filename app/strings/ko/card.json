@@ -1,0 +1,138 @@
+{
+  "card.all_of": {
+    "other": "모든 Card"
+  },
+  "card.amount_window": "{window} {amount}",
+  "card.asks_you": "{formatted} {sum_label}, 그 이상은 나에게 묻습니다",
+  "card.calls_left": {
+    "other": "호출 {count}회 남음"
+  },
+  "card.calls_used_of": {
+    "other": "{window} 호출 {count}회 중 {used}회"
+  },
+  "card.calls_window": {
+    "other": "{window} 호출 {count}회"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF가 확인함",
+  "card.card_draft_kiff": "Card · 초안 · KIFF 작성",
+  "card.card_got_room_call_needed": "합계가 초기화될 때까지 이 호출에 필요한 여유가 Card에 추가되었습니다",
+  "card.card_not_issued": "Card가 발급되지 않았습니다. ",
+  "card.card_revoked": "Card 취소됨",
+  "card.check.always_asks": "{rule}: 항상 나에게 묻습니다",
+  "card.check.never_allowed": "{rule}: 허용 안 됨",
+  "card.check.not_on_card": "이 taf의 Card에 없음",
+  "card.check.over_count": {
+    "other": "{window} {count}회 초과"
+  },
+  "card.check.over_each": "건당 {amount} 초과",
+  "card.check.over_total": "{window} {amount} 초과",
+  "card.count": {
+    "other": "Card {count}개"
+  },
+  "card.ended": "종료됨",
+  "card.ended_on": "{date} 종료",
+  "card.ends": "종료",
+  "card.extra_room": "{window} 추가 허용 +{extra}",
+  "card.extra_room_prefix": "추가 허용 +{formatted} ",
+  "card.extra_room_until": "{ends}까지 추가 허용 +{extra}",
+  "card.figure_left": "{figure} 남음",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{window} 호출 {count}회{each}: 이번이 {nth}번째입니다{item}"
+  },
+  "card.held.each_call_asks": "호출할 때마다 먼저 나에게 묻습니다",
+  "card.held.for_each": " ({name}별)",
+  "card.held.for_each_join": " · ",
+  "card.held.for_item": " ({item})",
+  "card.held.over_count": {
+    "other": "호출 {count}회 한도 초과: 이번이 {nth}번째입니다"
+  },
+  "card.held.over_one_call": "{amount}은(는) 1회 호출 한도 {cap}을(를) 넘습니다",
+  "card.held.over_total": "{amount}이(가) 합계 {cap}을(를) 넘게 됩니다",
+  "card.hero.calls_left_of": {
+    "other": "{window} {limit}회 중 남은 호출"
+  },
+  "card.hero.calls_use_unavailable": "{window} 호출 · 사용량 확인 불가",
+  "card.hero.left_of": "{window} {limit} 중 남음",
+  "card.hero.left_of_extra": "{window} {base} + 추가 허용 {extra} 중 남음",
+  "card.hero.left_of_extra_until": "{window} {base} + {ends}까지 추가 허용 {extra} 중 남음",
+  "card.hero.left_of_note": "{window} {limit} 중 남음{note}",
+  "card.hero.no_currency": "통화 없음",
+  "card.hero.no_currency_suffix": " · 통화 없음",
+  "card.hero.use_unavailable": "{window} · 사용량 확인 불가",
+  "card.hero.use_unavailable_note": "{label} · 사용량 확인 불가{note}",
+  "card.how_counted": "계산 방법",
+  "card.issue_prompt": "{taf}의 Card 발급",
+  "card.issued_by": "발급자",
+  "card.issued_by_account": "계정",
+  "card.issued_by_named": "발급자: {who}",
+  "card.its_card": "이 taf의 Card",
+  "card.kiff_did_not_revoke_cards": "KIFF가 Card {cards_left}개를 취소하지 않았습니다. KIFF에서 취소하세요.",
+  "card.left": "{window} {amount} 남음",
+  "card.left_extra_room": "{own} + 추가 허용 {extra}{until} 중 {current} 남음{note}",
+  "card.limit_can_not_raised_right": "지금은 여기서 한도를 올릴 수 없습니다.",
+  "card.limit_raised_read_balance_again": "한도를 올렸습니다. 다시 올리기 전에 잔액을 다시 확인하세요.",
+  "card.line.calls_in_window": {
+    "other": "{window} 호출 {count}회{then}"
+  },
+  "card.line.more_asks": "; 그 이상은 먼저 나에게 묻습니다",
+  "card.line.then_asks": ", 그 이상은 나에게 묻습니다",
+  "card.line.total_in_window": "{window} 합계 {amount}{then}",
+  "card.line.up_to_each": "건당 최대 {amount}",
+  "card.more": {
+    "other": "{count}개 더"
+  },
+  "card.no_actions": "아직 행동 없음",
+  "card.no_actions_short": "아직 행동 없음",
+  "card.no_currency": "{amount}(통화 없음)",
+  "card.no_end_date": "종료일 없음",
+  "card.outcome.not_a_resource": "Card의 리소스가 아님",
+  "card.outcome.outside": "Card 밖",
+  "card.outcome.over_one_action": "Card의 1회 행동 한도 초과",
+  "card.outcome.over_total": "Card 합계 초과",
+  "card.outside_held": "Card 밖: 나를 위해 보류됨",
+  "card.outside_refused": "Card 밖: 거절됨",
+  "card.over_limit_calls_would": "호출 {limit}회 한도 초과: 이번이 {nth}번째입니다",
+  "card.revoke_failed": "KIFF가 Card를 취소하지 않았습니다. {why}",
+  "card.revoked": "취소됨",
+  "card.rule.always_asks": "항상 나에게 묻습니다",
+  "card.rule.at_most_each": "건당 ≤ {amount}",
+  "card.rule.at_most_each_refused_above": "건당 ≤ {amount} · 초과 시 거절",
+  "card.rule.calls": {
+    "other": "{window} 호출 {count}회"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{window} 호출 {count}회, 그 이상은 나에게 묻습니다"
+  },
+  "card.rule.in_total": "{window} 합계 {amount}",
+  "card.rule.never": "허용 안 함",
+  "card.rule.total_then_asks": "{window} 합계 {amount}, 그 이상은 나에게 묻습니다",
+  "card.rule.up_to_each": "건당 최대 {amount}; 그 이상은 먼저 나에게 묻습니다",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf의 Card",
+  "card.tools": {
+    "other": "도구 {count}개"
+  },
+  "card.until": "종료일",
+  "card.until_date": "{date}까지",
+  "card.until_ends": " ({ends}까지)",
+  "card.used_of": "{window} {limit} 중 {used}",
+  "card.window.a_day": "하루",
+  "card.window.a_month": "한 달",
+  "card.window.a_week": "일주일",
+  "card.window.any_day": "24시간 동안",
+  "card.window.any_hour": "1시간 동안",
+  "card.window.any_week": "7일 동안",
+  "card.window.in_total": "총",
+  "card.window.in_total_window": "{window} 총",
+  "card.window.last_day": "최근 24시간",
+  "card.window.last_hour": "최근 1시간",
+  "card.window.last_week": "최근 7일",
+  "card.window.so_far": "지금까지",
+  "card.window.this_month": "이번 달",
+  "card.window.this_week": "이번 주",
+  "card.window.today": "오늘",
+  "card.within_card": "Card 안에서"
+}

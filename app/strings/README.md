@@ -12,6 +12,8 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   `<lang>/drive.json`. So two PRs on different features never touch the same file.
 - **`en/`** is the source and the list of keys.
 - **`de/`, `fr/`, `es/`, `it/`, `pt/`, `nl/`, `pl/`** hold the same keys in each language.
+- **`ja/` and `ko/`** are being written (the global launch, Korea first). They're in `all`, not
+  `shipped`, so neither app shows them until every key is there. Then they move to `shipped`.
 - **A new feature** is a new file in each language's folder, named as its keys begin.
 - **A key in another feature's file, or in two files,** is refused: the generator and its
   checks fail.

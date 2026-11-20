@@ -63,8 +63,11 @@ class SharedWords(unittest.TestCase):
             self.assertGreater(age, table["default"], f"{country}: only a country asking more than the default is listed")
             self.assertLessEqual(age, 21, country)
 
-    def test_the_languages_are_the_eight(self):
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
+    def test_the_languages_are_the_eight_then_japanese_and_korean(self):
+        # The eight ship. Japanese and Korean are being written (global launch, Korea first): not shipped until
+        # every key is there, so no app shows half a language.
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]))
 
@@ -223,7 +226,7 @@ class SharedWords(unittest.TestCase):
             if isinstance(english, dict) or english not in terms:
                 continue
             for lang, lines in self.lines.items():
-                if key in lines:
+                if key in lines and lang in terms[english]:  # ja, ko: their terms join the table when they ship
                     want = TERM_AS_PLURAL.get(key, {}).get(lang, terms[english][lang])
                     self.assertEqual(lines[key].lower(), want.lower(), f"{lang} {key}")
 

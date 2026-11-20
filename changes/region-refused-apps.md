@@ -1,0 +1,1 @@
+- **iPhone, iPad and Android:** a sign-in from where KIFF isn't offered says so in KIFF's own words, in the app's language, instead of "not allowed" or "didn't work" ([android-app.md](docs/android-app.md), [ios-app.md](docs/ios-app.md)).

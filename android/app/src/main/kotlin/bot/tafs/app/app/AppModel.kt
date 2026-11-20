@@ -1259,25 +1259,48 @@ class AppModel(
    * or declined). KIFF's refusals of the code come as it sends them (`invalid_grant`, `terms_outdated`).
    */
   suspend fun signInInApp(termsVersion: String, email: String? = null) {
-    val attempt = bot.tafs.app.kiff.AppSignIn.attempt()
-    val link = appSignInTab.signIn(bot.tafs.app.kiff.AppSignIn.authorizeUrl(kiff.baseUrl, attempt, bot.tafs.app.model.Res.language, email))
-    val code = when (val back = bot.tafs.app.kiff.AppSignIn.answer(link, attempt)) {
-      is bot.tafs.app.kiff.AppSignIn.Answer.Code -> back.code
-      is bot.tafs.app.kiff.AppSignIn.Answer.Refused -> throw AppSignInRefused(back.error)
-      else -> throw AppSignInRefused(AppSignInRefused.STATE_MISMATCH)
+    // Ticked again after `terms_outdated`, within the code's minute: KIFF refused the terms before spending the code, so it's
+    // sent again with the new version and the tab isn't opened twice (as iOS, docs/onboarding.md).
+    val kept = keptAppCode?.takeIf { java.time.Duration.between(it.at, clock()) < APP_CODE_KEPT }
+    keptAppCode = null
+    val (code, verifier) = kept?.let { it.code to it.verifier } ?: run {
+      val attempt = bot.tafs.app.kiff.AppSignIn.attempt()
+      val link = appSignInTab.signIn(bot.tafs.app.kiff.AppSignIn.authorizeUrl(kiff.baseUrl, attempt, bot.tafs.app.model.Res.language, email))
+      when (val back = bot.tafs.app.kiff.AppSignIn.answer(link, attempt)) {
+        is bot.tafs.app.kiff.AppSignIn.Answer.Code -> back.code to attempt.verifier
+        is bot.tafs.app.kiff.AppSignIn.Answer.Refused -> throw AppSignInRefused(back.error)
+        else -> throw AppSignInRefused(AppSignInRefused.STATE_MISMATCH)
+      }
     }
     val key = signer.publicKeyDER
     val approvalKey = signer.approvalPublicKeyDER
-    val token = kiff.appToken(
-      code, attempt.verifier, termsVersion,
-      publicKey = key.takeIf { it.isNotEmpty() },
-      approvalPublicKey = approvalKey.takeIf { key.isNotEmpty() && it.isNotEmpty() },
-      deviceName = deviceName,
-      platform = if (key.isEmpty()) null else PLATFORM,
-      kind = bot.tafs.app.model.ThisDevice.kiffKind,
-    )
+    val token = try {
+      kiff.appToken(
+        code, verifier, termsVersion,
+        publicKey = key.takeIf { it.isNotEmpty() },
+        approvalPublicKey = approvalKey.takeIf { key.isNotEmpty() && it.isNotEmpty() },
+        deviceName = deviceName,
+        platform = if (key.isEmpty()) null else PLATFORM,
+        kind = bot.tafs.app.model.ThisDevice.kiffKind,
+      )
+    } catch (e: bot.tafs.app.kiff.KiffError.Server) {
+      if (e.status == 409 && e.message == TERMS_OUTDATED) {
+        // Kept in memory only, for the new tick.
+        keptAppCode = KeptAppCode(code, verifier, clock())
+        throw AppSignInRefused(TERMS_OUTDATED)
+      }
+      throw e
+    }
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
+
+  /** The terms version in force at KIFF, read when the welcome shows its tick, so the version sent is the one the person saw. */
+  suspend fun appTermsVersion(): String = kiff.appTerms()
+
+  /** An in-app sign-in's code KIFF kept after `terms_outdated`, with its verifier: in memory only, for at most the code's minute. */
+  private data class KeptAppCode(val code: String, val verifier: String, val at: Instant)
+
+  private var keptAppCode: KeptAppCode? = null
 
   /** A sign-in's code and when it expires, kept with the phone's secrets until it's done. */
   @Serializable
@@ -1363,14 +1386,20 @@ class AppModel(
    * holds the key; then uses it as any sign-in does. Throws [KiffError.Expired] once the offer's time is up: the screen shows a
    * new one. KIFF decides everything else: whether the claim's proof holds, and what the session may do.
    */
-  suspend fun finishPairSignIn(offer: PairOffer) {
+  suspend fun finishPairSignIn(offer: PairOffer, termsVersion: String? = null) {
     // One signature, by the device key and without a prompt: it names only the nonce and the key, so every poll sends it.
     val proof = signer.signConfirmed(offer.claimMessage)
     val start = DeviceStart(
       deviceCode = offer.nonce, userCode = offer.checkCode, verificationUri = "", verificationUriComplete = "",
       expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
     )
-    val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    val token = try {
+      untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof, termsVersion) }
+    } catch (e: KiffError.Server) {
+      // The terms changed since the welcome's tick: KIFF says so before anything is claimed, so the tick is asked again.
+      if (termsVersion != null && e.status == 409 && e.message == TERMS_OUTDATED) throw AppSignInRefused(TERMS_OUTDATED)
+      throw e
+    }
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
 
@@ -9238,6 +9267,10 @@ class AppModel(
 
     /** The platform KIFF records for this device's key. */
     const val PLATFORM = "android"
+    /** KIFF's refusal of a sign-in's terms (409): the box is unticked, and the code is kept for the new tick. */
+    const val TERMS_OUTDATED = "terms_outdated"
+    /** How long a code kept after `terms_outdated` is sent again: 50 seconds of KIFF's 60, as iOS. */
+    val APP_CODE_KEPT: java.time.Duration = java.time.Duration.ofSeconds(50)
 
     // What the session is kept under, as iOS's Keychain accounts.
     const val TOKEN = "kiff.session"

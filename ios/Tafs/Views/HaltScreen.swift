@@ -172,7 +172,7 @@ struct HaltRow: View {
                     .scaledFont(13).foregroundColor(h.state == .running ? Theme.dim : Theme.no)
             }
             Spacer()
-            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+            Image(systemName: "chevron.forward").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
         }
         // The whole row opens it, not only its words and caret (kiff/tafs#236, item 12).
         .contentShape(Rectangle())

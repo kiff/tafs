@@ -1,0 +1,1 @@
+- **Android:** a vendor's quoted message in the record, a tool's or vendor's name in words, and a taf's name, job and status lines from tafs cloud carry no invisible direction character either ([android-app.md](docs/android-app.md)).

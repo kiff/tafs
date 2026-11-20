@@ -57,8 +57,26 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
   code goes to `appToken`, then to today's `takeSession`: the same approval key, account and celebration as the
   device-code sign-in. A link with another state is `AppSignInRefused` `state_mismatch` and never reaches KIFF;
-  KIFF's `access_denied` is its own refusal. The welcome's words for each refusal, and Continue calling it, come with
-  the three cards and the first Home.
+  KIFF's `access_denied` is its own refusal.
+- **Continue** (`OnboardingView`): it calls `signInInApp` with the terms version read when the tick showed
+  (`appTermsVersion`), and waits while it runs. Then the sign-in sheet's own celebration (`InAppSignedIn`). How it
+  ends when it doesn't sign in (`continueOutcome`):
+  - **closing KIFF's page** (`access_denied`, or the tab closed) says nothing, and the welcome is as it was;
+  - **terms that changed** since the tick (409 `terms_outdated`) untick the box and say so (`onboarding.terms_changed`).
+    KIFF refuses the terms before it spends the code, so the code is kept in memory for 50 of its 60 seconds, and the
+    new tick sends it again with the new version without opening KIFF's page twice. Past that, or after any other
+    refusal, nothing is kept;
+  - **anything else** says signing in didn't work, with the tick kept, so Continue tries again. A link back with
+    another state ends the attempt: a tab hands back one link, so there's no code left to wait for.
+- **A tablet** also offers **Sign in with your phone** under Continue, waiting on the same tick, as iPad does: the
+  sign-in sheet's phone half only (`SignInSheet(phoneOnly = true)`), with no KIFF code. Every pairing claim
+  carries the terms version the tick agreed to (`terms_version` on `/v1/pair/claim`, kiff/cloud#24), and KIFF
+  records it for this tablet with the session. It's read when the phone way is tapped if the welcome couldn't, and
+  with none, nothing opens and the welcome says signing in didn't work, so consent is never skipped. Terms that
+  changed (409 `terms_outdated`, before anything is claimed) close the sheet and untick the box, as Continue does. The
+  welcome counts KIFF's changed-terms answers (saved with the screen), so a rotation while the sheet is open neither loses
+  one nor unticks the box again after it was ticked anew.
+  However the sheet closes, the ticked version goes with it. Off, the claim is today's.
 - **The three cards** (`OnboardingCards`, step 3): Your tafs, A Card is your permission, You stay in control, with
   Skip, Next and Get started (`OnboardingSteps`). Each picture is Android's own view over the sample's words: Home's
   `TafRow`s, the Card tab's `TafCardFace` ("Support replies · Zendesk", 12 of 40 replies) and a Needs you card. The

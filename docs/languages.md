@@ -13,7 +13,9 @@ the terms below, so a word on a button is the word in a notification, an email a
   counts against a limit or how an amount is checked.
 - **Amounts and dates format by the phone's locale,** as they do now: `1.240,00 €` in German,
   `1 240,00 €` in French, `€1,240.00` in English.
-- **The binding texts stay in English:** Terms, Privacy and the DPA, until the owner says otherwise.
+- **The binding texts are in English:** Terms, Privacy and the DPA. Their translations, and each country's section,
+  are published in the country's language beside English; the English text binds, except where local law requires
+  the local-language text to bind (Quebec's Charter of the French language). The owner's ruling, 20 Nov.
 - **Developers' words stay in English:** logs, and an API's `error` field. What a person reads comes in
   `words`, `line`, titles and bodies, and those are translated.
 - **Each language is reviewed against this page's glossary,** every catalog and every listing, before it
@@ -126,6 +128,38 @@ A taf's own name ("Refunds") is the owner's and is never translated.
 Halted and Stopped are different words in every language: a halt blocks a taf in every system it works
 through, while a stopped request is one run that ended. A word not in this table is translated in the voice above, the same way every time it appears. A new
 term that recurs is added here first, then used.
+
+## Korean and Japanese (being written)
+
+`ko` and `ja` are in `all`, not `shipped` (app/strings/README.md): their lines are written feature by feature, and
+neither app shows them until every key is there. Their terms are kept here, apart from the Terms table above,
+which KIFF checks by its digest; they join it when they ship.
+
+| Language | Code | Address | Notes |
+|---|---|---|---|
+| Korean | `ko` | 합니다 / 하세요 | Statements end in -습니다/-ㅂ니다, requests in -세요, as Korean business apps do. "나" for the person in labels ("내 코드"). A particle after a placeholder that may end in a consonant is written 을(를), 이(가), 은(는). |
+
+| English | Korean |
+|---|---|
+| Needs you | 확인 필요 |
+| Approve / Approve once | 승인 / 한 번 승인 |
+| Refuse | 거절 |
+| held | 보류됨 |
+| Halt / Halted | 차단 / 차단됨 |
+| Stopped (one run that ended) | 멈춤 |
+| Pause / Paused | 일시 중지 / 일시 중지됨 |
+| Resume | 재개 |
+| Run now | 지금 실행 |
+| run / scheduled run | 실행 / 예약 실행 |
+| credits / spend limit | 크레딧 / 지출 한도 |
+| door | 창구 |
+| Record | 기록 |
+| Connect apps / connection | 앱 연결 / 연결 |
+| Sign in again / Sign in with KIFF | 다시 로그인 / KIFF로 로그인 |
+| Try again | 다시 시도 |
+| Ask Coach | Coach에게 묻기 |
+| Settings / Home / Activity | 설정 / 홈 / 활동 |
+| Terms of Service / Privacy Policy | 서비스 약관 / 개인정보처리방침 |
 
 ## The AI disclosure
 

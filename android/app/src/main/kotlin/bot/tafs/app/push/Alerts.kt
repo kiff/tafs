@@ -149,8 +149,9 @@ object AlertPayload {
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         // A held call that has expired is not shown: there is nothing to answer.
         if (expires != null && !expires.isAfter(now)) return null
-        val title = data["title"]?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Alert.needsYou else Words.App.name
-        val body = data["body"]?.takeIf { it.isNotBlank() } ?: when {
+        // tafs cloud's words can name a payee or a merchant: no direction character reorders them beside an amount (qa-kiff).
+        val title = data["title"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: if (open == NEEDS_YOU) Words.Alert.needsYou else Words.App.name
+        val body = data["body"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: when {
           open == USAGE -> Words.Push.openUsage
           tafId != null && open != NEEDS_YOU -> Words.Push.openTaf
           else -> Words.Push.openNeedsYou
@@ -168,8 +169,8 @@ object AlertPayload {
         val open = data["open"]?.takeIf { it in OPEN } ?: BRIEF
         val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
         if (expires != null && !expires.isAfter(now)) return null
-        val title = data["title"]?.takeIf { it.isNotBlank() } ?: Words.Alert.needsYou
-        val body = data["body"]?.takeIf { it.isNotBlank() } ?: Words.Push.openNeedsYou
+        val title = data["title"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: Words.Alert.needsYou
+        val body = data["body"]?.let(bot.tafs.app.kiff.KiffMapping::visible)?.takeIf { it.isNotBlank() } ?: Words.Push.openNeedsYou
         val loud = data["level"] != "quiet"
         Alert.Show(title, body, open, tag.ifEmpty { data["kind"].orEmpty() }, loud = loud, expiresAt = expires, brief = true, channel = channelOf(data, data["kind"], loud))
       }

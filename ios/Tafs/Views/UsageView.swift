@@ -328,7 +328,7 @@ struct BalancePanel: View {
                                     }
                                 }
                                 Spacer()
-                                Image(systemName: "chevron.right").scaledFont(13).foregroundColor(Theme.dim)
+                                Image(systemName: "chevron.forward").scaledFont(13).foregroundColor(Theme.dim)
                             }
                         }
                     }

@@ -72,7 +72,7 @@ object KiffMapping {
    */
   fun name(action: String, title: String?): String {
     val t = title.orEmpty().trim()
-    return if (t.isEmpty()) toolWords(action) else t
+    return if (t.isEmpty()) toolWords(action) else visible(t)
   }
 
   /**
@@ -106,7 +106,7 @@ object KiffMapping {
     var name = tool.split("__").last().split(".").lastOrNull { it.isNotEmpty() } ?: tool
     grantPrefix.find(name)?.let { if (it.range.last + 1 < name.length) name = name.substring(it.range.last + 1) }
     val words = name.split('_', '-').filter { it.isNotEmpty() }.joinToString(" ")
-    return words.ifEmpty { tool }
+    return visible(words.ifEmpty { tool })
   }
 
   /** A vendor as people say it: "stripe-mcp" or "mcp.stripe.com" → "Stripe" (item 52). */
@@ -116,8 +116,8 @@ object KiffMapping {
     for (suffix in listOf("-mcp", "_mcp", ".mcp")) if (v.endsWith(suffix)) v = v.dropLast(suffix.length)
     val dot = v.indexOf('.')
     if (dot >= 0) v = v.substring(0, dot)
-    val first = v.firstOrNull() ?: return vendor
-    return first.uppercase() + v.drop(1).replace("-", " ")
+    val first = v.firstOrNull() ?: return visible(vendor)
+    return visible(first.uppercase() + v.drop(1).replace("-", " "))
   }
 
   // MARK: The list
@@ -135,7 +135,7 @@ object KiffMapping {
    */
   fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.filter { it.name.isNotBlank() }.map { s ->
     val finish = s.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish,
+    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = visible(s.name), job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = visible(finish?.words.orEmpty()), finish = finish,
       // Discard only with every word, and only for an agent tafs cloud named.
       discard = s.discard?.takeIf { it.words.usable && s.kiffAgent.isNotBlank() }, kiffCardIds = s.discard?.cards.orEmpty())
   }
@@ -143,7 +143,7 @@ object KiffMapping {
   fun taf(h: HomeTaf, owner: String): Taf {
     fun amount(a: HomeAmount?): Money? = a?.let { money(it.minor, it.unit, it.scale) }
     fun rule(r: HomeRule) = CardRule(
-      action = r.action, label = r.label,
+      action = r.action, label = visible(r.label),
       perAction = amount(r.perAction), perWindow = amount(r.perWindow), countPerWindow = r.countPerWindow,
       window = window(r.window), outside = if (r.outside == "refuse") Outside.refuse else Outside.hold,
       extraRoom = amount(r.extraRoom), baseLimit = amount(r.baseLimit), roomEnds = r.roomWindowEnd,
@@ -151,9 +151,9 @@ object KiffMapping {
     val count = h.card.ids.size
     var taf = Taf(
       id = h.kiffAgent,
-      name = h.name,
+      name = visible(h.name),
       // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run has none, and is described by its Cards.
-      job = h.jobSummary ?: Words.Taf.worksUnderCards(count = count),
+      job = h.jobSummary?.let(::visible) ?: Words.Taf.worksUnderCards(count = count),
       tools = h.card.tools,
       colorIndex = h.color,
       card = Card(h.card.rules.map(::rule), owner, h.card.expires, revoked = !h.card.active),
@@ -164,36 +164,36 @@ object KiffMapping {
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
       h.state == "halted" -> taf.copy(state = TafState.halted, now = Words.Taf.Now.halted)
       // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
-      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
+      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = visible(h.work.line))
       // Something went wrong first (a failed check, its health, a run stopped or failed): tafs cloud's line, never "Working".
-      h.work?.attention == true && h.work.line.isNotBlank() -> taf.copy(state = TafState.idle, now = h.work.line)
+      h.work?.attention == true && h.work.line.isNotBlank() -> taf.copy(state = TafState.idle, now = visible(h.work.line))
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
       h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = Words.Taf.Now.worksFromChat)
       h.state == "working" -> taf.copy(
         state = TafState.working,
         // tafs cloud's words, with the day when it isn't today; the app's own format only where an older tafs cloud sends none.
-        now = h.nextRunWords?.takeIf { it.isNotBlank() } ?: h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running,
+        now = h.nextRunWords?.takeIf { it.isNotBlank() }?.let(::visible) ?: h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running,
       )
       h.state == "idle" -> taf.copy(state = TafState.idle, now = Words.Taf.Now.actingUnderKiff)
       h.state == "stopped" -> taf.copy(state = TafState.revoked, now = Words.Taf.Now.cardNotActive)
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
-      else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
+      else -> taf.copy(state = TafState.idle, now = visible(h.work?.line.orEmpty()))
     }
     // tafs cloud orders what the row says: its work's line carries health's first reason only while the work is idle (halted,
     // needs you, retrying, working, waiting on an app and paused come first). Then that line shows, tinted by tafs cloud's level.
     val level = h.health?.level?.takeIf { it == "at_risk" || it == "failing" }
     val line = h.work?.takeIf { it.status == "idle" }?.line?.takeIf { it.isNotBlank() }
-    if (level != null && line != null) taf = taf.copy(now = line, nowHealth = level)
+    if (level != null && line != null) taf = taf.copy(now = visible(line), nowHealth = level)
     // Its setup stopped partway: tafs cloud's words in place of what it's doing, and the chat to finish it in.
     val finish = h.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    if (finish != null) taf = taf.copy(now = finish.words, finish = finish)
+    if (finish != null) taf = taf.copy(now = visible(finish.words), finish = finish)
     return taf.copy(
       relevantNow = h.relevantNow,
       labels = h.labels.orEmpty().filter { it.isNotBlank() },
       cloudId = h.id,
       paused = h.status == "paused",
       nextRun = h.nextRun,
-      nextRunWords = h.nextRunWords?.takeIf { it.isNotBlank() },
+      nextRunWords = h.nextRunWords?.takeIf { it.isNotBlank() }?.let(::visible),
       worksFromChat = h.unscheduled == true,
       results = h.results,
       timeZoneWords = h.timeZoneWords,
@@ -203,7 +203,7 @@ object KiffMapping {
       // Each Card on its own (kiff/tafs#211), as tafs cloud read it from KIFF.
       kiffCards = h.card.cards?.map { c ->
         TafCard(
-          id = c.id, title = c.title, environment = c.environment, live = c.live, active = c.active, expires = c.expires,
+          id = c.id, title = visible(c.title), environment = c.environment, live = c.live, active = c.active, expires = c.expires,
           rules = c.rules.map(::rule),
           total = c.total?.let { t ->
             amount(t.limit)?.let { limit ->
@@ -251,18 +251,18 @@ object KiffMapping {
         "allowed" -> executed(c.toolOutcome, approved = c.held, vendor = vendors[c.actionName], counts = counted(c))
         "owner_required", "approval_required" -> RecordEntry.Kind.held to Words.Record.waitingForYou
         // KIFF's own words for why, when it has them (kiff/tafs#138).
-        else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = it) } ?: Words.Record.notSent)
+        else -> RecordEntry.Kind.refused to (c.reason?.let { Words.Record.notSentBecause(reason = visible(it)) } ?: Words.Record.notSent)
       }
       val refusedByTool = c.outcome == "allowed" && c.toolOutcome?.status == "refused_by_tool"
       // Typed by KIFF as the connection's refusal: KIFF's words, or the plain fact, never the tool's raw message.
       val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
-      val shown = if (byConnection && c.toolOutcome.code != null) c.detail ?: Words.Record.connectionRefusedBeforeSending else detail
+      val shown = if (byConnection && c.toolOutcome.code != null) c.detail?.let(::visible) ?: Words.Record.connectionRefusedBeforeSending else detail
       RecordEntry(
-        id = recordId(c.proposalId), tafId = actor, kind = kind, title = name(c.actionName, c.title), detail = shown, at = c.createdAt,
+        id = recordId(c.proposalId), tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
-        entityId = c.entityId, action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt, why = c.reasons,
-        madeAt = c.madeAt, reason = c.reason,
+        entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,
+        why = c.reasons?.map(::visible), madeAt = c.madeAt, reason = c.reason?.let(::visible),
         refusedByTool = if (refusedByTool) true else null,
         refusedBy = if (byConnection) Words.Record.theConnection else if (refusedByTool) vendors[c.actionName] else null,
       )
@@ -282,7 +282,7 @@ object KiffMapping {
     val said = message?.trim().orEmpty()
     if (said.isEmpty() || said.length > QUOTABLE_MAX || said.any { it == '\n' || it == '\r' }) return null
     if (said.any { it == '{' || it == '[' || it == '@' }) return null
-    return said
+    return visible(said)
   }
 
   /**
@@ -351,13 +351,13 @@ object KiffMapping {
     val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: countReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
     // A gateway call is filed under its tool call's id, which says nothing to the owner: what it's on is in
     // its arguments, as KIFF keeps them (kiff/tafs#102).
-    val name = says(e.action, e.title)
-    val summary = if (e.arguments == null) "$name ${e.entityId}" else name
+    val name = visible(says(e.action, e.title))
+    val summary = if (e.arguments == null) "$name ${visible(e.entityId)}" else name
     return HeldCall(
       id = heldId(e.id),
       tafId = e.subject,
       proposed = ProposedAction(e.action, summary, amountOf(e)),
-      reason = if (installs != null) "" else reason,
+      reason = if (installs != null) "" else visible(reason),
       heldAt = e.createdAt,
       expiresAt = e.expiresAt ?: e.createdAt.plus(Duration.ofMinutes(10)),
       kiffId = e.id,
@@ -379,6 +379,30 @@ object KiffMapping {
    * more than KIFF keeps ([max]: 280 for the reason, 120 for what it's on). It's drawn as text alone, so a link or markup in it is
    * only words. Blank is none.
    */
+  /**
+   * A line from KIFF, a vendor or a taf as an approval, the record, a notification or the watch draws it (qa-kiff, 20 Nov): no
+   * direction character (U+202A–U+202E, U+2066–U+2069, U+200E, U+200F, U+061C, the set iOS's `FileText.isDirection` names), so a
+   * payee name can't reorder how an amount or an IBAN beside it looks; any other control character becomes a space. Right-to-left
+   * letters themselves stay.
+   */
+  fun visible(text: String): String {
+    val out = StringBuilder(text.length)
+    var i = 0
+    while (i < text.length) {
+      val c = text.codePointAt(i)
+      when {
+        isDirection(c) -> Unit
+        Character.isISOControl(c) -> out.append(' ')
+        else -> out.appendCodePoint(c)
+      }
+      i += Character.charCount(c)
+    }
+    return out.toString()
+  }
+
+  /** The invisible characters that set or override a line's direction. */
+  fun isDirection(c: Int): Boolean = c in 0x202A..0x202E || c in 0x2066..0x2069 || c == 0x200E || c == 0x200F || c == 0x061C
+
   fun tafSays(reason: String?, max: Int = TAF_REASON_MAX): String? {
     if (reason == null) return null
     val plain = StringBuilder()
@@ -476,7 +500,7 @@ object KiffMapping {
       // The gateway's own arguments: the operation's id, and the taf's words, which show under "The taf says".
       if (k in shown || k == "kiff_operation_id" || k == "kiff_reason" || k == "kiff_about") return@mapNotNull null
       val text = argumentText(arguments[key]).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-      "$key: $text"
+      "${visible(key)}: ${visible(text)}"
     }
   }
 

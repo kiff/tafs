@@ -659,6 +659,11 @@ line: the phone counts nothing.
 
 ## When something doesn't go through
 
+One KIFF refusal is shown in KIFF's own words: a new sign-in from where KIFF isn't offered (403, `code:
+region_unsupported`, `ErrorWords.KIFF_WORDED`). Its `message` says so in the app's language (the request's
+`Accept-Language`); the welcome's Continue and the sign-in sheet show it as sent, never "not allowed" or "didn't
+work". Nothing on the app's side changes it, so nothing says to try again.
+
 The owner reads the app's own words for what happened and what, if anything, they can do
 (`ErrorWords`): offline, try again online; signed out, sign in; not allowed by their
 role; changed in the meantime; too many tries, wait a minute; down on our side, nothing to
@@ -1600,6 +1605,27 @@ Illustrations):
 
 `IllustrationsTest` draws each in light and dark (written with `-PphoneScreenshots` for a look beside its board), and
 `IllustrationPlacementTest` checks that each screen draws its board and that the drawings hold no text, string or image.
+
+## Right to left
+
+The app is laid out right to left in a right-to-left language (`supportsRtl`), for Arabic and Hebrew as the global launch adds
+them. Compose mirrors the layout itself: the tablet's sidebar is on the right, rows read from the right, and a switch's on is
+on the left.
+- **Every drawable that points a way mirrors itself** (`android:autoMirrored="true"`: the chevrons Back, the calendar's previous
+  and next, and a Card row use). A `›` written as text needs nothing: Unicode mirrors it in a right-to-left line.
+  `RtlTest` keeps both rules: no directional drawable without the mirror, and no Material arrow that isn't `Icons.AutoMirrored`.
+- **No direction character from a server reaches an approval** (`KiffMapping.visible`): U+202A–U+202E, U+2066–U+2069,
+  U+200E/U+200F and U+061C are taken out of what KIFF, a vendor, a taf or tafs cloud sends, wherever it's drawn beside an
+  amount or an answer: a held call's summary, reason and Details (payee, IBAN…), the record's entries, a Card's title and
+  rule labels, a notification's title and body, and the watch's Needs you; and every line `KiffMapping` builds from a server
+  value: a vendor's quoted message, a tool's or vendor's name in words, and a taf's name, job and status lines. So a payee name can't make an amount or an IBAN
+  beside it look reordered. Any other control character is a space; right-to-left letters stay (as iOS's #1547).
+- **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
+  text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
+  the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.
+- **The pictures:** `RtlScreenshots` draws sign-in, the tafs, a taf's chat, Account, Files and Devices right to left, on a
+  tablet's 1280 × 800 dp window, into `docs/screenshots/android/rtl/` (`-PrtlScreenshots`). With the app's English, so what
+  moves is the layout. Each test checks it was laid out right to left.
 
 ## Any screen
 

@@ -1,0 +1,13 @@
+{
+  "halt.again": "다시 차단",
+  "halt.all_now": "지금 모두 차단",
+  "halt.explain.halted": "차단됨. 재개하면 새 작업만 시작됩니다.",
+  "halt.explain.halted_since": "{time}부터. 재개하면 새 작업만 시작됩니다.",
+  "halt.explain.halting": "새로 시작되는 것은 없습니다. KIFF와 연결이 모두 확인하면 차단됨으로 표시됩니다.",
+  "halt.explain.running_all": "차단하면 재개할 때까지 tafs가 멈춥니다. 이미 보낸 호출은 도착할 수 있습니다.",
+  "halt.explain.running_one": "차단하면 재개할 때까지 멈춥니다. 이미 보낸 호출은 도착할 수 있습니다.",
+  "halt.halting_stops_no_run_starts": "차단하면 재개할 때까지 {who}이(가) 멈춥니다. 이미 보낸 호출은 도착할 수 있습니다.",
+  "halt.now": "지금 차단",
+  "halt.row_running": "재개할 때까지 멈추기",
+  "halt.your_tafs_lower": "내 tafs"
+}
