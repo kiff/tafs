@@ -19,6 +19,20 @@ export interface HealthReason {
   since?: string;
   /** A check that couldn't read: how the app answered the newest one, as kiff/agents keeps it (Fired.vendor). */
   vendor?: string;
+  /**
+   * A check whose read was never the app's to fail (kiff/agents' Fired.reason): its tool is on none of the taf's
+   * connections now (`no_tool`), or the app's answer has no list where the check looks (`no_items_path`). Its lines
+   * say that, never that the app couldn't be read.
+   */
+  check?: CheckCause;
+}
+
+/** The causes of a failed check that are the check's own, not the app's: each says so in its own words. */
+export type CheckCause = "no_tool" | "no_items_path";
+
+/** The newest failed check's cause when it's the check's own (CheckCause), else undefined: the app couldn't be read. */
+export function checkCause(reason: string | undefined): CheckCause | undefined {
+  return reason === "no_tool" || reason === "no_items_path" ? reason : undefined;
 }
 
 export interface Health { level: HealthLevel; reasons: HealthReason[] }
@@ -128,8 +142,9 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
     const newest = streak[0]!.outcome;
     if (newest === "failed_unfinished") reasons.push({ code: "dropped", level: "failing", since: began });
     else if (newest === "failed_check") {
-      const vendor = streak[0]!.vendor ? { vendor: streak[0]!.vendor } : {};
-      reasons.push(streak.length >= STREAK_FAILING ? { code: "check_failing", level: "failing", n: streak.length, since: began, ...vendor } : { code: "check_failing_one", level: "at_risk", since: began, ...vendor });
+      const cause = checkCause(streak[0]!.reason);
+      const more = { ...(streak[0]!.vendor ? { vendor: streak[0]!.vendor } : {}), ...(cause ? { check: cause } : {}) };
+      reasons.push(streak.length >= STREAK_FAILING ? { code: "check_failing", level: "failing", n: streak.length, since: began, ...more } : { code: "check_failing_one", level: "at_risk", since: began, ...more });
     }
     else reasons.push(streak.length >= STREAK_FAILING ? { code: "streak", level: "failing", n: streak.length, since: began } : { code: "streak_one", level: "at_risk", since: began });
   }
@@ -186,8 +201,11 @@ export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now
     case "dropped": return w.health_dropped;
     case "streak": return w.health_streak(r.n ?? STREAK_FAILING);
     case "streak_one": return w.health_streak_one;
-    case "check_failing": return w.health_check_failing(r.n ?? STREAK_FAILING, timeIn(r.since ?? now.toISOString(), zone, now, lang), app);
-    case "check_failing_one": return w.health_check_failing_one(whenIn(r.since ?? now.toISOString(), zone, now, lang), app);
+    // A check of its own cause failed, the app wasn't unreadable: the line never says it was (healthDo says why).
+    case "check_failing": return r.check ? w.health_check_stuck(r.n ?? STREAK_FAILING, timeIn(r.since ?? now.toISOString(), zone, now, lang))
+      : w.health_check_failing(r.n ?? STREAK_FAILING, timeIn(r.since ?? now.toISOString(), zone, now, lang), app);
+    case "check_failing_one": return r.check ? w.health_check_stuck_one(whenIn(r.since ?? now.toISOString(), zone, now, lang))
+      : w.health_check_failing_one(whenIn(r.since ?? now.toISOString(), zone, now, lang), app);
     case "all_failed": return w.health_all_failed(r.n ?? FAILED_IN_A_ROW);
     case "capped": return w.health_capped(r.n ?? 0, r.of ?? 0);
     case "failed_some": return w.health_failed_some(r.n ?? 0, r.of ?? 0);
@@ -210,11 +228,17 @@ export function vendorKind(vendor: string | undefined): "access" | "account" | "
   return undefined;
 }
 
-/** What the owner can do about it, or nothing where it takes care of itself. */
-function healthDo(r: HealthReason, lang: Lang, app?: string): string {
+/**
+ * What the owner can do about it, or nothing where it takes care of itself. `tool` is the read the taf's check names
+ * (its schedule's check.tool), said when the check's tool is on none of its connections now.
+ */
+function healthDo(r: HealthReason, lang: Lang, app?: string, tool?: string): string {
   const w = wordsIn(lang);
-  // A check the app refused says what the app's answer asks of the owner, when it's one of those.
   if (r.code === "check_failing" || r.code === "check_failing_one") {
+    // A check of its own cause: Coach fixes the check, so the owner hears that, never to check the app's connection.
+    if (r.check === "no_tool" && tool) return w.check_why_no_tool(tool);
+    if (r.check === "no_items_path") return w.check_why_no_items(app);
+    // A check the app refused says what the app's answer asks of the owner, when it's one of those.
     const kind = vendorKind(r.vendor);
     if (kind === "access") return w.check_why_access(app);
     if (kind === "account") return w.check_why_account(app);
@@ -248,8 +272,8 @@ function healthFix(r: HealthReason, lang: Lang, reader: Reader): Omit<HealthFix,
 }
 
 /** The level and each reason as a whole line: what happened, then what to do; and the buttons that fix them. */
-export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date(), app?: string): HealthView {
-  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now, app) + ".", healthDo(r, lang, app)].filter(Boolean).join(" "));
+export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date(), app?: string, tool?: string): HealthView {
+  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now, app) + ".", healthDo(r, lang, app, tool)].filter(Boolean).join(" "));
   const fixes = h.reasons.flatMap((r, line) => {
     const fix = healthFix(r, lang, reader);
     return fix ? [{ line, ...fix }] : [];

@@ -675,6 +675,33 @@ describe("tafs cloud", () => {
     expect(fine.body.summary).toEqual({ status: "idle", line: "Next run Fri 12:30", needs_you: 0 });
   });
 
+  // A check that names a tool none of the taf's connections has now (kiff/agents' no_tool) says so, naming the read, on its
+  // page and on the list: never that it couldn't read the app (Nov 2026). Its schedule is read only then.
+  it("names the read a failing check names when no connection of the taf has it, on its page and on the list", async () => {
+    const w = world();
+    const s = await w.agents.api.getSchedule("t_acme", RAE);
+    w.agents.schedules.set(`t_acme|${RAE}`, { ...s!, check: { tool: "list_emails", arguments: {}, items: "messages", cursor: "internalDate" } });
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "failed_check", reason: "no_tool" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "failed_check", reason: "no_tool" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    const said = "The check reads list_emails, which none of the taf's connections has now: Coach can point it at the right read.";
+    expect(page.body.health.lines[0]).toMatch(new RegExp(`^The scheduled check failed 2 times in a row, since .*\\. ${said.replace(/[.:]/g, "\\$&")}$`));
+    expect(page.body.summary).toEqual({ status: "idle", line: "The 09:45 check failed", needs_you: 0, attention: true });
+    expect(page.body.skipped.map((x: { words: string }) => x.words)).toEqual(["The 09:45 check failed", "The 09:30 check failed"]);
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    const listed = home.body.tafs.find((t: { id: string }) => t.id === RAE);
+    expect(listed.health.lines[0]).toContain(said);
+    expect(JSON.stringify([page.body, listed])).not.toContain("couldn't read");
+    // The list in the app's answer can't be found: it says so, without the tool.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ ...at("2026-10-29T09:45:00.000Z"), outcome: "failed_check", reason: "no_items_path" }, { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" }]);
+    const items = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
+    expect(items.body.health.lines[0]).toMatch(/^The scheduled check failed at 09:45\. The check can't find the list in the answer from the app: Coach can read one real answer and set where the list is\.$/);
+  });
+
   it("says a taf's health where an idle taf says its next run, on its page and on the list", async () => {
     const w = world();
     const at = (iso: string) => ({ due: iso, at: iso });
