@@ -319,6 +319,10 @@
         <item quantity="one">%1$s chiamata rimasta</item>
         <item quantity="other">%1$s chiamate rimaste</item>
     </plurals>
+    <plurals name="card_calls_left_line">
+        <item quantity="one">%1$s chiamata rimasta %2$s su %3$s</item>
+        <item quantity="other">%1$s chiamate rimaste %2$s su %3$s</item>
+    </plurals>
     <plurals name="card_calls_used_of">
         <item quantity="one">%2$s di %1$s chiamata %3$s</item>
         <item quantity="other">%2$s di %1$s chiamate %3$s</item>

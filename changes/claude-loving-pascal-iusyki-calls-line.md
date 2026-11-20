@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** a Card's calls left read as one line in each language's own word order where the figure isn't drawn apart (the taf's Card row, its share line and VoiceOver), so Korean reads "오늘 40회 중 28회 남음" ([languages.md](docs/languages.md)).

@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** a Card's calls figures are all written as the app's language writes numbers, the limit too, so a 10,000-call Card reads "9,999 calls left today of 10,000", not "of 10000".

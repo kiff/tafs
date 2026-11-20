@@ -47,12 +47,12 @@ class AppLocaleTest {
     assertNull(AppLocale.fromLocales(""))
   }
 
-  @Test fun theListIsThePhonesLanguageThenTheEightInTheTablesOrderNamedInThemselves() {
+  @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(9, rows.size)
+    assertEquals(10, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어"),
       rows.drop(1).map { it.tag to it.title },
     )
     assertEquals("This tablet's language", AppLocale.choices(device = "tablet").first().title)

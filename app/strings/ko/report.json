@@ -1,0 +1,17 @@
+{
+  "report.already": "이미 이 답변을 신고했습니다.",
+  "report.cant_from_here": "여기에서는 이 답변을 신고할 수 없습니다.",
+  "report.menu": "이 답변 신고",
+  "report.not_sent": "신고를 보내지 못했습니다. {why}",
+  "report.not_sent_why": "보내지 못함: {failed}",
+  "report.note_hint": "메모 추가(선택 사항)",
+  "report.note_most_characters": "메모는 최대 1,000자입니다.",
+  "report.person_kiff_reads_your_report": "KIFF의 담당자가 작성된 그대로의 답변과 함께 신고 내용을 읽습니다.",
+  "report.reason.harmful": "유해함",
+  "report.reason.offensive": "불쾌함",
+  "report.reason.other": "기타",
+  "report.reason.wrong": "틀림",
+  "report.runs_not_loaded": "실행 기록을 불러오지 못했습니다. {why}",
+  "report.thanks": "감사합니다. KIFF의 담당자가 신고 내용을 읽습니다.",
+  "report.what_wrong": "무엇이 문제인가요?"
+}

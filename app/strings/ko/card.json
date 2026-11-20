@@ -7,6 +7,9 @@
   "card.calls_left": {
     "other": "호출 {count}회 남음"
   },
+  "card.calls_left_line": {
+    "other": "{window} {limit}회 중 {count}회 남음"
+  },
   "card.calls_used_of": {
     "other": "{window} 호출 {count}회 중 {used}회"
   },

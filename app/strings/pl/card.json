@@ -13,6 +13,12 @@
     "many": "Zostało {count} wywołań",
     "other": "Zostało {count} wywołania"
   },
+  "card.calls_left_line": {
+    "one": "Zostało {count} wywołanie {window} z {limit}",
+    "few": "Zostały {count} wywołania {window} z {limit}",
+    "many": "Zostało {count} wywołań {window} z {limit}",
+    "other": "Zostało {count} wywołania {window} z {limit}"
+  },
   "card.calls_used_of": {
     "one": "{used} z {count} wywołania {window}",
     "few": "{used} z {count} wywołań {window}",

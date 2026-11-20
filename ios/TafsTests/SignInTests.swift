@@ -134,7 +134,8 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(Legal.page("terms", language: "ja").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
         XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
-        XCTAssertEqual(Set(Words.languages).subtracting(["en"]), Legal.translated, "every language the app ships has its page")
+        XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages)), "kiff.dev serves pages only in languages the app ships")
+        XCTAssertEqual(Set(Words.languages).subtracting(["en"]).subtracting(Legal.translated), ["ko"], "every shipped language has its page but Korean, which opens English, marked, until kiff.dev serves it")
     }
 
     /// KIFF's own Terms and Privacy, the account's, beside tafs's: in the app's language where kiff.dev serves it.
@@ -178,10 +179,10 @@ final class SignInTests: XCTestCase {
     /// A row says the page is in English only when it opens in English from another language.
     func testALegalRowSaysInEnglishOnlyWhenThePageIs() {
         XCTAssertEqual(Legal.label("Terms", language: "en"), "Terms")
-        for language in Words.languages where language != "en" {
+        for language in Legal.translated {
             XCTAssertEqual(Legal.label("Conditions", language: language), "Conditions", "\(language) has its own page: no suffix")
         }
-        for language in ["ja"] {
+        for language in ["ja", "ko"] {
             let label = Legal.label("Terms", language: language)
             XCTAssertEqual(label, Words.Settings.legalInEnglish(label: "Terms"))
             XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")

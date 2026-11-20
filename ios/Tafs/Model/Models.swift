@@ -283,11 +283,21 @@ struct TafCard: Identifiable, Hashable, Codable {
             return (shown(t.limit), Words.Card.Hero.useUnavailableNote(label: "\(t.window.label)", note: "\(note)"))
         }
         if let c = calls {
-            guard let used = c.used else { return ("\(c.limit)", Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
+            guard let used = c.used else { return (Words.number(c.limit), Words.Card.Hero.callsUseUnavailable(window: "\(c.window.label)")) }
             let left = max(0, c.limit - used)
-            return ("\(left)", Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: "\(c.limit)"))
+            return (Words.number(left), Words.Card.Hero.callsLeftOf(count: left, window: c.window.current, limit: Words.number(c.limit)))
         }
         return nil
+    }
+
+    /// The hero as one line, where the figure isn't drawn apart (a Card's row, its share line, VoiceOver): calls left
+    /// in the line's own word order (`card.calls_left_line`: "28 calls left today of 40", "오늘 40회 중 28회 남음"),
+    /// else the figure, then its words.
+    var heroLine: String? {
+        if total == nil, let c = calls, let used = c.used {
+            return Words.Card.callsLeftLine(count: max(0, c.limit - used), window: c.window.current, limit: Words.number(c.limit))
+        }
+        return hero.map { "\($0.figure) \($0.words)" }
     }
 
     /// What's left, short enough for a Card's edge in the stack (kiff/tafs#236, item 9):
