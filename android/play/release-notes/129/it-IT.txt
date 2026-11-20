@@ -1,0 +1,1 @@
+• tafs ora funziona in ogni orientamento, quindi si installa e funziona sui dispositivi sempre in orizzontale, come un Chromebook o un tablet agganciato di lato.

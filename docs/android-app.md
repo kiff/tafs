@@ -1601,6 +1601,25 @@ Illustrations):
 `IllustrationsTest` draws each in light and dark (written with `-PphoneScreenshots` for a look beside its board), and
 `IllustrationPlacementTest` checks that each screen draws its board and that the drawings hold no text, string or image.
 
+## Any screen
+
+tafs runs in any orientation, on phones held upright and on devices that are only ever landscape (a Chromebook's or a
+desktop's window, a tablet docked sideways), **since Android 129 (1.41.4)**. No activity is locked to an orientation, libraries'
+included, and the manifest names both screen orientations as features not required (`android.hardware.screen.portrait`,
+`android.hardware.screen.landscape`, `required="false"`), so Play never reads tafs as needing a portrait screen.
+- **ML Kit's code scanner** (Pairing a computer) brings an invisible delegate activity,
+  `GmsBarcodeScanningDelegateActivity`, that ML Kit locks to portrait so a rotation can't recreate it mid-scan. Android 128's
+  pre-launch check flagged it (a required portrait screen, implied). The app's manifest replaces that lock with
+  `screenOrientation="unspecified"` and handles the rotation itself (`configChanges` orientation and sizes), so the delegate
+  is never recreated and nothing is locked. The scanner's own screen is Google's, full screen in either orientation.
+- **Tested** by `AnyOrientationTest`, which reads the merged manifest through the package manager: no activity locked to
+  one orientation (ML Kit's delegate included, and named, so it can't fall out of the read), and neither screen feature
+  required. Taking the override out fails it.
+- **Shown** by `LandscapeOnlyScreenshots`, 1280 × 800 dp landscape, into `docs/screenshots/android/landscape/` when asked
+  (`-PlandscapeScreenshots`): sign-in, the tafs, a taf's chat, Account, Files in two panes and Devices (where the scanner
+  opens). A screen that stops drawing there fails the test either way. Portrait phones are as `PhoneStoreScreenshots`
+  draws them, unchanged.
+
 ## Store screenshots
 
 The phone's Play screenshots (`PhoneStoreScreenshots`, a unit test) are the app's real screens over the sample, drawn on the

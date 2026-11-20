@@ -1,0 +1,1 @@
+• tafs läuft jetzt in jeder Ausrichtung und lässt sich so auch auf Geräten installieren und nutzen, die nur im Querformat laufen, etwa einem Chromebook oder einem quer angedockten Tablet.

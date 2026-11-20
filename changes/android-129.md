@@ -1,0 +1,1 @@
+- **Android 129 (1.41.4): tafs runs in any orientation**, so it installs and works on devices that are only ever landscape (a Chromebook, a desktop, a tablet docked sideways). ML Kit's scanner delegate no longer locks the app to portrait, and neither screen orientation is a required feature ([android-app.md](docs/android-app.md#any-screen)).

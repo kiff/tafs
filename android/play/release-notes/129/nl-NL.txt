@@ -1,0 +1,1 @@
+• tafs werkt nu in elke stand, dus het installeert en werkt op apparaten die alleen liggend zijn, zoals een Chromebook of een tablet die liggend in een dock staat.

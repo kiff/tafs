@@ -1,0 +1,1 @@
+• tafs now runs in any orientation, so it installs and works on devices that are only ever landscape, such as a Chromebook or a tablet docked sideways.
