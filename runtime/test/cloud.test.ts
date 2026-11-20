@@ -676,7 +676,7 @@ describe("tafs cloud", () => {
   });
 
   // A check that names a tool none of the taf's connections has now (kiff/agents' no_tool) says so, naming the read, on its
-  // page and on the list: never that it couldn't read the app (Morning inbox, 20 Nov). Its schedule is read only then.
+  // page and on the list: never that it couldn't read the app (Nov 2026). Its schedule is read only then.
   it("names the read a failing check names when no connection of the taf has it, on its page and on the list", async () => {
     const w = world();
     const s = await w.agents.api.getSchedule("t_acme", RAE);

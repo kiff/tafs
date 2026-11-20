@@ -266,8 +266,8 @@ describe("a taf's health", () => {
   });
 
   // A check whose read was never the app's to fail (kiff/agents' Fired.reason) says why in its own words, never that the app
-  // couldn't be read: Morning inbox's check named list_emails after its Gmail went (no_tool), and Customer reply drafts 2's
-  // named no place for the list in Gmail's answer (no_items_path), and both read "couldn't read the app" (20 Nov).
+  // couldn't be read: a check that kept naming list_emails after its Gmail connection went (no_tool), and one that named no
+  // place for the list in Gmail's answer (no_items_path), both read "couldn't read the app" (Nov 2026).
   it("says a check names a tool none of the taf's connections has, or can't find the list, never that the app couldn't be read", () => {
     const checks = (reason?: string, vendor?: string) => [{ due: ago(15), at: ago(15), outcome: "failed_check", ...(reason ? { reason } : {}), ...(vendor ? { vendor } : {}) }, { due: ago(30), at: ago(30), outcome: "failed_check" }, fired(45, "run")] as Fired[];
     const view = (f: Fired[], app?: string, tool?: string, lang: Lang = "en") => healthView(healthOf([], f, NOW), lang, {}, "UTC", NOW, app, tool).lines[0];
