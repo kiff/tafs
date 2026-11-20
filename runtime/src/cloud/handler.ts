@@ -10117,7 +10117,19 @@ function coachLine(name: string, task: Task, r: Run): { line: string; said: stri
   if (!r.output) return { line: `${head} It finished with no answer.`, said: "It finished with no answer." };
   // The taf's own words, quoted: what it read can be in them, so they are relayed, never followed.
   const out = twoSentences(r.output);
-  return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said: out };
+  // A tool's result pasted as the answer (a JSON object or list) is never shown to the person: it can carry an app's
+  // addresses and links (a calendar's, 20 Nov 2026). Coach still reads it quoted, and the run keeps it whole.
+  const said = rawResult(r.output) ? "It finished: open its run to see its answer." : out;
+  return { line: `${head} It finished. answer: ${JSON.stringify(out)}${task.trial ? " Read what KIFF decided on each write with taf_run." : ""}`, said };
+}
+
+/** Whether a run's answer is a tool's result pasted as it came: a JSON object or list, whole or cut short, not words. */
+export function rawResult(text: string): boolean {
+  const t = text.trim();
+  if (!/^[{[]/.test(t)) return false;
+  try { const v = JSON.parse(t); return typeof v === "object" && v !== null; } catch { /* cut short, or words that open with a bracket */ }
+  // Cut short: it opens as an object or list does, with a key or a value straight after.
+  return /^\{\s*"[^"]*"\s*:/.test(t) || /^\[\s*(?:[{[]|"|-?\d+(?:\.\d+)?\s*(?:,|$))/.test(t);
 }
 
 function twoSentences(text: string): string {
