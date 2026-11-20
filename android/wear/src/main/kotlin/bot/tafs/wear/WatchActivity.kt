@@ -204,6 +204,7 @@ class WatchActivity : ComponentActivity() {
           if (voice !is WatchModel.Voice.Review) playback.release()
         }
         val probe by listener.probe.collectAsState()
+        val linkTrace by LinkTrace.latest.collectAsState()
         val working = asks.values.let { model.working() }
         val ready = asks.values.let { model.ready() }
         val thread = said.let { asks.let { model.thread() } }
@@ -212,7 +213,7 @@ class WatchActivity : ComponentActivity() {
         if (WATCH_V2) {
           WatchPages(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, kept = kept, timing = timing,
             // The Inbox kept on the watch, or, when it can't be (locked, no screen lock), what the phone answered now.
-            probe = if (BuildConfig.TIMING) probe else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
+            probe = if (BuildConfig.TIMING) probe else null, linkTrace = if (BuildConfig.TIMING) linkTrace?.line else null, inbox = inbox.takeIf { inboxKept }, taf = taf, haltPick = haltPick,
             signedOutHere = signedOutHere, calendar = calendar, account = account, thread = thread)
         }
         else WatchScreen(shown, outcome, confirmingHaltAll, voice, result, working, ready, actions, timing = timing)

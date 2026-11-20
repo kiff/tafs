@@ -1,0 +1,1 @@
+- **Wear OS, internal builds:** a timing build shows how the last ask to the phone went (finding the phone, the reply's time and size, or why it failed), so a false "phone not reachable" can be traced; a test holds what the phone sends each page to a budget ([watch-wear.md](docs/watch-wear.md)).

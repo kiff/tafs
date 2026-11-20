@@ -437,7 +437,21 @@ cd android && ./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearStore
 
 Otherwise the same tests still draw every screen, without writing a file, so a screen that no longer draws fails CI.
 
-## How the watch talks to KIFF and tafs cloud: through the phone
+## Measuring the link (internal builds only)
+
+A **timing build** (a `versionName` ending in `-timing`, or `-test`, `TAFS_WATCH_TIMING=1`, `-PwatchTiming`) draws one faint line above
+the page dots: the last ask to the phone as the watch measured it (`LinkTrace`, recorded by `DataLayerPhone`). For example,
+"tafs 0.4s + 1.9s · 3.2 kB" is the time to find the phone, then from sending to the reply, then the reply's size. A failure
+reads "tafs ✕ no phone (0.1s)", "✕ timeout" or "✕ error: …", so "your phone isn't reachable" can be told apart: no phone
+found by the capability lookup, the 10 s passing, or the Data Layer's own error. It holds no words of a reply, only its size,
+and a `-timing` build keeps no recording (only `-test` does). Production never draws it.
+
+**What the phone sends, by page** (`WatchPayloadAuditTest`, on the full sample, 20 Nov): Needs you 405 B (count, words, each
+call's taf, what it wants, its reason, refusable, its hold id); Tafs 709 B (each taf's id, name, state, halted); about 1.1 kB
+for every page at once. Each reply has a budget the test holds. So the slowness the owner saw isn't the bytes: it's the round
+trips and the phone's own reads, which the line above measures.
+
+
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
