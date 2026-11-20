@@ -275,12 +275,16 @@ fun SignInSheet(
           },
           style = scaled(12, color = Theme.dim),
         )
+        // A country that asks for more than 16 is told its own age before signing in (India, Brazil, Indonesia), also before
+        // the new welcome's switch is on; anywhere else, the sheet is as it was (docs/onboarding.md).
+        bot.tafs.app.model.raisedAgeLine()?.let { Text(it, style = scaled(12, color = Theme.dim), modifier = Modifier.testTag(SIGN_IN_AGE)) }
       }
     }
   }
 }
 
 internal const val PAIR_START = "sign_in.pair.start"
+internal const val SIGN_IN_AGE = "sign_in.age"
 internal const val KIFF_CONTINUE = "sign_in.kiff.continue"
 internal const val SIGNED_IN = "sign_in.connected"
 
