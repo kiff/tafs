@@ -71,7 +71,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["rules_unpinned", "no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required", "rules_unsaid"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
  * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
@@ -80,7 +80,7 @@ export const REDRAFT_CODES: ReadonlySet<string> = new Set(["rules_unpinned", "no
  */
 export const SHOW_NOW = "Nothing is waiting for the owner now: this approval is over, and there is no card for them to tap until you show one. Show the rules' confirm in this turn, before you end it, and never end a turn saying you're waiting for their approval with no card on screen.";
 
-const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules_required"]);
+const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules_required", "rules_unsaid"]);
 
 /**
  * What a refusal Coach redrafts on adds, so the redraft mends only what was named: the redraft under Eval 43690861487's
@@ -711,6 +711,7 @@ export function approvalWords(lang: Lang = "en") {
     rulesMissing: w.approval_rules_missing,
     rulesUnpinned: w.approval_rules_unpinned,
     rulesFigures: w.approval_rules_figures,
+    rulesUnsaid: w.approval_rules_unsaid,
     rulesUnagreed: w.approval_rules_unagreed,
     rulesRequired: w.approval_rules_required,
     onDemandLetsRun: w.approval_on_demand,
@@ -889,8 +890,13 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
       const per = (extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window") + (extra.per ? ` for each ${extra.per}` : "");
       return { outcome: "answered", answer: `failed: the draft gives "${extra.tool}" a limit the owner never agreed: ${extra.limit} on ${extra.quantity}, ${per}. The rules they agreed name every limit it has, and a Card carries those alone: no other ceiling, total or count, even as a safety margin. Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.`, note: W.rulesFigures(extra.tool), code: "rules_unagreed_figure" };
     }
-    // Figures the notice's words don't say: logged, never refused (formats vary by language).
-    for (const f of rulesUnsaid(agreement.rules, agreement.text)) console.log(`approval rules: a figure the notice's words don't say: ${f}`);
+    // A figure the notice's words don't say was never agreed: the owner agrees to what they read (Eval 44765665210,
+    // invoices-3: "a draft invoice for each one", and the Card held 10 a day and 1 per order). The Cards stay as drafted.
+    const unsaid = rulesUnsaid(agreement.rules, agreement.text);
+    if (unsaid.length > 0) {
+      console.log(`approval rules: figures the notice's words don't say: ${unsaid.join("; ")}`);
+      return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" the owner agreed doesn't say every limit its rules give, so the owner never read them: ${unsaid.join("; ")}. Show the rules again as a new notice with its confirm, one line per limit with its figure in digits as the Card holds it ("up to 10 a day", "1 per order, ever", "€5 each"), in the owner's language; once they tap agree, draft again with the same Cards, changing nothing in the draft.`, note: W.rulesUnsaid, code: "rules_unsaid" };
+    }
     return undefined;
   }
   if (off.kind === "missing") {

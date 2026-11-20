@@ -303,12 +303,29 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), once])], rule(), true)).toEqual([{ tool: "refund charge", ...once }]);
   });
 
-  it("figures the notice's words don't say are listed for the log, in the Card's units or major units", () => {
+  it("figures the notice's words don't say are listed, in the Card's units or major units", () => {
     expect(rulesUnsaid(rule(), "Refunds up to €5 each, and €50 a day, are refused past that.")).toEqual([]);
     expect(rulesUnsaid(rule(), "Remboursements jusqu'à 5,00 € chacun et 50 € par jour.")).toEqual([]);
     expect(rulesUnsaid(rule([{ ...DAY, limit: 100000 }]), "Bis 1.000,00 € am Tag.")).toEqual([]);
     expect(rulesUnsaid(rule([{ quantity: "count", window: "calendar_day", limit: 1000 }]), "At most 1,000 a day.")).toEqual([]);
     expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
+  });
+
+  it("1 is said in words only as its language's one beside its per word; anything unsure is unsaid", () => {
+    const once = [{ tool: "create_invoice", over: "refuse" as const, limits: [{ quantity: "count", window: "lifetime", limit: 1, per: "order_id" }] }];
+    const unsaid = ["create_invoice count lifetime 1 per order_id"];
+    for (const text of ["One invoice per order, ever.", "Une facture par commande.", "Eine Rechnung pro Bestellung.", "Einen Entwurf je Bestellung.",
+      "Una factura por cada pedido.", "Una bozza di fattura per ogni ordine.", "Één factuur per bestelling.", "Een factuur voor elke bestelling.",
+      "Jedna faktura na zamówienie.", "Uma fatura por encomenda.", "Invoices makes 1 draft per order."]) {
+      expect(rulesUnsaid(once, text), text).toEqual([]);
+    }
+    // An article, "for each one", a one with no per word, a per word too far, or a pair from two languages: unsaid.
+    for (const text of ["A draft invoice for each order.", "An invoice per order.", "A draft invoice for each one.", "Makes one draft invoice.",
+      "One draft invoice from the shop and so on per run.", "Un rapport que je relis.", "Uno entwurf pro Bestellung.", "Every order gets its invoice."]) {
+      expect(rulesUnsaid(once, text), text).toEqual(unsaid);
+    }
+    // One said in words is 1, never 10: the day's 10 still has to be written.
+    expect(rulesUnsaid([{ ...once[0]!, limits: [...once[0]!.limits, { quantity: "count", window: "calendar_day", limit: 10 }] }], "One invoice per order.")).toEqual(["create_invoice count calendar_day 10"]);
   });
 });
 

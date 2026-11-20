@@ -2533,14 +2533,15 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     { id: "c1", subject: "refunds-x", on_exceed: refund, grants: [{ action: "refund_charge_k3" }], aggregates: [] },
     { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
   const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "list_charges", over: "refuse" }];
-  async function setUp(refund: string) {
+  async function setUp(refund: string, theTools: unknown[] = tools) {
     const s = services();
-    s.grants = [grant({ status: "connected" }, { tools })];
+    s.grants = [grant({ status: "connected" }, { tools: theTools })];
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(refund) };
     const w = await world(s, { draft: "drf_1" });
     /** Coach shows a rules notice, and the confirm that agrees to it; `agree` records the person's tap. */
-    const rules = (id: string, list: unknown, agree = true) => {
-      w.agents.show(w.stored, { type: "notice", id, tone: "info", text: "Refunds are refused past €50 a day.", rules: list });
+    // The notice's words say each figure the tests' rules give: €5 a refund, €50 a day.
+    const rules = (id: string, list: unknown, agree = true, text = "Refunds over €5 each ask you, and are refused past €50 a day.") => {
+      w.agents.show(w.stored, { type: "notice", id, tone: "info", text, rules: list });
       w.agents.show(w.stored, { type: "confirm", id: `ok-${id}`, text: "Agree?", agrees: id, options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
       if (!agree) return;
       const list2 = w.agents.events.get(w.stored.session)!;
@@ -2726,8 +2727,9 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesMissing("X")).not.toBe(WORDS.rulesMissing("X"));
       expect(w.rulesFigures("X")).toContain("X");
       expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
+      expect(w.rulesUnsaid).not.toBe(WORDS.rulesUnsaid);
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unpinned") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unpinned") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed") && REDRAFT_CODES.has("rules_unsaid")).toBe(true);
   });
 
   describe("the figures the owner agreed", () => {
@@ -2809,7 +2811,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
     });
 
-    it("a figure the rules don't name is refused; one the notice's words don't say is logged and signed", async () => {
+    it("a figure the rules don't name is refused", async () => {
       // A total of another argument the rules never set: refused (a count beside the amounts is count_on_amount's).
       const extra = await setUp("refuse");
       setFigures(extra.s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
@@ -2817,20 +2819,88 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       const r = await extra.tap();
       expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
       expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 100 on sum\(fee\), per calendar_day\. /);
-      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say: logged, and signed.
+    });
+
+    // Eval 44765665210 (connect, invoices-3): the notice said "a draft invoice for each one", the rules and the Card held
+    // 10 a day and 1 per order, and the draft was signed. The owner agrees to what the notice says: a figure its words
+    // don't say is refused, the Cards as drafted, and Coach shows the rules again with each limit before drafting again.
+    it("a figure the notice's words don't say is refused (rules_unsaid), and Coach shows the rules again first", async () => {
       const { s, rules, tap } = await setUp("refuse");
       setFigures(s, 500, [dayTotal(5000)]);
-      rules("rules-1", FIGURED);
+      rules("rules-1", FIGURED, true, "Refunds are refused past €50 a day.");
       const logged: string[] = [];
       const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+      let r: Record<string, unknown>;
       try {
-        expect(await tap()).toMatchObject({ outcome: "sign" });
+        r = await tap();
       } finally {
         spy.mockRestore();
       }
-      expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
-      expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnsaid });
+      expect(String(r.answer)).toMatch(/^failed: the rules notice "rules-1" the owner agreed doesn't say every limit its rules give, so the owner never read them: refund_charge sum\(amount\) call 500\. Show the rules again as a new notice/);
+      expect(String(r.answer)).not.toContain("calendar_day 5000");
+      expect(String(r.answer)).toContain("changing nothing in the draft");
+      expect(String(r.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
+      expect(String(r.answer)).not.toContain(DRAW_AGAIN);
+      expect(s.checks).toEqual([]);
+      expect(logged).toContain("approval rules: figures the notice's words don't say: refund_charge sum(amount) call 500");
+      // The same draft under a notice that says both figures: signed.
+      const said = await setUp("refuse");
+      setFigures(said.s, 500, [dayTotal(5000)]);
+      said.rules("rules-1", FIGURED, true, "Refunds up to 5,00 € chacun et 50 € par jour.");
+      expect(await said.tap()).toMatchObject({ outcome: "sign" });
     });
+
+    // qa-kiff's condition 2: a limit the notice says that no Card holds is refused already, by the figure the rules give it.
+    it("a limit the notice says, €50 each, on a Card without it: refused (rules_figures)", async () => {
+      const { s, rules, tap } = await setUp("refuse");
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(50000)] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
+      rules("rules-1", [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, limit: 5000 }, { ...DAY, limit: 50000 }] }, { tool: "list_charges", over: "refuse" }], true, "Refunds up to €50 each and €500 a day.");
+      const r = await tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed give "Refund a charge" 5000 as each call on sum(amount)`);
+      expect(s.checks).toEqual([]);
+    });
+  });
+
+  // invoices-3 replayed in each language: create_invoice at 10 a day and 1 per order. A notice that says neither is
+  // refused; one that says 10 in digits and 1 as its language's word for one, next to its per word, is signed.
+  describe("the figures said in the notice's words, in each language (rules_unsaid)", () => {
+    const INVOICE_TOOLS = [{ tool: "create_invoice", name: "create_invoice_k3", title: "Create a draft invoice", resource_argument: "order_id" },
+      { tool: "list_orders", name: "list_orders_k3", title: "List orders", read_only: true }];
+    const INVOICES = [{ tool: "create_invoice", over: "refuse", limits: [{ quantity: "count", window: "calendar_day", limit: 10 }, { quantity: "count", window: "lifetime", per: "order_id", limit: 1 }] }, { tool: "list_orders", over: "refuse" }];
+    function setInvoices(s: ReturnType<typeof services>) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "create_invoice_k3" }], aggregates: [{ quantity: "count", window: "calendar_day", limit: 10 }, { quantity: "count", window: "lifetime", per: "order_id", limit: 1 }] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_orders_k3" }], aggregates: [] }] };
+    }
+    const SAYS: Record<string, { neither: string; both: string }> = {
+      en: { neither: "Every hour, Invoices lists your fulfilled orders and makes a draft invoice for each one.", both: "Every hour, Invoices makes one draft invoice per fulfilled order, at most 10 a day." },
+      fr: { neither: "Chaque heure, Invoices liste vos commandes livrées et crée un brouillon de facture pour chacune.", both: "Chaque heure, Invoices crée une facture brouillon par commande livrée, 10 par jour au plus." },
+      de: { neither: "Jede Stunde listet Invoices deine erfüllten Bestellungen und erstellt für jede einen Rechnungsentwurf.", both: "Jede Stunde erstellt Invoices einen Rechnungsentwurf pro erfüllter Bestellung, höchstens 10 am Tag." },
+      es: { neither: "Cada hora, Invoices lista tus pedidos completados y crea un borrador de factura para ellos.", both: "Cada hora, Invoices crea una factura borrador por pedido completado, como máximo 10 al día." },
+      it: { neither: "Ogni ora, Invoices elenca i tuoi ordini evasi e ne prepara le bozze delle fatture.", both: "Ogni ora, Invoices crea una bozza di fattura per ogni ordine evaso, al massimo 10 al giorno." },
+      nl: { neither: "Elk uur zet Invoices je afgeronde bestellingen op een rij en maakt er een conceptfactuur van.", both: "Elk uur maakt Invoices één conceptfactuur per afgeronde bestelling, hooguit 10 per dag." },
+      pl: { neither: "Co godzinę Invoices sprawdza zrealizowane zamówienia i tworzy dla nich szkice faktur.", both: "Co godzinę Invoices tworzy jedną fakturę roboczą na każde zrealizowane zamówienie, najwyżej 10 dziennie." },
+      pt: { neither: "A cada hora, o Invoices lista as suas encomendas concluídas e cria um rascunho de fatura para elas.", both: "A cada hora, o Invoices cria uma fatura rascunho por encomenda concluída, no máximo 10 por dia." },
+    };
+    for (const [lang, says] of Object.entries(SAYS)) {
+      it(`${lang}: neither figure said is refused; 10 in digits and 1 in words is signed`, async () => {
+        const off = await setUp("refuse", INVOICE_TOOLS);
+        setInvoices(off.s);
+        off.rules("rules-1", INVOICES, true, says.neither);
+        const r = await off.tap();
+        expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnsaid });
+        expect(String(r.answer)).toContain(": create_invoice count calendar_day 10; create_invoice count lifetime 1 per order_id. ");
+        expect(off.s.checks).toEqual([]);
+        const ok = await setUp("refuse", INVOICE_TOOLS);
+        setInvoices(ok.s);
+        ok.rules("rules-1", INVOICES, true, says.both);
+        expect(await ok.tap()).toMatchObject({ outcome: "sign" });
+      });
+    }
   });
 });
 

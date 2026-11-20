@@ -423,21 +423,45 @@ function figuresInAnyWindow(cards: readonly unknown[], name: string): Figure[] {
 }
 
 /**
- * The agreed figures the notice's words don't say, for the log: each limit whose number, in the Card's units or in
- * major units (a hundredth, as cents are of euros), appears nowhere in the notice's text. Numbers in the text are read
- * with either `,` or `.` as the decimal mark and spaces, dots or commas between thousands, so "€5", "5,00 €" and
- * "1.000" are all found. Never a reason to refuse: formats vary by language, and a miss goes to the gap ledger.
+ * The agreed figures the notice's words don't say: each limit whose number, in the Card's units or in major units (a
+ * hundredth, as cents are of euros), the notice's text doesn't write. The owner agrees to the words they read, so a figure
+ * the words leave out was never agreed (Eval 44765665210: invoices-3's notice said "a draft invoice for each one", and the
+ * Card held 10 a day and 1 per order). Numbers are read in digits, with either `,` or `.` as the decimal mark and spaces,
+ * dots or commas between thousands, so "€5", "5,00 €" and "1.000" are all found; and 1 as a word only where ONE_PER
+ * reads it. Any other figure written as a word isn't found, and Coach shows it again in digits: unsure is unsaid.
  */
 export function rulesUnsaid(rules: readonly AgreedRule[], text: string): string[] {
   const said = numbersIn(text);
+  const folded = text.normalize("NFC").toLowerCase();
+  if (ONE_PER.some((re) => re.test(folded))) said.add(1);
   const out: string[] = [];
   for (const r of rules) {
     for (const l of r.limits ?? []) {
-      if (!said.has(l.limit) && !said.has(l.limit / 100)) out.push(`${r.tool} ${l.quantity} ${l.window} ${l.limit}`);
+      if (!said.has(l.limit) && !said.has(l.limit / 100)) out.push(`${r.tool} ${l.quantity} ${l.window} ${l.limit}${l.per ? ` per ${l.per}` : ""}`);
     }
   }
   return out;
 }
+
+/**
+ * "One" in each language tafs speaks, and its words for "each" or "per" after it, as a notice says a limit of 1 for each
+ * item ("one invoice per order", "une facture par commande", "eine Rechnung pro Bestellung"). The word for one counts only
+ * with its own language's per word at most three words after it, never alone: "a"/"an" never counts, and "un", "ein"
+ * or "een" are articles too. A pair from two languages ("un rapport que je…") isn't read as one.
+ */
+const ONE_PER_WORDS: Record<string, { one: string[]; per: string[] }> = {
+  en: { one: ["one"], per: ["per", "each", "every", "for each", "for every"] },
+  fr: { one: ["un", "une"], per: ["par", "pour chaque", "chaque"] },
+  de: { one: ["ein", "eine", "einen", "einem", "einer", "eins"], per: ["pro", "je", "für jede", "für jeden", "für jedes", "jede", "jeden", "jedes"] },
+  es: { one: ["un", "uno", "una"], per: ["por", "por cada", "para cada", "cada"] },
+  it: { one: ["un", "uno", "una"], per: ["per", "per ogni", "ogni"] },
+  nl: { one: ["één", "een"], per: ["per", "voor elke", "voor ieder", "voor iedere", "elke", "iedere"] },
+  pl: { one: ["jeden", "jedna", "jedno", "jedną"], per: ["na", "za", "dla każdego", "dla każdej", "każdy", "każda", "każde", "każdego", "każdej"] },
+  pt: { one: ["um", "uma"], per: ["por", "por cada", "para cada", "cada"] },
+};
+const alt = (words: readonly string[]) => words.map((w) => w.replace(/ /g, "\\s+")).sort((a, b) => b.length - a.length).join("|");
+const ONE_PER = Object.values(ONE_PER_WORDS).map(({ one, per }) =>
+  new RegExp(`(?<![\\p{L}\\p{N}])(?:${alt(one)})(?:\\s+[\\p{L}\\p{N}'’-]+){0,3}?\\s+(?:${alt(per)})(?![\\p{L}\\p{N}])`, "u"));
 
 /** Every number the text writes, read each way its separators allow. */
 function numbersIn(text: string): Set<number> {
