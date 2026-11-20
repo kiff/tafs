@@ -1,0 +1,1 @@
+- **Play:** an internal release's upload never sends anything for review (`changesNotSentForReview`), so it can't resubmit a production release or a saved listing; with managed publishing on, it reaches testers once it's published in Play Console ([android-app.md](docs/android-app.md)).

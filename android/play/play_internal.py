@@ -8,6 +8,7 @@ with its own notes (docs/watch-wear.md, Versions). The token is a short-lived on
 
   play_internal.py --check                 the release notes of the current versionCode: one per language in LOCALES, each short enough; none fails
   play_internal.py --upload BUNDLE.aab     one edit: the bundle, the internal track's release with its notes, committed
+                                           without sending anything for review (changesNotSentForReview)
   play_internal.py --wear --check          the same, for the watch's versionCode and notes
   play_internal.py --wear --upload BUNDLE.aab
 
@@ -104,8 +105,13 @@ def upload(bundle: str, wear: bool = False) -> None:
         "track": track,
         "releases": [{"versionCodes": [str(code)], "status": "completed", "releaseNotes": release_notes}],
     })
-    call("POST", f"{API}/edits/{edit}:commit", token)
-    print(f"versionCode {code} is on Play's {track} track, with release notes in {len(release_notes)} languages")
+    # Committed without sending anything for review (PM, 20 Nov): with Play's managed publishing off, a plain commit sent every
+    # change pending in the console for review, a production release and a saved listing included, and so restarted 128's
+    # review. This edit goes to the internal track only; anything to review is sent from the console, by the person who
+    # owns the listing. With managed publishing on (since 20 Nov), the release waits there for Publish.
+    call("POST", f"{API}/edits/{edit}:commit?changesNotSentForReview=true", token)
+    print(f"versionCode {code} is committed to Play's {track} track, with release notes in {len(release_notes)} languages, "
+          "sending nothing for review: it reaches testers once it's published in Play Console")
 
 
 def main(argv: list) -> None:
