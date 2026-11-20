@@ -1,0 +1,1 @@
+- **Wear OS, behind a switch (off): a message to a taf whose Send isn't sure is never kept for later.** Keep for later stores the words on the watch and sends them as Coach's; a taf's message offers only Retry and Cancel ([watch-wear.md](docs/watch-wear.md)).

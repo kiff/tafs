@@ -457,6 +457,23 @@ which an older watch ignores, and `kind: "taf"`, so the watch keeps none of a ta
 conversation); a phone from before refuses an `ask` with `taf_id` (an unknown field), so the words never reach
 Coach. Nothing of a taf's chat is kept on the watch (`WatchAskTest`, `WatchLinkTest.onlyAMessageToATafCarriesItsTaf`).
 
+**Chatting with a taf, the wrist** (`WATCH_TAF_CHAT`, off until tafs cloud's switch is on and the privacy paragraph is live;
+the owner's picks of 20 Nov; `TafScreens.kt` `tafChat`, `WatchModel` `TafChat`; tested in `TafChatModelTest`,
+`TafChatScreenTest`). **1A:** a taf opens its own chat, then its page, then its settings, in its pager (Wear's pager is
+sideways, so "one swipe below" on Apple Watch is one swipe on here). The chat shows its state, its last turns as the phone shows
+them (`taf-chat`, read only, the last 6, each cut as an answer is, with "The rest is on your phone"), this visit's turns, then
+**Message {taf}**, **Type** and a quick reply. Each start names its taf (`readyToRecord(tafId)`, `review(tafId)`); Coach's
+starts name none, so words never go to a taf by another start. The review is titled "Message {taf}". Sent, the turn shows in
+the chat: "Sent", then "{taf} is answering", then its answer; held, **Approve on your phone** (the watch never approves).
+**2A:** a paused taf still takes the message, with "Paused: its schedule is off. It still answers what you send." Halted,
+nothing is sent: Resume on your phone. **Read more:** a long answer shows its first part; one tap reads the whole from tafs
+cloud (`ask-full`, `?full=1`'s top-level `text`), shown in place; without it, the rest is on the phone. **Nothing of a taf's
+chat is kept:** its turns live in the open taf only, gone when it closes; a taf chat's request (`kind: "taf"`, or sent from a
+chat this session) never reaches the Inbox, Coach's conversation or a result card; and a taf message whose Send isn't sure is
+never offered Keep for later (which keeps the words on the watch and sends them as Coach's): Retry or Cancel only
+(`aTafsMessageIsNeverKeptForLater`). The phone answers `taf-chat` from tafs cloud's conversation for a taf it lists, and
+`ask-full` from `GET /v1/watch/asks/{id}?full=1`; Your tafs carries `paused`.
+
 And the phone sends the watch one message, never a request it answers: **`ask-result`**, an ask's new state, when tafs
 cloud's push says it changed.
 
