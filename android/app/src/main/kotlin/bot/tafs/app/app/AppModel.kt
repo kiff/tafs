@@ -61,6 +61,7 @@ import bot.tafs.app.kiff.CloudSetup
 import bot.tafs.app.kiff.PlanqueClient
 import bot.tafs.app.kiff.PlanqueError
 import bot.tafs.app.kiff.SetupComponent
+import bot.tafs.app.kiff.AppSignInRefused
 import bot.tafs.app.kiff.VendorSignIn
 import bot.tafs.app.kiff.VendorSignInCancelled
 import bot.tafs.app.kiff.NoVendorSignIn
@@ -1087,6 +1088,8 @@ class AppModel(
   private val planque: PlanqueClient = PlanqueClient(bot.tafs.app.kiff.UrlConnectionTransport()),
   /** The vendor's own sign-in page, opened in a browser. */
   private val vendorSignIn: VendorSignIn = NoVendorSignIn,
+  /** KIFF's sign-in page in a Custom Tab, coming back to `dev.kiff.tafs:/oauth` (docs/onboarding.md, off). */
+  private val appSignInTab: VendorSignIn = NoVendorSignIn,
   /** Buying through Google Play; none in a build with Play Billing off (res/values/flags.xml). */
   private val purchases: Purchases = Purchases(NoPlayStore),
   private val playBilling: Boolean = false,
@@ -1245,6 +1248,34 @@ class AppModel(
       throw e
     }
     endSignIn()
+    takeSession(token, stopped = !currentCoroutineContext().isActive)
+  }
+
+  /**
+   * Signing in once, inside tafs (docs/onboarding.md, behind [bot.tafs.app.model.ONBOARDING_ON]): KIFF's page in a Custom Tab
+   * with a fresh PKCE attempt, then its code traded with the device's keys, as [startSignIn] sends them, for today's session.
+   * [termsVersion] is the version the welcome showed when the person ticked. A link back that isn't this attempt's is never
+   * used ([AppSignInRefused] `state_mismatch`); KIFF's refusal on the way back is its own (`access_denied` when the person closed
+   * or declined). KIFF's refusals of the code come as it sends them (`invalid_grant`, `terms_outdated`).
+   */
+  suspend fun signInInApp(termsVersion: String, email: String? = null) {
+    val attempt = bot.tafs.app.kiff.AppSignIn.attempt()
+    val link = appSignInTab.signIn(bot.tafs.app.kiff.AppSignIn.authorizeUrl(kiff.baseUrl, attempt, bot.tafs.app.model.Res.language, email))
+    val code = when (val back = bot.tafs.app.kiff.AppSignIn.answer(link, attempt)) {
+      is bot.tafs.app.kiff.AppSignIn.Answer.Code -> back.code
+      is bot.tafs.app.kiff.AppSignIn.Answer.Refused -> throw AppSignInRefused(back.error)
+      else -> throw AppSignInRefused(AppSignInRefused.STATE_MISMATCH)
+    }
+    val key = signer.publicKeyDER
+    val approvalKey = signer.approvalPublicKeyDER
+    val token = kiff.appToken(
+      code, attempt.verifier, termsVersion,
+      publicKey = key.takeIf { it.isNotEmpty() },
+      approvalPublicKey = approvalKey.takeIf { key.isNotEmpty() && it.isNotEmpty() },
+      deviceName = deviceName,
+      platform = if (key.isEmpty()) null else PLATFORM,
+      kind = bot.tafs.app.model.ThisDevice.kiffKind,
+    )
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
 
@@ -9021,6 +9052,7 @@ class AppModel(
     private val push: PushPlatform = NoPush,
     private val planque: PlanqueClient = PlanqueClient(bot.tafs.app.kiff.UrlConnectionTransport()),
     private val vendorSignIn: VendorSignIn = NoVendorSignIn,
+    private val appSignInTab: VendorSignIn = NoVendorSignIn,
     private val purchases: Purchases = Purchases(NoPlayStore),
     private val playBilling: Boolean = false,
     private val openedFiles: java.io.File? = null,
@@ -9029,7 +9061,7 @@ class AppModel(
     override fun <T : ViewModel> create(modelClass: Class<T>): T =
       AppModel(
         store, signer, kiff, cloud, secrets, deviceName = deviceName, push = push, planque = planque, vendorSignIn = vendorSignIn,
-        purchases = purchases, playBilling = playBilling, openedFiles = openedFiles ?: java.io.File(System.getProperty("java.io.tmpdir"), "attachments"),
+        appSignInTab = appSignInTab, purchases = purchases, playBilling = playBilling, openedFiles = openedFiles ?: java.io.File(System.getProperty("java.io.tmpdir"), "attachments"),
       ) as T
   }
 

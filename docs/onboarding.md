@@ -29,3 +29,28 @@ lines with links (`consent_tick`, `privacy_links`) take their link words as plac
 and each link's words are the title of the page it opens in that language. `Legal.linked` puts each link wherever the
 language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`; tafs's are `Legal.terms` and
 `Legal.privacy`.
+
+## Android
+
+Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
+
+- **The welcome** (`OnboardingView`, step 1): the same tick, links and age line, with `ConsentTick` and **Continue**
+  off until the box is ticked. The box is Material's checkbox, so TalkBack reads it as the whole tick line; the links
+  in the line are their own targets. `linked` puts each link where the language puts it. `Legal.kiffTerms` and
+  `Legal.kiffPrivacy` are KIFF's pages in the app's language (`/de/terms`), English for any other.
+- **The sign-in's app side** (`kiff/AppSignIn.kt`, step 2): a 43-character verifier and its S256 challenge, a fresh
+  `state`, and the authorize link (`client_id=tafs-app`, `redirect_uri=dev.kiff.tafs:/oauth`, `ui_locales` when
+  KIFF speaks the app's language, `login_hint` when given). A link back is taken only when it's
+  `dev.kiff.tafs:/oauth` exactly, with this attempt's `state`. Another state, or one given twice, is never used, not
+  even as a refusal. `KiffClient.appToken` trades the code at `POST /v1/auth/app/token` with its verifier, the terms
+  version and the device exactly as `/v1/auth/device/start` sends it, for today's `DeviceToken`. KIFF's refusals keep
+  their code as KIFF's `error` (`invalid_grant`, `terms_outdated`); `appTerms` reads the version in force.
+- **The tab** (`AppModel.signInInApp`): KIFF's page opens in a Custom Tab from tafs's own screen, in its task, the
+  way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). So leaving for the mail app for an email code
+  and coming back from the launcher returns to the tab. A tab closed with no link is left, with Open again and
+  Cancel. The manifest takes `dev.kiff.tafs:` links (Android matches a link with no host by its scheme only), and
+  `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
+  code goes to `appToken`, then to today's `takeSession`: the same approval key, account and celebration as the
+  device-code sign-in. A link with another state is `AppSignInRefused` `state_mismatch` and never reaches KIFF;
+  KIFF's `access_denied` is its own refusal. The welcome's words for each refusal, and Continue calling it, come with
+  the three cards and the first Home.

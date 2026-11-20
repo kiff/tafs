@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** the welcome's one tick for the terms, with KIFF's and tafs's pages linked and Continue off until it's ticked, and signing in once inside tafs: KIFF's page in a Custom Tab with PKCE S256, only our own redirect with this attempt's state, and its code traded for today's session ([onboarding.md](docs/onboarding.md)).

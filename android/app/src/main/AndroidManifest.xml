@@ -71,6 +71,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tafs" android:host="planque" android:path="/signed-in" />
             </intent-filter>
+            <!-- Where KIFF's sign-in comes back to (docs/onboarding.md): dev.kiff.tafs:/oauth, the Play package's own scheme.
+                 It has no host, so Android matches the scheme only; AppSignIn.answer takes the path and state exactly. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="dev.kiff.tafs" />
+            </intent-filter>
         </activity>
 
         <!-- Firebase Cloud Messaging delivers tafs cloud's alerts here. -->
