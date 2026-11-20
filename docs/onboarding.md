@@ -13,9 +13,9 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
    never ticks it. Trying the sample data needs no account, so it never waits on the tick. The AI consent stays its
    own screen (`AIConsentView`).
 2. **One sign-in, in the system's sheet.** KIFF's `/oauth/authorize` with PKCE, in `ASWebAuthenticationSession`
-   (Apple, Google or an email code), replacing the code-matching device flow. The contract is kiff/cloud's
+   (Apple or Google; email-code sign-in is off), replacing the code-matching device flow. The contract is kiff/cloud's
    `api/internal/appsignin/README.md`; the tick's terms version goes with the token request, and KIFF records the
-   consent in the same step that makes the session. The sheet is a private browser session (`VendorSignIn.kiffSheet()`): no earlier sign-in or cookie comes in, so every authorize goes through KIFF's form. A vendor's sheet still shares Safari's sign-in. iPad and Mac keep "Sign in with your phone".
+   consent in the same step that makes the session. The sheet is a private browser session (`VendorSignIn.kiffSheet()`): no earlier sign-in or cookie comes in, so every authorize goes through KIFF's form. A vendor's sheet still shares Safari's sign-in. iPad and Mac keep "Sign in with your phone": its pairing claim carries the same terms version, so KIFF records the consent for the device that showed the tick however the person signs in, and `terms_outdated` asks for the tick again there too.
 3. **Three cards:** Your tafs, A Card is your permission, You stay in control. Each draws the app's own components
    with the sample's words, so they read in the person's language. The last card names each device's approval:
    Face ID or Touch ID on iPhone and iPad, Touch ID or the phone on the Mac (`onboarding.control_lead_mac`).
@@ -50,7 +50,7 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
   way a vendor's sign-in does (`BrowserVendorSignIn`, `appSignInTab`). It's a **private browsing session** where the browser offers one
   (`isEphemeralBrowsingSupported`, opened in that browser), as iOS's private sheet: no cookie or earlier sign-in
   comes in, so every authorize goes through KIFF's form. A vendor's tab stays shared. A browser without private tabs
-  shares its cookies, and KIFF's server is the guard there (kiff/cloud#23). So leaving for the mail app for an email code
+  shares its cookies, and KIFF's server is the guard there (kiff/cloud#23). So leaving the tab for another app
   and coming back from the launcher returns to the tab. A tab closed with no link is left, with Open again and
   Cancel. The manifest takes `dev.kiff.tafs:` links (Android matches a link with no host by its scheme only), and
   `MainActivity` hands them to the waiting tab as they came. Only `AppSignIn.answer` decides whether one is ours. A
