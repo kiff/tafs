@@ -174,6 +174,28 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(String(data: StubProtocol.sent.last?.httpBody ?? Data(), encoding: .utf8), #"{"device_code":"dc"}"#)
     }
 
+    /// Where KIFF isn't offered, a new sign-in is refused in KIFF's own words, by its code; any other 403 keeps the app's.
+    func testARegionRefusalShowsKiffsWordsAndNoOther403Does() async throws {
+        let client = makeClient()
+        let words = "KIFF isn't available where you are right now. We offer it only in the countries and regions where Anthropic's Claude is available."
+        StubProtocol.responses["POST /v1/auth/device/start"] = (403, #"{"error":"region_unsupported","code":"region_unsupported","message":"\#(words)"}"#)
+        do {
+            _ = try await client.startDeviceSignIn()
+            XCTFail("expected the region refusal")
+        } catch let error as KIFFClient.KIFFError {
+            XCTAssertEqual(error, .regionUnsupported(words: words))
+            XCTAssertEqual(error.localizedDescription, words)
+        }
+        // Another 403, words or not: the app's own line, never the server's text.
+        StubProtocol.responses["POST /v1/auth/device/start"] = (403, #"{"error":"forbidden","code":"plan_required","message":"Some server text"}"#)
+        do {
+            _ = try await client.startDeviceSignIn()
+            XCTFail("expected a refusal")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, Words.Error.notAllowed)
+        }
+    }
+
     func testSignInSendsThePhonesKey() async throws {
         let client = makeClient()
         StubProtocol.responses["POST /v1/auth/device/start"] = (200, #"{"device_code":"dc","user_code":"ABCD-EFGH","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=ABCD-EFGH","expires_in":600,"interval":5}"#)

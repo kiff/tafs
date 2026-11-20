@@ -121,6 +121,22 @@ class OnboardingWelcomeTest {
     compose.onNodeWithTag("onboarding.continue").assertIsEnabled()
   }
 
+  /** Where KIFF isn't offered, Continue says so in KIFF's words, not "didn't work". */
+  @Test fun aRegionRefusalSaysKiffsWords() {
+    val words = "KIFF isn't available where you are right now. We offer it only in the countries and regions where Anthropic's Claude is available."
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, termsVersion = { "v" },
+          signInInApp = { throw bot.tafs.app.kiff.KiffError.Server(403, "region_unsupported", code = "region_unsupported", words = words) })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    compose.onNodeWithText(words).assertExists()
+    assertTrue(compose.onAllNodesWithText(Words.SignIn.didntWork).fetchSemanticsNodes().isEmpty())
+  }
+
   /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
   @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
     var phone = 0

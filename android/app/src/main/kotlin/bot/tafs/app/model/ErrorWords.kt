@@ -8,7 +8,7 @@ import bot.tafs.app.signing.SignerException
 /**
  * Why something didn't go through, in the app's own words: what happened, then what the owner can do, if anything. A server's
  * text never reaches the screen, except tafs cloud's `words`, which it writes for the owner (a run kiff/agents refused, a switch
- * a run blocks): those show as they come, on every path, and "try again" is said only where trying again can help: offline, busy, or briefly down. A
+ * a run blocks), and KIFF's words for a refusal by a code in [KIFF_WORDED] (not offered where the person is): those show as they come, on every path, and "try again" is said only where trying again can help: offline, busy, or briefly down. A
  * refusal the owner can't change says there's nothing to do on their side. The app's own errors (signing, signing in, a request
  * that doesn't match) keep their words, which already say this.
  */
@@ -19,7 +19,7 @@ object ErrorWords {
         // A message id already used for other words (docs/api.md, "One message, sent once"): never "It changed in the meantime".
         ?: if (e.status == 409 && e.code == "dedup_key_conflict") return Words.Error.sentWithOtherText
         else if (e.code in CLOUD_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
-      is KiffError.Server -> e.status
+      is KiffError.Server -> kiffWords(e)?.let { return it } ?: e.status
       // A vendor that refuses planque's client (one that allow-lists who may sign in): planque's own words, which say whose it is,
       // not "it isn't working on our side".
       // planque's own line for the person, when it sends one: never a line of the app's over it ("It changed in the meantime"
@@ -41,6 +41,15 @@ object ErrorWords {
     in 500..599 -> DOWN
     else -> OURS
   }
+
+  /**
+   * KIFF's own words for a refusal the person can't change from the app, by its stable code: where KIFF isn't offered
+   * (`region_unsupported`), its words say so in the app's language. Shown as sent, never "You're not allowed" over them.
+   */
+  val KIFF_WORDED = setOf("region_unsupported")
+
+  /** KIFF's words for [e], when it's one of [KIFF_WORDED]'s refusals and KIFF sent them. */
+  fun kiffWords(e: Throwable): String? = (e as? KiffError.Server)?.takeIf { it.code in KIFF_WORDED }?.words?.takeIf { it.isNotBlank() }
 
   /** tafs cloud's codes whose `error` is shown as sent, where it sends no `words`: "‹taf› doesn't use this app", never "It changed". */
   val CLOUD_WORDED = setOf("not_needed")

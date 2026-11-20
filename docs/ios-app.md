@@ -1190,7 +1190,9 @@ language, are shown as they are. KIFF's and planque's own reasons (an English li
 out (401), not allowed (403), changed meanwhile (409), busy (429), down (5xx), offline, or else "didn't understand each
 other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line for the person in their language, come
 first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
-again". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
+again". KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
+shown in KIFF's words too (`KIFFError.regionUnsupported`): its `message`, in the app's language, as the welcome and the
+sign-in sheet's line, with nothing that says to try again. The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.
 
 ## Words and languages

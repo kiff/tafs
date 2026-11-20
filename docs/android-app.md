@@ -659,6 +659,11 @@ line: the phone counts nothing.
 
 ## When something doesn't go through
 
+One KIFF refusal is shown in KIFF's own words: a new sign-in from where KIFF isn't offered (403, `code:
+region_unsupported`, `ErrorWords.KIFF_WORDED`). Its `message` says so in the app's language (the request's
+`Accept-Language`); the welcome's Continue and the sign-in sheet show it as sent, never "not allowed" or "didn't
+work". Nothing on the app's side changes it, so nothing says to try again.
+
 The owner reads the app's own words for what happened and what, if anything, they can do
 (`ErrorWords`): offline, try again online; signed out, sign in; not allowed by their
 role; changed in the meantime; too many tries, wait a minute; down on our side, nothing to
