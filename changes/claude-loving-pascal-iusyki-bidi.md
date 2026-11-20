@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** a payee name, an IBAN, a reason or an action's title from KIFF, a vendor or a taf can no longer carry an invisible direction character (U+202A–U+202E, U+2066–U+2069, U+200E/F, U+061C) onto an approval or into the record, so nothing can make an amount or an account number beside it look reordered ([approvals.md](docs/approvals.md)).
