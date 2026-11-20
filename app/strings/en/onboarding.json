@@ -1,5 +1,6 @@
 {
   "onboarding.age": "You must be at least 16, or your country's age of digital consent if it's higher.",
+  "onboarding.age_n": "You must be at least {age}.",
   "onboarding.card_lead": "Each taf works within a Card you issue: what it may do, with which app, and how much. Past it, it asks you.",
   "onboarding.card_title": "A Card is your permission",
   "onboarding.consent_tick": "I agree to {kiff_terms} and {tafs_terms}.",

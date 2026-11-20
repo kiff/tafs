@@ -51,6 +51,18 @@ class SharedWords(unittest.TestCase):
         self.source = generate.load("en")
         self.lines = {lang: generate.load(lang) for lang in self.langs["all"]}
 
+    def test_the_age_table_is_a_default_and_countries_that_ask_more(self):
+        # legal-i18n's table: 16 by default (the GDPR's ceiling), and a country only where its law asks for more.
+        table = generate.ages()
+        self.assertEqual(table["default"], 16)
+        for country, age in table.items():
+            if country == "default":
+                continue
+            self.assertRegex(country, r"^[A-Z]{2}$", "an ISO 3166-1 code, upper case")
+            self.assertIsInstance(age, int)
+            self.assertGreater(age, table["default"], f"{country}: only a country asking more than the default is listed")
+            self.assertLessEqual(age, 21, country)
+
     def test_the_languages_are_the_eight(self):
         self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl"])
         self.assertIn("en", self.langs["shipped"])
@@ -235,6 +247,7 @@ class Generator(unittest.TestCase):
     def setUp(self):
         self.folder = self.write({
             "languages.json": {"all": ["en", "pl", "de"], "shipped": ["en", "pl"]},
+            "ages.json": {"default": 16, "IN": 18},
             "en.json": {
                 "chat.kept_for": {"one": "Kept {count} for {name}, whose Card uses it.", "other": "Kept {count} for {name}, whose Cards use them."},
                 "chat.waiting": "{taf} is waiting on {who}: 100% of it's \"held\" & <new>",
@@ -255,9 +268,14 @@ class Generator(unittest.TestCase):
         })
         self.files = {os.path.relpath(p, REPO): t for p, t in generate.generated(self.folder).items()}
 
+    def test_the_age_table_is_written_for_the_welcome(self):
+        swift = self.files["ios/Tafs/Design/MinimumAge.swift"]
+        self.assertIn("static let standard = 16", swift)
+        self.assertIn('static let byCountry: [String: Int] = ["IN": 18]', swift)
+
     def test_only_shipped_languages_are_written(self):
         self.assertEqual(sorted(f for f in self.files if f.startswith("ios/")),
-                         ["ios/Tafs/Design/Words.swift", "ios/Tafs/Localizable.xcstrings"])
+                         ["ios/Tafs/Design/MinimumAge.swift", "ios/Tafs/Design/Words.swift", "ios/Tafs/Localizable.xcstrings"])
         self.assertNotIn('"de"', self.files["ios/Tafs/Localizable.xcstrings"])
 
     def test_ios_places_each_value_by_position_so_a_language_may_reorder(self):

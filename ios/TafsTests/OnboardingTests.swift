@@ -90,4 +90,18 @@ final class OnboardingTests: XCTestCase {
         XCTAssertEqual(card.calls?.used, 12)
         XCTAssertEqual(card.title, Words.Sample.Card.refundsStripe)
     }
+
+    /// The welcome's age line reads the person's country: India, Indonesia and Brazil say 18 (legal-i18n's table);
+    /// anywhere else, or no region known, reads the line every country reads (16, or the country's age if higher).
+    func testTheAgeLineIsTheCountrys() {
+        XCTAssertEqual(MinimumAge.standard, 16)
+        for region in ["IN", "ID", "BR", "in"] {
+            XCTAssertEqual(MinimumAge.of(region), 18, region)
+            XCTAssertEqual(Onboarding.ageLine(region: region), Words.Onboarding.ageN(age: "18"), region)
+        }
+        for region in ["FR", "KR", "US", nil] as [String?] {
+            XCTAssertEqual(MinimumAge.of(region), 16, region ?? "none")
+            XCTAssertEqual(Onboarding.ageLine(region: region), Words.Onboarding.age, region ?? "none")
+        }
+    }
 }

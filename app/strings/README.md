@@ -15,6 +15,9 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
 - **A new feature** is a new file in each language's folder, named as its keys begin.
 - **A key in another feature's file, or in two files,** is refused: the generator and its
   checks fail.
+- **`ages.json`** is the minimum age by country (legal-i18n's table): `default` (16) and each
+  country whose law asks for more. It generates `ios/Tafs/Design/MinimumAge.swift`, which the
+  welcome's age line reads (`onboarding.age_n`), and a test keeps every row above the default.
 - **`languages.json`** lists the languages (`all`) and the ones the apps ship (`shipped`). A
   shipped language must have every key. Only shipped languages are generated.
 - **`generate.save(lang, lines)`** writes a language's lines back, one sorted file per feature,
