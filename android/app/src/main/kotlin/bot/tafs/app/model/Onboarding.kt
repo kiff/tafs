@@ -17,3 +17,48 @@ data class ConsentTick(val agreed: Boolean = false) {
   /** Continue opens the sign-in only once the terms are agreed to. */
   val canContinue: Boolean get() = agreed
 }
+
+/** The three cards were seen on this device (Get started or Skip): they show once, after the first sign-in here. */
+const val CARDS_SEEN_KEY = "tafs.onboarding-cards-seen"
+
+/** Whether the three cards follow the celebration after signing in: with the new onboarding on, once per device. */
+fun showsOnboardingCards(seen: Boolean, on: Boolean = ONBOARDING_ON): Boolean = on && !seen
+
+/**
+ * Whether Home with no taf is the first Home (Ask Coach and How tafs works): with the new onboarding on, for someone who may use
+ * Coach, whatever tafs cloud says there.
+ */
+fun showsFirstHome(mayUseCoach: Boolean, on: Boolean = ONBOARDING_ON): Boolean = on && mayUseCoach
+
+/** The first Home's words: tafs cloud's own empty line when it sends one, alone; else the app's "No tafs yet" and what Coach does. */
+fun firstHomeLines(cloud: String?): Pair<String, String?> =
+  cloud?.takeIf { it.isNotBlank() }?.let { it to null } ?: (Words.Home.noTafs to Words.Onboarding.homeLead)
+
+/** The three cards, in order (docs/onboarding.md, step 3). */
+enum class OnboardingPage {
+  Tafs, Card, Control;
+
+  val title: String get() = when (this) {
+    Tafs -> Words.Onboarding.tafsTitle
+    Card -> Words.Onboarding.cardTitle
+    Control -> Words.Onboarding.controlTitle
+  }
+
+  /** The last card names Android's own way to approve: the screen lock. */
+  val lead: String get() = when (this) {
+    Tafs -> Words.Onboarding.tafsLead
+    Card -> Words.Onboarding.cardLead
+    Control -> Words.Onboarding.controlLeadAndroid
+  }
+
+  val next: OnboardingPage? get() = entries.getOrNull(ordinal + 1)
+}
+
+/** Where the person is in the cards: Next goes on, the last card's Get started ends them, and Skip ends them from any card. */
+data class OnboardingSteps(val page: OnboardingPage = OnboardingPage.Tafs, val finished: Boolean = false) {
+  val isLast: Boolean get() = page.next == null
+
+  fun advanced(): OnboardingSteps = page.next?.let { copy(page = it) } ?: copy(finished = true)
+
+  fun skipped(): OnboardingSteps = copy(finished = true)
+}
