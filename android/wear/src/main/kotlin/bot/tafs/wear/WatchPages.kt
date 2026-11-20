@@ -46,10 +46,11 @@ internal val WATCH_V2: Boolean = BuildConfig.WATCH_V2
 
 /**
  * Chatting with a taf from the watch (docs/watch-wear.md; the owner's picks 1A, 2A and Read more, 20 Nov): a taf opens its own
- * chat, its page and settings after it in its pager. Off until tafs cloud's `TAFS_WATCH_TAF_CHAT` is on and the privacy
- * paragraph is live; it needs v2's review first.
+ * chat, its page and settings after it in its pager. On since Wear 0.4.2 (400,000,007), once the privacy paragraph was live
+ * (kiff/cloud#19, 20 Nov). tafs cloud's `TAFS_WATCH_TAF_CHAT` still decides per account: where it's off, a message gets
+ * Open on phone, never Coach. It needs v2's review first.
  */
-internal val WATCH_TAF_CHAT: Boolean = false
+internal val WATCH_TAF_CHAT: Boolean = true
 
 /** v2's pages, side by side, moved between with a swipe: Coach is home, since talking to Coach is what the wrist is for. */
 internal enum class Page { Coach, Inbox, Tafs, Brief, Account }

@@ -1,0 +1,4 @@
+Chat with a taf from your watch.
+- Open a taf to see its last messages, then speak or type to it.
+- A long answer opens in full with Read more.
+- Approvals stay on your phone, and the watch keeps nothing of the chat.

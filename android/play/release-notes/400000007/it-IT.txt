@@ -1,0 +1,4 @@
+Chatta con un taf dal tuo orologio.
+- Apri un taf per vedere i suoi ultimi messaggi, poi parlagli o scrivigli.
+- Una risposta lunga si apre per intero con Continua a leggere.
+- Le approvazioni restano sul telefono e l'orologio non conserva nulla della chat.

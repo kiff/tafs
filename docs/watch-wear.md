@@ -376,6 +376,10 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
 
+**400,000,007 (0.4.2)** turns chatting with a taf on (`WATCH_TAF_CHAT`, the owner's picks 1A, 2A and Read more), with
+a taf's message never kept for later (#1515), for the owner's tap-to-text timing on the Galaxy Watch. tafs cloud's switch
+stays per account. To `wear:internal` on merge, with its notes in 8 languages.
+
 **400,000,005 (0.4.0)** is v2 for Play's review, the owner's direction after the Galaxy Watch 5 test: v2 on, with no timing
 or probe line and no recording (`KEEP_AUDIO` off), from the same code as the test build. It needs the phone at Android 123 or
 later. It goes to `wear:internal` on merge, as every raise does; the owner sends it to review from Play's console, after the
@@ -457,7 +461,8 @@ which an older watch ignores, and `kind: "taf"`, so the watch keeps none of a ta
 conversation); a phone from before refuses an `ask` with `taf_id` (an unknown field), so the words never reach
 Coach. Nothing of a taf's chat is kept on the watch (`WatchAskTest`, `WatchLinkTest.onlyAMessageToATafCarriesItsTaf`).
 
-**Chatting with a taf, the wrist** (`WATCH_TAF_CHAT`, off until tafs cloud's switch is on and the privacy paragraph is live;
+**Chatting with a taf, the wrist** (`WATCH_TAF_CHAT`, **on since 0.4.2**, once the privacy paragraph was live (kiff/cloud#19);
+tafs cloud's `TAFS_WATCH_TAF_CHAT` still decides per account, and where it's off a message gets Open on phone, never Coach;
 the owner's picks of 20 Nov; `TafScreens.kt` `tafChat`, `WatchModel` `TafChat`; tested in `TafChatModelTest`,
 `TafChatScreenTest`). **1A:** a taf opens its own chat, then its page, then its settings, in its pager (Wear's pager is
 sideways, so "one swipe below" on Apple Watch is one swipe on here). The chat shows its state, its last turns as the phone shows

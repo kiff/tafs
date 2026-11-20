@@ -1,0 +1,4 @@
+Rozmawiaj z tafem z zegarka.
+- Otwórz tafa, aby zobaczyć jego ostatnie wiadomości, i mów albo pisz do niego.
+- Długa odpowiedź otwiera się w całości po stuknięciu Czytaj dalej.
+- Zatwierdzanie zostaje na telefonie, a zegarek nie przechowuje niczego z czatu.
