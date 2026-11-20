@@ -265,6 +265,42 @@ describe("a taf's health", () => {
     }
   });
 
+  // A check whose read was never the app's to fail (kiff/agents' Fired.reason) says why in its own words, never that the app
+  // couldn't be read: Morning inbox's check named list_emails after its Gmail went (no_tool), and Customer reply drafts 2's
+  // named no place for the list in Gmail's answer (no_items_path), and both read "couldn't read the app" (20 Nov).
+  it("says a check names a tool none of the taf's connections has, or can't find the list, never that the app couldn't be read", () => {
+    const checks = (reason?: string, vendor?: string) => [{ due: ago(15), at: ago(15), outcome: "failed_check", ...(reason ? { reason } : {}), ...(vendor ? { vendor } : {}) }, { due: ago(30), at: ago(30), outcome: "failed_check" }, fired(45, "run")] as Fired[];
+    const view = (f: Fired[], app?: string, tool?: string, lang: Lang = "en") => healthView(healthOf([], f, NOW), lang, {}, "UTC", NOW, app, tool).lines[0];
+    expect(healthOf([], checks("no_tool"), NOW).reasons[0]).toMatchObject({ code: "check_failing", check: "no_tool" });
+    expect(view(checks("no_tool"), "Gmail", "list_emails")).toBe("The scheduled check failed 2 times in a row, since 09:30. The check reads list_emails, which none of the taf's connections has now: Coach can point it at the right read.");
+    expect(view(checks("no_items_path"), "Gmail")).toBe("The scheduled check failed 2 times in a row, since 09:30. The check can't find the list in the answer from Gmail: Coach can read one real answer and set where the list is.");
+    expect(view(checks("no_items_path"))).toMatch(/in the answer from the app:/);
+    // Once: at risk, with the time.
+    expect(view([{ due: ago(15), at: ago(15), outcome: "failed_check", reason: "no_tool" }, fired(30, "run")] as Fired[], undefined, "list_emails"))
+      .toBe("The scheduled check failed at 09:45. The check reads list_emails, which none of the taf's connections has now: Coach can point it at the right read.");
+    // The tool can't be read: it still never says the app couldn't be read, and points to the connection.
+    expect(view(checks("no_tool"), "Gmail")).toBe("The scheduled check failed 2 times in a row, since 09:30. Check the app's connection.");
+    // Its cause wins over an app's answer kept beside it, and any other reason is the app's, as before.
+    expect(view(checks("no_items_path", "401"), "Gmail")).toMatch(/can't find the list in the answer from Gmail/);
+    for (const reason of ["read_failed", "read_not_made", "not_a_list", undefined]) expect(view(checks(reason), "Gmail")).toMatch(/^The scheduled check couldn't read Gmail 2 times in a row/);
+    // Only the newest failure's cause counts.
+    const older = [{ due: ago(15), at: ago(15), outcome: "failed_check" }, { due: ago(30), at: ago(30), outcome: "failed_check", reason: "no_tool" }] as Fired[];
+    expect(view(older, "Gmail", "list_emails")).toMatch(/^The scheduled check couldn't read Gmail/);
+    for (const lang of LANGUAGES) {
+      for (const [reason, tool] of [["no_tool", "list_emails"], ["no_items_path", undefined]] as const) {
+        for (const app of ["Gmail", undefined]) {
+          const l = view(checks(reason), app, tool, lang);
+          expect(l, `${lang} ${reason}`).not.toMatch(/undefined|no_tool|no_items_path/);
+          expect(l, `${lang} ${reason}`).toContain("Coach");
+          if (tool) expect(l, lang).toContain(tool);
+          if (reason === "no_items_path" && app) expect(l, lang).toContain("Gmail");
+          // Never "couldn't read" the app: the line is the check's own.
+          expect(l, `${lang} ${reason}`).not.toBe(healthView(healthOf([], checks(), NOW), lang, {}, "UTC", NOW, app).lines[0]);
+        }
+      }
+    }
+  });
+
   it("has every reason's words in all eight languages, with none of the runtime's own names in them", () => {
     const every = [
       healthOf([], firings("failed_unworked", "failed_unworked", "run"), NOW), healthOf([], firings("failed_unworked", "run"), NOW),

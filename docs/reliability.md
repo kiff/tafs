@@ -123,6 +123,14 @@ again with the account you use for it."; 429, 5xx, `RESOURCE_EXHAUSTED`, `UNAVAI
 is "Gmail couldn't answer just then. It tries again at its next time." Only the newest failure's answer counts; any other
 answer says what it said before (`health.ts` `vendorKind`).
 
+A check can also fail for a cause of its own, never the app's (kiff/agents' `Fired.reason`, `health.ts` `checkCause`), and
+its lines never say the app couldn't be read: "The 09:00 check failed", "The scheduled check failed 2 times in a row,
+since Tue 09:00". Its read is on none of the taf's connections now (`no_tool`, such as a Gmail read after the taf moved to
+Calendar): "The check reads list_emails, which none of the taf's connections has now: Coach can point it at the right
+read.", the tool read from the taf's schedule only then (else "Check the app's connection."). The app's answer has no list
+where the check looks (`no_items_path`): "The check can't find the list in the answer from Gmail: Coach can read one real
+answer and set where the list is." Its cause wins over an app's answer kept beside it, and only the newest failure's counts.
+
 ## Where results go
 
 **Landed:** the places and their sending, in [doors.md](doors.md#where-results-go). Still to come: kiff/agents keeping the note.

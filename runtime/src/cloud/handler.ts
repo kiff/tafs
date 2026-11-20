@@ -959,11 +959,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const health = fired ? healthOf(runs, fired, now) : undefined;
     const zone = me.timeZone ?? "UTC";
     const checkApp = checkAppOf(await checkConnections(event, me, deps, [fired]), taf.kiffAgent);
+    const checkTool = await checkToolOf(health, me.tenantID, taf, deps);
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], checkApp, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now, checkApp) } : {}),
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], checkApp, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now, checkApp, checkTool) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -7519,6 +7520,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.
   const labelSet = deps.coach ? await readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined;
   const labelsOf = new Map(tafs.map((t) => [t.id, (t.labels ?? []).filter((id) => labelSet?.labels.some((l) => l.id === id))]));
+  // The read a failing check names, only for a check whose tool is on none of the taf's connections now: its line names it.
+  const checkTools = await Promise.all(tafs.map((t, i) => checkToolOf(recent[i] && fired[i] ? healthOf(recent[i]!, fired[i]!, now) : undefined, me.tenantID, t, deps)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -7535,7 +7538,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [], checkApp: checkAppOf(checkConns, t.kiffAgent) }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(labelsOf.get(t.id)!.length ? { labels: labelsOf.get(t.id) } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(labelsOf.get(t.id)!.length ? { labels: labelsOf.get(t.id) } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now, undefined, checkTools[i]) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
   });
@@ -9536,6 +9539,16 @@ const HEALTH_READ_MS = 1500;
 async function checkConnections(event: HTTPEvent, me: KIFFIdentity, deps: Deps, fired: Array<Fired[] | undefined>): Promise<AccountConnection[]> {
   if (!deps.planqueBase || !fired.some((f) => f?.some((x) => x.outcome === "failed_check"))) return [];
   return accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => [] as AccountConnection[]);
+}
+
+/**
+ * The read a taf's scheduled check names (its schedule's check.tool), read only when its health says that tool is on none
+ * of its connections now (`no_tool`), so the line can name it. undefined otherwise, or when the schedule can't be read:
+ * the line then says to check the app's connection.
+ */
+async function checkToolOf(health: Health | undefined, tenant: string, taf: Taf, deps: Deps): Promise<string | undefined> {
+  if (!health?.reasons.some((r) => r.check === "no_tool")) return undefined;
+  return (await deps.agents.getSchedule(tenant, taf.id).catch(() => undefined))?.check?.tool;
 }
 
 /**

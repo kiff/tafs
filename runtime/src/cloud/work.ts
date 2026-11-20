@@ -2,7 +2,7 @@ import type { Fired, Run } from "./agents.js";
 import { type Lang, plural, type When, wordsIn } from "./words/index.js";
 import type { RunCredits } from "./credits.js";
 import type { DeliveryView } from "./delivery.js";
-import { type Health, healthLine } from "./health.js";
+import { checkCause, type Health, healthLine } from "./health.js";
 import type { Sent } from "./doors/model.js";
 import { isYourStep, type YourStepView, yourStepsOf } from "./yourstep.js";
 
@@ -94,7 +94,8 @@ export function skippedOf(fired: Fired[], zone: string, now: Date, lang: Lang = 
       const when = whenIn(f.due, zone, now, lang);
       const words = {
         missed: w.work_skipped_late, busy: w.work_skipped_busy, switching: w.work_skipped_switching,
-        check_failed: w.work_check_failed, retrying: w.work_run_retrying, unfinished: w.work_run_unfinished,
+        // A check of its own cause (health.ts checkCause) failed, the app wasn't unreadable.
+        check_failed: checkCause(f.reason) ? w.work_check_stuck : w.work_check_failed, retrying: w.work_run_retrying, unfinished: w.work_run_unfinished,
         too_large: w.work_skipped_too_large, credits: w.work_skipped_credits,
       }[why](when);
       return { due: new Date(f.due).toISOString(), why, words };
@@ -301,7 +302,10 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
   // What went wrong last comes before the next run, which would read as all's well: its latest firing's check
   // that couldn't read first (a Run now's too), then its health, then its last run stopped at a cap or failed.
   const newest = fired[0];
-  if (newest?.outcome === "failed_check") return { status: "idle", line: w.work_check_failed(whenIn(newest.due, zone, now, lang), checkApp), needs_you: 0, attention: true };
+  if (newest?.outcome === "failed_check") {
+    const when = whenIn(newest.due, zone, now, lang);
+    return { status: "idle", line: checkCause(newest.reason) ? w.work_check_stuck(when) : w.work_check_failed(when, checkApp), needs_you: 0, attention: true };
+  }
   if (health && health.level !== "healthy") return { status: "idle", line: healthLine(health.reasons[0]!, lang, zone, now, checkApp), needs_you: 0, attention: true };
   const ended = runs.find((r) => r.status === "COMPLETED" || r.status === "ERROR");
   if (ended && !unscheduled && (ended.status === "ERROR" || (ended.stop && ended.stop !== "answered"))) {
