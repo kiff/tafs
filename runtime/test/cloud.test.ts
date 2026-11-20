@@ -3322,7 +3322,11 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     // Its dial names no check, so the taf's old read would apply: refused, and nothing switched or written.
     const refused = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" });
     expect(refused.status).toBe(409);
-    expect(refused.body).toMatchObject({ code: "no_tool" });
+    expect(refused.body).toMatchObject({ code: "no_tool", words: wordsIn("en").install_no_tool(2) });
+    expect(refused.body.words).not.toContain("list_emails");
+    // In the person's language, for the apps to show as is.
+    const fr = await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana", headers: { "accept-language": "fr" } });
+    expect(fr.body).toMatchObject({ code: "no_tool", words: wordsIn("fr").install_no_tool(2) });
     expect(JSON.stringify(refused.body)).toContain("its check reads list_emails, which none of the taf's connections has now");
     expect(w.agents.calls).toContain(`checkTool ${RAE} list_emails`);
     expect(w.agents.calls).not.toContain(`switchVersion ${RAE} 2`);

@@ -5085,7 +5085,7 @@ async function recordLiveCards(event: HTTPEvent, me: KIFFIdentity, taf: Taf, sta
  * Gmail read after its taf moved to Calendar went live, and every firing failed with no_tool (Nov 2026). Anything but a
  * sure no (an older kiff/agents, a list that couldn't be read) never stops an install.
  */
-async function refuseCheckWithoutTool(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Promise<void> {
+async function refuseCheckWithoutTool(me: KIFFIdentity, taf: Taf, n: number, deps: Deps, lang: Lang = "en"): Promise<void> {
   if (taf.unscheduled) return;
   const dial = taf.knobs?.[String(n)];
   const check = dial ? dial.check ?? taf.check : (await deps.agents.getSchedule(me.tenantID, taf.id).catch(() => undefined))?.check;
@@ -5095,7 +5095,9 @@ async function refuseCheckWithoutTool(me: KIFFIdentity, taf: Taf, n: number, dep
   } catch (err) {
     if (err instanceof AgentsError && err.status === 409 && (err.code === "no_tool" || err.code === "not_a_read")) {
       throw new HTTPError(409, `version ${n} isn't installed: its check reads ${check.tool}, which ${err.code === "no_tool" ? "none of the taf's connections has now" : "isn't a read"}. ` +
-        "Set its check to a read the taf has (taf_dial's check, beside its wakes), then install that version.", { code: err.code });
+        "Set its check to a read the taf has (taf_dial's check, beside its wakes), then install that version.",
+        // The person who tapped Install reads why in their language, with no tool's raw name; Coach reads the error.
+        { code: err.code, words: err.code === "no_tool" ? wordsIn(lang).install_no_tool(n) : wordsIn(lang).install_not_a_read(n) });
     }
   }
 }
@@ -5105,7 +5107,7 @@ async function goLive(event: HTTPEvent, me: KIFFIdentity, taf: Taf, n: number, d
   // The version's places, drafted by Coach with no session to check them under: checked now, under the owner's.
   const dial = taf.knobs?.[String(n)];
   await refuseMoneyPlaces(dial ? dial.results.filter((p): p is VendorPlace => typeof p !== "string") : taf.actionResults ?? [], event, taf, deps);
-  await refuseCheckWithoutTool(me, taf, n, deps);
+  await refuseCheckWithoutTool(me, taf, n, deps, langOf(event));
   const cards = await liveCards(event, taf, deps);
   await agentsCall(() => deps.agents.switchVersion(me.tenantID, taf.id, n, cards));
   await applyKnob(me, taf, n, deps);
