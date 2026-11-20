@@ -1,0 +1,1 @@
+Testversion von tafs auf Wear OS: zeigt, wie lange die Uhr auf jedem Bildschirm auf dein Handy wartet. Sie speichert Zeiten, nicht deine Nachrichten.

@@ -1,0 +1,1 @@
+Wersja testowa tafs na Wear OS: pokazuje, jak długo zegarek czeka na telefon na każdym ekranie. Zapisuje czasy, nie Twoje wiadomości.
