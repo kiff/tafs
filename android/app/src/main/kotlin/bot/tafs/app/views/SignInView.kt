@@ -283,6 +283,20 @@ internal fun SignedInCelebration(onGo: () -> Unit) {
   }
 }
 
+/** Signed in inside tafs (docs/onboarding.md): the sign-in sheet's own celebration, in a sheet of its own, closed by Let's go. */
+@Composable
+internal fun InAppSignedIn(onGo: () -> Unit) {
+  DriveSheet(
+    onDismissRequest = onGo,
+    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = Theme.background,
+  ) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp)) {
+      SignedInCelebration(onGo = onGo)
+    }
+  }
+}
+
 /** Whether the sign-in offers being added from the person's phone: on a tablet only, never on a phone. */
 internal fun offersPairSignIn(tablet: Boolean): Boolean = tablet
 

@@ -16,7 +16,10 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,6 +46,7 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.model.ConsentTick
 import bot.tafs.app.model.Legal
 import bot.tafs.app.model.ONBOARDING_ON
+import kotlinx.coroutines.launch
 
 /**
  * The first screen: sign in with KIFF, or look around with the sample. With the new onboarding on ([onboarding],
@@ -50,9 +54,49 @@ import bot.tafs.app.model.ONBOARDING_ON
  * with KIFF's place, off until the box is ticked. Trying the sample never waits on the tick.
  */
 @Composable
-fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifier = Modifier, onboarding: Boolean = ONBOARDING_ON) {
+fun OnboardingView(
+  onSignIn: () -> Unit,
+  onSample: () -> Unit,
+  modifier: Modifier = Modifier,
+  onboarding: Boolean = ONBOARDING_ON,
+  /** With the new onboarding: KIFF's sign-in inside tafs (`AppModel.signInInApp`) with the terms version the tick showed. */
+  signInInApp: (suspend (termsVersion: String?) -> Unit)? = null,
+  /** The terms version in force, read as the tick shows (`AppModel.appTermsVersion`). */
+  termsVersion: (suspend () -> String)? = null,
+) {
   var tick by rememberSaveable { mutableStateOf(false) }
   val consent = ConsentTick(tick)
+  var busy by remember { mutableStateOf(false) }
+  var problem by rememberSaveable { mutableStateOf<String?>(null) }
+  var termsChanged by rememberSaveable { mutableStateOf(false) }
+  var shownTerms by rememberSaveable { mutableStateOf<String?>(null) }
+  val scope = rememberCoroutineScope()
+  if (onboarding && termsVersion != null) LaunchedEffect(Unit) { shownTerms = runCatching { termsVersion() }.getOrNull() }
+  val onContinue: () -> Unit = if (!onboarding || signInInApp == null) onSignIn else ({
+    problem = null
+    termsChanged = false
+    busy = true
+    scope.launch {
+      try {
+        signInInApp(shownTerms)
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        when (continueOutcome(e)) {
+          ContinueOutcome.Quiet -> Unit
+          ContinueOutcome.TermsChanged -> {
+            // The box is unticked and says why; the new version is for the new tick.
+            tick = false
+            termsChanged = true
+            if (termsVersion != null) shownTerms = runCatching { termsVersion() }.getOrNull()
+          }
+          ContinueOutcome.Problem -> problem = Words.SignIn.didntWork
+        }
+      } finally {
+        busy = false
+      }
+    }
+  })
   Column(
     modifier
       .fillMaxSize()
@@ -68,10 +112,14 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
         Text(Words.SignIn.Welcome.title, style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.SignIn.Welcome.lead, style = scaled(16, color = Theme.soft))
       }
-      if (onboarding) ConsentLines(consent) { tick = consent.toggled().agreed }
+      if (onboarding) {
+        if (termsChanged) Text(Words.Onboarding.termsChanged, style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.testTag(ONBOARDING_TERMS_CHANGED))
+        ConsentLines(consent) { tick = consent.toggled().agreed }
+      }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-      if (onboarding) PrimaryButton(Words.Common.`continue`, onSignIn, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue)
+      problem?.let { Text(it, style = scaled(14, color = Theme.no), modifier = Modifier.testTag(ONBOARDING_PROBLEM)) }
+      if (onboarding) PrimaryButton(Words.Common.`continue`, onContinue, Modifier.testTag(ONBOARDING_CONTINUE), enabled = consent.canContinue && !busy)
       else PrimaryButton(Words.SignIn.withKiff, onSignIn)
       OutlineButton(Words.Sample.tryIt, onSample, Modifier.fillMaxWidth())
     }
@@ -127,5 +175,21 @@ internal fun linked(line: String, links: List<Pair<String, String>>): AnnotatedS
   }
 }
 
+/** How Continue's sign-in ended, when it didn't sign in. */
+internal enum class ContinueOutcome { Quiet, TermsChanged, Problem }
+
+/**
+ * The welcome's line for a sign-in that didn't sign in: closing KIFF's page says nothing (the welcome is as it was), terms that
+ * changed since the tick untick the box and say so, and anything else says signing in didn't work.
+ */
+internal fun continueOutcome(e: Throwable): ContinueOutcome = when {
+  e is bot.tafs.app.kiff.VendorSignInCancelled -> ContinueOutcome.Quiet
+  e is bot.tafs.app.kiff.AppSignInRefused && e.error == "access_denied" -> ContinueOutcome.Quiet
+  e is bot.tafs.app.kiff.AppSignInRefused && e.error == bot.tafs.app.app.AppModel.TERMS_OUTDATED -> ContinueOutcome.TermsChanged
+  else -> ContinueOutcome.Problem
+}
+
 internal const val ONBOARDING_TICK = "onboarding.tick"
+internal const val ONBOARDING_TERMS_CHANGED = "onboarding.terms_changed"
+internal const val ONBOARDING_PROBLEM = "onboarding.problem"
 internal const val ONBOARDING_CONTINUE = "onboarding.continue"

@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** Continue signs in inside tafs with the terms version the tick showed, then the celebration. Closing KIFF's page says nothing, terms that changed untick the box and say so while KIFF's code is kept for the new tick, and anything else says signing in didn't work ([onboarding.md](docs/onboarding.md)).
