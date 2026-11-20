@@ -1,0 +1,1 @@
+- **Korean in both apps:** tafs on iPhone, iPad, Mac, Android and the watches now shows every screen in Korean (한국어), picked from the phone's language or in Account › Language. The legal links open English, marked (영어), until kiff.dev serves Korean. Its terms are held to the Korean glossary by test ([languages](docs/languages.md)).
