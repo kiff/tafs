@@ -104,6 +104,7 @@
     <string name="watch_open_on_phone">Abrir en el teléfono</string>
     <string name="watch_page_brief">Resumen</string>
     <string name="watch_page_inbox">Bandeja</string>
+    <string name="watch_paused_still_answers">En pausa: su programación está detenida. Aun así responde a lo que envías.</string>
     <string name="watch_phone_not_reachable">Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo.</string>
     <string name="watch_play">Reproducir</string>
     <string name="watch_qr_needs_me_today">¿Qué me necesita hoy?</string>
@@ -111,6 +112,7 @@
     <string name="watch_qr_tell_me_more">Cuéntame más</string>
     <string name="watch_qr_thanks">Gracias</string>
     <string name="watch_quick_reply">Respuesta rápida</string>
+    <string name="watch_read_more">Leer más</string>
     <string name="watch_ready">Lista</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s listo</item>

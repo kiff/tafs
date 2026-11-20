@@ -4,8 +4,7 @@ import SwiftUI
 /// a taf's own chat, with its page one swipe below. The words go into that taf's chat as the person, through the phone, never
 /// to Coach. Approvals stay on the phone, and nothing of the chat is kept on the watch.
 enum WatchTafChat {
-    /// Off until tafs cloud's `TAFS_WATCH_TAF_CHAT` is on, the paused line and Read more are in 8 languages, and the privacy
-    /// paragraph is live.
+    /// Off until tafs cloud's `TAFS_WATCH_TAF_CHAT` is on and the privacy paragraph is live.
     static let on = false
 }
 
@@ -72,8 +71,8 @@ struct TafChatPage: View {
                     .listRowBackground(Color.clear)
             case .paused, .open:
                 if TafChatSend.of(taf) == .paused {
-                    // 2A: it still takes the message. The line's own words come with legal-i18n's key.
-                    Text(Words.Taf.State.paused)
+                    // 2A: it still takes the message; only its schedule is off, so it answers now.
+                    Text(Words.Watch.pausedStillAnswers)
                         .font(.footnote)
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
@@ -166,7 +165,7 @@ struct TafTurnRow: View {
                 }
                 switch Self.foot(answer, whole: whole) {
                 case .readMore:
-                    Button(Words.Common.more, action: readMore)
+                    Button(Words.Watch.readMore, action: readMore)
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(WatchLook.coach)
                         .buttonStyle(.plain)

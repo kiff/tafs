@@ -2695,6 +2695,7 @@
     <string name="watch_open_on_phone">Openen op telefoon</string>
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
+    <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
     <string name="watch_play">Afspelen</string>
     <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
@@ -2702,6 +2703,7 @@
     <string name="watch_qr_tell_me_more">Vertel meer</string>
     <string name="watch_qr_thanks">Bedankt</string>
     <string name="watch_quick_reply">Snel antwoord</string>
+    <string name="watch_read_more">Lees verder</string>
     <string name="watch_ready">Klaar</string>
     <plurals name="watch_ready_count">
         <item quantity="one">%1$s klaar</item>

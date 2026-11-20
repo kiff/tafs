@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Abrir no telemóvel",
   "watch.page.brief": "Resumo",
   "watch.page.inbox": "Caixa de entrada",
+  "watch.paused_still_answers": "Em pausa: o agendamento está parado. Ainda assim responde ao que envia.",
   "watch.phone_not_reachable": "O telemóvel não está ao alcance. Aproxime-o e tente novamente.",
   "watch.play": "Reproduzir",
   "watch.qr.needs_me_today": "O que precisa de mim hoje?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Diga-me mais",
   "watch.qr.thanks": "Obrigado",
   "watch.quick_reply": "Resposta rápida",
+  "watch.read_more": "Ler mais",
   "watch.ready": "Pronta",
   "watch.ready_count": {
     "one": "{count} pronto",

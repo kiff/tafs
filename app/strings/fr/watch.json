@@ -57,6 +57,7 @@
   "watch.open_on_phone": "Ouvrir sur le téléphone",
   "watch.page.brief": "Résumé",
   "watch.page.inbox": "Boîte de réception",
+  "watch.paused_still_answers": "En pause : son planning est arrêté. Il répond quand même à ce que vous envoyez.",
   "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
   "watch.play": "Lire",
   "watch.qr.needs_me_today": "Qu'est-ce qui m'attend aujourd'hui ?",
@@ -64,6 +65,7 @@
   "watch.qr.tell_me_more": "Dites-m'en plus",
   "watch.qr.thanks": "Merci",
   "watch.quick_reply": "Réponse rapide",
+  "watch.read_more": "Lire la suite",
   "watch.ready": "Prêt",
   "watch.ready_count": {
     "one": "{count} prêt",

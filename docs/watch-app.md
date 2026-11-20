@@ -102,16 +102,16 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
     `CoachModel` for the visit (`TafsModel.chat`), gone when the app leaves the screen.
   - **The chat:** the taf's state, this visit's turns (your words orange, the taf's green, `WatchLook.taf`), then "Message
     {taf}", which opens the same ask as Coach's (Speak, Type, Quick reply, Check before sending) titled for the taf.
-  - **2A:** a paused taf (`WatchTaf.paused`, sent by the phone) still takes the message; a halted one takes none and says
-    "Resume on your phone".
+  - **2A:** a paused taf (`WatchTaf.paused`, sent by the phone) still takes the message, and answers it now; a halted one
+    takes none and says "Resume on your phone".
   - **Read more (the owner's 01:10):** a long answer shows its first part with Read more. Only the tap reads the whole
     answer (`ask_full`, `GET /v1/watch/asks/{id}?full=1`, its `text`), shown in place and forgotten with the turns. If it can't be
     read, "The rest is on your phone."
   - **The last turns:** the chat opens on the last six turns of the person's own chat with the taf (`taf_chat`), read
     through the phone from `GET /v1/tafs/{id}/conversation` for a taf it lists, messages only, each cut as an answer is.
     This visit's turns show below them, once. Nothing is kept on the watch.
-  - **Before it goes on:** the paused line and the Read more word in 8 languages (legal-i18n; the screens show
-    `taf.state.paused` and `common.more` until then).
+  - **The words:** `watch.paused_still_answers` ("Paused: its schedule is off. It still answers what you send.", true to
+    what `message()` does: only the schedule is paused) and `watch.read_more`, legal-i18n's, in 8 languages.
 
 ## Coach
 
