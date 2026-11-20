@@ -1,0 +1,1 @@
+- **Android, onboarding (off):** the three cards after signing in, drawn by the app's own views over the sample, once per device; the first Home with tafs cloud's line, Ask Coach and How tafs works; and How tafs works in Account, with the cards again and the four legal pages ([onboarding.md](docs/onboarding.md)).

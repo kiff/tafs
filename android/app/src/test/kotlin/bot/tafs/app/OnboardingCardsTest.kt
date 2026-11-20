@@ -83,6 +83,27 @@ class OnboardingCardsTest {
     for (none in listOf(null, "", "  ")) assertEquals(Words.Home.noTafs to Words.Onboarding.homeLead, firstHomeLines(none))
   }
 
+  /** How tafs works titles its legal rows as their pages (`onboarding.row_*`), never with the tick line's link words. */
+  @Test fun theLegalRowsUseStandaloneTitles() {
+    val rows = bot.tafs.app.views.howItWorksLegalRows()
+    assertEquals(
+      listOf(bot.tafs.app.model.Legal.kiffPrivacy(), bot.tafs.app.model.Legal.privacy(), bot.tafs.app.model.Legal.kiffTerms(), bot.tafs.app.model.Legal.terms()),
+      rows.map { it.second },
+    )
+    assertEquals(listOf(Words.Onboarding.rowKiffPrivacy, Words.Onboarding.rowTafsPrivacy, Words.Onboarding.rowKiffTerms, Words.Onboarding.rowTafsTerms), rows.map { it.first })
+    assertEquals(4, rows.map { it.first }.toSet().size)
+  }
+
+  /** How tafs works lists the three cards; one tapped opens the cards there. */
+  @Test fun howTafsWorksOpensTheCardTapped() {
+    tall()
+    compose.setContent { TafsTheme { bot.tafs.app.views.HowTafsWorksSheet(onClose = {}) } }
+    compose.onNodeWithText(Words.Onboarding.rowTafsTerms).assertExists()
+    compose.onNodeWithTag("how_it_works.Control").performClick()
+    compose.waitForIdle()
+    compose.onNodeWithText(Words.Onboarding.getStarted).assertExists()
+  }
+
   @Test fun thePicturesDrawTheSamplesOwnTafsAndCard() {
     assertEquals(listOf("support", "parcels", "leads"), onboardingSampleTafs().map { it.id.removePrefix("onboarding-") })
     val card = onboardingSampleCard()

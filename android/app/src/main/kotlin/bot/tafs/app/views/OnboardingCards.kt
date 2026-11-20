@@ -121,5 +121,54 @@ internal fun onboardingSampleCard(): TafCard =
   TafCard(id = "onboarding-support", title = Words.Sample.Card.refundsStripe, rules = TafTemplates.support.rules,
     calls = CardTotal(limit = 40, used = 12, window = Window.day))
 
+/**
+ * How tafs works, any time (docs/onboarding.md): the three cards again, each opening where it's tapped, and the four legal pages
+ * titled as their pages are (`onboarding.row_*`, never the tick line's link words, which sit inside its sentence).
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun HowTafsWorksSheet(onClose: () -> Unit) {
+  val uri = androidx.compose.ui.platform.LocalUriHandler.current
+  var opened by rememberSaveable { mutableStateOf<OnboardingPage?>(null) }
+  bot.tafs.app.drive.DriveSheet(
+    onDismissRequest = onClose,
+    sheetState = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true),
+    containerColor = Theme.background,
+  ) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+      Text(Words.Onboarding.howItWorks, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.semantics { heading() })
+      Panel {
+        OnboardingPage.entries.forEach { page ->
+          Row(Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { opened = page }.padding(vertical = 10.dp).testTag("how_it_works.${page.name}"),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(page.title, style = scaled(16, color = Theme.ink), modifier = Modifier.weight(1f))
+            Text("›", style = scaled(16, color = Theme.dim))
+          }
+        }
+      }
+      Panel {
+        howItWorksLegalRows().forEach { (title, url) ->
+          Text(bot.tafs.app.model.Legal.label(title), style = scaled(16, color = Theme.amberText),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { uri.openUri(url) }.padding(vertical = 10.dp))
+        }
+      }
+    }
+  }
+  opened?.let { start ->
+    bot.tafs.app.drive.DriveDialog(
+      onDismissRequest = { opened = null },
+      properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false),
+    ) { OnboardingCards(start) { opened = null } }
+  }
+}
+
+/** The four legal pages as How tafs works lists them: each row's own standalone title, and its page in the app's language. */
+internal fun howItWorksLegalRows(): List<Pair<String, String>> = listOf(
+  Words.Onboarding.rowKiffPrivacy to bot.tafs.app.model.Legal.kiffPrivacy(),
+  Words.Onboarding.rowTafsPrivacy to bot.tafs.app.model.Legal.privacy(),
+  Words.Onboarding.rowKiffTerms to bot.tafs.app.model.Legal.kiffTerms(),
+  Words.Onboarding.rowTafsTerms to bot.tafs.app.model.Legal.terms(),
+)
+
 internal const val ONBOARDING_SKIP = "onboarding.skip"
 internal const val ONBOARDING_NEXT = "onboarding.next"
