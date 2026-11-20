@@ -3621,6 +3621,19 @@ describe("a taf's versions (kiff/tafs#107)", () => {
       const r = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: setting });
       expect(r.status, JSON.stringify(r.body)).toBe(200);
     }
+    // A version stored before the dial refused stray fields keeps them in its wakes (a check written inside one, Nov 2026).
+    // The knob hands its wakes back in a trigger's own form, so every − / + and Stop the apps send is still taken.
+    const held = w.tafs.held.get(`t_acme#${RAE}`)!;
+    const v = String(put.body.version);
+    w.tafs.held.set(`t_acme#${RAE}`, { ...held, knobs: { ...held.knobs, [v]: { ...held.knobs![v]!, wakes: [{ kind: "schedule", form: "weekdays", at: "10:00", check, label: "x" } as never] } } });
+    const stray = await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana" });
+    expect(JSON.stringify(stray.body.setting.wakes)).not.toMatch(/"check"|"label"/);
+    const choice = stray.body.wakes[0].size.choices[0].setting;
+    expect(JSON.stringify(choice.wakes)).not.toMatch(/"check"|"label"/);
+    for (const { check: _, ...setting } of [stray.body.setting, choice]) {
+      const r = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: setting });
+      expect(r.status, JSON.stringify(r.body)).toBe(200);
+    }
     // Two timetables would hand the same items twice: refused, with one timetable in words, never merged.
     for (const [wakes, nearest] of [
       [[{ kind: "schedule", form: "daily", at: "09:00" }, { kind: "schedule", form: "daily", at: "15:30" }], "the nearest is one list of times on the same minute: every day at 09:00 and 15:00"],
