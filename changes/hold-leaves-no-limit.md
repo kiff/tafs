@@ -1,0 +1,1 @@
+- A scheduled run's report says an item it didn't reach because the run paused on a hold is just that, with no limit named for it, since no call of it read one.
