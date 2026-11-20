@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
@@ -65,9 +66,14 @@ fun OnboardingView(
   termsVersion: (suspend () -> String)? = null,
   /**
    * A tablet's second way, under Continue and waiting on the same tick: added from the person's phone (pairing); null on a phone.
-   * It's given the terms version the tick agreed to, which the pairing claim carries, and what to do if KIFF says it changed.
+   * It's given the terms version the tick agreed to, which the pairing claim carries.
    */
-  onSignInWithPhone: ((termsVersion: String, termsChanged: () -> Unit) -> Unit)? = null,
+  onSignInWithPhone: ((termsVersion: String) -> Unit)? = null,
+  /**
+   * How many times KIFF said the terms changed on the phone way (a count, saved with the screen, so a rotation while the
+   * sheet is open neither loses one nor unticks the box twice): each new one unticks the box and says why.
+   */
+  phoneTermsChanged: Int = 0,
 ) {
   var tick by rememberSaveable { mutableStateOf(false) }
   val consent = ConsentTick(tick)
@@ -83,6 +89,10 @@ fun OnboardingView(
     termsChanged = true
     if (termsVersion != null) scope.launch { shownTerms = runCatching { termsVersion() }.getOrNull() }
   }
+  var phoneTermsHandled by rememberSaveable { mutableIntStateOf(0) }
+  LaunchedEffect(phoneTermsChanged) {
+    if (phoneTermsChanged > phoneTermsHandled) { phoneTermsHandled = phoneTermsChanged; untick() }
+  }
   // The phone way carries the version the tick agreed to, read now if it couldn't be when the welcome showed; without one,
   // nothing opens, so consent is never skipped (as iPad).
   val onPhone: (() -> Unit)? = onSignInWithPhone?.let { open ->
@@ -91,7 +101,7 @@ fun OnboardingView(
       termsChanged = false
       scope.launch {
         val version = shownTerms ?: termsVersion?.let { read -> runCatching { read() }.getOrNull() }?.also { shownTerms = it }
-        if (version == null) problem = Words.SignIn.didntWork else open(version, untick)
+        if (version == null) problem = Words.SignIn.didntWork else open(version)
       }
     }
   }

@@ -24,6 +24,9 @@ import bot.tafs.app.kiff.AppSignInRefused
 import bot.tafs.app.kiff.VendorSignInCancelled
 import androidx.compose.ui.test.onAllNodesWithTag
 import org.junit.Assert.fail
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -124,11 +127,11 @@ class OnboardingWelcomeTest {
   /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
   @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
     val sent = mutableListOf<String>()
-    var changed: () -> Unit = {}
+    var changed by mutableIntStateOf(0)
     compose.setContent {
       TafsTheme {
         OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "2026-11-14" },
-          onSignInWithPhone = { v, c -> sent += v; changed = c })
+          onSignInWithPhone = { v -> sent += v }, phoneTermsChanged = changed)
       }
     }
     compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
@@ -136,12 +139,30 @@ class OnboardingWelcomeTest {
     compose.onNodeWithTag("onboarding.with_phone").assertIsEnabled().performClick()
     compose.waitForIdle()
     assertEquals("the pairing carries the version the tick agreed to", listOf("2026-11-14"), sent)
+    assertTrue("the old way never shows beside Continue", compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
     // KIFF says the terms changed: the box is unticked and says why.
-    compose.runOnIdle { changed() }
+    changed = 1
     compose.waitForIdle()
     compose.onNodeWithTag("onboarding.terms_changed").assertExists()
     compose.onNodeWithTag("onboarding.with_phone").assertIsNotEnabled()
-    assertTrue("the old way never shows beside Continue", compose.onAllNodesWithText(Words.SignIn.withKiff).fetchSemanticsNodes().isEmpty())
+  }
+
+  /** A rotation recreates the welcome with the same count: an answer already handled never unticks the box again. */
+  @Test fun aHandledTermsChangeIsNeverAppliedTwice() {
+    val restore = androidx.compose.ui.test.junit4.StateRestorationTester(compose)
+    restore.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { "v" },
+          onSignInWithPhone = {}, phoneTermsChanged = 1)
+      }
+    }
+    compose.waitForIdle()
+    compose.onNodeWithTag("onboarding.terms_changed").assertExists()
+    // Ticked again after reading the new terms, then the screen is recreated: the tick stays.
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    restore.emulateSavedInstanceStateRestore()
+    compose.waitForIdle()
+    compose.onNodeWithTag("onboarding.with_phone").assertIsEnabled()
   }
 
   /** With no terms version to send, the phone way opens nothing and says it didn't work: consent is never skipped. */
@@ -150,7 +171,7 @@ class OnboardingWelcomeTest {
     compose.setContent {
       TafsTheme {
         OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, signInInApp = {}, termsVersion = { throw java.io.IOException("offline") },
-          onSignInWithPhone = { _, _ -> opened += 1 })
+          onSignInWithPhone = { _ -> opened += 1 })
       }
     }
     compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
