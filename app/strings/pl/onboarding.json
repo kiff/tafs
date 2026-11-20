@@ -21,5 +21,6 @@
   "onboarding.tafs_lead": "Taf wykonuje za Ciebie jedno zadanie, np. odpowiedzi dla klientów, spóźnione paczki czy kontakt z potencjalnymi klientami. Poproś Coacha, a skonfiguruje go z Tobą.",
   "onboarding.tafs_privacy": "Polityka prywatności tafs",
   "onboarding.tafs_terms": "Regulamin tafs",
-  "onboarding.tafs_title": "Twoje tafy pracują dla Ciebie"
+  "onboarding.tafs_title": "Twoje tafy pracują dla Ciebie",
+  "onboarding.terms_changed": "Warunki zmieniły się od zaznaczenia pola. Przeczytaj je i zaznacz pole ponownie."
 }

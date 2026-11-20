@@ -1660,6 +1660,7 @@
     <string name="onboarding_tafs_privacy">Polityka prywatności tafs</string>
     <string name="onboarding_tafs_terms">Regulamin tafs</string>
     <string name="onboarding_tafs_title">Twoje tafy pracują dla Ciebie</string>
+    <string name="onboarding_terms_changed">Warunki zmieniły się od zaznaczenia pola. Przeczytaj je i zaznacz pole ponownie.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Jeszcze nic</string>
     <string name="pair_added">Ten %1$s został dodany.</string>

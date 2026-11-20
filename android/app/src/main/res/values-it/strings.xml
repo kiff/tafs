@@ -1542,6 +1542,7 @@
     <string name="onboarding_tafs_privacy">Informativa sulla privacy di tafs</string>
     <string name="onboarding_tafs_terms">le Condizioni di tafs</string>
     <string name="onboarding_tafs_title">I tuoi taf lavorano per te</string>
+    <string name="onboarding_terms_changed">Le condizioni sono cambiate da quando hai spuntato la casella. Leggile, poi spuntala di nuovo.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Ancora niente</string>
     <string name="pair_added">Questo %1$s è aggiunto.</string>

@@ -1542,6 +1542,7 @@
     <string name="onboarding_tafs_privacy">tafs Privacy Policy</string>
     <string name="onboarding_tafs_terms">the tafs Terms</string>
     <string name="onboarding_tafs_title">Your tafs work for you</string>
+    <string name="onboarding_terms_changed">The Terms changed since you ticked the box. Read them, then tick it again.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>
     <string name="pair_added">This %1$s is added.</string>

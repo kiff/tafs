@@ -1542,6 +1542,7 @@
     <string name="onboarding_tafs_privacy">tafs-Datenschutzerklärung</string>
     <string name="onboarding_tafs_terms">den tafs-Nutzungsbedingungen</string>
     <string name="onboarding_tafs_title">Deine tafs arbeiten für dich</string>
+    <string name="onboarding_terms_changed">Die Nutzungsbedingungen haben sich geändert, seit du das Kästchen angehakt hast. Lies sie und hake es dann erneut an.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Noch nichts</string>
     <string name="pair_added">Dieser %1$s ist hinzugefügt.</string>

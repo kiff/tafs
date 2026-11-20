@@ -1581,6 +1581,7 @@ object Words {
     val tafsPrivacy: String get() = Res.s(R.string.onboarding_tafs_privacy)
     val tafsTerms: String get() = Res.s(R.string.onboarding_tafs_terms)
     val tafsTitle: String get() = Res.s(R.string.onboarding_tafs_title)
+    val termsChanged: String get() = Res.s(R.string.onboarding_terms_changed)
   }
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)

@@ -2941,6 +2941,8 @@ enum Words {
         static var tafsTerms: String { Words.line("onboarding.tafs_terms") }
         /// Your tafs work for you
         static var tafsTitle: String { Words.line("onboarding.tafs_title") }
+        /// The Terms changed since you ticked the box. Read them, then tick it again.
+        static var termsChanged: String { Words.line("onboarding.terms_changed") }
     }
     enum Overview {
         /// {figure} {words}

@@ -21,5 +21,6 @@
   "onboarding.tafs_lead": "Um taf faz um trabalho por si, como respostas de suporte, encomendas atrasadas ou acompanhamento de contactos. Peça ao Coach e ele configura um consigo.",
   "onboarding.tafs_privacy": "Política de Privacidade do tafs",
   "onboarding.tafs_terms": "os Termos do tafs",
-  "onboarding.tafs_title": "Os seus tafs trabalham para si"
+  "onboarding.tafs_title": "Os seus tafs trabalham para si",
+  "onboarding.terms_changed": "Os termos mudaram desde que marcou a caixa. Leia-os e marque-a novamente."
 }

@@ -88,7 +88,7 @@ enum AppSignIn {
     static func randomBytes(_ count: Int) -> Data {
         var bytes = [UInt8](repeating: 0, count: count)
         let status = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
-        precondition(status == errSecSuccess, "no random bytes")
+        precondition(status == errSecSuccess)
         return Data(bytes)
     }
 }
