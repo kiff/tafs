@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "브리핑",
+  "push.channel.briefs_description": "정해진 시간에 받는 브리핑.",
+  "push.channel.holds_description": "호출이 내 답변을 기다리며 보류되었습니다. 승인하기 전에는 아무것도 보내지 않습니다.",
+  "push.channel.other": "기타 알림",
+  "push.channel.other_description": "작업 요청과 그 답변, 소리 없음.",
+  "push.channel.urgent_description": "다음 브리핑까지 기다릴 수 없는 것, 소리 있음.",
+  "push.open_needs_you": "확인 필요를 열어 답변하세요.",
+  "push.open_taf": "taf를 열어 확인하세요.",
+  "push.open_usage": "요금제 및 사용량을 열어 확인하세요."
+}
