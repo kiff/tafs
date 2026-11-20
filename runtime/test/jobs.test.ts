@@ -123,7 +123,11 @@ describe("jobs", () => {
       // the report names each item and what became of it (kiff/agents#78).
       expect(prompt).toContain("leave any write that may need the owner's approval");
       // An item left behind a hold was explained with a limit no read gave (Chargebacks, 20 Nov, 2 runs of 3).
-      expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it");
+      expect(prompt.replace(/\s+/g, " ")).toContain("An item you didn't reach because your run paused on a hold is said as just that (\"A-1048: not done, since my run paused on the hold first\"), with no limit named for it: you never made its call, so you can't know what KIFF would have done with it.");
+      // Tools' descriptions carry the Card's line, so "no limit was read" was untrue (Eval 44732158037).
+      expect(prompt).not.toContain("no limit was read for it");
+      // A first write made with placeholder evidence to see what KIFF does paused the run on its hold (Eval 44732158037, chargebacks run 2).
+      expect(prompt.replace(/\s+/g, " ")).toContain("Every write is the item's real one, with its real details: never a write to see what KIFF does with it.");
       // Each turn is a wait: the owner's Stripe taf took 5 turns in a row per message,
       // 4-5 s each (kiff/tafs#138, item 58). Independent calls go in one turn.
       expect(prompt.replace(/\s+/g, " ")).toContain("make reads that don't need each other's answers together, in one turn: kiff_pending with your first reads, and every read of one item at once.");
