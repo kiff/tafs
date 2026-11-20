@@ -1,0 +1,13 @@
+{
+  "halt.again": "もう一度遮断",
+  "halt.all_now": "今すぐすべて遮断",
+  "halt.explain.halted": "遮断済みです。再開すると新しい作業だけが始まります。",
+  "halt.explain.halted_since": "{time}から遮断中です。再開すると新しい作業だけが始まります。",
+  "halt.explain.halting": "新しい作業は始まりません。KIFFと接続先の両方が確認すると、遮断済みと表示されます。",
+  "halt.explain.running_all": "遮断すると、再開するまでtafsが止まります。すでに送信された呼び出しは届く場合があります。",
+  "halt.explain.running_one": "遮断すると、再開するまで止まります。すでに送信された呼び出しは届く場合があります。",
+  "halt.halting_stops_no_run_starts": "遮断すると、再開するまで{who}が止まります。すでに送信された呼び出しは届く場合があります。",
+  "halt.now": "今すぐ遮断",
+  "halt.row_running": "再開するまで止める",
+  "halt.your_tafs_lower": "あなたのtafs"
+}

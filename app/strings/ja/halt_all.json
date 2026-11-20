@@ -1,0 +1,15 @@
+{
+  "halt_all.description": "すべてのtafを一度に止めます。tafsで再開するまで、新しいものは何も送信されません。",
+  "halt_all.failed": "tafsがtafsを遮断できませんでした。{why} tafsを開いて遮断してください。",
+  "halt_all.halted": {
+    "other": "{count}個のtafを遮断しました。再開するまで、新しいものは何も送信されません。"
+  },
+  "halt_all.halted_all": "tafsを遮断しました。再開するまで、新しいものは何も送信されません。",
+  "halt_all.halting": {
+    "other": "{count}個のtafを遮断しています：実行は始まりません。KIFFはまだすべての部分を確認していません。確認されるとtafsに表示されます。"
+  },
+  "halt_all.halting_all": "tafsを遮断しています：実行は始まりません。KIFFはまだすべての部分を確認していません。確認されるとtafsに表示されます。",
+  "halt_all.running": "tafsがtafsを遮断できませんでした。tafsを開いて遮断してください。",
+  "halt_all.signed_out": "tafsからサインアウトしています。tafsを遮断するにはサインインしてください。",
+  "halt_all.title": "すべてのtafを遮断"
+}
