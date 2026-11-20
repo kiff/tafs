@@ -72,7 +72,7 @@ object KiffMapping {
    */
   fun name(action: String, title: String?): String {
     val t = title.orEmpty().trim()
-    return if (t.isEmpty()) toolWords(action) else t
+    return if (t.isEmpty()) toolWords(action) else visible(t)
   }
 
   /**
@@ -106,7 +106,7 @@ object KiffMapping {
     var name = tool.split("__").last().split(".").lastOrNull { it.isNotEmpty() } ?: tool
     grantPrefix.find(name)?.let { if (it.range.last + 1 < name.length) name = name.substring(it.range.last + 1) }
     val words = name.split('_', '-').filter { it.isNotEmpty() }.joinToString(" ")
-    return words.ifEmpty { tool }
+    return visible(words.ifEmpty { tool })
   }
 
   /** A vendor as people say it: "stripe-mcp" or "mcp.stripe.com" → "Stripe" (item 52). */
@@ -116,8 +116,8 @@ object KiffMapping {
     for (suffix in listOf("-mcp", "_mcp", ".mcp")) if (v.endsWith(suffix)) v = v.dropLast(suffix.length)
     val dot = v.indexOf('.')
     if (dot >= 0) v = v.substring(0, dot)
-    val first = v.firstOrNull() ?: return vendor
-    return first.uppercase() + v.drop(1).replace("-", " ")
+    val first = v.firstOrNull() ?: return visible(vendor)
+    return visible(first.uppercase() + v.drop(1).replace("-", " "))
   }
 
   // MARK: The list
@@ -135,7 +135,7 @@ object KiffMapping {
    */
   fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.filter { it.name.isNotBlank() }.map { s ->
     val finish = s.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish,
+    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = visible(s.name), job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = visible(finish?.words.orEmpty()), finish = finish,
       // Discard only with every word, and only for an agent tafs cloud named.
       discard = s.discard?.takeIf { it.words.usable && s.kiffAgent.isNotBlank() }, kiffCardIds = s.discard?.cards.orEmpty())
   }
@@ -151,9 +151,9 @@ object KiffMapping {
     val count = h.card.ids.size
     var taf = Taf(
       id = h.kiffAgent,
-      name = h.name,
+      name = visible(h.name),
       // Its job in words, as tafs cloud says it (kiff/tafs#167); an agent tafs doesn't run has none, and is described by its Cards.
-      job = h.jobSummary ?: Words.Taf.worksUnderCards(count = count),
+      job = h.jobSummary?.let(::visible) ?: Words.Taf.worksUnderCards(count = count),
       tools = h.card.tools,
       colorIndex = h.color,
       card = Card(h.card.rules.map(::rule), owner, h.card.expires, revoked = !h.card.active),
@@ -164,36 +164,36 @@ object KiffMapping {
       // Halted, by itself or with the whole account: it reads so everywhere (kiff/tafs#236, item 13).
       h.state == "halted" -> taf.copy(state = TafState.halted, now = Words.Taf.Now.halted)
       // Its run waits for a connected app's event (the slow-tools design): not the owner's, in the connection's words.
-      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = h.work.line)
+      h.work?.status == "waiting_on_app" -> taf.copy(state = TafState.idle, now = visible(h.work.line))
       // Something went wrong first (a failed check, its health, a run stopped or failed): tafs cloud's line, never "Working".
-      h.work?.attention == true && h.work.line.isNotBlank() -> taf.copy(state = TafState.idle, now = h.work.line)
+      h.work?.attention == true && h.work.line.isNotBlank() -> taf.copy(state = TafState.idle, now = visible(h.work.line))
       // A taf with no schedule isn't at work until it's told something in its chat (kiff/tafs#138, item 55).
       h.state == "working" && h.unscheduled == true -> taf.copy(state = TafState.idle, now = Words.Taf.Now.worksFromChat)
       h.state == "working" -> taf.copy(
         state = TafState.working,
         // tafs cloud's words, with the day when it isn't today; the app's own format only where an older tafs cloud sends none.
-        now = h.nextRunWords?.takeIf { it.isNotBlank() } ?: h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running,
+        now = h.nextRunWords?.takeIf { it.isNotBlank() }?.let(::visible) ?: h.nextRun?.let { Words.Taf.Now.nextRun(time = shortTime(it)) } ?: Words.Taf.Now.running,
       )
       h.state == "idle" -> taf.copy(state = TafState.idle, now = Words.Taf.Now.actingUnderKiff)
       h.state == "stopped" -> taf.copy(state = TafState.revoked, now = Words.Taf.Now.cardNotActive)
       // A state this app doesn't know yet: tafs cloud's line for its work, never a guess.
-      else -> taf.copy(state = TafState.idle, now = h.work?.line.orEmpty())
+      else -> taf.copy(state = TafState.idle, now = visible(h.work?.line.orEmpty()))
     }
     // tafs cloud orders what the row says: its work's line carries health's first reason only while the work is idle (halted,
     // needs you, retrying, working, waiting on an app and paused come first). Then that line shows, tinted by tafs cloud's level.
     val level = h.health?.level?.takeIf { it == "at_risk" || it == "failing" }
     val line = h.work?.takeIf { it.status == "idle" }?.line?.takeIf { it.isNotBlank() }
-    if (level != null && line != null) taf = taf.copy(now = line, nowHealth = level)
+    if (level != null && line != null) taf = taf.copy(now = visible(line), nowHealth = level)
     // Its setup stopped partway: tafs cloud's words in place of what it's doing, and the chat to finish it in.
     val finish = h.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    if (finish != null) taf = taf.copy(now = finish.words, finish = finish)
+    if (finish != null) taf = taf.copy(now = visible(finish.words), finish = finish)
     return taf.copy(
       relevantNow = h.relevantNow,
       labels = h.labels.orEmpty().filter { it.isNotBlank() },
       cloudId = h.id,
       paused = h.status == "paused",
       nextRun = h.nextRun,
-      nextRunWords = h.nextRunWords?.takeIf { it.isNotBlank() },
+      nextRunWords = h.nextRunWords?.takeIf { it.isNotBlank() }?.let(::visible),
       worksFromChat = h.unscheduled == true,
       results = h.results,
       timeZoneWords = h.timeZoneWords,
@@ -282,7 +282,7 @@ object KiffMapping {
     val said = message?.trim().orEmpty()
     if (said.isEmpty() || said.length > QUOTABLE_MAX || said.any { it == '\n' || it == '\r' }) return null
     if (said.any { it == '{' || it == '[' || it == '@' }) return null
-    return said
+    return visible(said)
   }
 
   /**
