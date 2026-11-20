@@ -109,7 +109,7 @@ private fun ConsentLines(consent: ConsentTick, toggle: () -> Unit) {
       ),
       style = scaled(13, color = Theme.soft),
     )
-    Text(Words.Onboarding.age, style = scaled(12, color = Theme.dim))
+    Text(bot.tafs.app.model.ageLine(), style = scaled(12, color = Theme.dim))
   }
 }
 

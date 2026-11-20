@@ -62,3 +62,17 @@ data class OnboardingSteps(val page: OnboardingPage = OnboardingPage.Tafs, val f
 
   fun skipped(): OnboardingSteps = copy(finished = true)
 }
+
+/**
+ * The welcome's age line for the person's country (docs/onboarding.md): its own age where the law asks for more than
+ * [MinimumAge.STANDARD] (legal-i18n's table: India, Indonesia, Brazil…), else the line every country reads. The country is the
+ * device's own region (the system's, not the app's language, which may be set apart): the person's statement, as on iOS.
+ */
+fun ageLine(region: String? = deviceRegion()): String {
+  val age = MinimumAge.of(region)
+  return if (age > MinimumAge.STANDARD) Words.Onboarding.ageN(age = age.toString()) else Words.Onboarding.age
+}
+
+/** The device's region as the system has it ("IN"), or null when none is set. */
+fun deviceRegion(): String? =
+  android.content.res.Resources.getSystem().configuration.locales.takeIf { !it.isEmpty }?.get(0)?.country?.takeIf { it.isNotEmpty() }
