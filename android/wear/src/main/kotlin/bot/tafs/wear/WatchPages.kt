@@ -228,8 +228,8 @@ private fun ScalingLazyListScope.coachHome(
   // Typed words and quick replies go to the same review as words heard.
   item {
     androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-      Button(onClick = act.type, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.type, maxLines = 1) }
-      Button(onClick = openQuick, modifier = Modifier.weight(1f), colors = neutralButton()) { Text(Words.Watch.quickReply, maxLines = 2) }
+      IconOverWord(Words.Watch.type, act.type, HOME_TYPE, Modifier.weight(1f)) { keyboardGlyph(it) }
+      IconOverWord(Words.Watch.quickReply, openQuick, HOME_QUICK, Modifier.weight(1f)) { quickGlyph(it) }
     }
   }
   // A message kept for later: its words, that it's sent once the phone is in reach, and Delete.

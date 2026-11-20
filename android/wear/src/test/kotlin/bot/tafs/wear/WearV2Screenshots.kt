@@ -3,6 +3,9 @@ package bot.tafs.wear
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,13 +45,13 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
 
   private val repo = File(System.getProperty("tafs.repo") ?: "../..")
 
-  private fun shot(name: String, content: @Composable () -> Unit) {
+  private fun shot(name: String, language: String = "en", content: @Composable () -> Unit) {
     // xhdpi: twice the dp in pixels, 396 and 450.
-    RuntimeEnvironment.setQualifiers("en-w${dp}dp-h${dp}dp-round-watch-xhdpi")
+    RuntimeEnvironment.setQualifiers("$language-w${dp}dp-h${dp}dp-round-watch-xhdpi")
     Res.install(ApplicationProvider.getApplicationContext())
     compose.setContent { WatchTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
     compose.onRoot().captureRoboImage(File(repo, "android/play/wear-screenshots-v2/$size/$name.png").path)
-    assertEquals("en", Res.language)
+    assertEquals(language, Res.language)
   }
 
   private val act = Actions.none
@@ -138,6 +141,32 @@ class WearV2Screenshots(private val size: String, private val dp: Int) {
   /** Halt this taf, asked once more: Halt now in red, Cancel grey. */
   @Test fun haltAsked() = shot("14-halt-confirm") {
     pages(Page.Coach, haltPick = WatchModel.HaltPick(listOf(parcels, support, leads), setOf("taf_1"), confirming = true))
+  }
+
+  /** A taf's chat (row 44, B): its last turns, then the send bar, a round keyboard and a round microphone, and a quick reply. */
+  @Test fun aTafsChat() = shot("15-taf-chat") {
+    val chat = WatchModel.TafChat(WatchModel.TafChat.History.Read(listOf(
+      bot.tafs.watchlink.ChatLine("m1", mine = true, at = "2026-11-19T20:00:00Z", text = "Anything late today?"),
+      bot.tafs.watchlink.ChatLine("m2", mine = false, at = "2026-11-19T20:00:05Z", text = "Two parcels, both reshipped."),
+    )))
+    TafScreen(WatchModel.OpenTaf("taf_1", parcels, WatchModel.TafRead.Read(page), chat), null, act, openInbox = {}, chat = true,
+      pager = rememberPagerState { 3 })
+  }
+
+  /** Not sure it arrived: ↻ retries, named for TalkBack. */
+  @Test fun notSure() = shot("16-not-sure") { VoiceScreenV2(WatchModel.Voice.Unsure("Move my call", "w_00000001", null), act) }
+
+  /** Coach's Type and Quick reply under their icons, in English and in German, whose "Schnellantwort" steps its size down to fit. */
+  @Test fun typeAndQuickReply() = shot("17-type-quick") { typeAndQuick() }
+
+  @Test fun typeAndQuickReplyInGerman() = shot("17-type-quick-de", language = "de") { typeAndQuick() }
+
+  @Composable
+  private fun typeAndQuick() = Box(Modifier.fillMaxSize().padding(horizontal = 14.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
+    androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+      IconOverWord(Words.Watch.type, {}, HOME_TYPE, Modifier.weight(1f)) { keyboardGlyph(it) }
+      IconOverWord(Words.Watch.quickReply, {}, HOME_QUICK, Modifier.weight(1f)) { quickGlyph(it) }
+    }
   }
 
   companion object {

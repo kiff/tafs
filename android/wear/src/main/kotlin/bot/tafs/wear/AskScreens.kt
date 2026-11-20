@@ -205,16 +205,6 @@ private fun RoundAction(label: String, onClick: () -> Unit, color: Color, glyph:
 }
 
 @Composable
-internal fun SendButton(label: String, onClick: () -> Unit, width: Dp = 116.dp) {
-  Button(
-    onClick = onClick,
-    modifier = Modifier.height(40.dp).width(width),
-    colors = ButtonDefaults.buttonColors(containerColor = Look.send, contentColor = Look.onSend),
-    contentPadding = PaddingValues(horizontal = 8.dp),
-  ) { T(label, 14.sp, Look.onSend, FontWeight.SemiBold, Modifier.fillMaxWidth(), lines = 1) }
-}
-
-@Composable
 internal fun QuietButton(label: String, onClick: () -> Unit) {
   TextButton(
     onClick = onClick,
@@ -282,7 +272,8 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         Spacer(Modifier.height(3.dp))
         T(Words.Watch.checkPhone, 12.sp, Look.dim, modifier = Modifier.width(140.dp), lineHeight = 15.sp)
         Spacer(Modifier.height(10.dp))
-        SendButton(Words.Watch.retry, act.retry)
+        RoundIcon(Words.Watch.retry, act.retry, RETRY, size = 48.dp, container = Look.send, content = Look.onSend) { againGlyph(it) }
+        Spacer(Modifier.height(4.dp))
         keep?.let { QuietButton(Words.Watch.keepForLater, it) }
         QuietButton(Words.Common.cancel, act.closeVoice)
       }

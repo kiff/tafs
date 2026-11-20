@@ -249,7 +249,7 @@ private fun ReviewActions(act: Actions, modifier: Modifier = Modifier) {
 
 /** A round icon button, named [label] for TalkBack; its glyph is drawn and carries no word. */
 @Composable
-private fun RoundIcon(
+internal fun RoundIcon(
   label: String,
   onClick: () -> Unit,
   tag: String,
@@ -316,7 +316,7 @@ private fun DrawScope.sendGlyph(color: Color) {
 }
 
 /** ↻: a clockwise circle, open at the top right, with its arrowhead. */
-private fun DrawScope.againGlyph(color: Color) {
+internal fun DrawScope.againGlyph(color: Color) {
   val d = size.minDimension
   val c = center
   val sw = d * 0.11f
