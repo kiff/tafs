@@ -53,9 +53,11 @@ struct NavStack<Content: View>: View {
     }
 }
 
+/// What's copied is the text alone: no direction character, so a code, a key or an IBAN copied from a right-to-left
+/// screen (whose values are set apart by FSI … PDI, `Words.isolated`) pastes as its own characters (qa-kiff, #1557).
 enum Clipboard {
     static func copy(_ text: String) {
-        UIPasteboard.general.string = text
+        UIPasteboard.general.string = Words.withoutDirection(text)
     }
 
     /// A secret shown once (an `api` door's key): kept on this device only, never on the person's other devices through
@@ -63,7 +65,7 @@ enum Clipboard {
     static let secretLifetime: TimeInterval = 60
 
     static func copySecret(_ text: String, now: Date = Date()) {
-        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: text]],
+        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: Words.withoutDirection(text)]],
                                       options: secretOptions(now: now))
     }
 
