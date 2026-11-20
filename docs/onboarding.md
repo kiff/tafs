@@ -63,3 +63,7 @@ Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboardi
     refusal, nothing is kept;
   - **anything else** says signing in didn't work, with the tick kept, so Continue tries again. A link back with
     another state ends the attempt: a tab hands back one link, so there's no code left to wait for.
+- **A tablet** also offers **Sign in with your phone** under Continue, waiting on the same tick, as iPad does: the
+  sign-in sheet's phone half only (`SignInSheet(phoneOnly = true)`), with no KIFF code. That way goes through
+  pairing, which sends no terms version yet; KIFF recording it on the pairing claim is asked for before the switch
+  goes on.
