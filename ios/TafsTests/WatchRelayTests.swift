@@ -697,11 +697,15 @@ final class WatchRelayTests: XCTestCase {
     func testReadMoreReadsTheWholeAnswerByTheRequestsId() async {
         let reading = kept(CurrentKeyOnly())
         let long = String(repeating: "Refunded A-1052. ", count: 40)
-        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","text":"\#(long)","words":"Done"}}"#)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","words":"Done"},"text":"\#(long)"}"#)
         let whole = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
         XCTAssertEqual(whole.coach?.text, long.trimmingCharacters(in: .whitespaces), "the whole `text`, not the line")
         XCTAssertEqual(whole.coach?.more, false)
         XCTAssertEqual(StubProtocol.sent.last?.url?.query, "full=1")
+        // tafs cloud's shape (#1505): `text` beside `ask`. One inside `ask` is not the whole answer.
+        StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","text":"inside","words":"Done"}}"#)
+        let inside = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
+        XCTAssertEqual(inside, WatchReply(.failed, line: Words.Watch.moreOnPhone))
         // No `text` (the run hasn't finished, or the taf is no longer the person's to use): the rest is on the phone.
         StubProtocol.responses["GET /v1/watch/asks/wa_9?full=1"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"Refunded A-1052.","words":"Done"}}"#)
         let none = await reading.askFull(WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
