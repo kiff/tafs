@@ -87,6 +87,16 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   - **Where tafs cloud's switch for it is off** for the account (404 `watch_off`), or on a tafs cloud without the route,
     the words go to Coach's chat as before.
   - W3's follow-up (`CoachFollow`) reads the request the same way when the watch is put away.
+- **Chatting with a taf (20 Nov, the phone's half; the wrist's screens follow the owner's pick).** A
+  `coach_send` that names a `taf` sends that taf's id as `taf_id` in the same signed body (`{client_id, text, reply_to?,
+  taf_id}`), so the words go into that taf's own chat as the person, behind tafs cloud's `TAFS_WATCH_TAF_CHAT`
+  (`KeptWatchReading.tafSend`). They **never go to Coach**: with the switch off (404 `watch_taf_chat_off`), a taf the
+  person may not use (404 `no_taf`) or Coach's own taf (400 `coach_taf`), the watch says to open the phone. A follow-up
+  replies to the taf's last request. A request that ends waiting on the person (`held: true`) says "Approve on your
+  phone"; an answer past 400 characters (`more: true`) says the rest is on the phone. The watch keeps nothing of a taf's
+  chat.
+  On the wrist, `CoachModel` takes the taf's id: its Send names it, a phone from before it never sends the words to
+  Coach by v1's send, and its answers never go to the Inbox.
 
 ## Coach
 

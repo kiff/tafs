@@ -405,6 +405,38 @@ final class CoachModelTests: XCTestCase {
         }
     }
 
+    // MARK: Chatting with a taf (docs/watch-ask.md)
+
+    /// A taf's chat sends its words naming the taf, and reads the answer as Coach's is read; the Inbox isn't told, since
+    /// the watch keeps nothing of a taf's chat.
+    func testATafChatsSendNamesTheTafAndKeepsNothing() async {
+        let phone = TwoStepPhone(reads: [WatchReply(.ok, coach: Self.rae, answering: false)])
+        let model = CoachModel(phone: phone, taf: "depl_1", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        var told = 0
+        model.onAnswer = { _, _ in told += 1 }
+        model.review("Refund A-1052 too")
+        await model.sendReviewed()
+        XCTAssertEqual(phone.asked.first, WatchRequest(.coachSend, made: now, taf: "depl_1", text: "Refund A-1052 too",
+                                                       message: "6f1c2a4e-0b8d-4e57-9a3c-2d5e8f7b1c90"))
+        XCTAssertEqual(model.state, .answered(Self.rae))
+        XCTAssertEqual(model.turns.map(\.said), ["Refund A-1052 too"])
+        XCTAssertEqual(told, 0, "nothing of a taf's chat goes to the Inbox")
+    }
+
+    /// A phone from before chatting with a taf: the words stay in the review, and never go to Coach by v1's send.
+    func testATafChatNeverFallsBackToCoachOnAnOlderPhone() async {
+        let phone = V1Phone(refusing: .coachSend, answer: WatchReply(.ok, coach: Self.rae))
+        let model = CoachModel(phone: phone, taf: "depl_1", clock: { self.now }, lock: Unlocked(), newID: IDs().next, pause: {})
+        model.review("Hi")
+        await model.sendReviewed()
+        XCTAssertEqual(model.state, .failed(Words.Watch.openOnPhone))
+        XCTAssertEqual(phone.asked.map(\.kind), [.coachSend], "no v1 Coach send")
+        XCTAssertTrue(model.reviewing, "the words stay")
+        model.draft = "Hi"
+        await model.send()
+        XCTAssertEqual(phone.asked.map(\.kind), [.coachSend], "v1's send is Coach's, never a taf's")
+    }
+
     /// Quick reply: four lines, in Wear OS's order, each its own words.
     func testQuickReplyIsFourLinesInWearsOrder() {
         XCTAssertEqual(CoachModel.quickReplies, [Words.Watch.Qr.needsMeToday, Words.Watch.Qr.tellMeMore, Words.Watch.Qr.notNow,

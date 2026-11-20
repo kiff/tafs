@@ -24,7 +24,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
         /// Who is signed in, and the plan's line (watch v2). Read only.
         case account
         /// v2's Send (W2): Coach's words as `coach` sends them, answered as soon as tafs cloud has them, with where Coach's
-        /// answer will be (`WatchReply.ticket`), so the watch can say "Sent" before Coach answers.
+        /// answer will be (`WatchReply.ticket`), so the watch can say "Sent" before Coach answers. With `taf`, the words go
+        /// to that taf's own chat instead (chatting with a taf, docs/watch-ask.md), never to Coach.
         case coachSend = "coach_send"
         /// v2 (W2): Coach's answer so far to the words a ticket names, and whether Coach is still at it. Read only.
         case coachRead = "coach_read"
@@ -42,7 +43,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
     var made: Date
     /// Refuse: KIFF's id for the held call.
     var hold: String?
-    /// Halt: tafs cloud's id for the taf. Halt all names none.
+    /// Halt: tafs cloud's id for the taf. Halt all names none. `coachSend`: the taf whose own chat takes the words.
     var taf: String?
     /// Coach: the person's words, as the watch's dictation wrote them. Never audio.
     var text: String?
@@ -83,7 +84,9 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .halt: return given(taf)
         case .taf: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
         case .calendar: return day.map(Self.isDay) ?? true
-        case .coach, .coachSend: return given(text) && (text ?? "").count <= Self.coachLimit
+        case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
+        case .coachSend:
+            return given(text) && (text ?? "").count <= Self.coachLimit && (taf.map { given($0) && $0.count <= Self.tafIDLimit } ?? true)
         case .coachRead: return ticket?.isComplete ?? false
         }
     }

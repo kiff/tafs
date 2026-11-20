@@ -17,11 +17,18 @@ extension TafsCloud {
         var taf: Taf? = nil
         var line: String? = nil
         var words: String = ""
+        /// Chatting with a taf: the taf waits on the person (a held call, a question, a paused run), which is answered on
+        /// the phone. The request ends `done` with it.
+        var waitsOnPerson: Bool = false
+        /// The taf's answer went on past its 400 characters: the rest is on the phone.
+        var more: Bool = false
 
-        enum CodingKeys: String, CodingKey { case id, state, taf, line, words }
+        enum CodingKeys: String, CodingKey { case id, state, taf, line, words, held, more }
 
-        init(id: String, state: String, taf: Taf? = nil, line: String? = nil, words: String = "") {
+        init(id: String, state: String, taf: Taf? = nil, line: String? = nil, words: String = "", waitsOnPerson: Bool = false,
+             more: Bool = false) {
             self.id = id; self.state = state; self.taf = taf; self.line = line; self.words = words
+            self.waitsOnPerson = waitsOnPerson; self.more = more
         }
 
         init(from decoder: Decoder) throws {
@@ -31,21 +38,24 @@ extension TafsCloud {
             taf = try? c.decodeIfPresent(Taf.self, forKey: .taf)
             line = (try? c.decodeIfPresent(String.self, forKey: .line)).flatMap { $0.isEmpty ? nil : $0 }
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
+            waitsOnPerson = (try? c.decodeIfPresent(Bool.self, forKey: .held)) ?? false
+            more = (try? c.decodeIfPresent(Bool.self, forKey: .more)) ?? false
         }
 
         /// What the watch shows: the line when there is one, else tafs cloud's words for the state.
         var shown: String { line ?? words }
         /// Done, no taf took it, or it failed: nothing more comes.
         var ended: Bool { ["done", "no_taf", "failed"].contains(state) }
-        /// A call the taf's Cards hold waits for the owner on the phone: the request stays `working`, with a line saying so.
-        var held: Bool { state == "working" && line != nil }
+        /// A call the taf's Cards hold waits for the owner on the phone: Coach's request stays `working`, with a line saying
+        /// so; a taf chat's ends with `held: true`.
+        var held: Bool { waitsOnPerson || (state == "working" && line != nil) }
     }
 
     static let watchAsksPath = "/v1/watch/asks"
 
-    /// The body a watch request sends, as the device key signs it: these exact bytes, `{client_id, text, reply_to?}` and
-    /// nothing else (tafs cloud refuses any other field).
-    nonisolated static func watchAskBody(clientID: String, text: String, replyTo: String?) -> Data {
+    /// The body a watch request sends, as the device key signs it: these exact bytes, `{client_id, text, reply_to?, taf_id?}`
+    /// and nothing else (tafs cloud refuses any other field). The signature covers `taf_id`, so it can't be changed after.
+    nonisolated static func watchAskBody(clientID: String, text: String, replyTo: String?, tafID: String? = nil) -> Data {
         func quoted(_ s: String) -> String {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.withoutEscapingSlashes]
@@ -53,6 +63,7 @@ extension TafsCloud {
         }
         var fields = ["\"client_id\":\(quoted(clientID))", "\"text\":\(quoted(text))"]
         if let replyTo { fields.append("\"reply_to\":\(quoted(replyTo))") }
+        if let tafID { fields.append("\"taf_id\":\(quoted(tafID))") }
         return Data(("{" + fields.joined(separator: ",") + "}").utf8)
     }
 

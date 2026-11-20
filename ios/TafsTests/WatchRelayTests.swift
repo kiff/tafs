@@ -625,6 +625,72 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty)
     }
 
+    // MARK: Chatting with a taf (docs/watch-ask.md)
+
+    /// The words go to the taf the watch names: `taf_id` is in the exact body the device key signs, so it can't be changed
+    /// after, and Coach's chat isn't written to.
+    func testATafChatSendNamesTheTafInTheSignedBody() async throws {
+        let signer = CurrentKeyOnly()
+        let reading = kept(signer)
+        StubProtocol.responses["POST /v1/watch/asks"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"accepted","words":"Sent · Refunds has it"}}"#)
+        let messageID = UUID()
+        let reply = await reading.tafSend(taf: "depl_1", text: "Refund A-1052 too", messageID: messageID, after: nil)
+        XCTAssertEqual(reply, WatchReply(.ok, ticket: WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil)))
+        let body = try XCTUnwrap(sent("POST", "/v1/watch/asks").last?.httpBody)
+        XCTAssertEqual(String(decoding: body, as: UTF8.self),
+                       #"{"client_id":"\#(messageID.uuidString.lowercased())","text":"Refund A-1052 too","taf_id":"depl_1"}"#)
+        XCTAssertEqual(signer.signed.count, 1, "signed once, with the device key")
+        XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty, "Coach's chat isn't written to")
+        // A follow-up replies to the taf's last request.
+        _ = await reading.tafSend(taf: "depl_1", text: "And A-1053?", messageID: UUID(),
+                                  after: WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil))
+        let next = String(decoding: try XCTUnwrap(sent("POST", "/v1/watch/asks").last?.httpBody), as: UTF8.self)
+        XCTAssertTrue(next.hasSuffix(#","reply_to":"wa_9","taf_id":"depl_1"}"#))
+    }
+
+    /// Whatever tafs cloud refuses, a taf's words never go to Coach: with the switch off (`watch_taf_chat_off`), a taf the
+    /// person may not use (`no_taf`) or Coach's own taf (`coach_taf`), the watch says to open the phone.
+    func testATafChatNeverFallsBackToCoach() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"message":{"id":"m1"}}"#)
+        for (status, code) in [(404, "watch_taf_chat_off"), (404, "no_taf"), (404, "watch_off"), (400, "coach_taf")] {
+            StubProtocol.responses["POST /v1/watch/asks"] = (status, #"{"error":"no","code":"\#(code)"}"#)
+            let reply = await reading.tafSend(taf: "depl_1", text: "Hi", messageID: UUID(), after: nil)
+            XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.openOnPhone), code)
+        }
+        XCTAssertTrue(sent("POST", "/v1/tafs/taf-setup/messages").isEmpty, "never Coach's chat")
+        StubProtocol.responses["POST /v1/watch/asks"] = (403, #"{"error":"this device can only view","code":"view_only"}"#)
+        let viewOnly = await reading.tafSend(taf: "depl_1", text: "Hi", messageID: UUID(), after: nil)
+        XCTAssertEqual(viewOnly, WatchReply(.failed, line: Words.Watch.viewOnlyPhone))
+    }
+
+    /// A taf chat's request that ends waiting on the person (`held: true`) says "Approve on your phone"; one whose answer
+    /// went on past 400 characters (`more: true`) says the rest is on the phone.
+    func testATafChatsAnswerSaysHeldAndMore() async {
+        let reading = kept(CurrentKeyOnly())
+        let ticket = WatchCoachTicket(chat: WatchCoachTicket.askChat, session: "wa_9", sent: nil)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","held":true,"line":"A-1039 is €84, over its Card. It waits for you.","words":"Done"}}"#)
+        let held = await reading.coachRead(ticket)
+        XCTAssertEqual(held.coach?.approveOnPhone, true)
+        XCTAssertEqual(held.answering, false)
+        StubProtocol.responses["GET /v1/watch/asks/wa_9"] = (200, #"{"ask":{"id":"wa_9","client_id":"x","state":"done","more":true,"line":"This week: 31 refunds paid…","words":"Done"}}"#)
+        let long = await reading.coachRead(ticket)
+        XCTAssertEqual(long.coach, WatchCoachAnswer(text: "This week: 31 refunds paid…", more: true, approveOnPhone: false))
+    }
+
+    /// A taf chat's Send names its taf, or it's refused before anything is read or signed; a reader from before it sends
+    /// nothing.
+    func testATafChatSendNamesItsTaf() async {
+        let reading = Reading(at: now)
+        for taf in [" ", String(repeating: "a", count: WatchRequest.tafIDLimit + 1)] {
+            let refused = await send(WatchRequest(.coachSend, made: now, taf: taf, text: "Hi"), reading: reading)
+            XCTAssertEqual(refused, WatchReply(.refused))
+        }
+        XCTAssertTrue(reading.untouched)
+        let old = await send(WatchRequest(.coachSend, made: now, taf: "depl_1", text: "Hi"), reading: reading)
+        XCTAssertEqual(old, WatchReply(.notYet), "the fake reader is one from before chatting with a taf")
+    }
+
     /// W2: a refusal at Send is v1's, in the phone's words.
     func testCoachSendRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
         let reading = coachReading()
