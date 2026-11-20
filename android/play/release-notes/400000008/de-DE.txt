@@ -1,0 +1,4 @@
+tafs fragen, direkt vom Zifferblatt.
+- Füge die Komplikation tafs fragen hinzu: Ein Tippen öffnet tafs, bereit zuzuhören.
+- Sie zeigt nur ein Mikrofon, ein gesperrtes Zifferblatt verrät also nichts.
+- tafs auf der Uhr gibt es jetzt auf Koreanisch.

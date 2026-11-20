@@ -381,6 +381,10 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
 
+**400,000,008 (0.4.3)** adds Ask tafs on the watch face (the complication, #1570) and Korean (#1572), and no hidden
+direction character from a server reaches the watch (#1549). To `wear:internal` on merge, with its notes in the 8
+languages and Korean (ko-KR, the listing's language since 20 Nov).
+
 **400,000,007 (0.4.2)** turns chatting with a taf on (`WATCH_TAF_CHAT`, the owner's picks 1A, 2A and Read more), with
 a taf's message never kept for later (#1515), for the owner's tap-to-text timing on the Galaxy Watch. tafs cloud's switch
 stays per account. To `wear:internal` on merge, with its notes in 8 languages.
@@ -411,7 +415,7 @@ tarjeta, scheda, mosaico, tegel, karta).
 - **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear
   OS internal track, `wear:internal`, and no other: one edit, the bundle, the track's release with its notes, committed.
   The sign-in is the phone's (workload identity federation). A bundle Play reads as another `versionCode` commits nothing.
-- **Release notes:** `android/play/release-notes/<versionCode>/<locale>.txt`, in the same 8 languages, the watch's codes
+- **Release notes:** `android/play/release-notes/<versionCode>/<locale>.txt`, in the same languages as the phone's (Korean since 0.4.2), the watch's codes
   being in their own band. `test` checks the watch's current ones (`play_internal.py --wear --check`).
 - **Before `WEAR_UPLOAD` goes on:** Play takes a watch bundle only once the listing has the Wear OS form factor (Play
   Console › Test and release › Advanced settings › Form factors), which is a store-listing change and the owner's.
