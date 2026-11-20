@@ -447,7 +447,12 @@ def generated(folder=HERE, preview=()):
     langs = languages(folder)
     source = load("en", folder)
     lines = {lang: load(lang, folder) for lang in langs["all"]}
-    shipped = langs["shipped"] + [lang for lang in preview if lang in langs["all"] and lang not in langs["shipped"]]
+    previewed = [lang for lang in preview if lang in langs["all"] and lang not in langs["shipped"]]
+    shipped = langs["shipped"] + previewed
+    # A previewed language's missing lines are English in its own catalog: a key without a line of its own would
+    # otherwise show as the key itself ("record.title"), since the app reads the language's own table.
+    for lang in previewed:
+        lines[lang] = {**source, **lines[lang]}
     files = {IOS_CATALOG: ios_catalog(source, shipped, lines), IOS_SWIFT: ios_swift(source, lines, shipped),
              IOS_AGES: ios_ages(ages(folder))}
     android = None if preview else android_emitter()
