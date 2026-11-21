@@ -1,0 +1,19 @@
+{
+  "halt_all.description": "Aptur visus taf uzreiz. Nekas jauns netiek sūtīts, līdz tu tos turpini tafs lietotnē.",
+  "halt_all.failed": "tafs nevarēja apturēt tavus taf. {why} Atver tafs, lai tos apturētu.",
+  "halt_all.halted": {
+    "zero": "Apturēti {count} taf. Nekas jauns netiek sūtīts, līdz tu turpini.",
+    "one": "Apturēts {count} taf. Nekas jauns netiek sūtīts, līdz tu turpini.",
+    "other": "Apturēti {count} taf. Nekas jauns netiek sūtīts, līdz tu turpini."
+  },
+  "halt_all.halted_all": "Tavi taf ir apturēti. Nekas jauns netiek sūtīts, līdz tu turpini.",
+  "halt_all.halting": {
+    "zero": "Aptur {count} taf: neviena palaišana nesākas. KIFF vēl nav apstiprinājis visas daļas; tafs parādīs, kad būs.",
+    "one": "Aptur {count} taf: neviena palaišana nesākas. KIFF vēl nav apstiprinājis visas daļas; tafs parādīs, kad būs.",
+    "other": "Aptur {count} taf: neviena palaišana nesākas. KIFF vēl nav apstiprinājis visas daļas; tafs parādīs, kad būs."
+  },
+  "halt_all.halting_all": "Aptur tavus taf: neviena palaišana nesākas. KIFF vēl nav apstiprinājis visas daļas; tafs parādīs, kad būs.",
+  "halt_all.running": "tafs nevarēja apturēt tavus taf. Atver tafs, lai tos apturētu.",
+  "halt_all.signed_out": "Tu esi izrakstījies no tafs. Pieraksties, lai apturētu savus taf.",
+  "halt_all.title": "Apturēt visus taf"
+}

@@ -1,0 +1,1 @@
+- **Doors from another application can be turned on for one account first:** `TAFS_API_DOORS` takes a comma-separated list of accounts as well as `on`, so a test account proves a door end to end before it's on for everyone.

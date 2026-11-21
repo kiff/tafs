@@ -99,11 +99,11 @@ class SharedWords(unittest.TestCase):
             self.assertLessEqual(age, 21, country)
 
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
-        # The eight ship, and Korean with them (complete, PM 20 Nov). Japanese is being written: not shipped until
-        # every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
+        # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
+        # ships only once every key is there, so no app shows half a language.
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -258,7 +258,7 @@ class SharedWords(unittest.TestCase):
     def test_a_line_that_is_a_glossary_term_is_that_term_in_every_language(self):
         terms = glossary()
         self.assertIn("Approve once", terms)
-        # A shipped language not yet in the Terms table (ko) is held to its table under "Korean and Japanese".
+        # A shipped language not yet in the Terms table (ko, ja) is held to its table under "Korean and Japanese".
         for english, words in glossary_being_written().items():
             for lang, word in words.items():
                 if lang in self.langs["shipped"]:

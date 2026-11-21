@@ -289,7 +289,10 @@ exits 0 on an unsigned bundle too) and prints the signer certificate's SHA-256 i
 watch's. The temporary keystore is removed however the step ends. Neither bundle is kept as a run artifact: the repository
 is public, so Play holds the only copy.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
-it once into the secrets store, and `android/release.sh` builds with it. The app has no native
+it once into the secrets store, and `android/release.sh` builds with it. CI's release jobs read it from the GitHub secret
+`ANDROID_UPLOAD_KEY` (the same JSON: `keystore` in base64, `store_password`, `key_password`, `alias`), which only the
+`android-release` environment's jobs see. Until that secret is set, they read Secrets Manager's copy through the release
+role, as before. Each run's log says which ("The upload key: from GitHub"). The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
 stripped (`libandroidx.graphics.path.so` for Compose, `libdatastore_shared_counter.so` for
 DataStore), with no symbol table or debug sections, so there are no native symbols to put in the
@@ -1812,6 +1815,14 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. For an account KIFF still
   has on UTC, on a phone that isn't, that read happens before the account first shows (Android 1.20.2, as on iPhone and
   iPad), so the question never comes up for it. A later mismatch is still asked, as before.
+  It's never asked over the celebration of a sign-in inside the app (`InAppSignedIn`), and nor is "Your data and the AI": both wait until
+  "You're connected" is gone, then open in order. Two names for one fixed offset (GMT, UTC, Etc/UTC) are the same time, so
+  a phone on GMT is never asked to move an account on UTC (`AppModel.sameTime`); a zone with a summer time still differs.
+- **A phone with no fingerprint enrolled** holds no approval key, so KIFF makes its session view-only
+  (`AppState.noApprovalKeyHere`). The lines that say why approving isn't possible here (Needs you's `ApprovalKeyLine`,
+  Account) then say "Add a fingerprint to this phone to approve from it. Refusing still works."
+  (`approval.no_fingerprint`), not only "Sign in again", which changes nothing until a fingerprint is added. Sign in
+  again stays offered, since KIFF learns the new key at the next sign-in (`viewOnlyLine`).
 - **A taf made with no plan** says so on Coach's card, with **Choose a plan**, which opens Plan & usage.
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it

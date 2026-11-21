@@ -131,8 +131,9 @@ term that recurs is added here first, then used.
 
 ## Korean and Japanese (apart from the Terms table)
 
-`ko` ships (tafs#1572); `ja` has every line but is in `all`, not `shipped` (app/strings/README.md), so neither app
-shows it yet. Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
+`ko` ships (tafs#1572), and `ja` with it since 21 Nov. tafs cloud speaks `ko` and `ja` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
+language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` or `ja` yet, so a
+Korean or Japanese phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
 **Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading
@@ -189,6 +190,141 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Setup | セットアップ |
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
+
+## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
+`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
+
+### Estonian (et)
+
+Addressed as **sina**; buttons are sina imperatives. taf, Coach and Card take Estonian endings with no apostrophe (tafi,
+tafsi, Cardi, Coachilt). A value (`{taf}`, `{device}`, `{vendor}`) never takes an ending, so a sentence stands it in the
+nominative ("tafi {taf} Card", "see {device}").
+
+| English | Estonian |
+|---|---|
+| Needs you | Vajab sind |
+| Approve / Approve once | Kinnita / Kinnita üks kord |
+| Refuse | Keeldu |
+| held | kinni peetud |
+| Halt / Halted | Peata / Peatatud |
+| Stopped | Lõpetatud |
+| Pause / Paused | Pausile / Pausil |
+| Resume | Jätka |
+| Revoke | Tühista |
+| Record | Logi |
+| Connect / connection | Ühenda / ühendus |
+| Pair | Seo |
+| Account | Konto |
+| limit / spend limit | limiit / kululimiit |
+| credits / credit pack | krediidid / krediidipakett |
+| Sign in / Sign out | Logi sisse / Logi välja |
+| Inbox | Postkast |
+| Overview | Ülevaade |
+| Calendar | Kalender |
+| Setup | Seadistus |
+| Usage | Kasutus |
+| plan (billing) | pakett |
+| Cancel / Continue | Loobu / Edasi |
+
+### Greek (el)
+
+Addressed as **εσύ**. The glossary's buttons are nouns (Έγκριση, Άρνηση, Παύση, Συνέχιση); other buttons are
+imperatives (Δοκίμασε ξανά). In running text the names take an article: η Card / οι Cards (as the legal drafts write
+it), ο Coach, η KIFF, το taf / τα tafs. Every device word is neuter (τηλέφωνο, tablet, Mac, PC), so "αυτό το {device}"
+always agrees. A line that fills "από {who}" is written in the accusative.
+
+| English | Greek |
+|---|---|
+| Needs you | Σε χρειάζεται |
+| Approve / Approve once | Έγκριση / Έγκριση μία φορά |
+| Refuse | Άρνηση |
+| held | σε αναμονή |
+| Halt / Halted | Σταμάτημα / Σταματημένο |
+| Stopped | Διακόπηκε |
+| Pause / Paused | Παύση / Σε παύση |
+| Resume | Συνέχιση |
+| Revoke | Ανάκληση |
+| Record | Ιστορικό |
+| Connect / connection | Σύνδεση / σύνδεση |
+| Pair | Σύζευξη |
+| Account | Λογαριασμός |
+| limit / spend limit | όριο / όριο δαπανών |
+| credits / credit pack | μονάδες / πακέτο μονάδων |
+| Sign in / Sign out | Σύνδεση / Αποσύνδεση |
+| Inbox | Εισερχόμενα |
+| Overview | Επισκόπηση |
+| Calendar | Ημερολόγιο |
+| Setup (a taf's screen) | Διαμόρφωση |
+| Usage / plan (the subscription) | Χρήση / πρόγραμμα |
+| Coach's plan (its steps) | Σχέδιο |
+| Decline | Απόρριψη |
+
+### Lithuanian (lt)
+
+Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF, Setup and
+tafs cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
+(`{taf}`, `{device}`, `{biometry}`) stands alone in the nominative ("taf {taf} Card", "Patvirtinti: {biometry}").
+
+| English | Lithuanian |
+|---|---|
+| Needs you | Laukia jūsų |
+| Approve / Approve once | Patvirtinti / Patvirtinti vieną kartą |
+| Refuse | Atmesti |
+| held | sulaikyta |
+| Halt / Halted | Sustabdyti / Sustabdyta |
+| Stopped | Nutraukta |
+| Pause / Paused | Pristabdyti / Pristabdyta |
+| Resume | Tęsti |
+| Revoke | Atšaukti |
+| Record | Žurnalas |
+| Connect / connection | Prijungti / ryšys |
+| Pair / Unpair | Susieti / Atsieti |
+| Account | Paskyra |
+| limit / spend limit | limitas / išlaidų limitas |
+| credits / credit pack | kreditai / kreditų paketas |
+| Sign in / Sign out | Prisijungti / Atsijungti |
+| Inbox | Gautieji |
+| Overview | Apžvalga |
+| Calendar | Kalendorius |
+| Setup | Setup (a name, never declined) |
+| Usage | Naudojimas |
+| plan | planas |
+| door / knock | durys / beldimas |
+
+### Latvian (lv)
+
+Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,
+Card and Coach take no endings, and the plural is "taf" ("{count} taf"), as the legal drafts write it; Setup stays a
+name. A value stands alone ("šajā ierīcē ({device})", "Durvis: {door}"), and a line another line fills is written in
+the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… locative).
+
+| English | Latvian |
+|---|---|
+| Needs you | Gaida tevi |
+| Approve / Approve once | Apstiprināt / Apstiprināt vienreiz |
+| Refuse | Atteikt |
+| held | aizturēts |
+| Halt / Halted | Apturēt / Apturēts |
+| Stopped | Pārtraukts |
+| Pause / Paused | Iepauzēt / Iepauzēts |
+| Resume | Turpināt |
+| Revoke | Atsaukt |
+| Record | Žurnāls |
+| Connect / connection | Pievienot / savienojums |
+| Pair | Savienot pārī |
+| Account | Konts |
+| limit / spend limit | limits / tēriņu limits |
+| credits / credit pack | kredīti / kredītu pakete |
+| Sign in / Sign out | Pierakstīties / Izrakstīties |
+| Inbox | Iesūtne |
+| Overview | Pārskats |
+| Calendar | Kalendārs |
+| Usage | Lietojums |
+| plan | plāns |
+| door / knock | durvis / klauvējiens |
 
 ## The AI disclosure
 

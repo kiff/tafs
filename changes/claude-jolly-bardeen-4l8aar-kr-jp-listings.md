@@ -1,0 +1,1 @@
+- **Store listings in Korean and Japanese** (docs/store-listing.md): the Korean App Store listing, and the Japanese App Store and Google Play listings, for Korea's and Japan's store-ready launch; pasted once kiff.dev serves the Korean and Japanese legal pages.

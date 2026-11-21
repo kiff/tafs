@@ -11,10 +11,16 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   on. A key's first part is its feature and names its file: `drive.paused` is in
   `<lang>/drive.json`. So two PRs on different features never touch the same file.
 - **`en/`** is the source and the list of keys.
-- **`de/`, `fr/`, `es/`, `it/`, `pt/`, `nl/`, `pl/`, `ko/`** hold the same keys in each language (Korean
-  shipped 20 Nov, tafs#1572).
-- **`ja/`** has every key but is in `all`, not `shipped`, so neither app shows it. It moves to
-  `shipped` by its own PR.
+- **`de/`, `fr/`, `es/`, `it/`, `pt/`, `nl/`, `pl/`, `ko/`, `ja/`** hold the same keys in each language
+  (Korean shipped 20 Nov, tafs#1572; Japanese 21 Nov).
+- **`et/`** (batch 1, with el, lv and lt to follow) has every key, in `all`, not `shipped`, until its review. It ships
+  by its own PR.
+- **`el/`** (batch 1, with et, lv and lt) has every key, in `all`, not `shipped`, until its review. It ships by its own
+  PR.
+- **`lt/`** (batch 1, with el, et and lv) has every key, in `all`, not `shipped`, until its review. It ships by its own
+  PR.
+- **`lv/`** (batch 1, with el, et and lt) has every key, in `all`, not `shipped`, until its review. It ships by its own
+  PR.
 - **A new feature** is a new file in each language's folder, named as its keys begin.
 - **A key in another feature's file, or in two files,** is refused: the generator and its
   checks fail.

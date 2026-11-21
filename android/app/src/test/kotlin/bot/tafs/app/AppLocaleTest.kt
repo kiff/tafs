@@ -35,7 +35,7 @@ class AppLocaleTest {
 
   @Test fun aLanguageTafsDoesntShipIsIgnored() {
     val kept = Kept("it")
-    assertFalse(AppLocale.keep(kept, "ja"))
+    assertFalse(AppLocale.keep(kept, "tr"))
     assertFalse(AppLocale.keep(kept, ""))
     assertEquals("it", kept.tag)
     // One kept somehow reads as the phone's language.
@@ -64,10 +64,10 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(11, rows.size)
+    assertEquals(12, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "pt-BR" to "Português (Brasil)"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "pt-BR" to "Português (Brasil)"),
       rows.drop(1).map { it.tag to it.title },
     )
     assertEquals("This tablet's language", AppLocale.choices(device = "tablet").first().title)

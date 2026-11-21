@@ -192,7 +192,9 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     // the same app, so the job is never shown on an app the gallery couldn't connect.
     .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)) && (connects === null || connects.has(fold(v))))))
     .map((r): Recipe => {
-      const w = lang === "en" ? r : r.languages[baseLanguage(lang) as Exclude<Lang, "en" | "pt-BR">];
+      // A language the recipes aren't written in yet (Korean) reads them in English, as the job's say does.
+      const base = baseLanguage(lang);
+      const w = base === "en" || !(base in r.languages) ? r : r.languages[base as keyof typeof r.languages];
       // One line says what the job does, in the Card's terms: no problem headline over it, and no line on what waiting
       // costs today (the app-words cut, screen 2). The apps draw no empty line.
       return { id: r.id, title: w.title, category: r.category, headline: w.line, today: "", line: "", say: w.say,

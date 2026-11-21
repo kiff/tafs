@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Συνόψεις",
+  "push.channel.briefs_description": "Η σύνοψή σου στις ώρες που όρισες.",
+  "push.channel.holds_description": "Μια κλήση είναι σε αναμονή για την απάντησή σου. Τίποτα δεν στέλνεται μέχρι να την εγκρίνεις.",
+  "push.channel.other": "Άλλες ειδοποιήσεις",
+  "push.channel.other_description": "Αιτήματα για εργασίες και οι απαντήσεις τους, χωρίς ήχο.",
+  "push.channel.urgent_description": "Ό,τι δεν μπορεί να περιμένει την επόμενη σύνοψή σου, με ήχο.",
+  "push.open_needs_you": "Άνοιξε το «Σε χρειάζεται» για να απαντήσεις.",
+  "push.open_taf": "Άνοιξε το taf για να δεις.",
+  "push.open_usage": "Άνοιξε το «Πρόγραμμα και χρήση» για να δεις."
+}

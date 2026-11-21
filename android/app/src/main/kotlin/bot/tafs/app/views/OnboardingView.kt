@@ -74,6 +74,12 @@ fun OnboardingView(
    * sheet is open neither loses one nor unticks the box twice): each new one unticks the box and says why.
    */
   phoneTermsChanged: Int = 0,
+  /**
+   * Whether the person is back from KIFF's sign-in tab with no answer from it (`AppModel.appSignInLeft`), and the way to end that
+   * wait (`AppModel.endAppSignIn`): Continue is never left busy with nothing on screen while the tab is gone.
+   */
+  signInLeft: Boolean = false,
+  endSignIn: () -> Unit = {},
 ) {
   var tick by rememberSaveable { mutableStateOf(false) }
   val consent = ConsentTick(tick)
@@ -105,6 +111,8 @@ fun OnboardingView(
       }
     }
   }
+  // Back from the tab with no answer while Continue waits: the wait ends, and Continue says it didn't work and is free again.
+  LaunchedEffect(signInLeft, busy) { if (signInLeft && busy) endSignIn() }
   val onContinue: () -> Unit = if (!onboarding || signInInApp == null) onSignIn else ({
     problem = null
     termsChanged = false
