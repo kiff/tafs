@@ -132,9 +132,9 @@ term that recurs is added here first, then used.
 ## Korean and Japanese (apart from the Terms table)
 
 `ko` ships (tafs#1572); `ja` has every line but is in `all`, not `shipped` (app/strings/README.md), so neither app
-shows it yet. tafs cloud speaks `ko` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
-language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` yet, so a
-Korean phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
+shows it yet. tafs cloud speaks `ko` and `ja` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
+language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` or `ja` yet, so a
+Korean or Japanese phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
 **Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading
@@ -229,6 +229,39 @@ nominative ("tafi {taf} Card", "see {device}").
 | Usage | Kasutus |
 | plan (billing) | pakett |
 | Cancel / Continue | Loobu / Edasi |
+
+### Greek (el)
+
+Addressed as **εσύ**. The glossary's buttons are nouns (Έγκριση, Άρνηση, Παύση, Συνέχιση); other buttons are
+imperatives (Δοκίμασε ξανά). In running text the names take an article: η Card / οι Cards (as the legal drafts write
+it), ο Coach, η KIFF, το taf / τα tafs. Every device word is neuter (τηλέφωνο, tablet, Mac, PC), so "αυτό το {device}"
+always agrees. A line that fills "από {who}" is written in the accusative.
+
+| English | Greek |
+|---|---|
+| Needs you | Σε χρειάζεται |
+| Approve / Approve once | Έγκριση / Έγκριση μία φορά |
+| Refuse | Άρνηση |
+| held | σε αναμονή |
+| Halt / Halted | Σταμάτημα / Σταματημένο |
+| Stopped | Διακόπηκε |
+| Pause / Paused | Παύση / Σε παύση |
+| Resume | Συνέχιση |
+| Revoke | Ανάκληση |
+| Record | Ιστορικό |
+| Connect / connection | Σύνδεση / σύνδεση |
+| Pair | Σύζευξη |
+| Account | Λογαριασμός |
+| limit / spend limit | όριο / όριο δαπανών |
+| credits / credit pack | μονάδες / πακέτο μονάδων |
+| Sign in / Sign out | Σύνδεση / Αποσύνδεση |
+| Inbox | Εισερχόμενα |
+| Overview | Επισκόπηση |
+| Calendar | Ημερολόγιο |
+| Setup (a taf's screen) | Διαμόρφωση |
+| Usage / plan (the subscription) | Χρήση / πρόγραμμα |
+| Coach's plan (its steps) | Σχέδιο |
+| Decline | Απόρριψη |
 
 ### Lithuanian (lt)
 

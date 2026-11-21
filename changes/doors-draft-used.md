@@ -1,0 +1,1 @@
+- **Coach's door card says "Door made from this draft" once a door came from it**, and "This draft lapsed: ask Coach again" once it lapsed, in the person's language, instead of a generic error when the chat is opened again ([doors.md](docs/doors.md)).
