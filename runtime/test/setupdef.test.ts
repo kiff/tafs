@@ -153,8 +153,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
-  it("never writes an id to the owner", () => {
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
+  // 21 Nov (the emulator's Moneybird pass): "Use none_until_approved for the draft." reached the owner as a Coach line.
+  it("never writes an id, or a field or value of its tools, to the owner", () => {
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's), nor a field or value of your tools (effect, none_until_approved, resource_argument)");
   });
 
   it("signs a signed-out grant in again, never with a new request", () => {

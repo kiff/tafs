@@ -1,0 +1,1 @@
+- **Coach never writes a field or value of its tools to the owner:** "none_until_approved" reached the owner as a Coach line.

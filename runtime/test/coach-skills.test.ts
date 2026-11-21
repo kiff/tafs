@@ -73,8 +73,9 @@ describe("Coach's core", () => {
     expect(SETUP_INSTRUCTIONS).toBe(SETUP_CORE);
     // 2,520 since Eval 44128040350: the "read only" line (17 tokens) went in with the core at 2,499. 2,550 since Eval
     // 44204192951: the same line names an app's data left unchanged (an option "the sheet isn't changed" on a wide
-    // sign-in), and says a Card's never-lines stay its rules, so they're still proposed (draft-the-card@39).
-    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2550);
+    // sign-in), and says a Card's never-lines stay its rules, so they're still proposed (draft-the-card@39). 2,570 since
+    // 21 Nov: the id rule names a tool's fields and values too ("Use none_until_approved for the draft." reached the owner).
+    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2570);
     expect(SETUP_CORE).toContain(SKILLS_MAP);
     for (const s of COACH_SKILLS) expect(SETUP_CORE.includes(`  - ${s.name}: ${s.description}`), s.name).toBe(!NAMED_ONLY.includes(s.name));
     // The watch's skill is named-only: Coach's map never names it, so no phone conversation reads it (docs/watch-ask.md).
