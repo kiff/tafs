@@ -320,6 +320,45 @@ class Generator(unittest.TestCase):
         self.assertEqual(catalog["usage.all"]["localizations"]["de"]["stringUnit"]["value"], "100% used")
         self.assertEqual(catalog["home.title"]["localizations"]["de"]["stringUnit"]["value"], "Tafs")
 
+    def test_a_regional_variant_is_its_base_with_its_own_lines_on_top(self):
+        # pt-BR (languages.json's "variants") holds only the lines that read differently in Brazil: every other key reads
+        # as pt's, so the variant never falls behind. Shipped, it's its own iOS localization and Android's values-pt-rBR.
+        folder = self.write({
+            "languages.json": {"all": ["en", "pt"], "shipped": ["en", "pt", "pt-BR"], "variants": {"pt-BR": "pt"}},
+            "ages.json": {"default": 16},
+            "en.json": {"home.title": "Tafs", "needs_you.title": "Needs you", "home.count": {"one": "{count} taf", "other": "{count} tafs"}},
+            "pt.json": {"home.title": "Tafs", "needs_you.title": "Precisa de si", "home.count": {"one": "{count} taf", "other": "{count} tafs"}},
+        })
+        os.makedirs(os.path.join(folder, "pt-BR"))
+        with open(os.path.join(folder, "pt-BR", "needs_you.json"), "w", encoding="utf-8") as f:
+            json.dump({"needs_you.title": "Precisa de você"}, f, ensure_ascii=False)
+        lines = generate.load_lines(folder)
+        self.assertEqual(lines["pt-BR"]["needs_you.title"], "Precisa de você", "the variant's own line")
+        self.assertEqual(lines["pt-BR"]["home.title"], "Tafs", "the base's line where the variant has none")
+        self.assertEqual(generate.base_of("pt-BR", folder), "pt")
+        self.assertEqual(generate.base_of("pt", folder), "pt")
+        files = {os.path.relpath(p, REPO): t for p, t in generate.generated(folder).items()}
+        catalog = json.loads(files["ios/Tafs/Localizable.xcstrings"])["strings"]
+        self.assertEqual(catalog["needs_you.title"]["localizations"]["pt-BR"]["stringUnit"]["value"], "Precisa de você")
+        self.assertEqual(catalog["needs_you.title"]["localizations"]["pt"]["stringUnit"]["value"], "Precisa de si")
+        self.assertEqual(catalog["home.title"]["localizations"]["pt-BR"]["stringUnit"]["value"], "Tafs")
+        counts = [k for k in catalog if k.startswith("home.count")]
+        self.assertTrue(counts, "the count is in the catalog")
+        self.assertTrue(all("pt-BR" in catalog[k]["localizations"] for k in counts), "a count takes its base's plural forms")
+        self.assertIn('"pt-BR"', files["ios/Tafs/Design/Words.swift"])
+        import android
+        self.assertEqual(android.folder("pt-BR"), "values-pt-rBR")
+        self.assertEqual(android.folder("pt"), "values-pt")
+        self.assertIn("android/app/src/main/res/values-pt-rBR/strings.xml", files)
+        self.assertIn("Precisa de você", files["android/app/src/main/res/values-pt-rBR/strings.xml"])
+        self.assertIn('<locale android:name="pt-BR" />', files["android/app/src/main/res/xml/locales_config.xml"])
+
+    def test_with_no_variant_shipped_nothing_changes(self):
+        # The repo's own languages.json: a variant only takes effect once it's in "shipped".
+        langs = generate.languages()
+        for variant in langs.get("variants", {}):
+            self.assertNotIn(variant, langs["shipped"], "a variant ships only with its own lines read and the apps wired")
+
     def test_the_age_table_is_written_for_the_welcome(self):
         swift = self.files["ios/Tafs/Design/MinimumAge.swift"]
         self.assertIn("static let standard = 16", swift)

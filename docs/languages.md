@@ -198,6 +198,24 @@ German, Portuguese and Italian today. **Dutch and Polish come with the language 
 een AI-agent voor <writes_for>." and "Napisane przez agenta AI dla <writes_for>.", each with the words
 that tell a message's language, in tafs and kiff/agents together.
 
+## Regional variants
+
+A **regional variant** is a language's lines for one region where some read differently: `pt-BR` beside `pt`
+(`app/strings/languages.json`'s `variants`, `"pt-BR": "pt"`). Its folder, `app/strings/pt-BR/`, holds **only the
+lines that differ** from its base, one file per feature as every language's. `generate.py` (`load_lines`) reads the
+variant as its base's lines with its own on top, so a key it doesn't change reads as the base's and it never falls
+behind. A count takes its base's plural forms.
+
+**A variant is declared, not shipped,** until it's in `shipped`. While it isn't, nothing generated changes. Once it is:
+iOS's catalog gets a `pt-BR` localization and `Words.languages` lists it; Android gets `values-pt-rBR` and a `pt-BR` entry
+in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, each app is checked where it maps a
+language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
+set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`.
+
+**pt-BR** (Wave 1, Brazil) is declared, with no lines of its own yet. Brazil opens on the `pt` (pt-PT) lines, and pt-BR's
+lines follow as a priority, written by the language reviewer: "Precisa de você", "Registro", "celular" and the
+like, each a line that reads differently in Brazil.
+
 ## How it's built
 
 - **tafs cloud:** a catalog per language in `runtime/src/cloud/words/`, English the source (`en.ts`),
