@@ -289,7 +289,10 @@ exits 0 on an unsigned bundle too) and prints the signer certificate's SHA-256 i
 watch's. The temporary keystore is removed however the step ends. Neither bundle is kept as a run artifact: the repository
 is public, so Play holds the only copy.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
-it once into the secrets store, and `android/release.sh` builds with it. The app has no native
+it once into the secrets store, and `android/release.sh` builds with it. CI's release jobs read it from the GitHub secret
+`ANDROID_UPLOAD_KEY` (the same JSON: `keystore` in base64, `store_password`, `key_password`, `alias`), which only the
+`android-release` environment's jobs see. Until that secret is set, they read Secrets Manager's copy through the release
+role, as before. Each run's log says which ("The upload key: from GitHub"). The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
 stripped (`libandroidx.graphics.path.so` for Compose, `libdatastore_shared_counter.so` for
 DataStore), with no symbol table or debug sections, so there are no native symbols to put in the
