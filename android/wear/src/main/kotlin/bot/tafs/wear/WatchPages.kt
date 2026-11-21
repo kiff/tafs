@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -204,6 +207,15 @@ internal fun WatchPages(
     linkTrace?.let {
       Text(it, fontSize = 8.sp, color = Look.faint, maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp))
     }
+    // The last read on screen while a fresh one comes (row 44, D): one small dot at the top, named for TalkBack.
+    if ((shown as? WatchModel.Shown.Read)?.updating == true) {
+      androidx.compose.foundation.layout.Box(
+        Modifier.align(Alignment.TopCenter).padding(top = 6.dp).size(5.dp)
+          .background(Look.dim, androidx.compose.foundation.shape.CircleShape)
+          .testTag(UPDATING)
+          .semantics { contentDescription = Words.Common.loading },
+      )
+    }
     HorizontalPageIndicator(pager, Modifier.align(Alignment.BottomCenter))
   }
 }
@@ -376,3 +388,5 @@ private fun MenuScreen(shown: WatchModel.Shown, pages: List<Page>, act: Actions,
     item { Button(onClick = close, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.close) } }
   }
 }
+
+internal const val UPDATING = "updating"

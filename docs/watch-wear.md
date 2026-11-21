@@ -575,11 +575,18 @@ watch doesn't know is shown as Open on phone, never guessed at.
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.
+  - `watch-cache.bin` (`WatchCache`, row 44, D), so the watch opens at once: Needs you's count, and each taf's
+    name and whether it's halted or paused. Not Needs you's line, never a held call's details, never a taf's state line (it can name what a call wants),
+    never a taf's chat. Encrypted with AES-GCM under a key in the watch's Android Keystore (`KeystoreCacheStore`). Cleared on
+    either sign-out, whenever the app opens or refreshes while the watch is locked or has no screen lock (Wear OS locks a watch
+    taken off the wrist), and after 24 hours. On start, the pages draw it at once with a small dot at the top ("Loading" for
+    TalkBack) while the phone is asked; the phone's read replaces it. If the phone doesn't answer, the last read stays, with the
+    dot, for 30 s (`UNREACHABLE_AFTER_MS`), and only then is the phone called unreachable (`WatchCacheTest`).
   - `files/voice/`, in a test version only (`KEEP_AUDIO`): the review's recording, erased when the review is left and swept at
     start, put-away and sign-out here. A production build keeps no recording.
   - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
 
-  In memory only, forgotten when the app is put away: the reads, the asks, an open result, a taf's page, the halt pick, the
+  In memory only, forgotten when the app is put away: the reads (apart from the cache above), the asks, an open result, a taf's page, the halt pick, the
   calendar day, and Account's read (email, account name, plan). No tokens or keys, and no amount, merchant or person's name in a
   log on the watch or in the phone's relay.
 - **Voice:** the watch's own speech recognizer makes text, and only the text goes to the phone and tafs cloud, after the AI
