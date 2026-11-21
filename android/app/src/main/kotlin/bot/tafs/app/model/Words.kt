@@ -583,6 +583,30 @@ object Words {
     fun youStopped(taf: String): String = Res.s(R.string.chat_you_stopped, taf)
     val yourTaf: String get() = Res.s(R.string.chat_your_taf)
   }
+  object Chrome {
+    fun browserOn(browser: String, system: String): String = Res.s(R.string.chrome_browser_on, browser, system)
+    val codeBody: String get() = Res.s(R.string.chrome_code_body)
+    val codeTitle: String get() = Res.s(R.string.chrome_code_title)
+    val confirm: String get() = Res.s(R.string.chrome_confirm)
+    val expired: String get() = Res.s(R.string.chrome_expired)
+    val footer: String get() = Res.s(R.string.chrome_footer)
+    val nameLabel: String get() = Res.s(R.string.chrome_name_label)
+    val none: String get() = Res.s(R.string.chrome_none)
+    fun notLoaded(why: String): String = Res.s(R.string.chrome_not_loaded, why)
+    fun offeredSays(browser: String, system: String): String = Res.s(R.string.chrome_offered_says, browser, system)
+    val offeredTitle: String get() = Res.s(R.string.chrome_offered_title)
+    val onlyYours: String get() = Res.s(R.string.chrome_only_yours)
+    val pair: String get() = Res.s(R.string.chrome_pair)
+    fun pairNotStarted(why: String): String = Res.s(R.string.chrome_pair_not_started, why)
+    fun pairPrompt(name: String): String = Res.s(R.string.chrome_pair_prompt, name)
+    fun paired(name: String): String = Res.s(R.string.chrome_paired, name)
+    val profileNote: String get() = Res.s(R.string.chrome_profile_note)
+    val refused: String get() = Res.s(R.string.chrome_refused)
+    val remove: String get() = Res.s(R.string.chrome_remove)
+    fun removeNamed(name: String): String = Res.s(R.string.chrome_remove_named, name)
+    val title: String get() = Res.s(R.string.chrome_title)
+    val waiting: String get() = Res.s(R.string.chrome_waiting)
+  }
   object Coach {
     object Activity {
       val card: String get() = Res.s(R.string.coach_activity_card)

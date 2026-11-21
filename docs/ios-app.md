@@ -1067,6 +1067,28 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 - **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
 - Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
 
+## Pairing a Chrome
+
+Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, with Unpair, and **Pair a Chrome**
+(`PairChromeView`). The extension's side, and the contract all three sides build to, is
+[chrome.md](chrome.md). The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves
+`AppModel.chromes` nil, so planque's switch decides, never the app.
+
+- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 6-character secret
+  itself (`ChromePairing.newSecret`) and never sends it. It shows `lookup-secret`, with "Pair only a Chrome on a computer
+  you're at".
+- **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`). An
+  offer that doesn't hold means another extension used the lookup: nothing is paired, and the sheet says so.
+- **One prompt, naming the Chrome, signs the confirmation.** Only the approval key pairs a Chrome, since the extension
+  later opens a sealed sign-in only on that key's release. A phone without one doesn't open a pairing, as on Android. It
+  signs `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's key and its proof under
+  the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
+  next connect.
+- Its lines are `chrome.*`, shared with Android, which follows.
+- **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`), and `PlanqueTests`' Chrome tests (the
+  row only once planque offers it, an offer shown only on its proof, the confirmation's proof and signature verified).
+
 ### The sign-in screen
 
 The approved redesign (`SignInView`, `PairSignInView`, `ConnectedView`, `SignInArt`). Every word is a shared

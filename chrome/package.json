@@ -1,0 +1,9 @@
+{
+  "name": "tafs-chrome",
+  "private": true,
+  "type": "module",
+  "description": "tafs in your Chrome: the MV3 extension (docs/chrome.md).",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

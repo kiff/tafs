@@ -1,0 +1,123 @@
+import CryptoKit
+import Foundation
+
+/// The phone's side of pairing a Chrome (docs/chrome.md, "Pairing"): the code it shows, the check of the extension's proof,
+/// and the confirmation it signs. The code's last 17 characters are a secret this phone makes and never sends: the
+/// extension proves its key under it, and this phone proves its own key under it, so planque, which relays both, can't put
+/// another key on either side. Nothing here asks for Face ID; `AppModel.confirmChrome` signs the body this builds.
+enum ChromePairing {
+    /// The code's characters: no 0, 1, I, L, O or U.
+    static let alphabet = Array("23456789ABCDEFGHJKMNPQRSTVWXYZ")
+    /// 17 characters of 30, about 83 bits: planque stores the extension's proof, so the secret must hold against an
+    /// offline search of it.
+    static let secretLength = 17
+
+    static let pairLabel = "tafs-chrome/pair/v1"
+    static let extensionProofLabel = "tafs-chrome/ext/v1"
+    static let phoneProofLabel = "tafs-chrome/phone/v1"
+
+    /// A new secret, from the system's random source.
+    static func newSecret() -> String {
+        var generator = SystemRandomNumberGenerator()
+        return String((0..<secretLength).map { _ in alphabet.randomElement(using: &generator)! })
+    }
+
+    /// The code as the phone shows it: the lookup planque gave, then the secret in groups of four
+    /// ("K7QF-29XM-DPQR-STVW-XYZ2-3"). The extension takes it with or without the dashes.
+    static func code(lookup: String, secret: String) -> String {
+        var groups = [lookup]
+        var rest = Substring(secret)
+        while !rest.isEmpty {
+            groups.append(String(rest.prefix(4)))
+            rest = rest.dropFirst(4)
+        }
+        return groups.joined(separator: "-")
+    }
+
+    /// HMAC-SHA256 under the secret, over label ‖ 0x00 ‖ data.
+    static func hmac(_ secret: String, _ label: String, _ data: Data) -> Data {
+        var message = Data(label.utf8)
+        message.append(0)
+        message.append(data)
+        return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: Data(secret.utf8))))
+    }
+
+    /// Whether `proof` is the extension's proof of `key` (its SPKI DER), and of its KIFF offer's text, under our secret.
+    /// A wrong one means another extension used the code's lookup, or planque changed either: nothing is paired.
+    static func extensionProofHolds(secret: String, key: Data, proof: String, kiffOffer: String = "") -> Bool {
+        guard let given = base64URLDecoded(proof) else { return false }
+        // The proof covers the KIFF device's offer too, when the extension sends one: planque can swap neither key.
+        let expected = hmac(secret, extensionProofLabel, key + Data(kiffOffer.utf8))
+        return given.count == expected.count && zip(given, expected).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
+    }
+
+    /// The SHA-256 of the extension's SPKI DER, in lowercase hex, as the signed body names it.
+    static func chromeKeyHash(_ key: Data) -> String {
+        SHA256.hash(data: key).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// This phone's proof of its key and the extension's under the secret: HMAC(secret, phone label ‖ phone key ‖ sha256(chrome key)).
+    static func phoneProof(secret: String, phoneKey: Data, chromeKey: Data) -> String {
+        var data = phoneKey
+        data.append(contentsOf: SHA256.hash(data: chromeKey))
+        return base64URL(hmac(secret, phoneProofLabel, data))
+    }
+
+    /// What the phone signs to confirm the pairing, and sends with its signature.
+    struct Confirmation: Encodable, Equatable {
+        let chromeKeySHA256: String
+        let name: String
+        let phoneKey: String
+        let phoneProof: String
+        var phoneSig = ""
+
+        enum CodingKeys: String, CodingKey {
+            case chromeKeySHA256 = "chrome_key_sha256", name, phoneKey = "phone_key", phoneProof = "phone_proof", phoneSig = "phone_sig"
+        }
+    }
+
+    static func confirmation(secret: String, chromeKey: Data, name: String, phoneKey: Data) -> Confirmation {
+        Confirmation(chromeKeySHA256: chromeKeyHash(chromeKey), name: name, phoneKey: base64URL(phoneKey),
+                     phoneProof: phoneProof(secret: secret, phoneKey: phoneKey, chromeKey: chromeKey))
+    }
+
+    /// The bytes the phone signs for `confirmation` of pairing `pairing`: label ‖ 0x00 ‖ JCS of
+    /// `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`.
+    static func signedBytes(pairing: String, _ c: Confirmation) throws -> Data {
+        let body: JCS.Value = .object([
+            "pairing": .string(pairing),
+            "chrome_key_sha256": .string(c.chromeKeySHA256),
+            "name": .string(c.name),
+            "phone_key": .string(c.phoneKey),
+            "phone_proof": .string(c.phoneProof),
+        ])
+        var out = Data(pairLabel.utf8)
+        out.append(0)
+        out.append(try JCS.canonical(body))
+        return out
+    }
+
+    /// A signature as the contract sends it: raw r‖s, base64url without padding, from the base64 DER the signer gives.
+    static func rawSignature(fromDER base64: String) throws -> String {
+        guard let der = Data(base64Encoded: base64) else { throw CryptoKitError.incorrectParameterSize }
+        return base64URL(try P256.Signing.ECDSASignature(derRepresentation: der).rawRepresentation)
+    }
+
+    /// A name for the Chrome: the owner's, trimmed, at most 40 characters; the browser's own words when they gave none.
+    static func name(_ typed: String, browser: String) -> String {
+        let trimmed = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        return String((trimmed.isEmpty ? browser : trimmed).prefix(40))
+    }
+
+    static func base64URL(_ data: Data) -> String {
+        data.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    static func base64URLDecoded(_ text: String) -> Data? {
+        guard text.allSatisfy({ $0.isLetter && $0.isASCII || $0.isNumber && $0.isASCII || $0 == "-" || $0 == "_" }) else { return nil }
+        var s = text.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        s += String(repeating: "=", count: (4 - s.count % 4) % 4)
+        return Data(base64Encoded: s)
+    }
+}
