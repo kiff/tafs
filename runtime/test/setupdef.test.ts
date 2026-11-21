@@ -368,7 +368,11 @@ describe("Setup's definition on kiff/agents", () => {
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
     expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
-    expect(flat).toContain("named from that operation's fields as the vendor's docs give them, never one you make up");
+    // A money argument's unit is the currency code, cents being its scale: a Card in "cents" with the call in EUR had KIFF
+    // refuse every refund (Eval 44871215788, setup EN run 1), and an invalid unit wasn't registered (Eval 44861045509).
+    // Any currency, the one the operation uses, so a USD account's refund tool is in USD (mac-local, tafs#1631).
+    expect(flat).toContain('Name the argument that moves money, its unit the currency code the operation uses (EUR, USD…; never "cents": cents are scale 2), and make it required');
+    expect(flat).toContain("money it moves, in its own units, named from its fields as the vendor's docs give them, never one you make up");
     // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
     expect(flat).toContain("The operation's fields say whether it moves money, not what it is about: one about money that takes no amount field (contesting a claim on a payment, reminding a customer of an invoice) moves no money here. It has no amount argument, and its Card limits its calls a day.");
     // The owner's own limit is the limit (item 44).

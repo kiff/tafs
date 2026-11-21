@@ -32,7 +32,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   needs, each under its own name with that argument pinned to that operation:
   Never leave the operation to the taf. Such an operation's own fields aren't in the catalog, and their
   names aren't the thing's (a read of one item can take it as id): never guess
-  or rename them, even from an API you know. When the vendor has a read-only tool that
+  or rename them. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
   in the first planque request's setup_reads field (never a tool), so
   you can read it yourself. Once it's connected, it isn't among your tools until you
@@ -57,10 +57,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   properties: {"Status": {type: "string"}}}`). A field is plain or an array; a
   nested one's fields are arguments at their paths.
   Leave every other argument to the taf (arguments): its Card limits what
-  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit and scale,
+  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, its unit the currency code the operation uses (EUR, USD…; never "cents": cents are scale 2),
   and make it required: only an argument the vendor's operation takes for the
-  money it moves, in its own units, named from that operation's fields as
-  the vendor's docs give them, never one you make up. A tool that changes
+  money it moves, in its own units, named from its fields as the vendor's docs give them, never one you make up. A tool that changes
   data but moves no money (posting a reply, moving a meeting, sharing a file)
   has no amount argument. The operation's fields say whether it moves money,
   not what it is about: one about money that takes no amount field
@@ -69,7 +68,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A row number is never `resource_argument`: limit a sheet write by calls a day. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
-  name, the read's argument that takes the same id, and where its answer gives it, such as currency): KIFF refuses a call in another unit. Ask for a taf's tools once, complete (read_only, pins,
+  name, the read's argument that takes the same id, and where its answer gives it): KIFF refuses a call in another unit. Ask for a taf's tools once, complete (read_only, pins,
   arguments): each change is one more approval. Mark tools that
   only read as read_only: reading in the owner's account is open, with no limits.
 - Test or live is the owner's choice, never yours, when the vendor has both.
