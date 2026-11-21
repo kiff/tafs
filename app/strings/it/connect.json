@@ -155,6 +155,7 @@
   "connect.status.choosing_tools": "Accesso effettuato · Coach sta scegliendo i suoi strumenti",
   "connect.status.connected": "Collegato",
   "connect.status.signed_out": "Disconnesso da {vendor} · accedi di nuovo",
+  "connect.status.signed_out_plain": "Disconnesso · accedi di nuovo",
   "connect.status.waiting_sign_in": "In attesa dell'accesso su {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Questo taf non è ancora su tafs cloud, quindi non si possono collegare app per lui.",
   "connect.tafs_cloud_named_no_connection": "tafs cloud non ha indicato nessun collegamento da approvare",

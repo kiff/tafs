@@ -155,6 +155,7 @@
   "connect.status.choosing_tools": "Signed in · Coach is choosing its tools",
   "connect.status.connected": "Connected",
   "connect.status.signed_out": "Signed out by {vendor} · sign in again",
+  "connect.status.signed_out_plain": "Signed out · sign in again",
   "connect.status.waiting_sign_in": "Waiting for the sign-in at {vendor}",
   "connect.taf_not_tafs_cloud_apps": "This taf isn't on tafs cloud yet, so apps can't be connected for it.",
   "connect.tafs_cloud_named_no_connection": "tafs cloud named no connection to approve",

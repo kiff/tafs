@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Sesión iniciada · Coach está eligiendo sus herramientas</string>
     <string name="connect_status_connected">Conectado</string>
     <string name="connect_status_signed_out">%1$s cerró la sesión · vuelve a iniciar sesión</string>
+    <string name="connect_status_signed_out_plain">Sesión cerrada · vuelve a iniciar sesión</string>
     <string name="connect_status_waiting_sign_in">Esperando el inicio de sesión en %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Este taf aún no está en tafs cloud, así que no se le pueden conectar apps.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud no indicó ninguna conexión que aprobar</string>

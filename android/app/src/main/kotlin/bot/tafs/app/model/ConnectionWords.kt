@@ -122,8 +122,12 @@ object ConnectionWords {
     else -> g.status.replace('_', ' ').replaceFirstChar { it.uppercase() }
   }
 
-  /** A connection its vendor signed out, in planque's words; before planque sends them, the app's. */
-  fun signedOut(g: Grant): String = g.statusWords?.takeIf { it.isNotBlank() } ?: Words.Connect.Status.signedOut(g.vendor)
+  /**
+   * A connection that was signed out, in planque's words (`status_words`, which name who did it: the vendor, or a removed
+   * connection whose sign-in it used). Before planque sends them, the app's plain "Signed out · sign in again": true whoever did
+   * it, since the app can't tell (planque's `reason` is English for the log, never shown).
+   */
+  fun signedOut(g: Grant): String = g.statusWords?.takeIf { it.isNotBlank() } ?: Words.Connect.Status.signedOutPlain
 
   /** The tools the taf has through it, in words; Coach's own reads are not the taf's. */
   fun tools(g: Grant): String = g.request.tools.filter { it.tafs }.joinToString(" · ") { it.words }

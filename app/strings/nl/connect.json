@@ -155,6 +155,7 @@
   "connect.status.choosing_tools": "Ingelogd · Coach kiest de tools",
   "connect.status.connected": "Gekoppeld",
   "connect.status.signed_out": "Uitgelogd door {vendor} · log opnieuw in",
+  "connect.status.signed_out_plain": "Uitgelogd · log opnieuw in",
   "connect.status.waiting_sign_in": "Wacht op de login bij {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Dit taf staat nog niet op tafs cloud, dus er kunnen geen apps voor worden gekoppeld.",
   "connect.tafs_cloud_named_no_connection": "tafs cloud noemde geen koppeling om goed te keuren",

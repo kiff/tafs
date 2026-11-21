@@ -155,6 +155,7 @@
   "connect.status.choosing_tools": "Sessão iniciada · o Coach está a escolher as ferramentas",
   "connect.status.connected": "Ligado",
   "connect.status.signed_out": "Sessão terminada por {vendor} · inicie sessão novamente",
+  "connect.status.signed_out_plain": "Sessão terminada · inicie sessão novamente",
   "connect.status.waiting_sign_in": "À espera do início de sessão em {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Este taf ainda não está no tafs cloud, por isso não é possível ligar apps para ele.",
   "connect.tafs_cloud_named_no_connection": "O tafs cloud não indicou nenhuma ligação para aprovar",

@@ -574,7 +574,10 @@ sign-out or another sign-in on the way is told by the account's generation, as b
 
 **A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner in the
 home list, at the top with the held calls, its row reading planque's `status_words` ("Signed out
-by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). On the taf's Card tab its
+by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). Before planque sends its words, the app's own are the
+plain "Signed out · sign in again" (`connect.status.signed_out_plain`), true whoever signed it out: "by {vendor}" isn't, when
+planque signed it out because the connection whose sign-in it used was removed (`reused_sign_in_gone`). Who did it is planque's
+to say, in `status_words`. On the taf's Card tab its
 connection says the same, with **Sign in again**: one approval, then the vendor's own page
 (`AppModel.reconnect`), and "Connected" only once planque answers connected.
 
