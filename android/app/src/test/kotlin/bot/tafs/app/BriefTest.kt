@@ -551,9 +551,7 @@ class BriefTest {
     val state = AppState()
     assertNull(state.brief)
     assertEquals(Words.NeedsYou.title, state.needsYouTabTitle)
-    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText().replace("
-", "
-")
+    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText().replace("\r\n", "\n")
     assertTrue("no brief: Needs you, as today", view.contains("if (brief == null) {\n    needsYou()\n    return\n  }"))
     val main = File("src/main/kotlin/bot/tafs/app/MainActivity.kt").readText()
     assertTrue(main.contains("Tab.NeedsYou -> BriefTab(state, briefActions"))
