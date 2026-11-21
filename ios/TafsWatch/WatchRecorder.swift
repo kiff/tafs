@@ -5,8 +5,8 @@ import SwiftUI
 /// itself, since the system's dictation ends on its own pause rule and hands back text, never the sound. The recording ends
 /// on ✓, at `WatchVoice.limit`, or after about `WatchVoice.quietEnds` with nothing said. Then it goes to the paired iPhone,
 /// which turns it into text with its on-device recognizer only, and the text goes to Check before sending: nothing is sent
-/// before Send. **Deleted on the watch** once the text is back, on Cancel, when the screen closes, and after
-/// `WatchVoice.keepFor` at most; anything left is swept when recording starts.
+/// before Send. **Deleted on the watch** once the text is back, on Cancel, and when the screen closes; anything an ended
+/// app left is swept when the app starts and when recording starts (`sweepLeftovers`).
 @MainActor
 final class VoiceModel: ObservableObject {
     enum State: Equatable {
@@ -121,8 +121,14 @@ final class VoiceModel: ObservableObject {
         id = nil
     }
 
-    /// Anything a closed screen or an ended process left, and anything older than `keepFor`.
+    /// Anything a closed screen or an ended process left.
     private func sweep() {
+        try? FileManager.default.removeItem(at: folder)
+    }
+
+    /// At the app's start: a recording an app ended mid-transfer left behind goes.
+    nonisolated static func sweepLeftovers(
+        folder: URL = FileManager.default.temporaryDirectory.appendingPathComponent("voice", isDirectory: true)) {
         try? FileManager.default.removeItem(at: folder)
     }
 }

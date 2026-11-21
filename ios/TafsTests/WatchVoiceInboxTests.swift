@@ -94,6 +94,31 @@ final class WatchVoiceInboxTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
     }
 
+    /// An id that isn't a recording's is refused before any file is touched, and erasing by it touches nothing.
+    func testOnlyARecordingsIDIsReadOrErased() async throws {
+        let outside = folder.deletingLastPathComponent().appendingPathComponent("keep-me")
+        try Data("x".utf8).write(to: outside)
+        let inbox = inbox(pause: { _ in })
+        let reply = await inbox.transcribe("../keep-me")
+        XCTAssertEqual(reply, WatchReply(.refused))
+        await inbox.erase("../keep-me")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: outside.path))
+    }
+
+    /// A recognizer that never calls back: the phone stops waiting at the limit, and nothing was heard.
+    func testARecognizerThatNeverAnswersEndsAtTheLimit() async {
+        let started = Date()
+        let heard = await OnDeviceWatchTranscriber.firstText(within: 0.2) { _ in }
+        XCTAssertNil(heard)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 5)
+        let first = await OnDeviceWatchTranscriber.firstText(within: 1) { answer in
+            answer("Refund order 1042")
+            answer(nil)
+        }
+        XCTAssertEqual(first, "Refund order 1042")
+        XCTAssertEqual(OnDeviceWatchTranscriber.limit, 20)
+    }
+
     /// Switched off: nothing is taken, and the watch keeps the system's dictation.
     func testOffTakesNothing() async {
         let inbox = inbox(on: false)

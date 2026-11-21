@@ -39,7 +39,9 @@ actor WatchVoiceInbox {
         try? FileManager.default.removeItem(at: kept)
         do {
             try FileManager.default.moveItem(at: file, to: kept)
-            try? (kept as NSURL).setResourceValue(URLFileProtection.complete, forKey: .fileProtectionKey)
+            // Readable while the iPhone is locked, as it usually is in a pocket while the watch is talked to; it lives for
+            // seconds, and goes once read (dev-android on #1635).
+            try? (kept as NSURL).setResourceValue(URLFileProtection.completeUntilFirstUserAuthentication, forKey: .fileProtectionKey)
             return id
         } catch {
             return nil
@@ -60,6 +62,8 @@ actor WatchVoiceInbox {
 
     /// The recording's text, by its id: the phone's on-device recognizer, then the file is erased.
     func transcribe(_ id: String) async -> WatchReply {
+        // Only a recording's id names a file here: nothing else can reach outside the folder.
+        guard WatchVoice.isID(id) else { return WatchReply(.refused) }
         guard on else { return WatchReply(.notYet) }
         guard let url = await file(id) else { return WatchReply(.failed, line: Words.Watch.recordingNotReceived) }
         let reply = await transcriber.transcribe(url)
@@ -68,6 +72,7 @@ actor WatchVoiceInbox {
     }
 
     func erase(_ id: String) {
+        guard WatchVoice.isID(id) else { return }
         arrived[id] = nil
         resume(id, with: nil)
         try? FileManager.default.removeItem(at: folder.appendingPathComponent(id))
@@ -117,19 +122,32 @@ struct OnDeviceWatchTranscriber: WatchTranscribing {
         request.requiresOnDeviceRecognition = true
         request.shouldReportPartialResults = false
         var task: SFSpeechRecognitionTask?
-        let heard: String? = await withCheckedContinuation { done in
-            let once = OnceText(done)
+        let heard = await Self.firstText(within: Self.limit) { answer in
             task = recognizer.recognitionTask(with: request) { result, error in
-                if let result, result.isFinal { once.resume(result.bestTranscription.formattedString) }
-                if error != nil { once.resume(nil) }
+                if let result, result.isFinal { answer(result.bestTranscription.formattedString) }
+                if error != nil { answer(nil) }
             }
         }
-        // The recognizer and its task live until the text is back.
+        // No answer within the limit: the task goes too. The recognizer and its task live until then.
+        if heard == nil { task?.cancel() }
         withExtendedLifetime((recognizer, task)) {}
         guard let text = heard?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
             return WatchReply(.failed, line: Words.Watch.didntCatch)
         }
         return WatchReply(.ok, text: text)
+    }
+
+    /// The most the recognizer is given for 30 s of speech: past it, nothing was heard, and the task is cancelled, so the
+    /// phone never holds a task the watch has stopped waiting for.
+    static let limit: TimeInterval = 20
+
+    /// The first of the recognizer's final text, its error (nil) and the limit (nil), taken once.
+    static func firstText(within limit: TimeInterval, _ start: (@escaping @Sendable (String?) -> Void) -> Void) async -> String? {
+        await withCheckedContinuation { done in
+            let once = OnceText(done)
+            start { once.resume($0) }
+            DispatchQueue.global().asyncAfter(deadline: .now() + limit) { once.resume(nil) }
+        }
     }
 
     /// The recognizer's first final result or error, taken once.

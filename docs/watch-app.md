@@ -386,11 +386,15 @@ as Wear OS's tafs#1587 and #1596).** W12's path below, without Play and Pause. `
   (`watch.update_phone`); no answer (`watch.phone_not_reachable`). Try again; Type stays offered.
 - **Deleted:** on the phone as soon as it's read, whatever the outcome, and otherwise 2 minutes after it arrived, even if no
   request comes (`WatchVoice.keepFor`), and anything a process left when the phone's link starts; on the watch once the
-  text is back, on Cancel or when the screen closes (any transfer still on its way is cancelled first), and when recording
-  starts again. Complete file protection on the phone's copy.
+  text is back, on Cancel or when the screen closes (any transfer still on its way is cancelled first), and when the app or
+  a recording starts. The phone's copy is protected until the phone's first unlock, so it can be read while the phone is
+  locked in a pocket; only a recording's id (a UUID) names a file, and the recognizer gets 20 s at most, then its task is
+  cancelled.
 - **Switched on only** with the privacy page's Apple Watch paragraph saying so (today: "It makes no recording"), its
   microphone prompt (`NSMicrophoneUsageDescription`, in English as the phone's) read by legal-i18n, the owner's yes, and the
-  real-device check below (the phone turning a file into text while tafs is in the background).
+  real-device checks: that iOS runs the on-device recognizer while tafs on the phone is in the background, and that a
+  `transferFile` reaches a backgrounded phone app within the 20 s the phone waits for it. Both decide whether it works with
+  the phone in a pocket.
 
 **W12, Play and Pause on Apple Watch: the plan (not built; held for the owner's yes)**, as the owner asked for the next
 version ("on the watch first", 19 Nov). On Apple Watch only the phone's path exists: watchOS gives an app no speech
