@@ -1013,6 +1013,15 @@ jobs:
           BETA_FEEDBACK_EMAIL: ${{ secrets.BETA_FEEDBACK_EMAIL }}
         run: WHAT_TO_TEST="$(cat ios/WhatToTest.txt)" ruby ios/scripts/asc-beta.rb
 
+      # A K5 build (inputs.k5) says so where a build is picked for App Store review: its What to Test reads "never submit".
+      - name: Mark the K5 build
+        if: github.event_name == 'workflow_dispatch' && inputs.k5
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          BUILD_NUMBER: ${{ github.run_number }}
+          K5: "true"
+        run: ruby ios/scripts/asc-beta.rb
+
       - name: Remove the key and the keychain
         if: always()
         run: |

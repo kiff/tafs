@@ -10,7 +10,8 @@ no other does. Two builds have it:
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue,
   iOS's ask and KIFF's sign-in page, with a screenshot kept at each step (the `k5` artifact).
 - **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
-  testers, whatever `external` says.
+  testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
+  (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
 
 App Store builds never have `TAFS_K5`. The sign-up's email code and GitHub sign-in are left to the device pass.
 
