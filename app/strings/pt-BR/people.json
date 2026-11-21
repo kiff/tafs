@@ -8,6 +8,7 @@
   "people.manager_explains": "Um gestor adiciona e remove os membros do grupo. Gerenciar não lhe permite alterar os Cards de um taf.",
   "people.new_group_hint": "A seguir, adicione as suas pessoas e depois compartilhe um taf com ele a partir da página do taf.",
   "people.not_shared": "Não compartilhado",
+  "people.own_chats": "Cada pessoa tem os seus próprios chats e notas. Mais ninguém os vê no app.",
   "people.share.action": "Compartilhar",
   "people.share.not_shared": "{taf} não será compartilhado",
   "people.share.title": "Compartilhar {taf}",

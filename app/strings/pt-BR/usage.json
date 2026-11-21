@@ -1,4 +1,5 @@
 {
+  "usage.limit_ceiling": "O limite está no máximo que pode ser aumentado a partir do app. Entre em contato com o KIFF para aumentá-lo mais.",
   "usage.limit_changed": "O limite mudou nesse meio-tempo. Aqui está ele agora: aumente-o novamente se ainda for preciso.",
   "usage.manage": "Gerenciar",
   "usage.not_read": "Não foi possível ler o uso. {why}",

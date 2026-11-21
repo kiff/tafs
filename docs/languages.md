@@ -219,7 +219,9 @@ consent) isn't in it: it reads as `pt`'s until the language reviewer writes it. 
 Brazilian Portuguese and keeps pt for Portugal's (`AppLanguage.deviceLanguage`); Android picks `values-pt-rBR` itself.
 Both apps send `Accept-Language: pt-BR, pt;q=0.9, en;q=0.8` from a pt-BR phone: tafs cloud, planque and KIFF read `pt`
 today (their words stay `pt`'s), and can tell Brazil apart once they hold pt-BR words of their own.
-Its glossary, where it differs from Portuguese's:
+No "a + infinitive" ("A verificar…" is "Verificando…") and no enclitics where Brazil puts the pronoun first or says
+"você" ("pede-lhe" is "pede que você"). Card is masculine ("o Card", "pelo seu Card"). Its glossary, where it
+differs from Portuguese's (legal-i18n's read of tafs#1629):
 
 | English | pt-BR |
 |---|---|
@@ -238,6 +240,19 @@ Its glossary, where it differs from Portuguese's:
 | Approve once | Aprovar uma vez |
 | Refuse | Recusar |
 | Halt | Bloquear |
+| app | o app (masculine: "um app", "os seus apps", "Apps conectados") |
+| signed in (to an app, before its approval) | Login feito (never "Conectado", which is a finished connection) |
+| signed out (it happened) | Sessão encerrada; "Você saiu" for the person's own sign-out |
+| Sign out of… ? | Sair do KIFF? / Sair deste relógio? |
+| signed in to your account | conectado à sua conta |
+| waiting for | aguardando |
+| run (a taf runs) | rodar |
+| order | pedido (a parcel is "encomenda") |
+| follow-up | acompanhamento |
+| subscription | assinatura |
+| billing | faturamento |
+| Download | Baixar |
+| the app's Account screen | Conta |
 
 ## How it's built
 

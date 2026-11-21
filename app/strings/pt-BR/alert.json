@@ -1,6 +1,6 @@
 {
   "alert.allow_notifications": "Permita as notificações do tafs nas Configurações e tente novamente.",
-  "alert.foot.tells_you_device": "Quando um taf precisa de você, este {device} avisa-o mesmo com o tafs fechado.",
+  "alert.foot.tells_you_device": "Quando um taf precisa de você, este {device} avisa você mesmo com o tafs fechado.",
   "alert.loud_example": "Encomendas atrasadas precisa de você · Pedido #5098 · Os reenvios esperam pelo seu sim",
   "alert.needs_you": "Um taf precisa de você",
   "alert.prompt": "Receba um alerta quando um taf precisar de você",

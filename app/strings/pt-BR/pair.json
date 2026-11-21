@@ -10,5 +10,5 @@
   "pair.steps": "No celular, abra o tafs e depois {account}, {devices}, {pair}. Leia este código.",
   "pair.title": "Adicione este {device} com o seu celular",
   "pair.view_only.lead": "Este {device} mostra os seus tafs, Precisa de você e o Registro. Não pode aprovar até o adicionar com o seu celular.",
-  "pair.waiting": "À espera do seu celular…"
+  "pair.waiting": "Aguardando o seu celular…"
 }

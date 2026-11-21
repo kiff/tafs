@@ -1,18 +1,22 @@
 {
-  "taf.activity.checking_waits": "A verificar o que aguarda por você…",
-  "taf.halt.connection_sends_nothing": "A conexão não envia nada às suas apps",
+  "taf.activity.all_apps": "Todos os apps",
+  "taf.activity.checking_waits": "Verificando o que aguarda por você…",
+  "taf.halt.connection_sends_nothing": "A conexão não envia nada aos seus apps",
   "taf.now.paused_by_you": "Posto em pausa por você",
   "taf.now.waiting_on": "Precisa de você · {summary}",
   "taf.now.waiting_on_you": "Precisa de você",
+  "taf.remove.connections_disconnected": "O seu acesso aos apps foi removido.",
   "taf.remove.connections_left": {
-    "one": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Conectar apps.",
-    "other": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Conectar apps."
+    "one": "Não foi possível remover o acesso a {count} dos seus apps: remova-o em Conectar apps.",
+    "other": "Não foi possível remover o acesso a {count} dos seus apps: remova-o em Conectar apps."
   },
-  "taf.remove.done": "O seu agendamento, chats, relatórios de execução, memória e chave foram excluídos, e o nome {taf} está livre. Os recibos do KIFF mantêm-se.",
-  "taf.remove_body": "Os seus Cards são revogados, o seu agendamento parado, os seus chats, relatórios de execução, memória e chave excluídos, e o seu nome libertado. Os recibos do KIFF mantêm-se.",
+  "taf.remove.done": "O seu agendamento, chats, relatórios de execução, memória e chave foram excluídos, e o nome {taf} está livre. Os recibos do KIFF são mantidos.",
+  "taf.remove.step_connections": "acesso aos apps",
+  "taf.remove_body": "Os Cards dele são revogados, o agendamento é parado, os chats, relatórios de execução, memória e chave são excluídos, e o nome fica livre. Os recibos do KIFF são mantidos.",
   "taf.report.still_running": "ainda em andamento",
-  "taf.signed_tools_being_chosen": "Conectado · as ferramentas estão sendo escolhidas",
-  "taf.signed_tools_waiting_your_approval": "Conectado · ferramentas à espera da sua aprovação",
+  "taf.revoke_body": "Nenhuma ação nova é concluída. O que já foi feito continua.",
+  "taf.signed_tools_being_chosen": "Login feito · as ferramentas estão sendo escolhidas",
+  "taf.signed_tools_waiting_your_approval": "Login feito · ferramentas aguardando a sua aprovação",
   "taf.try_version_first_you_chat": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua trabalhando. Instalar uma coloca-a em produção.",
   "taf.unless_you_approve_tools_sign": "A menos que aprove as suas ferramentas, o login é revogado {time}."
 }

@@ -1,6 +1,7 @@
 {
-  "knob.connect_first": "Conecte esta app para o taf antes de aprovar o seu evento.",
-  "knob.not_recorded": "A conexão está à escuta, mas o seletor ainda não o registrou. Aprove novamente para o registrar.",
-  "knob.subscription_made_dial_has_not": "A subscrição foi feita, mas o seletor ainda não a registrou. Tente novamente.",
+  "knob.connect_first": "Conecte este app para o taf antes de aprovar o seu evento.",
+  "knob.event_filters": "Escuta",
+  "knob.not_recorded": "A conexão está escutando, mas o seletor ainda não registrou isso. Aprove novamente para registrar.",
+  "knob.subscription_made_dial_has_not": "A assinatura foi feita, mas o seletor ainda não a registrou. Tente novamente.",
   "knob.tap_a_ring": "Toque em um anel"
 }

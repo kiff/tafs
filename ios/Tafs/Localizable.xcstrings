@@ -967,7 +967,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf precisa de você, este %1$@ avisa-o mesmo com o tafs fechado."
+            "value": "Quando um taf precisa de você, este %1$@ avisa você mesmo com o tafs fechado."
           }
         }
       }
@@ -4493,7 +4493,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este dispositivo não pode aprovar. Aprove em outro dispositivo com sessão iniciada na sua conta."
+            "value": "Este dispositivo não pode aprovar. Aprove em outro dispositivo conectado à sua conta."
           }
         }
       }
@@ -4818,7 +4818,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este %1$@ não tem Face ID nem Touch ID, por isso não pode aprovar. Aprove em outro iPhone, iPad ou telefone Android com sessão iniciada na sua conta."
+            "value": "Este %1$@ não tem Face ID nem Touch ID, por isso não pode aprovar. Aprove em outro iPhone, iPad ou telefone Android conectado à sua conta."
           }
         }
       }
@@ -6378,7 +6378,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Digite o PIN da sua chave de segurança para a adicionar. O tafs pede-o sempre e nunca o guarda."
+            "value": "Digite o PIN da sua chave de segurança para adicioná-la. O tafs pede o PIN sempre e nunca o guarda."
           }
         }
       }
@@ -6508,7 +6508,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Digite o PIN da sua chave de segurança. O tafs pede-o sempre e nunca o guarda."
+            "value": "Digite o PIN da sua chave de segurança. O tafs pede o PIN sempre e nunca o guarda."
           }
         }
       }
@@ -8685,7 +8685,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um taf pergunta antes de fazer algo fora do seu Card, e o Coach pergunta antes de conectar uma app ou emitir um Card. Aprova neste dispositivo, e isso requer Face ID ou Touch ID."
+            "value": "Um taf pergunta antes de fazer algo fora do seu Card, e o Coach pergunta antes de conectar um app ou emitir um Card. Aprova neste dispositivo, e isso requer Face ID ou Touch ID."
           }
         }
       }
@@ -8880,7 +8880,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está desativado para o tafs. Abra as Configurações e ative %2$@ para o tafs."
+            "value": "%1$@ está desativado para o tafs. Abra os Ajustes e ative %2$@ para o tafs."
           }
         }
       }
@@ -9530,7 +9530,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O tafs não pode anexar este arquivo: não é de um tipo ou tamanho aceite. Escolha outro."
+            "value": "O tafs não pode anexar este arquivo: não é de um tipo ou tamanho aceito. Escolha outro."
           }
         }
       }
@@ -11350,7 +11350,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À medida que a conversa avança, o plano, as apps a conectar e o Card do taf aparecem aqui."
+            "value": "À medida que a conversa avança, o plano, os apps a conectar e o Card do taf aparecem aqui."
           }
         }
       }
@@ -12324,7 +12324,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Só quem gerencia a faturação da conta compra créditos."
+            "value": "Só quem gerencia o faturamento da conta compra créditos."
           }
         }
       }
@@ -29349,7 +29349,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma app neste telefone abre %1$@."
+            "value": "Nenhum app neste telefone abre %1$@."
           }
         }
       }
@@ -29414,7 +29414,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não há nenhuma app de câmera neste telefone para tirar uma fotografia."
+            "value": "Não há nenhum app de câmera neste telefone para tirar uma foto."
           }
         }
       }
@@ -31380,7 +31380,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@: enviada, à espera da app"
+            "value": "%1$@: enviada, aguardando o app"
           }
         }
       }
@@ -34775,7 +34775,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A tratar da conexão…"
+            "value": "Cuidando da conexão…"
           }
         }
       }
@@ -36530,7 +36530,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado"
+            "value": "Login feito"
           }
         }
       }
@@ -36595,7 +36595,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado em %1$@"
+            "value": "Login feito em %1$@"
           }
         }
       }
@@ -37505,7 +37505,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configure um novo taf, conecte uma app ou altere o funcionamento de um."
+            "value": "Configure um novo taf, conecte um app ou altere o funcionamento de um."
           }
         }
       }
@@ -38740,7 +38740,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A verificar o login…"
+            "value": "Verificando o login…"
           }
         }
       }
@@ -39195,7 +39195,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Por enquanto, é outro dispositivo que conecta as apps desta conta. Conecte-as a partir dele."
+            "value": "Por enquanto, é outro dispositivo que conecta os apps desta conta. Conecte-os a partir dele."
           }
         }
       }
@@ -39390,7 +39390,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível conectar as suas apps. Toque em Começar para tentar novamente."
+            "value": "Não foi possível conectar os seus apps. Toque em Começar para tentar novamente."
           }
         }
       }
@@ -40625,7 +40625,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Como está correndo?"
+            "value": "Como está indo?"
           }
         }
       }
@@ -40755,7 +40755,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diga o que deve mudar, ou pergunte como está correndo. O modo Coach parte do que %1$@ fez e do que o seu Card permite."
+            "value": "Diga o que deve mudar, ou pergunte como está indo. O modo Coach parte do que %1$@ fez e do que o seu Card permite."
           }
         }
       }
@@ -40950,7 +40950,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos."
+            "value": "Indique um app para o seu taf, como o seu fornecedor de pagamentos."
           }
         }
       }
@@ -41145,7 +41145,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$@."
+            "value": "Indique um app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$@."
           }
         }
       }
@@ -42965,7 +42965,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectar as suas apps"
+            "value": "Conectar os seus apps"
           }
         }
       }
@@ -43030,7 +43030,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "conectar as suas apps"
+            "value": "conectar os seus apps"
           }
         }
       }
@@ -43940,7 +43940,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ler as palavras do KIFF para esta conexão…"
+            "value": "Lendo as palavras do KIFF para esta conexão…"
           }
         }
       }
@@ -46020,7 +46020,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre-se a própria página do fornecedor. Nenhum taf vê o seu login."
+            "value": "A própria página do fornecedor é aberta. Nenhum taf vê o seu login."
           }
         }
       }
@@ -46085,7 +46085,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado em %1$@ · a ler o que oferece"
+            "value": "Login feito em %1$@ · lendo o que ele oferece"
           }
         }
       }
@@ -47125,7 +47125,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A Configuração respondeu algo que esta app não lê. Atualize a app."
+            "value": "A Configuração respondeu algo que este app não lê. Atualize o app."
           }
         }
       }
@@ -49595,7 +49595,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminou a sessão."
+            "value": "Você saiu."
           }
         }
       }
@@ -50830,7 +50830,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma app com esse nome. O Coach pode conectar uma que não esteja na lista."
+            "value": "Nenhum app com esse nome. O Coach pode conectar um que não esteja na lista."
           }
         }
       }
@@ -50960,7 +50960,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach pode conectar uma app que não esteja aqui, a partir da documentação dela."
+            "value": "O Coach pode conectar um app que não esteja aqui, a partir da documentação dele."
           }
         }
       }
@@ -51220,7 +51220,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As suas conexões a %1$@"
+            "value": "As suas conexões com %1$@"
           }
         }
       }
@@ -51350,7 +51350,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As apps conectam-se para um taf. Crie primeiro um e depois conecte aqui as suas apps."
+            "value": "Os apps se conectam para um taf. Crie primeiro um e depois conecte aqui os seus apps."
           }
         }
       }
@@ -51415,7 +51415,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível ler as apps. %1$@"
+            "value": "Não foi possível ler os apps. %1$@"
           }
         }
       }
@@ -52698,7 +52698,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectar uma app"
+            "value": "Conectar um app"
           }
         }
       }
@@ -52958,7 +52958,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apps conectadas"
+            "value": "Apps conectados"
           }
         }
       }
@@ -53023,7 +53023,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": " Conectar novamente pede-lhe para aprovar e entrar novamente."
+            "value": " Conectar novamente pede que você aprove e entre novamente."
           }
         }
       }
@@ -53218,7 +53218,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": " Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Conectar apps."
+            "value": " Não foi possível remover o acesso a %1$@ dos seus apps: remova-o em Conectar apps."
           }
         }
       }
@@ -53283,7 +53283,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": " O seu acesso às apps foi removido."
+            "value": " O seu acesso aos apps foi removido."
           }
         }
       }
@@ -53819,7 +53819,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar a mesma conta, o login é revogado em %1$@; caso contrário, quando o último for removido. Usar %1$@ novamente pede-lhe que aprove e faça login de novo."
+            "value": "Os outros tafs que usam %1$@ mantêm o acesso deles. Se nenhum outro taf usar a mesma conta, o login é revogado em %1$@; caso contrário, quando o último for removido. Usar %1$@ novamente pede que você aprove e faça login de novo."
           }
         }
       }
@@ -53884,7 +53884,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. A chave é excluída do tafs assim que nenhum taf a usar. Usar %1$@ novamente pede-lhe que aprove e cole uma chave de novo."
+            "value": "Os outros tafs que usam %1$@ mantêm o acesso deles. A chave é excluída do tafs assim que nenhum taf a usar. Usar %1$@ novamente pede que você aprove e cole uma chave de novo."
           }
         }
       }
@@ -55102,7 +55102,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua conexão a %2$@ foi mantida: %3$@ usa-a."
+            "value": "A sua conexão com %2$@ foi mantida: %3$@ a usa."
           }
         }
       }
@@ -55167,7 +55167,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua conexão a %2$@ foi mantida: %3$@ usam-na."
+            "value": "A sua conexão com %2$@ foi mantida: %3$@ a usam."
           }
         }
       }
@@ -56272,7 +56272,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Crie primeiro um taf: uma app é conectada para um taf a usar."
+            "value": "Crie primeiro um taf: um app é conectado para um taf usar."
           }
         }
       }
@@ -56792,7 +56792,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A abrir o login…"
+            "value": "Abrindo o login…"
           }
         }
       }
@@ -57572,7 +57572,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Manter selados os inícios de sessão das suas apps"
+            "value": "Manter selados os logins dos seus apps"
           }
         }
       }
@@ -57962,7 +57962,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ O seu agendamento, chats, relatórios de execução, memória e chave são excluídos, e o nome %2$@ fica livre. Os recibos do KIFF mantêm-se."
+            "value": "%1$@ O agendamento, chats, relatórios de execução, memória e chave dele são excluídos, e o nome %2$@ fica livre. Os recibos do KIFF são mantidos."
           }
         }
       }
@@ -58482,7 +58482,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ tem sessão iniciada. A seguir, o Coach escolhe as suas ações e você aprova-as."
+            "value": "Login feito em %1$@. A seguir, o Coach escolhe as ações dele e você as aprova."
           }
         }
       }
@@ -58547,7 +58547,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ tem sessão iniciada para %2$@. A seguir, o Coach escolhe as suas ações e você aprova-as."
+            "value": "Login feito em %1$@ para %2$@. A seguir, o Coach escolhe as ações dele e você as aprova."
           }
         }
       }
@@ -58612,7 +58612,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado · escolha as suas ações"
+            "value": "Login feito · escolha as suas ações"
           }
         }
       }
@@ -58677,7 +58677,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comece primeiro em Apps conectadas neste %1$@."
+            "value": "Comece primeiro em Apps conectados neste %1$@."
           }
         }
       }
@@ -58742,7 +58742,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comece primeiro em Apps conectadas neste iPhone."
+            "value": "Comece primeiro em Apps conectados neste iPhone."
           }
         }
       }
@@ -58807,7 +58807,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado · o Coach está escolhendo as ferramentas"
+            "value": "Login feito · o Coach está escolhendo as ferramentas"
           }
         }
       }
@@ -58937,7 +58937,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão terminada por %1$@ · entre novamente"
+            "value": "Sessão encerrada por %1$@ · entre novamente"
           }
         }
       }
@@ -59002,7 +59002,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão terminada · entre novamente"
+            "value": "Sessão encerrada · entre novamente"
           }
         }
       }
@@ -59067,7 +59067,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do login em %1$@"
+            "value": "Aguardando o login em %1$@"
           }
         }
       }
@@ -59652,7 +59652,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As palavras do KIFF para esta conexão não batem certo (%1$@). Nada foi aprovado."
+            "value": "As palavras do KIFF para esta conexão não conferem (%1$@). Nada foi aprovado."
           }
         }
       }
@@ -60773,7 +60773,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ só pode entregar trabalho a %2$@. O que %2$@ pode fazer continua sendo decidido pela sua Card."
+            "value": "%1$@ só pode entregar trabalho a %2$@. O que %2$@ pode fazer continua sendo decidido pelo seu Card."
           }
         }
       }
@@ -63616,7 +63616,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O bot continua ouvindo, por isso a porta mantém-se. %1$@"
+            "value": "O bot continua ouvindo, por isso a porta continua. %1$@"
           }
         }
       }
@@ -65224,7 +65224,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Olá, gostaria de receber de volta 15 $ da encomenda T-3001."
+            "value": "Olá, gostaria de receber de volta US$ 15 do pedido T-3001."
           }
         }
       }
@@ -67092,7 +67092,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ainda não há aqui nenhuma app chamada «%1$@»."
+            "value": "Ainda não há aqui nenhum app chamado «%1$@»."
           }
         }
       }
@@ -69042,7 +69042,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecte primeiro o bot do Slack para este taf, em Configurações › Conectar apps. Depois adicione aqui o seu canal."
+            "value": "Conecte primeiro o bot do Slack para este taf, em Conta › Conectar apps. Depois adicione aqui o canal dele."
           }
         }
       }
@@ -69237,7 +69237,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta conexão ao Slack ainda não está pronta. Tente novamente daqui a pouco."
+            "value": "Esta conexão com o Slack ainda não está pronta. Tente novamente daqui a pouco."
           }
         }
       }
@@ -69562,7 +69562,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para que conexão ao Slack é?"
+            "value": "Para qual conexão com o Slack é?"
           }
         }
       }
@@ -69887,7 +69887,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Slack não subscreveu %1$@: %2$@"
+            "value": "O Slack não fez a assinatura de %1$@: %2$@"
           }
         }
       }
@@ -70082,7 +70082,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O bot do Slack continua ouvindo esse canal, por isso a porta mantém-se. %1$@"
+            "value": "O bot do Slack continua ouvindo esse canal, por isso a porta continua. %1$@"
           }
         }
       }
@@ -70147,7 +70147,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A subscrição do Slack não foi parada, por isso a porta mantém-se: %1$@"
+            "value": "A assinatura do Slack não foi interrompida, por isso a porta continua: %1$@"
           }
         }
       }
@@ -70537,7 +70537,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Comece primeiro em Apps conectadas neste %1$@. A subscrição do Slack tem de ser parada antes de remover a sua porta."
+            "value": "Comece primeiro em Apps conectados neste %1$@. A assinatura do Slack precisa ser interrompida antes de remover a sua porta."
           }
         }
       }
@@ -71187,7 +71187,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ainda não é possível adicionar uma porta do WhatsApp na app Android. Adicione-a a partir do tafs em um iPhone."
+            "value": "Ainda não é possível adicionar uma porta do WhatsApp no app Android. Adicione-a a partir do tafs em um iPhone."
           }
         }
       }
@@ -71512,7 +71512,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deixar o Coach conduzir a app: %1$@"
+            "value": "Deixar o Coach conduzir o app: %1$@"
           }
         }
       }
@@ -71577,7 +71577,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta app não consegue fazer esse passo"
+            "value": "Este app não consegue fazer esse passo"
           }
         }
       }
@@ -71772,7 +71772,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach toca e escreve nesta app enquanto observa, apenas para este pedido. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
+            "value": "O Coach toca e escreve neste app enquanto você observa, apenas para este pedido. Nunca confirma nada. Toque no app para pausar ou em Parar para terminar."
           }
         }
       }
@@ -71837,7 +71837,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach toca, escreve e desliza nesta app enquanto observa. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
+            "value": "O Coach toca, escreve e desliza neste app enquanto você observa. Nunca confirma nada. Toque no app para pausar ou em Parar para terminar."
           }
         }
       }
@@ -71902,7 +71902,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach pede para conduzir a app"
+            "value": "O Coach pede para conduzir o app"
           }
         }
       }
@@ -71967,7 +71967,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach conduziu a app · %1$@"
+            "value": "O Coach conduziu o app · %1$@"
           }
         }
       }
@@ -72032,7 +72032,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agora não: o Coach não conduziu a app"
+            "value": "Agora não: o Coach não conduziu o app"
           }
         }
       }
@@ -72162,7 +72162,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conduzir a app"
+            "value": "Conduzir o app"
           }
         }
       }
@@ -72422,7 +72422,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A app saiu da tela, por isso o Coach parou"
+            "value": "O app saiu da tela, por isso o Coach parou"
           }
         }
       }
@@ -72747,7 +72747,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminou a sessão, por isso o Coach parou"
+            "value": "Você saiu, por isso o Coach parou"
           }
         }
       }
@@ -76192,7 +76192,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera de que aprove o login."
+            "value": "Aguardando você aprovar o login."
           }
         }
       }
@@ -76387,7 +76387,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua sessão está terminada. Entre novamente."
+            "value": "A sua sessão foi encerrada. Entre novamente."
           }
         }
       }
@@ -78239,7 +78239,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada arquivo é guardado 30 dias a partir da sua execução e depois desaparece sozinho. Toda a gente nesta conta vê estes arquivos. Os seus próprios anexos de chat ficam com as suas mensagens."
+            "value": "Cada arquivo é guardado 30 dias a partir da sua execução e depois desaparece sozinho. Todos nesta conta veem estes arquivos. Os seus próprios anexos de chat ficam com as suas mensagens."
           }
         }
       }
@@ -78564,7 +78564,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Só é mostrado o início. Transfira o arquivo para o ler na totalidade."
+            "value": "Só o início é mostrado. Baixe o arquivo para ler tudo."
           }
         }
       }
@@ -80562,7 +80562,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminou sessão no tafs. Entre para bloquear os seus tafs."
+            "value": "Você saiu do tafs. Entre para bloquear os seus tafs."
           }
         }
       }
@@ -80887,7 +80887,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectar uma app"
+            "value": "Conectar um app"
           }
         }
       }
@@ -80952,7 +80952,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecte uma app para configurar o seu primeiro taf."
+            "value": "Conecte um app para configurar o seu primeiro taf."
           }
         }
       }
@@ -81147,7 +81147,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecte uma app para configurar o seu primeiro taf."
+            "value": "Conecte um app para configurar o seu primeiro taf."
           }
         }
       }
@@ -83763,7 +83763,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O KIFF ainda não pode fazer isto: entre novamente nas Configurações para aprovar a partir deste %1$@."
+            "value": "O KIFF ainda não pode fazer isto: entre novamente em Conta para aprovar a partir deste %1$@."
           }
         }
       }
@@ -84478,7 +84478,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecte esta app para o taf antes de aprovar o seu evento."
+            "value": "Conecte este app para o taf antes de aprovar o seu evento."
           }
         }
       }
@@ -84998,7 +84998,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fica à escuta de"
+            "value": "Escuta"
           }
         }
       }
@@ -85729,7 +85729,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A conexão está à escuta, mas o seletor ainda não o registrou. Aprove novamente para o registrar."
+            "value": "A conexão está escutando, mas o seletor ainda não registrou isso. Aprove novamente para registrar."
           }
         }
       }
@@ -86704,7 +86704,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A subscrição foi feita, mas o seletor ainda não a registrou. Tente novamente."
+            "value": "A assinatura foi feita, mas o seletor ainda não a registrou. Tente novamente."
           }
         }
       }
@@ -89271,7 +89271,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf pede algo fora do seu Card, aparece aqui e no sua tela bloqueada."
+            "value": "Quando um taf pede algo fora do seu Card, aparece aqui e na sua tela bloqueada."
           }
         }
       }
@@ -90327,7 +90327,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Excede um total do Card, como o de um dia. Alguém que gerencia os Cards pode dar-lhe margem extra, ou pode recusar."
+            "value": "Passa de um total do Card, como o de um dia. Alguém que gerencia os Cards pode dar margem extra a ele, ou você pode recusar."
           }
         }
       }
@@ -91497,7 +91497,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termine a sessão e entre novamente para responder a partir deste telefone, para que o KIFF conheça a sua chave. Ou responda a este no KIFF."
+            "value": "Encerre a sessão e entre novamente para responder a partir deste telefone, para que o KIFF conheça a sua chave. Ou responda a este no KIFF."
           }
         }
       }
@@ -92602,7 +92602,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada taf trabalha dentro de uma Card que emite: o que pode fazer, com que app e quanto. Para além disso, pergunta-lhe."
+            "value": "Cada taf trabalha dentro de um Card que você emite: o que pode fazer, com qual app e quanto. Além disso, ele pergunta a você."
           }
         }
       }
@@ -93122,7 +93122,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf com você e mostra-lhe a Card antes de qualquer coisa correr."
+            "value": "Diga ao Coach, com as suas palavras, o que quer que seja feito. Ele configura o taf com você e mostra o Card antes de qualquer coisa rodar."
           }
         }
       }
@@ -95592,7 +95592,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do seu celular…"
+            "value": "Aguardando o seu celular…"
           }
         }
       }
@@ -98468,7 +98468,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada pessoa tem os seus próprios chats e notas. Mais ninguém os vê na app."
+            "value": "Cada pessoa tem os seus próprios chats e notas. Mais ninguém os vê no app."
           }
         }
       }
@@ -101913,7 +101913,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Está assinado de uma forma que esta app não conhece."
+            "value": "Está assinado de uma forma que este app não conhece."
           }
         }
       }
@@ -105683,7 +105683,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, e enviado, mas a resposta da app perdeu-se: verifique os registros da própria app"
+            "value": "%1$@, e enviado, mas a resposta do app se perdeu: verifique os registros do próprio app"
           }
         }
       }
@@ -107438,7 +107438,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A app recusou, mas nada mostra que não teve efeito."
+            "value": "O app recusou, mas nada mostra que não teve efeito."
           }
         }
       }
@@ -110330,7 +110330,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, mas não ficou registrado se a app o fez: verifique os registros da própria app"
+            "value": "%1$@, mas não ficou registrado se o app fez isso: verifique os registros do próprio app"
           }
         }
       }
@@ -110525,7 +110525,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, mas não foi possível enviar: nada chegou à app"
+            "value": "%1$@, mas não foi possível enviar: nada chegou ao app"
           }
         }
       }
@@ -110590,7 +110590,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, mas não foi possível enviar: nada chegou à app%2$@"
+            "value": "%1$@, mas não foi possível enviar: nada chegou ao app%2$@"
           }
         }
       }
@@ -112247,7 +112247,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pesquisar por encomenda, fatura, valor ou ação"
+            "value": "Pesquisar por pedido, fatura, valor ou ação"
           }
         }
       }
@@ -112312,7 +112312,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@, e enviado: à espera da resposta da app"
+            "value": "%1$@, e enviado: aguardando a resposta do app"
           }
         }
       }
@@ -112702,7 +112702,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A app"
+            "value": "O app"
           }
         }
       }
@@ -114782,7 +114782,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dar aos novos colaboradores as suas apps e remover quem sai no próprio dia. Só funções da lista aprovada. Desativar, nunca excluir."
+            "value": "Dar aos novos colaboradores os seus apps e remover quem sai no próprio dia. Só funções da lista aprovada. Desativar, nunca excluir."
           }
         }
       }
@@ -115367,7 +115367,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagar faturas habituais de fornecedores que correspondam a uma nota de encomenda. Só fornecedores existentes. Nunca alterar dados bancários nem adicionar um beneficiário."
+            "value": "Pagar contas habituais de fornecedores que correspondam a um pedido de compra. Só fornecedores existentes. Nunca alterar dados bancários nem adicionar um beneficiário."
           }
         }
       }
@@ -117642,7 +117642,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preparar um segundo seguimento para estes 3 contatos sem resposta há 7 dias?"
+            "value": "Preparar um segundo acompanhamento para estes 3 contatos sem resposta há 7 dias?"
           }
         }
       }
@@ -119153,7 +119153,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Responder às disputas de cartão com as provas da encomenda antes do prazo. Aceitar as pequenas que não se podem ganhar. Não compartilhar nada além do modelo."
+            "value": "Responder às disputas de cartão com as provas do pedido antes do prazo. Aceitar as pequenas que não dá para ganhar. Não compartilhar nada além do modelo."
           }
         }
       }
@@ -120778,7 +120778,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Coach, dentro da seu uso razoável · 6 execuções"
+            "value": "Coach, dentro do seu uso razoável · 6 execuções"
           }
         }
       }
@@ -122468,7 +122468,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seguimento de contatos"
+            "value": "Acompanhamento de contatos"
           }
         }
       }
@@ -123573,7 +123573,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "«Encomendas atrasadas» não correu às 07:00: o login na transportadora precisa de você."
+            "value": "«Encomendas atrasadas» não rodou às 07:00: o login na transportadora precisa de você."
           }
         }
       }
@@ -123898,7 +123898,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mudar o endereço de entrega da encomenda #5141"
+            "value": "Mudar o endereço de entrega do pedido #5141"
           }
         }
       }
@@ -124613,7 +124613,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avisar a encomenda #5120 do atraso"
+            "value": "Avisar o pedido #5120 do atraso"
           }
         }
       }
@@ -124743,7 +124743,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avisar a encomenda #5134 do atraso"
+            "value": "Avisar o pedido #5134 do atraso"
           }
         }
       }
@@ -125393,7 +125393,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reembolsar a encomenda n.º 4471"
+            "value": "Reembolsar o pedido #4471"
           }
         }
       }
@@ -125523,7 +125523,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reembolsar a encomenda n.º 4502"
+            "value": "Reembolsar o pedido #4502"
           }
         }
       }
@@ -126173,7 +126173,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não posso dar-me mais margem: só você pode, alterando o meu Card. Tudo o que o exceda aguarda por você em Precisa de você."
+            "value": "Não posso me dar mais margem: só você pode, alterando o meu Card. Tudo o que passar dele aguarda por você em Precisa de você."
           }
         }
       }
@@ -126969,7 +126969,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pergunta onde está a encomenda; seguimento em anexo"
+            "value": "Perguntou onde está o pedido; rastreamento em anexo"
           }
         }
       }
@@ -127359,7 +127359,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enviar o histórico de encomendas de um cliente para outro endereço"
+            "value": "Enviar o histórico de pedidos de um cliente para outro endereço"
           }
         }
       }
@@ -128464,7 +128464,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Foram desativados quando este telefone terminou a sessão. Ative-os para receber um alerta quando um taf precisar de você."
+            "value": "Foram desativados quando a sessão deste telefone foi encerrada. Ative-os para receber um alerta quando um taf precisar de você."
           }
         }
       }
@@ -129244,7 +129244,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inícios de sessão das apps"
+            "value": "Logins dos apps"
           }
         }
       }
@@ -129569,7 +129569,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Só o proprietário da conta a pode excluir."
+            "value": "Só o proprietário da conta pode excluí-la."
           }
         }
       }
@@ -130219,7 +130219,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminar a sessão de um dispositivo termina de imediato o seu login nesta conta. Para terminar a sessão neste telefone, use Sair em Conta."
+            "value": "Encerrar a sessão de um dispositivo encerra imediatamente o login dele nesta conta. Para encerrar a sessão neste telefone, use Sair em Conta."
           }
         }
       }
@@ -130284,7 +130284,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminar a sessão de um dispositivo termina de imediato o seu login nesta conta. Para terminar a sessão neste %1$@, use Sair no KIFF."
+            "value": "Encerrar a sessão de um dispositivo encerra imediatamente o login dele nesta conta. Para encerrar a sessão neste %1$@, use Sair no KIFF."
           }
         }
       }
@@ -133014,7 +133014,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminar a sessão de %1$@?"
+            "value": "Encerrar a sessão de %1$@?"
           }
         }
       }
@@ -133079,7 +133079,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminar a sessão de %1$@ na sua conta"
+            "value": "Encerrar a sessão de %1$@ na sua conta"
           }
         }
       }
@@ -133209,7 +133209,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Terminar a sessão deste dispositivo?"
+            "value": "Encerrar a sessão deste dispositivo?"
           }
         }
       }
@@ -134509,7 +134509,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão terminada"
+            "value": "Sessão encerrada"
           }
         }
       }
@@ -135484,7 +135484,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sair no KIFF?"
+            "value": "Sair do KIFF?"
           }
         }
       }
@@ -136849,7 +136849,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adicionar um destino a partir de uma app conectada…"
+            "value": "Adicionar um destino a partir de um app conectado…"
           }
         }
       }
@@ -137044,7 +137044,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovar assina neste telefone; só depois disso a app começa a avisar o taf."
+            "value": "Aprovar assina neste telefone; só depois disso o app começa a avisar o taf."
           }
         }
       }
@@ -137109,7 +137109,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovar assina neste %1$@; só depois disso a app começa a avisar o taf."
+            "value": "Aprovar assina neste %1$@; só depois disso o app começa a avisar o taf."
           }
         }
       }
@@ -137369,7 +137369,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectar uma app…"
+            "value": "Conectar um app…"
           }
         }
       }
@@ -137434,7 +137434,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apps conectadas"
+            "value": "Apps conectados"
           }
         }
       }
@@ -138019,7 +138019,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nas suas apps conectadas"
+            "value": "Nos seus apps conectados"
           }
         }
       }
@@ -138214,7 +138214,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A conexão não indicou que subscrição fez. Tente novamente."
+            "value": "A conexão não indicou qual assinatura fez. Tente novamente."
           }
         }
       }
@@ -141009,7 +141009,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elimina todos os tafs, as suas execuções, chats e notas, os seus Cards e as suas conexões. Não pode ser desfeito."
+            "value": "Exclui todos os tafs, as execuções, chats e notas deles, os Cards e as conexões. Não pode ser desfeito."
           }
         }
       }
@@ -141139,7 +141139,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a uma app. As suas respostas são assinadas neste %1$@."
+            "value": "Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a um app. As suas respostas são assinadas neste %1$@."
           }
         }
       }
@@ -141204,7 +141204,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a uma app. As suas aprovações são assinadas no seu celular."
+            "value": "Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a um app. As suas aprovações são assinadas no seu celular."
           }
         }
       }
@@ -141334,7 +141334,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O login dentro da app ainda não está ativado."
+            "value": "O login dentro do app ainda não está ativado."
           }
         }
       }
@@ -142374,7 +142374,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este telefone continua sem poder aprovar. Tente novamente, ou entre novamente nas Configurações."
+            "value": "Este telefone continua sem poder aprovar. Tente novamente, ou entre novamente em Conta."
           }
         }
       }
@@ -142439,7 +142439,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível aprovar novamente. Tente novamente, ou entre novamente nas Configurações."
+            "value": "Não foi possível aprovar novamente. Tente novamente, ou entre novamente em Conta."
           }
         }
       }
@@ -143934,7 +143934,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todas as apps"
+            "value": "Todos os apps"
           }
         }
       }
@@ -143999,7 +143999,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A verificar o que aguarda por você…"
+            "value": "Verificando o que aguarda por você…"
           }
         }
       }
@@ -144519,7 +144519,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A conexão não envia nada às suas apps"
+            "value": "A conexão não envia nada aos seus apps"
           }
         }
       }
@@ -148435,7 +148435,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu acesso às apps foi removido."
+            "value": "O seu acesso aos apps foi removido."
           }
         }
       }
@@ -148516,7 +148516,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Conectar apps."
+            "value": "Não foi possível remover o acesso a %1$@ dos seus apps: remova-o em Conectar apps."
           }
         }
       }
@@ -148581,7 +148581,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Conectar apps."
+            "value": "Não foi possível remover o acesso a %1$@ dos seus apps: remova-o em Conectar apps."
           }
         }
       }
@@ -148646,7 +148646,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu agendamento, chats, relatórios de execução, memória e chave foram excluídos, e o nome %1$@ está livre. Os recibos do KIFF mantêm-se."
+            "value": "O seu agendamento, chats, relatórios de execução, memória e chave foram excluídos, e o nome %1$@ está livre. Os recibos do KIFF são mantidos."
           }
         }
       }
@@ -149036,7 +149036,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "acesso às apps"
+            "value": "acesso aos apps"
           }
         }
       }
@@ -149426,7 +149426,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os seus Cards são revogados, o seu agendamento parado, os seus chats, relatórios de execução, memória e chave excluídos, e o seu nome libertado. Os recibos do KIFF mantêm-se."
+            "value": "Os Cards dele são revogados, o agendamento é parado, os chats, relatórios de execução, memória e chave são excluídos, e o nome fica livre. Os recibos do KIFF são mantidos."
           }
         }
       }
@@ -150141,7 +150141,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhuma ação nova é concluída. O que já foi feito mantém-se."
+            "value": "Nenhuma ação nova é concluída. O que já foi feito continua."
           }
         }
       }
@@ -151116,7 +151116,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado · as ferramentas estão sendo escolhidas"
+            "value": "Login feito · as ferramentas estão sendo escolhidas"
           }
         }
       }
@@ -151181,7 +151181,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectado · ferramentas à espera da sua aprovação"
+            "value": "Login feito · ferramentas aguardando a sua aprovação"
           }
         }
       }
@@ -153537,7 +153537,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O limite está no máximo que pode ser aumentado a partir da app. Contacte o KIFF para o aumentar mais."
+            "value": "O limite está no máximo que pode ser aumentado a partir do app. Entre em contato com o KIFF para aumentá-lo mais."
           }
         }
       }
@@ -158119,7 +158119,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Card de experiência da versão %1$@ para de imediato, e este chat é excluído. %2$@ continua funcionando como está."
+            "value": "O Card de experiência da versão %1$@ deixa de valer imediatamente, e este chat é excluído. %2$@ continua funcionando como está."
           }
         }
       }
@@ -165837,7 +165837,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A perguntar ao celular…"
+            "value": "Perguntando ao celular…"
           }
         }
       }
@@ -170337,7 +170337,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sair neste relógio?"
+            "value": "Sair deste relógio?"
           }
         }
       }
@@ -170402,7 +170402,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O celular continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada."
+            "value": "O celular continua conectado à sua conta. Este relógio esquece os seus tafs, chats e Caixa de entrada."
           }
         }
       }
@@ -170532,7 +170532,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão terminada neste relógio. O celular continua com sessão iniciada."
+            "value": "Sessão encerrada neste relógio. O celular continua conectado à sua conta."
           }
         }
       }
@@ -170792,7 +170792,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O celular está a convertê-lo em texto…"
+            "value": "O celular está convertendo isso em texto…"
           }
         }
       }

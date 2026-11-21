@@ -10,7 +10,8 @@
   "chat.file.cant_attach": "Não é possível anexar esse arquivo.",
   "chat.file.choose_file": "Escolher arquivo",
   "chat.file.could_not_open": "Não foi possível abrir o arquivo.",
-  "chat.file.no_camera": "Não há nenhuma app de câmera neste telefone para tirar uma fotografia.",
+  "chat.file.no_app_opens": "Nenhum app neste telefone abre {name}.",
+  "chat.file.no_camera": "Não há nenhum app de câmera neste telefone para tirar uma foto.",
   "chat.file.too_many": {
     "one": "Uma mensagem leva no máximo {count} arquivo.",
     "other": "Uma mensagem leva no máximo {count} arquivos."
@@ -20,6 +21,7 @@
   "chat.needs_you": "Precisa de você · ",
   "chat.not_on_cloud": "Este taf não está funcionando no tafs cloud, por isso não pode receber mensagens.",
   "chat.outcome.approved": "{title}: aprovada por você, concluída",
+  "chat.outcome.sending": "{title}: enviada, aguardando o app",
   "chat.send_files_once_done": "Enviar arquivos quando {taf} terminar",
   "chat.send_once_files_up": "Enviar quando os arquivos estiverem carregados",
   "chat.taf_is_answering": "{taf} está respondendo",

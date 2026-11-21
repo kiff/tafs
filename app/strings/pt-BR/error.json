@@ -5,7 +5,7 @@
   "error.file_not_uploaded": "O arquivo não foi carregado. Tente anexá-lo novamente.",
   "error.no_device_name": "Não foi possível contatar o KIFF para dar nome a este dispositivo. Verifique a conexão e tente novamente.",
   "error.sign_in_code_expired": "O código de login expirou. Comece de novo.",
-  "error.sign_in_pending": "À espera de que aprove o login.",
+  "error.sign_in_pending": "Aguardando você aprovar o login.",
   "error.signed_out": "Sessão do KIFF encerrada. Entre novamente.",
-  "error.youre_signed_out": "A sua sessão está terminada. Entre novamente."
+  "error.youre_signed_out": "A sua sessão foi encerrada. Entre novamente."
 }

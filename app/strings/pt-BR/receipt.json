@@ -1,4 +1,5 @@
 {
+  "receipt.check.unknown_signature": "Está assinado de uma forma que este app não conhece.",
   "receipt.decision.held_approved_by_you": "retida → aprovada por você",
   "receipt.decision.held_by_card": "retida para você pelo Card",
   "receipt.label.approved": "Aprovada uma vez por você",
