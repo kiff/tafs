@@ -19,7 +19,7 @@ import { failedLine, runFailure, skippedOf, summaryOf, whenIn, workOf } from "./
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
 import { COACH_WAITING_KEPT_MS, coachWaitingClear, coachWaitingOf, waitingCards, waitingRuns } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
-import { type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
+import { baseLanguage, type ConnectRoute, LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withoutTafsLines, withReplyLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
 import { handedByOf, requestDetail } from "./request.js";
@@ -8563,11 +8563,13 @@ function minutes(field: string): number[] | undefined {
 /**
  * The person's language on every call tafs cloud makes to KIFF for this request, so KIFF's words in a tafs cloud
  * answer (held calls' reasons, warnings, the approval window) match the screen (docs/languages.md). Only when the
- * app sent one: an app that sends none leaves KIFF's own choice as it was. Resolved to one of the eight.
+ * app sent one: an app that sends none leaves KIFF's own choice as it was. Resolved to one of the eight, and a regional
+ * variant with its base after it ("pt-BR, pt;q=0.9"), so KIFF, which speaks the eight, still answers in Portuguese.
  */
 export function withKIFFLanguage(event: HTTPEvent, deps: Deps): Deps {
   if (!header(event, "accept-language")) return deps;
-  const lang = langOf(event);
+  const resolved = langOf(event);
+  const lang = baseLanguage(resolved) === resolved ? resolved : `${resolved}, ${baseLanguage(resolved)};q=0.9`;
   const base = deps.kiffBase ?? KIFF_API;
   const inner = deps.fetch ?? fetch;
   const withLang: Fetch = (input, init) => {

@@ -1,6 +1,7 @@
 /**
- * tafs cloud's words in the eight languages (docs/languages.md): English is the source, and every other
- * language has every key, so a line can't ship untranslated (the type says so, and a test pins it).
+ * tafs cloud's words in the eight languages, and Brazilian Portuguese over Portuguese (docs/languages.md): English
+ * is the source, and every other language has every key, so a line can't ship untranslated (the type says so, and a
+ * test pins it). pt-BR is pt's words with Brazil's own on top (pt-BR.ts).
  * The language is the app's own, sent as `Accept-Language`; anything else reads English. A language only
  * changes words: never what a Card allows, nor how an amount or a date is formatted beyond the locale.
  */
@@ -12,13 +13,19 @@ import { it } from "./it.js";
 import { nl } from "./nl.js";
 import { pl } from "./pl.js";
 import { pt } from "./pt.js";
+import { ptBR } from "./pt-BR.js";
 
 export type { ConnectRoute, When, Words };
 
-export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const;
+export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR"] as const;
 export type Lang = (typeof LANGUAGES)[number];
 
-const CATALOGS: Record<Lang, Words> = { en, de, fr, es, it, pt, nl, pl };
+const CATALOGS: Record<Lang, Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR };
+
+/** A regional variant's base language ("pt" for "pt-BR"), for what's kept per base language only (a recipe's words, kiff.dev's pages). */
+export function baseLanguage(lang: Lang): Exclude<Lang, "pt-BR"> {
+  return lang === "pt-BR" ? "pt" : lang;
+}
 
 /** The words of a language. */
 export function wordsIn(lang: Lang): Words {
@@ -26,27 +33,30 @@ export function wordsIn(lang: Lang): Words {
 }
 
 /**
- * The best of the eight languages for an `Accept-Language` header: the highest `q` whose base language is one
- * of them (`de-AT` reads `de`), in the order given among equals; English when none is, or there's no header.
+ * The best of the languages for an `Accept-Language` header: the highest `q` whose tag is one of them as it is
+ * (`pt-BR`), else whose base language is (`de-AT` reads `de`, `pt-PT` reads `pt`), in the order given among equals;
+ * English when none is, or there's no header.
  */
 export function languageFrom(header: string | undefined): Lang {
   if (!header) return "en";
   let best: { lang: Lang; q: number; at: number } | undefined;
   header.split(",").slice(0, 20).forEach((part, at) => {
     const [tag, ...params] = part.trim().split(";");
-    const base = (tag ?? "").trim().toLowerCase().split("-")[0] ?? "";
-    if (!(LANGUAGES as readonly string[]).includes(base)) return;
+    const [base = "", region = ""] = (tag ?? "").trim().replace(/_/g, "-").split("-");
+    const regional = `${base.toLowerCase()}-${region.toUpperCase()}`;
+    const lang = (LANGUAGES as readonly string[]).includes(regional) ? regional : base.toLowerCase();
+    if (!(LANGUAGES as readonly string[]).includes(lang)) return;
     const qp = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
     const q = qp ? Number(qp.slice(2)) : 1;
     if (!Number.isFinite(q) || q <= 0 || q > 1) return;
-    if (!best || q > best.q) best = { lang: base as Lang, q, at };
+    if (!best || q > best.q) best = { lang: lang as Lang, q, at };
   });
   return best?.lang ?? "en";
 }
 
 /**
- * The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). Our Portuguese is
- * European, where 0 is plural ("0 tafs"); CLDR's plain `pt` is Brazilian, where 0 is singular.
+ * The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). Our `pt` is
+ * European, where 0 is plural ("0 tafs"); CLDR's plain `pt` is Brazilian, where 0 is singular, as in our `pt-BR`.
  */
 export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
   return new Intl.PluralRules(lang === "pt" ? "pt-PT" : lang).select(n);
@@ -69,6 +79,7 @@ export function midLine(phrase: string): string {
 /** Each language's name in English, for the lines Coach and the tafs read (they're written in English, as their instructions). */
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
+  "pt-BR": "Brazilian Portuguese",
 };
 
 /** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */
@@ -139,7 +150,7 @@ export function ownerLanguageLine(lang: Lang): string | undefined {
 
 /** The owner's language as ownerLanguageLine wrote it into instructions, or undefined. */
 export function ownerLanguageIn(text: string): Lang | undefined {
-  const m = /Your owner reads [A-Za-z ]+ \(([a-z]{2})\):/.exec(text);
+  const m = /Your owner reads [A-Za-z ]+ \(([a-z]{2}(?:-[A-Z]{2})?)\):/.exec(text);
   return m && (LANGUAGES as readonly string[]).includes(m[1]!) ? (m[1] as Lang) : undefined;
 }
 

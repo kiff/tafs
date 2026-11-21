@@ -6,7 +6,7 @@
  */
 import { RECIPES } from "../recipes.js";
 import type { CatalogApp } from "./connect.js";
-import { type Lang, wordsIn } from "./words/index.js";
+import { baseLanguage, type Lang, wordsIn } from "./words/index.js";
 
 /**
  * The recipes' categories, in the order the apps show them: as the recipes name them, in recipe order
@@ -192,7 +192,7 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     // the same app, so the job is never shown on an app the gallery couldn't connect.
     .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)) && (connects === null || connects.has(fold(v))))))
     .map((r): Recipe => {
-      const w = lang === "en" ? r : r.languages[lang];
+      const w = lang === "en" ? r : r.languages[baseLanguage(lang) as Exclude<Lang, "en" | "pt-BR">];
       // One line says what the job does, in the Card's terms: no problem headline over it, and no line on what waiting
       // costs today (the app-words cut, screen 2). The apps draw no empty line.
       return { id: r.id, title: w.title, category: r.category, headline: w.line, today: "", line: "", say: w.say,

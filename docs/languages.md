@@ -260,9 +260,18 @@ screen is **"Conta"**.
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
+- **Brazilian Portuguese in tafs cloud:** `pt-BR.ts` is `pt`'s catalog with the lines that read differently in
+  Brazil on top, and only those: "você" throughout ("Precisa de você", "Seu resumo"), "conexão" and "Conectar",
+  "Entrar" and "login" for signing in, "celular", "tela", "registro", and the gerund for "está a fazer"
+  ("Verificando…"). A key it doesn't change reads as `pt`'s, so it never falls behind. A line that states a legal
+  rule (the AI consent, the terms and privacy line) isn't in it: it reads as `pt`'s until the language reviewer
+  writes it (a test pins that). `languageFrom` keeps `pt-BR` when the app asks for it (both apps send
+  `pt-BR, pt;q=0.9, en;q=0.8` from a Brazilian phone); every other region reads its base, `pt-PT` as `pt`. Counts
+  follow Brazil's rule, where 0 is singular. Coach and the tafs are told "Brazilian Portuguese (pt-BR)". What's
+  kept per base language only reads the base's: a recipe's words, and kiff.dev's Terms and Privacy (`/pt/`).
 - **Which language, with a request:** the app's own resolved language, sent as `Accept-Language`
-  (above). tafs cloud passes it on, resolved to one of the eight, on every call it makes to KIFF for
-  that request, so KIFF's words in tafs cloud's answers match; an app that sends none leaves KIFF's
+  (above). tafs cloud passes it on, resolved to one of the eight (a regional variant with its base after it,
+  `pt-BR, pt;q=0.9`), on every call it makes to KIFF for that request, so KIFF's words in tafs cloud's answers match; an app that sends none leaves KIFF's
   own choice. **Without one** (a push alert, a door's alert, a delivery note), each phone's: the language
   its app sent when it signed up for alerts (`POST /v1/push`), kept with it. An alert is worded once per
   language and each phone gets its own.

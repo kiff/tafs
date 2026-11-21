@@ -5,7 +5,7 @@
  * (or with no tools, or no flags) never reads as read only.
  */
 import type { ApprovalGrant } from "./approval.js";
-import { type Lang, wordsIn } from "./words/index.js";
+import { baseLanguage, type Lang, wordsIn } from "./words/index.js";
 
 /** An API-key grant's request, in what the sheet reads (the connection server's `api`). */
 export interface KeyRequest {
@@ -52,9 +52,10 @@ function flat(s: string | undefined, n = 300): string {
   return (s ?? "").replace(/[\u0000-\u001f\u007f-\u009f]+/g, " ").trim().slice(0, n);
 }
 
-/** The app's Terms and Privacy Policy in the person's language, as the apps' own legal links are. */
+/** The app's Terms and Privacy Policy in the person's language, as the apps' own legal links are: pt-BR reads pt's pages. */
 export function legalLinks(lang: Lang): { terms: string; privacy: string } {
-  const at = lang === "en" ? "https://kiff.dev" : `https://kiff.dev/${lang}`;
+  const page = baseLanguage(lang);
+  const at = page === "en" ? "https://kiff.dev" : `https://kiff.dev/${page}`;
   return { terms: `${at}/terms`, privacy: `${at}/privacy` };
 }
 
