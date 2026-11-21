@@ -1,0 +1,2 @@
+- **Home and the tafs list show the newest taf first.** Each taf keeps its colour.
+- **A refused approval's line shows owner words only:** "Approve · it didn't go through", with the owner's note where tafs cloud has one, never the reason written for Coach.

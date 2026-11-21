@@ -207,7 +207,7 @@ export const nl: Words = {
   approval_status: (status: string) => ({ pending: "in afwachting", approved: "goedgekeurd", signed_in: "ingelogd", needs_reconnect: "wacht op opnieuw inloggen", listed: "vermeld", connected: "gekoppeld", failed: "mislukt", revoked: "ontkoppeld", unknown: "onbekend" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Goedgekeurd",
   approval_answer_declined: "Geweigerd",
-  approval_answer_failed: (why: string) => `Goedkeuren · het is niet gelukt: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Goedkeuren · het is niet gelukt: ${why}` : `Goedkeuren · het is niet gelukt`,
   approval_reason_connect: (vendor: string, taf: string) => `${vendor} koppelen aan ${taf}`,
   approval_reason_card: (taf: string) => `${taf} zijn Card geven`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} koppelen`,

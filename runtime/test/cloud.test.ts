@@ -1625,8 +1625,8 @@ describe("the home list", () => {
     w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, color: 2 });
     await w.tafs.put("t_acme", { id: NEW, name: "Bo", job: "refunds", kiffAgent: "bo", nameClaim: "c", created: "2026-10-01T09:00:00Z" });
     const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
-    // Bo was made first and sorts first, but doesn't take Rae's colour.
-    expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Bo", 0], ["Rae", 2]]);
+    // Bo was made first, so it lists after Rae (newest first, 21 Nov), and it still doesn't take Rae's colour.
+    expect(r.tafs.map((t: { name: string; color: number }) => [t.name, t.color])).toEqual([["Rae", 2], ["Bo", 0]]);
   });
 
   it("lists only what KIFF says the person may use or oversee, in the list and on the home screen", async () => {
@@ -1638,10 +1638,11 @@ describe("the home list", () => {
     // Rae is shared with her, Vi's group is hers to oversee; Bo, and the ops agent, are someone else's.
     w.account.access = { rae: { ...no, use: true }, bo: no, vi: { ...no, oversee: true }, "support-demo": { ...no, use: true }, "ops-bot": no };
     const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
-    expect(home.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
+    // Newest first: Vi was made after Rae.
+    expect(home.tafs.map((t: { name: string }) => t.name)).toEqual(["Vi", "Rae"]);
     expect(home.others).toEqual([]);
     const list = (await call(w, "GET", "/v1/tafs", { token: "ana" })).body;
-    expect(list.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
+    expect(list.tafs.map((t: { name: string }) => t.name)).toEqual(["Vi", "Rae"]);
     // An agent KIFF doesn't name isn't listed either.
     delete w.account.access.vi;
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);

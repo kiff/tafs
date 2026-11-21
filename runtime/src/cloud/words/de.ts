@@ -207,7 +207,7 @@ export const de: Words = {
   approval_status: (status: string) => ({ pending: "ausstehend", approved: "genehmigt", signed_in: "angemeldet", needs_reconnect: "wartet auf erneute Anmeldung", listed: "gelistet", connected: "verbunden", failed: "fehlgeschlagen", revoked: "getrennt", unknown: "unbekannt" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Genehmigt",
   approval_answer_declined: "Abgelehnt",
-  approval_answer_failed: (why: string) => `Genehmigen · hat nicht geklappt: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Genehmigen · hat nicht geklappt: ${why}` : `Genehmigen · hat nicht geklappt`,
   approval_reason_connect: (vendor: string, taf: string) => `${vendor} mit ${taf} verbinden`,
   approval_reason_card: (taf: string) => `${taf} seine Card geben`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} verbinden`,
