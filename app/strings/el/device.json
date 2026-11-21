@@ -1,0 +1,7 @@
+{
+  "device.linux": "PC",
+  "device.mac": "Mac",
+  "device.phone": "τηλέφωνο",
+  "device.tablet": "tablet",
+  "device.windows": "PC με Windows"
+}

@@ -1033,10 +1033,9 @@ describe("tafs cloud", () => {
       for (const lang of LANGUAGES) expect(await says(cause, lang), `${cause} in ${lang}`).not.toBe(await says("no_refresh_token", lang));
     }
     expect(await says("refresh_refused", "de")).toBe("Gmail nimmt diese Anmeldung nicht mehr an, daher kann Rae es nicht nutzen. Verbinde erneut, um dich anzumelden.");
-    // Korean isn't served yet (its catalog is on main, not wired), but its lines are there for when it is.
+    // Korean's and Japanese's own lines, as tafs cloud serves them.
     expect(ko.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Rae이(가) 제거된 연결의 Gmail 로그인을 사용하고 있었기 때문에 지금은 Gmail을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.");
     expect(ko.connect_again_refused_words("Gmail", "Rae")).not.toBe(ko.connect_again_words("Gmail", "Rae"));
-    // Japanese is the same: on main, not wired yet.
     expect(ja.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Raeは削除された接続のGmailのサインインを使っていたため、現在Gmailを使用できません。再接続してサインインしてください。");
     expect(ja.connect_again_refused_words("Gmail", "Rae")).not.toBe(ja.connect_again_words("Gmail", "Rae"));
     expect((await setup("needs_reconnect", "en", undefined, "refresh_refused")).connections?.[0]).toMatchObject({ signed_out_cause: "refresh_refused" });
@@ -2373,7 +2372,7 @@ describe("Setup (kiff/agents#91)", () => {
     // Its skills are stored first, each at its version, then its definition names them (the Coach skills design).
     expect(w.agents.calls.filter((c) => !c.startsWith("putSkill "))).toEqual([`putAgent ${NEW}`]);
     expect(w.agents.calls.filter((c) => c.startsWith("putSkill ")).length).toBe(def.skills?.length);
-    expect(def.skills?.length).toBe(13);
+    expect(def.skills?.length).toBe(14);
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
@@ -6687,6 +6686,18 @@ describe("the account's connections a Coach conversation starts with", () => {
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
+  });
+
+  it("says the owner's paired Chromes after the connections only while planque offers them", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const offered = planque(w, () => new Response(JSON.stringify({ connections, chromes: [{ name: "Work Mac" }] }), { status: 200 }));
+    const on = (await firstMessage(w, (await send(offered, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(on).toContain("- Stripe, for Bo: provider, entry connector:composio:stripe; mode: Mode not known yet: treated as live\n- Chrome: paired: Work Mac\n");
+    expect(ownerWords(on)).toBe("watch my shop's orders page");
+    const off = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
+    const said = (await firstMessage(w, (await send(off, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(said).not.toContain("Chrome");
   });
 
   it("starts with the guides of the apps the account's tafs hold, after their connections, read with the person's session", async () => {
