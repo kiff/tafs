@@ -8,5 +8,7 @@
   "extension_proof": "WBXdHZvcYLdg8I2fm0OJ-KVTItv8aa9gkucjI8d5e2I",
   "chrome_key_sha256": "85373e64524dff047f5423100fa3b9328efed49f49bf9ba752aa1e01708137f8",
   "phone_proof": "Pkjo0PN-HYyY_ZA-5cvmD3jQErePEaQFSrQmr84sqK4",
-  "signed_bytes": "dGFmcy1jaHJvbWUvcGFpci92MQB7ImNocm9tZV9rZXlfc2hhMjU2IjoiODUzNzNlNjQ1MjRkZmYwNDdmNTQyMzEwMGZhM2I5MzI4ZWZlZDQ5ZjQ5YmY5YmE3NTJhYTFlMDE3MDgxMzdmOCIsIm5hbWUiOiJXb3JrIE1hYyIsInBhaXJpbmciOiJwcl8xIiwicGhvbmVfa2V5IjoiQlJBYkpqRThSMUpkYUhOLWlaU2ZxclhBeTliaDdQY0NEUmdqTGpsRVQxcGxjSHVHa1p5bnNyM0kwOTdwOVA4S0ZTQXJOa0ZNVjJKdGVJT09tYVN2dXNYUTItYnhfQWNTSFNnelBrbFVYMnAxZ0l1V29heTN3czNZNHciLCJwaG9uZV9wcm9vZiI6IlBram8wUE4tSFl5WV9aQS01Y3ZtRDNqUUVyZVBFYVFGU3JRbXI4NHNxSzQifQ"
+  "signed_bytes": "dGFmcy1jaHJvbWUvcGFpci92MQB7ImNocm9tZV9rZXlfc2hhMjU2IjoiODUzNzNlNjQ1MjRkZmYwNDdmNTQyMzEwMGZhM2I5MzI4ZWZlZDQ5ZjQ5YmY5YmE3NTJhYTFlMDE3MDgxMzdmOCIsIm5hbWUiOiJXb3JrIE1hYyIsInBhaXJpbmciOiJwcl8xIiwicGhvbmVfa2V5IjoiQlJBYkpqRThSMUpkYUhOLWlaU2ZxclhBeTliaDdQY0NEUmdqTGpsRVQxcGxjSHVHa1p5bnNyM0kwOTdwOVA4S0ZTQXJOa0ZNVjJKdGVJT09tYVN2dXNYUTItYnhfQWNTSFNnelBrbFVYMnAxZ0l1V29heTN3czNZNHciLCJwaG9uZV9wcm9vZiI6IlBram8wUE4tSFl5WV9aQS01Y3ZtRDNqUUVyZVBFYVFGU3JRbXI4NHNxSzQifQ",
+  "kiff_offer": "{\"exp\":\"2026-11-21T12:04:30Z\",\"key_store\":\"software\",\"kind\":\"extension\",\"name\":\"tafs for Chrome\",\"nonce\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8\",\"platform\":\"chrome\",\"pub\":\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEGhG5CG_mREuTcksHlobJg670JT51ketRoLKEc3TfY8qpLQpRmXf3bbOLWdTEaWl5W0eangsTovdzrdCd5hRFQ\",\"v\":\"kiff.pair.v1\"}",
+  "extension_proof_with_kiff_offer": "--QB3fQr0iya_MWyxkIRmh_KHBwHyOVvtfmMM0iLqmU"
 }

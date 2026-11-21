@@ -31,11 +31,12 @@ enum ChromePairing {
         return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: Data(secret.utf8))))
     }
 
-    /// Whether `proof` is the extension's proof of `key` (its SPKI DER) under our secret. A wrong one means another
-    /// extension used the code's lookup: nothing is paired.
-    static func extensionProofHolds(secret: String, key: Data, proof: String) -> Bool {
+    /// Whether `proof` is the extension's proof of `key` (its SPKI DER), and of its KIFF offer's text, under our secret.
+    /// A wrong one means another extension used the code's lookup, or planque changed either: nothing is paired.
+    static func extensionProofHolds(secret: String, key: Data, proof: String, kiffOffer: String = "") -> Bool {
         guard let given = base64URLDecoded(proof) else { return false }
-        let expected = hmac(secret, extensionProofLabel, key)
+        // The proof covers the KIFF device's offer too, when the extension sends one: planque can swap neither key.
+        let expected = hmac(secret, extensionProofLabel, key + Data(kiffOffer.utf8))
         return given.count == expected.count && zip(given, expected).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
     }
 

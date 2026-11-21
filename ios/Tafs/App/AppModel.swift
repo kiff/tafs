@@ -1378,7 +1378,8 @@ final class AppModel: ObservableObject {
         case "waiting_for_phone":
             // Another extension that used the lookup can't prove its key: it doesn't have the secret.
             guard let offer = state.offer, let key = ChromePairing.base64URLDecoded(offer.key),
-                  ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof) else { return .refused }
+                  ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof, kiffOffer: offer.kiffOffer),
+                  Self.chromeKIFFDevice(offer) != nil else { return .refused }
             return .offered(offer)
         case "contested", "confirmed":
             // Another Chrome posted on this code (planque spends it), or it's confirmed already, not by this sheet.
@@ -1394,7 +1395,8 @@ final class AppModel: ObservableObject {
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
-              ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof) else { return false }
+              ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
+              let kiffDevice = Self.chromeKIFFDevice(offer) else { return false }
         let gen = accountGeneration
         let name = ChromePairing.name(typed, browser: Words.Chrome.browserOn(browser: offer.browser, system: offer.os))
         let phoneKey = signer.approvalPublicKeyDER
@@ -1410,6 +1412,23 @@ final class AppModel: ObservableObject {
             return false
         }
         guard gen == accountGeneration else { return false }
+        // The same Face ID pairs its view-only KIFF device, as Add a device pairs a computer: KIFF's pairing first, so a
+        // Chrome is never confirmed without the device it reads and chats as.
+        if let kiffDevice {
+            kiff.tenant = tenant
+            let signedAt = SigningTime.next()
+            do {
+                let prepared = try kiff.preparePairing(kiffDevice, signedAt: signedAt)
+                let signature = try signer.signApprovalConfirmed(prepared.message)
+                _ = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+            } catch KIFFClient.KIFFError.server(_, let message, let why) {
+                chromesError = Self.pairingRefusal(message: message, reason: why)
+                return false
+            } catch {
+                chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+                return false
+            }
+        }
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
@@ -1422,6 +1441,15 @@ final class AppModel: ObservableObject {
         }
         await refreshChromes()
         return true
+    }
+
+    /// The KIFF device an extension's offer carries, when it carries one: only a view-only browser extension, as KIFF reads
+    /// it. `.some(nil)` for an offer with none (an older extension); nil for one that isn't that.
+    static func chromeKIFFDevice(_ offer: PlanqueClient.ChromeOffer) -> PairingRequest?? {
+        guard !offer.kiffOffer.isEmpty else { return .some(nil) }
+        guard case .success(let request) = PairingRequest.read(offer.kiffOffer), request.platform == "chrome",
+              request.kind == "extension", request.softwareKey else { return nil }
+        return .some(request)
     }
 
     /// Unpairs a Chrome: planque deletes its key at once, and the extension wipes itself at its next connect. Removing

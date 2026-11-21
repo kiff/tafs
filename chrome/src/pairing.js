@@ -20,13 +20,16 @@ export function parseCode(text) {
   return { lookup: s.slice(0, 4), secret: s.slice(4) };
 }
 
-/** The extension's proof of its key under the secret: HMAC(secret, ext label ‖ key). */
-export async function extensionProof(secret, spki) {
-  return b64u(await hmac(secret, LABEL.extProof, spki));
+/**
+ * The extension's proof of its key, and of its KIFF offer when it sends one, under the secret:
+ * HMAC(secret, ext label ‖ key ‖ the KIFF offer's text). So planque can swap neither key.
+ */
+export async function extensionProof(secret, spki, kiffOffer = "") {
+  return b64u(await hmac(secret, LABEL.extProof, concat(spki, new TextEncoder().encode(kiffOffer))));
 }
 
-/** What the extension sends planque for the pairing `lookup` names. */
-export async function offer(secret, keyPair, { version, manifestHash, browser, os }) {
+/** What the extension sends planque for the pairing `lookup` names, with its KIFF device's offer (`kiff_offer`). */
+export async function offer(secret, keyPair, { version, manifestHash, browser, os, kiffOffer = "" }) {
   const spki = await publicSPKI(keyPair.publicKey);
   return {
     key: b64u(spki),
@@ -34,7 +37,8 @@ export async function offer(secret, keyPair, { version, manifestHash, browser, o
     manifest_hash: manifestHash,
     browser,
     os,
-    proof: await extensionProof(secret, spki),
+    ...(kiffOffer ? { kiff_offer: kiffOffer } : {}),
+    proof: await extensionProof(secret, spki, kiffOffer),
   };
 }
 
