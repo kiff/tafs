@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "جارٍ سؤال KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "لم يصل الطلب إلى KIFF. حاول مرة أخرى.",
+  "kiff.kiff_can_not_do_sign": "لا يستطيع KIFF فعل ذلك بعد: سجّل الدخول مرة أخرى من الإعدادات لتتمكن من الموافقة من هذا الجهاز ({device}).",
+  "kiff.kiff_did_not_answer_expected": "لم يرد KIFF كما هو متوقع. حاول مرة أخرى.",
+  "kiff.kiff_words_do_not_match": "كلمات KIFF لا تطابق التحقق منها. لا يمكن الموافقة على شيء."
+}

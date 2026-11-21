@@ -575,6 +575,59 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
+## Batch 3: Arabic (being written)
+
+Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its catalog is in `all`, not `shipped`,
+until its review and the right-to-left PR that carries it ships.
+
+### Arabic (ar)
+
+Modern Standard Arabic. Addressed to one reader, masculine as Arabic software writes it ("يمكنك", "اختر"); buttons are
+verbal nouns ("الموافقة", "الرفض", "المتابعة"), as Apple's Arabic does. taf, Card, Coach, KIFF and Setup are names and stay in
+Latin letters ("الـ taf", "الـ Card"), as Bulgarian and Greek write them. Numbers stay in Western digits (1, 2, 3); the
+choice of Arabic-Indic digits is a product decision still to make. Quotes are « » for a line's own, and a name a taf
+carries is isolated (`Words.isolated`). A door is "باب" (plural "أبواب"), a call "استدعاء", a request "طلب", a held call
+"استدعاء معلّق", a knock "طرق".
+
+**Plurals have six forms:** zero (0), one (1), two (2), few (3–10), many (11–99) and other (100 and up, and decimals).
+Every count line in `ar/` writes all six. A line may leave the number out in `zero`, `one` and `two` ("يوم واحد",
+"يومان"), as the words say it.
+
+**Direction:**
+- A menu path in a line that English writes with "→" writes "←" in Arabic. "‹" and "›" are mirrored by the text
+  direction itself, so they are written as English writes them. `test_strings` fails an Arabic line with "→".
+- The two dials (the Card knob and the door dial) turn the same way in Arabic. They are physical objects drawn with screen
+  angles, not a leading or trailing edge, so a swipe or drag clockwise is clockwise in either direction. Nothing in their
+  code mirrors.
+
+| English | Arabic |
+|---|---|
+| Needs you | بانتظارك |
+| Approve / Approve once | الموافقة / الموافقة مرة واحدة |
+| Refuse | الرفض |
+| held | معلّق |
+| Halt / Halted | تجميد / مجمّد |
+| Stopped | متوقف |
+| Pause / Paused | إيقاف مؤقت / متوقف مؤقتًا |
+| Resume | استئناف |
+| Revoke | إلغاء |
+| Record | السجل |
+| Connect / connection | ربط / اتصال |
+| Pair / Unpair | إقران / إلغاء الإقران |
+| Account | الحساب |
+| limit / spend limit | الحد / حد الإنفاق |
+| credits / credit pack | الأرصدة / حزمة أرصدة |
+| passkey | مفتاح المرور |
+| security key | مفتاح الأمان |
+| Sign in / Sign out | تسجيل الدخول / تسجيل الخروج |
+| Inbox | الوارد |
+| Overview | نظرة عامة |
+| Calendar | التقويم |
+| Usage | الاستخدام |
+| brief | الملخص |
+| receipt | الإيصال |
+| Cancel / Continue | إلغاء / متابعة |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

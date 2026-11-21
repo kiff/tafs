@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "تعذّر إرفاق {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "لا يستطيع tafs إرفاق هذا الملف: نوعه أو حجمه غير مقبول. اختر ملفًا آخر.",
+  "attachment.photo": "صورة",
+  "attachment.photo_could_not_read": "تعذّرت قراءة تلك الصورة.",
+  "attachment.photo_numbered": "صورة {n}",
+  "attachment.too_large": "حجم {name} هو {size}؛ والحد الأقصى {limit}.",
+  "attachment.wrong_kind": "تعذّر إرفاق {name}. يمكن إرفاق الصور وملفات PDF والنصوص وCSV وMarkdown وملفات Word وExcel."
+}
