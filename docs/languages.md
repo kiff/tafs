@@ -240,18 +240,13 @@ differs from Portuguese's (legal-i18n's read of tafs#1629):
 | Approve once | Aprovar uma vez |
 | Refuse | Recusar |
 | Halt | Bloquear |
-| app | o app (masculine: "um app", "os seus apps", "Apps conectados") |
-| signed in (to an app, before its approval) | Login feito (never "Conectado", which is a finished connection) |
-| signed out (it happened) | Sessão encerrada; "Você saiu" for the person's own sign-out |
-| signed in to your account | conectado à sua conta |
-| waiting for | aguardando |
-| run (a taf runs) | rodar |
-| order | pedido (a parcel is "encomenda") |
-| follow-up | acompanhamento |
-| subscription | assinatura |
-| billing | faturamento |
-| Download | Baixar |
-| the app's Account screen | Conta |
+
+Also from that read, in running text: **app** is masculine ("um app", "os seus apps", "Apps conectados"); an app
+signed in before its approval is **"Login feito"**, never "Conectado", which is a finished connection; a sign-out that
+happened is **"Sessão encerrada"** ("Você saiu" for the person's own), and signed in to the account is **"conectado à sua
+conta"**; **"aguardando"** for waiting, **"rodar"** for a taf's run, **"pedido"** for an order (a parcel is "encomenda"),
+**"acompanhamento"** for a follow-up, **"assinatura"**, **"faturamento"**, **"Baixar"**, and the app's own Account
+screen is **"Conta"**.
 
 ## How it's built
 
