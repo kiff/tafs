@@ -12,7 +12,7 @@ export type ReadSecret = (id: string, region: string) => Promise<string | undefi
 export interface AppSecret {
   /** A part as text (an object part as its JSON): the one secret's when it holds it, else its old secret's. */
   text(part: Part): Promise<string | undefined>;
-  /** Whether a part can be read at all: the one secret is set, or the part's old secret is. */
+  /** Whether a part can be read at all: the one secret is set (meant to hold every part), or the part's old secret is. */
   configured(part: Part): boolean;
 }
 
@@ -23,6 +23,10 @@ export function appSecret(read: ReadSecret, env: Record<string, string | undefin
     doors: { id: env.DOORS_SECRET_ID, region: regions.agents },
   };
   let whole: Promise<Record<string, unknown>> | undefined;
+  /**
+   * The one secret's parts, read once. A read that fails (throttled, a network blip, access not granted yet, or the
+   * secret not made yet) isn't kept: the next call reads again, and this call gets the error to fall back on.
+   */
   function one(): Promise<Record<string, unknown>> {
     whole ??= (async () => {
       const id = env.TAFS_SECRET_ID;
@@ -36,16 +40,32 @@ export function appSecret(read: ReadSecret, env: Record<string, string | undefin
         return {};
       }
     })();
-    return whole;
+    const mine = whole;
+    mine.catch(() => {
+      if (whole === mine) whole = undefined;
+    });
+    return mine;
   }
   return {
     async text(part) {
-      const v = (await one())[part];
+      const o = old[part];
+      let parts: Record<string, unknown>;
+      try {
+        parts = await one();
+      } catch (e) {
+        // The one secret couldn't be read this time: the part's old secret answers while it's set.
+        if (!o.id) throw e;
+        parts = {};
+      }
+      const v = parts[part];
       if (typeof v === "string" && v !== "") return v;
       if (v && typeof v === "object") return JSON.stringify(v);
-      const o = old[part];
       return o.id ? read(o.id, o.region) : undefined;
     },
+    /**
+     * Whether a part can be read at all: the one secret is set, or the part's old secret is. With TAFS_SECRET_ID set
+     * this is true for every part, held or not, since the one secret is meant to hold them all.
+     */
     configured(part) {
       return !!env.TAFS_SECRET_ID || !!old[part].id;
     },

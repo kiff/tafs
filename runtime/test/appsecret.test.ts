@@ -53,4 +53,31 @@ describe("tafs cloud's one secret", () => {
     const s = store({ "us-east-1:tafs": JSON.stringify({ apns: "pem" }) });
     expect(await appSecret(s.read, { TAFS_SECRET_ID: "tafs", TAFS_SECRET_REGION: "us-east-1" }, regions).text("apns")).toBe("pem");
   });
+
+  it("a failed read of the one secret isn't kept: that call falls back to the old secret, and the next reads again", async () => {
+    const s = store({ "eu-west-1:tafs": JSON.stringify({ apns: "new pem" }), "eu-west-1:tafs/apns-key": "old pem" });
+    let fail = 1;
+    const read = async (id: string, region: string) => {
+      if (id === "tafs" && fail-- > 0) {
+        s.asked.push(`${region}:${id} (failed)`);
+        throw new Error("ThrottlingException");
+      }
+      return s.read(id, region);
+    };
+    const keys = appSecret(read, { ...oldEnv, TAFS_SECRET_ID: "tafs" }, regions);
+    expect(await keys.text("apns")).toBe("old pem");
+    expect(await keys.text("apns")).toBe("new pem");
+    expect(s.asked).toEqual(["eu-west-1:tafs (failed)", "eu-west-1:tafs/apns-key", "eu-west-1:tafs"]);
+  });
+
+  it("a failed read of the one secret, with no old secret to fall back on, is the caller's error and is retried", async () => {
+    let fail = 1;
+    const read = async (id: string) => {
+      if (fail-- > 0) throw new Error("AccessDeniedException");
+      return id === "tafs" ? JSON.stringify({ apns: "pem" }) : undefined;
+    };
+    const keys = appSecret(read, { TAFS_SECRET_ID: "tafs" }, regions);
+    await expect(keys.text("apns")).rejects.toThrow("AccessDeniedException");
+    expect(await keys.text("apns")).toBe("pem");
+  });
 });
