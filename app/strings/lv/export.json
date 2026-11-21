@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Tavas sarunas netika eksportētas. {why}",
+  "export.not_offered": "Failus nevarēja saglabāt šajā tālrunī. Atbrīvo vietu, tad mēģini vēlreiz.",
+  "export.own_chats_each_taf_coach": "Tavas sarunas ar katru taf, arī ar Coach, tevis pievienoto failu nosaukumi un tavas piezīmes, kā lasāms fails un kā JSON. Tās vari eksportēt tikai tu.",
+  "export.preparing": "Sagatavo tavas sarunas…",
+  "export.ready_share_again": "Gatavs: {files}. Kopīgot vēlreiz",
+  "export.row": "Eksportēt manas sarunas",
+  "export.sign_in_first": "Pieraksties ar KIFF, lai eksportētu savas sarunas."
+}

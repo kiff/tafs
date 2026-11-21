@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Vastamise tähtaeg",
+  "work.answer_within_days": {
+    "one": "{count} päev",
+    "other": "{count} päeva"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} tund",
+    "other": "{count} tundi"
+  },
+  "work.answer_within_line": "Sulle teatatakse, kui juhtum ootab kauem.",
+  "work.answer_within_none": "Määramata",
+  "work.answer_within_not_set": "Seda ei õnnestunud määrata. {why}",
+  "work.asking_kiff_run": "KIFFilt palutakse käivitada {tool}…",
+  "work.did_not_stop": "See ei lõppenud: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Selle käivitused",
+  "work.not_read": "Selle tööd ei õnnestunud lugeda. {why}",
+  "work.not_sent_again": "Seda ei saadetud uuesti. {why}",
+  "work.request.try_reply_now": "Proovi vastust kohe",
+  "work.requests_need_you": {
+    "one": "{count} päring vajab sind",
+    "other": "{count} päringut vajab sind"
+  },
+  "work.send_again": "Saada uuesti",
+  "work.sending_again": "Uuesti saatmine…",
+  "work.stop_run": "Lõpeta käivitus",
+  "work.stopped_part_way_before_finished": "{taf} lõpetas poole pealt, enne kui sai valmis."
+}

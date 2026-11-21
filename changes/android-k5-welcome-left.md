@@ -1,0 +1,1 @@
+- **Android, signing in inside the app:** back from KIFF's page with no answer, the welcome says "Signing in didn't work." and Continue works again, instead of staying greyed for 15 minutes.

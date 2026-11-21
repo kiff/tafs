@@ -152,3 +152,17 @@ language, and a tester can't tell why (K5 on Android, 21 Nov 2026). Only test bu
   `Accept-Language`), as `region_unsupported` carries.
 - **tafs's part — one line on each app:** add `unsupported_client` to the codes whose words are shown as
   sent (`ErrorWords.KIFF_WORDED` on Android), so the welcome shows KIFF's words under Continue.
+
+## 12. The in-app sign-in page always draws a way to sign in — open
+
+KIFF's `/oauth/authorize` sends the app's private sheet to `app.kiff.dev/sign-in/app`, which mounts KIFF's sign-in
+widget under "Sign in to tafs". On 21 Nov 2026 the widget's script loaded without its interface part, so mounting it
+threw ("…not loaded with Ui components"), and the page showed its title and one line with nothing under it: no
+Google, no Apple, no message. A person can't sign in or tell why, and the app can only wait for the sheet to close.
+Found on Android's K5 pass; iOS's sheet opens the same page.
+
+- **The need:** the page loads the widget with its interface, pinned. If the widget can't mount, it says so in the
+  person's language, with Try again, and never leaves a blank page. A check that fails when the page has no
+  sign-in button.
+- **tafs's part:** none in the apps. The sheet is KIFF's page. A sheet closed with no answer already reads as
+  "Signing in didn't work." The K5 checklist checks that a sign-in button is visible, not only the page's title.

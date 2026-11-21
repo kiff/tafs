@@ -660,6 +660,11 @@ data class AppState(
   val retryingRefresh: Boolean = false,
   /** This device's time zone, offered once when the account's differs; and why the account's didn't change, when it didn't. */
   val timeZoneOffer: String? = null,
+  /**
+   * This phone holds no approval key (no strong biometric enrolled), so KIFF made its session view-only: signing in again
+   * changes nothing until a fingerprint is added. The lines that would say "Sign in again" say that instead (K5, 21 Nov).
+   */
+  val noApprovalKeyHere: Boolean = false,
   val timeZoneError: String? = null,
   /** The account's groups (Everyone first) and its active people, as KIFF lists them; and why they couldn't be read or changed. */
   val groups: List<Group> = emptyList(),
@@ -1300,6 +1305,19 @@ class AppModel(
     }
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
+
+  /**
+   * True once the person is back in tafs from KIFF's sign-in tab with no answer from it (the tab closed, or tafs brought back in
+   * front): the welcome then ends the wait ([endAppSignIn]) rather than keep Continue busy for the tab's 15 minutes.
+   */
+  val appSignInLeft: kotlinx.coroutines.flow.StateFlow<Boolean> get() = appSignInTab.left
+
+  /**
+   * Ends a sign-in inside the app that's waiting on a tab the person left: [signInInApp] ends with [VendorSignInReplaced], which
+   * the welcome says as "Signing in didn't work." (the K5 pass of 21 Nov: KIFF's page ended on "This sign-in has expired", the tab
+   * was closed, and Continue stayed greyed with no line until the app was stopped).
+   */
+  fun endAppSignIn() = appSignInTab.replace()
 
   /** The terms version in force at KIFF, read when the welcome shows its tick, so the version sent is the one the person saw. */
   suspend fun appTermsVersion(): String = kiff.appTerms()
@@ -7710,6 +7728,9 @@ class AppModel(
       if (generation == accountGeneration && door != null) {
         updateDoors(tafId) { d -> d.copy(doors = if (d.doors.any { it.id == door.id }) d.doors.map { if (it.id == door.id) door else it } else d.doors + door, error = null) }
       }
+      // A door made, changed or removed changes what starts the taf: Setup's "Starts when" is tafs cloud's dial, read again so it
+      // never shows a door that's gone (the doors proof, 21 Nov). Only where the dial was read; loadKnob keeps it on a failed read.
+      if (generation == accountGeneration && _state.value.knobs.containsKey(tafId)) loadKnob(tafId)
       door
     } catch (e: CancellationException) {
       throw e
@@ -8192,16 +8213,31 @@ class AppModel(
   private fun showAccount(account: Account) {
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
-    val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
+    val offer = device.takeIf { !sameTime(it, account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
     // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
     // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
     val viewOnly = account.viewOnly
+    // Read once per account read: a fingerprint added since makes the phone hold one at its next sign-in.
+    val noApprovalKey = runCatching { signer.approvalPublicKeyDER.isEmpty() }.getOrDefault(false)
     _state.update {
       it.copy(
         kiffAccount = account, timeZoneOffer = offer,
         approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+        noApprovalKeyHere = noApprovalKey,
       )
     }
+  }
+
+  /**
+   * Whether two zones keep the same time always: the same name, or names for one fixed offset ("GMT", "UTC", "Etc/UTC", "Z"). A
+   * phone on GMT is never asked to move an account on UTC (K5, 21 Nov). Zones that differ in any season (Europe/London and GMT)
+   * still differ.
+   */
+  internal fun sameTime(a: String, b: String): Boolean {
+    if (a == b) return true
+    val za = runCatching { java.time.ZoneId.of(a).normalized() }.getOrNull() ?: return false
+    val zb = runCatching { java.time.ZoneId.of(b).normalized() }.getOrNull() ?: return false
+    return za == zb
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
