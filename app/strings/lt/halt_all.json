@@ -1,0 +1,19 @@
+{
+  "halt_all.description": "Iškart sustabdo visus taf. Nieko naujo nesiunčiama, kol jų netęsite tafs programėlėje.",
+  "halt_all.failed": "tafs nepavyko sustabdyti jūsų taf. {why} Atidarykite tafs ir sustabdykite juos.",
+  "halt_all.halted": {
+    "one": "Sustabdytas {count} taf. Nieko naujo nesiunčiama, kol netęsite.",
+    "few": "Sustabdyti {count} taf. Nieko naujo nesiunčiama, kol netęsite.",
+    "other": "Sustabdyta {count} taf. Nieko naujo nesiunčiama, kol netęsite."
+  },
+  "halt_all.halted_all": "Jūsų taf sustabdyti. Nieko naujo nesiunčiama, kol netęsite.",
+  "halt_all.halting": {
+    "one": "Stabdomas {count} taf: joks paleidimas nepradedamas. KIFF dar nepatvirtino visų dalių; tafs parodys, kai patvirtins.",
+    "few": "Stabdomi {count} taf: joks paleidimas nepradedamas. KIFF dar nepatvirtino visų dalių; tafs parodys, kai patvirtins.",
+    "other": "Stabdoma {count} taf: joks paleidimas nepradedamas. KIFF dar nepatvirtino visų dalių; tafs parodys, kai patvirtins."
+  },
+  "halt_all.halting_all": "Stabdomi jūsų taf: joks paleidimas nepradedamas. KIFF dar nepatvirtino visų dalių; tafs parodys, kai patvirtins.",
+  "halt_all.running": "tafs nepavyko sustabdyti jūsų taf. Atidarykite tafs ir sustabdykite juos.",
+  "halt_all.signed_out": "Esate atsijungę nuo tafs. Prisijunkite, kad galėtumėte sustabdyti savo taf.",
+  "halt_all.title": "Sustabdyti visus taf"
+}

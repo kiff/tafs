@@ -2047,6 +2047,18 @@ describe("an api door's keys and signed steps", () => {
         await expect(draftOf(w, DRAFT)).rejects.toThrow(/already has a door from another application/);
       });
     });
+
+    it("drafts only for an account the flag lists, so another account's Coach drafts nothing", async () => {
+      const was = process.env.TAFS_API_DOORS;
+      try {
+        process.env.TAFS_API_DOORS = "t_other";
+        await expect(draftOf(world(), DRAFT)).rejects.toThrow(/isn't offered here yet/);
+        process.env.TAFS_API_DOORS = "t_other,t_acme";
+        expect((await draftOf(world(), DRAFT)).draft_id).toBeTruthy();
+      } finally {
+        if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was;
+      }
+    });
   });
 
   // The caller's side: another application hands the taf work with a key, and reads back how it went (design 2.1–3.6).
