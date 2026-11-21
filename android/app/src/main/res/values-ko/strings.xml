@@ -1785,6 +1785,8 @@
     <string name="record_tool_refused_counts">%1$s이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다</string>
     <string name="record_tool_refused_counts_why">%1$s이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다%2$s</string>
     <string name="record_tool_refused_money">%1$s이(가) 거절했습니다. 돈은 움직이지 않았지만 오늘 합계에는 여전히 포함됩니다.</string>
+    <string name="record_tool_refused_not_counted">%1$s이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다</string>
+    <string name="record_tool_refused_not_counted_why">%1$s이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다%2$s</string>
     <string name="record_waiting_for_you">나를 기다리는 중</string>
     <string name="record_within_card">%1$s, Card 안에서</string>
     <string name="record_within_card_alone">Card 안에서</string>

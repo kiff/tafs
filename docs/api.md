@@ -423,6 +423,12 @@ carry the connected account's address, a file's name or a request id, so it is n
 through drops `tool_outcome.message` unless the line quotes it. Those words never decide whether anything was
 done. The call's status, amounts, approval flags, receipts and counting remain KIFF's unchanged evidence.
 
+A refused call with `tool_outcome.counted: false` was kept by no Card total. The tool did nothing (planque's
+`effect:none`), and the Card's call count counts what's carried out, so the draw was given back. Where the call has no
+amount, the Record says "{who} refused it. Nothing was done, and it doesn't count toward today's limits"
+(`record.tool_refused_not_counted`), not that it still counts. Money and amount totals keep a refused call, so their
+lines don't change. A KIFF that doesn't send `counted` leaves today's line (iOS `KIFFMapping.executed`).
+
 A `not_done` entry may carry `next`, what the owner can do about it
 (kiff/tafs#476, gap 10): `{kind, words, tool, taf?, message?}`.
 - `reconnect`: a vendor's 401 or 403, or the connection's `operation_changed`.

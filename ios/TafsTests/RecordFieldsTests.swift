@@ -151,16 +151,16 @@ final class RecordFieldsTests: XCTestCase {
                        "The app refused it, and it still counts toward today's limits: charge_already_refunded")
     }
 
-    /// A refusal no Card total kept (KIFF's `counted: false`: planque's `effect:none` on a total that
-    /// counts what's carried out) says it doesn't count. Money's line never changes, and an older KIFF
-    /// that doesn't send `counted` leaves today's lines.
+    /// A refusal no Card total kept (KIFF's `counted: false`: planque's `effect:none` on a call count that
+    /// counts what's carried out) says it doesn't count. The money and amount lines never change, and an
+    /// older KIFF that doesn't send `counted` leaves today's line.
     func testARefusalNoTotalKeptSaysItDoesntCount() throws {
         var refused = KIFFClient.ActivityCall.ToolOutcome(status: "refused_by_tool", message: "Precondition check failed")
         refused.counted = false
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Gmail", counts: .nothing).1,
-                       "Gmail refused it. Nothing was done, and it doesn't count toward today's limits.")
-        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Gmail", counts: .amount).1,
-                       "Gmail refused it. Nothing was done, and it doesn't count toward today's limits.")
+                       "Gmail refused it. Nothing was done, and it doesn't count toward today's limits: Precondition check failed")
+        XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", counts: .amount).1,
+                       "Stripe refused it. Nothing was done, but it still counts against today's total.", "an amount total keeps it")
         XCTAssertEqual(KIFFMapping.executed(refused, approved: false, vendor: "Stripe", counts: .money).1,
                        "Stripe refused it. No money moved, but it still counts against today's total.", "money is never given back")
         refused.counted = true
@@ -170,6 +170,8 @@ final class RecordFieldsTests: XCTestCase {
         let decoded = try JSONDecoder().decode(KIFFClient.ActivityCall.ToolOutcome.self,
                                                from: Data(#"{"status":"refused_by_tool","counted":false}"#.utf8))
         XCTAssertEqual(decoded.counted, false)
+        XCTAssertEqual(KIFFMapping.executed(decoded, approved: false, vendor: nil, counts: .nothing).1,
+                       "The app refused it. Nothing was done, and it doesn't count toward today's limits", "no reason: no colon")
         let older = try JSONDecoder().decode(KIFFClient.ActivityCall.ToolOutcome.self,
                                              from: Data(#"{"status":"refused_by_tool","message":"No."}"#.utf8))
         XCTAssertNil(older.counted)

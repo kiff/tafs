@@ -122,6 +122,8 @@
   "record.tool_refused_counts": "{who} l'ha rifiutata, e conta comunque nei limiti di oggi",
   "record.tool_refused_counts_why": "{who} l'ha rifiutata, e conta comunque nei limiti di oggi{why}",
   "record.tool_refused_money": "{who} l'ha rifiutata. Nessun denaro trasferito, ma conta comunque nel totale di oggi.",
+  "record.tool_refused_not_counted": "{who} l'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi",
+  "record.tool_refused_not_counted_why": "{who} l'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi{why}",
   "record.waiting_for_you": "Ti aspetta",
   "record.within_card": "{amount}, entro la Card",
   "record.within_card_alone": "Entro la Card"
