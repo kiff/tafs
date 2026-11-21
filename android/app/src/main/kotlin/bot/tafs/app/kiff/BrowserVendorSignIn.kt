@@ -57,7 +57,7 @@ class BrowserVendorSignIn(
     this.url = url
     try {
       open(url)
-      return withTimeout(FIFTEEN_MINUTES_MS) { waiting.await() }
+      return withTimeout(SIGN_IN_WINDOW_MS) { waiting.await() }
     } catch (_: TimeoutCancellationException) {
       throw VendorSignInCancelled()
     } finally {
@@ -108,8 +108,12 @@ class BrowserVendorSignIn(
   /** Whether a sign-in is waiting on the vendor's page. */
   val isWaiting: Boolean get() = wait.isWaiting
 
-  private companion object {
-    const val FIFTEEN_MINUTES_MS = 15 * 60 * 1000L
+  internal companion object {
+    /**
+     * As long as planque's sign-in link works (its `signInTTL`, 60 minutes since 21 Nov): choosing the account, letting a vendor
+     * set up a workspace and sharing pages took longer than 15 on a phone test, and the app gave up before planque did.
+     */
+    const val SIGN_IN_WINDOW_MS = 60 * 60 * 1000L
   }
 }
 
