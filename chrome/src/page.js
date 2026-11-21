@@ -264,6 +264,9 @@
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
     switch (a.kind) {
       case "click":
+        // A link or form that would open a new tab goes in this one, inside the run's fence.
+        if (el.closest("a[target], form[target]")) el.closest("a[target], form[target]").target = "_self";
+        if (el.form && el.form.target) el.form.target = "_self";
         press(el);
         break;
       case "fill":
