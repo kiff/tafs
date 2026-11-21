@@ -31,7 +31,7 @@
   "approval.kept": "Tas paliek sadaļā “Gaida tevi”.",
   "approval.key_could_not_sign": "Atslēga nevarēja parakstīt",
   "approval.key_gone_approve_again": "Tavi pirkstu nospiedumi mainījās vai neviens netika atpazīts, tāpēc šis tālrunis nevar apstiprināt, kamēr tu to vēlreiz neapstiprini savā pārlūkā.",
-  "approval.key_gone_biometry": "Tu nomainīji {biometry} vai tas netika atpazīts, tāpēc šī ierīce nevar apstiprināt, kamēr tu to vēlreiz neapstiprini savā pārlūkā.",
+  "approval.key_gone_biometry": "Tu nomainīji {biometry}, vai arī to neizdevās atpazīt, tāpēc šī ierīce nevar apstiprināt, kamēr tu to vēlreiz neapstiprini savā pārlūkā.",
   "approval.key_gone_sign_in": "Tavi pirkstu nospiedumi mainījās vai neviens netika atpazīts, tāpēc šis tālrunis nevar apstiprināt, kamēr tu vēlreiz nepierakstīsies.",
   "approval.key_lost": "Vēlreiz pieraksties ar KIFF, lai apstiprinātu no šī tālruņa.",
   "approval.key_not_accepted": "KIFF nepieņēma šīs ierīces apstiprināšanas atslēgu. Mēģini vēlreiz.",
@@ -98,7 +98,7 @@
   "approval.turned_off_tafs_turn_tafs": "{either} ir izslēgts lietotnei tafs. Ieslēdz to tafs iestatījumos, lai apstiprinātu.",
   "approval.view_only": "Vēlreiz pieraksties šajā tālrunī, lai apstiprinātu, vai apstiprini no sava otra tālruņa.",
   "approval.view_only_mac": "Šis Mac var tikai skatīt. Lai apstiprinātu šeit, pievieno to no sava tālruņa: Konts › Ierīces › Pievienot ierīci.",
-  "approval.why": "Katrs apstiprinājums, ko tu dod tafs lietotnē (Card, savienojums vai maksājums virs limita), tiek parakstīts šajā tālrunī ar atslēgu, ko atbloķē tikai tavs pirksta nospiedums. Tavs PIN vai raksts nevar apstiprināt.",
+  "approval.why": "Katrs apstiprinājums, ko tu dod tafs lietotnē (Card, savienojums vai maksājums virs limita), tiek parakstīts šajā tālrunī ar atslēgu, ko atbloķē tikai tavs pirksta nospiedums. Tavs PIN vai kombinācija nevar apstiprināt.",
   "approval.without_allows": "Bez apstiprināšanas tu joprojām vari pierakstīties, pārskatīt, atteikt un apturēt.",
   "approval.your_passcode": "piekļuves kodu"
 }

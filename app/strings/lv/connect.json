@@ -161,7 +161,7 @@
   "connect.start_connected_tools_iphone_first": "Vispirms sāc sadaļā “Pievienotās lietotnes” šajā iPhone.",
   "connect.status.choosing_tools": "Pierakstījies · Coach izvēlas tās rīkus",
   "connect.status.connected": "Pievienots",
-  "connect.status.signed_out": "{vendor} izrakstīja · pierakstīties vēlreiz",
+  "connect.status.signed_out": "{vendor} tevi izrakstīja · pierakstīties vēlreiz",
   "connect.status.signed_out_plain": "Izrakstīts · pierakstīties vēlreiz",
   "connect.status.waiting_sign_in": "Gaida pierakstīšanos: {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Šis taf vēl nav tafs cloud, tāpēc tam nevar pievienot lietotnes.",

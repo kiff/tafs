@@ -75,7 +75,7 @@
   "people.shared_with_everyone": "Kopīgots ar visiem",
   "people.shared_with_prefix": "Kopīgots ar: ",
   "people.sharing": "Kopīgo…",
-  "people.stops_using": "{who} vairs nelieto {taf}. Viņa sarunas paliek viņam.",
+  "people.stops_using": "{who} vairs nelieto {taf}. Savas sarunas {who} patur.",
   "people.title": "Cilvēki un grupas",
   "people.uses": "Lieto: {tafs}",
   "people.uses_none": "Vēl nelieto nevienu taf"

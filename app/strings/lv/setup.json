@@ -23,7 +23,7 @@
   "setup.knob.events_not_set_up": "Notikumu apstiprināšana šim kontam no šī tālruņa nav iestatīta.",
   "setup.knob.no_subscription": "Savienojums nepateica, kādu abonementu tas izveidoja. Mēģini vēlreiz.",
   "setup.knob.not_approved": "Nav apstiprināts. {why}",
-  "setup.knob.not_approved_unconfirmed": "Nav apstiprināts: tas netika apstiprināts.",
+  "setup.knob.not_approved_unconfirmed": "Nav apstiprināts: darbība netika apliecināta.",
   "setup.knob.not_changed": "Nav mainīts. {why}",
   "setup.knob.not_removed": "Nav noņemts. {why}",
   "setup.knob.version_not_read": "Versiju {n} nevarēja nolasīt. Mēģini vēlreiz.",

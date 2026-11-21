@@ -8,7 +8,7 @@
   "files.all_tafs": "Visi taf",
   "files.by_run": "Pēc palaišanas",
   "files.by_taf": "Pēc taf",
-  "files.delete_body": "Tas nekavējoties pazūd no sadaļas “Faili” visiem šajā kontā. To nevar atsaukt.",
+  "files.delete_body": "Tas nekavējoties pazūd no sadaļas “Faili” visiem šajā kontā. To vairs nevarēs atjaunot.",
   "files.delete_now": "Dzēst tūlīt",
   "files.delete_question": "Dzēst “{name}” tūlīt?",
   "files.deleted": "Dzēsts visiem",

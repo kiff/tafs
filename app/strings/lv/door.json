@@ -2,7 +2,7 @@
   "door.add_door": "Pievienot durvis",
   "door.add_intro": "Dod {taf} adresi, uz kuru cilvēki var rakstīt. Tādas nav, kamēr tu to neieslēdz, un tā Card joprojām nosaka, ko tas dara.",
   "door.add_short": "Pievienot",
-  "door.anyone_else_today": "Šodien {others} no {cap} no visiem citiem.",
+  "door.anyone_else_today": "No visiem citiem šodien: {others} no {cap}.",
   "door.api.boundary": "Durvju atslēga var tikai nodot {taf} darbu. Tā nekad nevar maksāt vai pirkt.",
   "door.api.copied": "Nokopēts. Tā vairs netiks rādīta.",
   "door.api.copy_key": "Kopēt atslēgu",
@@ -40,10 +40,10 @@
     "other": "{count} no {limit}"
   },
   "door.api.open_reason": "Vēlreiz atvērt durvis: {app}",
-  "door.api.paused": "Pieprasījumi tiek atteikti, līdz tu tās atver. Jau izdarītais netiek atsaukts.",
+  "door.api.paused": "Pieprasījumi tiek atteikti, līdz tu tās atver. Jau izdarītais paliek spēkā.",
   "door.api.per_minute": "Minūtē",
   "door.api.read_how": "Izlasīt, kā gāja",
-  "door.api.remove_body": "Tās atslēgas pārstāj darboties, un {app} vairs nevar nodot {taf} darbu. Pieprasījumi, kas vēl nav sākti, tiek atcelti; tas, kas notiek, tiek pabeigts. Jau izdarītais netiek atsaukts.",
+  "door.api.remove_body": "Tās atslēgas pārstāj darboties, un {app} vairs nevar nodot {taf} darbu. Pieprasījumi, kas vēl nav sākti, tiek atcelti; tas, kas notiek, tiek pabeigts. Jau izdarītais paliek spēkā.",
   "door.api.revoke_body": "Tās sūtītie pieprasījumi, kas vēl nav sākti, tiek atcelti. Tas, kas notiek, tiek pabeigts. Lai to pārtrauktu tūlīt, aptur taf. Atsauktu atslēgu nevar atjaunot: jauna atslēga ir jauna atslēga.",
   "door.api.revoke_reason": "Atsaukt “{key}”",
   "door.api.revoke_title": "Atsaukt “{key}”?",
@@ -56,7 +56,7 @@
   "door.api.shown_once": "Rādīts tikai tagad.",
   "door.api.shown_once_body": "Nokopē to {app} slepenajos datos. tafs neglabā kopiju, ko varētu parādīt vēlreiz.",
   "door.api.today": "Šodien",
-  "door.api.two_keys": "Ne vairāk kā divas atslēgas, lai vienu varētu nomainīt, neapturot otru.",
+  "door.api.two_keys": "Ne vairāk kā divas atslēgas, lai vienu varētu nomainīt, kamēr otra darbojas.",
   "door.api.up_to": {
     "zero": "līdz {count}",
     "one": "līdz {count}",
@@ -70,19 +70,19 @@
   "door.checks_sender_server_signed_message": "Tās pārbauda, vai sūtītāja serveris parakstīja ziņu",
   "door.copy_address": "Kopēt adresi",
   "door.day.open": {
-    "zero": "Šodien {today} no {count} no tevis un pārī savienotajiem sūtītājiem. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts.",
-    "one": "Šodien {today} no {count} no tevis un pārī savienotajiem sūtītājiem. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts.",
-    "other": "Šodien {today} no {count} no tevis un pārī savienotajiem sūtītājiem. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts."
+    "zero": "No tevis un pārī savienotajiem sūtītājiem šodien: {today} no {count}. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts.",
+    "one": "No tevis un pārī savienotajiem sūtītājiem šodien: {today} no {count}. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts.",
+    "other": "No tevis un pārī savienotajiem sūtītājiem šodien: {today} no {count}. Tikai teksts: pielikumi netiek atvērti, un atbildē tas ir pateikts."
   },
   "door.day.others": {
-    "zero": "Šodien {others} no {count} no visiem citiem.",
-    "one": "Šodien {others} no {count} no visiem citiem.",
-    "other": "Šodien {others} no {count} no visiem citiem."
+    "zero": "No visiem citiem šodien: {others} no {count}.",
+    "one": "No visiem citiem šodien: {others} no {count}.",
+    "other": "No visiem citiem šodien: {others} no {count}."
   },
   "door.day.resting": {
-    "zero": "Šodien {count} no {count} no tevis un pārī savienotajiem sūtītājiem. Pārējie līdz rītdienai tiek atmesti.",
-    "one": "Šodien {count} no {count} no tevis un pārī savienotajiem sūtītājiem. Pārējie līdz rītdienai tiek atmesti.",
-    "other": "Šodien {count} no {count} no tevis un pārī savienotajiem sūtītājiem. Pārējie līdz rītdienai tiek atmesti."
+    "zero": "No tevis un pārī savienotajiem sūtītājiem šodien: {count} no {count}. Pārējie līdz rītdienai tiek atmesti.",
+    "one": "No tevis un pārī savienotajiem sūtītājiem šodien: {count} no {count}. Pārējie līdz rītdienai tiek atmesti.",
+    "other": "No tevis un pārī savienotajiem sūtītājiem šodien: {count} no {count}. Pārējie līdz rītdienai tiek atmesti."
   },
   "door.dial.add_position": "Pievienot durvis, {stops} no {stops_2}",
   "door.dial.add_stamp": "PIEVIENOT DURVIS",
@@ -182,13 +182,13 @@
   "door.slack_door": "Slack durvis",
   "door.slack_not_added": "Slack durvis netika pievienotas. {why}",
   "door.slack_still_listens": "Slack bots joprojām klausās šajā kanālā, tāpēc durvis paliek. {why}",
-  "door.slack_subscription_not_stopped_door": "Slack abonements netika apturēts, tāpēc durvis paliek: {why}",
+  "door.slack_subscription_not_stopped_door": "Slack abonements netika atcelts, tāpēc durvis paliek: {why}",
   "door.slack_workspace": "Slack darbvieta",
   "door.stamp.by": "KANĀLS: {app}",
   "door.stamp.goes_back": "KAD GATAVS, ATBILDE TIKS SŪTĪTA: {app}",
   "door.stamp.not_sent_back": "NAV SŪTĪTS ATPAKAĻ",
   "door.stamp.sent_back": "↩ ATBILDE NOSŪTĪTA: {app} · TAJĀ PAŠĀ PAVEDIENĀ",
-  "door.start_connected_tools_first_slack": "Vispirms sāc sadaļā “Pievienotās lietotnes” šajā ierīcē ({device}). Pirms durvju noņemšanas jāaptur Slack abonements.",
+  "door.start_connected_tools_first_slack": "Vispirms sāc sadaļā “Pievienotās lietotnes” šajā ierīcē ({device}). Pirms durvju noņemšanas jāatceļ Slack abonements.",
   "door.status.closed": "Aizvērtas",
   "door.status.open": "Atvērtas",
   "door.status.resting": "Atpūšas līdz rītdienai",

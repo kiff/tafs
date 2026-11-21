@@ -121,7 +121,7 @@
   "card.outcome.outside": "Ārpus Card",
   "card.outcome.over_one_action": "Pārsniedz Card limitu vienai darbībai",
   "card.outcome.over_total": "Pārsniedz Card kopsummu",
-  "card.outside_held": "Ārpus: aizturēts tev",
+  "card.outside_held": "Ārpus: aizturēts, gaida tevi",
   "card.outside_refused": "Ārpus: atteikts",
   "card.over_limit_calls_would": "Pārsniedz tā limitu ({limit} izsaukumi): šis būtu {nth}",
   "card.revoke_failed": "KIFF neatsauca Card. {why}",
