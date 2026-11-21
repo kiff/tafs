@@ -476,6 +476,16 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
   protection, and cleared on sign-out.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
+- **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
+  tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a
+  held call wants), a held call's details, an amount, or a chat. Needs you isn't kept: with a passcode the Inbox already
+  opens at once with its count. Complete file protection, so it can't be read while the watch is locked or off the wrist;
+  cleared on either sign-out (any reply saying the phone is signed out), when the app opens or is put away without a
+  passcode, and after 24 hours; a file that won't read is none (`WatchCacheTests`). Your tafs draws it at once with a small
+  dot ("Loading" to VoiceOver) while the phone is asked, and the phone's read replaces it. **A short drop keeps the last
+  read** (`ReadGrace`, on whatever the switch): when the phone doesn't answer, what's shown stays with the dot for 30 s, the
+  phone is asked once more, and only then is it unreachable. **Switched on only with its sentence on the privacy page**
+  (the Apple Watch paragraph says it keeps nothing apart from the Inbox) and the owner's yes.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch
