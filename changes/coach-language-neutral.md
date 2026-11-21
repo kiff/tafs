@@ -1,0 +1,1 @@
+- **Coach answers in the owner's language only:** its rule no longer names a language as its example. That example still cued Spanish replies to English owners.
