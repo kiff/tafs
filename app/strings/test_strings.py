@@ -101,7 +101,7 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean with them (complete, PM 20 Nov). Japanese is being written: not shipped until
         # every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lv"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
         self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])

@@ -263,6 +263,38 @@ always agrees. A line that fills "από {who}" is written in the accusative.
 | Coach's plan (its steps) | Σχέδιο |
 | Decline | Απόρριψη |
 
+### Lithuanian (lt)
+
+Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF, Setup and
+tafs cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
+(`{taf}`, `{device}`, `{biometry}`) stands alone in the nominative ("taf {taf} Card", "Patvirtinti: {biometry}").
+
+| English | Lithuanian |
+|---|---|
+| Needs you | Laukia jūsų |
+| Approve / Approve once | Patvirtinti / Patvirtinti vieną kartą |
+| Refuse | Atmesti |
+| held | sulaikyta |
+| Halt / Halted | Sustabdyti / Sustabdyta |
+| Stopped | Nutraukta |
+| Pause / Paused | Pristabdyti / Pristabdyta |
+| Resume | Tęsti |
+| Revoke | Atšaukti |
+| Record | Žurnalas |
+| Connect / connection | Prijungti / ryšys |
+| Pair / Unpair | Susieti / Atsieti |
+| Account | Paskyra |
+| limit / spend limit | limitas / išlaidų limitas |
+| credits / credit pack | kreditai / kreditų paketas |
+| Sign in / Sign out | Prisijungti / Atsijungti |
+| Inbox | Gautieji |
+| Overview | Apžvalga |
+| Calendar | Kalendorius |
+| Setup | Setup (a name, never declined) |
+| Usage | Naudojimas |
+| plan | planas |
+| door / knock | durys / beldimas |
+
 ### Latvian (lv)
 
 Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,
