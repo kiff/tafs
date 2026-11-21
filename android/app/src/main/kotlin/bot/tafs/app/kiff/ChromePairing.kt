@@ -18,7 +18,8 @@ import kotlinx.serialization.json.buildJsonObject
 object ChromePairing {
   /** The code's characters: no 0, 1, I, L, O or U. */
   const val ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ"
-  const val SECRET_LENGTH = 6
+  /** 17 characters of 30, about 83 bits: planque keeps the extension's proof under it, so it must not be guessable offline. */
+  const val SECRET_LENGTH = 17
 
   const val PAIR_LABEL = "tafs-chrome/pair/v1"
   const val EXTENSION_PROOF_LABEL = "tafs-chrome/ext/v1"
@@ -32,8 +33,11 @@ object ChromePairing {
   /** A new secret, from the system's secure random source. */
   fun newSecret(): String = String(CharArray(SECRET_LENGTH) { ALPHABET[random.nextInt(ALPHABET.length)] })
 
-  /** The code as the phone shows it: the lookup planque gave, then the secret ("K7QF-29XMDP"). */
-  fun code(lookup: String, secret: String): String = "$lookup-$secret"
+  /**
+   * The code as the phone shows it: the lookup planque gave, then the secret in groups of four ("K7QF-29XM-DPQR-STVW-XYZ2-3"),
+   * as iOS shows it. The extension takes it with or without the dashes.
+   */
+  fun code(lookup: String, secret: String): String = (listOf(lookup) + secret.chunked(4)).joinToString("-")
 
   /** HMAC-SHA256 under the secret, over label ‖ 0x00 ‖ data. */
   fun hmac(secret: String, label: String, data: ByteArray): ByteArray =

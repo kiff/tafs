@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
-import { refuseURL, bareURL, sensitive } from "../src/sites.js";
+import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
 import "../src/mask.js";
 
@@ -88,6 +88,14 @@ test("Chrome's own pages are never opened, and sensitive sites only when allowed
   assert.equal(sensitive("bankside-coffee.example"), false, "a word that only starts with bank");
 });
 
+test("a grant's site is never a public suffix, which would reach every site under it", () => {
+  assert.equal(siteOK("shop.example"), true);
+  assert.equal(siteOK("shop.co.uk"), true);
+  for (const s of ["com", "co.uk", "com.au", "github.io", ""]) assert.equal(siteOK(s), false, s);
+  assert.equal(refuseURL("https://shop.example.co.uk/", ["co.uk"]).code, "site_not_listed");
+  assert.equal(refuseURL("https://shop.example/", ["example"]).code, "site_not_listed");
+});
+
 test("a URL as recorded has no query or fragment", () => {
   assert.equal(bareURL("https://shop.example/a/b?token=x#y"), "https://shop.example/a/b");
   assert.equal(bareURL("nope"), "");
@@ -142,7 +150,40 @@ test("the extension's guard refuses what planque's does", () => {
   assert.equal(refuse(plain, { kind: "fill", ref: "f9", value: "x" }).code, "ref_unknown");
   assert.equal(refuse(plain, { kind: "submit", ref: "c1" }).code, "bad_step");
   assert.equal(refuse(plain, { kind: "fill", ref: "f1" }).code, "bad_step", "a fill has a value");
+  // A link whose words pay is refused like a control; on a checkout or payment page no link is followed at all.
+  const shop = { url: "https://shop.example/cart", fields: [], controls: [], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }, { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(shop, { kind: "click", ref: "l1" }).code, "payment_step");
+  assert.equal(refuse(shop, { kind: "click", ref: "l2" }), null);
+  const pay = { url: "https://shop.example/checkout", payment_frame: true, fields: [], controls: [], links: [{ ref: "l1", label: "Continue", url: "https://shop.example/checkout#pay" }, { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(pay, { kind: "click", ref: "l1" }).code, "payment_step", "a link back to the payment page itself");
+  assert.equal(refuse(pay, { kind: "click", ref: "l2" }).code, "payment_step", "nor a neutral link to another page");
+  // A neutral-label link on a checkout to another path may still place the order (a GET to /place-order): refused.
+  const checkout = { url: "https://shop.example/checkout", checkout: { lines: [] }, fields: [], controls: [], links: [{ ref: "l1", label: "Continue", url: "https://shop.example/place-order" }] };
+  assert.equal(refuse(checkout, { kind: "click", ref: "l1" }).code, "payment_step", "a checkout follows no link, whatever its path");
+  assert.equal(refuse({ ...checkout, checkout: undefined }, { kind: "click", ref: "l1" }), null, "off a checkout, the same link is followed");
   for (const words of ["Pay now", "Commander", "Jetzt kaufen", "Finalizar compra", "Acquista ora", "Afrekenen", "Fazer pedido"]) {
     assert.ok(PAY_WORDS.test(words), words);
+  }
+});
+
+test("every locale has English's keys and placeholders, and a description Chrome takes", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const dir = new URL("../_locales/", import.meta.url);
+  const read = (loc) => JSON.parse(readFileSync(new URL(loc + "/messages.json", dir), "utf8"));
+  const en = read("en");
+  // Waiting for legal-i18n's words, so Chrome shows English for them meanwhile. Empty before the switch goes on.
+  const awaiting = new Set([]);
+  const locales = readdirSync(dir).filter((l) => l !== "en");
+  assert.deepEqual(locales.sort(), ["de", "es", "fr", "it", "ja", "ko", "nl", "pl", "pt_BR", "pt_PT"]);
+  for (const loc of ["en", ...locales]) {
+    const m = read(loc);
+    assert.deepEqual(Object.keys(m).sort(), Object.keys(en).filter((k) => loc === "en" || !awaiting.has(k) || k in m).sort(), loc);
+    for (const [key, { message, placeholders }] of Object.entries(m)) {
+      assert.ok(message.trim(), `${loc} ${key}`);
+      assert.deepEqual(Object.keys(placeholders || {}).sort(), Object.keys(en[key].placeholders || {}).sort(), `${loc} ${key}`);
+      const used = [...message.matchAll(/\$([A-Z_]+)\$/g)].map((x) => x[1].toLowerCase()).sort();
+      assert.deepEqual([...new Set(used)], Object.keys(placeholders || {}).sort(), `${loc} ${key} uses its placeholders`);
+    }
+    assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
   }
 });

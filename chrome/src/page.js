@@ -145,11 +145,36 @@
     return out;
   }
 
-  function linksOf() {
+  /**
+   * A link that acts rather than goes somewhere: a script handler, a button's role, or a URL that is this page plus a
+   * fragment. It's offered as a control, so the pay and checkout rules apply to it as to a button.
+   */
+  function actsAsControl(el) {
+    if (el.matches("[role=button], [onclick]")) return true;
+    try {
+      const to = new URL(el.href);
+      const here = new URL(location.href);
+      return to.origin === here.origin && to.pathname === here.pathname && to.search === here.search;
+    } catch {
+      return true;
+    }
+  }
+
+  function linksOf(controls) {
     const out = [];
     for (const el of document.querySelectorAll("a[href]")) {
       if (out.length >= MAX_LINKS) break;
       if (!visible(el)) continue;
+      if (el.matches(CONTROLS)) continue; // already a control
+      if (actsAsControl(el)) {
+        if (controls.length >= MAX_CONTROLS) continue;
+        const ref = "c" + (controls.length + 1);
+        refs.set(ref, el);
+        const control = { ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), submits: false };
+        if (placesOrder(el, false)) control.places_order = true;
+        controls.push(control);
+        continue;
+      }
       const url = M.maskURL(el.href);
       if (!url) continue;
       const ref = "l" + (out.length + 1);
@@ -185,8 +210,8 @@
       text: text.length > MAX_TEXT ? text.slice(0, MAX_TEXT) + "\n(cut)" : text,
       fields: fieldsOf(),
       controls: controlsOf(),
-      links: linksOf(),
     };
+    page.links = linksOf(page.controls);
     if (paymentFrame()) page.payment_frame = true;
     if (dialog) page.dialog = dialog;
     dialog = null;
@@ -239,6 +264,9 @@
     if (kind === "password" || kind === "card" || kind === "code") return { ok: false, code: "secret_field" };
     switch (a.kind) {
       case "click":
+        // A link or form that would open a new tab goes in this one, inside the run's fence.
+        if (el.closest("a[target], form[target]")) el.closest("a[target], form[target]").target = "_self";
+        if (el.form && el.form.target) el.form.target = "_self";
         press(el);
         break;
       case "fill":

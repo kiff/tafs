@@ -102,7 +102,8 @@ fun ChromesSheet(
     if (pairing != null) activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
     onDispose { activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SECURE) }
   }
-  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+  // The sheet is its own window: the code's secret is kept off it too, not only off the activity behind.
+  DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background, secure = pairing != null) {
     Column(Modifier.fillMaxSize().navigationBarsPadding().testTag(CHROMES_SHEET)) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Chrome.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))

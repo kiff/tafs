@@ -58,7 +58,14 @@ export function refuse(page, act) {
       if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf clicks no control" };
       return null;
     }
-    if ((page.links || []).some((l) => l.ref === act.ref)) return null;
+    const link = (page.links || []).find((l) => l.ref === act.ref);
+    if (link) {
+      // A link whose words pay is refused as a control would be. On a checkout or payment page no link is followed at
+      // all: neither its URL nor its words can prove that following it places no order (a GET to /place-order).
+      if (PAY_WORDS.test(link.label || "")) return { code: CODE.paymentStep, why: "that link's words pay or place an order" };
+      if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf follows no link" };
+      return null;
+    }
     return { code: CODE.refUnknown, why: "the page has no control or link " + act.ref };
   }
   const field = (page.fields || []).find((f) => f.ref === act.ref);

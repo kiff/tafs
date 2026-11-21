@@ -1477,9 +1477,9 @@ Chrome**, as iOS's `ChromesView`. The extension's side, and the contract all thr
 The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves `AppState.chromes` null, so planque's
 switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`).
 
-- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 6-character secret itself
+- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 17-character secret itself (about 83 bits, so the proof planque keeps under it can't be tried offline), shown in groups of four (`K7QF-29XM-DPQR-STVW-XYZ2-3`)
   (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer
-  you're at", and the window is `FLAG_SECURE` while it does, so no screenshot, recents thumbnail or shared screen shows it.
+  you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
   `ChromePairingInProgress` leaves the secret out of its `toString`.
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
   constant time). The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the

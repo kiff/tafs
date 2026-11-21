@@ -13,6 +13,8 @@ export const LABEL = Object.freeze({
   result: "tafs-chrome/result/v1", // the extension answers a step
   release: "tafs-chrome/release/v1", // the phone releases one sealed value for one fill
   unpair: "tafs-chrome/unpair/v1", // the extension unpairs itself
+  sensitive: "tafs-chrome/sensitive/v1", // the phone allows one sensitive site for one grant
+  sites: "tafs-chrome/sites/v1", // the phone signs a grant's sites when the owner approves it
   extProof: "tafs-chrome/ext/v1", // HMAC: the extension's key, under the pairing code's secret
   phoneProof: "tafs-chrome/phone/v1", // HMAC: the phone's key and the extension's, under the same secret
 });
@@ -77,10 +79,12 @@ export async function sign(privateKey, label, body) {
 export async function verify(publicKey, label, body, sig) {
   try {
     const key = typeof publicKey === "string" ? await importPublic(publicKey) : publicKey;
-    let raw = fromB64u(sig);
-    if (raw.length !== 64) raw = derToRaw(raw);
-    if (!raw) return false;
-    return await crypto.subtle.verify(SIGN, key, raw, signingBytes(label, body));
+    const given = fromB64u(sig);
+    const data = signingBytes(label, body);
+    // r‖s first, as the contract sends it; a DER signature (a phone's keystore) after, which can also be 64 bytes long.
+    if (given.length === 64 && (await crypto.subtle.verify(SIGN, key, given, data))) return true;
+    const raw = derToRaw(given);
+    return !!raw && (await crypto.subtle.verify(SIGN, key, raw, data));
   } catch {
     return false;
   }

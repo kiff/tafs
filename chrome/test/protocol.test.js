@@ -1,9 +1,9 @@
-import { test } from "node:test";
+import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
-import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, MAX_AHEAD_MS } from "../src/protocol.js";
+import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
-import { Relay } from "../src/relay.js";
+import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
 
@@ -44,9 +44,13 @@ test("a step runs only when planque signed it for this Chrome, unexpired and new
 
 test("each answer, hello and welcome is signed for its purpose", async () => {
   const ext = await newKeyPair();
-  const r = await result(ext.privateKey, "op_1", { error: { code: "page_changed" } });
+  const r = await result(ext.privateKey, { id: "op_1", nonce: "n1" }, "chr_1", { error: { code: "page_changed" } });
   assert.equal(r.ok, false);
-  assert.equal(await verify(await pub(ext), LABEL.result, { id: "op_1", ok: false, page: null, error: { code: "page_changed" } }, r.sig), true);
+  const body = { id: "op_1", nonce: "n1", chrome_id: "chr_1", ok: false, page: null, error: { code: "page_changed" } };
+  assert.equal(await verify(await pub(ext), LABEL.result, body, r.sig), true);
+  // The step's nonce and the Chrome are signed: the same answer can't be filed against another step or Chrome.
+  assert.equal(await verify(await pub(ext), LABEL.result, { ...body, nonce: "n2" }, r.sig), false);
+  assert.equal(await verify(await pub(ext), LABEL.result, { ...body, chrome_id: "chr_2" }, r.sig), false);
 
   const h = await hello(ext.privateKey, { chromeId: "chr_1", nonceP: "p", nonceE: "e", version: "0.1.0", manifestHash: "h" });
   assert.equal(await verify(await pub(ext), LABEL.hello, { chrome_id: "chr_1", nonce_p: "p", nonce_e: "e", version: "0.1.0", manifest_hash: "h" }, h.sig), true);
@@ -73,12 +77,13 @@ test("a sealed value opens only on the paired phone's own release, never planque
   assert.equal(await checkRelease(release, { ...ctx, step: { ...s, act: { ...s.act, ref: "f3" } } }), false, "another field");
 });
 
-test("a pairing code is ten unambiguous characters", () => {
-  assert.deepEqual(parseCode("k7qf-29xmdp"), { lookup: "K7QF", secret: "29XMDP" });
-  assert.deepEqual(parseCode("K7QF 29XMDP"), { lookup: "K7QF", secret: "29XMDP" });
-  assert.equal(parseCode("K7QF-29XMD0"), null, "a zero");
-  assert.equal(parseCode("K7QF-29XMD"), null, "too short");
+test("a pairing code is four characters of lookup and a 17-character secret, about 83 bits", () => {
+  assert.deepEqual(parseCode("k7qf-29xm-dpqr-stvw-xyz2-3"), { lookup: "K7QF", secret: "29XMDPQRSTVWXYZ23" });
+  assert.deepEqual(parseCode("K7QF 29XMDPQRSTVWXYZ23"), { lookup: "K7QF", secret: "29XMDPQRSTVWXYZ23" });
+  assert.equal(parseCode("K7QF-29XMDP"), null, "the old six-character secret is too short");
+  assert.equal(parseCode("K7QF-29XM-DPQR-STVW-XYZ2-0"), null, "a zero");
   assert.ok(!/[01ILOU]/.test(ALPHABET));
+  assert.ok(Math.log2(ALPHABET.length) * 17 > 80);
 });
 
 /** The phone's side of a pairing, as the apps do it: checks our proof, then signs and proves its own key. */
@@ -93,7 +98,7 @@ async function phoneConfirms(secret, offered, { phone, pairing = "pr_1", name = 
 }
 
 test("pairing binds the phone's key and ours under the code's secret, which planque never sees", async () => {
-  const secret = "29XMDP";
+  const secret = "29XMDPQRSTVWXYZ23";
   const ext = await newKeyPair();
   const phone = await newKeyPair();
   const offered = await offer(secret, ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS" });
@@ -103,13 +108,13 @@ test("pairing binds the phone's key and ours under the code's secret, which plan
 
   // planque swaps in a key of its own: it can sign, but it can't prove the key under the secret.
   const mallory = await newKeyPair();
-  const swapped = await phoneConfirms("ZZZZZZ", offered, { phone: mallory }).catch(() => null);
+  const swapped = await phoneConfirms("ZZZZZZZZZZZZZZZZZ", offered, { phone: mallory }).catch(() => null);
   assert.equal(swapped, null, "the phone itself refuses an offer proved under another secret");
   const forged = { ...answer, phone_key: await pub(mallory) };
   forged.phone_sig = await sign(mallory.privateKey, LABEL.pair, { pairing: "pr_1", chrome_key_sha256: "x", name: "Work Mac", phone_key: forged.phone_key, phone_proof: answer.phone_proof });
   assert.equal(await checkConfirmation(secret, ext, forged), null, "a substituted phone key");
   assert.equal(await checkConfirmation(secret, ext, { ...answer, name: "Other" }), null, "a renamed pairing");
-  assert.equal(await checkConfirmation("AAAAAA", ext, answer), null, "another secret");
+  assert.equal(await checkConfirmation("AAAAAAAAAAAAAAAAA", ext, answer), null, "another secret");
   const otherExt = await newKeyPair();
   assert.equal(await checkConfirmation(secret, otherExt, answer), null, "an answer for another extension's key");
 });
@@ -173,6 +178,10 @@ test("the relay takes steps only after both ends proved themselves", async () =>
   const answer = ws.sent.at(-1);
   assert.equal(answer.type, "result");
   assert.equal(answer.ok, true);
+  assert.equal(answer.nonce, s.nonce, "the answer names the step's own nonce");
+  assert.equal(answer.chrome_id, "chr_1");
+  const { sig, type, ...signedBody } = answer;
+  assert.equal(await verify(await pub(ext), LABEL.result, signedBody, sig), true);
 
   const bad = step({ nonce: "n2" });
   await ws.deliver({ type: "step", step: bad, sig: "AAAA" });
@@ -197,6 +206,83 @@ test("a step before the welcome, or a forged welcome, ends the connection", asyn
   assert.notEqual(forged.ws.closed, null);
 });
 
+test("the extension speaks first: open, then planque's challenge", async () => {
+  const p = await planque();
+  const { relay, ws } = await relayWith(p);
+  assert.deepEqual(ws.sent, [], "nothing before the connection is up");
+  ws.onopen();
+  assert.deepEqual(ws.sent, [{ type: "open" }]);
+  await ws.deliver({ type: "challenge", nonce_p: "np" });
+  assert.equal(ws.sent.at(-1).type, "hello");
+  relay.close();
+});
+
+test("planque's close message counts as its close code: 4410 wipes once, 4401 and 4403 only close", async () => {
+  const p = await planque();
+  const before = await relayWith(p);
+  await before.ws.deliver({ type: "close", code: 4410, reason: "unpaired" });
+  assert.equal(before.wiped(), true, "even before the proofs");
+  assert.notEqual(before.ws.closed, null);
+
+  const after = await relayWith(p);
+  let wipes = 0;
+  after.relay.onUnpaired = () => (wipes += 1);
+  await handshake(p, after.ws);
+  await after.ws.deliver({ type: "close", code: 4410 });
+  after.ws.onclose({ code: 4410 });
+  assert.equal(wipes, 1, "a close message and a close code wipe once");
+  assert.equal(after.relay.connected, false);
+
+  for (const code of [4401, 4403]) {
+    const r = await relayWith(p);
+    await handshake(p, r.ws);
+    await r.ws.deliver({ type: "close", code, reason: "no" });
+    assert.equal(r.wiped(), false, String(code));
+    assert.equal(r.relay.connected, false, String(code));
+    assert.notEqual(r.ws.closed, null, String(code));
+  }
+});
+
+test("an answer over the relay's limit is page_too_large, signed", async () => {
+  const p = await planque();
+  const big = { active: false, handle: async () => ({ page: { read_id: "rd_1", url: "https://shop.example/", text: "x".repeat(MAX_RESULT_BYTES) } }), stop: async () => {} };
+  const { relay, ext, ws } = await relayWith(p, { runner: big });
+  await handshake(p, ws);
+  const s = step();
+  await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const answer = ws.sent.at(-1);
+  assert.equal(answer.type, "result");
+  assert.equal(answer.error.code, "page_too_large");
+  assert.ok(JSON.stringify(answer).length < MAX_RESULT_BYTES);
+  const { sig, type, ...body } = answer;
+  assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
+  relay.close();
+});
+
+test("a connection dropped during a run is opened again at once; idle, it waits for the alarm", async () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const p = await planque();
+    const running = { active: true, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner: running });
+    await handshake(p, ws);
+    ws.onclose({ code: 1001 });
+    assert.equal(FakeSocket.last, ws, "not before the first wait");
+    mock.timers.tick(1_000);
+    assert.notEqual(FakeSocket.last, ws, "opened again");
+    relay.close();
+
+    const idle = await relayWith(p);
+    await handshake(p, idle.ws);
+    idle.ws.onclose({ code: 1001 });
+    mock.timers.tick(60_000);
+    assert.equal(FakeSocket.last, idle.ws, "idle: the alarm reconnects");
+    idle.relay.close();
+  } finally {
+    mock.timers.reset();
+  }
+});
+
 test("planque closing with 4410 wipes the extension", async () => {
   const p = await planque();
   const r = await relayWith(p);
@@ -208,4 +294,36 @@ test("planque closing with 4410 wipes the extension", async () => {
   assert.equal(other.wiped(), false, "a dropped connection isn't an unpair");
   r.relay.close();
   other.relay.close();
+});
+
+test("a step's nonce is still refused after the service worker restarts", async () => {
+  const p = await planque();
+  const box = { entries: [] };
+  const kept = { get: async () => box.entries, set: async (e) => void (box.entries = e) };
+  const s = step({ nonce: "nr" });
+  const msg = { type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) };
+  const first = new Nonces(() => NOW, kept);
+  assert.equal((await checkStep(msg, { planqueKey: p.key, chromeId: "chr_1", nonces: first, now: NOW })).why, null);
+  const afterRestart = new Nonces(() => NOW, kept);
+  assert.equal((await checkStep(msg, { planqueKey: p.key, chromeId: "chr_1", nonces: afterRestart, now: NOW })).why, "seen before");
+});
+
+test("a release reaches at most two minutes ahead", async () => {
+  const phone = await newKeyPair();
+  const s = step({ op: "act", act: { kind: "fill", ref: "f2", sealed: "sec_1" } });
+  const body = { chrome_id: "chr_1", op: "op_1", sealed: "sec_1", origin: "https://shop.example", field_ref: "f2", nonce: "r1", exp: NOW + 10 * 60_000 };
+  const release = { ...body, sig: await sign(phone.privateKey, LABEL.release, body) };
+  assert.equal(await checkRelease(release, { phoneKey: await pub(phone), chromeId: "chr_1", step: s, origin: "https://shop.example", now: NOW }), false);
+});
+
+test("a sensitive site opens only on the paired phone's own allowance for that grant", async () => {
+  const phone = await newKeyPair();
+  const p = await planque();
+  const allow = async (k, grant, site) => ({ site, sig: await sign(k.privateKey, LABEL.sensitive, { chrome_id: "chr_1", grant, site }) });
+  const ctx = { phoneKey: await pub(phone), chromeId: "chr_1", grant: "g_1" };
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_1", "paypal.com")], ctx), ["paypal.com"]);
+  assert.deepEqual(await checkAllowances([await allow(p.keys, "g_1", "paypal.com")], ctx), [], "planque can't allow one");
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_2", "paypal.com")], ctx), [], "another grant's");
+  assert.deepEqual(await checkAllowances(["paypal.com"], ctx), [], "a bare name");
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_1", "paypal.com")], { ...ctx, phoneKey: null }), [], "not paired");
 });

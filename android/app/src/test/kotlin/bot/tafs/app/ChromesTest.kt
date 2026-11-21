@@ -74,12 +74,13 @@ class ChromesTest {
     transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF","expires_at":"2026-11-21T12:10:00Z"}""")
     val p = m.openChromePairing()!!
     assertEquals("K7QF", p.lookup)
-    assertEquals("K7QF-" + p.secret, p.code)
+    assertEquals(ChromePairing.SECRET_LENGTH, p.secret.length)
+    assertEquals("K7QF-" + p.secret.chunked(4).joinToString("-"), p.code)
     assertFalse("the secret is never logged", p.toString().contains(p.secret))
     transport.answer(read, 200, """{"pairing":"pr_1","status":"waiting_for_chrome"}""")
     assertEquals(AppModel.ChromePairingStep.Waiting, m.chromePairingStep(p))
     // Another extension used the lookup: its proof isn't under our secret, or isn't over its own key.
-    transport.answer(read, 200, offer("ZZZZZZ"))
+    transport.answer(read, 200, offer("Z".repeat(ChromePairing.SECRET_LENGTH)))
     assertEquals(AppModel.ChromePairingStep.Refused, m.chromePairingStep(p))
     transport.answer(read, 200, offer(p.secret, proofKey = byteArrayOf(1, 2, 3)))
     assertEquals(AppModel.ChromePairingStep.Refused, m.chromePairingStep(p))

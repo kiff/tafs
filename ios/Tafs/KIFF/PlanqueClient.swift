@@ -666,6 +666,8 @@ final class PlanqueClient {
         var browser = ""
         var os = ""
         let proof: String
+        /// The extension's KIFF device offer (`kiff.pair.v1`, view-only), as its text: the proof covers it.
+        var kiffOffer = ""
     }
 
     /// A pairing as planque has it: `waiting_for_chrome`, then `waiting_for_phone` once an extension sent its key (the
@@ -673,7 +675,7 @@ final class PlanqueClient {
     struct ChromePairingState: Decodable, Equatable {
         let status: String
         var offer: ChromeOffer?
-        enum CodingKeys: String, CodingKey { case status, key, proof, version, browser, os }
+        enum CodingKeys: String, CodingKey { case status, key, proof, version, browser, os, kiffOffer = "kiff_offer" }
         init(status: String, offer: ChromeOffer? = nil) { self.status = status; self.offer = offer }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -681,7 +683,8 @@ final class PlanqueClient {
             if let key = try c.decodeIfPresent(String.self, forKey: .key), let proof = try c.decodeIfPresent(String.self, forKey: .proof) {
                 offer = ChromeOffer(key: key, version: (try? c.decodeIfPresent(String.self, forKey: .version)) ?? "",
                                     browser: (try? c.decodeIfPresent(String.self, forKey: .browser)) ?? "",
-                                    os: (try? c.decodeIfPresent(String.self, forKey: .os)) ?? "", proof: proof)
+                                    os: (try? c.decodeIfPresent(String.self, forKey: .os)) ?? "", proof: proof,
+                                    kiffOffer: (try? c.decodeIfPresent(String.self, forKey: .kiffOffer)) ?? "")
             }
         }
     }

@@ -2,13 +2,15 @@ import CryptoKit
 import Foundation
 
 /// The phone's side of pairing a Chrome (docs/chrome.md, "Pairing"): the code it shows, the check of the extension's proof,
-/// and the confirmation it signs. The code's last six characters are a secret this phone makes and never sends: the
+/// and the confirmation it signs. The code's last 17 characters are a secret this phone makes and never sends: the
 /// extension proves its key under it, and this phone proves its own key under it, so planque, which relays both, can't put
 /// another key on either side. Nothing here asks for Face ID; `AppModel.confirmChrome` signs the body this builds.
 enum ChromePairing {
     /// The code's characters: no 0, 1, I, L, O or U.
     static let alphabet = Array("23456789ABCDEFGHJKMNPQRSTVWXYZ")
-    static let secretLength = 6
+    /// 17 characters of 30, about 83 bits: planque stores the extension's proof, so the secret must hold against an
+    /// offline search of it.
+    static let secretLength = 17
 
     static let pairLabel = "tafs-chrome/pair/v1"
     static let extensionProofLabel = "tafs-chrome/ext/v1"
@@ -20,8 +22,17 @@ enum ChromePairing {
         return String((0..<secretLength).map { _ in alphabet.randomElement(using: &generator)! })
     }
 
-    /// The code as the phone shows it: the lookup planque gave, then the secret ("K7QF-29XMDP").
-    static func code(lookup: String, secret: String) -> String { lookup + "-" + secret }
+    /// The code as the phone shows it: the lookup planque gave, then the secret in groups of four
+    /// ("K7QF-29XM-DPQR-STVW-XYZ2-3"). The extension takes it with or without the dashes.
+    static func code(lookup: String, secret: String) -> String {
+        var groups = [lookup]
+        var rest = Substring(secret)
+        while !rest.isEmpty {
+            groups.append(String(rest.prefix(4)))
+            rest = rest.dropFirst(4)
+        }
+        return groups.joined(separator: "-")
+    }
 
     /// HMAC-SHA256 under the secret, over label ‖ 0x00 ‖ data.
     static func hmac(_ secret: String, _ label: String, _ data: Data) -> Data {
@@ -31,11 +42,12 @@ enum ChromePairing {
         return Data(HMAC<SHA256>.authenticationCode(for: message, using: SymmetricKey(data: Data(secret.utf8))))
     }
 
-    /// Whether `proof` is the extension's proof of `key` (its SPKI DER) under our secret. A wrong one means another
-    /// extension used the code's lookup: nothing is paired.
-    static func extensionProofHolds(secret: String, key: Data, proof: String) -> Bool {
+    /// Whether `proof` is the extension's proof of `key` (its SPKI DER), and of its KIFF offer's text, under our secret.
+    /// A wrong one means another extension used the code's lookup, or planque changed either: nothing is paired.
+    static func extensionProofHolds(secret: String, key: Data, proof: String, kiffOffer: String = "") -> Bool {
         guard let given = base64URLDecoded(proof) else { return false }
-        let expected = hmac(secret, extensionProofLabel, key)
+        // The proof covers the KIFF device's offer too, when the extension sends one: planque can swap neither key.
+        let expected = hmac(secret, extensionProofLabel, key + Data(kiffOffer.utf8))
         return given.count == expected.count && zip(given, expected).reduce(UInt8(0)) { $0 | ($1.0 ^ $1.1) } == 0
     }
 

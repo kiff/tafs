@@ -9,7 +9,7 @@
   "background": { "service_worker": "src/sw.js", "type": "module" },
   "action": { "default_title": "__MSG_name__" },
   "side_panel": { "default_path": "sidepanel/index.html" },
-  "permissions": ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation"],
+  "permissions": ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation", "declarativeNetRequest"],
   "optional_host_permissions": ["https://*/*"],
   "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" }
 }

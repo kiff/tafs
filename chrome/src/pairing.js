@@ -1,5 +1,5 @@
 // Pairing this Chrome with the owner's phone (docs/chrome.md, "Pairing"). It starts on the phone, which shows a code: four
-// characters that find the pairing, and six that are a secret planque never sees. The owner types the code here. The
+// characters that find the pairing, and 17 that are a secret planque never sees. The owner types the code here. The
 // extension proves its key under the secret; the phone checks that proof, then signs, and proves its own key under the same
 // secret. So neither planque nor anyone between can put another key in either place.
 
@@ -13,20 +13,30 @@ export function hex(data) {
 /** The code's characters: no 0, 1, I, L, O or U, so a code read aloud or by eye is typed right. */
 export const ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** The code as typed ("k7qf-29xmdp", "K7QF 29XMDP") as `{lookup, secret}`, or null when it isn't one. */
+/** The secret's length: 17 characters of 30, about 83 bits, so a proof planque stores can't be tried offline. */
+export const SECRET_LENGTH = 17;
+export const LOOKUP_LENGTH = 4;
+
+/**
+ * The code as typed ("K7QF-29XM-DPQR-STVW-XYZ2-3", spaces or dashes anywhere, any case) as `{lookup, secret}`: the first
+ * four characters find the pairing, the other 17 are the secret. Null when it isn't one.
+ */
 export function parseCode(text) {
   const s = String(text || "").toUpperCase().replace(/[\s-]/g, "");
-  if (s.length !== 10 || [...s].some((c) => !ALPHABET.includes(c))) return null;
-  return { lookup: s.slice(0, 4), secret: s.slice(4) };
+  if (s.length !== LOOKUP_LENGTH + SECRET_LENGTH || [...s].some((c) => !ALPHABET.includes(c))) return null;
+  return { lookup: s.slice(0, LOOKUP_LENGTH), secret: s.slice(LOOKUP_LENGTH) };
 }
 
-/** The extension's proof of its key under the secret: HMAC(secret, ext label ‖ key). */
-export async function extensionProof(secret, spki) {
-  return b64u(await hmac(secret, LABEL.extProof, spki));
+/**
+ * The extension's proof of its key, and of its KIFF offer when it sends one, under the secret:
+ * HMAC(secret, ext label ‖ key ‖ the KIFF offer's text). So planque can swap neither key.
+ */
+export async function extensionProof(secret, spki, kiffOffer = "") {
+  return b64u(await hmac(secret, LABEL.extProof, concat(spki, new TextEncoder().encode(kiffOffer))));
 }
 
-/** What the extension sends planque for the pairing `lookup` names. */
-export async function offer(secret, keyPair, { version, manifestHash, browser, os }) {
+/** What the extension sends planque for the pairing `lookup` names, with its KIFF device's offer (`kiff_offer`). */
+export async function offer(secret, keyPair, { version, manifestHash, browser, os, kiffOffer = "" }) {
   const spki = await publicSPKI(keyPair.publicKey);
   return {
     key: b64u(spki),
@@ -34,7 +44,8 @@ export async function offer(secret, keyPair, { version, manifestHash, browser, o
     manifest_hash: manifestHash,
     browser,
     os,
-    proof: await extensionProof(secret, spki),
+    ...(kiffOffer ? { kiff_offer: kiffOffer } : {}),
+    proof: await extensionProof(secret, spki, kiffOffer),
   };
 }
 

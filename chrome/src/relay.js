@@ -1,22 +1,29 @@
 // The one connection to planque (docs/chrome.md, "Connect"). The extension always opens it; nothing connects in. Each connect
-// proves both ends: this extension signs planque's challenge with its paired key, and planque signs ours with the key pinned
-// in this build. Only then are steps taken, each checked as planque's (protocol.checkStep) before the runner sees it.
+// proves both ends: the extension says `open`, then signs planque's challenge with its paired key, and planque signs ours with
+// the key pinned in this build. Only then are steps taken, each checked as planque's (protocol.checkStep) before the runner
+// sees it. planque's relay can't choose a close code, so it says `close` with the code first; a real close code counts too.
 
 import { CLOSE, Nonces, checkStep, checkWelcome, hello, result } from "./protocol.js";
 import { randomId } from "./crypto.js";
 
 const PING_MS = 20_000;
+/** The relay carries at most 128 KB a message: a result above this is answered `page_too_large` instead. */
+export const MAX_RESULT_BYTES = 120 * 1024;
+/** A connection dropped during a run is opened again at once, then after 2, 4, … seconds, up to 30. */
+const RETRY_MS = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000];
 
 export class Relay {
   /**
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now() }) {
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
     Object.assign(this, { config, kept, runner, onUnpaired, onChange, WebSocket, now });
-    this.nonces = new Nonces(now);
+    this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
+    this.retries = 0;
+    this.retry = null;
   }
 
   get connected() {
@@ -24,6 +31,8 @@ export class Relay {
   }
 
   connect() {
+    clearTimeout(this.retry);
+    this.retry = null;
     if (this.ws) return;
     const { pairing } = this.kept;
     const url = this.config.relayURL + "?chrome=" + encodeURIComponent(pairing.chromeId);
@@ -32,20 +41,45 @@ export class Relay {
     this.ready = false;
     this.nonceE = null;
     this.nonceP = null;
+    // planque can't post until the connection is up, so the extension speaks first; the challenge comes as the answer.
+    ws.onopen = () => this.send({ type: "open" });
     ws.onmessage = (e) => this.receive(e.data).catch(() => this.close());
     ws.onclose = (e) => {
-      if (this.ws === ws) {
+      const dropped = this.ws === ws;
+      if (dropped) {
         this.ws = null;
         this.ready = false;
         clearInterval(this.pinger);
         this.onChange();
       }
-      if (e && e.code === CLOSE.unpaired) this.onUnpaired();
+      if (e && e.code === CLOSE.unpaired) return this.unpaired();
+      // Dropped under a run (the relay's idle or 2-hour limit, a network change): opened again at once, then backing off.
+      if (dropped && this.runner.active) this.reconnectSoon();
     };
     ws.onerror = () => {};
   }
 
+  reconnectSoon() {
+    if (this.retry) return;
+    const wait = RETRY_MS[Math.min(this.retries, RETRY_MS.length - 1)];
+    this.retries += 1;
+    this.retry = setTimeout(() => {
+      this.retry = null;
+      this.connect();
+    }, wait);
+  }
+
+  /** planque's 4410: wiped once, and never opened again. */
+  unpaired() {
+    if (this.wiped) return;
+    this.wiped = true;
+    this.close();
+    this.onUnpaired();
+  }
+
   close() {
+    clearTimeout(this.retry);
+    this.retry = null;
     const ws = this.ws;
     this.ws = null;
     this.ready = false;
@@ -66,6 +100,8 @@ export class Relay {
       return this.close();
     }
     const { keys, pairing } = this.kept;
+    // planque closing, at any point: no signature, as with stop, since closing only takes power away. 4410 wipes.
+    if (m.type === "close") return m.code === CLOSE.unpaired ? this.unpaired() : this.close();
     if (!this.ready) {
       if (m.type === "challenge" && !this.nonceP && typeof m.nonce_p === "string") {
         this.nonceP = m.nonce_p;
@@ -77,6 +113,7 @@ export class Relay {
         const ok = await checkWelcome(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonceP: this.nonceP, nonceE: this.nonceE });
         if (!ok) return this.close();
         this.ready = true;
+        this.retries = 0;
         this.pinger = setInterval(() => this.runner.active && this.send({ type: "ping" }), PING_MS);
         this.onChange();
         return;
@@ -90,11 +127,15 @@ export class Relay {
       if (checked.why) {
         // Not run, and said so only when it carries an id we can answer: an unsigned message gets no signed answer.
         const id = m.step && typeof m.step.id === "string" ? m.step.id : null;
-        if (id) this.send(await result(keys.privateKey, id, { error: { code: "bad_step", detail: checked.why } }));
+        if (id) this.send(await result(keys.privateKey, { id, nonce: m.step.nonce }, pairing.chromeId, { error: { code: "bad_step", detail: checked.why } }));
         return;
       }
       const out = await this.runner.handle(checked.step);
-      this.send(await result(keys.privateKey, checked.step.id, out));
+      let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
+      if (new TextEncoder().encode(JSON.stringify(answer)).length > MAX_RESULT_BYTES) {
+        answer = await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
+      }
+      this.send(answer);
       return;
     }
     if (m.type === "stop" && typeof m.run === "string") {

@@ -1334,6 +1334,12 @@ final class AppModel: ObservableObject {
 
     func openChromePairing() async -> ChromePairingInProgress? {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        // Only the approval key pairs a Chrome: the extension later opens a sealed sign-in only on that key's release, and
+        // only that key checks the Face ID itself. A phone without one says so, as Android does.
+        guard !signer.approvalPublicKeyDER.isEmpty else {
+            chromesError = Words.Chrome.pairNotStarted(why: Words.Approval.viewOnly)
+            return nil
+        }
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
@@ -1372,37 +1378,57 @@ final class AppModel: ObservableObject {
         case "waiting_for_phone":
             // Another extension that used the lookup can't prove its key: it doesn't have the secret.
             guard let offer = state.offer, let key = ChromePairing.base64URLDecoded(offer.key),
-                  ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof) else { return .refused }
+                  ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof, kiffOffer: offer.kiffOffer),
+                  Self.chromeKIFFDevice(offer) != nil else { return .refused }
             return .offered(offer)
-        case "confirmed":
-            return .refused // confirmed already, and not by this sheet: nothing more to do here
+        case "contested", "confirmed":
+            // Another Chrome posted on this code (planque spends it), or it's confirmed already, not by this sheet.
+            return .refused
         default:
             return .waiting
         }
     }
 
-    /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key signs this phone's proof and
+    /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key, and only it, signs this phone's proof and
     /// the extension's key under the secret, and the extension later checks that signature itself. False when it didn't
     /// go through.
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
-              ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof) else { return false }
+              ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
+              let kiffDevice = Self.chromeKIFFDevice(offer) else { return false }
         let gen = accountGeneration
         let name = ChromePairing.name(typed, browser: Words.Chrome.browserOn(browser: offer.browser, system: offer.os))
-        let approvalKey = signer.approvalPublicKeyDER
-        let phoneKey = approvalKey.isEmpty ? signer.publicKeyDER : approvalKey
+        let phoneKey = signer.approvalPublicKeyDER
+        guard !phoneKey.isEmpty else { return false }
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         let reason = Words.Chrome.pairPrompt(name: name)
         do {
             let bytes = try ChromePairing.signedBytes(pairing: p.pairing, confirmation)
-            let der = approvalKey.isEmpty ? try await signer.sign(bytes, reason: reason, grants: true) : try await signer.signApproval(bytes, reason: reason)
+            let der = try await signer.signApproval(bytes, reason: reason)
             confirmation.phoneSig = try ChromePairing.rawSignature(fromDER: der)
         } catch {
             if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
             return false
         }
         guard gen == accountGeneration else { return false }
+        // The same Face ID pairs its view-only KIFF device, as Add a device pairs a computer: KIFF's pairing first, so a
+        // Chrome is never confirmed without the device it reads and chats as.
+        if let kiffDevice {
+            kiff.tenant = tenant
+            let signedAt = SigningTime.next()
+            do {
+                let prepared = try kiff.preparePairing(kiffDevice, signedAt: signedAt)
+                let signature = try signer.signApprovalConfirmed(prepared.message)
+                _ = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+            } catch KIFFClient.KIFFError.server(_, let message, let why) {
+                chromesError = Self.pairingRefusal(message: message, reason: why)
+                return false
+            } catch {
+                chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+                return false
+            }
+        }
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
@@ -1415,6 +1441,15 @@ final class AppModel: ObservableObject {
         }
         await refreshChromes()
         return true
+    }
+
+    /// The KIFF device an extension's offer carries, when it carries one: only a view-only browser extension, as KIFF reads
+    /// it. `.some(nil)` for an offer with none (an older extension); nil for one that isn't that.
+    static func chromeKIFFDevice(_ offer: PlanqueClient.ChromeOffer) -> PairingRequest?? {
+        guard !offer.kiffOffer.isEmpty else { return .some(nil) }
+        guard case .success(let request) = PairingRequest.read(offer.kiffOffer), request.platform == "chrome",
+              request.kind == "extension", request.softwareKey else { return nil }
+        return .some(request)
     }
 
     /// Unpairs a Chrome: planque deletes its key at once, and the extension wipes itself at its next connect. Removing

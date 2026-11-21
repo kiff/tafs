@@ -1,5 +1,5 @@
 // Runs in the page's own world of a run's tab, as early as the extension can inject it (docs/chrome.md, "Dialogs"): the
-// page's alert, confirm and prompt stop blocking and are reported to the content script under this tab's token; a confirm
+// page's alert, confirm and prompt stop blocking, window.open opens nothing and are reported to the content script under this tab's token; a confirm
 // is never accepted and a prompt never answered. A "leave this page?" prompt can't hold a run's tab: beforeunload handlers
 // are dropped. Only the run's own tabs get this, never the owner's.
 //
@@ -25,6 +25,12 @@ export function installDialogGuard(token) {
   };
   window.prompt = function (text) {
     tell("prompt", text);
+    return null;
+  };
+  // A new window from a run's tab would load before Chrome's fence reaches it: none is opened. The run reads that the page
+  // asked for one, as a dialog.
+  window.open = function (url) {
+    tell("open", url);
     return null;
   };
   const add = EventTarget.prototype.addEventListener;
