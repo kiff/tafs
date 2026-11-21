@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Ερώτηση στην KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Δεν έφτασε στην KIFF. Δοκίμασε ξανά.",
+  "kiff.kiff_can_not_do_sign": "Η KIFF δεν μπορεί να το κάνει ακόμα: συνδέσου ξανά από τις Ρυθμίσεις για να εγκρίνεις από αυτό το {device}.",
+  "kiff.kiff_did_not_answer_expected": "Η KIFF δεν απάντησε όπως αναμενόταν. Δοκίμασε ξανά.",
+  "kiff.kiff_words_do_not_match": "Τα λόγια της KIFF δεν ταιριάζουν με τον έλεγχό τους. Δεν μπορεί να εγκριθεί τίποτα."
+}

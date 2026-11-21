@@ -192,6 +192,44 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
 
+## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
+`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
+
+### Greek (el)
+
+Addressed as **εσύ**. The glossary's buttons are nouns (Έγκριση, Άρνηση, Παύση, Συνέχιση); other buttons are
+imperatives (Δοκίμασε ξανά). In running text the names take an article: η Card / οι Cards (as the legal drafts write
+it), ο Coach, η KIFF, το taf / τα tafs. Every device word is neuter (τηλέφωνο, tablet, Mac, PC), so "αυτό το {device}"
+always agrees. A line that fills "από {who}" is written in the accusative.
+
+| English | Greek |
+|---|---|
+| Needs you | Σε χρειάζεται |
+| Approve / Approve once | Έγκριση / Έγκριση μία φορά |
+| Refuse | Άρνηση |
+| held | σε αναμονή |
+| Halt / Halted | Σταμάτημα / Σταματημένο |
+| Stopped | Διακόπηκε |
+| Pause / Paused | Παύση / Σε παύση |
+| Resume | Συνέχιση |
+| Revoke | Ανάκληση |
+| Record | Ιστορικό |
+| Connect / connection | Σύνδεση / σύνδεση |
+| Pair | Σύζευξη |
+| Account | Λογαριασμός |
+| limit / spend limit | όριο / όριο δαπανών |
+| credits / credit pack | μονάδες / πακέτο μονάδων |
+| Sign in / Sign out | Σύνδεση / Αποσύνδεση |
+| Inbox | Εισερχόμενα |
+| Overview | Επισκόπηση |
+| Calendar | Ημερολόγιο |
+| Setup (a taf's screen) | Διαμόρφωση |
+| Usage / plan | Χρήση / πρόγραμμα |
+| Decline | Απόρριψη |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Όλη η Card",
+    "other": "Όλες οι Cards"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, μετά σε ρωτά",
+  "card.calls_left": {
+    "one": "Απομένει {count} κλήση",
+    "other": "Απομένουν {count} κλήσεις"
+  },
+  "card.calls_left_line": {
+    "one": "Απομένει {count} κλήση από {limit} {window}",
+    "other": "Απομένουν {count} κλήσεις από {limit} {window}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} από {count} κλήση {window}",
+    "other": "{used} από {count} κλήσεις {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} κλήση {window}",
+    "other": "{count} κλήσεις {window}"
+  },
+  "card.card_confirmed_kiff": "Card · επιβεβαιωμένη από την KIFF",
+  "card.card_draft_kiff": "Card · προσχέδιο · από την KIFF",
+  "card.card_got_room_call_needed": "Η Card του πήρε το περιθώριο που χρειαζόταν αυτή η κλήση, μέχρι να μηδενιστεί αυτό το σύνολο",
+  "card.card_not_issued": "Η Card δεν εκδόθηκε. ",
+  "card.card_revoked": "Η Card ανακλήθηκε",
+  "card.check.always_asks": "{rule}: σε ρωτά πάντα",
+  "card.check.never_allowed": "{rule}: δεν επιτρέπεται ποτέ",
+  "card.check.not_on_card": "Δεν υπάρχει στην Card αυτού του taf",
+  "card.check.over_count": {
+    "one": "Πάνω από {count} {window}",
+    "other": "Πάνω από {count} {window}"
+  },
+  "card.check.over_each": "Πάνω από {amount} ανά κλήση",
+  "card.check.over_total": "Πάνω από {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cards"
+  },
+  "card.ended": "Έληξε",
+  "card.ended_on": "Έληξε {date}",
+  "card.ends": "Λήγει",
+  "card.extra_room": "+{extra} επιπλέον περιθώριο {window}",
+  "card.extra_room_prefix": "+{formatted} επιπλέον περιθώριο ",
+  "card.extra_room_until": "+{extra} επιπλέον περιθώριο έως {ends}",
+  "card.figure_left": "υπόλοιπο {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cards"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} κλήση {window}{each}: αυτή θα ήταν η {nth}{item}",
+    "other": "{count} κλήσεις {window}{each}: αυτή θα ήταν η {nth}{item}"
+  },
+  "card.held.each_call_asks": "Κάθε κλήση σε ρωτά πρώτα",
+  "card.held.for_each": " για κάθε {name}",
+  "card.held.for_each_join": " για κάθε ",
+  "card.held.for_item": " για {item}",
+  "card.held.over_count": {
+    "one": "Πάνω από το όριό του της {count} κλήσης: αυτή θα ήταν η {nth}",
+    "other": "Πάνω από το όριό του των {count} κλήσεων: αυτή θα ήταν η {nth}"
+  },
+  "card.held.over_one_call": "{amount}: πάνω από το όριο των {cap} για μία κλήση",
+  "card.held.over_total": "{amount}: θα ξεπερνούσε το σύνολο των {cap}",
+  "card.hero.calls_left_of": {
+    "one": "κλήση απομένει από {limit} {window}",
+    "other": "κλήσεις απομένουν από {limit} {window}"
+  },
+  "card.hero.calls_use_unavailable": "κλήσεις {window} · η χρήση δεν είναι διαθέσιμη",
+  "card.hero.left_of": "υπόλοιπο από {limit} {window}",
+  "card.hero.left_of_extra": "υπόλοιπο από {base} + {extra} επιπλέον περιθώριο {window}",
+  "card.hero.left_of_extra_until": "υπόλοιπο από {base} + {extra} επιπλέον περιθώριο {window} έως {ends}",
+  "card.hero.left_of_note": "υπόλοιπο από {limit} {window}{note}",
+  "card.hero.no_currency": "χωρίς νόμισμα",
+  "card.hero.no_currency_suffix": " · χωρίς νόμισμα",
+  "card.hero.use_unavailable": "{window} · η χρήση δεν είναι διαθέσιμη",
+  "card.hero.use_unavailable_note": "{label} · η χρήση δεν είναι διαθέσιμη{note}",
+  "card.how_counted": "Πώς υπολογίζεται",
+  "card.issue_prompt": "Έκδοση της Card του {taf}",
+  "card.issued_by": "Εκδόθηκε από",
+  "card.issued_by_account": "Ο λογαριασμός",
+  "card.issued_by_named": "Εκδόθηκε από {who}",
+  "card.its_card": "Η Card του",
+  "card.kiff_did_not_revoke_cards": "Η KIFF δεν ανακάλεσε {cards_left} από τις Cards του: ανακάλεσέ τες στην KIFF.",
+  "card.left": "{amount} υπόλοιπο {window}",
+  "card.left_extra_room": "υπόλοιπο {current} από {own} + {extra} επιπλέον περιθώριο{until}{note}",
+  "card.limit_can_not_raised_right": "Το όριο δεν μπορεί να αυξηθεί από εδώ αυτή τη στιγμή.",
+  "card.limit_raised_read_balance_again": "Το όριο αυξήθηκε. Διάβασε ξανά το υπόλοιπο πριν το αυξήσεις άλλη μία φορά.",
+  "card.line.calls_in_window": {
+    "one": "{count} κλήση {window}{then}",
+    "other": "{count} κλήσεις {window}{then}"
+  },
+  "card.line.more_asks": "· για περισσότερα σε ρωτά πρώτα",
+  "card.line.then_asks": ", μετά σε ρωτά",
+  "card.line.total_in_window": "{amount} συνολικά {window}{then}",
+  "card.line.up_to_each": "έως {amount} ανά κλήση",
+  "card.more": {
+    "one": "{count} ακόμα",
+    "other": "{count} ακόμα"
+  },
+  "card.no_actions": "Καμία ενέργεια ακόμα",
+  "card.no_actions_short": "καμία ενέργεια ακόμα",
+  "card.no_currency": "{amount} (χωρίς νόμισμα)",
+  "card.no_end_date": "Χωρίς ημερομηνία λήξης",
+  "card.outcome.not_a_resource": "Δεν είναι πόρος της Card",
+  "card.outcome.outside": "Εκτός της Card",
+  "card.outcome.over_one_action": "Πάνω από το όριο της Card για μία ενέργεια",
+  "card.outcome.over_total": "Πάνω από το σύνολο της Card",
+  "card.outside_held": "Εκτός: σε αναμονή για σένα",
+  "card.outside_refused": "Εκτός: άρνηση",
+  "card.over_limit_calls_would": "Πάνω από το όριό του των {limit} κλήσεων: αυτή θα ήταν η {nth}",
+  "card.revoke_failed": "Η KIFF δεν ανακάλεσε την Card. {why}",
+  "card.revoked": "Ανακλήθηκε",
+  "card.rule.always_asks": "σε ρωτά πάντα",
+  "card.rule.at_most_each": "≤ {amount} ανά κλήση",
+  "card.rule.at_most_each_refused_above": "≤ {amount} ανά κλήση · άρνηση για περισσότερα",
+  "card.rule.calls": {
+    "one": "{count} κλήση {window}",
+    "other": "{count} κλήσεις {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} κλήση {window}, μετά σε ρωτά",
+    "other": "{count} κλήσεις {window}, μετά σε ρωτά"
+  },
+  "card.rule.in_total": "{amount} συνολικά {window}",
+  "card.rule.never": "ποτέ",
+  "card.rule.total_then_asks": "{amount} συνολικά {window}, μετά σε ρωτά",
+  "card.rule.up_to_each": "έως {amount} ανά κλήση· για περισσότερα σε ρωτά πρώτα",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Η Card του taf",
+  "card.tools": {
+    "one": "{count} εργαλείο",
+    "other": "{count} εργαλεία"
+  },
+  "card.until": "Έως",
+  "card.until_date": "Έως {date}",
+  "card.until_ends": " έως {ends}",
+  "card.used_of": "{used} από {limit} {window}",
+  "card.window.a_day": "την ημέρα",
+  "card.window.a_month": "τον μήνα",
+  "card.window.a_week": "την εβδομάδα",
+  "card.window.any_day": "σε οποιοδήποτε 24ωρο",
+  "card.window.any_hour": "σε οποιαδήποτε ώρα",
+  "card.window.any_week": "σε οποιοδήποτε 7ήμερο",
+  "card.window.in_total": "συνολικά",
+  "card.window.in_total_window": "συνολικά {window}",
+  "card.window.last_day": "τις τελευταίες 24 ώρες",
+  "card.window.last_hour": "την τελευταία ώρα",
+  "card.window.last_week": "τις τελευταίες 7 ημέρες",
+  "card.window.so_far": "μέχρι τώρα",
+  "card.window.this_month": "αυτόν τον μήνα",
+  "card.window.this_week": "αυτή την εβδομάδα",
+  "card.window.today": "σήμερα",
+  "card.within_card": "εντός της Card"
+}

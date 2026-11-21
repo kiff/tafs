@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Απάντηση εντός",
+  "work.answer_within_days": {
+    "one": "{count} ημέρας",
+    "other": "{count} ημερών"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} ώρας",
+    "other": "{count} ωρών"
+  },
+  "work.answer_within_line": "Ενημερώνεσαι όταν μια υπόθεση περιμένει περισσότερο.",
+  "work.answer_within_none": "Δεν έχει οριστεί",
+  "work.answer_within_not_set": "Δεν μπόρεσε να οριστεί. {why}",
+  "work.asking_kiff_run": "Ζητείται από την KIFF να εκτελέσει το {tool}…",
+  "work.did_not_stop": "Δεν διακόπηκε: {why}",
+  "work.duration.minutes": "{minutes} λ. {seconds} δ.",
+  "work.duration.seconds": "{seconds} δ.",
+  "work.its_runs": "Οι εκτελέσεις του",
+  "work.not_read": "Η εργασία του δεν διαβάστηκε. {why}",
+  "work.not_sent_again": "Δεν στάλθηκε ξανά. {why}",
+  "work.request.try_reply_now": "Δοκίμασε την απάντηση τώρα",
+  "work.requests_need_you": {
+    "one": "{count} αίτημα σε χρειάζεται",
+    "other": "{count} αιτήματα σε χρειάζονται"
+  },
+  "work.send_again": "Στείλε ξανά",
+  "work.sending_again": "Αποστολή ξανά…",
+  "work.stop_run": "Διακοπή της εκτέλεσης",
+  "work.stopped_part_way_before_finished": "Το {taf} διακόπηκε στη μέση, πριν τελειώσει."
+}
