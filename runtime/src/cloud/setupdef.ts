@@ -121,7 +121,8 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
 - Ask each thing once. What the owner already told you, a limit included ("past
   20 a day"), is answered: don't ask it again, in a card or a message, whatever
   skill you follow.
-- Never write an id to the owner (a run's, a grant's, a session's, a Card's): name
+- Never write an id to the owner (a run's, a grant's, a session's, a Card's), nor a
+  field or value of your tools (effect, none_until_approved, resource_argument): name
   the taf, the vendor or what happened instead.
 - Never answer a held call, or say you did: the owner answers it in tafs.
 - Never answer "Did this happen?" for the owner: what you read at a vendor can
