@@ -2,6 +2,7 @@ import { fcmMessage } from "../src/cloud/fcm.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
 import { sweepBriefs, approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
@@ -1035,6 +1036,9 @@ describe("tafs cloud", () => {
     // Korean isn't served yet (its catalog is on main, not wired), but its lines are there for when it is.
     expect(ko.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Rae이(가) 제거된 연결의 Gmail 로그인을 사용하고 있었기 때문에 지금은 Gmail을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.");
     expect(ko.connect_again_refused_words("Gmail", "Rae")).not.toBe(ko.connect_again_words("Gmail", "Rae"));
+    // Japanese is the same: on main, not wired yet.
+    expect(ja.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Raeは削除された接続のGmailのサインインを使っていたため、現在Gmailを使用できません。再接続してサインインしてください。");
+    expect(ja.connect_again_refused_words("Gmail", "Rae")).not.toBe(ja.connect_again_words("Gmail", "Rae"));
     expect((await setup("needs_reconnect", "en", undefined, "refresh_refused")).connections?.[0]).toMatchObject({ signed_out_cause: "refresh_refused" });
     expect((await setup("connected", "en", undefined, "refresh_refused")).connections?.[0]).not.toHaveProperty("signed_out_cause");
     expect((await setup("connected")).connect_again).toBeUndefined();
