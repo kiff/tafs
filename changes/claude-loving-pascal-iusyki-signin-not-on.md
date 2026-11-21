@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** when signing in inside the app isn't on, the welcome's Continue says so plainly (in KIFF's words when it sends them), not "This phone and the server didn't understand each other".

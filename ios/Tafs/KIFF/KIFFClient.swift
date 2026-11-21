@@ -30,6 +30,9 @@ final class KIFFClient {
         /// A new sign-in from where KIFF isn't offered (`region_unsupported`): KIFF's own words, in the app's language,
         /// shown as sent. Nothing the person can change from the app, so nothing says to try again.
         case regionUnsupported(words: String)
+        /// Signing in inside the app isn't on for this app or account (`unsupported_client` on `/v1/auth/app/…`): KIFF's
+        /// own words when it sends them, else the app's plain line. Never "didn't understand each other": they did.
+        case signInNotOn(words: String?)
 
         var errorDescription: String? {
             switch self {
@@ -45,6 +48,7 @@ final class KIFFClient {
             case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
             case .termsOutdated: return Words.Onboarding.termsChanged
             case .regionUnsupported(let words): return words
+            case .signInNotOn(let words): return words.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 } ?? Words.SignIn.inAppNotOn
             }
         }
     }
@@ -96,6 +100,9 @@ final class KIFFClient {
     nonisolated static let criticalKeyRequired = "critical_key_required"
     /// KIFF's code for a new sign-in from where it isn't offered.
     nonisolated static let regionUnsupported = "region_unsupported"
+    /// KIFF's code when signing in inside the app isn't on for this app or account, and where that sign-in lives.
+    nonisolated static let unsupportedClient = "unsupported_client"
+    nonisolated static let appSignInPath = "/v1/auth/app/"
     nonisolated static let windowRequired = "window_required"
 
     /// What the device key signs inside an approval window: `kiff.request.v1`'s lines under
@@ -1729,6 +1736,11 @@ final class KIFFClient {
             // Where KIFF isn't offered: its words, by its stable code, never "You're not allowed" over them.
             if status == 403, fields?["code"] == Self.regionUnsupported, let words = fields?["message"], !words.isEmpty {
                 throw KIFFError.regionUnsupported(words: words)
+            }
+            // Signing in inside the app isn't on (row 39's switch, off for everyone but K5): said plainly, in KIFF's
+            // words when it sends them, never as a misunderstanding.
+            if status == 400, path.hasPrefix(Self.appSignInPath), fields?["error"] == Self.unsupportedClient {
+                throw KIFFError.signInNotOn(words: fields?["words"])
             }
             // A pairing's refusal: KIFF's own words for the person, with its code as the reason.
             if path == Self.pairingsPath, let code = fields?["error"] {

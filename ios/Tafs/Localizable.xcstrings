@@ -128332,6 +128332,17 @@
         }
       }
     },
+    "sign_in.in_app_not_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in inside the app isn't on yet."
+          }
+        }
+      }
+    },
     "sign_in.ios_did_not_open_sign": {
       "extractionState": "manual",
       "localizations": {

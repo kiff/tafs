@@ -2450,6 +2450,7 @@ object Words {
     fun everyActionTafTakesGoes(device: String): String = Res.s(R.string.sign_in_every_action_taf_takes_goes, device, Words.demonstrative(device))
     val everyActionTafTakesGoesView: String get() = Res.s(R.string.sign_in_every_action_taf_takes_goes_view)
     val howWorks: String get() = Res.s(R.string.sign_in_how_works)
+    val inAppNotOn: String get() = Res.s(R.string.sign_in_in_app_not_on)
     fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
     fun lead(device: String): String = Res.s(R.string.sign_in_lead, device, Words.demonstrative(device))
     val letsGo: String get() = Res.s(R.string.sign_in_lets_go)

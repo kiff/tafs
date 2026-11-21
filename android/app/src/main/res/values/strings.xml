@@ -2289,6 +2289,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this %1$s.</string>
     <string name="sign_in_every_action_taf_takes_goes_view">Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your approvals are signed on your phone.</string>
     <string name="sign_in_how_works">How it works</string>
+    <string name="sign_in_in_app_not_on">Signing in inside the app isn\'t on yet.</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
     <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>
     <string name="sign_in_lets_go">Let\'s go</string>

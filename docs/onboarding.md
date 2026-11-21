@@ -15,7 +15,8 @@ no other does. Two builds have it:
   When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
   can't be installed or picked any more. The lane that ran the pass posts it on the thread.
 
-App Store builds never have `TAFS_K5`. The sign-up's email code and GitHub sign-in are left to the device pass.
+App Store builds never have `TAFS_K5`. While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
+the app's "Signing in inside the app isn't on yet." (`KIFFError.signInNotOn`). The sign-up's email code and GitHub sign-in are left to the device pass.
 
 ## The steps
 
