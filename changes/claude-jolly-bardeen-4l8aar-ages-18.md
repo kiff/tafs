@@ -1,0 +1,1 @@
+- **Sign-in:** the minimum age is 18 in Costa Rica, the Philippines, Botswana, Ghana, Jamaica, Kenya, Malawi, Nigeria, Tanzania, Uganda, Zambia and Zimbabwe, where the law treats anyone under 18 as a child. None of these countries is open yet.
