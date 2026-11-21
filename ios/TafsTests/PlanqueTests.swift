@@ -1029,7 +1029,7 @@ extension PlanqueTests {
         await model.refreshChromes()
         XCTAssertNil(model.chromes)
         XCTAssertNil(model.chromesError)
-        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"id":"chr_1","name":"Work Mac","browser":"Chrome 131","os":"macOS"}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac","browser":"Chrome 131","os":"macOS","version":"0.1.0"}]}"#)
         await model.refreshChromes()
         XCTAssertEqual(model.chromes?.map(\.name), ["Work Mac"])
         XCTAssertFalse(sent("GET", "planque.test", "/v1/accounts/t_01/chromes").isEmpty)
@@ -1051,9 +1051,9 @@ extension PlanqueTests {
         let key = ChromePairing.base64URL(chromeKey)
         let good = ChromePairing.base64URL(ChromePairing.hmac(opened.secret, ChromePairing.extensionProofLabel, chromeKey))
         let bad = ChromePairing.base64URL(ChromePairing.hmac("AAAAAA", ChromePairing.extensionProofLabel, chromeKey))
-        let offer = { (proof: String) in #"{"status":"offered","offer":{"key":"\#(key)","version":"0.1.0","browser":"Chrome 131","os":"macOS","proof":"\#(proof)"}}"# }
+        let offer = { (proof: String) in #"{"pairing":"pr_1","status":"waiting_for_phone","key":"\#(key)","key_sha256":"x","proof":"\#(proof)","version":"0.1.0","browser":"Chrome 131","os":"macOS"}"# }
 
-        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, #"{"status":"waiting"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, #"{"pairing":"pr_1","status":"waiting_for_chrome"}"#)
         let waiting = await model.chromePairingStep(opened)
         XCTAssertEqual(waiting, .waiting)
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(bad))
@@ -1061,9 +1061,12 @@ extension PlanqueTests {
         XCTAssertEqual(refused, .refused, "another extension used the lookup")
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(good))
         guard case .offered(let proven) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer is shown") }
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (404, #"{"error":"no such pairing, or it expired"}"#)
+        let expired = await model.chromePairingStep(opened)
+        XCTAssertEqual(expired, .expired)
 
-        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings/pr_1/confirm"] = (200, #"{"id":"chr_1","name":"Work Mac"}"#)
-        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"id":"chr_1","name":"Work Mac"}]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings/pr_1/confirm"] = (200, #"{"chrome_id":"chr_1","name":"Work Mac"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
         let paired = await model.confirmChrome(opened, offer: proven, name: " Work Mac ")
         XCTAssertTrue(paired, model.chromesError ?? "")
         XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")])

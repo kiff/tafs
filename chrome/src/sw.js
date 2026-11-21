@@ -87,7 +87,8 @@ async function pairWith(text) {
     os: ua ? ua.platform : "",
   });
   const sent = await fetch(cfg.api + "/v1/extension/pairings/" + code.lookup, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-  if (!sent.ok) return { error: sent.status === 404 || sent.status === 410 ? "code" : "planque" };
+  // 404: no pairing has that code, or it expired; 409: another Chrome used it; 403: not a released build.
+  if (!sent.ok) return { error: sent.status === 404 || sent.status === 409 ? "code" : sent.status === 403 ? "not_released" : "planque" };
   // The secret waits in memory only, while the owner confirms on the phone.
   await chrome.storage.session.set({ pending: { lookup: code.lookup, secret: code.secret, key: body.key } });
   await indexedStore.set("pending_keys", keys);

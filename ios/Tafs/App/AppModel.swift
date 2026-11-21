@@ -1362,15 +1362,20 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { planque.signer = nil }
-        guard let state = try? await planque.chromePairing(p.pairing) else { return .waiting }
+        let state: PlanqueClient.ChromePairingState
+        do { state = try await planque.chromePairing(p.pairing) } catch PlanqueClient.PlanqueError.server(404, _, _) {
+            return .expired
+        } catch {
+            return .waiting
+        }
         switch state.status {
-        case "offered":
+        case "waiting_for_phone":
             // Another extension that used the lookup can't prove its key: it doesn't have the secret.
             guard let offer = state.offer, let key = ChromePairing.base64URLDecoded(offer.key),
                   ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof) else { return .refused }
             return .offered(offer)
-        case "expired":
-            return .expired
+        case "confirmed":
+            return .refused // confirmed already, and not by this sheet: nothing more to do here
         default:
             return .waiting
         }

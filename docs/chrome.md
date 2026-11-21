@@ -73,7 +73,9 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    {key: <SPKI, base64url>, version, manifest_hash, browser, os,
     proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key)}
    ```
-3. **The phone reads the pairing** (`GET …/pairings/{pairing}`) and checks `proof` with its secret. A wrong proof
+3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
+   `waiting_for_phone` with the extension's `key`, `key_sha256`, `proof`, `version`, `browser` and `os`, then
+   `confirmed`; an expired pairing is 404) and checks `proof` with its secret. A wrong proof
    means another extension used the lookup: it stops there. It shows the browser and OS, the owner names it
    ("Work Mac"), and Face ID or the fingerprint signs `tafs-chrome/pair/v1` over:
    ```
@@ -81,9 +83,13 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    phone_proof = HMAC(secret, "tafs-chrome/phone/v1" ‖ phone_key ‖ sha256(chrome key))
    ```
    (`sha256(chrome key)` is the raw 32 bytes here, and lowercase hex in the signed body.) It sends that with
-   `POST …/pairings/{pairing}/confirm`, and planque binds `chrome_id` (`chr_…`) to the account.
+   `POST …/pairings/{pairing}/confirm`, and planque binds `chrome_id` (`chr_…`) to the account. The account's Chromes
+   are `GET …/chromes` (`{chromes: [{chrome_id, name, browser, os, version, paired_at}]}`, 404 while planque doesn't
+   offer them) and `DELETE …/chromes/{chrome_id}`.
 4. **The extension polls** `GET /v1/extension/pairings/{lookup}?key=…`. It gets `202` while the phone hasn't confirmed,
-   then `{pairing, chrome_id, name, phone_key, phone_proof, phone_sig}`. It keeps the pairing only if `phone_proof`
+   then, once, `{pairing, chrome_id, name, phone_key, phone_proof, phone_sig}`; 404 for a key that isn't the pairing's.
+   Its `POST` answers 403 for a build that isn't released, 404 for an unknown or expired code, and 409 for a code
+   another Chrome used. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
