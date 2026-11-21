@@ -437,9 +437,11 @@ the app in sample mode.
   At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
-  **A refused approval or sign-in** reads only "didn't go through" on the card: tafs cloud's recorded why is written
-  for Coach ("Show the rules again as a new notice…"), so `SetupThread.answer` keeps no why for them, as Android; tafs
-  cloud's note for the owner, when it sends one, is the card's note. A refusal the phone wrote itself keeps its words.
+  **A refused approval or sign-in** never shows the settled `answer`'s why, which is written for Coach ("Show the rules
+  again as a new notice…"). Since tafs#1640 (live 09:04 UTC, 21 Nov), tafs cloud's `words` after " · it didn't go
+  through: " are only the owner's own note, so a card answered since then shows that note (`SetupThread.ownerNote`), as
+  Android draws `words`; one answered before shows only that it didn't go through. A refusal the phone wrote itself keeps
+  its words.
   **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
   as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
   card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint

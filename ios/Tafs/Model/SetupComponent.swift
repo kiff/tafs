@@ -365,17 +365,32 @@ struct SetupThread: Equatable {
         default:
             text = words
         }
-        // Why an approval or a sign-in didn't go through, as tafs cloud records it, is written for Coach ("Show the rules
-        // again as a new notice…"), never for the owner: the card says only that it didn't, and tafs cloud's own note
-        // for the owner, when it sends one, is the card's note (the owner's emulator pass, 21 Nov; as Android).
+        // Why an approval or a sign-in didn't go through: the settled `answer` ("failed: …") is written for Coach ("Show the
+        // rules again as a new notice…"), never for the owner (the owner's emulator pass, 21 Nov). Since tafs#1640, tafs
+        // cloud's `words` after " · it didn't go through: " are only the owner's own note, so the card shows that note,
+        // as Android draws `words`. One recorded before then may still carry Coach's text: it shows none.
         if c.type == .approval || c.type == .signIn, text.hasPrefix("failed") {
-            return Answer(type: c.type.rawValue, id: c.id, text: "failed", words: words)
+            let note = Self.ownerNote(recorded)
+            return Answer(type: c.type.rawValue, id: c.id, text: note.map { "failed: " + $0 } ?? "failed", words: words)
         }
         return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }
 
     /// What tafs cloud's English words for a failed answer put before why.
     static let didntGoThrough = " · it didn't go through: "
+
+    /// When tafs cloud's words for a failed answer became the owner's own note only (tafs#1640, live at 09:04 UTC on 21 Nov
+    /// 2026): what follows `didntGoThrough` in words recorded since then is never written for Coach.
+    static let ownerWordsSince = ISO8601DateFormatter().date(from: "2026-11-21T09:04:00Z")!
+
+    /// The owner's note after a failed approval's or sign-in's words, only where tafs cloud wrote it for the owner: recorded
+    /// since `ownerWordsSince`, in its English form, and not blank. Otherwise none, and the card says only that it didn't go
+    /// through.
+    static func ownerNote(_ recorded: TafsCloud.CardAnswer) -> String? {
+        guard let at = recorded.at, at >= ownerWordsSince, let r = recorded.words.range(of: didntGoThrough) else { return nil }
+        let note = recorded.words[r.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        return note.isEmpty ? nil : note
+    }
 
     /// An approval's settled answer (tafs#1283): approved, or connected with its Card next, is done;
     /// already approved; declined; failed with why. Any other value isn't approved. As Android's

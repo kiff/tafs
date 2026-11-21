@@ -109,4 +109,22 @@ final class ApprovalAnswerTests: XCTestCase {
         XCTAssertNil(refused?.why)
         XCTAssertEqual(SetupThread.Answer("[approval c1] failed: The approval window has ended.")?.why, "The approval window has ended.")
     }
+
+    /// Since tafs#1640, tafs cloud's words after "didn't go through: " are only the owner's note: a card answered since then
+    /// shows it; one answered before, or the settled answer's Coach text, never.
+    func testTheOwnersNoteShowsSinceTafsCloudSendsOnlyIt() throws {
+        let note = "Stripe is already connected. There's nothing new to approve, so nothing was approved."
+        let words = "Approve · it didn't go through: " + note
+        let forCoach = "failed: Show the rules again as a new notice"
+        var since = TafsCloud.CardAnswer(words: words, answer: forCoach)
+        since.at = SetupThread.ownerWordsSince.addingTimeInterval(60)
+        XCTAssertEqual(SetupThread.answer(since, to: try card())?.why, note)
+        var before = since
+        before.at = SetupThread.ownerWordsSince.addingTimeInterval(-60)
+        XCTAssertNil(SetupThread.answer(before, to: try card())?.why, "words recorded before #1640 may be Coach's")
+        var bare = TafsCloud.CardAnswer(words: "Approve · it didn't go through", answer: forCoach)
+        bare.at = since.at
+        XCTAssertNil(SetupThread.answer(bare, to: try card())?.why, "no note: only that it didn't go through")
+        XCTAssertEqual(SetupThread.answer(bare, to: try card())?.failed, true)
+    }
 }

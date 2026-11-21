@@ -1,0 +1,1 @@
+- **iPhone and iPad: a refused approval shows the owner's own note again** (tafs#1640's words, recorded since it went live); never the reason written for Coach.
