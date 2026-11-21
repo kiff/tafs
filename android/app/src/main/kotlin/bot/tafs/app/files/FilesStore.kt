@@ -4,15 +4,6 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Files (docs/android-app.md, Files): what the account's tafs made in their runs, kept 30 days from the run for everyone on the
- * account. On since Android 125, on the owner's yes (19 Nov), once its privacy lines were live and both phones clear a shared copy
- * on sign-out (tafs#1466, #1467); tafs cloud's routes are live (tafs#1412). Turned off, nothing of Files is drawn anywhere.
- */
-object FilesFeature {
-  const val on = true
-}
-
-/**
  * One file, as tafs cloud lists it (`GET /v1/files`): its name and media type as delivered, its size in bytes, when it was made and
  * when it goes, and the taf (by id, and by the name it had at delivery), the run and the chat it came from.
  */

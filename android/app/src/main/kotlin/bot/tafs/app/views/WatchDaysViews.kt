@@ -34,7 +34,6 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.model.zone
 import bot.tafs.app.watch.WatchDay
 import bot.tafs.app.watch.WatchDays
-import bot.tafs.app.watch.WatchDaysFeature
 import bot.tafs.app.watch.WatchDaysStore
 import bot.tafs.app.watch.WatchTurn
 import java.time.Instant
@@ -49,7 +48,7 @@ import kotlinx.coroutines.CancellationException
  * earlier-conversations sheet. Read only: replying is a Coach chat's. Nothing of it is kept on the phone.
  */
 
-/** tafs cloud's watch days, where the switch is on; null, and nothing of them drawn or asked, where it's off. */
+/** tafs cloud's watch days; null (a preview, a test), and nothing of them drawn or asked. */
 val LocalWatchDays = staticCompositionLocalOf<WatchDaysStore?> { null }
 
 /**
@@ -69,12 +68,12 @@ internal fun watchTurnTime(at: Instant): String =
 
 /**
  * "From your watch", and under it a row per day tafs cloud lists, newest first as it sends them: the day and how many requests.
- * Nothing at all, and no call, with the switch off ([on]) or no store; nothing either, never an error, when tafs cloud's switch
+ * Nothing at all, and no call, with no store; nothing either, never an error, when tafs cloud's switch
  * is off (404), it has no day, or the read fails.
  */
 @Composable
-internal fun WatchDaysSection(store: WatchDaysStore?, on: Boolean = WatchDaysFeature.on, onOpen: (WatchDay, LocalDate?) -> Unit) {
-  if (!on || store == null) return
+internal fun WatchDaysSection(store: WatchDaysStore?, onOpen: (WatchDay, LocalDate?) -> Unit) {
+  if (store == null) return
   var read by remember(store) { mutableStateOf<WatchDays?>(null) }
   LaunchedEffect(store) {
     read = try { store.days() } catch (e: CancellationException) { throw e } catch (_: Exception) { null }

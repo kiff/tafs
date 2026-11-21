@@ -9,16 +9,6 @@ import bot.tafs.app.kiff.WireWatchTurns
 import java.time.Instant
 import java.time.LocalDate
 
-/**
- * From your watch (docs/android-app.md, From your watch): the watch's Coach conversations, one day at a time, read only, in Coach's
- * earlier-conversations sheet. On since Android 124, on the owner's rule that a finished, reviewed feature goes on at once (19 Nov):
- * tafs cloud's routes are live (tafs#1463) and no new privacy text is needed. Turned off, nothing of it is drawn and tafs cloud
- * is never asked.
- */
-object WatchDaysFeature {
-  const val on = true
-}
-
 /** A day the person asked from their watch (`GET /v1/watch/days`): the day, in the account's zone, and how many requests. */
 data class WatchDay(val date: LocalDate, val count: Int)
 

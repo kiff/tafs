@@ -27,7 +27,6 @@ import bot.tafs.app.watch.StubWatchDaysStore
 import bot.tafs.app.watch.TafsCloudWatchDaysStore
 import bot.tafs.app.watch.WatchDay
 import bot.tafs.app.watch.WatchDays
-import bot.tafs.app.watch.WatchDaysFeature
 import bot.tafs.app.watch.WatchDaysStore
 import bot.tafs.app.watch.WatchTurn
 import java.time.Instant
@@ -69,10 +68,10 @@ class WatchDaysTest {
   }
 
   // The sheet drawn in the page, as beside the sidebar, so its rows are this test's to read.
-  private fun sheet(store: WatchDaysStore?, on: Boolean) = compose.setContent {
+  private fun sheet(store: WatchDaysStore?) = compose.setContent {
     TafsTheme {
       CompositionLocalProvider(LocalSheetBeside provides true, LocalWatchDays provides store) {
-        PreviousConversations(AppState(), CoachChatActions(), watchDaysOn = on) {}
+        PreviousConversations(AppState(), CoachChatActions()) {}
       }
     }
   }
@@ -92,24 +91,10 @@ class WatchDaysTest {
   private fun top(text: String) = compose.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.top
   private fun left(text: String) = compose.onNodeWithText(text).fetchSemanticsNode().boundsInRoot.left
 
-  // MARK: The switch
+  // MARK: No store
 
-  @Test fun fromYourWatchShipsOn() {
-    assertTrue("From your watch is on since Android 124 (the owner's 19 Nov rule; tafs cloud's routes are live)", WatchDaysFeature.on)
-  }
-
-  @Test fun withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing() {
-    val store = Counting()
-    sheet(store, on = false)
-    compose.waitForIdle()
-    compose.onNodeWithText(Words.Coach.Chats.previous).assertExists()
-    compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)
-    compose.onAllNodesWithTag("watch.day").assertCountEquals(0)
-    assertEquals(emptyList<String>(), store.asked)
-  }
-
-  @Test fun withNoStoreAsTheAppMakesNoneWithTheSwitchOffNothingIsDrawn() {
-    sheet(null, on = true)
+  @Test fun withNoStoreNothingOfTheWatchIsDrawn() {
+    sheet(null)
     compose.waitForIdle()
     compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)
   }
@@ -120,13 +105,13 @@ class WatchDaysTest {
   }
 
   @Test fun tafsCloudsSwitchOffDrawsNoSection() {
-    sheet(answering(null), on = true)
+    sheet(answering(null))
     compose.waitForIdle()
     compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)
   }
 
   @Test fun noDaysDrawsNoSection() {
-    sheet(answering(WatchDays(emptyList(), nov19)), on = true)
+    sheet(answering(WatchDays(emptyList(), nov19)))
     compose.waitForIdle()
     compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)
   }
@@ -136,7 +121,7 @@ class WatchDaysTest {
       override suspend fun days(): WatchDays? = throw CloudError(500, "down")
       override suspend fun day(date: LocalDate): List<WatchTurn>? = null
     }
-    sheet(failing, on = true)
+    sheet(failing)
     compose.waitForIdle()
     compose.onAllNodesWithText(Words.Coach.Chats.fromYourWatch).assertCountEquals(0)
     compose.onAllNodesWithText(ErrorWords.of(CloudError(500, "down")), substring = true).assertCountEquals(0)
@@ -147,7 +132,7 @@ class WatchDaysTest {
 
   @Test fun theDaysAreListedNewestFirstWithTheirCountsAndTheAccountsTodayIsToday() {
     val store = Counting()
-    sheet(store, on = true)
+    sheet(store)
     compose.waitForIdle()
     compose.onNodeWithText(Words.Coach.Chats.fromYourWatch).assertExists()
     assertEquals(3, compose.onAllNodesWithTag("watch.day", useUnmergedTree = true).fetchSemanticsNodes().size)
@@ -169,7 +154,7 @@ class WatchDaysTest {
     val other = watchDayTitle(nov18, today = null, phoneToday = nov19)
     assertTrue(other, other.contains("18") && other.contains("November") && other.contains("Wednesday"))
     // Drawn so in the sheet.
-    sheet(StubWatchDaysStore(StubWatchDaysStore.DAYS.replace("\"today\":\"2026-11-19\"", "\"today\":\"2026-11-18\"")), on = true)
+    sheet(StubWatchDaysStore(StubWatchDaysStore.DAYS.replace("\"today\":\"2026-11-19\"", "\"today\":\"2026-11-18\"")))
     compose.waitForIdle()
     compose.onAllNodesWithText(Words.Calendar.today).assertCountEquals(1)
     assertTrue(top(Words.Calendar.today) > top(watchDayTitle(nov19, today = nov18)))
@@ -179,7 +164,7 @@ class WatchDaysTest {
 
   @Test fun aDayShowsItsTurnsInTafsCloudsOrderEachSentFromTheWatchWithTheLineElseTheWords() {
     val store = Counting()
-    sheet(store, on = true)
+    sheet(store)
     compose.waitForIdle()
     open(nov19)
     assertEquals(listOf("days", "day 2026-11-19"), store.asked)
@@ -208,7 +193,7 @@ class WatchDaysTest {
   }
 
   @Test fun aStateTheAppDoesntKnowIsDrawnWithTafsCloudsWords() {
-    sheet(StubWatchDaysStore(), on = true)
+    sheet(StubWatchDaysStore())
     compose.waitForIdle()
     open(nov16)
     compose.onNodeWithText("Sent Nord Atelier a follow-up about the 40 chairs.").assertExists()
@@ -217,7 +202,7 @@ class WatchDaysTest {
   }
 
   @Test fun aTurnNoTafTookIsTafsCloudsWordsAlone() {
-    sheet(StubWatchDaysStore(), on = true)
+    sheet(StubWatchDaysStore())
     compose.waitForIdle()
     open(nov18)
     compose.onNodeWithText("Book a table for Friday").assertExists()
@@ -226,7 +211,7 @@ class WatchDaysTest {
   }
 
   @Test fun aDayOffersNoReply() {
-    sheet(StubWatchDaysStore(), on = true)
+    sheet(StubWatchDaysStore())
     compose.waitForIdle()
     open(nov19)
     compose.onAllNodesWithText(Words.Coach.Chats.sentFromYourWatch).assertCountEquals(3)
@@ -237,7 +222,7 @@ class WatchDaysTest {
 
   @Test fun aDayThatCantBeReadSaysSoInCoachsWordsWithTryAgain() {
     val store = Counting().apply { failDay = CloudError(500, "down") }
-    sheet(store, on = true)
+    sheet(store)
     compose.waitForIdle()
     open(nov19)
     val why = ErrorWords.of(CloudError(500, "down"))
