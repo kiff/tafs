@@ -1,0 +1,12 @@
+{
+  "about": "The phone's signatures when it approves a browser grant (docs/chrome.md, \"Steps\"): the bytes it signs for the grant's sites and for one sensitive site it allows. The extension checks both (protocol.checkSites, protocol.checkAllowances); the phones' tests build the same bytes.",
+  "chrome_id": "chr_01HZX5",
+  "grant": "g_7Q2M",
+  "sites": [
+    "shop.example",
+    "paypal.com"
+  ],
+  "site": "paypal.com",
+  "sites_signed_bytes": "dGFmcy1jaHJvbWUvc2l0ZXMvdjEAeyJjaHJvbWVfaWQiOiJjaHJfMDFIWlg1IiwiZ3JhbnQiOiJnXzdRMk0iLCJzaXRlcyI6WyJzaG9wLmV4YW1wbGUiLCJwYXlwYWwuY29tIl19",
+  "sensitive_signed_bytes": "dGFmcy1jaHJvbWUvc2Vuc2l0aXZlL3YxAHsiY2hyb21lX2lkIjoiY2hyXzAxSFpYNSIsImdyYW50IjoiZ183UTJNIiwic2l0ZSI6InBheXBhbC5jb20ifQ"
+}
