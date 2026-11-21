@@ -10,8 +10,8 @@ no other does. Two builds have it:
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue
   and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
   KIFF's sheet is private (ephemeral), so iOS shows no "Wants to Use kiff.dev to Sign In" ask for it; one that comes is
-  taken. **The page passes only when it draws a way to sign in:** a button or link that signs in (Google, Apple,
-  Continue, email) within 30 s. A page with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
+  taken. **The page passes only when it draws Google's or Apple's sign-in** within 30 s, and **no email or code field**
+  (email-code sign-in stays off). A page with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
 - **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
   testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
   (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.

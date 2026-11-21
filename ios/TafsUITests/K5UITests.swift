@@ -76,17 +76,19 @@ final class K5UITests: TafsUITestCase {
         }
         XCTAssertTrue(page.exists, "KIFF's sign-in page in the sheet, within 60 s of Continue")
         // A page is not a way in: on 21 Nov KIFF's page drew its title and one line, and no way to sign in. So the test
-        // waits for a control a person can sign in with (Continue with Google, Apple, …), not only the page's words.
+        // waits for Google's or Apple's control, not only the page's words. Email-code sign-in stays off, so an email field
+        // on the page is a finding, never a pass.
         let way = page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@",
                                                                        XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.link.rawValue,
-                                                                       Self.signInWords)).firstMatch
+                                                                       Self.providerWords)).firstMatch
         let drawn = way.waitForExistence(timeout: 30)
         keep("kiff-sign-in")
-        XCTAssertTrue(drawn, "KIFF's sign-in page draws a way to sign in (a Google, Apple or email button), within 30 s")
+        XCTAssertTrue(drawn, "KIFF's sign-in page draws Google's or Apple's sign-in, within 30 s")
+        XCTAssertEqual(page.textFields.count + page.secureTextFields.count, 0, "no email or code field: email-code sign-in stays off")
     }
 
-    /// The words of a control that signs in, in the languages the welcome runs in: what KIFF's page draws.
-    static let signInWords = ".*(google|apple|continue|sign in|log in|e-?mail|anmelden|weiter|connexion|continuer|iniciar sesi|continuar|accedi|continua|inloggen|doorgaan|zaloguj|kontynuuj|로그인|계속).*"
+    /// The providers KIFF's page offers: Google and Apple, whatever the language around their names.
+    static let providerWords = ".*(google|apple).*"
 
     /// The app signed out, as on a fresh install, in English with `region` as the device's country.
     @MainActor
