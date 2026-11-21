@@ -120,6 +120,11 @@ final class CoachModel: ObservableObject {
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.
     var inFlight: Bool { state == .sending || state == .sent || state == .answering }
 
+    /// One tap to talk (row 44, A): Ask goes straight to the system's dictation only when there's nothing to come back to (no
+    /// words on their way, none kept in the review after a failed Send) and the watch has a passcode, as Wear OS never
+    /// listens without a screen lock. Otherwise Ask opens the ask as before.
+    var listensFirst: Bool { !inFlight && !reviewing && lock.isSecure }
+
     var canSend: Bool { !inFlight && !words.isEmpty && words.count <= WatchRequest.coachLimit }
     private var words: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
 

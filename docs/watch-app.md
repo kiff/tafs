@@ -177,8 +177,15 @@ Sign out on this watch was live in 8 languages; turned off, a watch shows v1 who
 
 **Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
 Nothing leaves the watch before Send:
-- **Ask Coach** on the home opens the ask: the system's input (Type: dictation, Scribble or the keyboard, which watchOS
-  offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
+- **One tap to talk** (`WatchDictation`, `WatchDictationTests`; row 44, A, as Wear OS's tafs#1582): **Ask Coach** on the
+  home, and a taf chat's microphone, open the system's dictation at once (`presentTextInputController` with no suggestions
+  and plain text, which watchOS opens on the microphone), and the words go straight to Check before sending. Cancelled,
+  the ask opens on Type and Quick reply. It doesn't listen without a passcode (as Wear OS without a screen lock), while
+  words are on their way, or while words kept after a failed Send wait in the review: the ask opens as before, on them.
+  **To verify on a real watch:** that watchOS opens on listening, not on its own choices first (the simulator has no
+  dictation); if it does show them, it's still one tap to the input.
+- **The ask** (Re-record, and Ask when it doesn't listen first): the system's input (Type: dictation, Scribble or the
+  keyboard, which watchOS offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
   app can drive, so the system's input is the microphone: there's no Start, Stop, timer or recording of the app's own, and
   no Play. Only the words leave, as text ("Coach gets your words as text, never your voice.", as Wear OS says it).
 - **Check before sending** shows the words in full, scrolled with the crown, and under them, pinned at the foot in one row

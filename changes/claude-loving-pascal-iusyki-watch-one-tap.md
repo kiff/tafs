@@ -1,0 +1,1 @@
+- **Apple Watch: one tap to talk** (row 44, A): Ask Coach and a taf chat's microphone open the system's dictation at once, and the words go straight to Check before sending; nothing is sent before Send, and it never listens without a passcode.
