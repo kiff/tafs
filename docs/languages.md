@@ -132,9 +132,9 @@ term that recurs is added here first, then used.
 ## Korean and Japanese (apart from the Terms table)
 
 `ko` ships (tafs#1572); `ja` has every line but is in `all`, not `shipped` (app/strings/README.md), so neither app
-shows it yet. tafs cloud speaks `ko` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
-language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` yet, so a
-Korean phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
+shows it yet. tafs cloud speaks `ko` and `ja` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
+language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` or `ja` yet, so a
+Korean or Japanese phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
 **Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading

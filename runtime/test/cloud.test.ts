@@ -1033,10 +1033,9 @@ describe("tafs cloud", () => {
       for (const lang of LANGUAGES) expect(await says(cause, lang), `${cause} in ${lang}`).not.toBe(await says("no_refresh_token", lang));
     }
     expect(await says("refresh_refused", "de")).toBe("Gmail nimmt diese Anmeldung nicht mehr an, daher kann Rae es nicht nutzen. Verbinde erneut, um dich anzumelden.");
-    // Korean isn't served yet (its catalog is on main, not wired), but its lines are there for when it is.
+    // Korean's and Japanese's own lines, as tafs cloud serves them.
     expect(ko.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Rae이(가) 제거된 연결의 Gmail 로그인을 사용하고 있었기 때문에 지금은 Gmail을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.");
     expect(ko.connect_again_refused_words("Gmail", "Rae")).not.toBe(ko.connect_again_words("Gmail", "Rae"));
-    // Japanese is the same: on main, not wired yet.
     expect(ja.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Raeは削除された接続のGmailのサインインを使っていたため、現在Gmailを使用できません。再接続してサインインしてください。");
     expect(ja.connect_again_refused_words("Gmail", "Rae")).not.toBe(ja.connect_again_words("Gmail", "Rae"));
     expect((await setup("needs_reconnect", "en", undefined, "refresh_refused")).connections?.[0]).toMatchObject({ signed_out_cause: "refresh_refused" });
