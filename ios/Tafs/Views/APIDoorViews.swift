@@ -3,7 +3,7 @@ import SwiftUI
 /// A door "From another application" (`api`, docs/doors.md): a company's own software hands the taf work with a key. Its
 /// panel shows today's count against its cap, its last request in tafs cloud's words, its keys (at most two, each by its
 /// last four), New key, Revoke and the API instructions. Every change but pausing is signed (`DoorsModel.newKey`,
-/// `revoke`, `reopen`, `removeAPI`). Drawn only behind `APIDoorFeature.on`.
+/// `revoke`, `reopen`, `removeAPI`). Drawn for what tafs cloud sends: its `TAFS_API_DOORS` decides, never the app.
 struct APIDoorPanel: View {
     let door: TafsCloud.Door
     let taf: Taf
@@ -158,13 +158,20 @@ struct NewKeySheet: View {
 }
 
 /// The key, shown this once: Copy, where to send work, and an example that reads the key from the caller's own secret.
-/// Leaving it forgets the key (`keyShown`); the list only ever has its last four.
+/// Leaving it forgets the key (`keyShown`); the list only ever has its last four. As Android's `FLAG_SECURE` keeps it off
+/// the recents and off a recording, the key is covered whenever the app isn't in front (so the app switcher's snapshot
+/// never holds it) and while the screen is recorded, mirrored or shared. iOS lets no app refuse a screenshot.
 struct IssuedKeyView: View {
     let key: TafsCloud.IssuedKey
     let door: TafsCloud.Door
     let endpoint: String
     let done: () -> Void
     @State private var copied = false
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var captured = UIScreen.main.isCaptured
+
+    /// Whether the key may be drawn now: the app in front and the screen not captured.
+    static func shows(phase: ScenePhase, captured: Bool) -> Bool { phase == .active && !captured }
 
     var body: some View {
         ScrollView {
@@ -172,7 +179,7 @@ struct IssuedKeyView: View {
                 Text(Words.Door.Api.shownOnce).scaledFont(24, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 Text(Words.Door.Api.shownOnceBody(app: door.label)).scaledFont(15).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(key.key)
+                Text(Self.shows(phase: scenePhase, captured: captured) ? key.key : String(repeating: "•", count: 24))
                     .scaledFont(14, weight: .semibold, design: .monospaced).foregroundColor(Theme.ink)
                     .textSelection(.enabled).privacySensitive()
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading)
@@ -195,6 +202,9 @@ struct IssuedKeyView: View {
             .padding(20)
         }
         .screenBackground()
+        .onReceive(NotificationCenter.default.publisher(for: UIScreen.capturedDidChangeNotification)) { _ in
+            captured = UIScreen.main.isCaptured
+        }
     }
 }
 

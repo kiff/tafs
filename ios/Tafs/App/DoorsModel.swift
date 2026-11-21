@@ -20,7 +20,7 @@ final class DoorsModel: ObservableObject {
     /// tafs cloud's id for the taf.
     private let tafID: String
     private let signIn: VendorSigningIn
-    /// Signs a change to a door "From another application" (`APIDoorFeature`): the method, path and raw body, after Face ID
+    /// Signs a change to a door "From another application" : the method, path and raw body, after Face ID
     /// or the fingerprint, with the words the prompt shows. Answers the `KIFF-Device-Signature` header's value.
     typealias SignRequest = @MainActor (_ method: String, _ path: String, _ body: Data, _ reason: String) async throws -> String
     private let sign: SignRequest?

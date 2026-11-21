@@ -127,8 +127,8 @@ every field today's builds require, so older builds show it as a plain door. Bot
 fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows only tafs cloud's `words` (`APIDoorText.lastRequestWords`), and no line until they're sent, never the raw `status`), and each key's `last4`, `made_at`
 and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 
-**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
-first three behind `APIDoorFeature`, off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
+**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; offered
+where tafs cloud's `TAFS_API_DOORS` is on): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
 opening a paused door again (`PATCH …/{door}` `{open: true}`) and removing the door (`DELETE …/{door}`, its keys with it,
 from the door's Remove, which never sends an `api` door's removal unsigned; nor does the door's open switch send its reopening unsigned) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
 over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
@@ -210,11 +210,11 @@ outcomes to end with. It's started with the door's `outcomes`, so kiff/agents gi
 those, and keeps the one it accepted on the run as `outcome`: that is the outcome, checked again against the door's list.
 Words that only say one, or none at all, are `failed` (`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
 
-**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, behind `APIDoorFeature`, off), from the owner's
+**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, drawn for what tafs cloud sends, so `TAFS_API_DOORS` alone decides), from the owner's
 mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
 in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
 (asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
-the door's own when left blank; at most two); the key shown once (Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
+the door's own when left blank; at most two); the key shown once (covered whenever the app isn't in front, so the app switcher's snapshot never holds it, and while the screen is recorded or mirrored, as Android's `FLAG_SECURE`; Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
@@ -228,7 +228,7 @@ while tafs runs; Done forgets the key. API instructions show where to send reque
 host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
 one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
-**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, behind `APIDoorFeature`, off). Coach's `taf_door_api`
+**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, drawn when Coach sends the card, which it does only where `TAFS_API_DOORS` is on). Coach's `taf_door_api`
 shows a `door` card (`{taf_id, draft_id}`, no words of Coach's); the app reads the draft from tafs cloud
 (`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`) and draws it **from `body`, the bytes it signs and
 sends**, never from the copy beside it: the application's name, what it can do (`draft_scope`), what the taf does with its
