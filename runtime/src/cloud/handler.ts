@@ -3042,6 +3042,16 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       const kept = deps.coach ? await deps.coach.get(stepWhyKey(me.tenantID, id)).catch(() => undefined) : undefined;
       return [id, Array.isArray(kept) ? kept as StepWhys : []] as const;
     })));
+    // A connection made later in the chat is past an earlier run's refusal of the same app (keeper.connected).
+    const connectedLater = deps.coach ? await deps.coach.get(chatConnectedKey(me.tenantID, r.session.id)).catch(() => undefined) : undefined;
+    if (Array.isArray(connectedLater) && connectedLater.length) {
+      for (const [id, w] of runs) {
+        const started = Math.min(...w.parts.map((p) => p.start).filter((n) => !Number.isNaN(n)));
+        if (!Number.isFinite(started)) continue;
+        whysOf.set(id, (whysOf.get(id) ?? []).map((why) => why.refused && !why.resolved && (connectedLater as SessionConnected).some((c) =>
+          Date.parse(c.at) > started && connectsRefused(why.refused!, c)) ? { ...why, resolved: true as const } : why));
+      }
+    }
     for (const [id, w] of runs) {
       const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
@@ -6975,8 +6985,25 @@ function whyKeeper(me: KIFFIdentity, deps: Deps, taf: Taf, session?: string): Wh
       const at = deps.now?.() ?? new Date();
       await store.put(key, whys.map((w) => w.refused && connectsRefused(w.refused, through) ? { ...w, resolved: true as const } : w), new Date(at.getTime() + STEP_WHY_KEPT_MS));
     }));
+    // And for the chat's earlier runs: a connection made in a later turn is past their refusals too (21 Nov, the emulator's
+    // Calendar: the first run's red "Next: ask Coach to sign in again" stayed after Coach connected in the next).
+    const session = keeper.session;
+    if (!session) return;
+    then(() => store.get(chatConnectedKey(me.tenantID, session)).then(async (kept) => {
+      const at = deps.now?.() ?? new Date();
+      const marks = (Array.isArray(kept) ? kept as SessionConnected : []).slice(-STEP_WHYS_KEPT + 1);
+      await store.put(chatConnectedKey(me.tenantID, session), [...marks, { ...through, at: at.toISOString() }], new Date(at.getTime() + STEP_WHY_KEPT_MS));
+    }));
   };
   return keeper;
+}
+
+/** The apps a chat connected, each with when: an earlier run's refusal of the same is past (keeper.connected). */
+type SessionConnected = Array<{ vendor: string; key?: string; at: string }>;
+
+/** Where a chat's connections are kept: its session's. */
+function chatConnectedKey(tenant: string, session: string): string {
+  return `${tenant}#coach-connected#${session}`;
 }
 
 /** A connection call's action, from its input as sent ("request", "status"…), to tell Coach's retry of it from other work. */

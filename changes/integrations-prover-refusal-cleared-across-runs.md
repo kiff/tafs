@@ -1,0 +1,1 @@
+- **A connection refused in one turn of a chat, then made in a later one, no longer leaves the first turn's red line and "Next:".**
