@@ -445,7 +445,7 @@ things (`runtime/src/cloud/approval.ts`):
   The Cards stay as drafted: Coach hears the figures, shows the rules again with each one in
   digits, and drafts again once the owner agreed, as `rules_unagreed` (Eval 44765665210: the
   notice said "a draft invoice for each one", the Card held 10 a day and 1 per order, and it was
-  signed). Coach writes them so from `draft-the-card@42`.
+  signed). Coach writes them so from `draft-the-card@41`.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
