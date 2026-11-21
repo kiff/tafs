@@ -661,7 +661,7 @@ Privacidade (em inglês): https://kiff.dev/tafs/privacy
 **Wave 1 (Latin America), App Store only, repo only:** a new localization, Spanish (Mexico), which App Store Connect doesn't have
 yet (mac-local's read, 21 Nov). Adapted from es (es-ES), above, with the same claims and limits, in Mexican usage ("celular",
 "envío", "molesto", "vencen"). The names it quotes are the app's own, as a phone in Mexico shows them in Spanish (Te necesita,
-Registro, ¿Ocurrió esto?, Cuenta, Bloquear). Written by mac12 under the PM's 06:06 takeover; legal-i18n reads it before it's
+Registro, ¿Ocurrió esto?, Cuenta, Bloquear). Its words are read by the language reviewer before it's
 applied. Applying it waits for the owner's Wave 1 yes. Play's Latin American listing is es-419, dev-android's.
 
 ### App Store
@@ -725,7 +725,7 @@ Privacidad (en inglés): https://kiff.dev/privacy
 yet (mac-local's read, 21 Nov). Adapted from pt (pt-PT), above, with the same claims and limits, in Brazilian usage ("você",
 "celular", "contato", "controle", "senhas", "app" masculine). The names it quotes are the app's own, as a phone in Brazil shows
 them in the app's Portuguese (Precisa de si, Registo, Isto aconteceu?, Conta, Bloquear), so the listing and the screens match.
-Written by mac12 under the PM's 06:06 takeover; legal-i18n reads it before it's applied. Applying it waits for the owner's
+Its words are read by the language reviewer before it's applied. Applying it waits for the owner's
 Wave 1 yes. Play's pt-BR listing is dev-android's.
 
 ### App Store
