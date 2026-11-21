@@ -106,6 +106,9 @@ export const pt: Words = {
   connect_again_done: (app: string, taf: string) => `${app} voltou a estar ligado. ${taf} pode usá-lo.`,
   connect_again_fresh_words: (app: string, taf: string) => `O ${app} já não aceita o início de sessão anterior, por isso ${taf} não o pode usar. Ligue novamente com um novo início de sessão: um só início de sessão recupera cada taf que o usava.`,
   connect_again_fresh_done: (app: string) => `O ${app} voltou a estar ligado com o novo início de sessão. Cada taf que o usava pode voltar a usá-lo.`,
+  connect_again_refused_words: (app: string, taf: string) => `O ${app} já não aceita este início de sessão, por isso ${taf} não o pode usar. Ligue novamente para iniciar sessão.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} usava o início de sessão no ${app} de uma ligação que foi removida, por isso não pode usar o ${app} agora. Ligue novamente para iniciar sessão.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `A sessão no ${app} foi terminada, por isso ${taf} não o pode usar. Ligue novamente para iniciar sessão.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que não vê" : `${n} tafs que não vê`] : [])]);

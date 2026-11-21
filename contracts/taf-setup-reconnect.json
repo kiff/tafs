@@ -53,7 +53,7 @@
       "grant": "grt_gmail",
       "app": "Gmail",
       "title": "Connect again",
-      "words": "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.",
+      "words": "Gmail was signed out, so Rae can't use it. Connect again to sign in.",
       "done_words": "Gmail is connected again. Rae can use it."
     }
   }

@@ -24,6 +24,12 @@ export interface GrantView {
    * that can't be compared with the old one, which brings back every connection signed out on that account. Absent: same.
    */
   reconnect?: "same" | "fresh";
+  /**
+   * Why planque signed the connection out, as its code: `refresh_refused` (the vendor stopped taking the sign-in),
+   * `reused_sign_in_gone` (a connection it shared a sign-in with was removed), `no_refresh_token` (it really ran out).
+   * Absent: an older planque, or a connection signed out before planque kept it.
+   */
+  signed_out_cause?: string;
   /** The tafs on the connection, by their names, as planque reads them. */
   used_by?: string[];
 }
@@ -127,7 +133,7 @@ export function runningTool(events: SessionEvent[], run: Run | undefined): strin
 }
 
 export interface SetupView {
-  connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; fresh?: boolean; action_count: number; action_words: string;
+  connections: Array<{ id: string; name: string; status: string; status_words: string; reconnect: boolean; fresh?: boolean; signed_out_cause?: string; action_count: number; action_words: string;
     actions: Array<{ name: string; title: string; limits: string[]; steps: number[]; step_words: string }>;
     /** With no saved workflow, the line the app's sheet shows under its own Workflow heading, once. */
     workflow_words?: string;
@@ -177,7 +183,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
     return { id: g.id, name: names.get(g.id)!, status: g.status,
       status_words: g.status_words || ({ connected: w.setup_status_connected, listed: w.setup_status_listed, signed_in: w.setup_status_signed_in, needs_reconnect: w.setup_status_needs_reconnect, pending: w.setup_status_pending } as Record<string, string>)[g.status] || w.setup_status_unknown,
-      reconnect: g.status === "needs_reconnect", ...(g.status === "needs_reconnect" && g.reconnect === "fresh" ? { fresh: true } : {}), action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
+      reconnect: g.status === "needs_reconnect", ...(g.status === "needs_reconnect" && g.reconnect === "fresh" ? { fresh: true } : {}), ...(g.status === "needs_reconnect" && g.signed_out_cause ? { signed_out_cause: g.signed_out_cause } : {}), action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
       ...(custodyWords(g.custody, lang) ? { custody_words: custodyWords(g.custody, lang) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
       ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: siteSignIn(lang) } : {}),

@@ -106,6 +106,9 @@ export const it: Words = {
   connect_again_done: (app: string, taf: string) => `${app} è di nuovo connesso. ${taf} può usarlo.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} non accetta più il vecchio accesso, quindi ${taf} non può usarlo. Connetti di nuovo con un nuovo accesso: un solo accesso riporta ogni taf che lo usava.`,
   connect_again_fresh_done: (app: string) => `${app} è di nuovo connesso con il nuovo accesso. Ogni taf che lo usava può usarlo di nuovo.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} non accetta più questo accesso, quindi ${taf} non può usarlo. Connetti di nuovo per accedere.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} usava l'accesso a ${app} di un collegamento che è stato rimosso, quindi ora non può usare ${app}. Connetti di nuovo per accedere.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} è stato disconnesso, quindi ${taf} non può usarlo. Connetti di nuovo per accedere.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf che non vedi" : `${n} taf che non vedi`] : [])]);

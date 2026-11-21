@@ -505,7 +505,11 @@ not hold a device key, sign or approve anything. A missing or refused proof yiel
 `connections_error`; an unreadable connection list is not presented as an empty one.
 A connection whose sign-in the vendor no longer takes (`needs_reconnect`) also gives the page a
 `connect_again`: `{grant, app, title, words, done_words}`, the taf's own **Connect again**, in the reader's
-language ("Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in."). The app calls the
+language. Its `words` follow the cause planque kept for the sign-out (the grant's `signed_out_cause`, also on the
+connection row): `refresh_refused` ("Gmail no longer takes this sign-in, so Rae can't use it. Connect again to sign in."),
+`reused_sign_in_gone` (a connection it shared a sign-in with was removed), `no_refresh_token` (the only one that says
+"expired": the sign-in really ran out), and any other cause, or none (an older planque, or a connection signed out
+before it was kept), "Gmail was signed out, so Rae can't use it. Connect again to sign in." The app calls the
 connection server's approve for that `grant` (as Connect apps' Sign in again does), so the same connection is
 signed in again with its tools and the taf's Card, and shows `done_words` once it's connected. It never sends
 the person to a list of every app.
