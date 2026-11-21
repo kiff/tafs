@@ -15,6 +15,9 @@ enum ChromePairing {
     static let pairLabel = "tafs-chrome/pair/v1"
     static let extensionProofLabel = "tafs-chrome/ext/v1"
     static let phoneProofLabel = "tafs-chrome/phone/v1"
+    /// What the phone signs when the owner approves a browser grant: its sites, and each sensitive site allowed by name.
+    static let sitesLabel = "tafs-chrome/sites/v1"
+    static let sensitiveLabel = "tafs-chrome/sensitive/v1"
 
     /// A new secret, from the system's random source.
     static func newSecret() -> String {
@@ -94,6 +97,67 @@ enum ChromePairing {
         out.append(0)
         out.append(try JCS.canonical(body))
         return out
+    }
+
+    /// The bytes the phone signs for a browser grant's sites on one paired Chrome: label ‖ 0x00 ‖ JCS of
+    /// `{chrome_id, grant, sites}`. The extension runs a step only on sites inside them (`protocol.checkSites`).
+    static func sitesBytes(chromeID: String, grant: String, sites: [String]) throws -> Data {
+        try labelled(sitesLabel, .object(["chrome_id": .string(chromeID), "grant": .string(grant), "sites": .array(sites.map { .string($0) })]))
+    }
+
+    /// The bytes the phone signs to allow one sensitive site for one grant on one paired Chrome: label ‖ 0x00 ‖ JCS of
+    /// `{chrome_id, grant, site}`. Without it, the extension never opens that site (`protocol.checkAllowances`).
+    static func sensitiveBytes(chromeID: String, grant: String, site: String) throws -> Data {
+        try labelled(sensitiveLabel, .object(["chrome_id": .string(chromeID), "grant": .string(grant), "site": .string(site)]))
+    }
+
+    private static func labelled(_ label: String, _ body: JCS.Value) throws -> Data {
+        var out = Data(label.utf8)
+        out.append(0)
+        out.append(try JCS.canonical(body))
+        return out
+    }
+
+    /// The sites the extension blocks unless the phone allows them one by one (chrome/src/sites.js `SENSITIVE`,
+    /// vectors/chrome-sensitive.json): each a site and its subdomains. The approval card marks a grant's sensitive sites
+    /// from this, and signs an allowance only for one the owner ticked.
+    static let sensitiveSites: [String] = [
+        "1password.com",
+        "lastpass.com",
+        "bitwarden.com",
+        "dashlane.com",
+        "keepersecurity.com",
+        "nordpass.com",
+        "proton.me",
+        "coinbase.com",
+        "binance.com",
+        "kraken.com",
+        "metamask.io",
+        "blockchain.com",
+        "crypto.com",
+        "ledger.com",
+        "bitstamp.net",
+        "paypal.com",
+        "wise.com",
+        "revolut.com",
+        "n26.com",
+        "venmo.com",
+        "cash.app",
+        "klarna.com",
+        "payoneer.com",
+        "ameli.fr",
+        "nhs.uk",
+        "mychart.com",
+        "healthcare.gov"
+    ]
+    /// A host with one of these labels names a bank, a government or a health account.
+    static let sensitiveLabels = try! NSRegularExpression(pattern: #"(^|[.-])(bank|banking|banque|bancaire|banca|banco|bancario|sparkasse|volksbank|bausparkasse|credit-?union|tresor|impots|irs|hmrc|gov|gouv|gob|bund|gc|nic|health|sante|gesundheit|salud|saude|patient|medicare|medicaid)([.-]|$)"#)
+
+    /// Whether the extension treats `host` as sensitive, as `sites.sensitive` does.
+    static func isSensitive(_ host: String) -> Bool {
+        let host = host.lowercased()
+        if sensitiveSites.contains(where: { host == $0 || host.hasSuffix("." + $0) }) { return true }
+        return sensitiveLabels.firstMatch(in: host, range: NSRange(host.startIndex..., in: host)) != nil
     }
 
     /// A signature as the contract sends it: raw r‖s, base64url without padding, from the base64 DER the signer gives.
