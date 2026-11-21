@@ -62,5 +62,16 @@
   "coach_empty_body": { "message": "It's the same chat as in the tafs app. Coach sees this page only if you share it.", "description": "Empty chat: body" },
   "share_note": { "message": "Sends this one page to Coach, with password, card and code fields removed.", "description": "Note under Share this page" },
   "share_declined": { "message": "Not shared: tafs isn't allowed on this site in Chrome.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "The first time on a site, Chrome asks you to let tafs into it.", "description": "Shown before Chrome's site prompt, first share on a site" }
+  "share_permission": { "message": "The first time on a site, Chrome asks you to let tafs into it.", "description": "Shown before Chrome's site prompt, first share on a site" },
+  "vault_title": { "message": "Saved sign-ins" },
+  "vault_body": { "message": "Saved here, sealed on this computer. A taf can ask to use one only on that exact site, and it's typed only after you approve that one fill on your phone. tafs and KIFF never see it." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Username or email (optional)" },
+  "vault_password": { "message": "Password" },
+  "vault_save": { "message": "Save sealed" },
+  "vault_saved": { "message": "Saved. It's sealed on this computer." },
+  "vault_error": { "message": "That wasn't saved: a site needs https, and a password." },
+  "vault_remove": { "message": "Remove" },
+  "vault_with_username": { "message": "with a username" },
+  "vault_one_per_site": { "message": "One sign-in per site: saving another for the same site replaces it." }
 }
