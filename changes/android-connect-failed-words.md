@@ -1,0 +1,1 @@
+- **Android:** a connection planque couldn't set up reads "It isn't working on our side right now", never "It changed in the meantime" ([android-app.md](docs/android-app.md)).
