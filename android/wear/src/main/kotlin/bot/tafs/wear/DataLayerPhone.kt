@@ -17,6 +17,13 @@ import kotlinx.coroutines.withTimeoutOrNull
 class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : PhoneLink {
   private val capabilities = Wearable.getCapabilityClient(context)
   private val messages = Wearable.getMessageClient(context)
+  private val route = PhoneRoute(
+    lookup = {
+      capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
+        .nodes.let { nodes -> nodes.firstOrNull { it.isNearby } ?: nodes.firstOrNull() }?.id
+    },
+    send = { node, path, data -> messages.sendRequest(node, path, data).await() },
+  )
 
   override suspend fun ask(request: WatchRequest): Asked {
     val (path, data) = WatchLink.encode(request)
@@ -36,16 +43,25 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     }
     return try {
       withTimeoutOrNull(timeoutMs) {
-        val phone = capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
-          .nodes.let { nodes -> nodes.firstOrNull { it.isNearby } ?: nodes.firstOrNull() }
-        lookupMs = android.os.SystemClock.elapsedRealtime() - started
-        if (phone == null) { outcome = LinkTrace.NO_PHONE; return@withTimeoutOrNull Asked.Unreachable }
-        val reply = messages.sendRequest(phone.id, path, data).await()
-        sendMs = android.os.SystemClock.elapsedRealtime() - started - (lookupMs ?: 0L)
-        bytes = reply.size
-        val decoded = WatchLink.decodeReply(reply)
-        outcome = if (decoded != null) LinkTrace.OK else LinkTrace.UNREADABLE
-        decoded?.let { Asked.Answered(it) } ?: Asked.NotUnderstood
+        // The phone reached last first, a second look when none is found, a read sent once more (PhoneRoute).
+        when (val tried = route.ask(request, path, data) { lookupMs = android.os.SystemClock.elapsedRealtime() - started }) {
+          is PhoneRoute.Tried.NoPhone -> {
+            outcome = LinkTrace.NO_PHONE + if (tried.retried) " ↻" else ""
+            Asked.Unreachable
+          }
+          is PhoneRoute.Tried.Failed -> {
+            outcome = "error: ${tried.error.javaClass.simpleName}" + if (tried.retried) " ↻" else ""
+            Asked.Unreachable
+          }
+          is PhoneRoute.Tried.Reply -> {
+            sendMs = android.os.SystemClock.elapsedRealtime() - started - (lookupMs ?: 0L)
+            bytes = tried.bytes.size
+            val decoded = WatchLink.decodeReply(tried.bytes)
+            outcome = (if (decoded != null) LinkTrace.OK else LinkTrace.UNREADABLE)
+            if (decoded != null && tried.retried) outcome = LinkTrace.OK_RETRIED
+            decoded?.let { Asked.Answered(it) } ?: Asked.NotUnderstood
+          }
+        }
       } ?: Asked.Unreachable
     } catch (e: CancellationException) {
       // The screen closed or the ask was cancelled: not the link's failure, so not recorded as a timeout.

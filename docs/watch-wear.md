@@ -469,6 +469,12 @@ call's taf, what it wants, its reason, refusable, its hold id); Tafs 709 B (each
 for every page at once. Each reply has a budget the test holds. So the slowness the owner saw isn't the bytes: it's the round
 trips and the phone's own reads, which the line above measures.
 
+**Reaching the phone** (`PhoneRoute`, `PhoneRouteTest`), so a phone that's there isn't called unreachable: the phone the
+watch reached last is asked directly, with no capability lookup first; no phone found (common in the first seconds after the
+app starts) is looked for once more after half a second; and a read whose send failed goes once more to a phone found afresh.
+A write (Refuse, Halt, an ask, a Coach message) is never sent twice, since a failed send may still have arrived. All of it
+stays inside the same 10 s. A timing build's line marks a second try with ↻ ("tafs 0.0s + 1.2s · 709 B ↻", "✕ no phone ↻").
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
