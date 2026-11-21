@@ -1,0 +1,1 @@
+- **iPhone and iPad, a door Coach drafted:** reopening the chat after Approve shows tafs cloud's "Door made from this draft" in the ok colour, not as an error ([doors.md](docs/doors.md)).

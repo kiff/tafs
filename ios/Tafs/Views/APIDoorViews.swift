@@ -309,6 +309,9 @@ struct DoorDraftCard: View {
     let component: SetupComponent
     @State private var draft: TafsCloud.DoorDraft?
     @State private var failed: String?
+    /// The draft is used up because a door was made from it (`draft_used`): tafs cloud's words then say so, in the
+    /// ok colour, since nothing went wrong.
+    @State private var used = false
     @State private var busy = false
     /// The door the approval opened and its first key, held only until its screen closes.
     @State private var added: TafsCloud.AddedAPIDoor?
@@ -353,7 +356,8 @@ struct DoorDraftCard: View {
                 }
             }
             if let failed {
-                Text(failed).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                Text(failed).scaledFont(13, relativeTo: .footnote).foregroundColor(used ? Theme.ok : Theme.no)
+                    .accessibilityIdentifier(used ? "door.draft.used" : "door.draft.failed")
             }
         }
         .task(id: component.draftID) { await read() }
@@ -370,9 +374,16 @@ struct DoorDraftCard: View {
         do {
             draft = try await model.cloud.doorDraft(taf, draft: id)
             failed = nil
+            used = false
         } catch {
+            used = Self.isUsed(error)
             failed = (error as? TafsCloud.CloudError)?.words ?? error.localizedDescription
         }
+    }
+
+    /// Whether tafs cloud refused the read because a door was already made from this draft (410 `draft_used`).
+    static func isUsed(_ error: Error) -> Bool {
+        (error as? TafsCloud.CloudError)?.code == "draft_used"
     }
 
     private func approve(_ draft: TafsCloud.DoorDraft) {
