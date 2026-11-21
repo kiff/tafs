@@ -1,0 +1,1 @@
+- **Android, for testing only:** a K5 debug build (`-Pk5`, or the Android workflow run by hand with `k5`) turns the onboarding and the sign-in inside tafs on for a test device; release builds never have it ([onboarding.md](docs/onboarding.md)).
