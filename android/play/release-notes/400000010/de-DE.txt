@@ -1,0 +1,1 @@
+Testversion von tafs auf Wear OS: Sprechen mit einem Tippen, kein Abbruch, wenn du eine Pause machst, Uhrzeiten in jedem Chat, und sie öffnet sofort. Sie zeigt außerdem, wie lange die Uhr auf dein Handy wartet; diese Zeiten enthalten nie deine Nachrichten.

@@ -1,0 +1,1 @@
+Versão de teste do tafs no Wear OS: falar com um toque, sem cortes quando faz uma pausa, horas em cada chat, e abre de imediato. Mostra também quanto tempo o relógio espera pelo telemóvel; esses tempos nunca incluem as suas mensagens.
