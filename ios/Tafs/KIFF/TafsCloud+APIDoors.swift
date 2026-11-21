@@ -3,11 +3,8 @@ import Foundation
 /// A door "From another application" (`api`): a company's own software handing a taf work over the API, by a key the owner
 /// makes on the phone (docs/doors.md). Its keys are made, revoked and its door opened again only with the owner's signature:
 /// `kiff.request.v1` over the method, path and raw body, after Face ID or the fingerprint, as a taf's removal is signed.
-/// Pausing it needs none: stopping is always safe.
-enum APIDoorFeature {
-    /// Off until tafs cloud's routes, the Eval case and the privacy line are in, and the owner says yes.
-    static let on = false
-}
+/// Pausing it needs none: stopping is always safe. Offered where tafs cloud offers it (`TAFS_API_DOORS`, per account): Coach
+/// drafts a door, and an account holds one, only there, so the app draws what it's given and has no switch of its own.
 
 extension TafsCloud {
     /// A key as tafs cloud makes it: shown in this one answer only, never again.

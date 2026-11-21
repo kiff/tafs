@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} fail · hoitakse 30 päeva",
+    "other": "{count} faili · hoitakse 30 päeva"
+  },
+  "files.all": "Kõik",
+  "files.all_tafs": "Kõik tafid",
+  "files.by_run": "Käivituse järgi",
+  "files.by_taf": "Tafi järgi",
+  "files.delete_body": "See kaob kohe kõigi selle konto inimeste jaoks failidest. Seda ei saa tagasi võtta.",
+  "files.delete_now": "Kustuta kohe",
+  "files.delete_question": "Kas kustutada „{name}” kohe?",
+  "files.deleted": "Kõigi jaoks kustutatud",
+  "files.download": "Laadi alla",
+  "files.empty": "Veel midagi pole. Kui taf loob käivituse ajal aruande, tabeli või dokumendi, hoitakse seda siin 30 päeva, et kõik selle konto inimesed saaksid seda avada, salvestada või jagada.",
+  "files.everyone": "Kõik selle konto inimesed",
+  "files.goes_away": "Kaob",
+  "files.goes_in_days": {
+    "one": "kaob {count} päeva pärast",
+    "other": "kaob {count} päeva pärast"
+  },
+  "files.goes_on": "{date} (30 päeva pärast selle käivitust)",
+  "files.goes_today": "kaob täna",
+  "files.goes_tomorrow": "kaob homme",
+  "files.in_run": "Käivituses",
+  "files.kept_line": "Iga faili hoitakse 30 päeva alates selle käivitusest, siis kaob see ise. Kõik selle konto inimesed näevad neid faile. Sinu enda vestluste manused jäävad oma sõnumite juurde.",
+  "files.kept_until": "Selle faile hoitakse kuni {date}",
+  "files.made_by": "Looja",
+  "files.none_yet": "Veel pole · hoitakse 30 päeva",
+  "files.pick_one": "Vali fail, et seda siin näha.",
+  "files.preview_start": "Näidatakse ainult algust. Kogu faili lugemiseks laadi see alla.",
+  "files.saved": "Salvestatud sellesse seadmesse",
+  "files.see_in_chat": "Vaata vestluses",
+  "files.share": "Jaga",
+  "files.size": "Suurus",
+  "files.taf_row": {
+    "one": "{count} fail selle käivitustest",
+    "other": "{count} faili selle käivitustest"
+  },
+  "files.title": "Failid",
+  "files.type": "Tüüp",
+  "files.who_sees": "Kes seda näeb"
+}

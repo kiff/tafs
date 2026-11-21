@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} negalima pridėti.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs negali pridėti šio failo: jo tipas ar dydis netinka. Pasirinkite kitą.",
+  "attachment.photo": "Nuotrauka",
+  "attachment.photo_could_not_read": "Nepavyko nuskaityti nuotraukos.",
+  "attachment.photo_numbered": "Nuotrauka {n}",
+  "attachment.too_large": "{name} dydis – {size}; daugiausia – {limit}.",
+  "attachment.wrong_kind": "{name} negalima pridėti. Galima pridėti nuotraukas, PDF, tekstą, CSV, Markdown, Word ir Excel failus."
+}

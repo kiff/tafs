@@ -38,16 +38,37 @@ function line(s: unknown, max: number): string {
   return chars.length > max ? chars.slice(0, max - 1).join("").trimEnd() + "…" : t;
 }
 
+/**
+ * The owner's own Chromes, as planque lists them while it offers a taf in one: their names, the only thing said of
+ * them. Undefined while planque doesn't offer it, so Coach never offers a taf there.
+ */
+export interface AccountChromes { names: string[] }
+
+/** At most this many Chromes are named. */
+export const MAX_CHROMES = 10;
+
 /** The account's connections, as planque lists them; what it can't read counts as none. */
 export async function accountConnections(fetchFn: Fetch, base: string, tenant: string, bearer: string): Promise<AccountConnection[]> {
+  return (await accountConnectionsAndChromes(fetchFn, base, tenant, bearer)).connections;
+}
+
+/** The account's connections and, while planque offers a taf in the owner's Chrome, its paired Chromes. */
+export async function accountConnectionsAndChromes(fetchFn: Fetch, base: string, tenant: string, bearer: string): Promise<{ connections: AccountConnection[]; chromes?: AccountChromes }> {
   const res = await fetchFn(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/connections`, {
     headers: { authorization: `Bearer ${bearer}`, accept: "application/json" },
   });
   if (!res.ok) throw new Error(`planque answered ${res.status}`);
-  const got = await res.json() as { connections?: unknown };
-  if (!Array.isArray(got.connections)) return [];
+  const got = await res.json() as { connections?: unknown; chromes?: unknown };
+  const chromes = Array.isArray(got.chromes)
+    ? { names: (got.chromes as Record<string, unknown>[]).map((c) => line(c && c.name, 40)).filter((n) => n).slice(0, MAX_CHROMES) }
+    : undefined;
+  return { connections: parseConnections(got.connections), ...(chromes ? { chromes } : {}) };
+}
+
+function parseConnections(list: unknown): AccountConnection[] {
+  if (!Array.isArray(list)) return [];
   const out: AccountConnection[] = [];
-  for (const c of got.connections as Record<string, unknown>[]) {
+  for (const c of list as Record<string, unknown>[]) {
     if (!c || typeof c.agent !== "string" || !c.agent || typeof c.kind !== "string" || !KINDS.has(c.kind)) continue;
     const api = c.api && typeof c.api === "object" && typeof (c.api as { url?: unknown }).url === "string" ? { url: (c.api as { url: string }).url } : undefined;
     out.push({
@@ -91,6 +112,17 @@ export function connectionLines(conns: AccountConnection[], tafs: Map<string, st
     if (out.length === MAX_CONNECTIONS) break;
   }
   return out;
+}
+
+/**
+ * The line about the owner's own Chrome, while planque offers a taf in one: the paired Chromes by name, or that none
+ * is paired yet. None while it isn't offered (`connect-an-app`'s browser lines read it; a-browser-taf).
+ */
+export function chromeLine(chromes: AccountChromes | undefined): string[] {
+  if (!chromes) return [];
+  return [chromes.names.length > 0
+    ? `- Chrome: paired: ${chromes.names.join(", ")}`
+    : "- Chrome: offered, none paired yet"];
 }
 
 /** Opens the guides to the apps the account already holds, after its connections. */

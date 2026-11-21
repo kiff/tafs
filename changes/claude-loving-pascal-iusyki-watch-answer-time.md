@@ -1,0 +1,1 @@
+- **Apple Watch, Coach on the wrist:** each answer shows when it came, every time reads in the account's zone, and a header marks where a day starts, as a taf's chat and Wear OS show them ([watch-app.md](docs/watch-app.md)).

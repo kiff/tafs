@@ -1,0 +1,13 @@
+{
+  "halt.again": "Peata uuesti",
+  "halt.all_now": "Peata kõik kohe",
+  "halt.explain.halted": "Peatatud. Jätkamisel algab ainult uus töö.",
+  "halt.explain.halted_since": "Alates {time}. Jätkamisel algab ainult uus töö.",
+  "halt.explain.halting": "Midagi uut ei alga. Peatatud kuvatakse, kui KIFF ja ühendus on mõlemad kinnitanud.",
+  "halt.explain.running_all": "Peatamine hoiab sinu tafid seisus, kuni jätkad. Juba saadetud päring võib siiski kohale jõuda.",
+  "halt.explain.running_one": "Peatamine hoiab selle seisus, kuni jätkad. Juba saadetud päring võib siiski kohale jõuda.",
+  "halt.halting_stops_no_run_starts": "Peatamisel on {who} seisus, kuni jätkad. Juba saadetud päring võib siiski kohale jõuda.",
+  "halt.now": "Peata kohe",
+  "halt.row_running": "Peata see, kuni jätkad",
+  "halt.your_tafs_lower": "sinu tafid"
+}

@@ -1,0 +1,13 @@
+{
+  "halt.again": "Apturēt vēlreiz",
+  "halt.all_now": "Apturēt visus tūlīt",
+  "halt.explain.halted": "Apturēts. Turpinot sākas tikai jauns darbs.",
+  "halt.explain.halted_since": "Kopš {time}. Turpinot sākas tikai jauns darbs.",
+  "halt.explain.halting": "Nekas jauns nesākas. “Apturēts” parādās, kad to apstiprina gan KIFF, gan savienojums.",
+  "halt.explain.running_all": "Apturēšana aptur tavus taf, līdz tu tos turpini. Jau nosūtīts izsaukums var tomēr pienākt.",
+  "halt.explain.running_one": "Apturēšana to aptur, līdz tu to turpini. Jau nosūtīts izsaukums var tomēr pienākt.",
+  "halt.halting_stops_no_run_starts": "Apturēšana aptur {who}, līdz tu turpini. Jau nosūtīts izsaukums var tomēr pienākt.",
+  "halt.now": "Apturēt tūlīt",
+  "halt.row_running": "Apturēt, līdz tu turpini",
+  "halt.your_tafs_lower": "tavus taf"
+}

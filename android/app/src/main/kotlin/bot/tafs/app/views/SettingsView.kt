@@ -149,7 +149,7 @@ fun SettingsSheet(
             }
             if (state.mode == Mode.sample) Action(Words.SignIn.withKiff, Theme.ink, onSignIn)
             if (state.approvalKeyLost) {
-              Text(Words.Settings.signInAgainWhy, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
+              Text(if (state.noApprovalKeyHere) Words.Approval.noFingerprint else Words.Settings.signInAgainWhy, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
               Action(Words.Connect.signInAgain, Theme.amberText) { confirming = SignOut.SignInAgain }
             }
           }

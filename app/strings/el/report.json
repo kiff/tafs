@@ -1,0 +1,17 @@
+{
+  "report.already": "Έχεις ήδη αναφέρει αυτή την απάντηση.",
+  "report.cant_from_here": "Αυτή η απάντηση δεν μπορεί να αναφερθεί από εδώ.",
+  "report.menu": "Αναφορά αυτής της απάντησης",
+  "report.not_sent": "Η αναφορά σου δεν στάλθηκε. {why}",
+  "report.not_sent_why": "Δεν στάλθηκε: {failed}",
+  "report.note_hint": "Πρόσθεσε σημείωση (προαιρετικά)",
+  "report.note_most_characters": "Μια σημείωση έχει έως 1.000 χαρακτήρες.",
+  "report.person_kiff_reads_your_report": "Ένας άνθρωπος της KIFF διαβάζει την αναφορά σου, μαζί με την απάντηση όπως γράφτηκε.",
+  "report.reason.harmful": "Επιβλαβής",
+  "report.reason.offensive": "Προσβλητική",
+  "report.reason.other": "Άλλο",
+  "report.reason.wrong": "Λανθασμένη",
+  "report.runs_not_loaded": "Οι εκτελέσεις του δεν φορτώθηκαν. {why}",
+  "report.thanks": "Ευχαριστούμε. Κάποιος στην KIFF θα διαβάσει την αναφορά σου.",
+  "report.what_wrong": "Τι πρόβλημα έχει;"
+}

@@ -25,7 +25,7 @@ What they wrote instead that doesn't answer it (a question) isn't an answer:
 answer it, then show the card again (a new id), still waiting. Read the
 grant's status first: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. Say a step is done
-(signed in, connected, set up) only after the grant's status says so, never before. Once a sign-in made for a request is connected, go on in that reply to the request's next step (tools, rules, Card), or say why not; never stop at "signed in". If the sign-in was
+(signed in, connected, set up) only after the grant's status says so, never before. Once a sign-in made for a request is connected, go on in that reply with planque tools {grant}, then the rules and the Card, or say why not; never stop at "signed in", never a new request. If the sign-in was
 left or failed, show a sign-in card for the same grant. A grant that is needs_reconnect (its vendor signed planque out) gets a sign-in card for that same grant, never a new planque request; its tools come back as they were once
 it says connected. Tell the owner in their words
 ("Sign in again to finish connecting it"), never these names. If an approval failed ("failed: …"), read the grant's status
