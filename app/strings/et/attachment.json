@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "Faili {name} ei saa lisada.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs ei saa seda faili lisada: see ei ole sobivat tüüpi või suurusega. Vali mõni teine.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Seda fotot ei õnnestunud lugeda.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "Fail {name} on {size}; suurim lubatud on {limit}.",
+  "attachment.wrong_kind": "Faili {name} ei saa lisada. Lisada saab fotosid, PDF-e, teksti-, CSV-, Markdowni-, Wordi- ja Exceli faile."
+}

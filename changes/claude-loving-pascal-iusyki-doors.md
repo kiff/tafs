@@ -1,0 +1,1 @@
+- **Doors from another application, iPhone and iPad:** the screens follow tafs cloud's own switch, so no new app build is needed to offer them; the key shown once is covered in the app switcher and while the screen is recorded or mirrored ([doors.md](docs/doors.md)).

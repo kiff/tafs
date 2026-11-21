@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Kokkuvõtted",
+  "push.channel.briefs_description": "Sinu kokkuvõte määratud aegadel.",
+  "push.channel.holds_description": "Päring on kinni peetud ja ootab sinu vastust. Midagi ei saadeta enne, kui selle kinnitad.",
+  "push.channel.other": "Muud teavitused",
+  "push.channel.other_description": "Ülesannete päringud ja vastused neile, ilma helita.",
+  "push.channel.urgent_description": "See, mis ei saa sinu järgmist kokkuvõtet oodata, koos heliga.",
+  "push.open_needs_you": "Vastamiseks ava Vajab sind.",
+  "push.open_taf": "Vaatamiseks ava taf.",
+  "push.open_usage": "Vaatamiseks ava Pakett ja kasutus."
+}
