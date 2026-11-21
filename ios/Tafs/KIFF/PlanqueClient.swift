@@ -639,6 +639,66 @@ final class PlanqueClient {
         ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["code"] as? String
     }
 
+    // MARK: Chrome (docs/chrome.md, "Pairing")
+
+    /// A Chrome paired to the account, as planque lists it: the name the owner gave it, and the browser and system its
+    /// extension reported.
+    struct Chrome: Decodable, Equatable, Identifiable {
+        let id: String
+        let name: String
+        var browser: String?
+        var os: String?
+        var pairedAt: Date?
+        var lastSeen: Date?
+        enum CodingKeys: String, CodingKey { case id, name, browser, os, pairedAt = "paired_at", lastSeen = "last_seen" }
+    }
+
+    /// A pairing this phone opened: its id, and the four characters of the code planque looks it up by.
+    struct ChromePairingOpened: Decodable, Equatable {
+        let pairing: String
+        let lookup: String
+    }
+
+    /// What an extension sent for a pairing: its key (SPKI DER, base64url), what it says it is, and its proof under the
+    /// code's secret.
+    struct ChromeOffer: Decodable, Equatable {
+        let key: String
+        var version = ""
+        var browser = ""
+        var os = ""
+        let proof: String
+        enum CodingKeys: String, CodingKey { case key, version, browser, os, proof }
+    }
+
+    /// A pairing as planque has it: `waiting` for an extension, `offered` once one sent its key, or `expired`.
+    struct ChromePairingState: Decodable, Equatable {
+        let status: String
+        var offer: ChromeOffer?
+    }
+
+    /// The Chromes paired to the account. planque answers 404 while it doesn't offer them, and the app then shows nothing.
+    func chromes() async throws -> [Chrome] {
+        struct List: Decodable { let chromes: [Chrome] }
+        let list: List = try await send("GET", "chromes", body: Optional<[String: String]>.none)
+        return list.chromes
+    }
+
+    func openChromePairing() async throws -> ChromePairingOpened {
+        try await send("POST", "chromes/pairings", body: [String: String]())
+    }
+
+    func chromePairing(_ id: String) async throws -> ChromePairingState {
+        try await send("GET", "chromes/pairings/\(escaped(id))", body: Optional<[String: String]>.none)
+    }
+
+    func confirmChromePairing(_ id: String, _ confirmation: ChromePairing.Confirmation) async throws -> Chrome {
+        try await send("POST", "chromes/pairings/\(escaped(id))/confirm", body: confirmation)
+    }
+
+    func removeChrome(_ id: String) async throws {
+        _ = try await raw("DELETE", "chromes/\(escaped(id))", body: nil)
+    }
+
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
