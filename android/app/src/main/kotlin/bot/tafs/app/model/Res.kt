@@ -49,6 +49,12 @@ object Res {
    */
   val language: String get() = source.string(bot.tafs.app.R.string.words_language)
 
+  /**
+   * [language] without its region ("pt" for "pt-BR"): the language KIFF's pages, kiff.dev's, tafs cloud and planque answer in.
+   * A regional variant is the app's own lines only; the services speak its language.
+   */
+  val pageLanguage: String get() = language.substringBefore('-')
+
   /** Names joined as the lines' language lists them: "Refunds and Bills", "Refunds, Bills, and Save". */
   fun list(items: List<String>): String = source.list(items, language)
 

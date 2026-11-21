@@ -16,6 +16,9 @@ class AppLanguageNameTest {
     assertEquals("Français", AppLanguage.name("fr"))
     assertEquals("Deutsch", AppLanguage.name("de"))
     assertEquals("Polski", AppLanguage.name("pl"))
+    // A regional variant reads apart from its language.
+    assertEquals("Português", AppLanguage.name("pt"))
+    assertEquals("Português (Brasil)", AppLanguage.name("pt-BR"))
     assertEquals("English", AppLanguage.name())
   }
 

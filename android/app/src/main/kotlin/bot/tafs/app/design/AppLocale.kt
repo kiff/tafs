@@ -23,7 +23,7 @@ import java.util.Locale
  */
 object AppLocale {
   /** The languages tafs ships (app/strings/languages.json's `shipped`), in its order, as `locales_config` lists them. */
-  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko")
+  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR")
 
   /** Where the choice is kept on Android 11 and 12: a tag, or none for the phone's language. */
   interface Store {
@@ -38,10 +38,15 @@ object AppLocale {
   fun choices(device: String = ThisDevice.word): List<Choice> =
     listOf(Choice(null, Words.Settings.languageDevice(device))) + TAGS.map { Choice(it, AppLanguage.name(it)) }
 
-  /** [tag] as one of the 8 ("de-DE" is "de"), or null for a language tafs doesn't ship. */
+  /**
+   * [tag] as one tafs ships: a regional variant it ships as itself ("pt-BR"), any other region as its language ("de-DE" is
+   * "de", "pt-PT" is "pt"), or null for a language tafs doesn't ship.
+   */
   fun known(tag: String?): String? {
     if (tag.isNullOrBlank()) return null
-    return Locale.forLanguageTag(tag.trim()).language.takeIf { it in TAGS }
+    val locale = Locale.forLanguageTag(tag.trim().replace('_', '-'))
+    val regional = locale.country.takeIf { it.isNotEmpty() }?.let { "${locale.language}-$it" }
+    return regional?.takeIf { it in TAGS } ?: locale.language.takeIf { it in TAGS }
   }
 
   /** The kept choice; none (the phone's language) when nothing, or a tag tafs doesn't ship, is kept. */
