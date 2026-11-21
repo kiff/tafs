@@ -200,7 +200,7 @@ struct DoorsView: View {
 
     @ViewBuilder
     private func panel(_ door: TafsCloud.Door) -> some View {
-        if door.isAPI, APIDoorFeature.on {
+        if door.isAPI {
             // From another application: its keys, the key shown once, Revoke and the instructions (APIDoorViews.swift).
             APIDoorPanel(door: door, taf: taf, doors: doors, manages: manages) { confirmRemove = door }
         } else {
