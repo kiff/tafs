@@ -78,7 +78,7 @@ class TafModelTest {
   @Test fun beforeThePhoneAnswersItsNameAndStateAreYourTafs() = runTest {
     var during: WatchModel.OpenTaf? = null
     lateinit var model: WatchModel
-    model = model(Phone { if (it is WatchRequest.Taf) { during = model.taf.value; Asked.Unreachable } else reads(it) })
+    model = model(Phone { if (it is WatchRequest.Taf) { during = model.taf.value; Asked.Unreachable() } else reads(it) })
     model.openTaf("taf_3")
     assertEquals(WatchModel.OpenTaf("taf_3", deploys, WatchModel.TafRead.Asking), during)
     assertEquals("Deploys", during?.name)
@@ -87,7 +87,7 @@ class TafModelTest {
 
   @Test fun aTafsPageNotReadSaysWhyInThePhonesWords() = runTest {
     val cases = mapOf<Asked, WatchModel.TafRead>(
-      Asked.Unreachable to WatchModel.TafRead.PhoneUnreachable,
+      Asked.Unreachable() to WatchModel.TafRead.PhoneUnreachable(),
       Asked.Answered(WatchReply.SignedOut) to WatchModel.TafRead.SignedOut,
       Asked.Answered(WatchReply.Failed("Open on phone")) to WatchModel.TafRead.Failed("Open on phone"),
       // A phone with an older tafs doesn't know the page.
@@ -156,7 +156,7 @@ class TafModelTest {
       model.pickToHalt()
       assertNull(tafsNow.toString(), model.haltPick.value)
     }
-    val unread = WatchModel(Phone { Asked.Unreachable }, now = { t }, unlocked = { true }).also { it.refresh() }
+    val unread = WatchModel(Phone { Asked.Unreachable() }, now = { t }, unlocked = { true }).also { it.refresh() }
     unread.pickToHalt()
     assertNull(unread.haltPick.value)
   }
@@ -238,7 +238,7 @@ class TafModelTest {
     val phone = Phone {
       if (it is WatchRequest.Halt) {
         during += model.outcome.value
-        if (it.tafId == "taf_1") Asked.Answered(WatchReply.Failed("tafs couldn't halt it.")) else Asked.Unreachable
+        if (it.tafId == "taf_1") Asked.Answered(WatchReply.Failed("tafs couldn't halt it.")) else Asked.Unreachable()
       } else reads(it, tafs.copy(tafs = listOf(parcels, support, TafLine("taf_4", "Invoices", "Ready", halted = false))))
     }
     model = model(phone)
@@ -251,7 +251,7 @@ class TafModelTest {
     assertEquals(List(2) { WatchModel.Outcome.Halting("Late parcels, Support replies") }, during)
     val several = model.outcome.value as WatchModel.Outcome.Several
     assertEquals(
-      listOf("Late parcels" to WatchModel.Outcome.NotDone("tafs couldn't halt it."), "Support replies" to WatchModel.Outcome.PhoneUnreachable),
+      listOf("Late parcels" to WatchModel.Outcome.NotDone("tafs couldn't halt it."), "Support replies" to WatchModel.Outcome.PhoneUnreachable()),
       several.each,
     )
     assertFalse(several.done)
@@ -430,7 +430,7 @@ class TafScreensTest {
   }
 
   @Test fun withNoPhoneItsPageIsAskedAgain() {
-    showTaf(WatchModel.OpenTaf("taf_1", parcels, WatchModel.TafRead.PhoneUnreachable))
+    showTaf(WatchModel.OpenTaf("taf_1", parcels, WatchModel.TafRead.PhoneUnreachable()))
     compose.onNodeWithText(Words.Watch.phoneNotReachable).assertExists()
     compose.onNodeWithText(Words.Common.tryAgain).performClick()
     compose.onNodeWithText(Words.Common.close).performClick()
@@ -531,7 +531,7 @@ class TafScreensTest {
   }
 
   @Test fun severalHaltsSayWhatCameOfEach() {
-    val several = WatchModel.Outcome.Several(listOf("Late parcels" to WatchModel.Outcome.Done("Halted"), "Invoices" to WatchModel.Outcome.PhoneUnreachable))
+    val several = WatchModel.Outcome.Several(listOf("Late parcels" to WatchModel.Outcome.Done("Halted"), "Invoices" to WatchModel.Outcome.PhoneUnreachable()))
     showPages(Page.Tafs, outcome = several)
     compose.onNodeWithText("Late parcels · Halted").assertExists()
     compose.onNodeWithText("Invoices · ${Words.Watch.phoneNotReachable}").assertExists()

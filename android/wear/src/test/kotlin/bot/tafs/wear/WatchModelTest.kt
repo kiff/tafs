@@ -63,7 +63,7 @@ class WatchModelTest {
   }
 
   @Test fun needsYouStaysWhenYourTafsDoesntAnswer() = runTest {
-    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Unreachable }, now = { t })
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Unreachable() }, now = { t })
     model.refresh()
     assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), null), model.shown.value)
   }
@@ -79,9 +79,30 @@ class WatchModelTest {
   }
 
   @Test fun noPhoneSaysSo() = runTest {
-    val model = WatchModel(Phone { Asked.Unreachable }, now = { t })
+    val model = WatchModel(Phone { Asked.Unreachable() }, now = { t })
     model.refresh()
-    assertEquals(WatchModel.Shown.PhoneUnreachable, model.shown.value)
+    assertEquals(WatchModel.Shown.PhoneUnreachable(), model.shown.value)
+  }
+
+  // The link's reason reaches the screen, whichever it is (row 44, D).
+  @Test fun noPhoneSaysWhyItGotNoAnswer() = runTest {
+    for (why in LinkFailure.entries) {
+      val model = WatchModel(Phone { Asked.Unreachable(why) }, now = { t })
+      model.refresh()
+      assertEquals(why.toString(), WatchModel.Shown.PhoneUnreachable(why), model.shown.value)
+    }
+  }
+
+  // No phone found: tafs is missing only when a phone is paired and none ever offered tafs; the first seconds after start, before
+  // the capability shows, read as not in reach, never as tafs missing. The Data Layer's "not connected" is out of reach too.
+  @Test fun noPhoneIsMissingTafsOnlyWhenAPairedPhoneNeverOfferedIt() {
+    assertEquals(LinkFailure.NoApp, noPhone(paired = true, everOffered = false))
+    assertEquals(LinkFailure.NotReachable, noPhone(paired = true, everOffered = true))
+    assertEquals(LinkFailure.NotReachable, noPhone(paired = false, everOffered = false))
+    val notConnected = com.google.android.gms.common.api.ApiException(com.google.android.gms.common.api.Status(com.google.android.gms.wearable.WearableStatusCodes.TARGET_NODE_NOT_CONNECTED))
+    assertEquals(LinkFailure.NotReachable, failureOf(notConnected))
+    assertEquals(LinkFailure.Link, failureOf(com.google.android.gms.common.api.ApiException(com.google.android.gms.common.api.Status(com.google.android.gms.common.api.CommonStatusCodes.INTERNAL_ERROR))))
+    assertEquals(LinkFailure.Link, failureOf(IllegalStateException()))
   }
 
   @Test fun whatTheWatchCantDrawOpensOnThePhone() = runTest {
@@ -152,7 +173,7 @@ class WatchModelTest {
       Asked.Answered(WatchReply.AlreadyAnswered) to WatchModel.Outcome.AlreadyAnswered,
       Asked.Answered(WatchReply.Failed("Not refused: KIFF didn't answer.")) to WatchModel.Outcome.NotDone("Not refused: KIFF didn't answer."),
       Asked.Answered(WatchReply.Refused(NotAccepted.TOO_OLD)) to WatchModel.Outcome.NotDone(null),
-      Asked.Unreachable to WatchModel.Outcome.PhoneUnreachable,
+      Asked.Unreachable() to WatchModel.Outcome.PhoneUnreachable(),
       Asked.NotUnderstood to WatchModel.Outcome.NotDone(null),
     )
     for ((answer, outcome) in cases) {
@@ -204,7 +225,7 @@ class WatchModelTest {
   }
 
   @Test fun noReceiptOffersRetryWithTheSameId() = runTest {
-    var answer: Asked = Asked.Unreachable
+    var answer: Asked = Asked.Unreachable()
     val phone = asker { answer }
     var ids = 0
     val model = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_0000000${++ids}" })
@@ -245,7 +266,7 @@ class WatchModelTest {
   }
 
   @Test fun aResultNotOpenedIsReady() = runTest {
-    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, seen = mutableSetOf())
+    val model = WatchModel(asker { Asked.Unreachable() }, now = { t }, unlocked = { true }, seen = mutableSetOf())
     model.took(done)
     model.took(working.copy(id = "wa_02", clientId = "w_00000002"))
     assertEquals(listOf("wa_01"), model.ready().map { it.id })
@@ -343,7 +364,7 @@ class WatchModelTest {
 
   /** No brief, or a phone that can't say (an older one refuses the path), and Needs you shows as today. */
   @Test fun withNoBriefNeedsYouStays() = runTest {
-    for (answer in listOf(Asked.Answered(WatchReply.NoBrief), Asked.Answered(WatchReply.Refused(NotAccepted.UNKNOWN_PATH)), Asked.Unreachable, Asked.NotUnderstood)) {
+    for (answer in listOf(Asked.Answered(WatchReply.NoBrief), Asked.Answered(WatchReply.Refused(NotAccepted.UNKNOWN_PATH)), Asked.Unreachable(), Asked.NotUnderstood)) {
       val model = WatchModel(Phone { if (it is WatchRequest.Brief) answer else reads(it) }, now = { t }, briefOn = true)
       model.refresh()
       assertEquals(answer.toString(), WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), WatchModel.TafsRead(tafs.tafs, false)), model.shown.value)
@@ -586,7 +607,7 @@ class WatchModelTest {
     var reachable = false
     val phone = Phone {
       when {
-        !reachable -> Asked.Unreachable
+        !reachable -> Asked.Unreachable()
         it is WatchRequest.Ask -> Asked.Answered(WatchReply.AskTaken(taken))
         else -> reads(it)
       }
@@ -609,7 +630,7 @@ class WatchModelTest {
   }
 
   @Test fun aKeptMessageStaysWhenItsSendIsntTaken() = runTest {
-    var answer: Asked = Asked.Unreachable
+    var answer: Asked = Asked.Unreachable()
     val phone = Phone { if (it is WatchRequest.Ask) answer else reads(it) }
     val drafts = Drafts()
     unsureThenKept(phone, drafts)
@@ -634,7 +655,7 @@ class WatchModelTest {
 
   @Test fun aKeptMessageIsDeletedOnDeleteAndOnSignOut() = runTest {
     val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
-    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    val model = WatchModel(asker { Asked.Unreachable() }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
     model.deleteKept()
     assertNull(model.kept.value)
     assertNull(drafts.kept)
@@ -647,7 +668,7 @@ class WatchModelTest {
 
   @Test fun putAwayKeepsTheKeptMessage() = runTest {
     val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
-    val model = WatchModel(asker { Asked.Unreachable }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
+    val model = WatchModel(asker { Asked.Unreachable() }, now = { t }, unlocked = { true }, reviewFirst = true, drafts = drafts)
     model.forget()
     assertEquals(drafts.kept, model.kept.value)
   }

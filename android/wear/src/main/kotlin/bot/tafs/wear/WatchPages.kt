@@ -280,8 +280,8 @@ private fun ScalingLazyListScope.notRead(shown: WatchModel.Shown, act: Actions):
   when (shown) {
     WatchModel.Shown.Asking -> line(Words.Watch.askingPhone)
     WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
-    WatchModel.Shown.PhoneUnreachable -> {
-      line(Words.Watch.phoneNotReachable)
+    is WatchModel.Shown.PhoneUnreachable -> {
+      line(shown.why.line)
       item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.Shown.OpenOnPhone -> item {

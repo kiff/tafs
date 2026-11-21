@@ -100,7 +100,7 @@ class TranscribeOnPhoneTest {
   @Test fun aRecordingThatDidntReachThePhoneAsksNothingAndIsDeleted() = runTest {
     val phone = object : PhoneLink {
       val asked = mutableListOf<WatchRequest>()
-      override suspend fun ask(request: WatchRequest): Asked = Asked.Unreachable.also { asked += request }
+      override suspend fun ask(request: WatchRequest): Asked = Asked.Unreachable().also { asked += request }
       override suspend fun sendVoice(id: String, file: File) = false
     }
     val m = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_00000001" }, reviewFirst = true).also { it.listen() }

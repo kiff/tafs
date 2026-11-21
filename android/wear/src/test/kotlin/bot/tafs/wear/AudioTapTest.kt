@@ -69,7 +69,7 @@ class AudioTapTest {
   @Test fun listenersStopEndsTheFeed() {
     microphone()
     val listener = Listener(
-      RuntimeEnvironment.getApplication(), WatchModel(PhoneLink { Asked.Unreachable }), kotlinx.coroutines.MainScope(), keepAudio = true,
+      RuntimeEnvironment.getApplication(), WatchModel(PhoneLink { Asked.Unreachable() }), kotlinx.coroutines.MainScope(), keepAudio = true,
     )
     val tap = AudioTap(dir)
     assertNotNull(tap.start())
