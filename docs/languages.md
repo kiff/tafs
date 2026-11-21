@@ -243,7 +243,6 @@ differs from Portuguese's (legal-i18n's read of tafs#1629):
 | app | o app (masculine: "um app", "os seus apps", "Apps conectados") |
 | signed in (to an app, before its approval) | Login feito (never "Conectado", which is a finished connection) |
 | signed out (it happened) | Sessão encerrada; "Você saiu" for the person's own sign-out |
-| Sign out of… ? | Sair do KIFF? / Sair deste relógio? |
 | signed in to your account | conectado à sua conta |
 | waiting for | aguardando |
 | run (a taf runs) | rodar |
