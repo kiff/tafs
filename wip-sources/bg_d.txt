@@ -1,0 +1,259 @@
+@@ calendar
+agenda|Програма
+choose_date|Изберете дата
+date_picker|Дата
+day_heading|{weekday}, {day} {month}
+day_scheduled|{"one": "{day}, {count} насрочено", "other": "{day}, {count} насрочени"}
+heading|Календар
+mode.day|Ден
+mode.month|Месец
+mode.week|Седмица
+month_name.april|април
+month_name.august|август
+month_name.december|декември
+month_name.february|февруари
+month_name.january|януари
+month_name.july|юли
+month_name.june|юни
+month_name.march|март
+month_name.may|май
+month_name.november|ноември
+month_name.october|октомври
+month_name.september|септември
+month_title.april|Април
+month_title.august|Август
+month_title.december|Декември
+month_title.february|Февруари
+month_title.january|Януари
+month_title.july|Юли
+month_title.june|Юни
+month_title.march|Март
+month_title.may|Май
+month_title.november|Ноември
+month_title.october|Октомври
+month_title.september|Септември
+next_day|Следващ ден
+next_month|Следващ месец
+next_week|Следваща седмица
+nothing_on_day|Нищо не е насрочено за този ден.
+nothing_these_days|Нищо не е насрочено за тези дни.
+nothing_this_week|Нищо не е насрочено за тази седмица.
+previous_day|Предишен ден
+previous_month|Предишен месец
+previous_week|Предишна седмица
+reading|Четене на календара…
+slot_at|{name}, в {first}
+slot_times|{"one": "{name}, {count} път от {first}", "other": "{name}, {count} пъти от {first}"}
+times|{"one": "×{count}", "other": "×{count}"}
+title.day|{weekday}, {day} {month} {year}
+title.month|{month} {year}
+title.week|{from_day}–{to_day} {month} {year}
+title.week_across_months|{from_day} {from_month} – {to_day} {to_month} {year}
+title.week_across_years|{from_day} {from_month} {from_year} – {to_day} {to_month} {to_year}
+today|Днес
+today_date|Днес · {date}
+view_picker|Изглед
+weekday.fri|пт
+weekday.mon|пн
+weekday.sat|сб
+weekday.sun|нд
+weekday.thu|чт
+weekday.tue|вт
+weekday.wed|ср
+yesterday_date|Вчера · {date}
+@@ billing
+admin_adds_tasks|Само администраторът на акаунта добавя задачи.
+another_account|Тази покупка принадлежи на друг акаунт в tafs в този акаунт в Google, така че нищо не беше добавено тук.
+another_account_apple_id|Тази покупка принадлежи на друг акаунт в tafs с този Apple ID, така че нищо не беше добавено тук.
+app_store_could_not_confirm|App Store не можа да потвърди покупката.
+ask.added_pack|Администратор добави пакет.
+ask.asked_pack|Помолихте администратор за пакет.
+ask.asked_raise|Помолихте администратор да увеличи лимита на разходите.
+ask.declined|Администратор отказа.
+ask.declined_note|Администратор отказа: {note}
+ask.expired|Заявката ви приключи с периода.
+ask.line_pack|Администраторите на акаунта ви получават заявката ви. Когато някой добави пакета, вашите tafs продължават.
+ask.line_raise|Администраторите на акаунта ви получават заявката ви. Когато някой увеличи лимита на разходите, вашите tafs продължават.
+ask.raised|Администратор увеличи лимита на разходите.
+ask.someone_pack|Някой иска {pack}.
+ask.someone_raise|Някой иска увеличаване на лимита на разходите.
+bought_not_recorded|Закупено. KIFF още не го е добавил: tafs ще опита отново при отваряне.
+by_agreement|Управлява се по договора на вашата компания
+by_apple|Таксува се от Apple
+by_google_play|Таксува се от Google Play
+by_kiff|Таксува се от KIFF
+cancel_any_time_least_day|Можете да анулирате по всяко време, поне един ден преди подновяването, в „Абонаменти“ на акаунта си в Apple.
+contact_support|KIFF не може да добави тази покупка към този акаунт. Платили сте я, затова пишете ни на support@kiff.dev и ще го оправим.
+conversation_goes_plan_tools_being|С напредването на разговора тук се показват планът, свързваните приложения и Card на taf.
+length.days|{"one": "{count} ден", "other": "{count} дни"}
+length.months|{"one": "{count} месец", "other": "{count} месеца"}
+length.weeks|{"one": "{count} седмица", "other": "{count} седмици"}
+length.years|{"one": "{count} година", "other": "{count} години"}
+not_bought|Покупката не мина: {why}
+not_restored|Покупките не можаха да бъдат възстановени: {why}
+not_signed_in|Не сте влезли.
+nothing_to_restore|Няма какво да се възстанови.
+one_person_tafs_kiff_your|Един човек: tafs с включени кредити всеки период.
+only_someone_who_manages_account|Само човек, който управлява таксуването на акаунта, купува кредити.
+open_tafs_to_buy|Отворете tafs, за да купите.
+pack_adds_credits_once_never|Пакетът добавя кредити веднъж и те никога не изтичат. Първо се използват включените за периода кредити, после тези от пакетите.
+pending_credits|Покупката чака одобрение. Кредитите ви се добавят, щом приключи.
+plan_could_not_read_kiff|Планът не можа да бъде прочетен от KIFF: {why}
+play_cant_sell|Google Play не може да продава на този телефон, така че нищо не може да се купи тук.
+play_couldnt_open|Google Play не можа да отвори покупката.
+play_couldnt_read|Google Play не можа да бъде прочетен.
+play_couldnt_sell|Google Play не можа да го продаде.
+play_couldnt_sell_code|Google Play не можа да го продаде ({code}).
+play_doesnt_sell_this|Google Play не продава това тук.
+play_unreachable|Няма връзка с Google Play. Опитайте отново.
+price_per|{price} на {period}
+request.decline_pack_title|Отказване на заявката за {pack}?
+request.decline_prompt|Отказване на заявката
+request.decline_raise_title|Отказване на заявката за увеличаване на лимита на разходите?
+request.not_declined|Заявката не беше отказана. {why}
+request.not_sent|Заявката не замина. {why}
+request.not_withdrawn|Заявката не беше оттеглена. {why}
+restored|Покупките са възстановени.
+restored_not_recorded|Възстановено. KIFF още не е добавил всичко: tafs ще опита отново при отваряне.
+solo.free_then|Безплатно за {trial}, после {price} на {period}.
+solo.subscribe_for|Абонамент за {price}
+solo_not_available_app_store|Solo не е наличен в App Store в момента.
+solo_subscription_one_charged_your|Solo е абонамент за един {period} на цена {price}, таксуван в акаунта ви в Apple. Подновява се всеки {period_2}, докато не го анулирате.
+starts_free|Започва с {trial} безплатно.
+tafs_kiff_one_person_every|Tafs за един човек, всеки месец.
+terms_use|Условия за ползване
+test_purchase_credits|Тестовите покупки не добавят кредити към този акаунт.
+try_free|Опитайте {trial} безплатно
+what_credits|За какво са кредитите
+@@ usage
+admin_answers|{detail} Отговаря администратор.
+balance|Наличност
+balance_not_read|Наличността не можа да бъде прочетена. {why}
+buy|Добавяне на кредити
+buying|Купуване…
+cancel_solo|Анулиране на Solo
+choose_plan|Избор на план
+company_billed_kiff_solo_bought|Company вече се таксува от KIFF. Купеният в App Store Solo се подновява на {time}, освен ако не бъде анулиран от акаунта в Apple, който го е купил.
+credits|Кредити
+credits_not_read|Кредитите не можаха да бъдат прочетени. {why}
+day|ден
+label|Използване
+last_period|Предишен период
+last_period_credits_could_not|Кредитите за предишния период не можаха да бъдат прочетени. Изберете го отново, за да опитате пак.
+limit_ceiling|Лимитът е толкова висок, колкото може да бъде увеличен от приложението. Свържете се с KIFF, за да го увеличите още.
+limit_changed|Лимитът междувременно се промени. Ето го сега: увеличете го отново, ако още е нужно.
+manage|Управление
+month|месец
+more_runs|Още изпълнения
+more_runs_not_read|Още изпълнения не можаха да бъдат прочетени. {why}
+not_read|Използването не можа да бъде прочетено. {why}
+pack_credits|пакет кредити
+pack_named|{name} · пакет кредити
+packs_keep|Никога не изтича
+period|период
+raise_limit.not_raised|Лимитът не беше увеличен. {why}
+raise_limit.prompt|Увеличаване на лимита на разходите
+raise_limit.sign_in_first|Влезте с KIFF, за да увеличите лимита.
+raise_limit_button|Увеличаване на лимита
+raised_unread|Вашите tafs могат да продължат. Кредитите за този период не можаха да бъдат прочетени оттогава.
+raising|Увеличаване…
+read_again|Прочитане отново
+reading|Четене…
+requests.admin_answers|Отговаря администратор.
+requests.approve|Одобряване
+requests.ask|Молба
+requests.ask_admin|Молба към администратор
+requests.asking|Изпращане на молбата…
+requests.decline|Отказване
+requests.declining|Отказване…
+requests.note_hint|Защо, за тях
+requests.note_optional|Бележка (по избор)
+requests.title|Заявки
+requests.waiting|Чака
+requests.which_pack|Кой пакет
+requests.why_hint|За какво им трябва на tafs
+requests.why_optional|Защо (по избор)
+requests.withdraw|Оттегляне
+restore_purchases|Възстановяване на покупките
+restoring|Възстановяване…
+runs_could_not_read_pull|Тези изпълнения не можаха да бъдат прочетени. Плъзнете надолу, за да опитате отново.
+solo|Solo
+solo_terms|{price} на {every}. Подновява се всеки {every} до анулиране. Можете да анулирате по всяко време в абонаментите на Google Play, поне един ден преди подновяването.
+solo_terms_trial|Безплатно за {trial}, после {price} на {every}. Подновява се всеки {every} до анулиране. Можете да анулирате по всяко време в абонаментите на Google Play, поне един ден преди подновяването.
+start_solo|Стартиране на Solo
+taf_runs_not_read|Изпълненията му не можаха да бъдат прочетени. {why}
+tasks|{"one": "{count} задача", "other": "{count} задачи"}
+tasks_this_period|{"one": "{count} задача през този период", "other": "{count} задачи през този период"}
+the_balance|Наличността
+this_period|Този период
+title|План и използване
+use_unavailable|използването не е налично
+week|седмица
+year|година
+@@ receipt
+approved_once_by|Еднократно одобрено от {who}
+approved_once_by_lower|еднократно одобрено от {owner}
+changed|Тази разписка е променена, след като KIFF я е подписал, или не е подписана от KIFF. Не разчитайте на този ред.
+check.amount_mismatch|Сумата на този ред не съвпада с разписката на KIFF.
+check.answer_mismatch|Отговорът на този ред не съвпада с разписката на KIFF.
+check.malformed_signature|Подписът е повреден.
+check.no_steps|Разписката няма стъпки за проверка.
+check.not_kiff|Не е подписана от KIFF.
+check.payment_mismatch|Плащането на този ред не съвпада с разписката на KIFF.
+check.signature_mismatch|Подписът не съвпада с тези стъпки.
+check.unknown_signature|Подписана е по начин, който това приложение не познава.
+check.unreadable|Разписката не можа да бъде прочетена.
+checked|✓ Разписка на KIFF · проверена
+checked_on_device|Разписка на KIFF · проверена на този {device}
+checked_why|Подписана от KIFF, непроменена оттогава.
+checking_on_device|Проверка на разписката на KIFF на този {device}…
+copy|Копиране на разписката
+decided_by.card|Card
+decided_by.kiff|KIFF, според Card
+decided_by.signed_on|{who}, подписано на {device}
+decided_by.you|Вие
+decided_by.you_approving_once|Вие, с еднократно одобрение
+decided_by.you_issuing|Вие, издавайки Card
+decided_by.you_revoking|Вие, оттегляйки Card
+decided_by.your_device|вашето устройство
+decision.allowed_by_card|разрешено от Card
+decision.held_approved_by_you|задържано → одобрено от вас
+decision.held_approved_once_by|задържано → еднократно одобрено от {who}
+decision.held_by_card|задържано за вас от Card
+decision.held_refused_by|задържано → отказано от {who}
+decision.refused_by_card|отказано от Card
+doesnt_check_out|✕ Разписката на KIFF не се потвърждава
+fact.at|Кога
+fact.decided_by|Решено от
+fact.on|На
+fact.outcome|Резултат
+fact.taf|Taf
+fact.why|Защо
+hide_full|Скриване на цялата разписка
+if_it_stays|Ако това остане, изпратете ни идентификатора на разписката по-долу.
+issued|издадена {at}
+kiff_receipt|Разписка на KIFF
+label.approved|Еднократно одобрено от вас
+label.done|Направено в рамките на Card
+label.held|Задържано за вас
+label.in_tafs|В tafs
+label.not_done|Не е направено
+label.refused|Отказано
+label.sending|В процес
+label.started|Taf стартира
+label.unknown|Неизвестен резултат
+not_loaded|Разписката на KIFF не можа да се зареди. {why}
+not_signed_yet|Разписка на KIFF · още не е подписана
+outcome.card_refused|Не е изпратено. Неговата Card го отказа.
+outcome.done|Готово.
+outcome.moved|Готово. Преведени: {amount}.
+outcome.refused_by|Не е изпратено. Отказано от {who}.
+outcome.waiting|Чака вашия отговор.
+refused_by|Отказано от {who}
+share|Споделяне
+show_full|Показване на цялата разписка
+signed_on_device_why|С {biometry}, с ключ, който никога не напуска това устройство.
+signed_on_phone|✓ Подписано на този телефон
+signed_on_phone_why|С ключ, който никога не напуска този телефон.
+signs_within|KIFF подписва разписките до минута след решението. Проверете отново скоро.
+what_happened|Какво се случи

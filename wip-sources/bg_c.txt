@@ -1,0 +1,255 @@
+@@ home
+calendar_not_read|Календарът не можа да бъде прочетен. {why}
+cant_reach_kiff|Няма връзка с KIFF
+choose_taf|Изберете taf.
+connect_tool|Свързване на приложение
+connect_tool_set_up_your|Свържете приложение, за да настроите първия си taf.
+couldnt_load_from_kiff|Не можа да се зареди от KIFF
+couldnt_load_tafs|Вашите tafs не можаха да се заредят
+empty.coach|Свържете приложение, за да настроите първия си taf.
+empty.shared|Тук се показват tafs, споделени с вас.
+explore_jobs|Разглеждане на задачи
+footer|Влезли сте с KIFF.
+halted_open_halt|Спряно. Отваряне на „Спиране“
+labels_all|Всички
+loading|Зареждане на вашите tafs…
+new_taf|Нов taf
+no_longer_runs_tafs_deletes|Вече не работи. tafs изтрива останалото при всяко опресняване.
+no_tafs|Все още няма tafs.
+not_fully_removed|{name} още не е напълно премахнат.
+not_loaded|Вашите tafs не можаха да се заредят.
+open_halt|Отваряне на „Спиране“
+opens_plan|Отваря {title}.
+other_agents|Други агенти с Cards
+overview.column_card|CARD
+overview.column_last_result|ПОСЛЕДЕН РЕЗУЛТАТ
+overview.column_now|СЕГА
+overview.column_taf|TAF
+overview.each_line_opens|Всеки ред отваря taf.
+overview.subtitle|Днес, за всички ваши tafs
+overview.title|Преглед
+plan_line_description|{words} Отваря „План и използване“.
+reason_answer_by|{why} · отговорете до {time}
+sample_foot|Примерни данни. Нов taf започва в Coach.
+sample_label|Какво докладва след пробното си изпълнение
+see_all_jobs|Всички задачи
+shared_you|Споделени с вас
+start_new_taf|Създаване на нов taf
+status|Състояние
+status_retrying|{words} · нов опит
+tafs_shared_you_show|Тук се показват tafs, споделени с вас.
+tagline|They taf. You kiff.
+title|Tafs
+try_with_coach|Опитайте с Coach
+working|{"one": "{count} taf работи.", "other": "{count} tafs работят."}
+your_tafs|Вашите tafs
+@@ knob
+all_services|Всички услуги
+approve_event|Одобряване на събитието
+approve_once|Докоснете за еднократно одобрение
+ask_coach_to_change|Помолете Coach за промяна
+back_to_why|‹ Защо
+caption|Кога стартира, Какво прави по ред, Къде отива резултатът.
+change|Промяна
+confirm_with|Потвърждаване с {biometry}
+connect_first|Свържете това приложение за taf, преди да одобрите събитието му.
+dial_could_not_read|Скалата не можа да бъде прочетена: {why}
+dial_did_not_change|Скалата не се промени: {why}
+done_today|Направени днес: {done}
+draft|Скалата, подготвена от Coach
+draft_title|{taf} ще работи така
+event_changed|Това събитие се промени. Показано е отново, както е сега: одобрете него.
+event_changed_read_dial_again|Това събитие се промени. Прочетете скалата отново, преди да го одобрите.
+event_filters|Следи за
+follow_up_not_removed|Следващата стъпка не беше премахната: {why}
+listen_only_events_matching_filters|Следи само събития, които отговарят на тези филтри.
+live|Тази скала е активна.
+lower|Намаляване
+make_live|{"one": "Активиране на {count} промяна с {biometry}", "other": "Активиране на {count} промени с {biometry}"}
+no_requests|Все още няма заявки.
+no_stops|, без спирки
+not_live|ЧЕРНОВА · V{version} · НЕАКТИВНА
+not_read_back|Промяната е направена, но не можа да бъде прочетена обратно. Докоснете, за да прочетете скалата отново.
+not_recorded|Връзката следи, но скалата още не я е записала. Одобрете отново, за да я запише.
+one_confirmation|Едно потвърждение задава и трите пръстена.
+pause|Пауза
+raise|Увеличаване
+reading_draft|Четене на скалата, подготвена от Coach…
+replaced|По-нова скала замени тази.
+request_title|Заявка
+resume|Възобновяване
+ring.what|Какво
+ring.when|Кога
+ring.where|Къде
+search|Попитайте Coach или намерете каквото и да е
+showing|Показване
+showing_filter|Показване: {filter}
+showing_filter_label|Показване, {filter}
+subscription_made_dial_has_not|Абонаментът е създаден, но скалата още не го е записала. Опитайте отново.
+tap_a_ring|Докоснете пръстен
+this_taf|Този taf
+use_size|Използвайте − и +
+why|ЗАЩО
+with_stops|{"one": "{name} · {count} спирка", "other": "{name} · {count} спирки"}
+@@ drive
+a_secret_field|тайно поле
+a_text_field|текстово поле
+approval|Нека Coach управлява приложението: {task}
+cant_do_step|Това приложение не може да направи тази стъпка
+cant_scroll|Не може да се превърта там: {direction}
+caption|Coach управлява: {task}
+card_note_pauses|Coach докосва и пише в това приложение, докато гледате, само за тази заявка. Никога не потвърждава нищо. Докоснете приложението, за да го спрете на пауза, или докоснете „Спиране“, за да приключите.
+card_note_scrolls_pauses|Coach докосва, пише и превърта в това приложение, докато гледате. Никога не потвърждава нищо. Докоснете приложението, за да го спрете на пауза, или докоснете „Спиране“, за да приключите.
+card_title|Coach иска да управлява приложението
+coach_drove_app|Coach управлява приложението · {task}
+declined_line|Не сега: Coach не управлява приложението
+done|Готово
+drive_app|Управление на приложението
+ended.done|Coach приключи
+ended.halted|Акаунтът е спрян, така че Coach спря
+ended.idle|15 минути нищо не беше направено, така че Coach спря
+ended.left_app|Приложението изчезна от екрана, така че Coach спря
+ended.locked|Телефонът се заключи, така че Coach спря
+ended.other|Coach спря
+ended.owner_took_over|Поехте управлението, така че Coach ви остави да продължите
+ended.replaced|Започна друго управление
+ended.signed_out|Излязохте, така че Coach спря
+ended.stopped|Спряхте Coach
+long_pressed|Продължително натискане
+long_pressed_on|Продължително натискане: {what}
+looked|Погледна
+looked_didnt_come|Погледна: {event} не дойде навреме
+looked_once_came|Погледна, след като дойде {event}
+needs_you_let_coach_drive|Чака ви · нека Coach управлява
+no_field|Няма избрано поле
+no_step_done|Не е направена нито една стъпка.
+no_steps|Нищо не беше направено.
+not_on_screen|Това не е на екрана сега
+nothing_back|Няма накъде назад
+nothing_there|Там няма нищо, което Coach може да използва
+paused|На пауза
+scrolled|Превъртяно: {direction}
+step_failed|Тази стъпка не успя
+stop|Спиране на Coach
+swiped|Плъзгане
+tapped|Докосване
+tapped_on|Докосване: {what}
+too_late|Твърде късно
+typed|Въведено
+typed_into|Въведено в {field}
+went_back|Върна се назад
+what_i_did|Какво направих
+yours_to_confirm|Това трябва да потвърдите вие
+yours_to_fill|Това трябва да попълните вие
+@@ sign_in
+again_to_sign|Влезте отново с KIFF: този вход не може да подписва за телефона.
+again_to_sign_device|Влезте отново с KIFF: този вход не може да подписва за този {device}.
+agree|С влизането приемате документа {terms} на KIFF, който обхваща и tafs, и документа {privacy} на KIFF.
+check_code|Проверете дали KIFF показва същия код, преди да одобрите.
+connected|Свързани сте.
+connected_line|Да създадем страхотни неща заедно.
+could_not_finish|Не можа да завърши: {why}. Опитайте отново.
+could_not_start|Не можа да започне: {why}. Опитайте отново.
+deletes_every_taf_runs_chats|Изтрива всеки taf, изпълненията, чатовете и бележките му, вашите Cards и връзките ви. Това не може да бъде отменено.
+didnt_work|Влизането не успя.
+every_action_taf_takes_goes|Всяко действие на taf минава през KIFF, който проверява неговата Card, преди нещо да стигне до приложение. Отговорите ви се подписват на този {device}.
+every_action_taf_takes_goes_view|Всяко действие на taf минава през KIFF, който проверява неговата Card, преди нещо да стигне до приложение. Одобренията ви се подписват на телефона ви.
+how_works|Как работи
+in_app_not_on|Влизането в приложението още не е включено.
+ios_did_not_open_sign|iOS не отвори страницата за вход (грешка {code}; {context}). Опитайте отново с отворен tafs.
+lead|Вашите tafs действат според Cards на KIFF. Одобрете този {device} в KIFF и издадените от вас Cards ще се появят тук.
+lets_go|Да започваме
+not_signed_out|Още не сте излезли от KIFF. Опитайте отново или изведете този телефон от „Устройства“ на друго устройство.
+not_signed_out_device|Още не сте излезли от KIFF: {why}. Опитайте отново или изведете този {device} от „Устройства“ на друго устройство.
+open_kiff|Отваряне на KIFF за одобрение
+other_browser|Или отворете тази връзка в друг браузър:
+pair_check|Ще ви попита дали този {device} показва {code}.
+pair_how|На телефона, на който вече използвате tafs, отворете {account} → {devices} → {add} и сканирайте този код.
+pair_new_code|Кодът изтече, ето нов.
+pair_no_key|Този {device} не може да съхранява ключ, така че не може да бъде сдвоен. Влезте с KIFF вместо това.
+pair_prompt|Сдвояване на този {device} с другия ви телефон
+pair_start|Вход с другия ви телефон
+pair_waiting|Изчакване на другия ви телефон…
+relink.code_expired|Кодът изтече, преди да бъде одобрен в браузъра. Опитайте отново.
+relink.didnt_take|Този телефон все още не може да одобрява. Опитайте отново или влезте отново от Настройки.
+relink.failed|Повторното одобрение не успя. Опитайте отново или влезте отново от Настройки.
+relink.fingerprints_changed|Пръстовите ви отпечатъци току-що се промениха. Опитайте отново.
+relink.finishing_last|KIFF завършва последното. Опитайте отново след малко.
+relink.no_connection|Няма връзка. Опитайте отново.
+relink.not_approved_in_browser|Не беше одобрено в браузъра.
+relink.prompt|Повторно одобрение с този пръстов отпечатък
+scan_with_tafs|Сканиране с tafs
+show_code|Показване на кода
+sign_did_not_come_back|Входът не се върна в tafs.
+tafs_had_no_window_screen|tafs нямаше прозорец на екрана, върху който да отвори входа. Отворете tafs и опитайте отново.
+waiting|Изчакване на вашето одобрение…
+waiting_for_browser|Изчакване на браузъра ви… Проверете дали показва {user_code} и одобрявайте само ако държите този {device} в ръцете си.
+welcome.inside_lead|В рамките на Card
+welcome.inside_rest|действа и всяко действие има разписка.
+welcome.lead|Един taf върши работа в рамките на Card, която задавате. Отвъд нея ви пита.
+welcome.outside_lead|Извън нея
+welcome.outside_rest|ви чака, точно тук.
+welcome.revoked_lead|Оттеглена
+welcome.revoked_rest|никое ново действие не минава.
+welcome.title|tafs
+with_kiff|Вход с KIFF
+with_phone|Вход с телефона ви
+your_code|Вашият код
+@@ setup
+add_door|Добавяне на врата…
+add_place|Добавяне на място от свързано приложение…
+app_events|Събития от приложения
+approve|Одобряване
+approve_note|Одобрението се подписва на този телефон; едва след това приложението започва да съобщава на taf.
+approve_note_device|Одобрението се подписва на този {device}; едва след това приложението започва да съобщава на taf.
+at_least_one|Поне едно място остава включено.
+change_starts|Промяна на стартирането с Coach
+choose_actions|Избор на действия
+connect_app|Свързване на приложение…
+connected_apps|Свързани приложения
+discard_not_confirmed|Не е отхвърлено. Нищо не се промени.
+doors|Врати
+edit|Редактиране
+follow_ups|Следващи стъпки, зададени от самия него
+from_tafs|От tafs
+if_busy|Ако още работи, когато дойде следващото стартиране
+if_still_working|Ако още работи
+improve_in_coach|Подобряване в Coach
+in_apps|Във вашите свързани приложения
+job|Задачата
+knob.events_not_set_up|Одобряването на събития не е настроено за този акаунт от този телефон.
+knob.no_subscription|Връзката не каза кой абонамент създаде. Опитайте отново.
+knob.not_approved|Не е одобрено. {why}
+knob.not_approved_unconfirmed|Не е одобрено: не беше потвърдено.
+knob.not_changed|Не е променено. {why}
+knob.not_removed|Не е премахнато. {why}
+knob.version_not_read|Версия {n} не можа да бъде прочетена. Опитайте отново.
+listening|Следи
+no_schedule|Не се стартира по график.
+no_start|Когато му кажете, в чата му.
+not_every_paused|Не всички стартирания можаха да бъдат спрени на пауза. Опитайте отново.
+not_sent|Не е изпратено
+open|Отваряне
+pause_every|Пауза на всички стартирания
+place.app_title|Известие на телефоните ни
+place.app_words|На кого е отговорено и през коя врата, никога думите му
+place.email_title|Имейл до мен
+place.email_words|Отговорът му до {email}; не и кога сте написали съобщението
+place.email_words_yours|Отговорът му до вашия имейл; не и кога сте написали съобщението
+place.reply_title|Отговор до подателя
+place.reply_words|В същата нишка, през вратата, през която е дошло
+reading_results|Четене къде отиват резултатите му…
+reading_starts|Четене какво го стартира…
+remove|Премахване
+remove_for_good|Окончателно премахване
+results_go_to|Резултатите отиват в
+results_not_changed|Къде отиват резултатите му не се промени: {why}
+resume_every|Възобновяване на всички стартирания
+run_after|Изпълнение след
+schedule|Графикът му
+section_description|{title}. {lines}. Отваряне
+send_again|Изпращане отново
+skip_it|Пропускане
+starts_when|Стартира, когато
+stop|Спиране
+title|Setup

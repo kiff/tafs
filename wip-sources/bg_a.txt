@@ -1,0 +1,171 @@
+@@ app
+name|tafs
+@@ overview
+hero|{figure} {words}
+nothing_yet|Все още нищо
+@@ mission
+log|Дневник
+read_only|Само за четене · най-новите първи
+removed|премахнат
+@@ device
+linux|компютър
+mac|Mac
+phone|телефон
+tablet|таблет
+windows|компютър с Windows
+@@ kiff
+asking_kiff|Запитване към KIFF: {title}…
+did_not_reach_kiff_try|Не стигна до KIFF. Опитайте отново.
+kiff_can_not_do_sign|KIFF още не може да направи това: влезте отново от Настройки, за да одобрявате от този {device}.
+kiff_did_not_answer_expected|KIFF не отговори както се очакваше. Опитайте отново.
+kiff_words_do_not_match|Текстът на KIFF не съвпада с проверката му. Нищо не може да бъде одобрено.
+@@ update
+available|Излезе нова версия на tafs.
+downloading|Изтегляне на актуализацията…
+ready|Актуализацията е готова.
+restart|Рестартиране
+update|Актуализиране
+@@ export
+not_exported|Чатовете ви не бяха експортирани. {why}
+not_offered|Файловете не можаха да се запазят на този телефон. Освободете място и опитайте отново.
+own_chats_each_taf_coach|Собствените ви чатове с всеки taf, включително с Coach, имената на прикачените файлове и бележките ви, като четим файл и като JSON. Само вие можете да ги експортирате.
+preparing|Подготвяне на чатовете ви…
+ready_share_again|Готово: {files}. Споделяне отново
+row|Експортиране на моите чатове
+sign_in_first|Влезте с KIFF, за да експортирате чатовете си.
+@@ brief
+decisions|Решения
+done|Направено от последното резюме
+evidence|Доказателства
+meanwhile|Междувременно:
+next_move|Следваща стъпка
+recommends|Coach препоръчва
+title|Вашето резюме
+urgent|Спешно
+@@ attachment
+cant_attach|{name} не може да бъде прикачен.
+kilobytes|{size} KB
+megabytes|{size} MB
+not_taken|tafs не може да прикачи този файл: типът или размерът му не се приемат. Изберете друг.
+photo|Снимка
+photo_could_not_read|Снимката не можа да бъде прочетена.
+photo_numbered|Снимка {n}
+too_large|{name} е {size}; максимумът е {limit}.
+wrong_kind|{name} не може да бъде прикачен. Могат да се прикачват снимки, PDF, текст, CSV, Markdown и файлове на Word и Excel.
+@@ halt_all
+description|Спира всички tafs наведнъж. Нищо ново не се изпраща, докато не ги възобновите в tafs.
+failed|tafs не можа да спре вашите tafs. {why} Отворете tafs, за да ги спрете.
+halted|{"one": "{count} taf е спрян. Нищо ново не се изпраща, докато не възобновите.", "other": "{count} tafs са спрени. Нищо ново не се изпраща, докато не възобновите."}
+halted_all|Вашите tafs са спрени. Нищо ново не се изпраща, докато не възобновите.
+halting|{"one": "Спиране на {count} taf: не започва изпълнение. KIFF още не е потвърдил всяка част; tafs показва, когато потвърди.", "other": "Спиране на {count} tafs: не започва изпълнение. KIFF още не е потвърдил всяка част; tafs показва, когато потвърди."}
+halting_all|Спиране на вашите tafs: не започва изпълнение. KIFF още не е потвърдил всяка част; tafs показва, когато потвърди.
+running|tafs не можа да спре вашите tafs. Отворете tafs, за да ги спрете.
+signed_out|Излезли сте от tafs. Влезте, за да спрете вашите tafs.
+title|Спиране на всички tafs
+@@ push
+channel.briefs|Резюмета
+channel.briefs_description|Вашето резюме в зададените часове.
+channel.holds_description|Повикване е задържано за вашия отговор. Нищо не се изпраща, докато не го одобрите.
+channel.other|Други известия
+channel.other_description|Заявки за задачи и отговорите им, без звук.
+channel.urgent_description|Това, което не може да чака следващото резюме, със звук.
+open_needs_you|Отворете „Чака ви“, за да отговорите.
+open_taf|Отворете taf, за да видите.
+open_usage|Отворете „План и използване“, за да видите.
+@@ halt
+again|Спиране отново
+all_now|Спиране на всичко сега
+explain.halted|Спряно. Възобновяването стартира само нова работа.
+explain.halted_since|От {time}. Възобновяването стартира само нова работа.
+explain.halting|Нищо ново не започва. „Спряно“ се показва, щом KIFF и връзката потвърдят.
+explain.running_all|Спирането спира вашите tafs, докато не ги възобновите. Вече изпратено повикване може все пак да пристигне.
+explain.running_one|Спирането го спира, докато не го възобновите. Вече изпратено повикване може все пак да пристигне.
+halting_stops_no_run_starts|Спирането спира {who}, докато не възобновите. Вече изпратено повикване може все пак да пристигне.
+now|Спиране сега
+row_running|Спрете го, докато не го възобновите
+your_tafs_lower|вашите tafs
+@@ report
+already|Вече сте докладвали този отговор.
+cant_from_here|Този отговор не може да бъде докладван оттук.
+menu|Докладване на този отговор
+not_sent|Докладът ви не беше изпратен. {why}
+not_sent_why|Не е изпратено: {failed}
+note_hint|Добавете бележка (по избор)
+note_most_characters|Бележката е най-много 1000 знака.
+person_kiff_reads_your_report|Човек от KIFF чете доклада ви заедно с отговора, както е бил написан.
+reason.harmful|Вредно
+reason.offensive|Обидно
+reason.other|Друго
+reason.wrong|Грешно
+runs_not_loaded|Изпълненията му не можаха да се заредят. {why}
+thanks|Благодарим. Някой от KIFF ще прочете доклада ви.
+what_wrong|Какво не е наред?
+@@ work
+answer_within|Отговор в рамките на
+answer_within_days|{"one": "{count} ден", "other": "{count} дни"}
+answer_within_hours|{"one": "{count} час", "other": "{count} часа"}
+answer_within_line|Ще ви бъде казано, когато случай чака по-дълго.
+answer_within_none|Не е зададено
+answer_within_not_set|Не можа да бъде зададено. {why}
+asking_kiff_run|Молба към KIFF да изпълни {tool}…
+did_not_stop|Не спря: {why}
+duration.minutes|{minutes} мин {seconds} с
+duration.seconds|{seconds} с
+its_runs|Изпълненията му
+not_read|Работата му не можа да бъде прочетена. {why}
+not_sent_again|Не беше изпратено отново. {why}
+request.try_reply_now|Опитайте отговора сега
+requests_need_you|{"one": "{count} заявка ви чака", "other": "{count} заявки ви чакат"}
+send_again|Изпращане отново
+sending_again|Изпращане отново…
+stop_run|Спиране на изпълнението
+stopped_part_way_before_finished|{taf} спря по средата, преди да завърши.
+@@ chrome
+browser_on|{browser} на {system}
+code_body|В Chrome отворете разширението tafs и въведете този код. Валиден е 10 минути.
+code_title|Въведете този код в Chrome
+confirm|Сдвояване
+expired|Кодът изтече, така че нищо не беше сдвоено. Започнете отново.
+footer|Вашите tafs могат да използват сдвоен Chrome само на сайтовете, които дадена връзка изброява, а рисковите стъпки одобрявате тук.
+held_basket|В кошницата
+held_in|В браузъра {name}
+held_page|На страницата
+name_label|Име
+none|Няма сдвоен Chrome.
+not_loaded|Вашите Chrome не можаха да бъдат прочетени: {why}
+offered_says|Казва, че е {browser} на {system}.
+offered_title|Сдвояване на този Chrome?
+only_yours|Сдвоявайте само Chrome на компютър, пред който сте.
+pair|Сдвояване на Chrome
+pair_not_started|Сдвояването не можа да започне: {why}
+pair_prompt|Сдвояване на {name} с вашите tafs
+paired|{name} е сдвоен.
+profile_note|tafs работи в собствен профил на Chrome. Влизайте там само в сайтовете, които искате вашите tafs да използват.
+refused|Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.
+remove|Премахване на сдвояването
+remove_named|Премахване на сдвояването с {name}
+title|Chrome
+waiting|Изчакване на Chrome…
+@@ pair
+added|Този {device} е добавен.
+added_passkey|Този {device} не може сам да подписва одобрения. Одобрявайте от телефона си или с ключ за достъп.
+check_code_lead|Телефонът ви пита дали вашият {device} показва този код:
+code_expired|Този код изтече.
+device_name|tafs на този {device}
+failed|Този {device} не беше добавен: {why}. Покажете нов код и опитайте отново.
+from_sign_in|Вече използвате tafs на телефона си? Добавете този {device} с него.
+keychain_refused|Този Mac не можа да запази входа си в Keychain (грешка {code}), така че не беше добавен. Покажете нов код и опитайте отново.
+keyring_refused|Този компютър не можа да запази входа си, така че не беше добавен: нужен е работещ и отключен keyring, например GNOME Keyring, KWallet или KeePassXC. Настройте или отключете такъв, след това покажете нов код и опитайте отново.
+new_code|Показване на нов код
+passkey_why_body|Остава на този {device}, защитен с {biometry}. С него този {device} одобрява действията на вашите tafs и нищо не се одобрява без вас. След това Windows ще поиска лицето, пръстовия ви отпечатък или ПИН.
+passkey_why_go|Създаване на ключа за достъп
+passkey_why_title|Създаване на ключ за достъп за този {device}
+refused_key_registered|Телефонът ви казва, че този {device} вече е сдвоен с акаунта ви. Покажете нов код и го сканирайте отново.
+refused_other|Телефонът ви не можа да добави този {device}. Покажете нов код и го сканирайте отново.
+refused_title|Телефонът ви не добави този {device}
+steps|На телефона си отворете tafs, после {account}, {devices}, {pair}. Сканирайте този код.
+title|Добавяне на този {device} с телефона ви
+view_only.add|Добавяне на този {device}
+view_only.lead|Този {device} показва вашите tafs, „Чака ви“ и Дневника. Не може да одобрява, докато не го добавите с телефона си.
+view_only.title|Само за преглед
+waiting|Изчакване на телефона ви…
