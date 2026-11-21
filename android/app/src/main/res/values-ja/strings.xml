@@ -562,6 +562,9 @@
     <string name="chrome_confirm">ペアリング</string>
     <string name="chrome_expired">コードの有効期限が切れたため、何もペアリングされませんでした。もう一度やり直してください。</string>
     <string name="chrome_footer">tafsがペアリング済みのChromeを使えるのは、接続に指定されたサイトだけです。リスクのある操作はここで承認します。</string>
+    <string name="chrome_held_basket">カートの中身</string>
+    <string name="chrome_held_in">%1$sで</string>
+    <string name="chrome_held_page">ページの内容</string>
     <string name="chrome_name_label">名前</string>
     <string name="chrome_none">ペアリング済みのChromeはありません。</string>
     <string name="chrome_not_loaded">Chromeの一覧を読み込めませんでした: %1$s</string>
