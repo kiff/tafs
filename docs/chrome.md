@@ -296,14 +296,16 @@ A sign-in the owner saves in the side panel ("Saved sign-ins": site, an optional
 one exact origin (`chrome/src/vault.js`).
 
 - **Sealed on the computer.** Each value is encrypted with AES-GCM under a key that can't be exported, kept in
-  IndexedDB, with the origin bound in as additional data, so an entry moved to another origin can't be opened. The side
-  panel lists only each site and whether a username is saved, never a value. Unpairing wipes the vault with everything
-  else.
+  IndexedDB, with the origin, the entry and the part (username or password) bound in as additional data. So an entry
+  moved to another origin can't be opened, and neither can an entry's username and password swapped in storage. The
+  side panel lists only each site and whether a username is saved, never a value. One sign-in is kept per site: saving
+  another for the same site replaces it, and the panel says so. Unpairing wipes the vault with everything else.
 - **The taf sees handles only.** A read of a page on that exact origin carries `page.sealed:
   ["sec_…:username", "sec_…:password"]`. A taf names one in `act.sealed` to ask for a fill.
 - **Only the paired phone's own release opens one, for one fill.** `step.release` is the phone's `tafs-chrome/release/v1`
   signature, with the `phone_key` the extension learned at pairing, over
-  `{chrome_id, op: step.id, sealed, origin, field_ref, nonce, exp}`, with `exp` at most 2 minutes ahead. planque relays it and can't make one, and a
+  `{chrome_id, op: step.id, sealed, origin, field_ref, read_id, nonce, exp}`, with `exp` at most 2 minutes ahead. Refs are
+  renumbered on every read, so `read_id` makes the release name the exact field the owner saw. planque relays it and can't make one, and a
   compromised planque can't either. The extension checks it (`protocol.checkRelease`), takes its nonce once, then
   opens the value.
 - **It goes only where it fits:** a `:password` handle only into a password field, and a `:username` handle only into a
@@ -356,8 +358,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   tafs cloud's routes with the session's own bearer; the KIFF offer as a view-only extension; the claim's DER proof
   verified; and a claim that waits, and a session that could approve, ended and never kept.
 - **`sealed.test.js`:** the vault (sealed per exact origin, never listed or kept in clear, an entry moved to another
-  origin unreadable), handles on a read, and a sealed fill that runs only on the paired phone's release. It refuses no
-  release, planque's, another origin's, an expired one, and a reused one, and checks which part fits which field.
+  origin or its parts swapped unreadable), handles on a read, and a sealed fill that runs only on the paired phone's
+  release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
+  checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
   input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
   covered button that isn't clicked, and dialogs.

@@ -72,5 +72,6 @@
   "vault_saved": { "message": "Saved. It's sealed on this computer." },
   "vault_error": { "message": "That wasn't saved: a site needs https, and a password." },
   "vault_remove": { "message": "Remove" },
-  "vault_with_username": { "message": "with a username" }
+  "vault_with_username": { "message": "with a username" },
+  "vault_one_per_site": { "message": "One sign-in per site: saving another for the same site replaces it." }
 }

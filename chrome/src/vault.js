@@ -49,12 +49,13 @@ export class Vault {
     if (!origin) throw new Error("origin");
     if (typeof password !== "string" || !password) throw new Error("password");
     const key = await this.key();
-    const seal = async (value) => {
+    const id = randomId("sec_");
+    const seal = async (value, part) => {
       const iv = crypto.getRandomValues(new Uint8Array(12));
-      const data = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: new TextEncoder().encode(origin) }, key, new TextEncoder().encode(value)));
+      const data = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: bound(origin, id, part) }, key, new TextEncoder().encode(value)));
       return { iv, data };
     };
-    const entry = { id: randomId("sec_"), origin, hasUsername: !!username, username: username ? await seal(username) : null, password: await seal(password) };
+    const entry = { id, origin, hasUsername: !!username, username: username ? await seal(username, "username") : null, password: await seal(password, "password") };
     await this.store.set(ENTRIES, [...(await this.entries()).filter((e) => e.origin !== origin), entry]);
     return entry.id;
   }
@@ -75,8 +76,9 @@ export class Vault {
   }
 
   /**
-   * The value a handle names, only for `origin`: the caller has already checked the phone's release. The origin is
-   * bound into the encryption too, so a value moved to another origin's entry can't be opened.
+   * The value a handle names, only for `origin`: the caller has already checked the phone's release. The origin, the
+   * entry and the part are bound into the encryption too, so a value moved to another origin's entry, another entry, or
+   * swapped between an entry's username and password can't be opened.
    */
   async open(handle, origin) {
     const [id, part] = String(handle).split(":");
@@ -86,10 +88,15 @@ export class Vault {
     if (!sealed) return null;
     const key = await this.key();
     try {
-      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: sealed.iv, additionalData: new TextEncoder().encode(origin) }, key, sealed.data);
+      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: sealed.iv, additionalData: bound(origin, id, part) }, key, sealed.data);
       return new TextDecoder().decode(plain);
     } catch {
       return null;
     }
   }
+}
+
+/** What a sealed value is bound to: its exact origin, its entry and which part it is. */
+function bound(origin, id, part) {
+  return new TextEncoder().encode(origin + "\n" + id + "\n" + part);
 }

@@ -30,6 +30,12 @@ test("a sign-in is sealed for one exact https origin, and opens only there", asy
   const entries = await store.get("vault");
   await store.set("vault", entries.map((e) => ({ ...e, origin: "https://evil.example" })));
   assert.equal(await v.open(id + ":password", "https://evil.example"), null);
+  // Nor can an entry's username and password be swapped in storage: each is bound to its entry and its part.
+  await store.set("vault", entries.map((e) => ({ ...e, username: e.password, password: e.username })));
+  assert.equal(await v.open(id + ":username", "https://shop.example"), null);
+  assert.equal(await v.open(id + ":password", "https://shop.example"), null);
+  await store.set("vault", entries);
+  assert.equal(await v.open(id + ":password", "https://shop.example"), "hunter22");
   await v.remove(id);
   assert.deepEqual(await v.list(), []);
 });
@@ -83,7 +89,7 @@ function fill(id, extra = {}) {
 }
 
 async function release(phone, step, origin = "https://shop.example", extra = {}) {
-  const body = { chrome_id: "chr_1", op: step.id, sealed: step.act.sealed, origin, field_ref: step.act.ref, nonce: "r1", exp: NOW + 30_000, ...extra };
+  const body = { chrome_id: "chr_1", op: step.id, sealed: step.act.sealed, origin, field_ref: step.act.ref, read_id: step.read_id, nonce: "r1", exp: NOW + 30_000, ...extra };
   return { ...body, sig: await sign(phone.privateKey, LABEL.release, body) };
 }
 
@@ -101,7 +107,11 @@ test("a sealed fill runs only on the phone's own release, for that step, field a
   assert.equal((await r.handle({ ...step, release: forged })).error.code, "release_missing", "planque can't release");
   assert.equal((await r.handle({ ...step, release: await release(phone, step, "https://evil.example") })).error.code, "release_missing", "another origin");
   r.resume("run_1"); // three refused acts in a row pause the run, as any failures do
+  // The same field ref on another read may be another field: the release names the read the owner saw.
+  assert.equal((await r.handle({ ...step, release: await release(phone, step, undefined, { read_id: "rd_0" }) })).error.code, "release_missing", "another read");
+  r.resume("run_1"); // three refused acts in a row pause the run, as any failures do
   assert.equal((await r.handle({ ...step, release: await release(phone, step, undefined, { exp: NOW - 1 }) })).error.code, "release_missing", "expired");
+  r.resume("run_1");
   assert.equal(c.calls.length, 0, "nothing was typed");
 
   r.resume("run_1");

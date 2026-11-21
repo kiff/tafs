@@ -81,7 +81,8 @@ export async function checkWelcome(message, { planqueKey, chromeId, nonceP, nonc
 
 /**
  * Whether `release` is the paired phone's signature releasing sealed value `sealed` for one fill of step `step` on
- * `origin`, unexpired (slice 5). planque relays it and can't make one.
+ * `origin`, into field `field_ref` of read `read_id` (refs are renumbered on every read, so the read names the exact
+ * field the owner saw), unexpired. planque relays it and can't make one.
  */
 export async function checkRelease(release, { phoneKey, chromeId, step, origin, now = Date.now() }) {
   if (!release || typeof release !== "object") return false;
@@ -91,9 +92,11 @@ export async function checkRelease(release, { phoneKey, chromeId, step, origin, 
     sealed: step.act && step.act.sealed,
     origin,
     field_ref: step.act && step.act.ref,
+    read_id: step.read_id,
     nonce: release.nonce,
     exp: release.exp,
   };
+  if (typeof body.read_id !== "string" || !body.read_id) return false;
   if (typeof body.exp !== "number" || body.exp < now || body.exp > now + RELEASE_MAX_AHEAD_MS || typeof body.nonce !== "string") return false;
   if (release.chrome_id !== chromeId || release.op !== step.id || release.origin !== origin) return false;
   return verify(phoneKey, LABEL.release, body, release.sig);
