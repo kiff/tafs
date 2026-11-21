@@ -1060,6 +1060,9 @@ extension PlanqueTests {
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(bad))
         let refused = await model.chromePairingStep(opened)
         XCTAssertEqual(refused, .refused, "another extension used the lookup")
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, #"{"pairing":"pr_1","status":"contested"}"#)
+        let contested = await model.chromePairingStep(opened)
+        XCTAssertEqual(contested, .refused, "planque spent a code two Chromes posted on")
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(good))
         guard case .offered(let proven) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer is shown") }
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (404, #"{"error":"no such pairing, or it expired"}"#)
