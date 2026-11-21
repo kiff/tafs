@@ -55,6 +55,26 @@ struct Meter: View {
     }
 }
 
+/// The header where a chat's day starts (`ChatTime.day`): Today, Yesterday, then the date, centred.
+struct ChatDayHeader: View {
+    let date: Date
+    var body: some View {
+        Text(ChatTime.day(date, calendar: AccountTime.calendar))
+            .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.dim)
+            .frame(maxWidth: .infinity).padding(.top, 6)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// The small time under a chat message, on its side (`ChatTime.time`), in the account's zone.
+struct ChatSentTime: View {
+    let date: Date
+    var body: some View {
+        Text(ChatTime.time(date, zone: AccountTime.zone))
+            .scaledFont(11, relativeTo: .caption2).monospacedDigit().foregroundColor(Theme.dim)
+    }
+}
+
 struct Eyebrow: View {
     let text: String
     var color: Color = Theme.dim

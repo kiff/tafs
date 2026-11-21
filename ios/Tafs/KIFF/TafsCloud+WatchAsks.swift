@@ -25,8 +25,10 @@ extension TafsCloud {
         /// Read more (`?full=1` only): the taf's whole answer, cleaned as the line is and never cut, at most 16 KB. tafs cloud
         /// sends it beside `ask`, not in it; none when the run hasn't finished or the person may no longer use the taf.
         var text: String? = nil
+        /// When tafs cloud last changed it (`updated`): for an ended request, when its answer came (row 44, C).
+        var updated: Date? = nil
 
-        enum CodingKeys: String, CodingKey { case id, state, taf, line, words, held, more }
+        enum CodingKeys: String, CodingKey { case id, state, taf, line, words, held, more, updated }
 
         init(id: String, state: String, taf: Taf? = nil, line: String? = nil, words: String = "", waitsOnPerson: Bool = false,
              more: Bool = false) {
@@ -43,6 +45,16 @@ extension TafsCloud {
             words = (try? c.decode(String.self, forKey: .words)) ?? ""
             waitsOnPerson = (try? c.decodeIfPresent(Bool.self, forKey: .held)) ?? false
             more = (try? c.decodeIfPresent(Bool.self, forKey: .more)) ?? false
+            updated = (try? c.decodeIfPresent(String.self, forKey: .updated)).flatMap { Self.instant($0) }
+        }
+
+        /// An ISO-8601 time, with or without fractions of a second, as tafs cloud writes it.
+        static func instant(_ text: String) -> Date? {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let d = f.date(from: text) { return d }
+            f.formatOptions = [.withInternetDateTime]
+            return f.date(from: text)
         }
 
         /// What the watch shows: the line when there is one, else tafs cloud's words for the state.

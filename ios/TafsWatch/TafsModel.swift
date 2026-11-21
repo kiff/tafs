@@ -42,7 +42,9 @@ final class TafsModel: ObservableObject {
             return
         }
         switch reply.outcome {
-        case .ok: state = .loaded(reply.tafs ?? [])
+        case .ok:
+            WatchAccountZone.learn(reply.zone)
+            state = .loaded(reply.tafs ?? [])
         case .signedOut: state = .signedOut; halts = [:]
         case .failed: state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
         case .refused, .stale, .notYet, .answered: state = .unreachable
