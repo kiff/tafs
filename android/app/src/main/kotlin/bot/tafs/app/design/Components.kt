@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.SolidColor
@@ -95,7 +96,19 @@ fun Meter(fraction: Double, color: Color = Theme.ok) {
 
 @Composable
 fun Eyebrow(text: String, color: Color = Theme.dim) {
-  Text(text.uppercase(), style = scaled(12, color = color, mono = true, tracking = 0.7.sp))
+  Text(text.uppercase(), style = eyebrowStyle(text, color))
+}
+
+/**
+ * A section's small heading: monospaced and tracked, except in Korean, Japanese or Chinese, whose words the monospaced face's
+ * wide spaces and the tracking pull apart ("내   TAFS"; the Korean preview). Those keep the plain face, untracked, as on iOS.
+ */
+fun eyebrowStyle(text: String, color: Color = Theme.dim): TextStyle =
+  if (ideographic(text)) scaled(12, color = color) else scaled(12, color = color, mono = true, tracking = 0.7.sp)
+
+/** Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart. */
+fun ideographic(text: String): Boolean = text.codePoints().anyMatch { c ->
+  c in 0x1100..0x11FF || c in 0x3040..0x30FF || c in 0x3130..0x318F || c in 0x3400..0x4DBF || c in 0x4E00..0x9FFF || c in 0xAC00..0xD7AF
 }
 
 /** The screen title: iOS's 34pt rounded bold. */

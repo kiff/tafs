@@ -135,6 +135,10 @@ term that recurs is added here first, then used.
 shows it yet. Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
+**Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading
+in Hangul, kana or Han keeps the plain face, untracked, since the monospaced face's wide spaces and the tracking pull its words
+apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle` on Android (`EyebrowTest`).
+
 | Language | Code | Address | Notes |
 |---|---|---|---|
 | Korean | `ko` | 합니다 / 하세요 | Statements end in -습니다/-ㅂ니다, requests in -세요, as Korean business apps do. "나" for the person in labels ("내 코드"). A particle after a placeholder that may end in a consonant is written 을(를), 이(가), 은(는). |
