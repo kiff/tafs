@@ -85,6 +85,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     fr: ["cr_actions", "dial_app", "setup_notes", "setup_actions"], // "action", "actions", "note", "notes" and "App" are French words too
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
+    ko: ["cr_pct"], // "80%" is written alike
     nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details", "brief_later"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App", "Details" and "Later" are Dutch too
   };
 
@@ -99,6 +100,9 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   });
 
   it("picks the app's language from Accept-Language: the highest q among the eight, by base language, else English", () => {
+    // Korean is wired: a Korean phone reads tafs cloud's Korean, the AI consent lines included.
+    expect(languageFrom("ko-KR,ko;q=0.9")).toBe("ko");
+    expect(wordsIn("ko").ai_consent_title).not.toBe(en.ai_consent_title);
     expect(languageFrom(undefined)).toBe("en");
     expect(languageFrom("")).toBe("en");
     expect(languageFrom("de")).toBe("de");
@@ -239,7 +243,8 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
    * any case. Its words in each language match in any case.
    */
   /** The languages with a column in the Terms table: every one but a regional variant, which has its own glossary. */
-  const BASES = LANGUAGES.filter((l) => baseLanguage(l) === l);
+  // Korean's terms are their own section ("Korean and Japanese"), not a column of this table.
+  const BASES = LANGUAGES.filter((l) => baseLanguage(l) === l && l !== "ko");
 
   function glossary(): Array<{ en: string; label: boolean; words: Record<string, string> }> {
     const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");

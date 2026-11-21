@@ -317,7 +317,8 @@ describe("a taf's health", () => {
         const view = healthView(h, lang, { billing: true });
         const fixes = [...(view.fixes ?? []), ...(healthView(h, lang).fixes ?? [])].flatMap((f) => [f.words, f.say ?? "the button's words"]);
         for (const line of [...view.lines, ...h.reasons.map((r) => healthLine(r, lang)), ...fixes]) {
-          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(10);
+          // Korean says in 6 characters what English says in 11 ("크레딧 추가", "Add credits").
+          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(lang === "ko" ? 4 : 10);
           expect(line, lang).not.toMatch(/cursor|firing|failed_|skipped_|undefined/i);
           expect(line, lang).not.toMatch(/NaN/);
         }
