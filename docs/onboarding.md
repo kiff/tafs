@@ -38,6 +38,13 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 
 Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
 
+**K5, the end-to-end pass on a test device** (`BuildConfig.K5`, as iOS's `TAFS_K5`): `ONBOARDING_ON` is on only in a **debug**
+build made with `-Pk5` or `TAFS_K5=1` (`./gradlew :app:assembleDebug -Pk5`, or `android.yml` run by hand with `k5`, whose
+`k5` job leaves the APK as a run artifact for 7 days). That job builds without Firebase's settings (alerts off), since the
+repository is public, and a `k5` run never starts `release` or `wear-release`. A **release** build sets `K5` to `false` whatever is
+passed, so no build for Play has it, and CI checks it on every run ("A release build never has K5"; `K5SwitchTest`: off unless
+asked for).
+
 - **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
   law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`),
   and, before the switch is on, today's sign-in sheet says a raised age too (`raisedAgeLine`: India, Brazil, Indonesia, Colombia; nothing
