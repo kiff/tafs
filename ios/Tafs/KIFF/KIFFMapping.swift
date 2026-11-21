@@ -319,7 +319,38 @@ enum KIFFMapping {
         call.tafReason = tafWords(e.tafReason, max: 280)
         call.agent = e.subject
         call.breachOutcomes = e.breaches.map(\.outcome)
+        // The summary stays KIFF's: planque's words for the act carry the element's own label, which the page wrote,
+        // so they're drawn only in the block's page part, never as what the card asks.
+        call.browser = browserStep(e.browser)
         return call
+    }
+
+    /// A held browser step as the card draws it (docs/chrome.md, "The approval card"). Every line is one plain line,
+    /// cut to planque's cap; without a site or planque's words for the act, there's no browser card and the hold
+    /// reads as any other.
+    /// One basket line as the card draws it: "2 × Mug · 12.50", the quantity only when there's more than one, the
+    /// price as the page showed it. Each part is the page's words, made one plain line; a line with no item is left out.
+    static func basketLine(_ line: KIFFClient.CardException.BrowserStep.Line?) -> String? {
+        guard let line, let item = tafWords(line.item, max: 160) else { return nil }
+        var text = item
+        if let quantity = line.quantity, quantity > 1 { text = "\(quantity) × " + text }
+        if let price = tafWords(line.price?.text, max: 30) { text += " · " + price }
+        return text
+    }
+
+    static func browserStep(_ b: KIFFClient.CardException.BrowserStep?) -> BrowserStep? {
+        guard let b, let site = tafWords(b.site, max: 253), let act = tafWords(b.actionWords, max: 200) else { return nil }
+        let context = b.context?.value
+        let checkout = b.checkout?.value
+        return BrowserStep(
+            site: site,
+            origin: tafWords(b.origin, max: 300),
+            actionWords: act,
+            pageTitle: tafWords(context?.title, max: 200),
+            pageText: tafWords(context?.text, max: 600),
+            basket: Array((checkout?.lines ?? []).compactMap { basketLine($0.value) }.prefix(20)),
+            chromeName: tafWords(b.chrome?.value?.name, max: 80)
+        )
     }
 
     /// The arguments KIFF's gateway adds to every call: its operation id, which isn't the
