@@ -451,7 +451,7 @@ fun CoachCard(shown: ShownComponent, state: AppState, actions: CoachActions) {
 private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
   val grant = state.grants.firstOrNull { it.id == c.grant }
   val draft = c.draft?.let { state.setupDrafts[it] }
-  val busy = state.connecting != null
+  val busy = approvalHeld(state, c.grant)
   var details by remember { mutableStateOf(false) }
   // Answered, it keeps one line saying what it was: several in a row each say what was approved. One line, whatever the words'
   // length: with no title, planque's text can run to paragraphs. With a Card, a tap opens it again to read the Card that was
@@ -569,6 +569,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           }
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
           windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+          // Held by another card's approval still on its vendor's page: said, never a button that stays off unexplained.
+          if (busy && state.connecting != grant.id) Text(Words.Connect.anotherApproval, style = scaled(12, color = Theme.dim))
           if (state.connecting == grant.id) {
             val app = bot.tafs.app.model.ConnectionWords.appName(grant, state.connectApps)
             if (state.vendorPageOpen) Text(waitingWords(app), style = scaled(12, color = Theme.dim))
@@ -697,8 +699,19 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
 }
 
 /** A sign-in card's line: the card's service, else the connection's app name, else "the vendor". */
-/** KIFF's approval-window words for [c], only when tafs cloud marks its Approve a tap (`signs.takes`, docs/chat.md). */
-internal fun windowWordsFor(c: SetupComponent, windowWords: String?): String? = windowWords?.takeIf { c.signs?.tap == true }
+/**
+ * KIFF's approval-window words for [c], only when its Approve is a tap ([CoachWords.approvesAsTap]): the same answer signing
+ * follows, so the button never says one thing and does another.
+ */
+internal fun windowWordsFor(c: SetupComponent, windowWords: String?): String? = windowWords?.takeIf { CoachWords.approvesAsTap(c, it) }
+
+/**
+ * Another approval holds this card's buttons: the one that runs at a time ([AppState.connecting]) is this card's own, or
+ * another card's still on its vendor's page. One left (the owner came back with no link) gives way when this card is
+ * approved (`AppModel.giveWayToNewApproval`), so it holds nothing here.
+ */
+internal fun approvalHeld(state: AppState, grantId: String?): Boolean =
+  state.connecting != null && (state.connecting == grantId || !state.vendorPageLeft)
 
 /** Back in tafs with no link from the vendor's page: the same page again (planque takes it until its approve expires). */
 @Composable
@@ -744,7 +757,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
       ApprovalKeyLine()
     }
     else -> {
-      val busy = state.connecting != null
+      val busy = approvalHeld(state, c.grant)
       val waiting = c.grant != null && state.connecting == c.grant
       Panel(stroke = Theme.amber.copy(alpha = 0.45f)) {
         Eyebrow(Words.Coach.SignIn.eyebrow, Theme.amberText)
@@ -761,6 +774,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
           enabled = !busy && c.grant != null,
         )
         Text(opensWords(c.service, app, c.destination), style = scaled(12, color = Theme.dim, mono = true))
+        if (busy && !waiting) Text(Words.Connect.anotherApproval, style = scaled(12, color = Theme.dim))
         if (waiting) {
           if (state.vendorPageOpen) Text(waitingWords(app ?: c.service), style = scaled(12, color = Theme.dim))
           if (state.vendorPageLeft) ReopenSignIn(app ?: c.service, actions)

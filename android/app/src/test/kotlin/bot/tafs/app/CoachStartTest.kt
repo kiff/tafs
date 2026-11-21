@@ -1185,6 +1185,69 @@ class CoachStartTest {
     assertNull(m.state.value.connecting)
   }
 
+  /** Two sign-ins, g1's and g2's, each waiting on its vendor's page until replaced; [left] is the owner back with no link. */
+  private class TwoPages : VendorSignIn {
+    val opened = mutableListOf<String>()
+    override val left = kotlinx.coroutines.flow.MutableStateFlow(false)
+    private var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    override suspend fun signIn(url: String): String { opened += url; waiting = kotlinx.coroutines.CompletableDeferred(); left.value = false; return waiting.await() }
+    override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+  }
+
+  private fun twoSignIns() {
+    coachThread(signInCard)
+    val g2 = grant("approved").replace(""""id":"g1"""", """"id":"g2"""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")},$g2]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth/1"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g2/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth/2"}""")
+  }
+
+  private val secondSignIn get() = KiffClient.json.decodeFromString<SetupComponent>(signInCard.replace(""""id":"s1","grant":"g1"""", """"id":"s2","grant":"g2""""))
+
+  // The owner on the emulator, 21 Nov: a sign-in closed on its vendor's page with no link held every other approval card, greyed
+  // with no word why, until the app was opened again. A new approval now takes over from it, as Open again does: the left one's
+  // wait ends quietly (Coach hears nothing from it), and the new one goes on.
+  @Test fun aSignInLeftOnItsVendorsPageGivesWayToANewApproval() = runTest {
+    reads()
+    twoSignIns()
+    val pages = TwoPages()
+    val m = model(pages, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.startSignInAgain(KiffClient.json.decodeFromString(signInCard))
+    runCurrent()
+    assertEquals("g1", m.state.value.connecting)
+    pages.left.value = true
+    runCurrent()
+    // Left, it holds no other card: the second card's buttons are on.
+    assertFalse(bot.tafs.app.views.approvalHeld(m.state.value, "g2"))
+    m.startSignInAgain(secondSignIn)
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    assertEquals(listOf("https://mcp.stripe.com/oauth/1", "https://mcp.stripe.com/oauth/2"), pages.opened)
+    assertEquals("g2", m.state.value.connecting)
+    assertNull(m.state.value.coachNotes["s2"])
+    // The first card was given up quietly: no "failed" answer went to Coach for it.
+    assertEquals(0, transport.requestsTo("POST /v1/tafs/setup_1/components/s1/answer").size)
+  }
+
+  // Still on the vendor's page (the owner may be signing in there), a sign-in keeps the turn: the other card says so.
+  @Test fun aSignInStillOnItsVendorsPageHoldsTheNextApprovalAndSaysSo() = runTest {
+    reads()
+    twoSignIns()
+    val pages = TwoPages()
+    val m = model(pages, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.startSignInAgain(KiffClient.json.decodeFromString(signInCard))
+    runCurrent()
+    assertTrue(bot.tafs.app.views.approvalHeld(m.state.value, "g2"))
+    m.startSignInAgain(secondSignIn)
+    repeat(5) { advanceTimeBy(100); runCurrent() }
+    assertEquals(listOf("https://mcp.stripe.com/oauth/1"), pages.opened)
+    assertEquals("g1", m.state.value.connecting)
+    assertEquals(bot.tafs.app.model.Words.Connect.anotherApproval, m.state.value.coachNotes["s2"])
+  }
+
   // With no approval waiting on the page (none this model started), Open again opens the same page, as before.
   @Test fun openAgainWithNoApprovalToRunOpensTheSamePage() = runTest {
     reads()

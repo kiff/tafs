@@ -1784,7 +1784,17 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     `retryListApproval`); closing the sheet ends the reads (`ConnectAppsTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
-  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
+  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9). **What the button says is what
+  happens:** signing reads the same rule (`CoachWords.approvesAsTap`), so a card that says "Approve with your fingerprint"
+  asks for it even while this phone holds a window, and its call doesn't ride on that window. Before, a card tafs cloud didn't
+  mark could still go as a tap inside a held window, under the fingerprint's words (`PlanqueTest`,
+  `aCardThatSaysFingerprintAsksForItEvenInsideAWindow`).
+- **One approval runs at a time** (`AppState.connecting`), and a card another approval holds says so, "Another approval
+  is going through. Approve this one once it's done.", never a greyed button with no word (`approvalHeld`). A sign-in the
+  owner came back from with no link (its vendor's page left) holds nothing: approving another card gives it up, as
+  **Open … again** does (`AppModel.giveWayToNewApproval`). Its wait ends quietly, Coach hears nothing from it, its card shows
+  Approve again, and the new approval goes on. Before, it held every card in every chat until tafs was opened again
+  (`CoachStartTest`, `aSignInLeftOnItsVendorsPageGivesWayToANewApproval`).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under

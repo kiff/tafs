@@ -294,6 +294,13 @@ object CoachWords {
     return if (what == null) answer else "$answer · $what"
   }
 
+  /**
+   * Approve on [c] is a tap inside the approval window this phone holds: only where tafs cloud marks it so (`signs.tap`,
+   * docs/chat.md) and KIFF's window words are here. The button says "Approve" then, and "Approve with your fingerprint"
+   * otherwise; signing follows the same answer, so what the button says is what happens.
+   */
+  fun approvesAsTap(c: SetupComponent, windowWords: String?): Boolean = windowWords != null && c.signs?.tap == true
+
   /** Taken by tafs cloud, before the thread shows it in kiff/agents' words. */
   val TAKEN get() = Words.Coach.answered
 
