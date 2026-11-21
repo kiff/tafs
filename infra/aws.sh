@@ -19,11 +19,6 @@
 #                              (push#tenant), and delivered alert ids (ttl).
 #                              And the chats each taf's owner archived
 #                              (archived#tenant#taf, ttl), kiff/tafs#82.
-#   tafs/anthropic-api-key     the model key; a person creates it before this script
-#                              runs and replicates it to eu-west-1 (see README). Made
-#                              here only when it doesn't exist, holding "unset".
-#                              tafs cloud doesn't read it: kiff/agents reads its
-#                              replica in eu-west-1, which runs the model.
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
 #                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
@@ -54,7 +49,6 @@ REGION=eu-west-1
 DATA_REGION=eu-west-1
 TAFS_PUBLIC_URL=https://cloud.tafs.kiff.dev
 FN=tafs-cloud
-SECRET=tafs/anthropic-api-key
 APNS_SECRET=tafs/apns-key
 # The "tafs push" key (Sandbox & Production, team scoped), and the app it pushes to.
 # Its id and the Apple team come from the environment: this repository is public.
@@ -81,13 +75,6 @@ if ! aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_
   aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com \
     --client-id-list sts.amazonaws.com >/dev/null
   echo "created the GitHub OIDC provider"
-fi
-
-# The secret, created as a placeholder. A person puts the real key in it.
-if ! SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$SECRET" --query ARN --output text 2>/dev/null); then
-  SECRET_ARN=$(aws secretsmanager create-secret --name "$SECRET" --description "tafs cloud: Anthropic API key" \
-    --secret-string unset --tags Key=project,Value=tafs --query ARN --output text)
-  echo "created secret $SECRET"
 fi
 
 # The APNs key, as a placeholder until a person puts the .p8 in it.
