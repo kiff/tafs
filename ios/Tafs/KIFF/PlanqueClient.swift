@@ -631,6 +631,9 @@ final class PlanqueClient {
         return (line("error"), line("words"))
     }
 
+    /// planque's code for a connect that ended failed (planque#329).
+    nonisolated static let connectFailed = "connect_failed"
+
     /// planque's machine-readable `code` on a refusal, when it sends one as text.
     nonisolated static func refusalCode(_ data: Data) -> String? {
         ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["code"] as? String
@@ -701,7 +704,12 @@ final class PlanqueClient {
             lastRefusalCode = Self.refusalCode(data)
             if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
-            throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
+            // A connect that ended failed on planque's side (planque#329, `409 connect_failed`): its `error` is the reason for
+            // Coach (a tool the vendor no longer lists, an argument's type), so the person reads that it isn't working on our
+            // side, never its 409's "It changed in the meantime". planque's own words for the person, when sent, come first.
+            // The status stays 409: sent again unchanged, it would fail the same way. As Android's `ErrorWords.CONNECT_FAILED`.
+            let words = said.words ?? (status == 409 && lastRefusalCode == Self.connectFailed ? Words.Error.down : nil)
+            throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: words)
         }
         return data
     }
