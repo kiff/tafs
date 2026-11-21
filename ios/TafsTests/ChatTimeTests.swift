@@ -1,0 +1,42 @@
+import XCTest
+@testable import Tafs
+
+/// When each chat message was sent (row 44, C), as Android's `ChatTimeTest`: 12/24 h, Today, Yesterday, an older
+/// date with and without its year, and where a header goes.
+final class ChatTimeTests: XCTestCase {
+    private var paris: Calendar {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "Europe/Paris")!
+        return c
+    }
+
+    private func date(_ y: Int, _ m: Int, _ d: Int, _ h: Int, _ min: Int) -> Date {
+        paris.date(from: DateComponents(year: y, month: m, day: d, hour: h, minute: min))!
+    }
+
+    func testTheTimeFollowsTheDevicesClock() {
+        let at = date(2026, 11, 20, 14, 5)
+        let en = Locale(identifier: "en")
+        XCTAssertEqual(ChatTime.time(at, zone: paris.timeZone, language: en, twentyFour: true), "14:05")
+        XCTAssertTrue(ChatTime.time(at, zone: paris.timeZone, language: en, twentyFour: false).hasPrefix("2:05"))
+        XCTAssertEqual(ChatTime.time(at, zone: paris.timeZone, language: Locale(identifier: "de"), twentyFour: true), "14:05")
+    }
+
+    func testTodayYesterdayThenTheDateWithItsYearOnlyWhenOther() {
+        let now = date(2026, 11, 20, 23, 0)
+        XCTAssertEqual(ChatTime.day(date(2026, 11, 20, 0, 5), now: now, calendar: paris), Words.Calendar.today)
+        XCTAssertEqual(ChatTime.day(date(2026, 11, 19, 23, 55), now: now, calendar: paris), Words.Chat.Day.yesterday)
+        let en = Locale(identifier: "en_US")
+        XCTAssertEqual(ChatTime.day(date(2026, 11, 18, 9, 0), now: now, calendar: paris, language: en), "Wed, Nov 18")
+        XCTAssertEqual(ChatTime.day(date(2025, 11, 18, 9, 0), now: now, calendar: paris, language: en), "Tue, Nov 18, 2025")
+        XCTAssertFalse(ChatTime.day(date(2026, 11, 18, 9, 0), now: now, calendar: paris, language: Locale(identifier: "de")).isEmpty)
+    }
+
+    /// Five messages over three days: three headers, at the first message of each day, in the account's zone.
+    func testAHeaderWhereEachDayStarts() {
+        let dates = [date(2026, 11, 18, 9, 0), date(2026, 11, 18, 23, 59), date(2026, 11, 19, 0, 1),
+                     date(2026, 11, 19, 8, 0), date(2026, 11, 20, 7, 0)]
+        let starts = dates.indices.filter { ChatTime.startsDay(dates, at: $0, calendar: paris) }
+        XCTAssertEqual(starts, [0, 2, 4])
+    }
+}

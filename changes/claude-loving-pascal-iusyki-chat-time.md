@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** every chat, Coach's and each taf's, shows when each message was sent: a small time under it, following the device's 12- or 24-hour clock in the app's language, and a header where a day starts (Today, Yesterday, then the date) ([chat.md](docs/chat.md)).

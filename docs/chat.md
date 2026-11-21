@@ -702,4 +702,7 @@ message and a line where a day starts, with none of its code). Coach's chat is t
   `DateFormat.getBestDateTimePattern`; a pattern `java.time` can't read falls back to the language's short form. Android:
   `messageTime` and `chatDay` (`model/AccountTime.kt`), drawn in `TafChatView` (`ChatTimesTest`). The watch: docs/watch-wear.md,
   in the same account's zone, which the phone sends it (`WatchReply.Tafs.zone`), so a message reads the same time on both.
-- **iPhone, iPad, Apple Watch and the Mac follow** (mac12), with `Date.FormatStyle` and `setLocalizedDateFormatFromTemplate`.
+- **iPhone, iPad and the Mac:** `ChatTime` (`ios/Tafs/Model/ChatTime.swift`, `ChatTimeTests`), the same rule with
+  `setLocalizedDateFormatFromTemplate` (`Hm`/`hm` from the device's `j`, `EEEMMMd`/`EEEMMMdy`), drawn as `ChatDayHeader` and
+  `ChatSentTime` in `TafChatView` and Coach's `SetupChatView`. It replaces the time iOS drew between parts an hour apart.
+  The Apple Watch follows.
