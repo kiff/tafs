@@ -52,7 +52,7 @@ class WatchActivity : ComponentActivity() {
     )
   }
 
-  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2 && BuildConfig.KEEP_AUDIO) }
+  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2 && BuildConfig.KEEP_AUDIO, phoneFallback = WATCH_V2) }
   private val playback by lazy { FilePlayback() }
   private var speaker: Speaker? = null
 

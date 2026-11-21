@@ -152478,6 +152478,65 @@
         }
       }
     },
+    "watch.no_offline_speech": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy kann Gesprochenes in dieser Sprache nicht selbst in Text umwandeln. Tipp stattdessen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone can't turn speech into text in this language by itself. Type instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono no puede pasar la voz a texto por sí solo en este idioma. Escribe en su lugar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone ne peut pas transformer seul la parole en texte dans cette langue. Écrivez plutôt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono non può trasformare da solo la voce in testo in questa lingua. Scrivi invece."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 언어에서는 휴대폰이 자체적으로 음성을 텍스트로 변환할 수 없습니다. 대신 입력하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon kan spraak in deze taal niet zelf omzetten in tekst. Typ in plaats daarvan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon nie potrafi sam zamienić mowy na tekst w tym języku. Napisz zamiast tego."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não consegue converter sozinho a voz em texto neste idioma. Escreva em vez disso."
+          }
+        }
+      }
+    },
     "watch.not_sure": {
       "extractionState": "manual",
       "localizations": {
@@ -154791,6 +154850,65 @@
           "stringUnit": {
             "state": "translated",
             "value": "Escuta %1$@ ms · receção %2$@ ms · resultado %3$@ ms"
+          }
+        }
+      }
+    },
+    "watch.transcribing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy macht Text daraus…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning it into text on your phone…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono lo está pasando a texto…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone le transforme en texte…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono lo sta trasformando in testo…"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "휴대폰에서 텍스트로 변환하는 중…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon maakt er tekst van…"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon zamienia to na tekst…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel está a convertê-lo em texto…"
           }
         }
       }

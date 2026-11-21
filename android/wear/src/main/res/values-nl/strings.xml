@@ -101,6 +101,7 @@
         <item quantity="one">%1$s wacht op jou</item>
         <item quantity="other">%1$s wachten op jou</item>
     </plurals>
+    <string name="watch_no_offline_speech">Je telefoon kan spraak in deze taal niet zelf omzetten in tekst. Typ in plaats daarvan.</string>
     <string name="watch_not_sure">Onzeker of het aankwam</string>
     <string name="watch_nothing_sent_until">Er wordt niets verstuurd tot je goedkeurt.</string>
     <string name="watch_nothing_waits">Er wacht niets op je.</string>
@@ -142,6 +143,7 @@
     <string name="watch_swipe_settings">Veeg naar links voor zijn instellingen</string>
     <string name="watch_tap_start">Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.</string>
     <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
+    <string name="watch_transcribing">Je telefoon maakt er tekst van…</string>
     <string name="watch_trust">Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.</string>
     <string name="watch_type">Typen</string>
     <string name="watch_type_hint">Schrijf aan Coach…</string>

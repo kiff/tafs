@@ -55,6 +55,9 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
     return if (!stopping && now() - lastWordsAt < quietMs) Next.Listen else Next.Done(shown(null))
   }
 
+  /** What was heard so far, across stretches. */
+  fun heardSoFar(): String = shown(null)
+
   /** The recognizer failed outright: done, with what was heard so far. */
   fun failed(): Next = if (cancelled) Next.Cancelled else Next.Done(shown(null))
 
@@ -63,6 +66,17 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
   companion object {
     /** About 8 s of quiet ends it, as WhatsApp's recording does when the person has clearly finished. */
     const val QUIET_MS = 8_000L
+
+    /**
+     * The recognizer's errors where the watch records the rest itself and the phone turns it into text (row 44, A): no network,
+     * the server, the language, the recognizer busy. Not the microphone's own errors, nor a missing permission.
+     */
+    fun fallsBackToPhone(error: Int): Boolean = error in setOf(
+      android.speech.SpeechRecognizer.ERROR_NETWORK, android.speech.SpeechRecognizer.ERROR_NETWORK_TIMEOUT,
+      android.speech.SpeechRecognizer.ERROR_SERVER, android.speech.SpeechRecognizer.ERROR_SERVER_DISCONNECTED,
+      android.speech.SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED, android.speech.SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE,
+      android.speech.SpeechRecognizer.ERROR_TOO_MANY_REQUESTS, android.speech.SpeechRecognizer.ERROR_RECOGNIZER_BUSY,
+    )
 
     /** The recognizer's errors that mean a quiet stretch, not a failure: listen on. */
     fun isQuiet(error: Int): Boolean =

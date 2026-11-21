@@ -51,6 +51,7 @@
     "one": "{count} needs you",
     "other": "{count} need you"
   },
+  "watch.no_offline_speech": "Your phone can't turn speech into text in this language by itself. Type instead.",
   "watch.not_sure": "Not sure it arrived",
   "watch.nothing_sent_until": "Nothing is sent until you approve.",
   "watch.nothing_waits": "Nothing waits for you.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Swipe left for its settings",
   "watch.tap_start": "Tap Start, then speak. Your words show here as you talk.",
   "watch.timing": "Listen {listen} ms · receipt {receipt} ms · result {result} ms",
+  "watch.transcribing": "Turning it into text on your phone…",
   "watch.trust": "This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.",
   "watch.type": "Type",
   "watch.type_hint": "Write to Coach…",

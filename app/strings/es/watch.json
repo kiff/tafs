@@ -51,6 +51,7 @@
     "one": "{count} te necesita",
     "other": "{count} te necesitan"
   },
+  "watch.no_offline_speech": "Tu teléfono no puede pasar la voz a texto por sí solo en este idioma. Escribe en su lugar.",
   "watch.not_sure": "No se sabe si llegó",
   "watch.nothing_sent_until": "No se envía nada hasta que apruebes.",
   "watch.nothing_waits": "Nada te espera.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Desliza a la izquierda para sus ajustes",
   "watch.tap_start": "Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.",
   "watch.timing": "Escucha {listen} ms · acuse {receipt} ms · resultado {result} ms",
+  "watch.transcribing": "Tu teléfono lo está pasando a texto…",
   "watch.trust": "Este reloj no guarda contraseñas ni claves y no aprueba nada: lo que necesita tu sí espera a tu teléfono. Tus tafs solo hacen lo que permiten sus Cards.",
   "watch.type": "Escribir",
   "watch.type_hint": "Escribe a Coach…",

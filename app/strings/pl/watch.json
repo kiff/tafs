@@ -59,6 +59,7 @@
     "one": "{count} czeka na Ciebie",
     "other": "{count} czeka na Ciebie"
   },
+  "watch.no_offline_speech": "Telefon nie potrafi sam zamienić mowy na tekst w tym języku. Napisz zamiast tego.",
   "watch.not_sure": "Nie wiadomo, czy dotarło",
   "watch.nothing_sent_until": "Nic nie zostanie wysłane, dopóki nie zatwierdzisz.",
   "watch.nothing_waits": "Nic na Ciebie nie czeka.",
@@ -102,6 +103,7 @@
   "watch.swipe_settings": "Przesuń w lewo, by zobaczyć ustawienia",
   "watch.tap_start": "Dotknij Start i mów. Twoje słowa pojawiają się tu na bieżąco.",
   "watch.timing": "Słuchanie {listen} ms · potwierdzenie {receipt} ms · wynik {result} ms",
+  "watch.transcribing": "Telefon zamienia to na tekst…",
   "watch.trust": "Ten zegarek nie przechowuje haseł ani kluczy i niczego nie zatwierdza: to, co wymaga Twojej zgody, czeka na telefon. Twoje tafs robią tylko to, na co pozwalają ich Cards.",
   "watch.type": "Pisz",
   "watch.type_hint": "Napisz do Coacha…",
