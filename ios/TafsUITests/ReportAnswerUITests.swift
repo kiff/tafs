@@ -59,10 +59,12 @@ final class ReportAnswerUITests: TafsUITestCase {
         for _ in 0..<3 where !sheet {
             if springboard.alerts.firstMatch.exists { letTheMonitorRun(app) }
             var shown = false
+            // The last report's sheet can still be sliding away after Done, covering the answer, and a
+            // press then fails the test (tafs#1611's run): wait until the sheet's Send is gone. Never
+            // `isHittable` on the answer: where XCTest can't compute its hit point, asking fails the test
+            // (#1614's first run) though the press itself works.
+            _ = gone(send, within: 10)
             for _ in 0..<3 where !shown {
-                // The last report's sheet can still be sliding away after Done: the answer under it
-                // isn't hittable yet, and a press then fails the test (tafs#1611's run). Wait for it.
-                guard hittable(answer, within: 10) else { continue }
                 answer.press(forDuration: 1.2)
                 shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
             }
@@ -95,6 +97,13 @@ final class ReportAnswerUITests: TafsUITestCase {
     private func done(_ app: XCUIApplication, _ words: String) -> Bool {
         let shown = app.staticTexts["report-done"]
         return shown.waitForExistence(timeout: 10) && shown.label == words
+    }
+
+    /// Whether `element` is gone within `seconds`: no longer in the app's tree.
+    @MainActor
+    private func gone(_ element: XCUIElement, within seconds: TimeInterval) -> Bool {
+        let away = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        return XCTWaiter().wait(for: [away], timeout: seconds) == .completed
     }
 
     /// Whether `element` can be tapped within `seconds`: it exists and has a hit point.
