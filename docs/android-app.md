@@ -1500,6 +1500,11 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   confirmation, so a Chrome is never confirmed without its device. iOS signs both behind one Face ID; Android's approval key
   unlocks for one signature, so it asks twice. KIFF's refusal, in its own words, confirms nothing.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- **Approving a browser grant (groundwork, not wired into approval yet):** `ChromePairing.sitesBytes` and `sensitiveBytes`
+  build `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}` and `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`,
+  as iOS's. `ChromePairing.isSensitive` marks the sites the extension blocks unless the owner allows them by name: the
+  extension's list and label pattern, with the host read as its `hostOf` reads it (lower case, an ideographic full stop as a
+  dot, no trailing dot). `ChromePairingTest` checks all three against vectors/chrome-grant.json and chrome-sensitive.json.
 - Its lines are `chrome.*`, shared with iOS.
 - **Tests:** `ChromePairingTest` (the shared vector with and without `kiff_offer`, a refused proof, the KIFF offer read only
   as a Chrome extension in software, raw `r‖s` verified as P1363) and `ChromesTest`:
