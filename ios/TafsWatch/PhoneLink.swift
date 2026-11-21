@@ -37,13 +37,16 @@ extension PhoneLink: PhoneAsking {
         // WatchConnectivity can neither reply nor fail (seen on the simulator, possible on a watch): the watch would wait on
         // its send screen with no words. Past the limit it's "Your phone isn't in reach", and a Send tried again goes under
         // the same id, which tafs cloud takes once.
-        return await PhoneWait.first { (answer: @escaping @Sendable (WatchReply?) -> Void) in
+        let reply = await PhoneWait.first { (answer: @escaping @Sendable (WatchReply?) -> Void) in
             session.sendMessageData(data, replyHandler: { @Sendable reply in
                 answer(WatchMessage.decode(WatchReply.self, from: reply))
             }, errorHandler: { @Sendable _ in
                 answer(nil)
             })
         }
+        // Whatever was asked, a signed-out phone drops the account's zone (agentgabo on #1590).
+        WatchAccountZone.heard(reply)
+        return reply
     }
 }
 
