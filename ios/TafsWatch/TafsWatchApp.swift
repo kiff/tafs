@@ -15,6 +15,8 @@ struct TafsWatchApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // A recording an app ended mid-transfer left behind (row 44, A).
+        VoiceModel.sweepLeftovers()
         PhoneLink.shared.start()
     }
 

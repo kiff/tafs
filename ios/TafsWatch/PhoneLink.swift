@@ -84,3 +84,40 @@ enum PhoneWait {
         }
     }
 }
+
+/// The watch's own recording, to the phone and its text back (row 44, A; `WatchVoice`, behind its switch). The file goes
+/// over `transferFile`, queued and delivered even while tafs isn't open on the phone; `transcribe` then waits for its text,
+/// longer than a read since it covers the file's way and the recognizer. A transfer still on its way is called off when the
+/// recording is thrown away, so the phone never gets it.
+extension PhoneLink: VoiceSending {
+    /// The file's way, the phone waiting for it, and the recognizer, for 30 s of speech.
+    static let transcribeLimit: TimeInterval = 45
+
+    @MainActor
+    func transcribe(_ file: URL, id: String) async -> WatchReply? {
+        let session = WCSession.default
+        guard session.activationState == .activated, session.isReachable else { return nil }
+        let transfer = session.transferFile(file, metadata: [WatchVoice.metadataKey: id])
+        PhoneLink.transfers[id] = transfer
+        defer { PhoneLink.transfers[id] = nil }
+        let data = WatchMessage.encode(WatchRequest(.transcribe, made: Date(), message: id))
+        let reply = await PhoneWait.first(within: Self.transcribeLimit) { (answer: @escaping @Sendable (WatchReply?) -> Void) in
+            session.sendMessageData(data, replyHandler: { @Sendable reply in
+                answer(WatchMessage.decode(WatchReply.self, from: reply))
+            }, errorHandler: { @Sendable _ in
+                answer(nil)
+            })
+        }
+        if reply == nil { transfer.cancel() }
+        WatchAccountZone.heard(reply)
+        return reply
+    }
+
+    @MainActor
+    func cancelTranscribe(_ id: String) {
+        PhoneLink.transfers.removeValue(forKey: id)?.cancel()
+    }
+
+    /// Each recording's transfer while its text is asked for.
+    @MainActor private static var transfers: [String: WCSessionFileTransfer] = [:]
+}
