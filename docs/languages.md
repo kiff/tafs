@@ -501,6 +501,40 @@ other (20 and up).
 | plan (billing) | plan |
 | Cancel / Continue | Anulați / Continuați |
 
+### Bulgarian (bg)
+
+Addressed as **вие**; buttons are nouns ("Одобряване", "Отказ", "Продължаване"). taf, Card, Coach, KIFF and Setup stay
+as names in Latin letters, as Greek writes them: "taf" is masculine (plural "tafs") and Card feminine ("неговата
+Card"), and neither takes the article. Every device word is masculine (телефон, таблет, компютър, Mac), so "този
+{device}" always agrees. Apple's menu paths are the Bulgarian ones ("Настройки", "Системни настройки"); Windows' are
+"Настройки". The plural forms are one and other.
+
+| English | Bulgarian |
+|---|---|
+| Needs you | Чака ви |
+| Approve / Approve once | Одобряване / Еднократно одобрение |
+| Refuse | Отказ |
+| held | задържано |
+| Halt / Halted | Спиране / Спряно |
+| Stopped | Приключил |
+| Pause / Paused | Пауза / На пауза |
+| Resume | Възобновяване |
+| Revoke | Оттегляне |
+| Record | Дневник |
+| Connect / connection | Свързване / връзка |
+| Pair / Unpair | Сдвояване / Премахване на сдвояването |
+| Account | Акаунт |
+| limit / spend limit | лимит / лимит на разходите |
+| credits / credit pack | кредити / пакет кредити |
+| passkey | ключ за достъп |
+| Sign in / Sign out | Вход / Изход |
+| Inbox | Входящи |
+| Overview | Преглед |
+| Calendar | Календар |
+| Usage | Използване |
+| plan (billing) | план |
+| Cancel / Continue | Отказ / Продължаване |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

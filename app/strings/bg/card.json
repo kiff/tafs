@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Цялата Card",
+    "other": "Всички Cards"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, след това ви пита",
+  "card.calls_left": {
+    "one": "остава {count} повикване",
+    "other": "остават {count} повиквания"
+  },
+  "card.calls_left_line": {
+    "one": "остава {count} повикване {window} от {limit}",
+    "other": "остават {count} повиквания {window} от {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} от {count} повикване {window}",
+    "other": "{used} от {count} повиквания {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} повикване {window}",
+    "other": "{count} повиквания {window}"
+  },
+  "card.card_confirmed_kiff": "Card · потвърдена от KIFF",
+  "card.card_draft_kiff": "Card · чернова · от KIFF",
+  "card.card_got_room_call_needed": "Неговата Card получи лимита, от който това повикване имаше нужда, докато общият лимит не се нулира",
+  "card.card_not_issued": "Card не беше издадена. ",
+  "card.card_revoked": "Card е оттеглена",
+  "card.check.always_asks": "{rule}: винаги ви пита",
+  "card.check.never_allowed": "{rule}: никога не е разрешено",
+  "card.check.not_on_card": "Не е в Card на този taf",
+  "card.check.over_count": {
+    "one": "Над {count} {window}",
+    "other": "Над {count} {window}"
+  },
+  "card.check.over_each": "Над {amount} всяко",
+  "card.check.over_total": "Над {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cards"
+  },
+  "card.ended": "Приключила",
+  "card.ended_on": "Приключила на {date}",
+  "card.ends": "Приключва",
+  "card.extra_room": "+{extra} допълнителен лимит {window}",
+  "card.extra_room_prefix": "+{formatted} допълнителен лимит ",
+  "card.extra_room_until": "+{extra} допълнителен лимит до {ends}",
+  "card.figure_left": "остават {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cards"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} повикване {window}{each}: това би било {nth} поред{item}",
+    "other": "{count} повиквания {window}{each}: това би било {nth} поред{item}"
+  },
+  "card.held.each_call_asks": "Всяко повикване първо ви пита",
+  "card.held.for_each": " за всеки {name}",
+  "card.held.for_each_join": " за всеки ",
+  "card.held.for_item": " за {item}",
+  "card.held.over_count": {
+    "one": "Над лимита му от {count} повикване: това би било {nth} поред",
+    "other": "Над лимита му от {count} повиквания: това би било {nth} поред"
+  },
+  "card.held.over_one_call": "{amount} надвишава лимита от {cap} за едно повикване",
+  "card.held.over_total": "{amount} би надвишило общия лимит от {cap}",
+  "card.hero.calls_left_of": {
+    "one": "повикване остава {window} от {limit}",
+    "other": "повиквания остават {window} от {limit}"
+  },
+  "card.hero.calls_use_unavailable": "повиквания {window} · използването не е налично",
+  "card.hero.left_of": "остава {window} от {limit}",
+  "card.hero.left_of_extra": "остава {window} от {base} + {extra} допълнителен лимит",
+  "card.hero.left_of_extra_until": "остава {window} от {base} + {extra} допълнителен лимит до {ends}",
+  "card.hero.left_of_note": "остава {window} от {limit}{note}",
+  "card.hero.no_currency": "без валута",
+  "card.hero.no_currency_suffix": " · без валута",
+  "card.hero.use_unavailable": "{window} · използването не е налично",
+  "card.hero.use_unavailable_note": "{label} · използването не е налично{note}",
+  "card.how_counted": "Как се брои",
+  "card.issue_prompt": "Издаване на Card за {taf}",
+  "card.issued_by": "Издадена от",
+  "card.issued_by_account": "Акаунтът",
+  "card.issued_by_named": "Издадена от {who}",
+  "card.its_card": "Неговата Card",
+  "card.kiff_did_not_revoke_cards": "KIFF не оттегли {cards_left} от неговите Cards: оттеглете ги в KIFF.",
+  "card.left": "остават {amount} {window}",
+  "card.left_extra_room": "остава {current} от {own} + {extra} допълнителен лимит{until}{note}",
+  "card.limit_can_not_raised_right": "Лимитът не може да бъде увеличен оттук в момента.",
+  "card.limit_raised_read_balance_again": "Лимитът беше увеличен. Прочетете наличността отново, преди да го увеличите пак.",
+  "card.line.calls_in_window": {
+    "one": "{count} повикване {window}{then}",
+    "other": "{count} повиквания {window}{then}"
+  },
+  "card.line.more_asks": "; за повече първо ви пита",
+  "card.line.then_asks": ", след това ви пита",
+  "card.line.total_in_window": "общо {amount} {window}{then}",
+  "card.line.up_to_each": "до {amount} всяко",
+  "card.more": {
+    "one": "още {count}",
+    "other": "още {count}"
+  },
+  "card.no_actions": "Все още няма действия",
+  "card.no_actions_short": "все още няма действия",
+  "card.no_currency": "{amount} (без валута)",
+  "card.no_end_date": "Без крайна дата",
+  "card.outcome.not_a_resource": "Не е от ресурсите на Card",
+  "card.outcome.outside": "Извън Card",
+  "card.outcome.over_one_action": "Над лимита на Card за едно действие",
+  "card.outcome.over_total": "Над общия лимит на Card",
+  "card.outside_held": "Извън: задържано за вас",
+  "card.outside_refused": "Извън: отказано",
+  "card.over_limit_calls_would": "Над лимита му от {limit} повиквания: това би било {nth} поред",
+  "card.revoke_failed": "KIFF не оттегли Card. {why}",
+  "card.revoked": "Оттеглена",
+  "card.rule.always_asks": "винаги ви пита",
+  "card.rule.at_most_each": "≤ {amount} всяко",
+  "card.rule.at_most_each_refused_above": "≤ {amount} всяко · над това се отказва",
+  "card.rule.calls": {
+    "one": "{count} повикване {window}",
+    "other": "{count} повиквания {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} повикване {window}, след това ви пита",
+    "other": "{count} повиквания {window}, след това ви пита"
+  },
+  "card.rule.in_total": "общо {amount} {window}",
+  "card.rule.never": "никога",
+  "card.rule.total_then_asks": "общо {amount} {window}, след това ви пита",
+  "card.rule.up_to_each": "до {amount} всяко; за повече първо ви пита",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card на taf",
+  "card.tools": {
+    "one": "{count} инструмент",
+    "other": "{count} инструмента"
+  },
+  "card.until": "До",
+  "card.until_date": "До {date}",
+  "card.until_ends": " до {ends}",
+  "card.used_of": "{used} от {limit} {window}",
+  "card.window.a_day": "на ден",
+  "card.window.a_month": "на месец",
+  "card.window.a_week": "на седмица",
+  "card.window.any_day": "за всеки 24 часа",
+  "card.window.any_hour": "за всеки час",
+  "card.window.any_week": "за всеки 7 дни",
+  "card.window.in_total": "общо",
+  "card.window.in_total_window": "общо {window}",
+  "card.window.last_day": "за последните 24 часа",
+  "card.window.last_hour": "за последния час",
+  "card.window.last_week": "за последните 7 дни",
+  "card.window.so_far": "досега",
+  "card.window.this_month": "този месец",
+  "card.window.this_week": "тази седмица",
+  "card.window.today": "днес",
+  "card.within_card": "в рамките на Card"
+}

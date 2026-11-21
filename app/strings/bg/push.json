@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Резюмета",
+  "push.channel.briefs_description": "Вашето резюме в зададените часове.",
+  "push.channel.holds_description": "Повикване е задържано за вашия отговор. Нищо не се изпраща, докато не го одобрите.",
+  "push.channel.other": "Други известия",
+  "push.channel.other_description": "Заявки за задачи и отговорите им, без звук.",
+  "push.channel.urgent_description": "Това, което не може да чака следващото резюме, със звук.",
+  "push.open_needs_you": "Отворете „Чака ви“, за да отговорите.",
+  "push.open_taf": "Отворете taf, за да видите.",
+  "push.open_usage": "Отворете „План и използване“, за да видите."
+}
