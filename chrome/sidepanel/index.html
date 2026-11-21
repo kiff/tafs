@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>tafs</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header><span class="mark">tafs</span><span id="conn" class="conn"></span></header>
+
+    <section id="pair" hidden>
+      <h1 data-m="pair_title"></h1>
+      <p data-m="pair_body"></p>
+      <p class="note" data-m="pair_profile"></p>
+      <form id="pairForm">
+        <label for="code" data-m="pair_code_label"></label>
+        <input id="code" autocomplete="off" spellcheck="false" maxlength="13" inputmode="text" />
+        <button type="submit" data-m="pair_button"></button>
+      </form>
+      <p id="pairStatus" class="status" role="status"></p>
+    </section>
+
+    <section id="paired" hidden>
+      <h1 id="pairedName"></h1>
+      <p data-m="paired_body"></p>
+      <div id="runs"></div>
+      <p id="idle" class="note" data-m="idle"></p>
+      <button id="unpair" class="quiet" data-m="unpair"></button>
+    </section>
+
+    <template id="runTemplate">
+      <article class="run">
+        <h2 class="taf"></h2>
+        <p class="where"></p>
+        <p class="paused" hidden></p>
+        <div class="asks"></div>
+        <ol class="steps"></ol>
+        <div class="buttons">
+          <button class="pause" data-m="pause"></button>
+          <button class="resume" data-m="resume" hidden></button>
+          <button class="stop" data-m="stop"></button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>
