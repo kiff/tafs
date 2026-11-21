@@ -38,7 +38,10 @@ describe("Setup's definition on kiff/agents", () => {
   // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
   it("writes even its first working line in the owner's language, never an example's", () => {
     const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    // Naming one language cued it: on Sonnet the waiting line went out in Spanish to English owners, with no Spanish
+    // left in the core but this rule's own example (Eval 44861045509, billing).
+    expect(core).toContain("the language they write in, and no other. Their last message sets it, never an example here.");
+    expect(core).not.toMatch(/Spanish|French|German/);
     expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
     expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
   });
