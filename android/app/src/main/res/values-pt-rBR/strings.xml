@@ -51,7 +51,7 @@
     <string name="approval_approve">Aprovar</string>
     <string name="approval_approve_again_on_device">Aprovar novamente com este %1$s</string>
     <string name="approval_approve_with">Aprovar com %1$s</string>
-    <string name="approval_approving">A aprovar…</string>
+    <string name="approval_approving">Aprovando…</string>
     <string name="approval_approving_asks_none_set_up">Aprovar pede %1$s, e nenhum está configurado neste %2$s. Configure-o em %3$s e depois volte.</string>
     <string name="approval_approving_needs_none_set_up">Aprovar requer %1$s, e nenhum está configurado. Configure-o em %2$s.</string>
     <string name="approval_approving_needs_passcode_set_passcode">Aprovar requer um código e %1$s. Defina um código em %2$s e depois adicione %3$s.</string>
@@ -283,7 +283,7 @@
     <string name="calendar_previous_day">Dia anterior</string>
     <string name="calendar_previous_month">Mês anterior</string>
     <string name="calendar_previous_week">Semana anterior</string>
-    <string name="calendar_reading">A ler o calendário…</string>
+    <string name="calendar_reading">Lendo o calendário…</string>
     <string name="calendar_slot_at">%1$s, às %2$s</string>
     <plurals name="calendar_slot_times">
         <item quantity="one">%2$s, %1$s vez a partir das %3$s</item>
@@ -467,7 +467,7 @@
     <string name="chat_answer_copy_label">Copiar esta resposta</string>
     <string name="chat_answer_more">Mais ações</string>
     <string name="chat_answered_card_above">Respondeu ao cartão acima</string>
-    <string name="chat_answering">A responder</string>
+    <string name="chat_answering">Respondendo</string>
     <string name="chat_attach_not_a_photo">Não foi possível ler %1$s como fotografia.</string>
     <string name="chat_attach_too_big">%1$s tem %2$s; o máximo é %3$s.</string>
     <string name="chat_attach_unreadable">Não foi possível ler %1$s.</string>
@@ -509,7 +509,7 @@
         <item quantity="other">Uma mensagem leva no máximo %1$s arquivos.</item>
     </plurals>
     <string name="chat_file_unreadable">Não foi possível ler esse arquivo.</string>
-    <string name="chat_file_uploading">A carregar</string>
+    <string name="chat_file_uploading">Enviando</string>
     <string name="chat_held">Aguarda até terminar e depois segue como a sua próxima mensagem</string>
     <string name="chat_it_fallback">Ele</string>
     <string name="chat_it_lower">ele</string>
@@ -554,7 +554,7 @@
     <string name="chat_stopped_out_of_room">%1$s parou: a resposta ficou sem espaço. Peça algo mais curto, ou uma parte de cada vez.</string>
     <string name="chat_taf_is_answering">%1$s está respondendo</string>
     <string name="chat_the_taf">O taf</string>
-    <string name="chat_thinking">A pensar…</string>
+    <string name="chat_thinking">Pensando…</string>
     <string name="chat_thread_not_loaded">Não foi possível carregar a conversa. %1$s</string>
     <plurals name="chat_too_long">
         <item quantity="one">Tem mais de %1$s carácter. Diga-o em menos palavras.</item>
@@ -583,22 +583,22 @@
         <item quantity="one">Trabalhou %2$s · %1$s passo, %3$s falhou</item>
         <item quantity="other">Trabalhou %2$s · %1$s passos, %3$s falharam</item>
     </plurals>
-    <string name="chat_working">A trabalhar…</string>
+    <string name="chat_working">Trabalhando…</string>
     <string name="chat_working_on">%1$s…</string>
     <string name="chat_write_next">Escrever a próxima mensagem</string>
-    <string name="chat_writing">A escrever…</string>
+    <string name="chat_writing">Escrevendo…</string>
     <string name="chat_you_stopped">Parou %1$s.</string>
     <string name="chat_your_taf">o seu taf</string>
-    <string name="coach_activity_card">A preparar o Card…</string>
+    <string name="coach_activity_card">Preparando o Card…</string>
     <string name="coach_activity_connection">Cuidando da conexão…</string>
-    <string name="coach_activity_install_version">A instalar a nova versão…</string>
-    <string name="coach_activity_kiff">A verificar o KIFF…</string>
-    <string name="coach_activity_pause">A pausar ou retomar um taf…</string>
-    <string name="coach_activity_run">A ler o que um taf fez…</string>
-    <string name="coach_activity_stop">A parar uma execução…</string>
-    <string name="coach_activity_tafs">A ler os seus tafs…</string>
-    <string name="coach_activity_task">A entregar a tarefa ao taf…</string>
-    <string name="coach_activity_try_version">A experimentar a nova versão…</string>
+    <string name="coach_activity_install_version">Instalando a nova versão…</string>
+    <string name="coach_activity_kiff">Verificando o KIFF…</string>
+    <string name="coach_activity_pause">Pausando ou retomando um taf…</string>
+    <string name="coach_activity_run">Lendo o que um taf fez…</string>
+    <string name="coach_activity_stop">Parando uma execução…</string>
+    <string name="coach_activity_tafs">Lendo os seus tafs…</string>
+    <string name="coach_activity_task">Entregando a tarefa ao taf…</string>
+    <string name="coach_activity_try_version">Experimentando a nova versão…</string>
     <string name="coach_already_approved">Já aprovado</string>
     <string name="coach_answer_approve">Aprovar</string>
     <string name="coach_answer_approve_failed">Aprovar · não foi concluído</string>
@@ -624,7 +624,7 @@
     <string name="coach_answer_did_not_reach_setup">A sua resposta não chegou à Configuração. Toque novamente.</string>
     <string name="coach_answer_not_reached">A sua resposta não chegou à Configuração. %1$s</string>
     <string name="coach_answered">Respondido.</string>
-    <string name="coach_answering">A enviar a sua resposta…</string>
+    <string name="coach_answering">Enviando a sua resposta…</string>
     <string name="coach_approval_decline">Recusar</string>
     <string name="coach_approval_title">O Coach pede a sua aprovação</string>
     <string name="coach_approved_signed">Aprovado · login feito em %1$s</string>
@@ -675,7 +675,7 @@
     <string name="coach_drag_make_wider_narrower">Arraste para o alargar ou estreitar</string>
     <string name="coach_drive_cant">O Coach não pode conduzir: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Não iniciado: não foi confirmado.</string>
-    <string name="coach_driving">A conduzir</string>
+    <string name="coach_driving">Conduzindo</string>
     <string name="coach_earlier_request">Pedido anterior</string>
     <string name="coach_folds_plan">Recolhe o plano</string>
     <string name="coach_full_screen">Tela cheia</string>
@@ -687,7 +687,7 @@
     <string name="coach_improve_taf">Melhorar %1$s</string>
     <string name="coach_intro">Indique um app para o seu taf, como o seu fornecedor de pagamentos.</string>
     <string name="coach_kiff_counts_way">O KIFF conta desta forma</string>
-    <string name="coach_making_live">A pôr em produção…</string>
+    <string name="coach_making_live">Colocando em produção…</string>
     <string name="coach_name_tool_taf_should_work">Indique um app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$s.</string>
     <string name="coach_needs_you_approve">Precisa de você · aprovar</string>
     <string name="coach_needs_you_question">Precisa de você · uma pergunta</string>
@@ -732,23 +732,23 @@
     <string name="coach_questions_the_question">A pergunta</string>
     <string name="coach_questions_your_answers">"As suas respostas · "</string>
     <string name="coach_reading_kiff_words">Lendo as palavras do KIFF para esta conexão…</string>
-    <string name="coach_reading_kiff_words_short">A ler as palavras do KIFF…</string>
+    <string name="coach_reading_kiff_words_short">Lendo as palavras do KIFF…</string>
     <string name="coach_result_new_version">Nova versão · %1$s</string>
     <string name="coach_result_open">Abrir %1$s</string>
-    <string name="coach_result_preparing">A preparar a nova versão…</string>
+    <string name="coach_result_preparing">Preparando a nova versão…</string>
     <string name="coach_result_see_it">Ver em %1$s</string>
     <string name="coach_result_see_version">Ver a versão %1$s</string>
     <string name="coach_result_set_up">Configurado · %1$s</string>
     <string name="coach_result_version_made">A versão %1$s está criada.</string>
     <string name="coach_send_when_answer_done">Enviar quando esta resposta terminar</string>
-    <string name="coach_setting_up">A configurar %1$s…</string>
+    <string name="coach_setting_up">Configurando %1$s…</string>
     <string name="coach_setup_changed_request_see_below">A Configuração alterou este pedido: veja abaixo</string>
     <string name="coach_setup_needs">A Configuração precisa</string>
     <string name="coach_shape_approve_named">Aprovar %1$s</string>
     <string name="coach_shape_draft_until_approved">Um rascunho até o aprovar na conversa.</string>
     <string name="coach_shape_not_connected">Não conectado</string>
     <string name="coach_shape_sign_in_at">"Entrar em "</string>
-    <string name="coach_shape_taking_shape">A ganhar forma</string>
+    <string name="coach_shape_taking_shape">Ganhando forma</string>
     <string name="coach_shape_the_connection">a conexão</string>
     <string name="coach_shows_approval">Mostra a aprovação</string>
     <string name="coach_shows_earlier_request">Mostra o pedido anterior</string>
@@ -774,7 +774,7 @@
     <string name="coach_the_vendor">o fornecedor</string>
     <string name="coach_title">Coach</string>
     <string name="coach_tools_give">Dar ao Coach as suas ferramentas</string>
-    <string name="coach_tools_giving">A dar…</string>
+    <string name="coach_tools_giving">Dando…</string>
     <string name="coach_tools_title">Ferramentas do Coach</string>
     <string name="coach_tools_eyebrow">Ferramentas</string>
     <string name="coach_tools_not_given">As ferramentas do Coach não foram dadas. %1$s</string>
@@ -790,7 +790,7 @@
     <string name="common_cancel">Cancelar</string>
     <string name="common_choose">Escolher</string>
     <string name="common_close">Fechar</string>
-    <string name="common_confirming">A confirmar…</string>
+    <string name="common_confirming">Confirmando…</string>
     <string name="common_continue">Continuar</string>
     <string name="common_copied">Copiado</string>
     <string name="common_copy">Copiar</string>
@@ -801,7 +801,7 @@
     <string name="common_done">Concluído</string>
     <string name="common_hide_the_list">Ocultar a lista</string>
     <string name="common_less">Menos</string>
-    <string name="common_loading">A carregar…</string>
+    <string name="common_loading">Carregando…</string>
     <string name="common_more">Mais</string>
     <string name="common_next">Seguinte</string>
     <string name="common_not_done">Não feito</string>
@@ -810,12 +810,12 @@
     <string name="common_not_sent_unconfirmed">Não enviado: não foi confirmado.</string>
     <string name="common_nothing_yet">Ainda nada.</string>
     <string name="common_ok">OK</string>
-    <string name="common_opening">A abrir…</string>
+    <string name="common_opening">Abrindo…</string>
     <string name="common_save">Salvar</string>
     <string name="common_send">Enviar</string>
-    <string name="common_sending">A enviar…</string>
+    <string name="common_sending">Enviando…</string>
     <string name="common_show_the_list">Mostrar a lista</string>
-    <string name="common_starting">A iniciar…</string>
+    <string name="common_starting">Iniciando…</string>
     <string name="common_try_again">Tentar novamente</string>
     <string name="common_you">Você</string>
     <string name="common_you_signed_out">Você saiu.</string>
@@ -826,7 +826,7 @@
     <string name="connect_approve_title">Aprovar esta conexão</string>
     <string name="connect_apps_also_on_many">Também nos Cards de %1$s</string>
     <string name="connect_apps_also_on_one">Também no Card de %1$s</string>
-    <string name="connect_apps_clearing">A limpar…</string>
+    <string name="connect_apps_clearing">Limpando…</string>
     <string name="connect_apps_column_app">App</string>
     <string name="connect_apps_column_how">Como se conecta</string>
     <string name="connect_apps_column_status">Estado</string>
@@ -898,7 +898,7 @@
     <string name="connect_disconnect_app_question">Remover o acesso a %1$s?</string>
     <string name="connect_disconnect_body">As suas ações deixam de funcionar para este taf.</string>
     <string name="connect_disconnect_button">Remover o acesso</string>
-    <string name="connect_disconnecting">A remover o acesso…</string>
+    <string name="connect_disconnecting">Removendo o acesso…</string>
     <string name="connect_from_removed">De tafs removidos</string>
     <string name="connect_give_key_on_sheet">Dar a chave em uma tela segura</string>
     <string name="connect_give_key_with">Dar a chave com %1$s</string>
@@ -954,8 +954,8 @@
     <string name="connect_prompt_give_key">Dar a %1$s a sua chave para %2$s</string>
     <string name="connect_prompt_give_key_app">Dar a %1$s a sua chave</string>
     <string name="connect_prompt_keep_sealed">Manter selados os logins dos seus apps</string>
-    <string name="connect_reading_asks">A ler o que pede…</string>
-    <string name="connect_reading_request">A ler o pedido…</string>
+    <string name="connect_reading_asks">Lendo o que pede…</string>
+    <string name="connect_reading_request">Lendo o pedido…</string>
     <string name="connect_reconnect_in_coach">Volte a ligá-lo no Coach.</string>
     <string name="connect_replace_key">Substituir a chave</string>
     <string name="connect_request_does_not_match_what">Este pedido não corresponde ao que mostra, por isso não pode ser aprovado.</string>
@@ -1138,7 +1138,7 @@
     <string name="door_press_close">Prima %1$s para fechar a porta de %2$s</string>
     <string name="door_press_open">Prima %1$s para abrir a porta de %2$s</string>
     <string name="door_proven_section">Sabe quem escreve · pode ter chaves</string>
-    <string name="door_reading_channels">A ler os seus canais…</string>
+    <string name="door_reading_channels">Lendo os seus canais…</string>
     <string name="door_refund_request">Pedido de reembolso</string>
     <string name="door_remove">Remover</string>
     <string name="door_remove_body">O seu endereço deixa de ser de %1$s. As mensagens já no chat mantêm-se.</string>
@@ -1264,7 +1264,7 @@
     <string name="export_not_exported">Os seus chats não foram exportados. %1$s</string>
     <string name="export_not_offered">Não foi possível salvar os arquivos neste telefone. Libere algum espaço e tente novamente.</string>
     <string name="export_own_chats_each_taf_coach">Os seus chats com cada taf, incluindo os do Coach, os nomes dos arquivos que anexou e as suas notas, em um arquivo legível e em JSON. Só você os pode exportar.</string>
-    <string name="export_preparing">A preparar os seus chats…</string>
+    <string name="export_preparing">Preparando os seus chats…</string>
     <string name="export_ready_share_again">Pronto: %1$s. Compartilhar novamente</string>
     <string name="export_row">Exportar os meus chats</string>
     <string name="export_sign_in_first">Entre com o KIFF para exportar os seus chats.</string>
@@ -1328,10 +1328,10 @@
     </plurals>
     <string name="halt_all_halted_all">Os seus tafs estão bloqueados. Nada de novo é enviado até retomar.</string>
     <plurals name="halt_all_halting">
-        <item quantity="one">A bloquear %1$s taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</item>
-        <item quantity="other">A bloquear %1$s tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</item>
+        <item quantity="one">Bloqueando %1$s taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</item>
+        <item quantity="other">Bloqueando %1$s tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</item>
     </plurals>
-    <string name="halt_all_halting_all">A bloquear os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</string>
+    <string name="halt_all_halting_all">Bloqueando os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.</string>
     <string name="halt_all_running">O tafs não conseguiu bloquear os seus tafs. Abra o tafs para os bloquear.</string>
     <string name="halt_all_signed_out">Você saiu do tafs. Entre para bloquear os seus tafs.</string>
     <string name="halt_all_title">Bloquear todos os tafs</string>
@@ -1348,7 +1348,7 @@
     <string name="home_footer">Conectado com o KIFF.</string>
     <string name="home_halted_open_halt">Bloqueado. Abrir Bloquear</string>
     <string name="home_labels_all">Todos</string>
-    <string name="home_loading">A carregar os seus tafs…</string>
+    <string name="home_loading">Carregando os seus tafs…</string>
     <string name="home_new_taf">Novo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Já não funciona. O tafs exclui o que resta sempre que atualiza.</string>
     <string name="home_no_tafs">Ainda sem tafs.</string>
@@ -1382,7 +1382,7 @@
         <item quantity="other">%1$s tafs a trabalhar.</item>
     </plurals>
     <string name="home_your_tafs">Os seus tafs</string>
-    <string name="kiff_asking_kiff">A perguntar ao KIFF: %1$s…</string>
+    <string name="kiff_asking_kiff">Perguntando ao KIFF: %1$s…</string>
     <string name="kiff_did_not_reach_kiff_try">Não chegou ao KIFF. Tente novamente.</string>
     <string name="kiff_kiff_can_not_do_sign">O KIFF ainda não pode fazer isto: entre novamente em Conta para aprovar a partir deste %1$s.</string>
     <string name="kiff_kiff_did_not_answer_expected">O KIFF não respondeu como esperado. Tente novamente.</string>
@@ -1420,7 +1420,7 @@
     <string name="knob_one_confirmation">Uma confirmação define os três anéis.</string>
     <string name="knob_pause">Pausar</string>
     <string name="knob_raise">Aumentar</string>
-    <string name="knob_reading_draft">A ler o seletor que o Coach preparou…</string>
+    <string name="knob_reading_draft">Lendo o seletor que o Coach preparou…</string>
     <string name="knob_replaced">Um seletor mais recente substituiu este.</string>
     <string name="knob_request_title">Pedido</string>
     <string name="knob_resume">Retomar</string>
@@ -1428,9 +1428,9 @@
     <string name="knob_ring_when">Quando</string>
     <string name="knob_ring_where">Onde</string>
     <string name="knob_search">Pergunte ao Coach ou procure o que quiser</string>
-    <string name="knob_showing">A mostrar</string>
-    <string name="knob_showing_filter">A mostrar %1$s</string>
-    <string name="knob_showing_filter_label">A mostrar, %1$s</string>
+    <string name="knob_showing">Mostrando</string>
+    <string name="knob_showing_filter">Mostrando %1$s</string>
+    <string name="knob_showing_filter_label">Mostrando, %1$s</string>
     <string name="knob_subscription_made_dial_has_not">A assinatura foi feita, mas o seletor ainda não a registrou. Tente novamente.</string>
     <string name="knob_tap_a_ring">Toque em um anel</string>
     <string name="knob_this_taf">Este taf</string>
@@ -1516,7 +1516,7 @@
     <string name="needs_you_taf_says">O taf diz</string>
     <string name="needs_you_title">Precisa de você</string>
     <string name="needs_you_turn_alerts">Ativar alertas</string>
-    <string name="needs_you_turning_on">A ativar…</string>
+    <string name="needs_you_turning_on">Ativando…</string>
     <string name="needs_you_unsure_answer_not_taken">A sua resposta não foi aceite. %1$s</string>
     <string name="needs_you_unsure_coach_not_opened">Não foi possível abrir o Coach sobre isto. %1$s</string>
     <string name="needs_you_waiting_for_browser">Aguardando o seu navegador…</string>
@@ -1562,7 +1562,7 @@
     <string name="pair_keychain_refused">Este Mac não conseguiu guardar o login no porta-chaves (erro %1$s), por isso não foi adicionado. Mostre um código novo e tente outra vez.</string>
     <string name="pair_keyring_refused">Este computador não conseguiu guardar o login, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez.</string>
     <string name="pair_new_code">Mostrar um código novo</string>
-    <string name="pair_passkey_why_body">Fica neste %1$s, protegida pelo %2$s. Com ela, este %1$s aprova as ações dos seus tafs, e nada é aprovado sem si. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.</string>
+    <string name="pair_passkey_why_body">Ela fica neste %1$s, protegida por %2$s. Com ela, este %1$s aprova as ações dos seus tafs, e nada é aprovado sem você. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.</string>
     <string name="pair_passkey_why_go">Criar a chave de acesso</string>
     <string name="pair_passkey_why_title">Crie uma chave de acesso para este %1$s</string>
     <string name="pair_refused_key_registered">O celular indica que este %1$s já está associado à sua conta. Mostre um código novo e leia-o de novo.</string>
@@ -1677,7 +1677,7 @@
     <string name="receipt_checked">✓ Recibo do KIFF · verificado</string>
     <string name="receipt_checked_on_device">Recibo do KIFF · verificado neste %1$s</string>
     <string name="receipt_checked_why">Assinado pelo KIFF, inalterado desde então.</string>
-    <string name="receipt_checking_on_device">A verificar o recibo do KIFF neste %1$s…</string>
+    <string name="receipt_checking_on_device">Verificando o recibo do KIFF neste %1$s…</string>
     <string name="receipt_copy">Copiar recibo</string>
     <string name="receipt_decided_by_card">O Card</string>
     <string name="receipt_decided_by_kiff">O KIFF, com base no Card</string>
@@ -1789,7 +1789,7 @@
         <item quantity="other">%1$s chamadas ainda não têm recibo.</item>
     </plurals>
     <string name="record_export_not_exported">Não foi possível exportá-los. %1$s</string>
-    <string name="record_export_preparing">A preparar recibos…</string>
+    <string name="record_export_preparing">Preparando recibos…</string>
     <string name="record_export_receipts">Exportar recibos</string>
     <string name="record_extra_room">Margem extra dada por você · %1$s · %2$s</string>
     <string name="record_extra_room_detail">O seu Card recebeu a margem para este total, até ser reposto. Se também exceder um limite por chamada, a chamada fica novamente retida por isso</string>
@@ -2261,8 +2261,8 @@
     <string name="setup_place_email_words_yours">A sua resposta para o seu email; não quando foi você a escrever a mensagem</string>
     <string name="setup_place_reply_title">Responder ao remetente</string>
     <string name="setup_place_reply_words">Na mesma conversa, pela porta por onde chegou</string>
-    <string name="setup_reading_results">A ler para onde vão os seus resultados…</string>
-    <string name="setup_reading_starts">A ler o que o inicia…</string>
+    <string name="setup_reading_results">Lendo para onde vão os seus resultados…</string>
+    <string name="setup_reading_starts">Lendo o que o inicia…</string>
     <string name="setup_remove">Remover</string>
     <string name="setup_remove_for_good">Remover definitivamente</string>
     <string name="setup_results_go_to">Os resultados vão para</string>
@@ -2331,7 +2331,7 @@
     <string name="sign_in_your_code">O seu código</string>
     <string name="taf_activity_all_apps">Todos os apps</string>
     <string name="taf_activity_checking_waits">Verificando o que aguarda por você…</string>
-    <string name="taf_activity_reading_notes">A ler as suas notas…</string>
+    <string name="taf_activity_reading_notes">Lendo as suas notas…</string>
     <string name="taf_app_add_actions">Adicionar ações com o Coach</string>
     <string name="taf_app_what_it_may_do">O que pode fazer</string>
     <string name="taf_gone">Este taf já não existe.</string>
@@ -2340,7 +2340,7 @@
     <string name="taf_halt_cloud_not_resumed_all">O KIFF retomou os seus tafs, mas o tafs cloud ainda não. %1$s</string>
     <string name="taf_halt_connection_sends_nothing">A conexão não envia nada aos seus apps</string>
     <string name="taf_halt_halted_with_all">Bloqueado com todos os seus tafs. Retome-os todos para que possa funcionar.</string>
-    <string name="taf_halt_halting">A bloquear…</string>
+    <string name="taf_halt_halting">Bloqueando…</string>
     <string name="taf_halt_halting_wait">Bloqueando… aguardando a confirmação de cada parte.</string>
     <string name="taf_halt_kiff_not_resumed">O KIFF não retomou %1$s. %2$s</string>
     <string name="taf_halt_kiff_not_resumed_all">O KIFF não retomou os seus tafs. %1$s</string>
@@ -2354,7 +2354,7 @@
     <string name="taf_halt_resume_all_prompt">Retomar todos os seus tafs</string>
     <string name="taf_halt_resume_prompt">Retomar %1$s</string>
     <string name="taf_halt_resume_with">Retomar com %1$s</string>
-    <string name="taf_halt_resuming">A retomar…</string>
+    <string name="taf_halt_resuming">Retomando…</string>
     <string name="taf_halt_title">Bloquear</string>
     <string name="taf_halt_title_all">Bloquear tudo</string>
     <string name="taf_halt_who_holds">Quem mantém o bloqueio</string>
@@ -2376,7 +2376,7 @@
     <string name="taf_not_archived">Não arquivado. %1$s</string>
     <string name="taf_not_live_version_card_taf">Não está no Card da versão em produção: o taf não o usa agora. Voltar a uma versão anterior pode precisar dele.</string>
     <string name="taf_not_put_back">Não reposto. %1$s</string>
-    <string name="taf_now_acting_under_kiff">A agir ao abrigo do KIFF</string>
+    <string name="taf_now_acting_under_kiff">Agindo sob o KIFF</string>
     <string name="taf_now_back_to_work">De volta ao trabalho</string>
     <string name="taf_now_card_not_active">Card não ativo</string>
     <string name="taf_now_card_revoked">Parado: Card revogado</string>
@@ -2386,7 +2386,7 @@
     <string name="taf_now_refused">Recusado · %1$s</string>
     <string name="taf_now_removed">Removido</string>
     <string name="taf_now_running">Em funcionamento</string>
-    <string name="taf_now_starting">A iniciar</string>
+    <string name="taf_now_starting">Iniciando</string>
     <string name="taf_now_waiting_on">Precisa de você · %1$s</string>
     <string name="taf_now_waiting_on_you">Precisa de você</string>
     <string name="taf_now_works_from_chat">Trabalha a partir do seu chat</string>
@@ -2445,15 +2445,15 @@
     <string name="taf_shows_cards">Mostra os Cards</string>
     <string name="taf_signed_tools_being_chosen">Login feito · as ferramentas estão sendo escolhidas</string>
     <string name="taf_signed_tools_waiting_your_approval">Login feito · ferramentas aguardando a sua aprovação</string>
-    <string name="taf_starting_run">A iniciar uma execução…</string>
+    <string name="taf_starting_run">Iniciando uma execução…</string>
     <string name="taf_state_halted">Bloqueado</string>
     <string name="taf_state_paused">Em pausa</string>
     <string name="taf_state_ready">Pronto</string>
     <string name="taf_state_stopped">Parado</string>
     <string name="taf_state_waiting">Aguardando</string>
-    <string name="taf_state_working">A trabalhar</string>
+    <string name="taf_state_working">Trabalhando</string>
     <string name="taf_try_version_first_you_chat">Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua trabalhando. Instalar uma coloca-a em produção.</string>
-    <string name="taf_trying_resume">A experimentar a v%1$s · Retomar</string>
+    <string name="taf_trying_resume">Experimentando a v%1$s · Retomar</string>
     <string name="taf_unless_you_approve_tools_sign">A menos que aprove as suas ferramentas, o login é revogado %1$s.</string>
     <string name="taf_view_picker">Vista</string>
     <string name="taf_workflow_change_with_coach">Alterar o fluxo de trabalho com o Coach</string>
@@ -2472,7 +2472,7 @@
     <string name="usage_balance">Saldo</string>
     <string name="usage_balance_not_read">Não foi possível ler o saldo. %1$s</string>
     <string name="usage_buy">Adicionar créditos</string>
-    <string name="usage_buying">A comprar…</string>
+    <string name="usage_buying">Comprando…</string>
     <string name="usage_cancel_solo">Cancelar o Solo</string>
     <string name="usage_choose_plan">Escolher um plano</string>
     <string name="usage_company_billed_kiff_solo_bought">O Company é agora faturado pelo KIFF. O Solo comprado na App Store renova-se a %1$s a menos que seja cancelado, a partir da conta Apple que o comprou.</string>
@@ -2498,16 +2498,16 @@
     <string name="usage_raise_limit_sign_in_first">Entre com o KIFF para aumentar o limite.</string>
     <string name="usage_raise_limit_button">Aumentar o limite</string>
     <string name="usage_raised_unread">Os seus tafs podem continuar. Desde então, não foi possível ler os créditos deste período.</string>
-    <string name="usage_raising">A aumentar…</string>
+    <string name="usage_raising">Aumentando…</string>
     <string name="usage_read_again">Ler novamente</string>
-    <string name="usage_reading">A ler…</string>
+    <string name="usage_reading">Lendo…</string>
     <string name="usage_requests_admin_answers">Um administrador responde.</string>
     <string name="usage_requests_approve">Aprovar</string>
     <string name="usage_requests_ask">Pedir</string>
     <string name="usage_requests_ask_admin">Pedir a um administrador</string>
-    <string name="usage_requests_asking">A pedir…</string>
+    <string name="usage_requests_asking">Pedindo…</string>
     <string name="usage_requests_decline">Recusar</string>
-    <string name="usage_requests_declining">A recusar…</string>
+    <string name="usage_requests_declining">Recusando…</string>
     <string name="usage_requests_note_hint">Porquê, para eles</string>
     <string name="usage_requests_note_optional">Nota (opcional)</string>
     <string name="usage_requests_title">Pedidos</string>
@@ -2517,7 +2517,7 @@
     <string name="usage_requests_why_optional">Porquê (opcional)</string>
     <string name="usage_requests_withdraw">Retirar</string>
     <string name="usage_restore_purchases">Restaurar compras</string>
-    <string name="usage_restoring">A restaurar…</string>
+    <string name="usage_restoring">Restaurando…</string>
     <string name="usage_runs_could_not_read_pull">Não foi possível ler estas execuções. Puxe para tentar novamente.</string>
     <string name="usage_solo">Solo</string>
     <string name="usage_solo_terms">%1$s por %2$s. É renovada a cada %2$s até ser cancelada. Cancele quando quiser nas assinaturas do Google Play, pelo menos um dia antes da renovação.</string>
@@ -2571,8 +2571,8 @@
     <string name="version_install_unconfirmed">A instalação da versão %1$s não foi concluída: o KIFF não confirmou o seu Card. %2$s O seu taf não é executado até a concluir ou cancelar.</string>
     <string name="version_install_unfinished">A instalação da versão %1$s não foi concluída. %2$s O seu taf não é executado até a concluir ou cancelar.</string>
     <string name="version_install_with">Instalar com %1$s</string>
-    <string name="version_installing">A instalar…</string>
-    <string name="version_installing_number">A instalar a versão %1$s</string>
+    <string name="version_installing">Instalando…</string>
+    <string name="version_installing_number">Instalando a versão %1$s</string>
     <string name="version_intro">Instalar uma versão torna-a a versão em produção, para a frente ou para trás. Uma confirmação basta.</string>
     <string name="version_live_now">Em produção agora</string>
     <string name="version_live_number">Versão %1$s · em produção</string>
@@ -2611,7 +2611,7 @@
     <string name="version_trial_not_read">Não foi possível ler a experiência. %1$s</string>
     <string name="version_trial_not_started">A experiência da versão %1$s não começou. %2$s</string>
     <string name="version_trial_prompt">Experimentar a versão %1$s de %2$s, com o seu próprio Card</string>
-    <string name="version_trial_trying">A experimentar a versão %1$s</string>
+    <string name="version_trial_trying">Experimentando a versão %1$s</string>
     <string name="version_trial_card_unreadable">Não foi possível ler o Card desta experiência.</string>
     <string name="version_trial_has_ended">Esta experiência terminou.</string>
     <plurals name="version_tried_calls">
@@ -2635,15 +2635,15 @@
     <string name="version_try_it">Experimentar</string>
     <string name="version_try_number">Experimentar a versão %1$s</string>
     <string name="version_try_number_note">Experimentar a versão %1$s: %2$s</string>
-    <string name="version_trying">A experimentar</string>
-    <string name="version_trying_number">A experimentar a versão %1$s</string>
+    <string name="version_trying">Experimentando</string>
+    <string name="version_trying_number">Experimentando a versão %1$s</string>
     <string name="version_unchanged">Sem alterações</string>
     <string name="version_while_trying">Enquanto a experimenta</string>
     <string name="version_while_you_try_chat">As ações da versão %1$s são reais, ao abrigo do seu próprio Card.</string>
     <string name="version_while_you_try_counts_from_zero">O seu Card conta a partir de zero.</string>
     <string name="version_while_you_try_ends">Termina quando a instalar, voltar atrás, ou após 7 dias sem uso.</string>
     <string name="version_while_you_try_live_keeps_working">A versão em produção continua funcionando; em um dia, podem ser gastos os limites de ambos os Cards.</string>
-    <string name="version_working">A trabalhar…</string>
+    <string name="version_working">Trabalhando…</string>
     <string name="voice_cancel_dictating">Cancelar o ditado</string>
     <string name="voice_cannot">Este telefone não consegue reconhecer %1$s no próprio telefone, por isso o microfone não funciona aqui. Pode escrever em vez disso.</string>
     <string name="voice_dictate">Ditar uma mensagem</string>
@@ -2654,7 +2654,7 @@
     <string name="voice_dictation_not_available_right_try">O ditado não está disponível neste momento. Tente novamente daqui a pouco.</string>
     <string name="voice_dictation_stopped_tap_mic_start">O ditado parou: %1$s Toque no microfone para recomeçar.</string>
     <string name="voice_downloading">Este telefone está obtendo %1$s para o ditado. O microfone funciona quando estiver pronto, dentro de um ou dois minutos.</string>
-    <string name="voice_listening_in">A ouvir em %1$s</string>
+    <string name="voice_listening_in">Ouvindo em %1$s</string>
     <string name="voice_microphone_off_tafs_turn_settings">O microfone está desativado para o tafs. Ative-o em Ajustes › tafs › Microfone.</string>
     <string name="voice_microphone_off_tafs_turn_settings_mac">O microfone está desativado para o tafs. Ative-o em Ajustes do Sistema › Privacidade e Segurança › Microfone (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Microfone).</string>
     <string name="voice_no_microphone">Permita que o tafs use o microfone para ditar. A sua voz torna-se texto neste telefone e não é enviada para lado nenhum.</string>
@@ -2698,8 +2698,8 @@
     </plurals>
     <string name="watch_halt_pick_title">Escolha quais bloquear</string>
     <string name="watch_halt_this">Bloquear este taf</string>
-    <string name="watch_halting">A bloquear %1$s…</string>
-    <string name="watch_halting_all">A bloquear todos os seus tafs…</string>
+    <string name="watch_halting">Bloqueando %1$s…</string>
+    <string name="watch_halting_all">Bloqueando todos os seus tafs…</string>
     <string name="watch_hear">Ouvir</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chamada retida precisa de você</item>
@@ -2714,7 +2714,7 @@
     <string name="watch_keep_for_later">Guardar para mais tarde</string>
     <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
-    <string name="watch_listening">A ouvir</string>
+    <string name="watch_listening">Ouvindo</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
     <string name="watch_more_on_phone">O resto está no celular.</string>
@@ -2745,7 +2745,8 @@
         <item quantity="other">%1$s prontos</item>
     </plurals>
     <string name="watch_recent_chats">Chats recentes</string>
-    <string name="watch_recording">A gravar</string>
+    <string name="watch_recording">Gravando</string>
+    <string name="watch_recording_not_received">A gravação não chegou ao celular. Tente novamente ou digite.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>
@@ -2754,7 +2755,7 @@
     <string name="watch_resume_on_phone">Retomar no celular</string>
     <string name="watch_retry">Repetir</string>
     <string name="watch_review">Verifique antes de enviar</string>
-    <string name="watch_sending">A enviar…</string>
+    <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · configurações</string>
     <string name="watch_sign_in_on_phone">Primeiro, entre no tafs no celular.</string>
@@ -2789,7 +2790,7 @@
     <string name="work_answer_within_line">Avisamos quando um caso espera mais.</string>
     <string name="work_answer_within_none">Não definido</string>
     <string name="work_answer_within_not_set">Não foi possível definir. %1$s</string>
-    <string name="work_asking_kiff_run">A pedir ao KIFF para executar %1$s…</string>
+    <string name="work_asking_kiff_run">Pedindo ao KIFF para executar %1$s…</string>
     <string name="work_did_not_stop">Não parou: %1$s</string>
     <string name="work_duration_minutes">%1$s min %2$s s</string>
     <string name="work_duration_seconds">%1$s s</string>
@@ -2802,7 +2803,7 @@
         <item quantity="other">%1$s pedidos precisam de você</item>
     </plurals>
     <string name="work_send_again">Enviar novamente</string>
-    <string name="work_sending_again">A enviar novamente…</string>
+    <string name="work_sending_again">Enviando novamente…</string>
     <string name="work_stop_run">Parar a execução</string>
     <string name="work_stopped_part_way_before_finished">%1$s parou a meio, antes de terminar.</string>
 </resources>

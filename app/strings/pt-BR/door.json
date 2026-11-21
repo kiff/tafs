@@ -13,6 +13,7 @@
   "door.no_app_called": "Ainda não há aqui nenhum app chamado «{query}».",
   "door.no_door_yet": "{taf} ainda não tem porta. Alguém que o gerencia pode adicionar uma.",
   "door.pair_intro": "As mensagens desta pessoa para esta porta de {door} dão trabalho, dentro do Card. As de qualquer outra pessoa ficam só como pedido de contato.",
+  "door.reading_channels": "Lendo os seus canais…",
   "door.replies_only": "As respostas vão apenas para quem escreveu. Tudo o resto que o taf faz continua passando pelo KIFF.",
   "door.slack.connect_first": "Conecte primeiro o bot do Slack para este taf, em Conta › Conectar apps. Depois adicione aqui o canal dele.",
   "door.slack.connect_first_in_connect_apps": "Conecte primeiro o bot do Slack para {taf}, em Conectar apps. Depois adicione aqui a sua porta.",

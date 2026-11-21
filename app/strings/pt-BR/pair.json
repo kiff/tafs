@@ -4,6 +4,7 @@
   "pair.from_sign_in": "Já usa o tafs no celular? Adicione este {device} com ele.",
   "pair.keychain_refused": "Este Mac não conseguiu guardar o login no porta-chaves (erro {code}), por isso não foi adicionado. Mostre um código novo e tente outra vez.",
   "pair.keyring_refused": "Este computador não conseguiu guardar o login, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez.",
+  "pair.passkey_why_body": "Ela fica neste {device}, protegida por {biometry}. Com ela, este {device} aprova as ações dos seus tafs, e nada é aprovado sem você. A seguir, o Windows pede o seu rosto, impressão digital ou PIN.",
   "pair.refused_key_registered": "O celular indica que este {device} já está associado à sua conta. Mostre um código novo e leia-o de novo.",
   "pair.refused_other": "O celular não conseguiu adicionar este {device}. Mostre um código novo e leia-o de novo.",
   "pair.refused_title": "O celular não adicionou este {device}",

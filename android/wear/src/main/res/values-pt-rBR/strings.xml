@@ -6,7 +6,7 @@
     <string name="alert_not_refused">Não recusado</string>
     <string name="calendar_next_day">Dia seguinte</string>
     <string name="calendar_previous_day">Dia anterior</string>
-    <string name="calendar_reading">A ler o calendário…</string>
+    <string name="calendar_reading">Lendo o calendário…</string>
     <plurals name="calendar_times">
         <item quantity="one">×%1$s</item>
         <item quantity="other">×%1$s</item>
@@ -25,7 +25,7 @@
     <string name="common_cancel">Cancelar</string>
     <string name="common_close">Fechar</string>
     <string name="common_done">Concluído</string>
-    <string name="common_loading">A carregar…</string>
+    <string name="common_loading">Carregando…</string>
     <string name="common_ok">OK</string>
     <string name="common_send">Enviar</string>
     <string name="common_try_again">Tentar novamente</string>
@@ -76,8 +76,8 @@
     </plurals>
     <string name="watch_halt_pick_title">Escolha quais bloquear</string>
     <string name="watch_halt_this">Bloquear este taf</string>
-    <string name="watch_halting">A bloquear %1$s…</string>
-    <string name="watch_halting_all">A bloquear todos os seus tafs…</string>
+    <string name="watch_halting">Bloqueando %1$s…</string>
+    <string name="watch_halting_all">Bloqueando todos os seus tafs…</string>
     <string name="watch_hear">Ouvir</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chamada retida precisa de você</item>
@@ -92,7 +92,7 @@
     <string name="watch_keep_for_later">Guardar para mais tarde</string>
     <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
-    <string name="watch_listening">A ouvir</string>
+    <string name="watch_listening">Ouvindo</string>
     <string name="watch_menu">Menu</string>
     <string name="watch_mic_needed">Para pedir por voz, autorize o microfone para o tafs neste relógio.</string>
     <string name="watch_more_on_phone">O resto está no celular.</string>
@@ -123,7 +123,8 @@
         <item quantity="other">%1$s prontos</item>
     </plurals>
     <string name="watch_recent_chats">Chats recentes</string>
-    <string name="watch_recording">A gravar</string>
+    <string name="watch_recording">Gravando</string>
+    <string name="watch_recording_not_received">A gravação não chegou ao celular. Tente novamente ou digite.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>
@@ -132,7 +133,7 @@
     <string name="watch_resume_on_phone">Retomar no celular</string>
     <string name="watch_retry">Repetir</string>
     <string name="watch_review">Verifique antes de enviar</string>
-    <string name="watch_sending">A enviar…</string>
+    <string name="watch_sending">Enviando…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_settings_of">%1$s · configurações</string>
     <string name="watch_sign_in_on_phone">Primeiro, entre no tafs no celular.</string>

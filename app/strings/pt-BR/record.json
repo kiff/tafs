@@ -11,6 +11,7 @@
   "record.did_this_happen.why_refused": "O app recusou, mas nada mostra que não teve efeito.",
   "record.event.knock_done": "Você pediu que ele agisse sobre a mensagem de {who}",
   "record.event.paired_detail": "As mensagens desta pessoa por {door} passam a dar trabalho a ele",
+  "record.export_preparing": "Preparando recibos…",
   "record.extra_room": "Margem extra dada por você · {at} · {summary}",
   "record.filter.waiting": "Aguardando",
   "record.no_longer_waiting": "não está mais aguardando",

@@ -1,5 +1,6 @@
 {
   "approval.add_face_id_first": "Adicione primeiro o Face ID ou uma impressão digital nas Configurações: este {device} aprova com um deles.",
+  "approval.approving": "Aprovando…",
   "approval.biometry.screen_lock": "o seu bloqueio de tela",
   "approval.device_can_not_approve_approve": "Este dispositivo não pode aprovar. Aprove em outro dispositivo conectado à sua conta.",
   "approval.first_taf": "Configurar um taf requer aprovações: o Coach pede que você aprove as ferramentas dele e o Card do taf.",

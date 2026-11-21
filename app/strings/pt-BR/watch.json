@@ -7,12 +7,15 @@
   "watch.check_phone_title": "Veja o celular",
   "watch.coach_needs_consent": "Antes de falar com o Coach, permita o uso de IA no tafs no celular.",
   "watch.glance_description": "Quantos precisam de você, nunca o quê nem quem.",
+  "watch.halting": "Bloqueando {taf}…",
+  "watch.halting_all": "Bloqueando todos os seus tafs…",
   "watch.held_calls": {
     "one": "{count} chamada retida precisa de você",
     "other": "{count} chamadas retidas precisam de você"
   },
   "watch.its_settings": "Suas configurações",
   "watch.kept_to_send": "Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.",
+  "watch.listening": "Ouvindo",
   "watch.more_on_phone": "O resto está no celular.",
   "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
   "watch.needs_you_count": {
@@ -23,7 +26,10 @@
   "watch.nothing_waits": "Nada espera por você.",
   "watch.open_on_phone": "Abrir no celular",
   "watch.phone_not_reachable": "O celular não está ao alcance. Aproxime-o e tente novamente.",
+  "watch.recording": "Gravando",
+  "watch.recording_not_received": "A gravação não chegou ao celular. Tente novamente ou digite.",
   "watch.resume_on_phone": "Retomar no celular",
+  "watch.sending": "Enviando…",
   "watch.settings_of": "{taf} · configurações",
   "watch.sign_in_on_phone": "Primeiro, entre no tafs no celular.",
   "watch.sign_out_q": "Sair deste relógio?",

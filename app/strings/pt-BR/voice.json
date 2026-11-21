@@ -2,6 +2,7 @@
   "voice.dictation_not_add_keyboard_dictation": "O ditado ainda não está disponível neste {device}. Adicione um teclado com o ditado ativado em Ajustes › Geral › Teclado › Teclados, aguarde o download do idioma e tente novamente.",
   "voice.dictation_not_add_keyboard_dictation_mac": "O ditado ainda não está ativado neste Mac. Ative-o em Ajustes do Sistema › Teclado › Ditado (no macOS 12: Preferências do Sistema › Teclado › Ditado), aguarde o download do idioma e tente novamente.",
   "voice.downloading": "Este telefone está obtendo {language} para o ditado. O microfone funciona quando estiver pronto, dentro de um ou dois minutos.",
+  "voice.listening_in": "Ouvindo em {name}",
   "voice.microphone_off_tafs_turn_settings": "O microfone está desativado para o tafs. Ative-o em Ajustes › tafs › Microfone.",
   "voice.microphone_off_tafs_turn_settings_mac": "O microfone está desativado para o tafs. Ative-o em Ajustes do Sistema › Privacidade e Segurança › Microfone (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Microfone).",
   "voice.open_settings": "Abrir Ajustes",

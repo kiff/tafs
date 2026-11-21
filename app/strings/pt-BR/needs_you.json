@@ -18,6 +18,7 @@
   "needs_you.sign_in_again_to_answer": "Encerre a sessão e entre novamente para responder a partir deste telefone, para que o KIFF conheça a sua chave. Ou responda a este no KIFF.",
   "needs_you.tab_label": "Precisa de você, {n}",
   "needs_you.title": "Precisa de você",
+  "needs_you.turning_on": "Ativando…",
   "needs_you.waiting_for_browser": "Aguardando o seu navegador…",
   "needs_you.when_taf_asks_something_outside": "Um alerta chega a você neste {device}, mesmo com o tafs fechado."
 }

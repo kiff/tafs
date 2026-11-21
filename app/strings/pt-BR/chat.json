@@ -1,4 +1,5 @@
 {
+  "chat.answering": "Respondendo",
   "chat.cap.cost": "{taf} parou: esta tarefa custaria mais do que o seu limite por tarefa. Peça algo mais restrito, ou alguém que gerencia {taf} pode aumentar o limite.",
   "chat.chats_were_not_exported_could": "Os seus chats não foram exportados: este {device} não conseguiu salvar os arquivos.",
   "chat.delete": "Excluir",
@@ -19,6 +20,7 @@
     "other": "Uma mensagem leva no máximo {count} arquivos."
   },
   "chat.file.unreadable": "Não foi possível ler esse arquivo.",
+  "chat.file.uploading": "Enviando",
   "chat.message_carries_most_files": "Uma mensagem leva no máximo {per_message} arquivos.",
   "chat.needs_you": "Precisa de você · ",
   "chat.not_on_cloud": "Este taf não está funcionando no tafs cloud, por isso não pode receber mensagens.",
@@ -27,5 +29,8 @@
   "chat.send_files_once_done": "Enviar arquivos quando {taf} terminar",
   "chat.send_once_files_up": "Enviar quando os arquivos estiverem carregados",
   "chat.taf_is_answering": "{taf} está respondendo",
-  "chat.waiting_for_you": "Precisa de você"
+  "chat.thinking": "Pensando…",
+  "chat.waiting_for_you": "Precisa de você",
+  "chat.working": "Trabalhando…",
+  "chat.writing": "Escrevendo…"
 }

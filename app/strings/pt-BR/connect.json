@@ -1,6 +1,7 @@
 {
   "connect.another_approval": "Outra aprovação está em andamento. Aprove esta quando estiver concluída.",
   "connect.approve_title": "Aprovar esta conexão",
+  "connect.apps.clearing": "Limpando…",
   "connect.apps.column_how": "Como se conecta",
   "connect.apps.connect": "Conectar",
   "connect.apps.connected": "Conectado ✓",
@@ -34,6 +35,7 @@
   "connect.could_not_connected": "Não foi possível conectar {vendor}: {why}",
   "connect.disconnect.rest": "Os outros tafs que usam {vendor} mantêm o acesso deles. Se nenhum outro taf usar a mesma conta, o login é revogado em {vendor}; caso contrário, quando o último for removido. Usar {vendor} novamente pede que você aprove e faça login de novo.",
   "connect.disconnect.rest_key": "Os outros tafs que usam {vendor} mantêm o acesso deles. A chave é excluída do tafs assim que nenhum taf a usar. Usar {vendor} novamente pede que você aprove e cole uma chave de novo.",
+  "connect.disconnecting": "Removendo o acesso…",
   "connect.give_key_on_sheet": "Dar a chave em uma tela segura",
   "connect.kept_connection": {
     "one": "A sua conexão com {vendor} foi mantida: {names} a usa.",
@@ -62,6 +64,8 @@
   "connect.prompt.connect_app_mac": "conectar {vendor}",
   "connect.prompt.connect_mac": "conectar {vendor} a {agent}",
   "connect.prompt.keep_sealed": "Manter selados os logins dos seus apps",
+  "connect.reading_asks": "Lendo o que pede…",
+  "connect.reading_request": "Lendo o pedido…",
   "connect.schedule_chats_run_reports_memory": "{cards} O agendamento, chats, relatórios de execução, memória e chave dele são excluídos, e o nome {taf} fica livre. Os recibos do KIFF são mantidos.",
   "connect.sign_came_back_connection": "o login voltou, mas a conexão está {status}",
   "connect.sign_in_again": "Entrar novamente",
