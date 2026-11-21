@@ -1470,6 +1470,35 @@ implementation of §5.2 must give literally: the P-256 keys of private keys 1 an
 the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
 request, the window, each refusal) and `PairComputerTest` (the sheet).
 
+## Pairing a Chrome
+
+Account › **Chrome** (`ChromesSheet`, `ChromesView.kt`) lists the Chromes paired to the account, with Unpair, and **Pair a
+Chrome**, as iOS's `ChromesView`. The extension's side, and the contract all three sides build to, is [chrome.md](chrome.md).
+The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves `AppState.chromes` null, so planque's
+switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`).
+
+- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 17-character secret itself (about 83 bits, so the proof planque keeps under it can't be tried offline), shown in groups of four (`K7QF-29XM-DPQR-STVW-XYZ2-3`)
+  (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer
+  you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
+  `ChromePairingInProgress` leaves the secret out of its `toString`.
+- **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
+  constant time). The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the
+  lookup: nothing is paired, and the sheet says so (`chrome.refused`). So does a pairing planque marks `contested` (more than
+  one Chrome tried the code, so it's spent). An expired pairing says `chrome.expired`.
+- **One fingerprint, naming the Chrome, signs the confirmation** with the **approval key** only (`signCritical`):
+  `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's approval key and its proof under the
+  secret. The Keystore's DER signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+  - **A phone without an approval key can't pair.** Unlike iOS, Android's other key signs with no prompt the Keystore enforces,
+    so it could never stand for the owner's presence when a sealed value is released. Pairing says so instead of starting.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- Its lines are `chrome.*`, shared with iOS.
+- **Tests:** `ChromePairingTest` (the shared vector, a refused proof, raw `r‖s` verified as P1363) and `ChromesTest`:
+  - the row only once planque offers Chromes;
+  - an offer shown only on its proof, and the secret never in a request;
+  - one fingerprint naming the Chrome, and the approval key's `r‖s` verifying where the device key's doesn't;
+  - a closed prompt sends nothing;
+  - Unpair with no prompt.
+
 ## Signing in with your other phone
 
 A new tablet can be added from a phone that's already signed in, with no browser:
