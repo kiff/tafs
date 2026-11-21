@@ -1,0 +1,1 @@
+- **Wear OS: when the watch's speech service gives up, your phone finishes the job.** The watch records the rest and your phone turns it into text on the phone itself, never on a server; only the text comes back to check before Send. The recording is deleted once the text is back, on Cancel, and after 2 minutes at most ([watch-wear.md](docs/watch-wear.md)).

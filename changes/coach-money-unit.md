@@ -1,0 +1,1 @@
+- **Coach states a money tool's unit as its currency:** EUR, with cents as its scale, never "cents". A Card in cents while the payment came in euros had every refund refused.

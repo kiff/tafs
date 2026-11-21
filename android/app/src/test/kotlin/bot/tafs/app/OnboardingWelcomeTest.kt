@@ -140,6 +140,24 @@ class OnboardingWelcomeTest {
     assertTrue(compose.onAllNodesWithText(Words.SignIn.didntWork).fetchSemanticsNodes().isEmpty())
   }
 
+  /**
+   * While signing in inside the app is off (KIFF's `unsupported_client`, K5 on 21 Nov), Continue says so: KIFF's `words` when it
+   * sends them, else the app's line in the person's language; never "didn't work".
+   */
+  @Test fun signingInInsideTheAppNotOnSaysSo() {
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(onSignIn = {}, onSample = {}, onboarding = true, termsVersion = { "v" },
+          signInInApp = { throw bot.tafs.app.kiff.KiffError.Server(400, "unsupported_client") })
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    compose.onNodeWithText(Words.SignIn.inAppNotOn).assertExists()
+    assertTrue(compose.onAllNodesWithText(Words.SignIn.didntWork).fetchSemanticsNodes().isEmpty())
+  }
+
   /** A tablet's second way, Sign in with your phone, waits on the same tick; a phone has none. */
   @Test fun aTabletsPhoneWayWaitsOnTheTickToo() {
     val sent = mutableListOf<String>()
@@ -210,7 +228,9 @@ class OnboardingWelcomeTest {
     assertEquals(ContinueOutcome.Quiet, continueOutcome(AppSignInRefused("access_denied")))
     assertEquals(ContinueOutcome.TermsChanged, continueOutcome(AppSignInRefused(AppModel.TERMS_OUTDATED)))
     assertEquals(ContinueOutcome.Problem, continueOutcome(AppSignInRefused(AppSignInRefused.STATE_MISMATCH)))
-    assertEquals(ContinueOutcome.Problem, continueOutcome(AppSignInRefused("unsupported_client")))
+    // Signing in inside the app is off (KIFF's switch), from authorize or from KIFF's API: said plainly.
+    assertEquals(ContinueOutcome.NotOn, continueOutcome(AppSignInRefused("unsupported_client")))
+    assertEquals(ContinueOutcome.NotOn, continueOutcome(bot.tafs.app.kiff.KiffError.Server(400, "unsupported_client")))
     assertEquals(ContinueOutcome.Problem, continueOutcome(bot.tafs.app.kiff.KiffError.Server(400, "invalid_grant")))
     assertEquals(ContinueOutcome.Problem, continueOutcome(java.io.IOException("offline")))
   }

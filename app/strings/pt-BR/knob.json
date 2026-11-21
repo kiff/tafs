@@ -1,0 +1,11 @@
+{
+  "knob.connect_first": "Conecte este app para o taf antes de aprovar o seu evento.",
+  "knob.event_filters": "Escuta",
+  "knob.not_recorded": "A conexão está escutando, mas o seletor ainda não registrou isso. Aprove novamente para registrar.",
+  "knob.reading_draft": "Lendo o seletor que o Coach preparou…",
+  "knob.showing": "Mostrando",
+  "knob.showing_filter": "Mostrando {filter}",
+  "knob.showing_filter_label": "Mostrando, {filter}",
+  "knob.subscription_made_dial_has_not": "A assinatura foi feita, mas o seletor ainda não a registrou. Tente novamente.",
+  "knob.tap_a_ring": "Toque em um anel"
+}

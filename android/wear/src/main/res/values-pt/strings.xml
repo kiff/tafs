@@ -101,6 +101,7 @@
         <item quantity="one">%1$s precisa de si</item>
         <item quantity="other">%1$s precisam de si</item>
     </plurals>
+    <string name="watch_no_offline_speech">O telemóvel não consegue converter sozinho a voz em texto neste idioma. Escreva em vez disso.</string>
     <string name="watch_not_sure">Não se sabe se chegou</string>
     <string name="watch_nothing_sent_until">Nada é enviado até aprovar.</string>
     <string name="watch_nothing_waits">Nada espera por si.</string>
@@ -108,6 +109,9 @@
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
+    <string name="watch_phone_link_failed">Não foi possível comunicar com o telemóvel. Tente novamente.</string>
+    <string name="watch_phone_no_answer">O telemóvel não respondeu a tempo. Tente novamente.</string>
+    <string name="watch_phone_no_app">A app tafs não está no telemóvel. Instale-a e tente novamente.</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
     <string name="watch_play">Reproduzir</string>
     <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
@@ -123,6 +127,7 @@
     </plurals>
     <string name="watch_recent_chats">Chats recentes</string>
     <string name="watch_recording">A gravar</string>
+    <string name="watch_recording_not_received">A gravação não chegou ao telemóvel. Tente novamente ou escreva.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>
@@ -142,6 +147,7 @@
     <string name="watch_swipe_settings">Deslize para a esquerda para as definições</string>
     <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
+    <string name="watch_transcribing">O telemóvel está a convertê-lo em texto…</string>
     <string name="watch_trust">Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.</string>
     <string name="watch_type">Escrever</string>
     <string name="watch_type_hint">Escrever ao Coach…</string>

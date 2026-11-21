@@ -212,7 +212,7 @@ struct TafDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             // One line, Files first: "Files · Version 5 · live" (docs/files.md, the owner's 19 Nov test).
             HStack(spacing: 2) {
-                if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
+                if let cloud = model.cloudTaf(for: taf.id) {
                     TafFilesEntry(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud))
                     if showsVersions(taf) {
                         Text(verbatim: "·").scaledFont(15, weight: .bold).foregroundColor(Theme.dim).accessibilityHidden(true)
@@ -1253,7 +1253,8 @@ struct TafCardFace: View {
     /// and until when.
     static func spoken(_ card: TafCard, issuedBy: String, revoked: Bool) -> String {
         var parts: [String] = []
-        if let line = card.heroLine { parts.append(line) }
+        // A revoked Card allows nothing: no "left today" over it (dev-android's K5 finding a).
+        if !revoked, let line = card.heroLine { parts.append(line) }
         parts.append([card.title, card.environmentLabel].compactMap { $0 }.joined(separator: ", "))
         parts += card.facts
         if card.rules.isEmpty { parts.append(Words.Card.noActions) }
@@ -1271,7 +1272,7 @@ struct TafCardFace: View {
                 if let environment = card.environmentLabel { EnvironmentPill(text: environment) }
             }
             Spacer(minLength: 0)
-            if let hero = card.hero {
+            if !revoked, let hero = card.hero {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(hero.figure).scaledFont(34, weight: .bold, relativeTo: .title).monospacedDigit()
                         .oneLineUnlessLarge().minimumScaleFactor(0.6)
@@ -1291,10 +1292,16 @@ struct TafCardFace: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
                     // A Card with no end says so, never a far-off date (kiff/tafs#96).
-                    Text(revoked ? Words.Card.revoked : !card.active ? Words.Card.ended : card.expires == nil ? Words.Card.ends : Words.Card.until)
-                        .scaledFont(10).opacity(0.75)
-                    Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? Words.Card.noEndDate)
-                        .scaledFont(12, weight: .semibold)
+                    // Revoked: said alone, in the place of the end, never over "No end date" or a date it won't
+                    // reach (dev-android's K5 finding a; tafs cloud doesn't send when it was revoked).
+                    if revoked {
+                        Text(Words.Card.revoked).scaledFont(12, weight: .semibold)
+                    } else {
+                        Text(!card.active ? Words.Card.ended : card.expires == nil ? Words.Card.ends : Words.Card.until)
+                            .scaledFont(10).opacity(0.75)
+                        Text(card.expires?.shown(date: .abbreviated, time: .omitted) ?? Words.Card.noEndDate)
+                            .scaledFont(12, weight: .semibold)
+                    }
                 }
             }
         }

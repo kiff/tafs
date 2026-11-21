@@ -15,11 +15,13 @@ object LinkTrace {
      * One faint line under a page: "tafs 0.4s + 1.9s · 3.2 kB". A failure keeps the split, so a timeout while waiting on the
      * phone reads "tafs ✕ timeout (0.2s + 9.8s)", and one while still looking for it "tafs ✕ timeout (10.0s)".
      */
-    val line: String get() = if (outcome == OK) "$request ${s(lookupMs)} + ${sendMs?.let(::s) ?: "–"} · ${bytes?.let(::kb) ?: "–"}"
+    val line: String get() = if (outcome == OK || outcome == OK_RETRIED) "$request ${s(lookupMs)} + ${sendMs?.let(::s) ?: "–"} · ${bytes?.let(::kb) ?: "–"}" + (if (outcome == OK_RETRIED) " ↻" else "")
       else "$request ✕ $outcome (${s(lookupMs)}${sendMs?.let { " + " + s(it) } ?: ""})"
   }
 
   const val OK = "ok"
+  /** Answered, after a second look for the phone or a read sent once more (PhoneRoute). */
+  const val OK_RETRIED = "ok ↻"
   const val NO_PHONE = "no phone"
   const val TIMEOUT = "timeout"
   const val UNREADABLE = "unreadable"

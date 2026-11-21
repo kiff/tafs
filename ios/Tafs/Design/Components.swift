@@ -55,16 +55,46 @@ struct Meter: View {
     }
 }
 
+/// The header where a chat's day starts (`ChatTime.day`): Today, Yesterday, then the date, centred.
+struct ChatDayHeader: View {
+    let date: Date
+    var body: some View {
+        Text(ChatTime.day(date, calendar: AccountTime.calendar))
+            .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.dim)
+            .frame(maxWidth: .infinity).padding(.top, 6)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+/// The small time under a chat message, on its side (`ChatTime.time`), in the account's zone.
+struct ChatSentTime: View {
+    let date: Date
+    var body: some View {
+        Text(ChatTime.time(date, zone: AccountTime.zone))
+            .scaledFont(11, relativeTo: .caption2).monospacedDigit().foregroundColor(Theme.dim)
+    }
+}
+
 struct Eyebrow: View {
     let text: String
     var color: Color = Theme.dim
 
     var body: some View {
-        // Text's own tracking, before the font.
+        // Text's own tracking, before the font. Korean, Japanese and Chinese keep the plain face with no tracking:
+        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview).
+        let ideographic = Eyebrow.ideographic(text)
         Text(text.uppercased())
-            .tracking(0.7)
-            .scaledFont(12, design: .monospaced, relativeTo: .caption)
+            .tracking(ideographic ? 0 : 0.7)
+            .scaledFont(12, design: ideographic ? .default : .monospaced, relativeTo: .caption)
             .foregroundColor(color)
+    }
+
+    /// Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart.
+    static func ideographic(_ text: String) -> Bool {
+        text.unicodeScalars.contains { s in
+            (0x1100...0x11FF).contains(s.value) || (0x3040...0x30FF).contains(s.value) || (0x3130...0x318F).contains(s.value)
+                || (0x3400...0x4DBF).contains(s.value) || (0x4E00...0x9FFF).contains(s.value) || (0xAC00...0xD7AF).contains(s.value)
+        }
     }
 }
 

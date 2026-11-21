@@ -102,6 +102,22 @@ def languages(folder=HERE):
         return json.load(f)
 
 
+def base_of(lang, folder=HERE):
+    """A regional variant's base language (`languages.json`'s `variants`: "pt-BR" is "pt"), or the language itself."""
+    return languages(folder).get("variants", {}).get(lang, lang)
+
+
+def load_lines(folder=HERE):
+    """Every language's lines, by language: each in `all`, and each regional variant (`variants`, "pt-BR": "pt") as its
+    base's lines with its own on top. A variant holds only the lines that read differently there (`app/strings/pt-BR/`),
+    so it never falls behind its base: a key it doesn't change reads as the base's."""
+    langs = languages(folder)
+    lines = {lang: load(lang, folder) for lang in langs["all"]}
+    for variant, base in langs.get("variants", {}).items():
+        lines[variant] = {**lines[base], **load(variant, folder)}
+    return lines
+
+
 def forms_of(line):
     """A line's texts: each plural form of a count, or the one text of a plain line."""
     return list(line.values()) if isinstance(line, dict) else [line]
@@ -247,7 +263,7 @@ def ios_catalog(source, shipped, lines):
         strings[key] = {"extractionState": "manual", "localizations": localizations}
     # Which form a number takes, in each shipped language's own rules.
     strings[IOS_PLURAL_KEY] = {"extractionState": "manual", "localizations": {
-        lang: {"variations": {"plural": {form: unit(f"%lld|{form}") for form in PLURALS[lang] + ["other"]}}} for lang in shipped}}
+        lang: {"variations": {"plural": {form: unit(f"%lld|{form}") for form in PLURALS[lang.split("-")[0]] + ["other"]}}} for lang in shipped}}
     # The language each language's lines are in: its own tag.
     strings[IOS_LANGUAGE_KEY] = {"extractionState": "manual", "localizations": {lang: unit(lang) for lang in shipped}}
     catalog = {"sourceLanguage": "en", "strings": strings, "version": "1.0"}
@@ -446,7 +462,7 @@ def generated(folder=HERE, preview=()):
     in English, as the catalog falls back. Android's files aren't written then."""
     langs = languages(folder)
     source = load("en", folder)
-    lines = {lang: load(lang, folder) for lang in langs["all"]}
+    lines = load_lines(folder)
     previewed = [lang for lang in preview if lang in langs["all"] and lang not in langs["shipped"]]
     shipped = langs["shipped"] + previewed
     # A previewed language's missing lines are English in its own catalog: a key without a line of its own would

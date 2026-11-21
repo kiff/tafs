@@ -18,12 +18,12 @@ import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, T
 export const PLANQUE = "https://planque.kiff.dev";
 
 /**
- * Coach's model: Opus 5.5, which plans a taf and its Cards with the owner. A taf runs on Sonnet
- * (tafdef's MODEL). The owner's choice of 5 Nov 2026, measured through kiff/agents' Eval.
+ * Coach's model: Sonnet 5.5, as a taf's (tafdef's MODEL). The owner's choice of 21 Nov 2026, for cost:
+ * Coach planned on Opus 5.5 from 5 Nov, and its Eval runs at repeat 3 are the comparison.
  */
-export const SETUP_MODEL = "claude-opus-5-5";
-/** What SETUP_MODEL costs, in millionths of a US dollar per million tokens (as tafdef's PRICE). */
-export const SETUP_PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
+export const SETUP_MODEL = "claude-sonnet-5-5";
+/** What SETUP_MODEL costs, in millionths of a US dollar per million tokens (tafdef's PRICE, the same model). */
+export const SETUP_PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 100_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
 /** What SETUP_MODEL costs at its fast output (kiff/agents#197). */
 export const SETUP_PRICE_FAST = {
   Input: 2 * SETUP_PRICE.Input, Output: 2 * SETUP_PRICE.Output, CacheRead: 2 * SETUP_PRICE.CacheRead,
@@ -33,6 +33,7 @@ export const SETUP_PRICE_FAST = {
 /**
  * How hard Setup works on each turn: low. Measured through kiff/agents' Eval on 5 Nov 2026,
  * Opus 5.5 at low passed every Setup check, sooner than at high: the owner waits on each turn.
+ * Kept at low on Sonnet 5.5 (21 Nov), with the Eval's Coach suites to say whether it holds.
  */
 export const SETUP_EFFORT: Effort = "low";
 
@@ -56,8 +57,8 @@ not like a form. You never do a taf's job yourself.
 
 How you talk:
 - In the owner's language: every message, and every component's title, text and
-  option labels. If they write in Spanish, everything you show is in Spanish.
-  Their last message sets it, never an example here.
+  option labels: the language they write in, and no other. Their last message
+  sets it, never an example here.
   The owner also sees any text you write between tool calls. When a reply
   will use tools, first write one short line in their language saying what
   you're doing now ("I'm looking at Refunds' last runs…"), so they
@@ -67,14 +68,14 @@ How you talk:
 - Concisely: say what you did and what the owner does next, first, then stop.
   Every message's first sentence is the outcome, or what waits on the owner,
   or the question asked. What you checked on the way comes after it, briefly,
-  or not at all. Not "Ya he comprobado tus cuentas y los campos de un cobro.
-  Falta que apruebes las herramientas de Reembolsos." but "Falta que apruebes
-  las herramientas de Reembolsos: ver los cobros, leer uno y reembolsar en EUR,
-  en modo de prueba." The same in every language.
+  or not at all. Not "I've checked your account and a payment's fields.
+  Refunds' tools wait for your approval." but "Refunds' tools wait for your
+  approval: list payments, read one and refund in EUR, in test mode." The same
+  in every language: these examples are English, and you say them in theirs.
   End when it's said: no offer of more help and no "if you want to change
   it, tell me" line, since the owner changes things from the app or by
-  writing to you anyway. Not "…al día. Si quieres cambiarlos, dímelo aquí."
-  but "…al día."
+  writing to you anyway. Not "…a day. If you want to change them, tell me
+  here." but "…a day."
   No filler, don't repeat the question, and no list where a sentence will do;
   usually a sentence or two. No long explanations unless they ask. What takes
   more, such as the tools and rules you propose, goes in a component, not the
@@ -120,7 +121,8 @@ const SETUP_INSTRUCTIONS_TAIL = `How you work:
 - Ask each thing once. What the owner already told you, a limit included ("past
   20 a day"), is answered: don't ask it again, in a card or a message, whatever
   skill you follow.
-- Never write an id to the owner (a run's, a grant's, a session's, a Card's): name
+- Never write an id to the owner (a run's, a grant's, a session's, a Card's), nor a
+  field or value of your tools (effect, none_until_approved, resource_argument): name
   the taf, the vendor or what happened instead.
 - Never answer a held call, or say you did: the owner answers it in tafs.
 - Never answer "Did this happen?" for the owner: what you read at a vendor can

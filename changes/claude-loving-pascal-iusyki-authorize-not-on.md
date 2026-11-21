@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** when KIFF's sign-in page sends back that signing in inside the app isn't on, the welcome says so plainly, as it already does for KIFF's API.

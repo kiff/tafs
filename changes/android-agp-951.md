@@ -1,0 +1,1 @@
+- **Android build:** the Android Gradle plugin 9.5.1, with Gradle 9.6.0, which it needs. Nothing changes in the apps.

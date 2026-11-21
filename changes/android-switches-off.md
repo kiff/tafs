@@ -1,0 +1,1 @@
+- **Android: Files and From your watch no longer have an app switch.** Both have been on since Android 125 and 124, so `FilesFeature` and `WatchDaysFeature` are removed, as scheduled for 21 Nov. Nothing changes on screen ([android-app.md](docs/android-app.md)).

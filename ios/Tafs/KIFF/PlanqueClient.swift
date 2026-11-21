@@ -308,9 +308,10 @@ final class PlanqueClient {
         /// Ended with Cancel, not Remove access: a sign-in that never came back, or a request
         /// not answered yet.
         var cancellable: Bool { waitingSignIn || pendingRequest }
-        /// The signed-out connection in planque's words; before planque sends them, the app's.
+        /// The signed-out connection in planque's words, which name the cause; before planque sends them, the app's
+        /// plain "Signed out · sign in again", true whoever signed it out (not "by {vendor}": a sibling's removal does too).
         var signedOutWords: String {
-            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOut(vendor: "\(vendor)")
+            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOutPlain
         }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
@@ -517,7 +518,7 @@ final class PlanqueClient {
     }
 
     /// Confirms the vendor sign-in with the code it handed back to the app. Only the phone
-    /// that approved can, within 15 minutes; then planque registers the tools in KIFF.
+    /// that approved can, within planque's sign-in window (60 minutes); then planque registers the tools in KIFF.
     func confirm(grantID: String, code: String) async throws -> Grant {
         try await send("POST", "grants/\(escaped(grantID))/confirm", body: ["confirm": code])
     }
@@ -630,6 +631,9 @@ final class PlanqueClient {
         return (line("error"), line("words"))
     }
 
+    /// planque's code for a connect that ended failed (planque#329).
+    nonisolated static let connectFailed = "connect_failed"
+
     /// planque's machine-readable `code` on a refusal, when it sends one as text.
     nonisolated static func refusalCode(_ data: Data) -> String? {
         ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["code"] as? String
@@ -663,7 +667,7 @@ final class PlanqueClient {
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
         // The person's languages, as tafs cloud gets them: planque writes the words they approve in the first it has.
         // Not part of what's signed (the method, the path and query, the body).
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         // This phone's zone, for the times in planque's words ("last used 00:32"); not part of what's signed either.
         request.setValue(TimeZone.current.identifier, forHTTPHeaderField: "X-Time-Zone")
         if let body {
@@ -700,7 +704,12 @@ final class PlanqueClient {
             lastRefusalCode = Self.refusalCode(data)
             if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
-            throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
+            // A connect that ended failed on planque's side (planque#329, `409 connect_failed`): its `error` is the reason for
+            // Coach (a tool the vendor no longer lists, an argument's type), so the person reads that it isn't working on our
+            // side, never its 409's "It changed in the meantime". planque's own words for the person, when sent, come first.
+            // The status stays 409: sent again unchanged, it would fail the same way. As Android's `ErrorWords.CONNECT_FAILED`.
+            let words = said.words ?? (status == 409 && lastRefusalCode == Self.connectFailed ? Words.Error.down : nil)
+            throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: words)
         }
         return data
     }

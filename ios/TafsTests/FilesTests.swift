@@ -51,8 +51,7 @@ final class FilesTests: XCTestCase {
         XCTAssertEqual(TafFilesEntry.label(count: 2), Words.Files.title + ", " + Words.Files.tafRow(count: 2))
     }
 
-    func testFilesIsOnAndKeptThirtyDays() {
-        XCTAssertTrue(FilesFeature.on)
+    func testFilesAreKeptThirtyDays() {
         XCTAssertEqual(FilesFeature.keptDays, 30)
     }
 

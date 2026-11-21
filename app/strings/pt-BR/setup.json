@@ -1,0 +1,13 @@
+{
+  "setup.add_place": "Adicionar um destino a partir de um app conectado…",
+  "setup.approve_note": "Aprovar assina neste telefone; só depois disso o app começa a avisar o taf.",
+  "setup.approve_note_device": "Aprovar assina neste {device}; só depois disso o app começa a avisar o taf.",
+  "setup.connect_app": "Conectar um app…",
+  "setup.connected_apps": "Apps conectados",
+  "setup.follow_ups": "Acompanhamentos que definiu para você",
+  "setup.in_apps": "Nos seus apps conectados",
+  "setup.knob.no_subscription": "A conexão não indicou qual assinatura fez. Tente novamente.",
+  "setup.reading_results": "Lendo para onde vão os seus resultados…",
+  "setup.reading_starts": "Lendo o que o inicia…",
+  "setup.skip_it": "Pular"
+}

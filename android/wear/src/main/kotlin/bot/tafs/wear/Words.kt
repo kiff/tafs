@@ -126,6 +126,7 @@ object Words {
     val moreOnPhone: String get() = Res.s(R.string.watch_more_on_phone)
     val needsLock: String get() = Res.s(R.string.watch_needs_lock)
     fun needsYouCount(count: Int): String = Res.p(R.plurals.watch_needs_you_count, count, Res.number(count))
+    val noOfflineSpeech: String get() = Res.s(R.string.watch_no_offline_speech)
     val notSure: String get() = Res.s(R.string.watch_not_sure)
     val nothingSentUntil: String get() = Res.s(R.string.watch_nothing_sent_until)
     val nothingWaits: String get() = Res.s(R.string.watch_nothing_waits)
@@ -135,6 +136,9 @@ object Words {
       val inbox: String get() = Res.s(R.string.watch_page_inbox)
     }
     val pausedStillAnswers: String get() = Res.s(R.string.watch_paused_still_answers)
+    val phoneLinkFailed: String get() = Res.s(R.string.watch_phone_link_failed)
+    val phoneNoAnswer: String get() = Res.s(R.string.watch_phone_no_answer)
+    val phoneNoApp: String get() = Res.s(R.string.watch_phone_no_app)
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
     val play: String get() = Res.s(R.string.watch_play)
     object Qr {
@@ -149,6 +153,7 @@ object Words {
     fun readyCount(count: Int): String = Res.p(R.plurals.watch_ready_count, count, Res.number(count))
     val recentChats: String get() = Res.s(R.string.watch_recent_chats)
     val recording: String get() = Res.s(R.string.watch_recording)
+    val recordingNotReceived: String get() = Res.s(R.string.watch_recording_not_received)
     val refused: String get() = Res.s(R.string.watch_refused)
     val reply: String get() = Res.s(R.string.watch_reply)
     val rerecord: String get() = Res.s(R.string.watch_rerecord)
@@ -168,6 +173,7 @@ object Words {
     val swipeSettings: String get() = Res.s(R.string.watch_swipe_settings)
     val tapStart: String get() = Res.s(R.string.watch_tap_start)
     fun timing(listen: String, receipt: String, result: String): String = Res.s(R.string.watch_timing, listen, receipt, result)
+    val transcribing: String get() = Res.s(R.string.watch_transcribing)
     val trust: String get() = Res.s(R.string.watch_trust)
     val type: String get() = Res.s(R.string.watch_type)
     val typeHint: String get() = Res.s(R.string.watch_type_hint)

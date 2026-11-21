@@ -106,6 +106,9 @@ export const pl: Words = {
   connect_again_done: (app: string, taf: string) => `${app} jest znów połączony. ${taf} może z niego korzystać.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} nie przyjmuje już starego logowania, więc ${taf} nie może z niego korzystać. Połącz ponownie, logując się od nowa: jedno logowanie przywraca każdy taf, który z niego korzystał.`,
   connect_again_fresh_done: (app: string) => `Połączenie z ${app} znów działa dzięki nowemu logowaniu. Każdy taf, który z niego korzystał, może znów z niego korzystać.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} nie przyjmuje już tego logowania, więc ${taf} nie może z niego korzystać. Połącz ponownie, aby się zalogować.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} korzystał z logowania do ${app} z połączenia, które zostało usunięte, więc nie może teraz korzystać z ${app}. Połącz ponownie, aby się zalogować.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `Nastąpiło wylogowanie z ${app}, więc ${taf} nie może z niego korzystać. Połącz ponownie, aby się zalogować.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf, którego nie widzisz" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? `${n} tafy, których nie widzisz` : `${n} tafów, których nie widzisz`] : [])]);
@@ -204,7 +207,7 @@ export const pl: Words = {
   approval_status: (status: string) => ({ pending: "oczekujące", approved: "zatwierdzone", signed_in: "zalogowane", needs_reconnect: "czeka na ponowne zalogowanie", listed: "na liście", connected: "połączone", failed: "nieudane", revoked: "rozłączone", unknown: "nieznany" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Zatwierdzone",
   approval_answer_declined: "Odrzucone",
-  approval_answer_failed: (why: string) => `Zatwierdź · nie powiodło się: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Zatwierdź · nie powiodło się: ${why}` : `Zatwierdź · nie powiodło się`,
   approval_reason_connect: (vendor: string, taf: string) => `Połącz ${vendor} z ${taf}`,
   approval_reason_card: (taf: string) => `Daj ${taf} jego Card`,
   approval_reason_connect_unnamed: (vendor: string) => `Połącz ${vendor}`,

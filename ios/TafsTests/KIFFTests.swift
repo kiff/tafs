@@ -196,6 +196,36 @@ final class KIFFTests: XCTestCase {
         }
     }
 
+    /// Signing in inside the app while KIFF has it off (`unsupported_client`, K5's stop): said plainly, in KIFF's words
+    /// when it sends them, else the app's line, never "didn't understand each other".
+    func testInAppSignInThatIsntOnSaysSoPlainly() async throws {
+        let client = makeClient()
+        StubProtocol.responses["GET /v1/auth/app/terms"] = (400, #"{"error":"unsupported_client","error_description":"signing in inside the app isn't on yet"}"#)
+        do {
+            _ = try await client.appTermsVersion()
+            XCTFail("expected the refusal")
+        } catch let error as KIFFClient.KIFFError {
+            XCTAssertEqual(error, .signInNotOn(words: nil))
+            XCTAssertEqual(error.localizedDescription, "Signing in inside the app isn't on yet.")
+        }
+        let words = "Signing in inside tafs isn't open yet. Use Sign in with KIFF."
+        StubProtocol.responses["GET /v1/auth/app/terms"] = (400, #"{"error":"unsupported_client","words":"\#(words)"}"#)
+        do {
+            _ = try await client.appTermsVersion()
+            XCTFail("expected the refusal")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, words, "KIFF's words when it sends them")
+        }
+        // Another 400 on another path keeps the app's own line.
+        StubProtocol.responses["POST /v1/auth/device/start"] = (400, #"{"error":"unsupported_client"}"#)
+        do {
+            _ = try await client.startDeviceSignIn()
+            XCTFail("expected a refusal")
+        } catch {
+            XCTAssertNotEqual(error.localizedDescription, "Signing in inside the app isn't on yet.")
+        }
+    }
+
     func testSignInSendsThePhonesKey() async throws {
         let client = makeClient()
         StubProtocol.responses["POST /v1/auth/device/start"] = (200, #"{"device_code":"dc","user_code":"ABCD-EFGH","verification_uri":"https://app.test/auth/device","verification_uri_complete":"https://app.test/auth/device?code=ABCD-EFGH","expires_in":600,"interval":5}"#)

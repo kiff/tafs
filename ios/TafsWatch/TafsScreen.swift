@@ -16,6 +16,12 @@ struct TafsScreen: View {
         NavigationStack {
             content
                 .navigationTitle(Words.Home.yourTafs)
+                .toolbar {
+                    if model.updating {
+                        // The kept read, or the last one through a short drop, while the phone is asked (row 44, D).
+                        ToolbarItem(placement: .topBarTrailing) { UpdatingDot() }
+                    }
+                }
         }
         .task { await model.load() }
     }
@@ -78,8 +84,8 @@ struct TafsScreen: View {
             } message: {
                 Text(Words.Halt.Explain.runningAll)
             }
-        case .unreachable:
-            WatchNotice(line: Words.Watch.phoneNotReachable) { await model.load() }
+        case .unreachable(let why):
+            WatchNotice(line: why.line) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .failed(let why):
@@ -131,5 +137,16 @@ private struct TafRow: View {
         } message: {
             Text(Words.Halt.Explain.runningOne)
         }
+    }
+}
+
+/// The small dot over a page drawn from what the watch kept, or its last read, while the phone is asked: "Loading" to
+/// VoiceOver.
+struct UpdatingDot: View {
+    var body: some View {
+        Circle()
+            .fill(.secondary)
+            .frame(width: 6, height: 6)
+            .accessibilityLabel(Words.Common.loading)
     }
 }

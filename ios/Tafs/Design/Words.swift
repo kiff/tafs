@@ -1688,7 +1688,7 @@ enum Words {
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
             /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
-            /// Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.
+            /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor}; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
             /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
@@ -1781,7 +1781,7 @@ enum Words {
         static var openingSignIn: String { Words.line("connect.opening_sign_in") }
         /// Other connections
         static var otherConnections: String { Words.line("connect.other_connections") }
-        ///  Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor_2}.
+        ///  Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor_2}; otherwise, when the last one is removed.
         static func otherConnectionsStayConnectedNo(vendor: String, vendor2: String) -> String { Words.line("connect.other_connections_stay_connected_no", vendor, vendor2) }
         /// KIFF's words for this connection couldn't be read. {why}
         static func profileWordsNotRead(why: String) -> String { Words.line("connect.profile_words_not_read", why) }
@@ -1850,6 +1850,8 @@ enum Words {
             static var connected: String { Words.line("connect.status.connected") }
             /// Signed out by {vendor} · sign in again
             static func signedOut(vendor: String) -> String { Words.line("connect.status.signed_out", vendor) }
+            /// Signed out · sign in again
+            static var signedOutPlain: String { Words.line("connect.status.signed_out_plain") }
             /// Waiting for the sign-in at {vendor}
             static func waitingSignIn(vendor: String) -> String { Words.line("connect.status.waiting_sign_in", vendor) }
         }
@@ -3573,6 +3575,10 @@ enum Words {
         static func toolRefusedCountsWhy(who: String, why: String) -> String { Words.line("record.tool_refused_counts_why", who, why) }
         /// {who} refused it. No money moved, but it still counts against today's total.
         static func toolRefusedMoney(who: String) -> String { Words.line("record.tool_refused_money", who) }
+        /// {who} refused it. Nothing was done, and it doesn't count toward today's limits
+        static func toolRefusedNotCounted(who: String) -> String { Words.line("record.tool_refused_not_counted", who) }
+        /// {who} refused it. Nothing was done, and it doesn't count toward today's limits{why}
+        static func toolRefusedNotCountedWhy(who: String, why: String) -> String { Words.line("record.tool_refused_not_counted_why", who, why) }
         /// Waiting for you
         static var waitingForYou: String { Words.line("record.waiting_for_you") }
         /// {amount}, within the Card
@@ -4527,6 +4533,8 @@ enum Words {
         static var everyActionTafTakesGoesView: String { Words.line("sign_in.every_action_taf_takes_goes_view") }
         /// How it works
         static var howWorks: String { Words.line("sign_in.how_works") }
+        /// Signing in inside the app isn't on yet.
+        static var inAppNotOn: String { Words.line("sign_in.in_app_not_on") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
         /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
@@ -5377,6 +5385,8 @@ enum Words {
         static var needsLock: String { Words.line("watch.needs_lock") }
         /// {count} need you
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
+        /// Your phone can't turn speech into text in this language by itself. Type instead.
+        static var noOfflineSpeech: String { Words.line("watch.no_offline_speech") }
         /// Not sure it arrived
         static var notSure: String { Words.line("watch.not_sure") }
         /// Nothing is sent until you approve.
@@ -5393,6 +5403,12 @@ enum Words {
         }
         /// Paused: its schedule is off. It still answers what you send.
         static var pausedStillAnswers: String { Words.line("watch.paused_still_answers") }
+        /// Couldn't talk to your phone. Try again.
+        static var phoneLinkFailed: String { Words.line("watch.phone_link_failed") }
+        /// Your phone didn't answer in time. Try again.
+        static var phoneNoAnswer: String { Words.line("watch.phone_no_answer") }
+        /// tafs isn't on your phone. Install it there, then try again.
+        static var phoneNoApp: String { Words.line("watch.phone_no_app") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
         /// Play
@@ -5419,6 +5435,8 @@ enum Words {
         static var recentChats: String { Words.line("watch.recent_chats") }
         /// Recording
         static var recording: String { Words.line("watch.recording") }
+        /// The recording didn't reach your phone. Try again, or type instead.
+        static var recordingNotReceived: String { Words.line("watch.recording_not_received") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
@@ -5457,6 +5475,8 @@ enum Words {
         static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// Turning it into text on your phone…
+        static var transcribing: String { Words.line("watch.transcribing") }
         /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
         static var trust: String { Words.line("watch.trust") }
         /// Type
@@ -5534,7 +5554,7 @@ enum Words {
 
     /// The languages the app's screens are written in, as `languages.json` ships them: what it
     /// asks the servers for, never a language only Siri's phrases are in.
-    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"]
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"]
 
     /// The catalog the lines are read from: the system's pick for the app, or the language picked
     /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.

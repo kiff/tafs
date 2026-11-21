@@ -90,11 +90,9 @@ struct TafChatView: View {
                             if i == firstWords, let live = state.live {
                                 LiveWork(live: live).id("work")
                             }
-                            // A time between parts of the thread that are far apart, not on every line.
-                            if i == 0 || item.at.timeIntervalSince(items[i - 1].at) >= 3600 {
-                                Text(AccountTime.calendar.isDateInToday(item.at) ? item.at.shortTime : item.at.shown(date: .abbreviated, time: .shortened))
-                                    .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                                    .frame(maxWidth: .infinity).padding(.top, 6)
+                            // A header where a day starts (row 44, C): Today, Yesterday, then the date.
+                            if ChatTime.startsDay(items.map(\.at), at: i, calendar: AccountTime.calendar) {
+                                ChatDayHeader(date: item.at)
                             }
                             Group {
                                 switch item {
@@ -104,6 +102,7 @@ struct TafChatView: View {
                                             .contextMenu { askAgain(m.text) }
                                         // Written while a card waited: these words were its answer (`answers`).
                                         if m.answers != nil { AnsweredCardLine() }
+                                        ChatSentTime(date: m.at)
                                     }
                                 case .message(let m):
                                     VStack(alignment: .leading, spacing: 6) {
@@ -123,6 +122,7 @@ struct TafChatView: View {
                                         if let line = m.runLines.under { RunLine(text: line).accessibilityIdentifier("taf-counted") }
                                         // A connection its work asked for that was refused: tafs cloud's lines, never folded.
                                         if let refused = m.refusedLines { RefusedLines(refused: refused).accessibilityIdentifier("taf-refused") }
+                                        ChatSentTime(date: m.at)
                                     }
                                 case .held(let call):
                                     HeldCallCard(call: call)

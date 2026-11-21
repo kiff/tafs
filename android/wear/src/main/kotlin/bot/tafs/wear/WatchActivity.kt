@@ -49,10 +49,11 @@ class WatchActivity : ComponentActivity() {
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
       inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,
       signIn = if (WATCH_V2) PreferencesWatchSignIn(this) else null,
+      cache = if (WATCH_V2) WatchCache(KeystoreCacheStore(this), System::currentTimeMillis) else null,
     )
   }
 
-  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2 && BuildConfig.KEEP_AUDIO) }
+  private val listener by lazy { Listener(this, model, lifecycleScope, keepAudio = WATCH_V2 && BuildConfig.KEEP_AUDIO, phoneFallback = WATCH_V2) }
   private val playback by lazy { FilePlayback() }
   private var speaker: Speaker? = null
 
@@ -451,8 +452,8 @@ internal fun WatchScreen(
     when (shown) {
       WatchModel.Shown.Asking -> line(Words.Watch.askingPhone)
       WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
-      WatchModel.Shown.PhoneUnreachable -> {
-        line(Words.Watch.phoneNotReachable)
+      is WatchModel.Shown.PhoneUnreachable -> {
+        line(shown.why.line)
         item { Button(onClick = act.tryAgain, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
       }
       WatchModel.Shown.OpenOnPhone -> item {
@@ -582,7 +583,7 @@ internal fun OutcomeCard(outcome: WatchModel.Outcome, act: Actions) {
         is WatchModel.Outcome.Halting -> Text(if (outcome.taf.isNullOrEmpty()) Words.Watch.haltingAll else Words.Watch.halting(outcome.taf))
         WatchModel.Outcome.AlreadyAnswered -> Text(Words.Watch.alreadyAnswered)
         WatchModel.Outcome.NeedsLock -> Text(Words.Watch.needsLock)
-        WatchModel.Outcome.PhoneUnreachable -> Text(Words.Watch.phoneNotReachable)
+        is WatchModel.Outcome.PhoneUnreachable -> Text(outcome.why.line)
         is WatchModel.Outcome.NotDone -> outcome.words?.let { Text(it) }
         // v2: each taf picked, with what came of its Halt (TafScreens.kt).
         is WatchModel.Outcome.Several -> for ((taf, each) in outcome.each) Text(listOfNotNull(taf, wordsOf(each)).joinToString(" · "))

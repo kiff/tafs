@@ -297,6 +297,8 @@ struct SetupThread: Equatable {
         /// kiff/agents' words for it, when the answer came as data (the card's `answer`):
         /// what the card shows, as recorded.
         var words: String? = nil
+        /// A refused approval's line as tafs cloud words it for the owner (tafs#1640), drawn whole under the card.
+        var refused: String? = nil
 
         init(type: String, id: String, text: String, words: String? = nil) {
             self.type = type
@@ -364,6 +366,17 @@ struct SetupThread: Equatable {
             text = words.lowercased().hasPrefix("approved") ? "approved" : "declined"
         default:
             text = words
+        }
+        // Why an approval or a sign-in didn't go through: the settled `answer` ("failed: …") is written for Coach ("Show the
+        // rules again as a new notice…"), never for the owner (the owner's emulator pass, 21 Nov), so it's never the why.
+        // A refused approval's `words` are tafs cloud's line for the owner, in the owner's language: built when the thread
+        // is read, from the owner's own note only (tafs#1640), so they're drawn whole (`refused`), as Android draws `words`.
+        // A sign-in's words aren't built so: it says only that it didn't go through.
+        if c.type == .approval || c.type == .signIn, text.hasPrefix("failed") {
+            var a = Answer(type: c.type.rawValue, id: c.id, text: "failed", words: words)
+            let line = words.trimmingCharacters(in: .whitespacesAndNewlines)
+            if c.type == .approval, recorded.answer?.hasPrefix("failed: ") == true, !line.isEmpty { a.refused = line }
+            return a
         }
         return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }

@@ -9,7 +9,7 @@ final class TafPageModel: ObservableObject {
         /// Before the phone answers: the taf's name from Your tafs, and "Asking your phone…".
         case asking
         case loaded(WatchTafPage)
-        case unreachable
+        case unreachable(PhoneFailure)
         case signedOut
         /// A phone from before the read: "Update tafs on your phone".
         case updatePhone
@@ -44,9 +44,13 @@ final class TafPageModel: ObservableObject {
     func load() async {
         open = true
         if case .loaded = state {} else { state = .asking }
-        let reply = await phone.ask(WatchRequest(.taf, made: clock(), taf: taf.id))
+        let reached = await phone.reach(WatchRequest(.taf, made: clock(), taf: taf.id))
         guard open else { return }
-        guard let reply else { state = .unreachable; return }
+        let reply: WatchReply
+        switch reached {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .unreachable(why); return
+        }
         switch reply.outcome {
         case .ok:
             // Only this taf's page is drawn here.
@@ -62,7 +66,7 @@ final class TafPageModel: ObservableObject {
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:
-            state = .unreachable
+            state = .unreachable(.notReachable)
         }
     }
 
@@ -77,10 +81,10 @@ final class TafPageModel: ObservableObject {
         guard halt?.isSending != true else { return }
         guard lock.isSecure else { halt = .failed(Words.Watch.needsLock); return }
         halt = .sending
-        let reply = await phone.ask(WatchRequest(.halt, made: clock(), taf: taf.id))
-        if reply?.outcome == .signedOut { state = .signedOut; halt = nil; return }
-        halt = WatchAnswer.from(reply)
-        if reply?.outcome == .ok, open { await load() }
+        let reached = await phone.reach(WatchRequest(.halt, made: clock(), taf: taf.id))
+        if reached.reply?.outcome == .signedOut { state = .signedOut; halt = nil; return }
+        halt = WatchAnswer.from(reached)
+        if reached.reply?.outcome == .ok, open { await load() }
     }
 }
 
@@ -151,8 +155,8 @@ struct TafPageScreen: View {
                     TafSettingsScreen(model: model)
                 }
             }
-        case .unreachable:
-            WatchNotice(line: Words.Watch.phoneNotReachable) { await model.load() }
+        case .unreachable(let why):
+            WatchNotice(line: why.line) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .updatePhone:

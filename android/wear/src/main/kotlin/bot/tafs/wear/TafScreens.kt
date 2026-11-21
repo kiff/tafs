@@ -140,8 +140,8 @@ private fun ScalingLazyListScope.notReadTaf(open: WatchModel.OpenTaf, act: Actio
   when (val read = open.read) {
     WatchModel.TafRead.Asking -> line(Words.Watch.askingPhone)
     WatchModel.TafRead.SignedOut -> line(Words.Watch.signInOnPhone)
-    WatchModel.TafRead.PhoneUnreachable -> {
-      line(Words.Watch.phoneNotReachable)
+    is WatchModel.TafRead.PhoneUnreachable -> {
+      line(read.why.line)
       item { Button(onClick = { act.openTaf(open.tafId) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.TafRead.UpdatePhone -> line(Words.Watch.updatePhone)
@@ -364,7 +364,7 @@ internal fun wordsOf(outcome: WatchModel.Outcome): String? = when (outcome) {
   is WatchModel.Outcome.NotDone -> outcome.words
   WatchModel.Outcome.AlreadyAnswered -> Words.Watch.alreadyAnswered
   WatchModel.Outcome.NeedsLock -> Words.Watch.needsLock
-  WatchModel.Outcome.PhoneUnreachable -> Words.Watch.phoneNotReachable
+  is WatchModel.Outcome.PhoneUnreachable -> outcome.why.line
   is WatchModel.Outcome.Halting, is WatchModel.Outcome.Several -> null
 }
 

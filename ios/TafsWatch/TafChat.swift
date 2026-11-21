@@ -45,6 +45,8 @@ struct TafChatPage: View {
     let taf: WatchTaf
     @ObservedObject var chat: CoachModel
     @State private var asking = false
+    /// The watch's own recording, behind `WatchVoice.on` (row 44, A): its text then opens Check before sending.
+    @State private var recording = false
 
     var body: some View {
         List {
@@ -55,12 +57,15 @@ struct TafChatPage: View {
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
             }
-            // The last turns from before this visit, as the phone shows them.
-            ForEach(chat.history) { line in
-                TafChatLineRow(line: line)
+            // The last turns from before this visit, as the phone shows them, with a header where a day starts (row 44, C).
+            let days = chat.history.map(\.at) + chat.turns.map(\.at)
+            ForEach(Array(chat.history.enumerated()), id: \.element.id) { i, line in
+                if ChatTime.startsDay(days, at: i, calendar: chat.calendar) { WatchChatDay(date: line.at, calendar: chat.calendar) }
+                TafChatLineRow(line: line, zone: chat.zone)
             }
-            ForEach(chat.turns) { turn in
-                TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id]) {
+            ForEach(Array(chat.turns.enumerated()), id: \.element.id) { i, turn in
+                if ChatTime.startsDay(days, at: chat.history.count + i, calendar: chat.calendar) { WatchChatDay(date: turn.at, calendar: chat.calendar) }
+                TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id], zone: chat.zone) {
                     Task { await chat.readMore(turn.id) }
                 }
             }
@@ -78,7 +83,14 @@ struct TafChatPage: View {
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
                 }
-                Button { asking = true } label: {
+                Button {
+                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+                    if WatchVoice.on, chat.listensFirst {
+                        recording = true
+                    } else {
+                        Task { if await WatchDictation.talk(to: chat) { asking = true } }
+                    }
+                } label: {
                     Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
                         .font(.headline)
                 }
@@ -89,12 +101,29 @@ struct TafChatPage: View {
         .sheet(isPresented: $asking) {
             CoachAsk(model: chat, title: Words.Chat.messageTaf(taf: taf.name), answerer: taf.name)
         }
+        .sheet(isPresented: $recording, onDismiss: { if chat.reviewing { asking = true } }) {
+            VoiceRecordScreen(model: VoiceModel { words in chat.review(words) })
+        }
+    }
+}
+
+/// The header where a chat's day starts on the wrist: Today, Yesterday, then the date (`ChatTime.day`).
+struct WatchChatDay: View {
+    let date: Date
+    let calendar: Calendar
+    var body: some View {
+        Text(ChatTime.day(date, calendar: calendar))
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
+            .listRowBackground(Color.clear)
     }
 }
 
 /// A turn from before this visit: yours orange on the right, the taf's green on the left, the rest on the phone if cut.
 struct TafChatLineRow: View {
     let line: WatchChatLine
+    var zone: TimeZone = .current
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -103,6 +132,8 @@ struct TafChatLineRow: View {
             if line.more {
                 Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
             }
+            // When it was sent (row 44, C), small, under its words.
+            Text(ChatTime.time(line.at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
@@ -120,12 +151,14 @@ struct TafTurnRow: View {
     let turn: CoachModel.Turn
     let taf: String
     let whole: CoachModel.Whole?
+    var zone: TimeZone = .current
     let readMore: () -> Void
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(turn.at, style: .time)
+            Text(ChatTime.time(turn.at, zone: zone))
                 .font(.caption2)
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
             Text(verbatim: turn.said)
                 .font(.footnote)
@@ -176,6 +209,10 @@ struct TafTurnRow: View {
                     Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
                 case nil:
                     EmptyView()
+                }
+                // When the answer came (row 44, C), small, under it, as Wear OS shows it.
+                if let at = answer?.at {
+                    Text(ChatTime.time(at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
                 }
             }
             .padding(.horizontal, 8)

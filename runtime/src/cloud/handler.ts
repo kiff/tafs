@@ -839,7 +839,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     // Only the tafs KIFF says the person may use or oversee are.
-    const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
+    // Newest first, as Home lists them.
+    const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent))
+      .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
     // Leftover connections of tafs gone end here, on the read of a person who may manage tafs (their session), at most hourly.
     if (me.capabilities.includes("cards.manage")) await within(sweepLeftovers(me, bearer(event), deps), 2000).catch((err) => console.warn(`connections sweep: ${(err as Error)?.message ?? "timed out"}`));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
@@ -3040,6 +3042,16 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       const kept = deps.coach ? await deps.coach.get(stepWhyKey(me.tenantID, id)).catch(() => undefined) : undefined;
       return [id, Array.isArray(kept) ? kept as StepWhys : []] as const;
     })));
+    // A connection made later in the chat is past an earlier run's refusal of the same app (keeper.connected).
+    const connectedLater = deps.coach ? await deps.coach.get(chatConnectedKey(me.tenantID, r.session.id)).catch(() => undefined) : undefined;
+    if (Array.isArray(connectedLater) && connectedLater.length) {
+      for (const [id, w] of runs) {
+        const started = Math.min(...w.parts.map((p) => p.start).filter((n) => !Number.isNaN(n)));
+        if (!Number.isFinite(started)) continue;
+        whysOf.set(id, (whysOf.get(id) ?? []).map((why) => why.refused && !why.resolved && (connectedLater as SessionConnected).some((c) =>
+          Date.parse(c.at) > started && connectsRefused(why.refused!, c)) ? { ...why, resolved: true as const } : why));
+      }
+    }
     for (const [id, w] of runs) {
       const whys = [...(whysOf.get(id) ?? [])];
       for (const p of w.parts) {
@@ -3276,7 +3288,7 @@ export function settledApprovalAnswer(answer: unknown): string | undefined {
   return undefined;
 }
 
-export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
+export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?: unknown }, lang: Lang): string | undefined {
   if (b.type !== "approval" || typeof b.answer !== "string") return undefined;
   const w = wordsIn(lang);
   if (b.answer === "approved") return w.approval_answer_approved;
@@ -3286,7 +3298,10 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lan
     // A connect step that worked by design, its Card next: never "it didn't go through".
     const next = why.endsWith(`; ${CARD_NEXT}`) ? / is connected$/.exec(why.slice(0, -`; ${CARD_NEXT}`.length)) : null;
     if (next) return w.approval_connected_card_next(why.slice(0, next.index));
-    return w.approval_answer_failed(why);
+    // The reason after "failed: " is written for Coach (what to draft again, what never to say), never for the owner
+    // (21 Nov, the owner on the emulator: a refused Card's line carried "Show the rules again as a new notice…"). The
+    // owner reads the line alone, or the owner's own note where tafs cloud kept one (the precheck's).
+    return w.approval_answer_failed(typeof b.note === "string" && b.note ? b.note : undefined);
   }
   return undefined;
 }
@@ -3458,7 +3473,7 @@ const splitKeys = {
 async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
   if (!deps.coach || !me.capabilities.includes("cards.manage")) return;
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
     ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   for (const c of components) {
     const card = c.component as { type?: unknown; grant?: unknown; draft?: unknown; id?: unknown } | undefined;
@@ -3503,7 +3518,7 @@ const precheckKeys = {
   told: (tenant: string, draft: string, version: string) => `${tenant}#draft-precheck-told#${draft}#${version}`,
 };
 /** A refusal Coach was told on a chat's read: its answer, so every phone draws the card as answered. */
-interface PrecheckTold { answer: string; at: string }
+interface PrecheckTold { answer: string; at: string; note?: string }
 
 /**
  * A Card draft checked as the phone reads the chat, before its card is drawn (Eval 43690861487's Refunds: the owner
@@ -3522,7 +3537,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
   if (!component) return undefined;
   const now = nowOf(deps);
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
     ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   const claim = precheckKeys.claim(me.tenantID, ask.draft, ask.version);
   const toldKey = precheckKeys.told(me.tenantID, ask.draft, ask.version);
@@ -3554,7 +3569,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
     if (!(err instanceof HTTPError && err.status === 409)) await release();
     return undefined;
   }
-  const told: PrecheckTold = { answer: out.answer, at: now.toISOString() };
+  const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), ...(out.note ? { note: out.note } : {}) };
   await deps.coach.put(toldKey, told, kept).catch(() => undefined);
   return shown(told);
 }
@@ -5199,9 +5214,23 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
       ...(out.fresh
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
-        : { words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
+        : { words: connectAgainWords(w, out.signed_out_cause, out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
+}
+
+/**
+ * What Coach tells the owner about a connection planque signed out, by the cause planque kept: "expired" only for a
+ * sign-in that really ran out (`no_refresh_token`); a vendor that stopped taking it, a removed connection's shared
+ * sign-in, and any other cause or none (an older planque) each have their own line, none says expired.
+ */
+export function connectAgainWords(w: ReturnType<typeof wordsIn>, cause: string | undefined, app: string, taf: string): string {
+  switch (cause) {
+    case "no_refresh_token": return w.connect_again_words(app, taf);
+    case "refresh_refused": return w.connect_again_refused_words(app, taf);
+    case "reused_sign_in_gone": return w.connect_again_shared_gone_words(app, taf);
+    default: return w.connect_again_signed_out_words(app, taf);
+  }
 }
 
 async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
@@ -6956,8 +6985,25 @@ function whyKeeper(me: KIFFIdentity, deps: Deps, taf: Taf, session?: string): Wh
       const at = deps.now?.() ?? new Date();
       await store.put(key, whys.map((w) => w.refused && connectsRefused(w.refused, through) ? { ...w, resolved: true as const } : w), new Date(at.getTime() + STEP_WHY_KEPT_MS));
     }));
+    // And for the chat's earlier runs: a connection made in a later turn is past their refusals too (21 Nov, the emulator's
+    // Calendar: the first run's red "Next: ask Coach to sign in again" stayed after Coach connected in the next).
+    const session = keeper.session;
+    if (!session) return;
+    then(() => store.get(chatConnectedKey(me.tenantID, session)).then(async (kept) => {
+      const at = deps.now?.() ?? new Date();
+      const marks = (Array.isArray(kept) ? kept as SessionConnected : []).slice(-STEP_WHYS_KEPT + 1);
+      await store.put(chatConnectedKey(me.tenantID, session), [...marks, { ...through, at: at.toISOString() }], new Date(at.getTime() + STEP_WHY_KEPT_MS));
+    }));
   };
   return keeper;
+}
+
+/** The apps a chat connected, each with when: an earlier run's refusal of the same is past (keeper.connected). */
+type SessionConnected = Array<{ vendor: string; key?: string; at: string }>;
+
+/** Where a chat's connections are kept: its session's. */
+function chatConnectedKey(tenant: string, session: string): string {
+  return `${tenant}#coach-connected#${session}`;
 }
 
 /** A connection call's action, from its input as sent ("request", "status"…), to tell Coach's retry of it from other work. */
@@ -7526,7 +7572,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     colors.set(t.id, color);
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
-  const tafs = all.filter((t) => listable(access, t.kiffAgent));
+  // Newest first, as the owner looks for the taf they just made (21 Nov, the owner on the emulator's pass): only the
+  // list's order, after the colours, which are still handed out oldest first so each taf keeps the one it started with.
+  const tafs = all.filter((t) => listable(access, t.kiffAgent))
+    .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
   // Where each taf's work stands (docs/reliability.md): one read of its recent runs, for its
   // last run and its work line. A read that fails leaves both out.
   const now = deps.now?.() ?? new Date();

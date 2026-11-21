@@ -477,11 +477,11 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
-  // Files (docs/android-app.md, Files): a model only with its switch on, over tafs cloud's routes.
-  val files = remember { if (bot.tafs.app.files.FilesFeature.on) bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) else null }
-  val filesShowing = files?.state?.collectAsState()?.value?.showing == true
-  // From your watch (docs/android-app.md): a store only with its switch on; off, Coach's sheet draws nothing of it and asks nothing.
-  val watchDays = remember { if (bot.tafs.app.watch.WatchDaysFeature.on) model.watchDaysStore else null }
+  // Files (docs/android-app.md, Files), over tafs cloud's routes.
+  val files = remember { bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) }
+  val filesShowing = files.state.collectAsState().value.showing
+  // From your watch (docs/android-app.md), in Coach's earlier-conversations sheet.
+  val watchDays = remember { model.watchDaysStore }
   var filesFromAccount by rememberSaveable { mutableStateOf(false) }
   var showingConnectApps by rememberSaveable { mutableStateOf(false) }
   var showingPeople by rememberSaveable { mutableStateOf(false) }
@@ -833,11 +833,11 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     else -> Beside.Overview
   }
   // What the sidebar opened beside it, closed when it opens something else: one screen beside it at a time, as the iPad's.
-  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false; files?.close() }
+  fun closeBeside() { showingSettings = false; usageOpen = false; showingConnectApps = false; if (haltTaf == null) haltOpen = false; files.close() }
   // From a file to the chat it came from: its taf, by tafs cloud's id, on its page.
   val filesSeeInChat: (bot.tafs.app.files.KeptFile) -> Unit = { f ->
     state.tafs.firstOrNull { it.cloudId != null && it.cloudId == f.tafId }?.let { taf ->
-      files?.close(); filesFromAccount = false; closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = taf.id
+      files.close(); filesFromAccount = false; closeBeside(); tab = Tab.Tafs; coachOpen = false; trialTaf = null; openTaf = taf.id
     }
   }
   // A taf opened from the sidebar: on the Tafs tab, with nothing else over it.
@@ -1022,7 +1022,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onClose = { showingSettings = false },
         focus = settingsFocus,
         onFocused = { settingsFocus = null },
-        onFiles = { showingSettings = false; filesFromAccount = true; files?.show() },
+        onFiles = { showingSettings = false; filesFromAccount = true; files.show() },
       )
     }
     }

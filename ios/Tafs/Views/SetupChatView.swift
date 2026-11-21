@@ -275,10 +275,9 @@ struct SetupChatView: View {
                         if i == firstOfRun, let live = model.setupLive {
                             LiveWork(live: live).id("work")
                         }
-                        // A time between parts of the thread that are far apart, not on every line.
-                        if let gap = gapTime(items, i) {
-                            Text(gap).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                                .frame(maxWidth: .infinity).padding(.top, 6)
+                        // A header where a day starts (row 44, C): Today, Yesterday, then the date.
+                        if ChatTime.startsDay(items.map(\.at), at: i, calendar: AccountTime.calendar) {
+                            ChatDayHeader(date: item.at)
                         }
                         Group {
                             switch item {
@@ -289,6 +288,7 @@ struct SetupChatView: View {
                                                                               attachments: m.attachments), taf: nil)
                                     // Written while a card waited: these words were its answer (`answers`).
                                     if m.answers != nil { AnsweredCardLine() }
+                                    ChatSentTime(date: m.at)
                                 }
                             case .message(let m):
                                 // Streamed answers show as written; only without a stream are they revealed.
@@ -296,6 +296,7 @@ struct SetupChatView: View {
                                     if let work = m.work { WorkSummary(work: work, coach: true) }
                                     RevealingBubble(message: m, reveal: revealing(m), revealed: $revealed, grown: $grown)
                                         .reportable(m, in: nil, model: model, reporting: $reporting)
+                                    ChatSentTime(date: m.at)
                                 }
                             case .component(let c):
                                 SetupComponentView(shown: c)
@@ -566,12 +567,6 @@ struct SetupChatView: View {
                 return true
             }
         }
-    }
-
-    private func gapTime(_ items: [SetupThread.Item], _ i: Int) -> String? {
-        let at = items[i].at
-        if i > 0, at.timeIntervalSince(items[i - 1].at) < 3600 { return nil }
-        return AccountTime.calendar.isDateInToday(at) ? at.shortTime : at.shown(date: .abbreviated, time: .shortened)
     }
 
     /// The empty chat: the question it answers (#82), what Setup does, and ways to start (#58).
@@ -848,7 +843,7 @@ struct SetupChatsList: View {
     @State private var notArchived: String?
     /// The conversation waiting for the owner's yes to archive it.
     @State private var confirming: TafsCloud.Chat?
-    /// W11: the watch's conversations, one a day (`WatchDaysFeature`, off).
+    /// W11: the watch's conversations, one a day.
     @State private var watchDays: WatchDaysModel?
 
     var body: some View {
@@ -899,7 +894,7 @@ struct SetupChatsList: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
             .task {
                 await model.loadSetupChats()
-                guard WatchDaysFeature.on, model.mode == .kiff else { return }
+                guard model.mode == .kiff else { return }
                 let zone = model.kiffAccount?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
                 let days = watchDays ?? WatchDaysModel(reading: model.cloud, zone: zone)
                 watchDays = days
@@ -1754,7 +1749,9 @@ struct SetupApproval: View {
                 Text(Words.Coach.newerRequestConnectionBelow)
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else if case .failed(let why) = state {
-                Text(why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.didNotGoThroughNothing)
+                // tafs cloud's line for a refused approval, whole; else the phone's own why.
+                Text(model.setupThread.answer(to: component.id)?.refused
+                     ?? why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.didNotGoThroughNothing)
                     .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
             if !replaced, state.isFailure && model.requestRefused(component) {

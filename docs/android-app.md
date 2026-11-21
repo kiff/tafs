@@ -234,7 +234,7 @@ cd android
 ```
 
 Gradle needs a JDK 17 or later; Android Studio's own (`jbr`) does. The build uses the
-Android Gradle plugin 9.1 on Gradle 9.3.1, which the wrapper fetches and checks against its
+Android Gradle plugin 9.5 on Gradle 9.6.0, which the wrapper fetches and checks against its
 checksum; Android Studio needs to support that plugin version to open the project. On Windows,
 `gradlew.bat`. CI (`.github/workflows/android.yml`) runs the unit tests and the debug
 builds on every pull request that touches `android/`, and the UI tests on an emulator. The UI
@@ -480,7 +480,10 @@ searches across their tafs, opens one case, and exports receipts
   replaced at each export. `missing` shows as a line ("2 calls have no receipt yet.").
 - **What the app answered:** a call the app refused, or one that couldn't be sent, says so in the
   app's own line, which names the app ("Gmail refused it, and it still counts toward today's
-  limits"). KIFF's `tool_outcome.message` carries the app's answer through, so it's quoted after
+  limits"). When KIFF says no Card total kept it (`tool_outcome.counted: false`: the vendor refused, nothing was done, and the
+  Card counts what's done), the line says it doesn't count ("Gmail refused it. Nothing was done, and it doesn't count toward
+  today's limits", `record.tool_refused_not_counted`, as iOS). A call with money or an amount keeps its own line, and an older KIFF
+  that doesn't send the field keeps today's. KIFF's `tool_outcome.message` carries the app's answer through, so it's quoted after
   that line only when it's a short, plain, one-line reason (`KiffMapping.quotable`: 160 characters
   at most, no JSON, no address). An app's raw answer can hold the connected account's address, a
   file's name or a request id, and the Record, and the "Last failed" line Connect apps and a taf's
@@ -504,6 +507,14 @@ in it as they start (`attachBaseContext`), and recreates the screen after a chan
 per-app language once the phone moves to 13. Either way the words are installed again at once, so lines drawn outside the
 screen change too, and every request's `Accept-Language` follows. The session and what's open stay: the model lives in
 `TafsApplication`, not the screen, and the Account sheet stays open.
+
+**Brazilian Portuguese (pt-BR)** ships beside pt as a regional variant: its lines are pt's with Brazil's own on top
+(`app/strings/pt-BR/`), generated into `values-pt-rBR`, so a phone set to Brazil reads them and one set to Portugal, or any
+other Portuguese, reads pt's. The list names it "Português (Brasil)", after "Português", and keeps it as itself
+(`AppLocale.known`: "pt-BR" stays, "pt-PT" is "pt", "de-DE" is "de"). Only the app's own lines are regional: KIFF's
+pages and kiff.dev's open in its language (`Res.pageLanguage`, "pt"): the Terms and Privacy links, the sign-in and the
+held call's page. `Accept-Language` sends the variant, then its language ("pt-BR, pt;q=0.9, en;q=0.8"), so tafs cloud and
+planque answer in pt today and can tell Brazil apart once they have its words.
 
 **Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
 region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
@@ -574,7 +585,10 @@ sign-out or another sign-in on the way is told by the account's generation, as b
 
 **A connection its vendor signed out** (`needs_reconnect`): its taf waits on the owner in the
 home list, at the top with the held calls, its row reading planque's `status_words` ("Signed out
-by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). On the taf's Card tab its
+by Stripe · sign in again"; `AppState.signedOut`, `waitingOnOwner`). Before planque sends its words, the app's own are the
+plain "Signed out · sign in again" (`connect.status.signed_out_plain`), true whoever signed it out: "by {vendor}" isn't, when
+planque signed it out because the connection whose sign-in it used was removed (`reused_sign_in_gone`). Who did it is planque's
+to say, in `status_words`. On the taf's Card tab its
 connection says the same, with **Sign in again**: one approval, then the vendor's own page
 (`AppModel.reconnect`), and "Connected" only once planque answers connected.
 
@@ -679,7 +693,9 @@ raw reason stays in the error for the code that acts on it (including an approva
 whose `detail` or `error` is the app's own line now). tafs cloud writes its `words`, else its `error`,
 for the person, so those are shown as sent; one that isn't is fixed in tafs cloud. The one planque line
 shown as planque says it is a vendor refusing planque's client (`vendor_refused_client`), since it says
-whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
+whose it is. iPhone and iPad do the same. A connect planque ended failed (409 `connect_failed`, planque#329) reads as
+not working on our side, never as its 409's "It changed in the meantime": its reason is for Coach
+(`ErrorWords.CONNECT_FAILED`; iOS follows). "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again. The person never reads it: a connection planque has
@@ -791,6 +807,8 @@ answered:
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
   iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
+  A revoked Card's face says **Revoked** and nothing more in its corner, and shows no "left today", since nothing uses it
+  (`TafCardFace`, `RevokedCardFaceTest`); a Card in use keeps its end date or "No end date", and what's left.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
 `you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is
@@ -1507,8 +1525,9 @@ afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 
 What the account's tafs make in their runs (a report, a sheet, a document), kept 30 days from the run for everyone on the
 account, as mockup v2.1 draws it (kiff/work `files-v2/`). It reads tafs cloud's Files routes. **On since Android 125
-(1.41.0)**, on the owner's yes of 19 Nov: `FilesFeature.on` is `true` (`files/FilesStore.kt`, pinned by `filesShipsOn`). Turned off, no
-model is made and `LocalFiles` is null, and Account, a taf's page and its chat draw nothing of it (`withTheSwitchOffNothingOfFilesIsDrawn`).
+(1.41.0)**, on the owner's yes of 19 Nov; its switch (`FilesFeature`) was removed on 21 Nov, so `MainActivity` always makes the
+model. Where `LocalFiles` is null (a preview, a test), Account, a taf's page and its chat draw nothing of it
+(`withNoModelNothingOfFilesIsDrawn`).
 
 - **The store** (`FilesStore`) is tafs cloud's four routes and nothing else (docs/api.md, contracts/files-*.json): `list`
   (`GET /v1/files?taf=&run=&chat=`, paged by the last id read, `?after=`, with `next`, newest first), `file`
@@ -1559,10 +1578,10 @@ model is made and `LocalFiles` is null, and Account, a taf's page and its chat d
 ## From your watch (W11)
 
 The watch's Coach conversations on the phone, one a day, read only, as the iPhone's are (docs/watch-app.md, W11). **On since
-Android 124 (1.40.0)**: `WatchDaysFeature.on` is `true` (`watch/WatchDays.kt`, pinned by `fromYourWatchShipsOn`), on the owner's
-rule of 19 Nov that a finished, reviewed feature goes on at once; tafs cloud's routes are live (tafs#1463). Turned off, `MainActivity`
-makes no store and `LocalWatchDays` is null, and Coach's Previous conversations draws nothing of it and asks tafs cloud nothing
-(`withTheSwitchOffTheSheetDrawsNothingOfTheWatchAndAsksNothing`).
+Android 124 (1.40.0)**, on the owner's rule of 19 Nov that a finished, reviewed feature goes on at once; tafs cloud's routes are
+live (tafs#1463). Its switch (`WatchDaysFeature`) was removed on 21 Nov, so `MainActivity` always provides the store; tafs cloud's
+own switch still decides (a 404 draws nothing). Where `LocalWatchDays` is null (a preview, a test), Coach's Previous conversations
+draws nothing of it and asks nothing (`withNoStoreNothingOfTheWatchIsDrawn`).
 
 - **The store** (`WatchDaysStore`) is tafs cloud's two routes and nothing else, with the session, under the same switch as
   `GET /v1/watch/asks`: `days` (`GET /v1/watch/days`: the days, newest first, each `date` and `count`, and `today`, the
@@ -1776,7 +1795,17 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     `retryListApproval`); closing the sheet ends the reads (`ConnectAppsTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
-  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
+  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9). **What the button says is what
+  happens:** signing reads the same rule (`CoachWords.approvesAsTap`), so a card that says "Approve with your fingerprint"
+  asks for it even while this phone holds a window, and its call doesn't ride on that window. Before, a card tafs cloud didn't
+  mark could still go as a tap inside a held window, under the fingerprint's words (`PlanqueTest`,
+  `aCardThatSaysFingerprintAsksForItEvenInsideAWindow`).
+- **One approval runs at a time** (`AppState.connecting`), and a card another approval holds says so, "Another approval
+  is going through. Approve this one once it's done.", never a greyed button with no word (`approvalHeld`). A sign-in the
+  owner came back from with no link (its vendor's page left) holds nothing: approving another card gives it up, as
+  **Open … again** does (`AppModel.giveWayToNewApproval`). Its wait ends quietly, Coach hears nothing from it, its card shows
+  Approve again, and the new approval goes on. Before, it held every card in every chat until tafs was opened again
+  (`CoachStartTest`, `aSignInLeftOnItsVendorsPageGivesWayToANewApproval`).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
@@ -1868,5 +1897,5 @@ The API contracts and recent-run history bound are in [api.md](api.md).
 
 ### A vendor sign-in left in its tab
 
-The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** and **Cancel**. Open again never opens the same link: a vendor's link is single-use once its sign-in reached planque, so the page would only say it was used. It ends the wait on that page quietly, with nothing answered to Coach or reported to tafs cloud (`VendorSignInReplaced`, `Came.Replaced`), and runs the card's approval again, one fingerprint (`AppModel.reopenSignIn`). Planque decides from there: a grant it holds signed in answers `signed_in` with its confirm code, and the phone confirms it with no page, as any held sign-in; any other gets a fresh link, opened as the first was (Android 1.29.4). Only with no approval to run again does it open the same page. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 15 minutes end the wait as a closed sign-in; the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting). **The tab gone** (closed with back or its ✕, or closed above tafs's screen by the launcher) marks the sign-in left even when no resume was seen: the tab opens for a result (`MainActivity.vendorTab`), which comes back once the tab is gone, never while it's still there behind another app, and with no link within the grace the card or Connect apps' sheet offers Open again and Cancel (`VendorWait.closed`). It's never left on "Approving…" with no way back (Android 1.30.1; before, a closed tab could leave it there).
+The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** and **Cancel**. Open again never opens the same link: a vendor's link is single-use once its sign-in reached planque, so the page would only say it was used. It ends the wait on that page quietly, with nothing answered to Coach or reported to tafs cloud (`VendorSignInReplaced`, `Came.Replaced`), and runs the card's approval again, one fingerprint (`AppModel.reopenSignIn`). Planque decides from there: a grant it holds signed in answers `signed_in` with its confirm code, and the phone confirms it with no page, as any held sign-in; any other gets a fresh link, opened as the first was (Android 1.29.4). Only with no approval to run again does it open the same page. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 60 minutes end the wait as a closed sign-in (`SIGN_IN_WINDOW_MS`, as long as planque's sign-in link works); the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting). **The tab gone** (closed with back or its ✕, or closed above tafs's screen by the launcher) marks the sign-in left even when no resume was seen: the tab opens for a result (`MainActivity.vendorTab`), which comes back once the tab is gone, never while it's still there behind another app, and with no link within the grace the card or Connect apps' sheet offers Open again and Cancel (`VendorWait.closed`). It's never left on "Approving…" with no way back (Android 1.30.1; before, a closed tab could leave it there).
 Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.

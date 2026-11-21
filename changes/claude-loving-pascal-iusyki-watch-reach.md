@@ -1,0 +1,1 @@
+- **Apple Watch: fewer false "phone not reachable"** (row 44, D): the link is looked at once more before the phone counts as out of reach, a read whose send failed goes once more (a write never does), and each failure says which: not in reach, no answer in time, tafs not on the phone, or the link's own error.

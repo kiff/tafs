@@ -1,0 +1,1 @@
+- **Android:** a section's small heading in Korean or Japanese keeps the plain face, without letter-spacing, so its words stay together, as on iOS ([languages.md](docs/languages.md)).

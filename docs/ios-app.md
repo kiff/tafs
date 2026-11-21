@@ -437,6 +437,11 @@ the app in sample mode.
   At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
+  **A refused approval or sign-in** never shows the settled `answer`'s why, which is written for Coach ("Show the rules
+  again as a new notice…"). A refused approval's `words` are tafs cloud's line for the owner, in the owner's language,
+  built when the thread is read from the owner's own note only (tafs#1640), so the card draws them whole
+  (`SetupThread.Answer.refused`), as Android draws `words`. A refused sign-in says only that it didn't go through. A
+  refusal the phone wrote itself keeps its words.
   **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
   as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
   card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint
@@ -447,8 +452,9 @@ the app in sample mode.
   ask's message opens a window (the approval key signs `kiff.window.v1`, five minutes) unless one is held, and the
   step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
   device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
-  `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
-  before, with Face ID. **A connection approved outside Coach's step** (`AppModel.connect(grantID:)`: Connect apps, Connect
+  `critical` ask, no hint, a card not marked `"tap"` (whose line names Face ID: a window held is never used for it, so
+  Approve never approves without the Face ID it promised; the owner's emulator pass, 21 Nov), a session without the
+  approval key, a drive, or a KIFF without the route (404) signs as before, with Face ID. **A connection approved outside Coach's step** (`AppModel.connect(grantID:)`: Connect apps, Connect
   again, an approval card's Connect) has no ask, so its own Face ID opens the window, as on Android (tafs#1272): a
   window held from before is closed first, planque's approve and confirm go as a tap for that call alone, KIFF's
   refusal of the open (other than 404 or 405) stops it with nothing sent to planque, and the connection's window is
@@ -1190,7 +1196,9 @@ language, are shown as they are. KIFF's and planque's own reasons (an English li
 out (401), not allowed (403), changed meanwhile (409), busy (429), down (5xx), offline, or else "didn't understand each
 other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line for the person in their language, come
 first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
-again". KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
+again". A connect planque ended failed (409 `code: connect_failed`, planque#329) with no `words` reads as not working
+on our side, never as its 409's "changed meanwhile": its `error` is the reason for Coach (`PlanqueClient.connectFailed`,
+as Android's `ErrorWords.CONNECT_FAILED`). KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
 shown in KIFF's words too (`KIFFError.regionUnsupported`): its `message`, in the app's language, as the welcome and the
 sign-in sheet's line, with nothing that says to try again. The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.

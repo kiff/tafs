@@ -30,6 +30,9 @@ final class KIFFClient {
         /// A new sign-in from where KIFF isn't offered (`region_unsupported`): KIFF's own words, in the app's language,
         /// shown as sent. Nothing the person can change from the app, so nothing says to try again.
         case regionUnsupported(words: String)
+        /// Signing in inside the app isn't on for this app or account (`unsupported_client` on `/v1/auth/app/…`): KIFF's
+        /// own words when it sends them, else the app's plain line. Never "didn't understand each other": they did.
+        case signInNotOn(words: String?)
 
         var errorDescription: String? {
             switch self {
@@ -45,6 +48,7 @@ final class KIFFClient {
             case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
             case .termsOutdated: return Words.Onboarding.termsChanged
             case .regionUnsupported(let words): return words
+            case .signInNotOn(let words): return words.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 } ?? Words.SignIn.inAppNotOn
             }
         }
     }
@@ -96,6 +100,9 @@ final class KIFFClient {
     nonisolated static let criticalKeyRequired = "critical_key_required"
     /// KIFF's code for a new sign-in from where it isn't offered.
     nonisolated static let regionUnsupported = "region_unsupported"
+    /// KIFF's code when signing in inside the app isn't on for this app or account, and where that sign-in lives.
+    nonisolated static let unsupportedClient = "unsupported_client"
+    nonisolated static let appSignInPath = "/v1/auth/app/"
     nonisolated static let windowRequired = "window_required"
 
     /// What the device key signs inside an approval window: `kiff.request.v1`'s lines under
@@ -935,7 +942,10 @@ final class KIFFClient {
             var message: String?
             var refusedBy: String? = nil
             var code: String? = nil
-            enum CodingKeys: String, CodingKey { case status, message, code, refusedBy = "refused_by" }
+            /// false when no Card total kept the call: the tool did nothing (planque's `effect:none`) and the total
+            /// counts what's carried out, so the draw was given back. Absent from an older KIFF: today's lines.
+            var counted: Bool? = nil
+            enum CodingKeys: String, CodingKey { case status, message, code, counted, refusedBy = "refused_by" }
         }
         let proposalID: String
         let actionName: String
@@ -1635,7 +1645,22 @@ final class KIFFClient {
         return out.isEmpty ? ["en"] : out
     }
 
-    static func acceptLanguage(_ preferred: [String]) -> String {
+    /// What every call to KIFF, tafs cloud and planque sends as `Accept-Language`: the screens' languages, with the
+    /// app's regional variant first where its lines are one (pt-BR, then pt), as Android sends it. The services read the
+    /// language today and can tell Brazil apart once they have its words.
+    nonisolated static var acceptLanguageHeader: String {
+        acceptLanguage(withVariant(Words.locale.identifier, screenLanguages))
+    }
+
+    /// `languages` with `variant` first when it's a shipped regional variant of their first (pt-BR before pt).
+    nonisolated static func withVariant(_ variant: String, _ languages: [String], shipped: [String] = Words.languages) -> [String] {
+        let tag = variant.replacingOccurrences(of: "_", with: "-")
+        guard tag.contains("-"), shipped.contains(tag), let base = tag.split(separator: "-").first.map(String.init),
+              languages.first == base else { return languages }
+        return [tag] + languages
+    }
+
+    nonisolated static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
         if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
         return tags.enumerated().map { i, tag in
@@ -1662,7 +1687,7 @@ final class KIFFClient {
         // The language the app shows, not the device's list: an English app on a Spanish iPad
         // read KIFF's reasons in Spanish (kiff/tafs#138, 21 Oct). When the app is translated,
         // KIFF follows it.
-        request.setValue(Self.acceptLanguage(Self.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(Self.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try (body as? RawJSON)?.data ?? JSONEncoder().encode(body)
@@ -1726,6 +1751,11 @@ final class KIFFClient {
             // Where KIFF isn't offered: its words, by its stable code, never "You're not allowed" over them.
             if status == 403, fields?["code"] == Self.regionUnsupported, let words = fields?["message"], !words.isEmpty {
                 throw KIFFError.regionUnsupported(words: words)
+            }
+            // Signing in inside the app isn't on (row 39's switch, off for everyone but K5): said plainly, in KIFF's
+            // words when it sends them, never as a misunderstanding.
+            if status == 400, path.hasPrefix(Self.appSignInPath), fields?["error"] == Self.unsupportedClient {
+                throw KIFFError.signInNotOn(words: fields?["words"])
             }
             // A pairing's refusal: KIFF's own words for the person, with its code as the reason.
             if path == Self.pairingsPath, let code = fields?["error"] {

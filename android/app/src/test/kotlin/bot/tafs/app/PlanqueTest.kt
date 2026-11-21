@@ -761,9 +761,16 @@ class PlanqueTest {
     assertEquals(listOf("g1"), m.state.value.connections("refunds-1").map { it.id })
   }
 
+  /**
+   * With no words from planque yet, the app's own plain line, true whoever signed it out: never "by {vendor}", which isn't true
+   * when planque signed it out because the connection whose sign-in it used was removed. planque's `reason` is never read for it.
+   */
   @Test fun aSignedOutConnectionWithNoWordsYetSaysSoInTheAppsWords() {
-    val g = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant(status = "needs_reconnect"))
-    assertEquals("Signed out by mcp.stripe.com · sign in again", bot.tafs.app.model.ConnectionWords.signedOut(g))
+    fun signedOut(reason: String?) = bot.tafs.app.model.ConnectionWords.signedOut(
+      KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant(status = "needs_reconnect", extra = reason?.let { ""","reason":"$it"""" } ?: "")),
+    )
+    assertEquals("Signed out · sign in again", signedOut(null))
+    assertEquals("Signed out · sign in again", signedOut("the connection whose sign-in it used was disconnected"))
   }
 
   @Test fun anyLiveUpdateReadsPlanquesGrantsAgain() = runTest {
@@ -1206,6 +1213,9 @@ class PlanqueTest {
   }
 
   private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
+
+  /** The same card, marked by tafs cloud as a tap inside the approval window (`signs.takes`). */
+  private fun tapComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard.replace("}", ""","signs":{"card":false,"takes":"tap"}}"""))
 
   // MARK: Coach's card for an app connected with a key: the key goes in on the card, then the card is answered
 
@@ -1735,9 +1745,9 @@ class PlanqueTest {
     assertFalse(body, body.contains("The key is deleted from tafs."))
     assertFalse(body, body.contains("revoked"))
     assertFalse(body, body.contains("leave KIFF"))
-    // A sign-in, by contrast, is revoked at the vendor when nothing else uses it.
+    // A sign-in, by contrast, is revoked at the vendor once no other taf uses the same account there.
     val signIn = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", "connected", extra = ",\"vendor\":\"Stripe\""))
-    assertTrue(words.disconnectBody(signIn, null).contains("it's revoked at Stripe"))
+    assertTrue(words.disconnectBody(signIn, null).contains("the sign-in is revoked at Stripe"))
   }
 
   // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)
@@ -2297,10 +2307,35 @@ class PlanqueTest {
     coachWithCard(m)
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
     m.approveCoach(approvalComponent(), digest, null)
-    m.approveCoach(approvalComponent(), digest, null)
+    // The second card is one tafs cloud marks a tap, so its button says "Approve" and it rides on the window.
+    m.approveCoach(tapComponent(), digest, null)
     assertEquals(1, auth.asked.size)
     assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
     assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
+  }
+
+  // The owner, 21 Nov: what the button says is what happens. A card tafs cloud doesn't mark a tap says "Approve with your
+  // fingerprint", so it asks for the fingerprint even while this phone holds a window, and its call doesn't ride on it.
+  @Test fun aCardThatSaysFingerprintAsksForItEvenInsideAWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+    }
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("No fingerprint for the next 5 minutes", m.state.value.windowWords)
+    m.approveCoach(approvalComponent(), digest, null)
+    // Two fingerprints: the window's, then this card's own. One window opened, and only the first call rode on it.
+    assertEquals(2, auth.asked.size)
+    assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(1, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
   }
 
   @Test fun planqueSayingTheWindowEndedOpensANewOneAndTriesOnceMore() = runTest {
@@ -2510,5 +2545,15 @@ class PlanqueTest {
     val grant = """{"id":"g_02","status":"pending","text":"books pourra lire vos factures sur mcp.qonto.com","lang":"fr","digest_v":2,""" +
       """"digest":"f1ca3ab371ecf97a82d134204e4931ef39ea474b7cd6a3e233b36f97499fbb32","request":$request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
     assertTrue(readGrant(grant).digestMatches)
+  }
+
+  // planque#329 answers a failed connect with 409 connect_failed and a reason written for Coach ("connector_…'s resource must be
+  // a string in its schema"). The person reads that it isn't working on our side: never the reason, never "It changed in the
+  // meantime", which a bare 409 reads as. planque's own words for the person, when sent, still come first.
+  @Test fun aFailedConnectReadsAsOursNeverTheReasonForCoach() {
+    val failed = PlanqueError.Server(409, "connector_5f26's resource must be a string in its schema", code = "connect_failed")
+    assertEquals(bot.tafs.app.model.Words.Error.down, bot.tafs.app.model.ErrorWords.of(failed))
+    assertEquals(bot.tafs.app.model.Words.Error.changed, bot.tafs.app.model.ErrorWords.of(PlanqueError.Server(409, "x")))
+    assertEquals("Stripe said no.", bot.tafs.app.model.ErrorWords.of(PlanqueError.Server(409, "x", code = "connect_failed", words = "Stripe said no.")))
   }
 }

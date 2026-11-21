@@ -174,6 +174,7 @@ struct OnboardingView: View {
             Text(Onboarding.ageLine())
                 .scaledFont(12).foregroundColor(Theme.dim)
                 .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("onboarding.age")
         }
     }
 

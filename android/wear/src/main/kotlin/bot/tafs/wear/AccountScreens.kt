@@ -157,8 +157,8 @@ private fun CalendarScreen(calendar: WatchModel.Reading<WatchModel.DayRead>?, ac
     when (calendar) {
       null, WatchModel.Reading.Asking -> line(Words.Calendar.reading)
       WatchModel.Reading.SignedOut -> line(Words.Watch.signInOnPhone)
-      WatchModel.Reading.PhoneUnreachable -> {
-        line(Words.Watch.phoneNotReachable)
+      is WatchModel.Reading.PhoneUnreachable -> {
+        line(calendar.why.line)
         item { Button(onClick = { act.readCalendar(null) }, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
       }
       WatchModel.Reading.OpenOnPhone -> item {
@@ -219,8 +219,8 @@ internal fun ScalingLazyListScope.accountItems(account: WatchModel.Reading<Watch
   when (account) {
     null, WatchModel.Reading.Asking -> line(Words.Watch.askingPhone)
     WatchModel.Reading.SignedOut -> line(Words.Watch.signInOnPhone)
-    WatchModel.Reading.PhoneUnreachable -> {
-      line(Words.Watch.phoneNotReachable)
+    is WatchModel.Reading.PhoneUnreachable -> {
+      line(account.why.line)
       item { Button(onClick = act.readAccount, modifier = Modifier.fillMaxWidth(), colors = neutralButton()) { Text(Words.Common.tryAgain) } }
     }
     WatchModel.Reading.OpenOnPhone -> Unit

@@ -1,10 +1,10 @@
 import Foundation
 
 /// Files (docs/files.md): what the account's tafs delivered in their runs, kept 30 days from the run and seen by everyone
-/// on the account. On since 19 Nov, on the owner's yes, once its privacy lines were live in 8 languages and the phone
-/// cleared its own copies on sign-out (tafs#1467). The screens read tafs cloud's routes (`CloudFilesStore`), in KIFF mode only.
+/// on the account. On for everyone since 19 Nov (the owner's yes, tafs#1467); its app switch went with row 35, so tafs
+/// cloud's own switch alone decides (a 404 draws nothing). The screens read tafs cloud's routes (`CloudFilesStore`), in KIFF
+/// mode only.
 enum FilesFeature {
-    static let on = true
     /// How long a file is kept from its run (the owner's pick, 1a): tafs cloud's rule, shown here, never applied here.
     static let keptDays = 30
 }

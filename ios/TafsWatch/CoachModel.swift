@@ -65,6 +65,16 @@ final class CoachModel: ObservableObject {
     /// A taf's chat: its last turns from before this visit, read through the phone when the chat opens. Forgotten with the
     /// turns; never kept on the watch.
     @Published private(set) var history: [WatchChatLine] = []
+    /// The account's zone, as the phone sends it with Your tafs and a taf's chat, so times and days read as on the
+    /// phone; the watch's own until the phone says (row 44, C).
+    var zone: TimeZone { WatchAccountZone.zone }
+
+    /// A calendar in `zone`, for where a chat's days start.
+    var calendar: Calendar {
+        var c = Calendar.current
+        c.timeZone = zone
+        return c
+    }
     /// Read more, by turn: each whole answer read on a tap. Forgotten with the turns.
     @Published private(set) var whole: [String: Whole] = [:]
     /// The last request this visit sent: the next Send replies to it (`reply_to`, docs/watch-ask.md), so Coach keeps the
@@ -110,6 +120,11 @@ final class CoachModel: ObservableObject {
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.
     var inFlight: Bool { state == .sending || state == .sent || state == .answering }
 
+    /// One tap to talk (row 44, A): Ask goes straight to the system's dictation only when there's nothing to come back to (no
+    /// words on their way, none kept in the review after a failed Send) and the watch has a passcode, as Wear OS never
+    /// listens without a screen lock. Otherwise Ask opens the ask as before.
+    var listensFirst: Bool { !inFlight && !reviewing && lock.isSecure }
+
     var canSend: Bool { !inFlight && !words.isEmpty && words.count <= WatchRequest.coachLimit }
     private var words: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -124,8 +139,11 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased()))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             draft = ""
@@ -165,9 +183,12 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
-                                                 ticket: lastTicket))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
+                                              ticket: lastTicket)) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             guard let ticket = reply.ticket else { state = .failed(Words.Watch.phoneNotReachable); return }
@@ -245,6 +266,7 @@ final class CoachModel: ObservableObject {
         let visit = self.visit
         let reply = await phone.ask(WatchRequest(.tafChat, made: clock(), taf: taf))
         guard visit == self.visit, let reply, reply.outcome == .ok, let chat = reply.chat else { return }
+        WatchAccountZone.learn(reply.zone)
         // This visit's turns are shown below them: only what came before the first is history, so none shows twice.
         guard let first = turns.first?.at else { history = chat; return }
         history = chat.filter { $0.at < first }

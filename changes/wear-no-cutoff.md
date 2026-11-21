@@ -1,0 +1,1 @@
+- **Wear OS: dictation isn't cut off by a pause.** The watch keeps listening across the recognizer's own pauses and joins what you said; it ends when you tap ✓ or after about 8 seconds of quiet ([watch-wear.md](docs/watch-wear.md)).

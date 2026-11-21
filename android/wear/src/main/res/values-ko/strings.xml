@@ -96,6 +96,7 @@
     <plurals name="watch_needs_you_count">
         <item quantity="other">확인 필요 %1$s개</item>
     </plurals>
+    <string name="watch_no_offline_speech">이 언어에서는 휴대폰이 자체적으로 음성을 텍스트로 변환할 수 없습니다. 대신 입력하세요.</string>
     <string name="watch_not_sure">도착했는지 확실하지 않음</string>
     <string name="watch_nothing_sent_until">승인할 때까지 아무것도 보내지 않습니다.</string>
     <string name="watch_nothing_waits">기다리는 항목이 없습니다.</string>
@@ -103,6 +104,9 @@
     <string name="watch_page_brief">브리핑</string>
     <string name="watch_page_inbox">받은편지함</string>
     <string name="watch_paused_still_answers">일시 중지됨: 일정이 꺼져 있습니다. 보내는 메시지에는 계속 답합니다.</string>
+    <string name="watch_phone_link_failed">휴대폰과 연결하지 못했습니다. 다시 시도하세요.</string>
+    <string name="watch_phone_no_answer">휴대폰이 제시간에 응답하지 않았습니다. 다시 시도하세요.</string>
+    <string name="watch_phone_no_app">휴대폰에 tafs가 설치되어 있지 않습니다. 설치한 후 다시 시도하세요.</string>
     <string name="watch_phone_not_reachable">휴대폰이 범위 밖에 있습니다. 더 가까이 가져온 후 다시 시도하세요.</string>
     <string name="watch_play">재생</string>
     <string name="watch_qr_needs_me_today">오늘 확인할 일은?</string>
@@ -117,6 +121,7 @@
     </plurals>
     <string name="watch_recent_chats">최근 채팅</string>
     <string name="watch_recording">녹음 중</string>
+    <string name="watch_recording_not_received">녹음이 휴대폰에 전달되지 않았습니다. 다시 시도하거나 직접 입력하세요.</string>
     <string name="watch_refused">거절했습니다. 아무것도 보내지 않았습니다.</string>
     <string name="watch_reply">답장</string>
     <string name="watch_rerecord">다시 녹음</string>
@@ -136,6 +141,7 @@
     <string name="watch_swipe_settings">왼쪽으로 밀어 설정 보기</string>
     <string name="watch_tap_start">시작을 탭한 후 말하세요. 말하는 동안 내 말이 여기에 표시됩니다.</string>
     <string name="watch_timing">듣기 %1$sms · 영수증 %2$sms · 결과 %3$sms</string>
+    <string name="watch_transcribing">휴대폰에서 텍스트로 변환하는 중…</string>
     <string name="watch_trust">이 워치는 비밀번호나 키를 보관하지 않으며 아무것도 승인하지 않습니다. 내 승인이 필요한 일은 휴대폰에서 기다립니다. taf는 Card가 허용하는 일만 합니다.</string>
     <string name="watch_type">입력</string>
     <string name="watch_type_hint">Coach에게 쓰기…</string>

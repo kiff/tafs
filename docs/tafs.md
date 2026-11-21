@@ -49,8 +49,9 @@ tafs cloud stores one agent definition per taf in kiff/agents
 (`runtime/src/cloud/tafdef.ts`):
 
 - **Model:** `claude-sonnet-5-5`, at medium effort, at standard output (Sonnet 5.5 has no fast
-  output), at most 16,000 tokens a turn. Coach runs on `claude-opus-5-5` at low effort
-  (`setupdef.ts`). The owner's choice of 5 Nov 2026, measured through kiff/agents' Eval. The
+  output), at most 16,000 tokens a turn. Coach runs on `claude-sonnet-5-5` too, at low effort
+  (`setupdef.ts`; on `claude-opus-5-5` from 5 Nov until the owner's choice of 21 Nov 2026, for cost).
+  The taf's model is the owner's choice of 5 Nov 2026, measured through kiff/agents' Eval. The
   model's short progress notes stream to the owner on the live line while it works
   (`thinking: "updates"`, docs/chat.md); its reasoning never does.
 - **Instructions:** the shared tafs instructions, the job's, the owner's notes, how its
@@ -101,7 +102,9 @@ taken becomes "Name 2", "Name 3"….
 
 ## The home list
 
-`GET /v1/home` is the app's list: tafs only, each with its state, colour and Card summary.
+`GET /v1/home` is the app's list: tafs only, newest first, each with its state, colour and Card summary
+(`GET /v1/tafs` lists them in the same order). Colours are still handed out oldest first, so each taf keeps the one it
+started with.
 tafs cloud builds it from its records and KIFF's Cards and held calls, read with the owner's
 session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists only what KIFF
 says the person may use or oversee. An agent made through KIFF's API isn't a taf: it's

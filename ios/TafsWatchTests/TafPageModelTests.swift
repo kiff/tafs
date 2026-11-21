@@ -70,11 +70,11 @@ final class TafPageModelTests: XCTestCase {
     /// Before the phone can read it, the page says why in v1's words.
     func testEachWayThePhoneCantAnswer() async {
         let cases: [(WatchReply?, TafPageModel.State)] = [
-            (nil, .unreachable),
+            (nil, .unreachable(.notReachable)),
             (WatchReply(.signedOut), .signedOut),
             (WatchReply(.notYet), .updatePhone),
             (WatchReply(.failed, line: "tafs couldn't read it."), .failed("tafs couldn't read it.")),
-            (WatchReply(.stale), .unreachable),
+            (WatchReply(.stale), .unreachable(.notReachable)),
         ]
         for (reply, state) in cases {
             let model = TafPageModel(taf: rae, phone: Phone(reply), clock: { self.now }, lock: Unlocked())

@@ -19,17 +19,55 @@ import bot.tafs.watchlink.Amounts
  */
 internal const val BRIEF_ON_WATCH = false
 
+/** How long the phone may fail to answer while the last read stays on screen, before it's called unreachable (row 44, D). */
+internal const val UNREACHABLE_AFTER_MS = 30_000L
+
 /** How the watch reaches the phone: one live request and its answer, or nothing when the phone can't be reached. */
 fun interface PhoneLink {
   /** The phone's reply; [Asked.Unreachable] when no phone with tafs answered in time. */
   suspend fun ask(request: WatchRequest): Asked
+
+  /**
+   * A recording the watch's recognizer gave up on, to the phone over its own channel (row 44, A): the only audio that leaves the
+   * watch, and only to the paired phone, which turns it into text there ([WatchRequest.Transcribe]). Whether it all went.
+   */
+  suspend fun sendVoice(id: String, file: java.io.File): Boolean = false
+}
+
+/** The longest a recording for the phone is kept on the watch, whatever happens: 2 minutes (row 44, A). */
+internal const val VOICE_KEEP_MS = 2 * 60 * 1000L
+
+/**
+ * Why the phone gave no answer, so the wrist says which, never "not in reach" for all of them (row 44, D; the Apple Watch's
+ * `PhoneFailure`, tafs#1632, in the same lines).
+ */
+enum class LinkFailure {
+  /** No phone with tafs is in reach: none found after the second look, or the link says it isn't connected. */
+  NotReachable,
+
+  /** The phone was asked and didn't answer within the limit. */
+  NoAnswer,
+
+  /** The paired phone is there, but tafs isn't on it (or isn't one that answers the watch). */
+  NoApp,
+
+  /** The link itself failed, or the reply couldn't be read. */
+  Link;
+
+  /** What the watch says, with Try again under it. */
+  val line: String get() = when (this) {
+    NotReachable -> Words.Watch.phoneNotReachable
+    NoAnswer -> Words.Watch.phoneNoAnswer
+    NoApp -> Words.Watch.phoneNoApp
+    Link -> Words.Watch.phoneLinkFailed
+  }
 }
 
 sealed interface Asked {
   data class Answered(val reply: WatchReply) : Asked
 
-  /** No phone with tafs is connected, or it didn't answer in time. */
-  data object Unreachable : Asked
+  /** No phone with tafs answered, and [why]. */
+  data class Unreachable(val why: LinkFailure = LinkFailure.NotReachable) : Asked
 
   /** The phone answered with something this watch doesn't understand (a newer phone): it says Open on phone, never guesses. */
   data object NotUnderstood : Asked
@@ -66,6 +104,8 @@ class WatchModel(
   private val inboxStore: InboxStore? = null,
   /** v2's Sign out on this watch alone (AccountScreens.kt): whether it's signed out here; none in v1, which can't sign out. */
   private val signIn: WatchSignIn? = null,
+  /** What the watch keeps so it opens at once (row 44, D, [WatchCache]); none in a test that doesn't use it. */
+  private val cache: WatchCache? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -75,7 +115,13 @@ class WatchModel(
      * The phone's Needs you and Your tafs, in its words; and its brief, shown in Needs you's place, when the switch is on and the
      * account has one.
      */
-    data class Read(val needsYou: NeedsYouRead, val tafs: TafsRead?, val brief: WatchReply.Brief? = null) : Shown {
+    data class Read(
+      val needsYou: NeedsYouRead,
+      val tafs: TafsRead?,
+      val brief: WatchReply.Brief? = null,
+      /** What's shown is the last read (kept, or from before a short drop), and a fresh one is on its way (row 44, D). */
+      val updating: Boolean = false,
+    ) : Shown {
       /**
        * The hold [decision] may be refused by, from the wrist: only a held call Needs you's own read lists as refusable, matched by
        * its hold id, so the brief offers Refuse exactly where Needs you does. Null for any other: it's Open on phone.
@@ -88,7 +134,7 @@ class WatchModel(
     data object SignedOut : Shown
 
     /** No phone answered: keep it close and try again. */
-    data object PhoneUnreachable : Shown
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Shown
 
     /** The phone said something this watch can't draw, or refused the read: Open on phone. */
     data object OpenOnPhone : Shown
@@ -118,7 +164,7 @@ class WatchModel(
     /** The watch has no screen lock, or is locked: nothing was sent. */
     data object NeedsLock : Outcome
 
-    data object PhoneUnreachable : Outcome
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Outcome
 
     /** v2: several tafs halted one after the other, each taf's name with what came of its Halt. */
     data class Several(val each: List<Pair<String, Outcome>>) : Outcome {
@@ -187,7 +233,7 @@ class WatchModel(
       is WatchReply.Failed -> Outcome.NotDone(reply.words)
       else -> Outcome.NotDone(null)
     }
-    Asked.Unreachable -> Outcome.PhoneUnreachable
+    is Asked.Unreachable -> Outcome.PhoneUnreachable(asked.why)
     Asked.NotUnderstood -> Outcome.NotDone(null)
   }
 
@@ -206,7 +252,7 @@ class WatchModel(
 
     data object SignedOut : TafRead
 
-    data object PhoneUnreachable : TafRead
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : TafRead
 
     /** A phone with an older tafs, which doesn't know the page: update it. */
     data object UpdatePhone : TafRead
@@ -313,7 +359,7 @@ class WatchModel(
         is WatchReply.Refused -> if (reply.reason == NotAccepted.UNKNOWN_PATH) TafRead.UpdatePhone else TafRead.Failed(null)
         else -> TafRead.Failed(null)
       }
-      Asked.Unreachable -> TafRead.PhoneUnreachable
+      is Asked.Unreachable -> TafRead.PhoneUnreachable(asked.why)
       Asked.NotUnderstood -> TafRead.Failed(null)
     }
     // Only while this taf is still the one open: closed, or another opened meanwhile, its answer is dropped.
@@ -439,6 +485,9 @@ class WatchModel(
 
     /** Nothing heard, or the speech input failed: tap to try again. */
     data object HeardNothing : Voice
+
+    /** The watch's recognizer gave up: the phone is turning the recording into text, on the phone itself (row 44, A). */
+    data class Transcribing(val before: String, val replyTo: String?) : Voice
 
     /** Not sent: this watch has no screen lock, or is locked. */
     data object NeedsLock : Voice
@@ -672,14 +721,50 @@ class WatchModel(
         else -> Voice.NotSent(null)
       }
       // No answer in the watch's time: the phone may have sent it.
-      Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
+      is Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
       Asked.NotUnderstood -> Voice.NotSent(null)
     }
   }
 
   /** Done with the microphone's screen: back to the microphone. Nothing heard is kept. */
   fun closeVoice() {
+    // Cancel while the phone transcribes: the recording goes now, and the text that comes after is dropped.
+    phoneVoice?.delete()
+    phoneVoice = null
     voiceNow = null
+  }
+
+  /** The recording on its way to the phone, deleted on Cancel. */
+  private var phoneVoice: VoiceAudio? = null
+
+  /**
+   * The watch's recognizer gave up partway and the watch recorded the rest ([audio]); [before] is what it heard first (row 44, A).
+   * The recording goes to the phone, which turns it into text on the phone itself; the text joins [before] and goes to the review,
+   * as words heard do. The recording is deleted once the text is back, on Cancel, and after [VOICE_KEEP_MS] at most. With no
+   * on-device recognizer on the phone, what was heard before stands, or the watch says so: nothing goes to a server.
+   */
+  suspend fun transcribeOnPhone(audio: KeptAudio, before: String, language: String) {
+    val listening = _voice.value as? Voice.Listening ?: return audio.delete()
+    phoneVoice = audio
+    voiceNow = Voice.Transcribing(before, listening.replyTo)
+    val id = newClientId()
+    val reply = try {
+      kotlinx.coroutines.withTimeoutOrNull(VOICE_KEEP_MS) {
+        if (!phone.sendVoice(id, audio.file)) null
+        else (phone.ask(WatchRequest.Transcribe(now(), id, language)) as? Asked.Answered)?.reply
+      }
+    } finally {
+      audio.delete()
+      if (phoneVoice === audio) phoneVoice = null
+    }
+    // Cancelled, or another start, meanwhile: nothing more.
+    val transcribing = _voice.value as? Voice.Transcribing ?: return
+    voiceNow = Voice.Listening(before, transcribing.replyTo)
+    when (reply) {
+      is WatchReply.Transcribed -> heard(listOf(before, reply.text).filter { it.isNotBlank() }.joinToString(" "))
+      WatchReply.NoOfflineSpeech -> if (before.isNotBlank()) heard(before) else voiceNow = Voice.NotSent(Words.Watch.noOfflineSpeech)
+      else -> if (before.isNotBlank()) heard(before) else heardNothing()
+    }
   }
 
   /**
@@ -852,9 +937,18 @@ class WatchModel(
     if (_signedOutHere.value) return
     // A locked watch, or one with no screen lock, keeps no Inbox: as the tile's count, nothing shows off the wrist.
     val kept = unlocked()
-    if (!kept) clearInboxLines()
+    if (!kept) {
+      clearInboxLines()
+      cache?.clear()
+    }
     _inboxKept.value = kept && (inboxStore != null || reviewFirst)
-    if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
+    // Opens at once on what was kept, marked as updating, while the phone is asked (row 44, D).
+    if (_shown.value !is Shown.Read) {
+      _shown.value = cache?.takeIf { kept }?.load()?.let { c ->
+        // The count alone: Needs you's line comes with the phone's read.
+        Shown.Read(NeedsYouRead(c.count, "", emptyList()), c.tafs?.let { TafsRead(it, c.allHalted) }, updating = true)
+      } ?: Shown.Asking
+    } else _shown.value = (_shown.value as Shown.Read).copy(updating = true)
     val asked = phone.ask(WatchRequest.NeedsYou(now()))
     if (_signedOutHere.value) return
     val needsYou = when (asked) {
@@ -869,6 +963,7 @@ class WatchModel(
           tile?.signedOut()
           // Signed out: nothing of the account stays on the watch, a kept message and a recording included, nor its zone.
           WatchChatTime.use(null)
+          cache?.clear()
           deleteKept()
           clearInbox()
           if (_voice.value is Voice.Review) voiceNow = null
@@ -881,17 +976,35 @@ class WatchModel(
         }
         else -> return show(Shown.OpenOnPhone)
       }
-      Asked.Unreachable -> return show(Shown.PhoneUnreachable)
+      is Asked.Unreachable -> return unreachable(asked.why)
       Asked.NotUnderstood -> return show(Shown.OpenOnPhone)
     }
+    failingSince = null
     // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
     val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }
       ?.also { if (it.zone != null) WatchChatTime.use(it.zone) }?.let { TafsRead(it.tafs, it.allHalted) }
     if (_signedOutHere.value) return
+    if (kept && unlocked()) cache?.save(needsYou, tafs)
     show(Shown.Read(needsYou, tafs, brief))
     // The phone answered: a message kept for later goes now.
     sendKept()
+  }
+
+  /** Since when the phone hasn't answered, while the last read is still shown. */
+  private var failingSince: Long? = null
+
+  /**
+   * No phone answered: a short drop keeps the last read on screen, marked as updating; only after [UNREACHABLE_AFTER_MS] of
+   * failing is the phone called unreachable (row 44, D: "a short disconnect must not flash 'Asking your phone'").
+   */
+  private fun unreachable(why: LinkFailure = LinkFailure.NotReachable) {
+    val shown = _shown.value
+    if (shown is Shown.Read) {
+      val since = failingSince ?: now().also { failingSince = it }
+      if (now() - since < UNREACHABLE_AFTER_MS) return show(shown.copy(updating = true))
+    }
+    show(Shown.PhoneUnreachable(why))
   }
 
   // MARK: Keep for later (v2, docs/watch-wear.md)
@@ -968,7 +1081,7 @@ class WatchModel(
 
     data object SignedOut : Reading<Nothing>
 
-    data object PhoneUnreachable : Reading<Nothing>
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Reading<Nothing>
 
     /** An answer this watch can't draw (an older phone, a failed read): Open on phone, never a guess. */
     data object OpenOnPhone : Reading<Nothing>
@@ -1004,7 +1117,7 @@ class WatchModel(
       is Reading.Read -> Reading.Read(DayRead(read.value, read.value.day == today))
       Reading.Asking -> Reading.Asking
       Reading.SignedOut -> Reading.SignedOut
-      Reading.PhoneUnreachable -> Reading.PhoneUnreachable
+      is Reading.PhoneUnreachable -> read
       Reading.OpenOnPhone -> Reading.OpenOnPhone
     }
   }
@@ -1029,7 +1142,7 @@ class WatchModel(
       WatchReply.SignedOut -> Reading.SignedOut
       else -> Reading.OpenOnPhone
     }
-    Asked.Unreachable -> Reading.PhoneUnreachable
+    is Asked.Unreachable -> Reading.PhoneUnreachable(asked.why)
     Asked.NotUnderstood -> Reading.OpenOnPhone
   }
 
@@ -1043,6 +1156,7 @@ class WatchModel(
    * review and its recording, the message kept for later and the tile's count. The flag stays on the watch until Sign in, here.
    */
   fun signOutHere() {
+    cache?.clear()
     signIn?.signOut()
     _signedOutHere.value = true
     forget()

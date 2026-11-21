@@ -1,0 +1,1 @@
+- **Store listing (draft):** Google Play's Latin American Spanish (es-419) and Brazilian Portuguese (pt-BR) listings, adapted from es and pt with the same claims and limits; nothing is in Play Console yet ([store-listing.md](docs/store-listing.md)).

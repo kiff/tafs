@@ -144,6 +144,17 @@ describe("conversation", () => {
       refused: { vendor: "Shippo", next }, resolved: true }], new Date(NOW.getTime() + 3600_000));
     const again = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     expect(again.body.messages.find((m: { from: string }) => m.from === "taf").refused).toBeUndefined();
+    // Connected in a later turn of the same chat (21 Nov, the emulator's Calendar): the earlier run's refusal is past too.
+    // One connected before that run started isn't.
+    await w.coach.put(stepWhyKey("t_acme", chat.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet",
+      refused: { vendor: "Shippo", reason: "Why: managed sign-in isn't set up for this app", next } }], new Date(NOW.getTime() + 3600_000));
+    const connectedAt = async (iso: string) => {
+      await w.coach.put(`t_acme#coach-connected#${chat.session}`, [{ vendor: "Shippo", at: iso }], new Date(NOW.getTime() + 3600_000));
+      const read = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+      return read.body.messages.find((m: { from: string }) => m.from === "taf").refused;
+    };
+    expect(await connectedAt(at(-60))).toEqual({ words: "Coach couldn't connect Shippo yet", why: "Why: managed sign-in isn't set up for this app", next });
+    expect(await connectedAt(at(600))).toBeUndefined();
   });
 
   it("gives each step its words: KIFF's title for a tool through KIFF, an own tool's by what it does, none for a tool nothing names", async () => {
@@ -1344,13 +1355,13 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(connects.find((c) => c.run === next.id)?.answer).toBeUndefined();
   });
 
-  it("words an approval card's answer in the reader's language, the reason after it as tafs cloud gave it", async () => {
+  it("words an approval card's answer in the reader's language, never with the reason written for Coach", async () => {
     // kiff/agents records "Approve · it didn't go through: …" in English (#716).
     const w = world();
     const answers: Array<[string, string]> = [
       ["approved", "Zatwierdzone"],
       ["declined", "Odrzucone"],
-      ["failed: Nic nie zostało połączone.", "Zatwierdź · nie powiodło się: Nic nie zostało połączone."],
+      ["failed: Nic nie zostało połączone.", "Zatwierdź · nie powiodło się"],
       ["already approved: Stripe is connected", "Approve · already approved"],
     ];
     const runs: string[] = [];
@@ -1370,7 +1381,7 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     };
     expect(await read("pl-PL")).toEqual(answers.map(([, want]) => want));
     // English reads as kiff/agents' words always read: tafs cloud's English is the same.
-    expect(await read()).toEqual(["Approved", "Declined", "Approve · it didn't go through: Nic nie zostało połączone.", "Approve · already approved"]);
+    expect(await read()).toEqual(["Approved", "Declined", "Approve · it didn't go through", "Approve · already approved"]);
     // And each carries its answer settled, in no language, so the apps never read the words to decide (17 Nov: a French
     // owner's Reject read "Approved" on Windows).
     const settled = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana", headers: { "Accept-Language": "fr-FR" } });

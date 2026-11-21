@@ -38,7 +38,10 @@ describe("Setup's definition on kiff/agents", () => {
   // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
   it("writes even its first working line in the owner's language, never an example's", () => {
     const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    // Naming one language cued it: on Sonnet the waiting line went out in Spanish to English owners, with no Spanish
+    // left in the core but this rule's own example (Eval 44861045509, billing).
+    expect(core).toContain("the language they write in, and no other. Their last message sets it, never an example here.");
+    expect(core).not.toMatch(/Spanish|French|German/);
     expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
     expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
   });
@@ -46,13 +49,15 @@ describe("Setup's definition on kiff/agents", () => {
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
-    // Coach plans with the owner on Opus 5.5, at low; a taf runs on Sonnet 5.5 (the owner's choice of 5 Nov 2026).
-    expect(d.model).toBe("claude-opus-5-5");
-    expect(SETUP_MODEL).toBe("claude-opus-5-5");
+    // Coach plans with the owner on Sonnet 5.5, at low, as a taf runs (the owner's choice of 21 Nov 2026).
+    expect(d.model).toBe("claude-sonnet-5-5");
+    expect(SETUP_MODEL).toBe("claude-sonnet-5-5");
     expect(taf.model).toBe(MODEL);
-    expect(d.model).not.toBe(taf.model);
+    expect(d.model).toBe(taf.model);
     expect(d.price).toEqual(SETUP_PRICE);
-    expect(d.price).toEqual({ Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 });
+    // The same model, the same price: what a turn of Coach costs is what a taf's turn costs.
+    expect(d.price).toEqual(taf.price);
+    expect(d.price).toEqual({ Input: 2_000_000, Output: 10_000_000, CacheRead: 100_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 });
     expect(d.effort).toBe(SETUP_EFFORT);
     expect(d.thinking).toBe("updates"); // the person waiting sees its progress notes, never its reasoning
     expect(SETUP_EFFORT).toBe("low");
@@ -148,8 +153,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
-  it("never writes an id to the owner", () => {
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
+  // 21 Nov (the emulator's Moneybird pass): "Use none_until_approved for the draft." reached the owner as a Coach line.
+  it("never writes an id, or a field or value of its tools, to the owner", () => {
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's), nor a field or value of your tools (effect, none_until_approved, resource_argument)");
   });
 
   it("signs a signed-out grant in again, never with a new request", () => {
@@ -223,10 +229,13 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT).toContain("In the owner's language: every message, and every component's title");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
     // The first sentence leads: the outcome, what waits on the owner, or the question; what was
-    // checked comes after, if at all, with an example in the owner's language (Eval 41013084238).
+    // checked comes after, if at all (Eval 41013084238). The examples are English and said in the owner's language: a
+    // Spanish one had Coach on Sonnet answer an English owner in Spanish (Eval 44848284846, 15 of 61 lines).
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
-    expect(COACH_TEXT).toContain("Falta que apruebes las herramientas de Reembolsos");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Refunds' tools wait for your approval: list payments, read one and refund in EUR, in test mode.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("these examples are English, and you say them in theirs.");
+    expect(COACH_TEXT).not.toMatch(/Falta que|al día|dímelo/);
     // After tafs cloud answers the result, one closing message, always (Eval 41042518957).
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
     expect(COACH_TEXT).not.toContain("The app starts the taf from that draft.");
@@ -235,7 +244,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Before saying it's ready or fixed, check it: one read through it");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A 401 or 403 there is the key or sign-in refused");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
-    // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
+    // No closing offer of more help (Eval 41024236766: "if you want to change them, tell me here").
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
     expect(COACH_TEXT).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
@@ -360,7 +369,11 @@ describe("Setup's definition on kiff/agents", () => {
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
     expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
-    expect(flat).toContain("named from that operation's fields as the vendor's docs give them, never one you make up");
+    // A money argument's unit is the currency code, cents being its scale: a Card in "cents" with the call in EUR had KIFF
+    // refuse every refund (Eval 44871215788, setup EN run 1), and an invalid unit wasn't registered (Eval 44861045509).
+    // Any currency, the one the operation uses, so a USD account's refund tool is in USD (mac-local, tafs#1631).
+    expect(flat).toContain('Name the argument that moves money, its unit the currency code the operation uses (EUR, USD…; never "cents": cents are scale 2), and make it required');
+    expect(flat).toContain("money it moves, in its own units, named from its fields as the vendor's docs give them, never one you make up");
     // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
     expect(flat).toContain("The operation's fields say whether it moves money, not what it is about: one about money that takes no amount field (contesting a claim on a payment, reminding a customer of an invoice) moves no money here. It has no amount argument, and its Card limits its calls a day.");
     // The owner's own limit is the limit (item 44).
@@ -404,7 +417,8 @@ describe("Setup's definition on kiff/agents", () => {
     // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).
     expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it in the first planque request");
     // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("When you must pin the account, pin the grant's own account, as planque's status lists it: never a read of the accounts.");
+    // Reads too: left open, the taf looks the account up on every message (Eval 44848284846, read_charge on Sonnet).
+    expect(flat).toContain("Pin the account on every tool that takes it, reads too: the grant's own account, as planque's status lists it: never a read of the accounts.");
     expect(flat).toContain("gets its describing tool connected by planque with the sign-in when it has one: never ask for it, or any read, alone.");
     expect(flat).toContain("Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known.");
     expect(flat).toContain("A managed app's connect names the taf's planned tools (uses).");

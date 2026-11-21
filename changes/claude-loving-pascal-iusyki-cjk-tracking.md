@@ -1,0 +1,1 @@
+- **iOS, iPadOS and Mac:** a section's small heading in Korean or Japanese keeps the plain face, without letter-spacing, so its words stay together ("기억하는 것", not "기억하는   것").

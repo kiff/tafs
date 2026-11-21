@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** a refused call that a Card's call count gave back now says so in the Record: "{app} refused it. Nothing was done, and it doesn't count toward today's limits". It's in all 10 languages ([api.md](docs/api.md)).

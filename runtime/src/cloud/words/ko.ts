@@ -104,6 +104,9 @@ export const ko: Words = {
   connect_again_done: (app: string, taf: string) => `${app}이(가) 다시 연결되었습니다. ${taf}이(가) 사용할 수 있습니다.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app}이(가) 더 이상 이전 로그인을 받지 않아 ${taf}이(가) 사용할 수 없습니다. 새 로그인으로 다시 연결하세요. 한 번 로그인하면 그 로그인을 사용하던 모든 taf가 다시 사용할 수 있습니다.`,
   connect_again_fresh_done: (app: string) => `${app}이(가) 새 로그인으로 다시 연결되었습니다. 이를 사용하던 모든 taf가 다시 사용할 수 있습니다.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app}이(가) 더 이상 이 로그인을 받지 않아 ${taf}이(가) 사용할 수 없습니다. 다시 연결해 로그인하세요.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf}이(가) 제거된 연결의 ${app} 로그인을 사용하고 있었기 때문에 지금은 ${app}을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app}에서 로그아웃되어 ${taf}이(가) 사용할 수 없습니다. 다시 연결해 로그인하세요.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [`내가 볼 수 없는 taf ${n}개`] : [])]);
@@ -202,7 +205,7 @@ export const ko: Words = {
   approval_status: (status: string) => ({ pending: "대기 중", approved: "승인됨", signed_in: "로그인됨", needs_reconnect: "다시 로그인 필요", listed: "목록에 있음", connected: "연결됨", failed: "실패", revoked: "취소됨", unknown: "알 수 없음" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "승인됨",
   approval_answer_declined: "거부됨",
-  approval_answer_failed: (why: string) => `승인 · 처리되지 않았습니다: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `승인 · 처리되지 않았습니다: ${why}` : `승인 · 처리되지 않았습니다`,
   approval_reason_connect: (vendor: string, taf: string) => `${taf}에 ${vendor} 연결`,
   approval_reason_card: (taf: string) => `${taf}에 Card 주기`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} 연결`,

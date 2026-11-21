@@ -1,0 +1,1 @@
+- **Wear OS: fewer false "phone not reachable".** The watch asks the phone it reached last directly, looks once more when it finds none, and sends a read once more to a phone found afresh; a refusal, a halt or a message is never sent twice ([watch-wear.md](docs/watch-wear.md)).

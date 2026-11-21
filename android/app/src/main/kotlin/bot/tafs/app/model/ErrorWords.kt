@@ -25,7 +25,10 @@ object ErrorWords {
       // planque's own line for the person, when it sends one: never a line of the app's over it ("It changed in the meantime"
       // read as "try again" over a sign-in to another account, and the owner looped).
       is PlanqueError.Server -> if (!e.words.isNullOrBlank()) return e.words
-        else if (e.code in PLANQUE_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
+        else if (e.code in PLANQUE_WORDED && !e.message.isNullOrBlank()) return e.message!!
+        // A connect that failed on planque's side (planque#329): its reason is for Coach, never "It changed in the meantime",
+        // which its 409 would otherwise read as.
+        else if (e.code == CONNECT_FAILED) return DOWN else e.status
       is SignerException, is KiffError, is PlanqueError, is OwnWords -> return e.message.orEmpty()
       is java.io.IOException -> return OFFLINE
       else -> return OURS
@@ -56,6 +59,12 @@ object ErrorWords {
 
   /** planque's codes whose `error` is shown as planque says it, from before planque sent `words`. */
   val PLANQUE_WORDED = setOf("vendor_refused_client")
+
+  /**
+   * planque's 409 for a connect that ended failed (planque#329): its `error` is the reason for the asking agent (a tool name the
+   * vendor no longer lists, an argument's type), with connector ids, so the person reads that it isn't working on our side.
+   */
+  const val CONNECT_FAILED = "connect_failed"
 
   val OFFLINE get() = Words.Error.offline
   val SIGNED_OUT get() = Words.Error.youreSignedOut

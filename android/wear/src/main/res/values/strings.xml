@@ -101,6 +101,7 @@
         <item quantity="one">%1$s needs you</item>
         <item quantity="other">%1$s need you</item>
     </plurals>
+    <string name="watch_no_offline_speech">Your phone can\'t turn speech into text in this language by itself. Type instead.</string>
     <string name="watch_not_sure">Not sure it arrived</string>
     <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
     <string name="watch_nothing_waits">Nothing waits for you.</string>
@@ -108,6 +109,9 @@
     <string name="watch_page_brief">Brief</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Paused: its schedule is off. It still answers what you send.</string>
+    <string name="watch_phone_link_failed">Couldn\'t talk to your phone. Try again.</string>
+    <string name="watch_phone_no_answer">Your phone didn\'t answer in time. Try again.</string>
+    <string name="watch_phone_no_app">tafs isn\'t on your phone. Install it there, then try again.</string>
     <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
     <string name="watch_play">Play</string>
     <string name="watch_qr_needs_me_today">What needs me today?</string>
@@ -123,6 +127,7 @@
     </plurals>
     <string name="watch_recent_chats">Recent chats</string>
     <string name="watch_recording">Recording</string>
+    <string name="watch_recording_not_received">The recording didn\'t reach your phone. Try again, or type instead.</string>
     <string name="watch_refused">Refused. Nothing was sent.</string>
     <string name="watch_reply">Reply</string>
     <string name="watch_rerecord">Re-record</string>
@@ -142,6 +147,7 @@
     <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
+    <string name="watch_transcribing">Turning it into text on your phone…</string>
     <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
     <string name="watch_type">Type</string>
     <string name="watch_type_hint">Write to Coach…</string>

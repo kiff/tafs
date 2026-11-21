@@ -1510,9 +1510,13 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
   it("never reads as a failure when it worked by design: the card's words say it's connected and the Card is next, in the person's language", () => {
     expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "en")).toBe("Gmail is connected. Next, its Card.");
     expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "fr")).toBe("Gmail est connecté. Ensuite, la Card.");
-    // A real failure still says so.
+    // A real failure still says so, in owner words: the reason after "failed: " is written for Coach, never shown (21 Nov,
+    // the owner on the emulator read "Show the rules again as a new notice…"). With the owner's note, that's shown.
     expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone" }, "en"))
-      .toBe("Approve · it didn't go through: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone");
+      .toBe("Approve · it didn't go through");
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: draft it again over the taf's connected tools only", note: "Nothing was approved. Coach drafts it again." }, "en"))
+      .toBe("Approve · it didn't go through: Nothing was approved. Coach drafts it again.");
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: draft it again" }, "fr")).toBe("Approuver · cela n'a pas abouti");
   });
 
   // The owner's Reject read "Approved · signed in to Stripe" on Windows (17 Nov): an app read anything that wasn't the
@@ -2423,7 +2427,8 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
     await w.call("GET", CHAT, undefined);
     expect(w.told()?.answer).toMatch(/^failed: /);
     // What Coach was told is kept for the version, so another phone draws the card answered too.
-    expect(await w.coach.get("t_acme#draft-precheck-told#drf_1#v3")).toEqual({ answer: w.told()?.answer, at: NOW.toISOString() });
+    // The owner's note is kept with it, so the card's line shows owner words, never the answer written for Coach.
+    expect(await w.coach.get("t_acme#draft-precheck-told#drf_1#v3")).toEqual({ answer: w.told()?.answer, at: NOW.toISOString(), note: expect.any(String) });
     // The claim is kept per draft and version: the same version, read again, is drawn answered without a check.
     expect(await w.coach.once("t_acme#draft-precheck#drf_1#v3", new Date(NOW.getTime() + 60_000))).toBe(false);
     expect(await w.coach.once("t_acme#draft-precheck#drf_1#v4", new Date(NOW.getTime() + 60_000))).toBe(true);

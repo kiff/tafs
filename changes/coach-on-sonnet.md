@@ -1,0 +1,1 @@
+- **Coach runs on Claude Sonnet 5.5**, as the tafs do, at the same low effort and with the same skills; its price constants follow the model ([tafs.md](docs/tafs.md)).

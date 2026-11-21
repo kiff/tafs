@@ -1,10 +1,8 @@
 import Foundation
 
-/// W11, "From your watch" on the iPhone and iPad (docs/watch-app.md, "W11"): on since tafs cloud's watch-day routes went
-/// live (tafs#1463). A tafs cloud whose own switch is off answers 404, and the section isn't drawn.
-enum WatchDaysFeature {
-    static let on = true
-}
+/// W11, "From your watch" on the iPhone and iPad (docs/watch-app.md, "W11"): on for everyone since tafs cloud's watch-day
+/// routes went live (tafs#1463); its app switch went with row 35. A tafs cloud whose own switch is off answers 404, and the
+/// section isn't drawn.
 
 /// tafs cloud's watch-day reads (`GET /v1/watch/days`, `GET /v1/watch/days/{date}`): the person's own, read only.
 @MainActor
@@ -25,27 +23,24 @@ final class WatchDaysModel: ObservableObject {
         case failed(String)
     }
 
-    /// The days, newest first; none while the switch is off, or when tafs cloud has none (or doesn't serve them yet).
+    /// The days, newest first; none when tafs cloud has none (or doesn't serve them, or its switch is off).
     @Published private(set) var days: [TafsCloud.WatchDay] = []
     /// Today in the account's time zone, as tafs cloud says it; nil from one that doesn't, and then the phone's day.
     @Published private(set) var today: String?
     @Published private(set) var day: DayState = .reading
     private let reading: WatchDaysReading
-    private let on: Bool
     private var asked = 0
     /// The account's time zone (the phone's when it has none): the days are the account's, so a turn's time is too, as
     /// Android shows it (qa-kiff's read).
     let zone: TimeZone
 
-    init(reading: WatchDaysReading, on: Bool = WatchDaysFeature.on, zone: TimeZone = .current) {
+    init(reading: WatchDaysReading, zone: TimeZone = .current) {
         self.reading = reading
-        self.on = on
         self.zone = zone
     }
 
-    /// The days. A read that fails shows none: the section is simply not there, as with the switch off.
+    /// The days. A read that fails shows none: the section is simply not there.
     func load() async {
-        guard on else { days = []; today = nil; return }
         let read = (try? await reading.watchDays()) ?? TafsCloud.WatchDayList()
         days = read.days
         today = read.today

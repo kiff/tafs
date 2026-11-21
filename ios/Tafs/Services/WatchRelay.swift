@@ -41,6 +41,8 @@ protocol WatchReading {
     func calendar(day: String?) async throws -> WatchCalendarDay
     /// Who is signed in, the account's name and the plan's line (watch v2).
     func account() async throws -> WatchAccount
+    /// The watch's own recording, by its id: its text, from this phone's on-device recognizer (`WatchVoiceInbox`).
+    func transcribe(_ id: String) async -> WatchReply
 }
 
 extension WatchReading {
@@ -57,6 +59,8 @@ extension WatchReading {
     func tafChat(_ id: String) async throws -> [WatchChatLine]? { [] }
     /// A reader from before chatting with a taf: nothing is sent.
     func tafSend(taf: String, text: String, messageID: UUID, after: WatchCoachTicket?) async -> WatchReply { WatchReply(.notYet) }
+    /// A reader without the watch's recording: the watch keeps the system's dictation.
+    func transcribe(_ id: String) async -> WatchReply { WatchReply(.notYet) }
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
@@ -134,7 +138,7 @@ enum WatchRelay {
             }
         case .tafs:
             do {
-                return WatchReply(.ok, tafs: try await reading.tafs())
+                return WatchReply(.ok, tafs: try await reading.tafs(), zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
@@ -166,11 +170,14 @@ enum WatchRelay {
         case .askFull:
             guard let ticket = request.ticket else { return WatchReply(.refused) }
             return await reading.askFull(ticket)
+        case .transcribe:
+            // The watch's own recording, turned into text on this phone only; nothing goes to a server (`WatchVoiceInbox`).
+            return await reading.transcribe(request.message?.lowercased() ?? "")
         case .tafChat:
             // Read only: the person's own chat with a taf the phone lists.
             do {
                 guard let chat = try await reading.tafChat(request.taf ?? "") else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
-                return WatchReply(.ok, chat: chat)
+                return WatchReply(.ok, chat: chat, zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
@@ -601,7 +608,9 @@ struct KeptWatchReading: WatchReading {
 
     nonisolated static func reply(_ asked: TafsCloud.WatchAsk) -> WatchReply {
         guard asked.ended || asked.held else { return WatchReply(.ok, answering: true) }
-        return WatchReply(.ok, coach: WatchCoachAnswer.cut(asked.shown, more: asked.more, approveOnPhone: asked.held), answering: false)
+        var answer = WatchCoachAnswer.cut(asked.shown, more: asked.more, approveOnPhone: asked.held)
+        answer.at = asked.updated
+        return WatchReply(.ok, coach: answer, answering: false)
     }
 
     /// Coach's answer to the person's message: Coach's words written after it in that chat, and
@@ -612,16 +621,23 @@ struct KeptWatchReading: WatchReading {
         guard let mine = thread.messages.last(where: { $0.session == session && $0.from == .owner && (sentID == nil || $0.serverID == sentID) })
         else { return nil }
         let since = mine.at
-        let words = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }.map(\.text)
-            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let answered = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let words = answered.map(\.text)
         let cards = thread.components.contains { $0.session == session && $0.firstAt >= since }
         guard !words.isEmpty || cards else { return nil }
-        return WatchCoachAnswer.cut(words.joined(separator: "\n\n"), more: false, approveOnPhone: cards)
+        var answer = WatchCoachAnswer.cut(words.joined(separator: "\n\n"), more: false, approveOnPhone: cards)
+        answer.at = answered.last?.at
+        return answer
     }
 
     func halt(taf: String?) async -> HaltAll.Outcome {
         guard let taf else { return await HaltAll.run(cloud: cloud, wait: wait) }
         return await HaltAll.runOne(taf, cloud: cloud, wait: wait)
+    }
+
+    func transcribe(_ id: String) async -> WatchReply {
+        await WatchVoiceInbox.shared.transcribe(id)
     }
 }
 
@@ -633,8 +649,16 @@ final class WatchLink: NSObject, WCSessionDelegate, @unchecked Sendable {
 
     func start() {
         guard WCSession.isSupported() else { return }
+        // A recording a process that ended left behind goes (`WatchVoiceInbox`).
+        WatchVoiceInbox.shared.sweep()
         WCSession.default.delegate = self
         WCSession.default.activate()
+    }
+
+    /// The watch's own recording (row 44, A): moved before this returns, since WatchConnectivity deletes the file after.
+    func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        guard let id = WatchVoiceInbox.shared.place(file.fileURL, metadata: file.metadata) else { return }
+        Task { await WatchVoiceInbox.shared.arrived(id) }
     }
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}

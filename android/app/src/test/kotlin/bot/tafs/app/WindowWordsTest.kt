@@ -30,4 +30,16 @@ class WindowWordsTest {
   @Test fun noWindowNoWords() {
     assertNull(windowWordsFor(card("""{"card":false,"takes":"tap"}"""), null))
   }
+
+  // A card's buttons are held by its own approval, or by another card's still on its vendor's page; one the owner came back
+  // from with no link holds nothing (it gives way, AppModel.giveWayToNewApproval).
+  @Test fun anApprovalHoldsOtherCardsOnlyWhileItsVendorsPageIsOpen() {
+    val open = bot.tafs.app.app.AppState(connecting = "g1")
+    assertEquals(true, bot.tafs.app.views.approvalHeld(open, "g1"))
+    assertEquals(true, bot.tafs.app.views.approvalHeld(open, "g2"))
+    val left = open.copy(vendorPageLeft = true)
+    assertEquals(true, bot.tafs.app.views.approvalHeld(left, "g1"))
+    assertEquals(false, bot.tafs.app.views.approvalHeld(left, "g2"))
+    assertEquals(false, bot.tafs.app.views.approvalHeld(bot.tafs.app.app.AppState(), "g2"))
+  }
 }

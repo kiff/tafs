@@ -42,7 +42,7 @@ The same as English: plain, short, specific. Say what happened and what the pers
 | French | `fr` | vous | French business software addresses people as vous. |
 | Spanish | `es` | tú | Neutral Spanish, understood in Spain and Latin America. |
 | Italian | `it` | tu | Informal, as business apps in Italian do. |
-| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe, and a `pt-BR` phone reads it fine. |
+| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe. Brazil reads its own regional variant, `pt-BR` (below, "Regional variants"). |
 | Dutch | `nl` | je | Informal, as Dutch apps do. |
 | Polish | `pl` | Ty | Buttons in the infinitive or imperative, sentences addressing Ty. |
 
@@ -135,6 +135,10 @@ term that recurs is added here first, then used.
 shows it yet. Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
+**Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading
+in Hangul, kana or Han keeps the plain face, untracked, since the monospaced face's wide spaces and the tracking pull its words
+apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle` on Android (`EyebrowTest`).
+
 | Language | Code | Address | Notes |
 |---|---|---|---|
 | Korean | `ko` | 합니다 / 하세요 | Statements end in -습니다/-ㅂ니다, requests in -세요, as Korean business apps do. "나" for the person in labels ("내 코드"). A particle after a placeholder that may end in a consonant is written 을(를), 이(가), 은(는). |
@@ -193,6 +197,56 @@ What a taf sends outside the company starts with its disclosure line, in the mes
 German, Portuguese and Italian today. **Dutch and Polish come with the language work:** "Geschreven door
 een AI-agent voor <writes_for>." and "Napisane przez agenta AI dla <writes_for>.", each with the words
 that tell a message's language, in tafs and kiff/agents together.
+
+## Regional variants
+
+A **regional variant** is a language's lines for one region where some read differently: `pt-BR` beside `pt`
+(`app/strings/languages.json`'s `variants`, `"pt-BR": "pt"`). Its folder, `app/strings/pt-BR/`, holds **only the
+lines that differ** from its base, one file per feature as every language's. `generate.py` (`load_lines`) reads the
+variant as its base's lines with its own on top, so a key it doesn't change reads as the base's and it never falls
+behind. A count takes its base's plural forms.
+
+**A variant is declared, not shipped,** until it's in `shipped`. While it isn't, nothing generated changes. Once it is:
+iOS's catalog gets a `pt-BR` localization and `Words.languages` lists it; Android gets `values-pt-rBR` and a `pt-BR` entry
+in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, each app is checked where it maps a
+language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
+set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`.
+
+**pt-BR** (Wave 1, Brazil) ships: Brazilian forms over `pt`'s, "você" throughout, "celular", "tela", "arquivo", "senha",
+"Entrar" for signing in, "conexão" for a connection, and the system's own names on each platform (iOS "Ajustes", macOS
+"Ajustes do Sistema", Windows and Android "Configurações"). A line that states a legal rule (the terms, the age, a
+consent) isn't in it: it reads as `pt`'s until the language reviewer writes it. iOS picks pt-BR for a phone set to
+Brazilian Portuguese and keeps pt for Portugal's (`AppLanguage.deviceLanguage`); Android picks `values-pt-rBR` itself.
+Both apps send `Accept-Language: pt-BR, pt;q=0.9, en;q=0.8` from a pt-BR phone: tafs cloud, planque and KIFF read `pt`
+today (their words stay `pt`'s), and can tell Brazil apart once they hold pt-BR words of their own.
+No "a + infinitive" ("A verificar…" is "Verificando…") and no enclitics where Brazil puts the pronoun first or says
+"você" ("pede-lhe" is "pede que você"). Card is masculine ("o Card", "pelo seu Card"). Its glossary, where it
+differs from Portuguese's (legal-i18n's read of tafs#1629):
+
+| English | pt-BR |
+|---|---|
+| Needs you | Precisa de você |
+| Record | Registro |
+| Connect apps | Conectar apps |
+| connection | conexão |
+| Sign in again | Entrar novamente |
+| Disconnect | Desconectar |
+| Settings | Configurações |
+| Plan & usage | Plano e uso |
+| Working on it | Em andamento |
+| Your step | Seu passo |
+| Your brief | Seu resumo |
+| Skip it | Pular |
+| Approve once | Aprovar uma vez |
+| Refuse | Recusar |
+| Halt | Bloquear |
+
+Also from that read, in running text: **app** is masculine ("um app", "os seus apps", "Apps conectados"); an app
+signed in before its approval is **"Login feito"**, never "Conectado", which is a finished connection; a sign-out that
+happened is **"Sessão encerrada"** ("Você saiu" for the person's own), and signed in to the account is **"conectado à sua
+conta"**; **"aguardando"** for waiting, **"rodar"** for a taf's run, **"pedido"** for an order (a parcel is "encomenda"),
+**"acompanhamento"** for a follow-up, **"assinatura"**, **"faturamento"**, **"Baixar"**, and the app's own Account
+screen is **"Conta"**.
 
 ## How it's built
 

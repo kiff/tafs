@@ -27,6 +27,15 @@ class LegalTest {
   }
 
   // A language kiff.dev doesn't serve the pages in opens English, and says so, as kiff.dev does.
+  // Brazil's lines are pt-BR, and kiff.dev serves Portuguese pages: they open, with no "in English".
+  @Test fun aRegionalVariantOpensItsLanguagesPages() {
+    assertEquals("https://kiff.dev/pt/tafs/terms", Legal.terms("pt-BR"))
+    assertEquals("https://kiff.dev/pt/tafs/privacy", Legal.privacy("pt-BR"))
+    assertEquals("https://kiff.dev/pt/terms", Legal.kiffTerms("pt-BR"))
+    assertEquals("https://kiff.dev/pt/privacy", Legal.kiffPrivacy("pt-BR"))
+    assertEquals("Terms", Legal.label("Terms", "pt-BR"))
+  }
+
   @Test fun aLanguageWithNoPageOpensEnglishAndSaysSo() {
     assertEquals("https://kiff.dev/tafs/terms", Legal.terms("sv"))
     assertEquals("https://kiff.dev/tafs/privacy", Legal.privacy("sv"))

@@ -423,6 +423,12 @@ carry the connected account's address, a file's name or a request id, so it is n
 through drops `tool_outcome.message` unless the line quotes it. Those words never decide whether anything was
 done. The call's status, amounts, approval flags, receipts and counting remain KIFF's unchanged evidence.
 
+A refused call with `tool_outcome.counted: false` was kept by no Card total. The tool did nothing (planque's
+`effect:none`), and the Card's call count counts what's carried out, so the draw was given back. Where the call has no
+amount, the Record says "{who} refused it. Nothing was done, and it doesn't count toward today's limits"
+(`record.tool_refused_not_counted`), not that it still counts. Money and amount totals keep a refused call, so their
+lines don't change. A KIFF that doesn't send `counted` leaves today's line (iOS `KIFFMapping.executed`).
+
 A `not_done` entry may carry `next`, what the owner can do about it
 (kiff/tafs#476, gap 10): `{kind, words, tool, taf?, message?}`.
 - `reconnect`: a vendor's 401 or 403, or the connection's `operation_changed`.
@@ -499,7 +505,11 @@ not hold a device key, sign or approve anything. A missing or refused proof yiel
 `connections_error`; an unreadable connection list is not presented as an empty one.
 A connection whose sign-in the vendor no longer takes (`needs_reconnect`) also gives the page a
 `connect_again`: `{grant, app, title, words, done_words}`, the taf's own **Connect again**, in the reader's
-language ("Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in."). The app calls the
+language. Its `words` follow the cause planque kept for the sign-out (the grant's `signed_out_cause`, also on the
+connection row): `refresh_refused` ("Gmail no longer takes this sign-in, so Rae can't use it. Connect again to sign in."),
+`reused_sign_in_gone` (a connection it shared a sign-in with was removed), `no_refresh_token` (the only one that says
+"expired": the sign-in really ran out), and any other cause, or none (an older planque, or a connection signed out
+before it was kept), "Gmail was signed out, so Rae can't use it. Connect again to sign in." The app calls the
 connection server's approve for that `grant` (as Connect apps' Sign in again does), so the same connection is
 signed in again with its tools and the taf's Card, and shows `done_words` once it's connected. It never sends
 the person to a list of every app.

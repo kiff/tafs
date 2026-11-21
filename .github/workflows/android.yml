@@ -27,6 +27,10 @@ on:
         description: "Watch only: show the timing readout (an internal build for a test on a real watch; never one for production)"
         type: boolean
         default: false
+      k5:
+        description: "Phone only: a debug APK with the onboarding and the sign-in inside tafs on, for K5 on a test device (a run artifact; nothing goes to Play)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -81,6 +85,11 @@ jobs:
         run: |
           ./gradlew :app:assembleRelease --stacktrace
           play/check_watch_link.sh app/build/outputs/apk/release/app-release-unsigned.apk
+      # K5's switch never reaches a release build, even asked for (docs/onboarding.md).
+      - name: A release build never has K5
+        run: |
+          ./gradlew :app:generateReleaseBuildConfig -Pk5 --stacktrace
+          grep -q 'boolean K5 = false' app/build/generated/source/buildConfig/release/bot/tafs/app/BuildConfig.java
       # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
       - name: The watch's tests and its debug build
         run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
@@ -99,6 +108,35 @@ jobs:
             android/app/build/reports/tests
             android/watchlink/build/reports/tests
             android/wear/build/reports/tests
+
+  # K5 (docs/onboarding.md), by hand only: a debug APK with the onboarding and the sign-in inside tafs on, for a test device or
+  # the emulator. Built without Firebase's settings (alerts off), since the repository is public and the APK is a run artifact
+  # anyone signed in to GitHub can download. Never signed for Play, never uploaded.
+  k5:
+    if: github.event_name == 'workflow_dispatch' && inputs.k5 && inputs.form != 'wear'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - run: chmod +x gradlew
+      - name: Accept the SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - name: The K5 debug build
+        run: |
+          ./gradlew :app:assembleDebug -Pk5 --stacktrace
+          grep -q 'boolean K5 = true' app/build/generated/source/buildConfig/debug/bot/tafs/app/BuildConfig.java
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tafs-k5-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
 
   # The screens' UI tests (the held call's card) on an emulator: KVM makes it fast enough.
   ui:
@@ -189,7 +227,7 @@ jobs:
     needs: [test, ui, version]
     if: >-
       !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
-      ((github.event_name == 'workflow_dispatch' && inputs.form != 'wear') || needs.version.outputs.raised == 'true')
+      ((github.event_name == 'workflow_dispatch' && inputs.form != 'wear' && !inputs.k5) || needs.version.outputs.raised == 'true')
     # An internal release goes out on a merge to main that raises versionCode (or a manual run), with no reviewer to wait on:
     # CI, the reviews and the internal track are the guardrails. Promotion beyond internal (Play review) is the owner's, in Play.
     # The release role trusts only this environment.
@@ -276,7 +314,7 @@ jobs:
     needs: [test, version]
     if: >-
       !cancelled() && needs.test.result == 'success' &&
-      ((github.event_name == 'workflow_dispatch' && inputs.form == 'wear') || needs.version.outputs.wear_raised == 'true')
+      ((github.event_name == 'workflow_dispatch' && inputs.form == 'wear' && !inputs.k5) || needs.version.outputs.wear_raised == 'true')
     environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30

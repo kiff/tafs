@@ -890,7 +890,7 @@
         <item quantity="other">Si fermano anche %2$s.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Nessun taf usa %1$s ora.</string>
-    <string name="connect_disconnect_rest">Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato presso %1$s. Usare di nuovo %1$s ti chiede di approvare e accedere di nuovo.</string>
+    <string name="connect_disconnect_rest">Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso %1$s; altrimenti, quando viene rimosso l\'ultimo. Usare di nuovo %1$s ti chiede di approvare e accedere di nuovo.</string>
     <string name="connect_disconnect_rest_key">Gli altri taf che usano %1$s mantengono il loro accesso. La chiave viene eliminata da tafs quando nessun taf la usa più. Usare di nuovo %1$s ti chiede di approvare e incollare di nuovo una chiave.</string>
     <string name="connect_disconnect_title">Rimuovere l\'accesso a %1$s?</string>
     <string name="connect_disconnect_title_from">Rimuovere l\'accesso a %1$s per %2$s?</string>
@@ -943,7 +943,7 @@
     <string name="connect_open_browser_again">Apri di nuovo il browser</string>
     <string name="connect_opening_sign_in">Apertura dell\'accesso…</string>
     <string name="connect_other_connections">Altri collegamenti</string>
-    <string name="connect_other_connections_stay_connected_no">" Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso %2$s; altrimenti, quando viene rimosso l\'ultimo."</string>
     <string name="connect_profile_words_not_read">Non è stato possibile leggere le parole di KIFF per questo collegamento. %1$s</string>
     <string name="connect_profile_words_unread">Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.</string>
     <string name="connect_prompt_connect">Collega %1$s a %2$s</string>
@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Accesso effettuato · Coach sta scegliendo i suoi strumenti</string>
     <string name="connect_status_connected">Collegato</string>
     <string name="connect_status_signed_out">Disconnesso da %1$s · accedi di nuovo</string>
+    <string name="connect_status_signed_out_plain">Disconnesso · accedi di nuovo</string>
     <string name="connect_status_waiting_sign_in">In attesa dell\'accesso su %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Questo taf non è ancora su tafs cloud, quindi non si possono collegare app per lui.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud non ha indicato nessun collegamento da approvare</string>
@@ -1850,6 +1851,8 @@
     <string name="record_tool_refused_counts">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi</string>
     <string name="record_tool_refused_counts_why">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi%2$s</string>
     <string name="record_tool_refused_money">%1$s l\'ha rifiutata. Nessun denaro trasferito, ma conta comunque nel totale di oggi.</string>
+    <string name="record_tool_refused_not_counted">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi</string>
+    <string name="record_tool_refused_not_counted_why">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi%2$s</string>
     <string name="record_waiting_for_you">Ti aspetta</string>
     <string name="record_within_card">%1$s, entro la Card</string>
     <string name="record_within_card_alone">Entro la Card</string>
@@ -2286,6 +2289,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un\'app. Le tue risposte vengono firmate su questo %1$s.</string>
     <string name="sign_in_every_action_taf_takes_goes_view">Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un\'app. Le tue approvazioni vengono firmate sul telefono.</string>
     <string name="sign_in_how_works">Come funziona</string>
+    <string name="sign_in_in_app_not_on">L\'accesso dall\'app non è ancora attivo.</string>
     <string name="sign_in_ios_did_not_open_sign">iOS non ha aperto la pagina di accesso (errore %1$s; %2$s). Riprova con tafs aperta.</string>
     <string name="sign_in_lead">I tuoi tafs agiscono con le Card di KIFF. Approva questo %1$s in KIFF, e le Card che hai emesso compaiono qui.</string>
     <string name="sign_in_lets_go">Andiamo</string>
@@ -2719,6 +2723,7 @@
         <item quantity="one">%1$s ti aspetta</item>
         <item quantity="other">%1$s ti aspettano</item>
     </plurals>
+    <string name="watch_no_offline_speech">Il telefono non può trasformare da solo la voce in testo in questa lingua. Scrivi invece.</string>
     <string name="watch_not_sure">Arrivo non confermato</string>
     <string name="watch_nothing_sent_until">Non viene inviato nulla finché non approvi.</string>
     <string name="watch_nothing_waits">Niente ti aspetta.</string>
@@ -2726,6 +2731,9 @@
     <string name="watch_page_brief">Riepilogo</string>
     <string name="watch_page_inbox">In arrivo</string>
     <string name="watch_paused_still_answers">In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.</string>
+    <string name="watch_phone_link_failed">Il collegamento con il telefono non è riuscito. Riprova.</string>
+    <string name="watch_phone_no_answer">Il telefono non ha risposto in tempo. Riprova.</string>
+    <string name="watch_phone_no_app">L\'app tafs non è sul telefono. Installala, poi riprova.</string>
     <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
     <string name="watch_play">Riproduci</string>
     <string name="watch_qr_needs_me_today">Cosa mi aspetta oggi?</string>
@@ -2741,6 +2749,7 @@
     </plurals>
     <string name="watch_recent_chats">Chat recenti</string>
     <string name="watch_recording">Registrazione</string>
+    <string name="watch_recording_not_received">La registrazione non è arrivata al telefono. Riprova, oppure scrivi.</string>
     <string name="watch_refused">Rifiutata. Non è stato inviato nulla.</string>
     <string name="watch_reply">Rispondi</string>
     <string name="watch_rerecord">Registra di nuovo</string>
@@ -2760,6 +2769,7 @@
     <string name="watch_swipe_settings">Scorri a sinistra per le sue impostazioni</string>
     <string name="watch_tap_start">Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.</string>
     <string name="watch_timing">Ascolto %1$s ms · ricevuta %2$s ms · risultato %3$s ms</string>
+    <string name="watch_transcribing">Il telefono lo sta trasformando in testo…</string>
     <string name="watch_trust">Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.</string>
     <string name="watch_type">Scrivi</string>
     <string name="watch_type_hint">Scrivi a Coach…</string>

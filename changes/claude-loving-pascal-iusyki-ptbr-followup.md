@@ -1,0 +1,1 @@
+- **Brazilian Portuguese: the watch's three new failure lines** (not in reach, no answer, tafs not on the phone, from tafs#1632) say "celular", and **the pt-BR store listings quote the app's pt-BR screen names** (Precisa de você, Registro), as a phone in Brazil now shows them.

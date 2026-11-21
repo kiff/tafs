@@ -1,0 +1,1 @@
+- **iPhone, iPad, Mac, Android:** removing a connection says what happens now: the sign-in is revoked at the vendor when no other taf uses the same account there, otherwise when the last one is removed.

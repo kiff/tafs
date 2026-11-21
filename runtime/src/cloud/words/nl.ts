@@ -106,6 +106,9 @@ export const nl: Words = {
   connect_again_done: (app: string, taf: string) => `${app} is weer verbonden. ${taf} kan het gebruiken.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} accepteert de oude aanmelding niet meer, dus ${taf} kan het niet gebruiken. Verbind opnieuw met een nieuwe aanmelding: één aanmelding brengt elke taf terug die het gebruikte.`,
   connect_again_fresh_done: (app: string) => `${app} is weer verbonden met de nieuwe aanmelding. Elke taf die het gebruikte, kan het weer gebruiken.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} accepteert deze aanmelding niet meer, dus ${taf} kan het niet gebruiken. Verbind opnieuw om je aan te melden.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} gebruikte de ${app}-aanmelding van een koppeling die is verwijderd en kan ${app} daarom nu niet gebruiken. Verbind opnieuw om je aan te melden.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} is afgemeld, dus ${taf} kan het niet gebruiken. Verbind opnieuw om je aan te melden.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf die je niet ziet" : `${n} tafs die je niet ziet`] : [])]);
@@ -204,7 +207,7 @@ export const nl: Words = {
   approval_status: (status: string) => ({ pending: "in afwachting", approved: "goedgekeurd", signed_in: "ingelogd", needs_reconnect: "wacht op opnieuw inloggen", listed: "vermeld", connected: "gekoppeld", failed: "mislukt", revoked: "ontkoppeld", unknown: "onbekend" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Goedgekeurd",
   approval_answer_declined: "Geweigerd",
-  approval_answer_failed: (why: string) => `Goedkeuren · het is niet gelukt: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Goedkeuren · het is niet gelukt: ${why}` : `Goedkeuren · het is niet gelukt`,
   approval_reason_connect: (vendor: string, taf: string) => `${vendor} koppelen aan ${taf}`,
   approval_reason_card: (taf: string) => `${taf} zijn Card geven`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} koppelen`,

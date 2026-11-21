@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** a revoked Card reads "Revoked" on its own, with no "No end date" under it and no "left today" over it.

@@ -1,0 +1,1 @@
+- **Android:** a connection that was signed out, with no words from the service yet, says "Signed out · sign in again" rather than "Signed out by {vendor}", which wasn't true when another connection's removal signed it out ([android-app.md](docs/android-app.md)).

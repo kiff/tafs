@@ -118,6 +118,8 @@
   "record.tool_refused_counts": "{who}が拒否しましたが、今日の上限にはカウントされます",
   "record.tool_refused_counts_why": "{who}が拒否しましたが、今日の上限にはカウントされます{why}",
   "record.tool_refused_money": "{who}が拒否しました。お金は移動していませんが、今日の合計にはカウントされます。",
+  "record.tool_refused_not_counted": "{who}が拒否しました。何も実行されておらず、今日の上限にもカウントされません",
+  "record.tool_refused_not_counted_why": "{who}が拒否しました。何も実行されておらず、今日の上限にもカウントされません{why}",
   "record.waiting_for_you": "あなたを待っています",
   "record.within_card": "{amount}、Cardの範囲内",
   "record.within_card_alone": "Cardの範囲内"

@@ -47,6 +47,7 @@
   "watch.needs_you_count": {
     "other": "要確認{count}件"
   },
+  "watch.no_offline_speech": "この言語では、スマートフォンだけで音声をテキストに変換できません。代わりに入力してください。",
   "watch.not_sure": "届いたか不明",
   "watch.nothing_sent_until": "承認するまで何も送信されません。",
   "watch.nothing_waits": "待機中の項目はありません。",
@@ -54,6 +55,9 @@
   "watch.page.brief": "ブリーフィング",
   "watch.page.inbox": "受信トレイ",
   "watch.paused_still_answers": "一時停止中：スケジュールはオフです。送ったメッセージには引き続き答えます。",
+  "watch.phone_link_failed": "スマートフォンと通信できませんでした。もう一度お試しください。",
+  "watch.phone_no_answer": "スマートフォンから時間内に応答がありませんでした。もう一度お試しください。",
+  "watch.phone_no_app": "スマートフォンにtafsがインストールされていません。インストールしてから、もう一度お試しください。",
   "watch.phone_not_reachable": "スマートフォンが範囲外です。近づけてから、もう一度お試しください。",
   "watch.play": "再生",
   "watch.qr.needs_me_today": "今日確認することは？",
@@ -68,6 +72,7 @@
   },
   "watch.recent_chats": "最近のチャット",
   "watch.recording": "録音中",
+  "watch.recording_not_received": "録音がスマートフォンに届きませんでした。もう一度お試しいただくか、入力してください。",
   "watch.refused": "拒否しました。何も送信されていません。",
   "watch.reply": "返信",
   "watch.rerecord": "録音し直す",
@@ -87,6 +92,7 @@
   "watch.swipe_settings": "左にスワイプして設定を表示",
   "watch.tap_start": "「開始」をタップしてから話してください。話している間、言葉がここに表示されます。",
   "watch.timing": "聞き取り {listen}ms・領収書 {receipt}ms・結果 {result}ms",
+  "watch.transcribing": "スマートフォンでテキストに変換しています…",
   "watch.trust": "このウォッチはパスワードやキーを保持せず、何も承認しません。あなたの承認が必要なものはスマートフォンで待ちます。tafsはCardが許可することだけを行います。",
   "watch.type": "入力",
   "watch.type_hint": "Coachに書く…",

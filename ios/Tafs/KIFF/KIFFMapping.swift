@@ -236,7 +236,9 @@ enum KIFFMapping {
     /// What the tool did with an allowed call: its kind and the words for it. approved: the
     /// owner approved it, held first.
     /// A call the vendor refused still counts against the Card's totals: it
-    /// says so plainly, naming the vendor as connected.
+    /// says so plainly, naming the vendor as connected. Unless KIFF says no total kept it
+    /// (`counted == false`: the tool did nothing, and the Card's call count counts what's carried
+    /// out): then it says it doesn't count. The money and amount lines stay: those totals keep it.
     static func executed(_ o: KIFFClient.ActivityCall.ToolOutcome?, approved: Bool, vendor: String? = nil, counts: Counted = .nothing) -> (RecordEntry.Kind, String) {
         let why = quotable(o?.message).map { ": \($0)" } ?? ""
         let allowed = approved ? Words.Record.approvedByYou : Words.Record.allowedByCard
@@ -248,7 +250,9 @@ enum KIFFMapping {
             switch counts {
             case .money: return (.notDone, Words.Record.toolRefusedMoney(who: "\(who)"))
             case .amount: return (.notDone, Words.Record.toolRefusedAmount(who: "\(who)"))
-            case .nothing: return (.notDone, Words.Record.toolRefusedCountsWhy(who: "\(who)", why: "\(why)"))
+            case .nothing:
+                if o?.counted == false { return (.notDone, Words.Record.toolRefusedNotCountedWhy(who: "\(who)", why: "\(why)")) }
+                return (.notDone, Words.Record.toolRefusedCountsWhy(who: "\(who)", why: "\(why)"))
             }
         case "not_sent"?:
             return (.notDone, Words.Record.notSentNothingReachedWhy(allowed: "\(allowed)", why: "\(why)"))

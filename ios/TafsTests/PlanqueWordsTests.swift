@@ -47,4 +47,32 @@ final class PlanqueWordsTests: XCTestCase {
             XCTAssertEqual(message, "that sign-in is to another account than this connection's", "the reason stays for the code")
         }
     }
+
+    /// A connect planque ended failed (planque#329) answers 409 `connect_failed` with a reason for Coach and no words: the
+    /// person reads that it isn't working on our side, never the reason, never "It changed in the meantime". planque's own
+    /// words, when sent, still come first; it's still a refusal of the request. As Android's `aFailedConnectReadsAsOurs…`.
+    func testAFailedConnectReadsAsOursNeverTheReasonForCoach() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: URLSession(configuration: config))
+        planque.tenant = "t_01"
+        planque.deviceID = "dev_1"
+        planque.signer = { _ in "sig" }
+        let path = "POST /v1/accounts/t_01/grants/g_1/confirm"
+        for (body, shown) in [(#"{"error":"connector_5f26's resource must be a string in its schema","code":"connect_failed"}"#, Words.Error.down),
+                              (#"{"error":"x","code":"connect_failed","words":"Stripe said no."}"#, "Stripe said no."),
+                              (#"{"error":"digest changed"}"#, Words.Error.changed)] {
+            StubProtocol.responses[path] = (409, body)
+            do {
+                _ = try await planque.confirm(grantID: "g_1", code: "c")
+                XCTFail("refused")
+            } catch {
+                XCTAssertEqual(error.localizedDescription, shown, body)
+                XCTAssertFalse(error.localizedDescription.contains("connector_"), body)
+                XCTAssertTrue(AppModel.refusesTheRequest(error), body)
+            }
+        }
+    }
 }

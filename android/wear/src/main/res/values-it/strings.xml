@@ -101,6 +101,7 @@
         <item quantity="one">%1$s ti aspetta</item>
         <item quantity="other">%1$s ti aspettano</item>
     </plurals>
+    <string name="watch_no_offline_speech">Il telefono non può trasformare da solo la voce in testo in questa lingua. Scrivi invece.</string>
     <string name="watch_not_sure">Arrivo non confermato</string>
     <string name="watch_nothing_sent_until">Non viene inviato nulla finché non approvi.</string>
     <string name="watch_nothing_waits">Niente ti aspetta.</string>
@@ -108,6 +109,9 @@
     <string name="watch_page_brief">Riepilogo</string>
     <string name="watch_page_inbox">In arrivo</string>
     <string name="watch_paused_still_answers">In pausa: la sua pianificazione è ferma. Risponde comunque a ciò che invii.</string>
+    <string name="watch_phone_link_failed">Il collegamento con il telefono non è riuscito. Riprova.</string>
+    <string name="watch_phone_no_answer">Il telefono non ha risposto in tempo. Riprova.</string>
+    <string name="watch_phone_no_app">L\'app tafs non è sul telefono. Installala, poi riprova.</string>
     <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
     <string name="watch_play">Riproduci</string>
     <string name="watch_qr_needs_me_today">Cosa mi aspetta oggi?</string>
@@ -123,6 +127,7 @@
     </plurals>
     <string name="watch_recent_chats">Chat recenti</string>
     <string name="watch_recording">Registrazione</string>
+    <string name="watch_recording_not_received">La registrazione non è arrivata al telefono. Riprova, oppure scrivi.</string>
     <string name="watch_refused">Rifiutata. Non è stato inviato nulla.</string>
     <string name="watch_reply">Rispondi</string>
     <string name="watch_rerecord">Registra di nuovo</string>
@@ -142,6 +147,7 @@
     <string name="watch_swipe_settings">Scorri a sinistra per le sue impostazioni</string>
     <string name="watch_tap_start">Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.</string>
     <string name="watch_timing">Ascolto %1$s ms · ricevuta %2$s ms · risultato %3$s ms</string>
+    <string name="watch_transcribing">Il telefono lo sta trasformando in testo…</string>
     <string name="watch_trust">Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.</string>
     <string name="watch_type">Scrivi</string>
     <string name="watch_type_hint">Scrivi a Coach…</string>

@@ -101,6 +101,20 @@ class AscBetaTest < Minitest::Test
     assert_nil asc.index("post", "/v1/betaBuildLocalizations")
   end
 
+  # A K5 build: its What to Test says never to submit it, and it's never added to the Beta testers or submitted.
+  def test_a_k5_build_is_marked_and_kept_from_the_beta_testers
+    asc = FakeASC.new
+    out = StringIO.new
+    AscBeta.mark_k5(asc.to_proc, { "BUILD_NUMBER" => "7" }, out: out, wait: ->(_) {})
+    made = asc.index("post", "/v1/betaBuildLocalizations")
+    refute_nil made
+    assert_equal({ locale: "en-US", whatsNew: AscBeta::K5_WHAT_TO_TEST }, asc.calls[made][2][:data][:attributes])
+    assert_includes AscBeta::K5_WHAT_TO_TEST, "never submit for App Store review"
+    assert_nil asc.index("post", "/v1/betaGroups/grp1/relationships/builds"), "never in Beta testers"
+    assert_nil asc.index("post", "/v1/betaAppReviewSubmissions"), "never submitted"
+    assert_includes out.string, "marked K5"
+  end
+
   def test_a_build_already_in_review_is_fine
     asc = FakeASC.new
     asc.on("post", "/v1/betaAppReviewSubmissions", 409, { "errors" => [{ "code" => "ENTITY_ERROR", "detail" => "already submitted" }] })

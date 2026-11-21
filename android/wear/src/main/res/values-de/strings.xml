@@ -101,6 +101,7 @@
         <item quantity="one">%1$s braucht dich</item>
         <item quantity="other">%1$s brauchen dich</item>
     </plurals>
+    <string name="watch_no_offline_speech">Dein Handy kann Gesprochenes in dieser Sprache nicht selbst in Text umwandeln. Tipp stattdessen.</string>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
     <string name="watch_nothing_sent_until">Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="watch_nothing_waits">Nichts wartet auf dich.</string>
@@ -108,6 +109,9 @@
     <string name="watch_page_brief">Briefing</string>
     <string name="watch_page_inbox">Eingang</string>
     <string name="watch_paused_still_answers">Pausiert: Sein Zeitplan ist aus. Was du sendest, beantwortet er trotzdem.</string>
+    <string name="watch_phone_link_failed">Die Verbindung zu deinem Handy hat nicht geklappt. Versuch es erneut.</string>
+    <string name="watch_phone_no_answer">Dein Handy hat nicht rechtzeitig geantwortet. Versuch es erneut.</string>
+    <string name="watch_phone_no_app">tafs ist nicht auf deinem Handy. Installier es dort und versuch es dann erneut.</string>
     <string name="watch_phone_not_reachable">Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.</string>
     <string name="watch_play">Abspielen</string>
     <string name="watch_qr_needs_me_today">Was braucht mich heute?</string>
@@ -123,6 +127,7 @@
     </plurals>
     <string name="watch_recent_chats">Letzte Chats</string>
     <string name="watch_recording">Aufnahme läuft</string>
+    <string name="watch_recording_not_received">Die Aufnahme ist nicht auf deinem Handy angekommen. Versuch es erneut oder tippe stattdessen.</string>
     <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
     <string name="watch_reply">Antworten</string>
     <string name="watch_rerecord">Neu aufnehmen</string>
@@ -142,6 +147,7 @@
     <string name="watch_swipe_settings">Nach links wischen für seine Einstellungen</string>
     <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>
+    <string name="watch_transcribing">Dein Handy macht Text daraus…</string>
     <string name="watch_trust">Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.</string>
     <string name="watch_type">Tippen</string>
     <string name="watch_type_hint">Schreib an Coach…</string>

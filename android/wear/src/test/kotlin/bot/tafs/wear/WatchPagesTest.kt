@@ -297,6 +297,17 @@ class WatchPagesTest {
     assertTrue("the heard words run to the face's edge: $words", insideTheFace(words, androidx.compose.ui.unit.Dp(4f)))
   }
 
+  /** Row 44, D: the last read on screen while a fresh one comes shows one small dot, named for TalkBack; a fresh read, none. */
+  @Test fun anUpdatingReadShowsItsDotAndAFreshOneDoesnt() {
+    show(read.copy(updating = true))
+    compose.onNodeWithTag(UPDATING).assertContentDescriptionEquals(Words.Common.loading)
+  }
+
+  @Test fun aFreshReadShowsNoUpdatingDot() {
+    show(read)
+    compose.onAllNodesWithTag(UPDATING).assertCountEquals(0)
+  }
+
   @Test fun deletedSaysNothingWasSent() {
     show(read, voice = WatchModel.Voice.Deleted)
     compose.onNodeWithText(Words.Watch.deletedNothingSent).assertExists()

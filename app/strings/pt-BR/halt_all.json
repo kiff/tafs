@@ -1,0 +1,8 @@
+{
+  "halt_all.halting": {
+    "one": "Bloqueando {count} taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.",
+    "other": "Bloqueando {count} tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
+  },
+  "halt_all.halting_all": "Bloqueando os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.",
+  "halt_all.signed_out": "Você saiu do tafs. Entre para bloquear os seus tafs."
+}
