@@ -811,7 +811,8 @@ apps' sign-ins). Coach never connects one without `uses`: its sign-in would ask 
 never narrows what a taf or its connection can do in words, in any language ("only", "just", "read-only", or the
 language's own forms, such as French *ne … que*, Korean *-만* or Japanese *だけ*): its Card is the limit, and restating
 the Card ("asks you first above €150") is fine. Eval 44806446879's French Sheets plan offered "Il lira seulement des plages
-de cellules". A sign-in ends 15 minutes after the owner's approval, so Coach says so and guides it in one go; before
+de cellules". A sign-in ends 60 minutes after the owner's approval (`connect-an-app@31`, with planque's window raised from
+15 on 21 Nov), so Coach says so and guides it in one go; before
 Allow, it says which account the vendor's page names, and the wrong one is cancelled, granting nothing. A tool the
 connection says its sign-in doesn't cover ("partly signed in") gets the tools that work, never a new sign-in that would
 answer the same; and a taf that writes never reuses a sign-in made for reads, which Coach says up front (planque's

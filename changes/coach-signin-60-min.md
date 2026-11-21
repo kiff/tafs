@@ -1,0 +1,1 @@
+- **Coach says a sign-in ends 60 minutes after the owner's approval**, as planque's window now is (`connect-an-app@31`; [coach.md](docs/coach.md)).
