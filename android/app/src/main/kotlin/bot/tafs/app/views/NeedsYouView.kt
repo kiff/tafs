@@ -81,6 +81,9 @@ val LocalSignInAgain = staticCompositionLocalOf<(() -> Unit)?> { null }
 /** KIFF keeps this session view-only: the key line says to sign in again on this phone, or approve from the other one. */
 val LocalViewOnly = compositionLocalOf { false }
 
+/** This phone holds no approval key (`AppState.noApprovalKeyHere`): its view-only line asks for a fingerprint, not a new sign-in. */
+val LocalNoApprovalKeyHere = compositionLocalOf { false }
+
 /**
  * Approve again in your browser, where KIFF can re-link this phone: what it's waiting for, and its actions. Null where it isn't
  * offered (the sample, previews, a KIFF without it), which leaves Sign in again.
@@ -106,7 +109,9 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
   val again = LocalApproveAgain.current
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     if (again == null) {
-      Text(if (LocalViewOnly.current) Words.Approval.viewOnly else bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
+      val noKey = LocalNoApprovalKeyHere.current
+      Text(viewOnlyLine(LocalViewOnly.current, noKey), style = scaled(14, color = Theme.amberText))
+      // With no fingerprint the line asks for one first; Sign in again stays, since KIFF learns the new key at the next sign-in.
       signInAgain?.let { OutlineButton(Words.Connect.signInAgain, it, Modifier.fillMaxWidth(), color = Theme.amberText) }
       return@Column
     }
@@ -479,4 +484,11 @@ private fun remaining(call: HeldCall, now: Instant): String {
   val seconds = Duration.between(now, call.expiresAt).seconds
   if (seconds < 1) return Words.NeedsYou.expired
   return Words.NeedsYou.left("%d:%02d".format(seconds / 60, seconds % 60))
+}
+
+/** The line where an approval can't be given here: a fingerprint to add, KIFF's view-only session, or the approval key renewed. */
+internal fun viewOnlyLine(viewOnly: Boolean, noApprovalKeyHere: Boolean): String = when {
+  noApprovalKeyHere -> Words.Approval.noFingerprint
+  viewOnly -> Words.Approval.viewOnly
+  else -> bot.tafs.app.signing.ApprovalKeyRenewed.WORDS
 }

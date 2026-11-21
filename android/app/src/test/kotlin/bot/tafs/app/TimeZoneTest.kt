@@ -10,6 +10,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -54,6 +55,32 @@ class TimeZoneTest {
     val m = model(other)
     m.signOut(tellKiff = false)
     assertEquals(ZoneId.systemDefault(), zone)
+  }
+
+  /**
+   * K5, 21 Nov: a phone with no fingerprint enrolled holds no approval key, so KIFF's session is view-only, and "Sign in again"
+   * alone can't fix it. The model says so (`noApprovalKeyHere`), and the line asks for a fingerprint first.
+   */
+  @Test fun aPhoneWithNoApprovalKeySaysToAddAFingerprintNotOnlyToSignInAgain() = runTest {
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","approval_mode":"view"}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    secrets.save("1", AppModel.KEYED)
+    val noKey = object : bot.tafs.app.signing.ApprovalSigning by signer {
+      override val approvalPublicKeyDER: ByteArray get() = ByteArray(0)
+    }
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = noKey, clock = { t0 }, start = false).also { it.restore(); it.refresh() }
+    assertTrue(m.state.value.approvalViewOnly)
+    assertTrue(m.state.value.noApprovalKeyHere)
+    assertEquals(bot.tafs.app.model.Words.Approval.noFingerprint, bot.tafs.app.views.viewOnlyLine(viewOnly = true, noApprovalKeyHere = true))
+    // A phone that holds one: KIFF's view-only line, as before.
+    assertFalse(model(other).state.value.noApprovalKeyHere)
+    assertEquals(bot.tafs.app.model.Words.Approval.viewOnly, bot.tafs.app.views.viewOnlyLine(viewOnly = true, noApprovalKeyHere = false))
+    assertEquals(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, bot.tafs.app.views.viewOnlyLine(viewOnly = false, noApprovalKeyHere = false))
   }
 
   @Test fun thisDevicesZoneIsOfferedWhenItDiffers() = runTest {

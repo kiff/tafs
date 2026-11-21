@@ -1755,6 +1755,13 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. For an account KIFF still
   has on UTC, on a phone that isn't, that read happens before the account first shows (Android 1.20.2, as on iPhone and
   iPad), so the question never comes up for it. A later mismatch is still asked, as before.
+  It's never asked over the celebration of a sign-in inside the app (`InAppSignedIn`): it waits until that's gone, so
+  a tap meant for the celebration can't land behind it (K5, 21 Nov).
+- **A phone with no fingerprint enrolled** holds no approval key, so KIFF makes its session view-only
+  (`AppState.noApprovalKeyHere`). The lines that say why approving isn't possible here (Needs you's `ApprovalKeyLine`,
+  Account) then say "Add a fingerprint to this phone to approve from it. Refusing still works."
+  (`approval.no_fingerprint`), not only "Sign in again", which changes nothing until a fingerprint is added. Sign in
+  again stays offered, since KIFF learns the new key at the next sign-in (`viewOnlyLine`).
 - **A taf made with no plan** says so on Coach's card, with **Choose a plan**, which opens Plan & usage.
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
