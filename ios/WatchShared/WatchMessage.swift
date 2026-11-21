@@ -139,10 +139,14 @@ struct WatchReply: Codable, Equatable, Sendable {
     var answering: Bool?
     /// `tafChat`: the last turns of the person's chat with the taf, oldest first.
     var chat: [WatchChatLine]?
+    /// `tafChat`: the account's time zone (an IANA identifier), so the wrist's times and days read as the phone's
+    /// (row 44, C). None from an older phone: the watch's own.
+    var zone: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
-         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil) {
+         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil,
+         zone: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -155,6 +159,7 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.ticket = ticket
         self.answering = answering
         self.chat = chat
+        self.zone = zone
     }
 }
 

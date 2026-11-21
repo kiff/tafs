@@ -39,4 +39,20 @@ final class ChatTimeTests: XCTestCase {
         let starts = dates.indices.filter { ChatTime.startsDay(dates, at: $0, calendar: paris) }
         XCTAssertEqual(starts, [0, 2, 4])
     }
+
+    /// agentgabo's read: the wrist reads the account's zone, as the phone and Wear OS do, not its own. A message at
+    /// 23:30 in Paris is a new day there while it's still the same day in New York, and both its time and its day
+    /// header follow the calendar given.
+    func testTimesAndDaysFollowTheAccountsZoneNotTheDevices() {
+        var newYork = Calendar(identifier: .gregorian)
+        newYork.timeZone = TimeZone(identifier: "America/New_York")!
+        let late = date(2026, 11, 19, 23, 30), early = date(2026, 11, 20, 0, 30)
+        XCTAssertEqual(ChatTime.time(late, zone: paris.timeZone, language: Locale(identifier: "en"), twentyFour: true), "23:30")
+        XCTAssertEqual(ChatTime.time(late, zone: newYork.timeZone, language: Locale(identifier: "en"), twentyFour: true), "17:30")
+        XCTAssertTrue(ChatTime.startsDay([late, early], at: 1, calendar: paris), "past midnight in Paris")
+        XCTAssertFalse(ChatTime.startsDay([late, early], at: 1, calendar: newYork), "the same evening in New York")
+        let reply = WatchReply(.ok, chat: [], zone: "Europe/Paris")
+        let read = try! JSONDecoder().decode(WatchReply.self, from: JSONEncoder().encode(reply))
+        XCTAssertEqual(read.zone, "Europe/Paris", "the phone sends the account's zone with a taf's chat")
+    }
 }

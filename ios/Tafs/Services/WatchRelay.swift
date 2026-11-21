@@ -170,7 +170,7 @@ enum WatchRelay {
             // Read only: the person's own chat with a taf the phone lists.
             do {
                 guard let chat = try await reading.tafChat(request.taf ?? "") else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
-                return WatchReply(.ok, chat: chat)
+                return WatchReply(.ok, chat: chat, zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }

@@ -706,4 +706,5 @@ message and a line where a day starts, with none of its code). Coach's chat is t
   `setLocalizedDateFormatFromTemplate` (`Hm`/`hm` from the device's `j`, `EEEMMMd`/`EEEMMMdy`), drawn as `ChatDayHeader` and
   `ChatSentTime` in `TafChatView` and Coach's `SetupChatView`. It replaces the time iOS drew between parts an hour apart.
   On the Apple Watch, a taf's chat (`TafChatPage`) shows the time under each earlier turn, the turn's time over each new
-  one, and a header per day, in the watch's own zone.
+  one, and a header per day, in the account's zone, which the phone sends with the chat (`WatchReply.zone`), as Wear OS does;
+  a phone too old to send it leaves the watch's own.

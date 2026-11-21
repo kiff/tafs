@@ -13,11 +13,7 @@ enum ChatTime {
     /// The time under a message: "14:05", or "2:05 PM" on a 12-hour device, in the app's language.
     static func time(_ date: Date, zone: TimeZone, language: Locale = Words.locale,
                      twentyFour: Bool = ChatTime.deviceUses24Hour()) -> String {
-        let f = DateFormatter()
-        f.locale = language
-        f.timeZone = zone
-        f.setLocalizedDateFormatFromTemplate(twentyFour ? "Hm" : "hm")
-        return f.string(from: date)
+        formatter(twentyFour ? "Hm" : "hm", language, zone).string(from: date)
     }
 
     /// The header where a day starts: Today, Yesterday, else the date with its weekday, and its year when it
@@ -27,12 +23,25 @@ enum ChatTime {
         if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(date, inSameDayAs: yesterday) {
             return Words.Chat.Day.yesterday
         }
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        return formatter(sameYear ? "EEEMMMd" : "EEEMMMdy", language, calendar.timeZone).string(from: date)
+    }
+
+    /// One formatter per template, language and zone, made once: a long chat draws a time on every row, every render.
+    nonisolated(unsafe) private static var made: [String: DateFormatter] = [:]
+    private static let lock = NSLock()
+
+    private static func formatter(_ template: String, _ language: Locale, _ zone: TimeZone) -> DateFormatter {
+        let key = "\(template)|\(language.identifier)|\(zone.identifier)"
+        lock.lock()
+        defer { lock.unlock() }
+        if let f = made[key] { return f }
         let f = DateFormatter()
         f.locale = language
-        f.timeZone = calendar.timeZone
-        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
-        f.setLocalizedDateFormatFromTemplate(sameYear ? "EEEMMMd" : "EEEMMMdy")
-        return f.string(from: date)
+        f.timeZone = zone
+        f.setLocalizedDateFormatFromTemplate(template)
+        made[key] = f
+        return f
     }
 
     /// Whether the message at `index` starts a day: the first one, or the first on a later day than the one before.
