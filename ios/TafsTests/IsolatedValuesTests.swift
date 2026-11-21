@@ -25,4 +25,14 @@ final class IsolatedValuesTests: XCTestCase {
         XCTAssertEqual(Words.withoutDirection("\u{2068}ABCD-EFGH\u{2069}"), "ABCD-EFGH")
         XCTAssertEqual(Words.withoutDirection("DE89 3704\nشركة"), "DE89 3704\nشركة", "letters and line breaks stay")
     }
+
+    /// The ko preview: a section's small heading in Korean or Japanese keeps the plain face, untracked, so its words
+    /// aren't pulled apart; Latin headings keep the monospaced, tracked look.
+    func testIdeographicHeadingsKeepThePlainFace() {
+        XCTAssertTrue(Eyebrow.ideographic("기억하는 것"))
+        XCTAssertTrue(Eyebrow.ideographic("確認が必要"))
+        XCTAssertTrue(Eyebrow.ideographic("内 TAFS"))
+        XCTAssertFalse(Eyebrow.ideographic("WHAT IT REMEMBERS"))
+        XCTAssertFalse(Eyebrow.ideographic("À VOUS DE VOIR"))
+    }
 }

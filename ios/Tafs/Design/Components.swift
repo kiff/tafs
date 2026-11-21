@@ -60,11 +60,21 @@ struct Eyebrow: View {
     var color: Color = Theme.dim
 
     var body: some View {
-        // Text's own tracking, before the font.
+        // Text's own tracking, before the font. Korean, Japanese and Chinese keep the plain face with no tracking:
+        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview).
+        let ideographic = Eyebrow.ideographic(text)
         Text(text.uppercased())
-            .tracking(0.7)
-            .scaledFont(12, design: .monospaced, relativeTo: .caption)
+            .tracking(ideographic ? 0 : 0.7)
+            .scaledFont(12, design: ideographic ? .default : .monospaced, relativeTo: .caption)
             .foregroundColor(color)
+    }
+
+    /// Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart.
+    static func ideographic(_ text: String) -> Bool {
+        text.unicodeScalars.contains { s in
+            (0x1100...0x11FF).contains(s.value) || (0x3040...0x30FF).contains(s.value) || (0x3130...0x318F).contains(s.value)
+                || (0x3400...0x4DBF).contains(s.value) || (0x4E00...0x9FFF).contains(s.value) || (0xAC00...0xD7AF).contains(s.value)
+        }
     }
 }
 
