@@ -1,6 +1,18 @@
 {
+  "card.asks_you": "{formatted} {sum_label}, depois pergunta a você",
+  "card.check.always_asks": "{rule}: sempre pergunta a você",
+  "card.held.each_call_asks": "Cada chamada pergunta a você primeiro",
   "card.hero.calls_use_unavailable": "chamadas {window} · uso indisponível",
   "card.hero.use_unavailable": "{window} · uso indisponível",
   "card.hero.use_unavailable_note": "{label} · uso indisponível{note}",
-  "card.outside_held": "Fora: retida para você"
+  "card.line.more_asks": "; mais do que isso pergunta a você primeiro",
+  "card.line.then_asks": ", depois pergunta a você",
+  "card.outside_held": "Fora: retida para você",
+  "card.rule.always_asks": "sempre pergunta a você",
+  "card.rule.calls_then_asks": {
+    "one": "{count} chamada {window}, depois pergunta a você",
+    "other": "{count} chamadas {window}, depois pergunta a você"
+  },
+  "card.rule.total_then_asks": "{amount} no total {window}, depois pergunta a você",
+  "card.rule.up_to_each": "até {amount} cada; mais do que isso pergunta a você primeiro"
 }

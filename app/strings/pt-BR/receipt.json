@@ -5,5 +5,6 @@
   "receipt.label.approved": "Aprovada uma vez por você",
   "receipt.label.held": "Retida para você",
   "receipt.label.sending": "Em andamento",
+  "receipt.outcome.waiting": "Aguardando a sua resposta.",
   "receipt.share": "Compartilhar"
 }

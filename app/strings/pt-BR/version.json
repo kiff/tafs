@@ -1,5 +1,6 @@
 {
   "version.go_back_body": "O Card de experiência da versão {version} deixa de valer imediatamente, e este chat é excluído. {taf} continua funcionando como está.",
+  "version.guide.give_task": "Dê a ele uma tarefa que use a alteração, como faria com {name} em produção.",
   "version.guide.keeps_working": "{name} continua funcionando como está. O que esta versão faz é real, ao abrigo do seu próprio Card.",
   "version.install_body": "A versão {version} passa a ser a versão em produção, com o seu Card. Este chat é excluído.",
   "version.stop_and_install": "Parar e instalar",

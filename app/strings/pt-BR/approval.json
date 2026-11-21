@@ -2,6 +2,7 @@
   "approval.add_face_id_first": "Adicione primeiro o Face ID ou uma impressão digital nas Configurações: este {device} aprova com um deles.",
   "approval.biometry.screen_lock": "o seu bloqueio de tela",
   "approval.device_can_not_approve_approve": "Este dispositivo não pode aprovar. Aprove em outro dispositivo conectado à sua conta.",
+  "approval.first_taf": "Configurar um taf requer aprovações: o Coach pede que você aprove as ferramentas dele e o Card do taf.",
   "approval.has_no_face_id_touch": "Este {device} não tem Face ID nem Touch ID, por isso não pode aprovar. Aprove em outro iPhone, iPad ou telefone Android conectado à sua conta.",
   "approval.kept": "Fica guardado em Precisa de você.",
   "approval.key_gone_sign_in": "As suas impressões digitais mudaram, ou nenhuma foi reconhecida, por isso este telefone não pode aprovar até entrar novamente.",

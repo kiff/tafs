@@ -1,9 +1,11 @@
 {
   "watch.approve_on_phone": "Aprove no celular",
+  "watch.ask_needs_consent": "Antes de pedir ao tafs, autorize o uso de IA no tafs no celular.",
   "watch.asking_phone": "Perguntando ao celular…",
   "watch.check_phone": "Verifique a conexão do celular",
   "watch.check_phone_sub": "Precisa de você está aberto lá. Aprove a chamada lá.",
   "watch.check_phone_title": "Veja o celular",
+  "watch.coach_needs_consent": "Antes de falar com o Coach, permita o uso de IA no tafs no celular.",
   "watch.glance_description": "Quantos precisam de você, nunca o quê nem quem.",
   "watch.held_calls": {
     "one": "{count} chamada retida precisa de você",

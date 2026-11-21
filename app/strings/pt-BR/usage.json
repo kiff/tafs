@@ -4,6 +4,9 @@
   "usage.manage": "Gerenciar",
   "usage.not_read": "Não foi possível ler o uso. {why}",
   "usage.raise_limit.sign_in_first": "Entre com o KIFF para aumentar o limite.",
+  "usage.requests.waiting": "Aguardando",
+  "usage.solo_terms": "{price} por {every}. É renovada a cada {every} até ser cancelada. Cancele quando quiser nas assinaturas do Google Play, pelo menos um dia antes da renovação.",
+  "usage.solo_terms_trial": "Grátis durante {trial}, depois {price} por {every}. É renovada a cada {every} até ser cancelada. Cancele quando quiser nas assinaturas do Google Play, pelo menos um dia antes da renovação.",
   "usage.title": "Plano e uso",
   "usage.use_unavailable": "uso indisponível"
 }

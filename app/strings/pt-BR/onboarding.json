@@ -1,4 +1,6 @@
 {
+  "onboarding.age": "Você precisa ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for maior.",
+  "onboarding.age_n": "Você precisa ter pelo menos {age} anos.",
   "onboarding.card_lead": "Cada taf trabalha dentro de um Card que você emite: o que pode fazer, com qual app e quanto. Além disso, ele pergunta a você.",
   "onboarding.control_lead": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.",
   "onboarding.control_lead_android": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com o bloqueio de tela, ou recusa.",

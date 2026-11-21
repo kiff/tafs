@@ -4753,7 +4753,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configurar um taf requer aprovações: o Coach pede-lhe para aprovar as suas ferramentas e o Card do taf."
+            "value": "Configurar um taf requer aprovações: o Coach pede que você aprove as ferramentas dele e o Card do taf."
           }
         }
       }
@@ -11220,7 +11220,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancele quando quiser, pelo menos um dia antes da renovação, nas Subscrições da sua conta Apple."
+            "value": "Cancele quando quiser, pelo menos um dia antes da renovação, em Assinaturas na sua conta Apple."
           }
         }
       }
@@ -12129,7 +12129,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sem sessão iniciada."
+            "value": "Você não entrou na sua conta."
           }
         }
       }
@@ -12519,7 +12519,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A compra está à espera de aprovação. Os seus créditos são adicionados quando estiver concluída."
+            "value": "A compra está aguardando aprovação. Os seus créditos são adicionados quando ela for concluída."
           }
         }
       }
@@ -13884,7 +13884,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Solo é uma subscrição por %1$@, a %2$@, cobrada na sua conta Apple. Renova-se a cada %3$@ até a cancelar."
+            "value": "O Solo é uma assinatura por %1$@, a %2$@, cobrada na sua conta Apple. É renovada a cada %3$@ até você cancelar."
           }
         }
       }
@@ -19343,7 +19343,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ %2$@, depois pergunta-lhe"
+            "value": "%1$@ %2$@, depois pergunta a você"
           }
         }
       }
@@ -20317,7 +20317,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@: pergunta-lhe sempre"
+            "value": "%1$@: sempre pergunta a você"
           }
         }
       }
@@ -21681,7 +21681,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada chamada pergunta-lhe primeiro"
+            "value": "Cada chamada pergunta a você primeiro"
           }
         }
       }
@@ -23809,7 +23809,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "; mais do que isso pergunta-lhe primeiro"
+            "value": "; mais do que isso pergunta a você primeiro"
           }
         }
       }
@@ -23874,7 +23874,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": ", depois pergunta-lhe"
+            "value": ", depois pergunta a você"
           }
         }
       }
@@ -25060,7 +25060,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "pergunta-lhe sempre"
+            "value": "sempre pergunta a você"
           }
         }
       }
@@ -25271,7 +25271,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ chamada %2$@, depois pergunta-lhe"
+            "value": "%1$@ chamada %2$@, depois pergunta a você"
           }
         }
       }
@@ -25336,7 +25336,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ chamadas %2$@, depois pergunta-lhe"
+            "value": "%1$@ chamadas %2$@, depois pergunta a você"
           }
         }
       }
@@ -25677,7 +25677,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ no total %2$@, depois pergunta-lhe"
+            "value": "%1$@ no total %2$@, depois pergunta a você"
           }
         }
       }
@@ -25742,7 +25742,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "até %1$@ cada; mais do que isso pergunta-lhe primeiro"
+            "value": "até %1$@ cada; mais do que isso pergunta a você primeiro"
           }
         }
       }
@@ -28423,7 +28423,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pergunte a %1$@ o que fez, ou diga-lhe o que fazer de outra forma. Fica sempre dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui."
+            "value": "Pergunte a %1$@ o que fez, ou diga o que fazer de outro jeito. Ele sempre fica dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui."
           }
         }
       }
@@ -28488,7 +28488,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pergunte-lhe o que fez, ou diga-lhe o que fazer de outra forma. Fica sempre dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui."
+            "value": "Pergunte o que ele fez, ou diga o que fazer de outro jeito. Ele sempre fica dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui."
           }
         }
       }
@@ -36660,7 +36660,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "sessão iniciada"
+            "value": "login feito"
           }
         }
       }
@@ -37115,7 +37115,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach pede-lhe para aprovar"
+            "value": "O Coach pede a sua aprovação"
           }
         }
       }
@@ -37180,7 +37180,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovado · sessão iniciada em %1$@"
+            "value": "Aprovado · login feito em %1$@"
           }
         }
       }
@@ -39000,7 +39000,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O modo Coach tem de alterar este pedido antes de o poder aprovar."
+            "value": "O modo Coach precisa alterar este pedido antes que você possa aprová-lo."
           }
         }
       }
@@ -41860,7 +41860,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agora não: sem sessão iniciada em %1$@"
+            "value": "Agora não: nenhum login feito em %1$@"
           }
         }
       }
@@ -43745,7 +43745,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Está a discutir estas perguntas com o Coach."
+            "value": "Você está discutindo estas perguntas com o Coach."
           }
         }
       }
@@ -46410,7 +46410,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach ainda não pode ter as suas ferramentas: outra ferramenta no KIFF chama-se %1$@. Mude-lhe o nome ou remova-a no KIFF."
+            "value": "O Coach ainda não pode ter as ferramentas dele: outra ferramenta no KIFF se chama %1$@. Renomeie ou remova essa ferramenta no KIFF."
           }
         }
       }
@@ -46475,7 +46475,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Coach ainda não pode ter as suas ferramentas: outra ferramenta no KIFF tem o nome de uma delas. Mude-lhe o nome ou remova-a no KIFF."
+            "value": "O Coach ainda não pode ter as ferramentas dele: outra ferramenta no KIFF tem o nome de uma delas. Renomeie ou remova essa ferramenta no KIFF."
           }
         }
       }
@@ -51740,7 +51740,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Continuar à espera"
+            "value": "Continuar aguardando"
           }
         }
       }
@@ -65825,7 +65825,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "● PEDIDO DE CONTACTO · POR %1$@"
+            "value": "● PEDIDO DE CONTATO · POR %1$@"
           }
         }
       }
@@ -87695,7 +87695,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desativado, o Card muda e este continua à espera da sua resposta."
+            "value": "Desativado, o Card muda e este continua aguardando a sua resposta."
           }
         }
       }
@@ -90197,7 +90197,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nada está à espera."
+            "value": "Nada está aguardando."
           }
         }
       }
@@ -91172,7 +91172,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As chamadas retidas são respondidas por um aprovador com sessão iniciada, não por uma chave."
+            "value": "As chamadas retidas são respondidas por um aprovador conectado à conta, não por uma chave."
           }
         }
       }
@@ -92082,7 +92082,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do seu navegador…"
+            "value": "Aguardando o seu navegador…"
           }
         }
       }
@@ -92147,7 +92147,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um alerta chega-lhe neste %1$@, mesmo com o tafs fechado."
+            "value": "Um alerta chega a você neste %1$@, mesmo com o tafs fechado."
           }
         }
       }
@@ -92472,7 +92472,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tem de ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for superior."
+            "value": "Você precisa ter pelo menos 16 anos, ou a idade de consentimento digital do seu país, se for maior."
           }
         }
       }
@@ -92537,7 +92537,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tem de ter pelo menos %1$@ anos."
+            "value": "Você precisa ter pelo menos %1$@ anos."
           }
         }
       }
@@ -100808,7 +100808,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar."
+            "value": "Uma chamada está retida aguardando a sua resposta. Nada é enviado até você aprovar."
           }
         }
       }
@@ -104968,7 +104968,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera da sua resposta."
+            "value": "Aguardando a sua resposta."
           }
         }
       }
@@ -107373,7 +107373,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta é uma das primeiras chamadas de uma nova operação com dinheiro, por isso o KIFF pergunta-lhe o que aconteceu."
+            "value": "Esta é uma das primeiras chamadas de uma nova operação com dinheiro, por isso o KIFF pergunta a você o que aconteceu."
           }
         }
       }
@@ -108023,7 +108023,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pediu-lhe que agisse sobre a mensagem de %1$@"
+            "value": "Você pediu que ele agisse sobre a mensagem de %1$@"
           }
         }
       }
@@ -108478,7 +108478,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As mensagens desta pessoa por %1$@ dão-lhe trabalho a partir de agora"
+            "value": "As mensagens desta pessoa por %1$@ passam a dar trabalho a ele"
           }
         }
       }
@@ -109940,7 +109940,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera"
+            "value": "Aguardando"
           }
         }
       }
@@ -110265,7 +110265,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "já não está à espera"
+            "value": "não está mais aguardando"
           }
         }
       }
@@ -114327,7 +114327,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O que tem de errado?"
+            "value": "O que há de errado?"
           }
         }
       }
@@ -117317,7 +117317,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Contactos"
+            "value": "Contatos"
           }
         }
       }
@@ -126238,7 +126238,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "(Resposta de exemplo. Com sessão iniciada no KIFF, o seu taf responde a sério.)"
+            "value": "(Resposta de exemplo. Com login feito no KIFF, o seu taf responde de verdade.)"
           }
         }
       }
@@ -140619,7 +140619,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ao iniciar sessão, aceita os %1$@ do KIFF, que abrangem o tafs, e a sua %2$@."
+            "value": "Ao entrar, você aceita os %1$@ do KIFF, que abrangem o tafs, e a %2$@ dele."
           }
         }
       }
@@ -142244,7 +142244,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do seu outro telefone…"
+            "value": "Aguardando o seu outro telefone…"
           }
         }
       }
@@ -143089,7 +143089,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera da sua aprovação…"
+            "value": "Aguardando a sua aprovação…"
           }
         }
       }
@@ -143154,7 +143154,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera do seu navegador… Verifique se mostra %1$@, e aprove apenas com este %2$@ nas suas mãos."
+            "value": "Aguardando o seu navegador… Verifique se ele mostra %1$@, e aprove só com este %2$@ nas suas mãos."
           }
         }
       }
@@ -143349,7 +143349,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um taf faz uma tarefa dentro do Card que define. Para lá disso, pergunta-lhe."
+            "value": "Um taf faz uma tarefa dentro do Card que você define. Além disso, ele pergunta a você."
           }
         }
       }
@@ -144714,7 +144714,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A bloquear… à espera de que cada parte confirme."
+            "value": "Bloqueando… aguardando a confirmação de cada parte."
           }
         }
       }
@@ -145299,7 +145299,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera"
+            "value": "Aguardando"
           }
         }
       }
@@ -151571,7 +151571,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera"
+            "value": "Aguardando"
           }
         }
       }
@@ -155422,7 +155422,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "À espera"
+            "value": "Aguardando"
           }
         }
       }
@@ -156007,7 +156007,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ por %2$@. Renova-se a cada %2$@ até ser cancelado. Cancele quando quiser nas subscrições do Google Play, pelo menos um dia antes da renovação."
+            "value": "%1$@ por %2$@. É renovada a cada %2$@ até ser cancelada. Cancele quando quiser nas assinaturas do Google Play, pelo menos um dia antes da renovação."
           }
         }
       }
@@ -156072,7 +156072,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grátis durante %1$@, depois %2$@ por %3$@. Renova-se a cada %3$@ até ser cancelado. Cancele quando quiser nas subscrições do Google Play, pelo menos um dia antes da renovação."
+            "value": "Grátis durante %1$@, depois %2$@ por %3$@. É renovada a cada %3$@ até ser cancelada. Cancele quando quiser nas assinaturas do Google Play, pelo menos um dia antes da renovação."
           }
         }
       }
@@ -158249,7 +158249,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dê-lhe uma tarefa que use a alteração, como faria com %1$@ em produção."
+            "value": "Dê a ele uma tarefa que use a alteração, como faria com %1$@ em produção."
           }
         }
       }
@@ -165642,7 +165642,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel."
+            "value": "Antes de pedir ao tafs, autorize o uso de IA no tafs no celular."
           }
         }
       }
@@ -166227,7 +166227,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel."
+            "value": "Antes de falar com o Coach, permita o uso de IA no tafs no celular."
           }
         }
       }

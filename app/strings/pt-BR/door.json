@@ -8,6 +8,7 @@
   "door.hi_like_back_order": "Olá, gostaria de receber de volta US$ 15 do pedido T-3001.",
   "door.key.foot": "{how}. Uma mensagem só conta como dessa pessoa quando isso se verifica; qualquer outra pessoa faz um pedido de contato.",
   "door.key.none": "{how}, por isso ninguém aqui pode dar trabalho a {taf}. Tudo o que chega fica como pedido de contato.",
+  "door.knock.by": "● PEDIDO DE CONTATO · POR {app}",
   "door.knocks_waiting": "Pedidos de contato · precisam de você",
   "door.no_app_called": "Ainda não há aqui nenhum app chamado «{query}».",
   "door.no_door_yet": "{taf} ainda não tem porta. Alguém que o gerencia pode adicionar uma.",

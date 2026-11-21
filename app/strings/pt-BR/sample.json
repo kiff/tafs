@@ -3,6 +3,7 @@
   "sample.access.job": "Dar aos novos colaboradores os seus apps e remover quem sai no próprio dia. Só funções da lista aprovada. Desativar, nunca excluir.",
   "sample.access.rule.deleting_users": "Excluir usuários",
   "sample.bill_pay.job": "Pagar contas habituais de fornecedores que correspondam a um pedido de compra. Só fornecedores existentes. Nunca alterar dados bancários nem adicionar um beneficiário.",
+  "sample.brief.label.clients": "Contatos",
   "sample.brief.next_move": "Preparar um segundo acompanhamento para estes 3 contatos sem resposta há 7 dias?",
   "sample.brief.rest": {
     "one": "{count} coisa aguarda sem precisar de você agora",
@@ -30,6 +31,7 @@
   "sample.refunds.refund_4471": "Reembolsar o pedido #4471",
   "sample.refunds.refund_4502": "Reembolsar o pedido #4502",
   "sample.reply.more_room": "Não posso me dar mais margem: só você pode, alterando o meu Card. Tudo o que passar dele aguarda por você em Precisa de você.",
+  "sample.reply.note": "(Resposta de exemplo. Com login feito no KIFF, o seu taf responde de verdade.)",
   "sample.reply.waiting": {
     "one": "{count} coisa aguarda por você em Precisa de você.",
     "other": "{count} coisas aguardam por você em Precisa de você."

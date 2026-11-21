@@ -2,6 +2,8 @@
   "chat.cap.cost": "{taf} parou: esta tarefa custaria mais do que o seu limite por tarefa. Peça algo mais restrito, ou alguém que gerencia {taf} pode aumentar o limite.",
   "chat.chats_were_not_exported_could": "Os seus chats não foram exportados: este {device} não conseguiu salvar os arquivos.",
   "chat.delete": "Excluir",
+  "chat.empty_named": "Pergunte a {taf} o que fez, ou diga o que fazer de outro jeito. Ele sempre fica dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui.",
+  "chat.empty_unnamed": "Pergunte o que ele fez, ou diga o que fazer de outro jeito. Ele sempre fica dentro do seu Card. Uma chamada que precise da sua aprovação, de um chat ou de uma execução agendada, também aparece aqui.",
   "chat.file.attach": "Anexar uma fotografia ou arquivo",
   "chat.file.attach_full": {
     "one": "Anexar: {count} arquivo é o máximo por mensagem",

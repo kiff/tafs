@@ -55,7 +55,7 @@
     <string name="watch_approve_on_phone">Aprove no celular</string>
     <string name="watch_as_of">Atualizado às %1$s</string>
     <string name="watch_ask">Pedir ao tafs</string>
-    <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_ask_needs_consent">Antes de pedir ao tafs, autorize o uso de IA no tafs no celular.</string>
     <string name="watch_ask_not_on">Pedir a partir do relógio ainda não está ativo.</string>
     <string name="watch_ask_text_only">O tafs recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="watch_asking_phone">Perguntando ao celular…</string>
@@ -64,7 +64,7 @@
     <string name="watch_check_phone_sub">Precisa de você está aberto lá. Aprove a chamada lá.</string>
     <string name="watch_check_phone_title">Veja o celular</string>
     <string name="watch_clear_read">Limpar lidos</string>
-    <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita o uso de IA no tafs no celular.</string>
     <string name="watch_deleted_nothing_sent">Eliminado. Nada foi enviado.</string>
     <string name="watch_didnt_catch">Não percebi. Toque para tentar novamente.</string>
     <string name="watch_dismiss">Ignorar</string>

@@ -2,6 +2,8 @@
   "taf.activity.all_apps": "Todos os apps",
   "taf.activity.checking_waits": "Verificando o que aguarda por você…",
   "taf.halt.connection_sends_nothing": "A conexão não envia nada aos seus apps",
+  "taf.halt.halting_wait": "Bloqueando… aguardando a confirmação de cada parte.",
+  "taf.halt.part_waiting": "Aguardando",
   "taf.now.paused_by_you": "Posto em pausa por você",
   "taf.now.waiting_on": "Precisa de você · {summary}",
   "taf.now.waiting_on_you": "Precisa de você",
@@ -17,6 +19,7 @@
   "taf.revoke_body": "Nenhuma ação nova é concluída. O que já foi feito continua.",
   "taf.signed_tools_being_chosen": "Login feito · as ferramentas estão sendo escolhidas",
   "taf.signed_tools_waiting_your_approval": "Login feito · ferramentas aguardando a sua aprovação",
+  "taf.state.waiting": "Aguardando",
   "taf.try_version_first_you_chat": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua trabalhando. Instalar uma coloca-a em produção.",
   "taf.unless_you_approve_tools_sign": "A menos que aprove as suas ferramentas, o login é revogado {time}."
 }
