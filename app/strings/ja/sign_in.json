@@ -12,6 +12,7 @@
   "sign_in.every_action_taf_takes_goes": "tafのすべての操作はKIFFを通り、アプリに届く前にKIFFがCardを確認します。あなたの回答はこの{device}で署名されます。",
   "sign_in.every_action_taf_takes_goes_view": "tafのすべての操作はKIFFを通り、アプリに届く前にKIFFがCardを確認します。あなたの承認はスマートフォンで署名されます。",
   "sign_in.how_works": "しくみ",
+  "sign_in.in_app_not_on": "アプリ内でのサインインはまだオンになっていません。",
   "sign_in.ios_did_not_open_sign": "iOSがサインインページを開きませんでした（エラー {code}、{context}）。tafsを開いた状態でもう一度お試しください。",
   "sign_in.lead": "あなたのtafsはKIFFのCardのもとで動きます。KIFFでこの{device}を承認すると、発行したCardがここに表示されます。",
   "sign_in.lets_go": "はじめましょう",

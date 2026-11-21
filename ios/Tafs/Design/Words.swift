@@ -4533,6 +4533,8 @@ enum Words {
         static var everyActionTafTakesGoesView: String { Words.line("sign_in.every_action_taf_takes_goes_view") }
         /// How it works
         static var howWorks: String { Words.line("sign_in.how_works") }
+        /// Signing in inside the app isn't on yet.
+        static var inAppNotOn: String { Words.line("sign_in.in_app_not_on") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
         /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.

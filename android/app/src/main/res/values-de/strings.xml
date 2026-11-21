@@ -2289,6 +2289,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Antworten werden auf diesem %1$s signiert.</string>
     <string name="sign_in_every_action_taf_takes_goes_view">Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Genehmigungen werden auf deinem Handy signiert.</string>
     <string name="sign_in_how_works">So funktioniert es</string>
+    <string name="sign_in_in_app_not_on">Die Anmeldung in der App ist noch nicht eingeschaltet.</string>
     <string name="sign_in_ios_did_not_open_sign">iOS hat die Anmeldeseite nicht geöffnet (Fehler %1$s; %2$s). Versuch es erneut, während tafs geöffnet ist.</string>
     <string name="sign_in_lead">Deine tafs handeln unter KIFF-Cards. Genehmige dieses %1$s in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier.</string>
     <string name="sign_in_lets_go">Los geht\'s</string>
