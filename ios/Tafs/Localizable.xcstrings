@@ -38055,6 +38055,12 @@
             "value": "Nel carrello"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カートの中身"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38120,6 +38126,12 @@
             "value": "In %1$@"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@で"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38183,6 +38195,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sulla pagina"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ページの内容"
           }
         },
         "ko": {
