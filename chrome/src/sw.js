@@ -16,7 +16,11 @@ let relay = null;
 let lastActive = 0;
 
 const vault = new Vault(indexedStore);
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing });
+const releaseStore = {
+  get: async () => (await chrome.storage.session.get("releases")).releases || [],
+  set: (entries) => chrome.storage.session.set({ releases: entries }),
+};
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
@@ -55,7 +59,12 @@ async function connect() {
   const cfg = config();
   if (!kept.pairing || !cfg.planqueKey) return;
   if (!relay) {
-    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish() });
+    // The steps' nonces survive MV3 stopping this worker: kept in the session's memory store, never on disk.
+    const nonceStore = {
+      get: async () => (await chrome.storage.session.get("nonces")).nonces || [],
+      set: (entries) => chrome.storage.session.set({ nonces: entries }),
+    };
+    relay = new Relay({ config: { ...cfg, manifestHash: await manifestHash() }, kept, runner, onUnpaired: wipe, onChange: () => publish(), nonceStore });
   }
   relay.connect();
   lastActive = Date.now();

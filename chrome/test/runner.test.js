@@ -91,6 +91,8 @@ test("an open off the run's sites is refused before any window opens", async () 
   const r = new Runner({ chrome: c, sleep });
   assert.equal((await r.handle(step({ url: "https://evil.example/" }))).error.code, "site_not_listed");
   assert.equal((await r.handle(step({ url: "https://www.paypal.com/", sites: ["paypal.com"], run: "run_2" }))).error.code, "site_blocked");
+  // planque saying the owner allowed it isn't enough: the allowance must be the paired phone's signature.
+  assert.equal((await r.handle(step({ url: "https://www.paypal.com/", sites: ["paypal.com"], run: "run_3", sensitive_allowed: ["paypal.com", { site: "paypal.com", sig: "AAAA" }] }))).error.code, "site_blocked");
   assert.ok(!c.calls.some((x) => x[0] === "windows.create"));
 });
 

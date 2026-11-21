@@ -52,6 +52,7 @@ it changes all three.
 | `tafs-chrome/result/v1` | the extension | a step's answer |
 | `tafs-chrome/release/v1` | the phone | one sealed value for one fill |
 | `tafs-chrome/unpair/v1` | the extension | its own unpairing |
+| `tafs-chrome/sensitive/v1` | the phone | one sensitive site allowed for one grant: `{chrome_id, grant, site}` |
 
 - **HMACs** are HMAC-SHA256 under the pairing code's secret, over `label ‖ 0x00 ‖ data`, with `tafs-chrome/ext/v1` and
   `tafs-chrome/phone/v1`.
@@ -126,7 +127,7 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 
 ```
 step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run, taf, grant,
-        sites: ["shop.example", …], sensitive_allowed?: [...],
+        sites: ["shop.example", …], sensitive_allowed?: [{site, sig}],   // sig: the phone's, tafs-chrome/sensitive/v1
         op: "open" | "read" | "act" | "close",
         url?,                          // open: a start URL or a link from the current read, already checked by planque
         read_id?,                      // act: the read it was planned from
@@ -135,7 +136,14 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
 ```
 
 **The extension runs nothing that isn't planque's, for this Chrome, unexpired and new** (`protocol.checkStep`). A nonce
-is remembered for 10 minutes. It answers a refused step's `id` with `bad_step`, and gives an unsigned message no
+is remembered for 10 minutes, in `chrome.storage.session`, so a step replayed after MV3 stops the service worker is still
+refused.
+- **A grant's `sites` never name a public suffix** (`com`, `co.uk`, `github.io`, …: `sites.siteOK`). Such an entry
+  reaches nothing.
+- **A sensitive site opens only on the paired phone's own allowance** (`sensitive_allowed[].sig`, the phone's
+  `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`, checked with the paired `phone_key`, `protocol.checkAllowances`).
+  planque relays it, and an entry without a valid one is dropped. The phones sign it when the owner approves a grant that
+  names a sensitive site. It answers a refused step's `id` with `bad_step`, and gives an unsigned message no
 signed answer.
 
 **The extension answers** `{type: "result", id, ok, page, error, sig}`, signed with its key over `{id, ok, page, error}`:
@@ -175,7 +183,7 @@ error = {code, detail?}      // detail never carries page text
 | `bad_url` | not `https`, user info in the URL, or not a URL |
 | `address_private` | an IP address (in any form a browser reads), or a local name (`.local`, `.internal`, …) |
 | `site_not_listed` | a host that isn't one of the run's sites or their subdomains, including a navigation the page starts |
-| `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the owner allowed it by name (`sensitive_allowed`) |
+| `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
 | `needs_site_permission` | Chrome hasn't let the extension into that site yet: the side panel offers "Allow shop.example in Chrome" |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
 | `ref_unknown` | the read has no such ref, or its element is gone |
@@ -241,7 +249,7 @@ one exact origin (`chrome/src/vault.js`).
   ["sec_…:username", "sec_…:password"]`. A taf names one in `act.sealed` to ask for a fill.
 - **Only the paired phone's own release opens one, for one fill.** `step.release` is the phone's `tafs-chrome/release/v1`
   signature, with the `phone_key` the extension learned at pairing, over
-  `{chrome_id, op: step.id, sealed, origin, field_ref, nonce, exp}`. planque relays it and can't make one, and a
+  `{chrome_id, op: step.id, sealed, origin, field_ref, nonce, exp}`, with `exp` at most 2 minutes ahead. planque relays it and can't make one, and a
   compromised planque can't either. The extension checks it (`protocol.checkRelease`), takes its nonce once, then
   opens the value.
 - **It goes only where it fits:** a `:password` handle only into a password field, and a `:username` handle only into a

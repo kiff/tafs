@@ -12,9 +12,9 @@ export class Relay {
    * `config` {relayURL, planqueKey, version, manifestHash}; `kept` {keys, pairing}; `runner` handles steps; `onUnpaired()`
    * wipes the extension; `WebSocket` is the browser's (a fake in tests).
    */
-  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now() }) {
+  constructor({ config, kept, runner, onUnpaired, onChange = () => {}, WebSocket = globalThis.WebSocket, now = () => Date.now(), nonceStore = null }) {
     Object.assign(this, { config, kept, runner, onUnpaired, onChange, WebSocket, now });
-    this.nonces = new Nonces(now);
+    this.nonces = new Nonces(now, nonceStore);
     this.ws = null;
     this.ready = false;
   }
