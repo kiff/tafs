@@ -192,6 +192,44 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
 
+## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
+`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
+
+### Lithuanian (lt)
+
+Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF and tafs
+cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
+(`{taf}`, `{device}`, `{biometry}`) stands alone in the nominative ("taf {taf} Card", "Patvirtinti: {biometry}").
+
+| English | Lithuanian |
+|---|---|
+| Needs you | Laukia jūsų |
+| Approve / Approve once | Patvirtinti / Patvirtinti vieną kartą |
+| Refuse | Atmesti |
+| held | sulaikyta |
+| Halt / Halted | Sustabdyti / Sustabdyta |
+| Stopped | Nutraukta |
+| Pause / Paused | Pristabdyti / Pristabdyta |
+| Resume | Tęsti |
+| Revoke | Atšaukti |
+| Record | Žurnalas |
+| Connect / connection | Prijungti / ryšys |
+| Pair / Unpair | Susieti / Atsieti |
+| Account | Paskyra |
+| limit / spend limit | limitas / išlaidų limitas |
+| credits / credit pack | kreditai / kreditų paketas |
+| Sign in / Sign out | Prisijungti / Atsijungti |
+| Inbox | Gautieji |
+| Overview | Apžvalga |
+| Calendar | Kalendorius |
+| Setup | Sąranka |
+| Usage | Naudojimas |
+| plan | planas |
+| door / knock | durys / beldimas |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
