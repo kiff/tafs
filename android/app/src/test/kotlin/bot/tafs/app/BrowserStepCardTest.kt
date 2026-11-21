@@ -73,4 +73,11 @@ class BrowserStepCardTest {
     assertEquals("Click “redrO ecalP”", step.action)
     assertEquals(KiffMapping.BROWSER_EXCERPT_MAX, step.excerpt!!.length)
   }
+
+  @Test fun aLongBasketIsCutAtTwentyLines() {
+    val lines = (1..30).joinToString(",") { """{"item":"Item $it","quantity":1,"price":"1.00"}""" }
+    val step = held("""{"site":"shop.example","action_words":"Click “Place order”","checkout":{"lines":[$lines]}}""").browser!!
+    assertEquals(KiffMapping.BROWSER_BASKET_MAX, step.lines.size)
+    assertEquals("1 × Item 1 · 1.00", step.lines.first())
+  }
 }

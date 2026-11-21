@@ -1510,7 +1510,7 @@ approval card"), and the card draws them under KIFF's own lines, never in their 
 - under "On the page" (`chrome.held_page`): the element's own label as planque read it ("Click “Place order”") first,
   then the page's title and an excerpt of at most 600 characters, masked by planque. **The label is the page's words, so
   it never becomes the card's summary**: that stays KIFF's, the tool's, as for any hold (`aHostileLabelNeverBecomesTheSummary`);
-- under "In the basket" (`chrome.held_basket`), a checkout's lines, one each ("2 × Blue pen · 3.00"); the total is KIFF's
+- under "In the basket" (`chrome.held_basket`), a checkout's lines, one each and at most 20 ("2 × Blue pen · 3.00"); the total is KIFF's
   amount, at the top.
 
 Each piece is plain text, one paragraph, with no character that reorders or hides words (`KiffMapping.browserStep`, as the

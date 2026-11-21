@@ -381,6 +381,9 @@ object KiffMapping {
     )
   }
 
+  /** At most this many of a checkout's lines are drawn, as iOS draws them; the total is KIFF's amount either way. */
+  const val BROWSER_BASKET_MAX = 20
+
   /** The longest page excerpt drawn on a held browser step's card, as planque cuts it. */
   const val BROWSER_EXCERPT_MAX = 600
 
@@ -395,7 +398,7 @@ object KiffMapping {
     val lines = b.checkout?.lines.orEmpty().mapNotNull { l ->
       val item = tafSays(l.item, 120)?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
       listOfNotNull(text(l.quantity)?.let { "$it × $item" } ?: item, text(l.price)).joinToString(" · ")
-    }
+    }.take(BROWSER_BASKET_MAX)
     return BrowserStep(
       site = site,
       origin = tafSays(b.origin, 200).orEmpty(),
