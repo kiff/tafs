@@ -109,6 +109,9 @@
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
+    <string name="watch_phone_link_failed">De verbinding met je telefoon is mislukt. Probeer het opnieuw.</string>
+    <string name="watch_phone_no_answer">Je telefoon antwoordde niet op tijd. Probeer het opnieuw.</string>
+    <string name="watch_phone_no_app">tafs staat niet op je telefoon. Installeer het daar en probeer het opnieuw.</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
     <string name="watch_play">Afspelen</string>
     <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>

@@ -34,6 +34,15 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case askFull = "ask_full"
         /// Chatting with a taf: the last turns of the person's own chat with the taf in `taf`, as the phone shows it. Read only.
         case tafChat = "taf_chat"
+
+        /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
+        /// all, a Coach message) is never sent twice: a send that failed may still have arrived.
+        var isRead: Bool {
+            switch self {
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat: return true
+            case .refuse, .halt, .haltAll, .coach, .coachSend: return false
+            }
+        }
     }
 
     /// How old a request may be when the phone reads it, either way.

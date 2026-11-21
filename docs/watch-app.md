@@ -293,6 +293,14 @@ Nothing leaves the watch before Send:
   fail (seen in the simulator on 19 Nov, its `wcd` dropping the message), and without a limit the watch stayed on its send
   screen with no words. Past it, the phone counts as not in reach; a Send tried again goes under the same id, which tafs
   cloud takes once.
+- **Reaching the phone** (`PhoneRoute`, `PhoneRouteTests`; row 44, D, as Wear OS's tafs#1588), so a phone that's there
+  isn't called unreachable: the link can say "not reachable" for a moment after the app starts or wakes, so it's looked at
+  once more half a second later; and a **read** whose send failed goes once more. A **write** (Refuse, Halt, Halt all, a
+  Coach message) is sent once, since a failed send may still have arrived; the person decides whether to try again, under
+  the same id. All of it stays inside the same 20 s.
+- **Each failure says which**, with Try again: the phone not in reach (`watch.phone_not_reachable`), no answer within the 20 s
+  (`watch.phone_no_answer`), tafs not on the phone (`watch.phone_no_app`), or the link's own error or a reply that can't be
+  read (`watch.phone_link_failed`).
 - **A phone that can only view** (KIFF's `view_only`: signed in with no approval key, as the simulator is) can't sign a watch
   request, and tafs cloud refuses it (403 `view_only`). The watch says so, `watch.view_only_phone` ("This phone can only view,
   so you can't ask from the watch. Sign in on a phone that can approve."), never "a reply wasn't sent".

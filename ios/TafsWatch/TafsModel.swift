@@ -6,7 +6,7 @@ final class TafsModel: ObservableObject {
     enum State: Equatable {
         case loading
         case loaded([WatchTaf])
-        case unreachable
+        case unreachable(PhoneFailure)
         case signedOut
         case failed(String)
     }
@@ -37,9 +37,10 @@ final class TafsModel: ObservableObject {
         asking = true
         defer { asking = false }
         if case .loaded = state {} else { state = .loading }
-        guard let reply = await phone.ask(WatchRequest(.tafs, made: clock())) else {
-            state = .unreachable
-            return
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.tafs, made: clock())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .unreachable(why); return
         }
         switch reply.outcome {
         case .ok:
@@ -47,7 +48,7 @@ final class TafsModel: ObservableObject {
             state = .loaded(reply.tafs ?? [])
         case .signedOut: state = .signedOut; halts = [:]
         case .failed: state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
-        case .refused, .stale, .notYet, .answered: state = .unreachable
+        case .refused, .stale, .notYet, .answered: state = .unreachable(.notReachable)
         }
     }
 
@@ -60,10 +61,10 @@ final class TafsModel: ObservableObject {
         guard lock.isSecure else { halts[key] = .failed(Words.Watch.needsLock); return }
         halts[key] = .sending
         let request = taf.map { WatchRequest(.halt, made: clock(), taf: $0) } ?? WatchRequest(.haltAll, made: clock())
-        let reply = await phone.ask(request)
-        if reply?.outcome == .signedOut { state = .signedOut; halts = [:]; return }
-        halts[key] = WatchAnswer.from(reply)
-        if reply?.outcome == .ok { await load() }
+        let reached = await phone.reach(request)
+        if reached.reply?.outcome == .signedOut { state = .signedOut; halts = [:]; return }
+        halts[key] = WatchAnswer.from(reached)
+        if reached.reply?.outcome == .ok { await load() }
     }
 
     /// A taf's chat: the same one each time it's opened this visit.

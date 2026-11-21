@@ -7,6 +7,102 @@ import WatchConnectivity
 protocol PhoneAsking {
     /// The phone's reply, or nil when the phone isn't in reach or didn't answer.
     func ask(_ request: WatchRequest) async -> WatchReply?
+    /// The phone's reply, or why there's none, each in its own words (row 44, D).
+    func reach(_ request: WatchRequest) async -> PhoneReach
+}
+
+extension PhoneAsking {
+    /// A phone that only answers or doesn't (the tests' phones): no answer is "not in reach", as before.
+    func reach(_ request: WatchRequest) async -> PhoneReach {
+        guard let reply = await ask(request) else { return .failed(.notReachable) }
+        return .reply(reply)
+    }
+}
+
+/// Why an ask got no reply, so the wrist says which, not "not in reach" for all of them (row 44, D; as Wear OS's
+/// tafs#1588 tells them apart).
+enum PhoneFailure: Error, Equatable, Sendable {
+    /// The phone isn't in reach: the watch can't find it.
+    case notReachable
+    /// The phone was asked and didn't answer within `PhoneWait.limit`.
+    case noAnswer
+    /// tafs isn't on the paired iPhone.
+    case noApp
+    /// The link itself failed, or the reply couldn't be read.
+    case link
+
+    /// What the watch says, with Try again under it.
+    var line: String {
+        switch self {
+        case .notReachable: return Words.Watch.phoneNotReachable
+        case .noAnswer: return Words.Watch.phoneNoAnswer
+        case .noApp: return Words.Watch.phoneNoApp
+        case .link: return Words.Watch.phoneLinkFailed
+        }
+    }
+
+    /// The send itself failed, so nothing was answered and a read may go once more. Not the limit: it's used up.
+    var sendFailed: Bool { self == .notReachable || self == .link }
+}
+
+/// The phone's reply, or why there's none.
+enum PhoneReach: Equatable, Sendable {
+    case reply(WatchReply)
+    case failed(PhoneFailure)
+
+    var reply: WatchReply? {
+        if case .reply(let reply) = self { return reply }
+        return nil
+    }
+}
+
+/// One ask's way to the phone, apart from WatchConnectivity so it can be tested (`PhoneRouteTests`), so a phone that's
+/// there isn't called unreachable (row 44, D; Wear OS's `PhoneRoute`, tafs#1588):
+/// - just launched, the session may still be activating: it's waited for, 2 s at most;
+/// - the link can say "not reachable" for a moment after the app starts or wakes: it's looked at once more after half a
+///   second before the phone counts as out of reach;
+/// - a read whose send failed goes once more. A write is sent once: a failed send may still have arrived, so the person
+///   decides whether to try again, under the same id;
+/// - all of it inside the one `PhoneWait.limit`.
+@MainActor
+struct PhoneRoute {
+    /// How long the link is given to come back before the phone counts as out of reach.
+    static let secondLook: TimeInterval = 0.5
+
+    var activated: () -> Bool
+    /// tafs is on the paired iPhone.
+    var installed: () -> Bool
+    var reachable: () -> Bool
+    /// One send, within the given seconds: the reply's bytes, or why not.
+    var send: (Data, TimeInterval) async -> Result<Data, PhoneFailure>
+    var pause: (TimeInterval) async -> Void = { seconds in try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)) }
+    var now: () -> Date = Date.init
+
+    func reach(_ request: WatchRequest) async -> PhoneReach {
+        let deadline = now().addingTimeInterval(PhoneWait.limit)
+        for _ in 0..<20 where !activated() { await pause(0.1) }
+        guard activated() else { return .failed(.notReachable) }
+        guard installed() else { return .failed(.noApp) }
+        let data = WatchMessage.encode(request)
+        for attempt in 1...2 {
+            if !reachable() {
+                await pause(Self.secondLook)
+                guard reachable() else { return .failed(.notReachable) }
+            }
+            let left = deadline.timeIntervalSince(now())
+            guard left > 0 else { return .failed(.noAnswer) }
+            switch await send(data, left) {
+            case .success(let bytes):
+                // A reply that can't be read (a phone from before, or damaged on the way) is the link's failure, not
+                // the phone's absence; it isn't sent again, since the phone did answer.
+                guard let reply = WatchMessage.decode(WatchReply.self, from: bytes) else { return .failed(.link) }
+                return .reply(reply)
+            case .failure(let why):
+                guard attempt == 1, request.kind.isRead, why.sendFailed else { return .failed(why) }
+            }
+        }
+        return .failed(.link)
+    }
 }
 
 /// The watch's end of WatchConnectivity.
@@ -20,6 +116,16 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
     }
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {}
+
+    /// WatchConnectivity's error, as the wrist words it.
+    static func failure(_ error: Error) -> PhoneFailure {
+        switch (error as? WCError)?.code {
+        case .notReachable?, .deviceNotPaired?, .sessionNotActivated?, .sessionInactive?: return .notReachable
+        case .companionAppNotInstalled?, .watchAppNotInstalled?: return .noApp
+        case .messageReplyTimedOut?: return .noAnswer
+        default: return .link
+        }
+    }
 }
 
 // In an extension, so the class itself isn't main-actor isolated: WatchConnectivity calls its
@@ -27,26 +133,33 @@ final class PhoneLink: NSObject, WCSessionDelegate, @unchecked Sendable {
 extension PhoneLink: PhoneAsking {
     @MainActor
     func ask(_ request: WatchRequest) async -> WatchReply? {
+        await reach(request).reply
+    }
+
+    @MainActor
+    func reach(_ request: WatchRequest) async -> PhoneReach {
         let session = WCSession.default
-        // Just launched: the session may still be activating. Wait for it a moment.
-        for _ in 0..<20 where session.activationState != .activated {
-            try? await Task.sleep(nanoseconds: 100_000_000)
-        }
-        guard session.activationState == .activated, session.isReachable else { return nil }
-        let data = WatchMessage.encode(request)
-        // WatchConnectivity can neither reply nor fail (seen on the simulator, possible on a watch): the watch would wait on
-        // its send screen with no words. Past the limit it's "Your phone isn't in reach", and a Send tried again goes under
-        // the same id, which tafs cloud takes once.
-        let reply = await PhoneWait.first { (answer: @escaping @Sendable (WatchReply?) -> Void) in
-            session.sendMessageData(data, replyHandler: { @Sendable reply in
-                answer(WatchMessage.decode(WatchReply.self, from: reply))
-            }, errorHandler: { @Sendable _ in
-                answer(nil)
+        let route = PhoneRoute(
+            activated: { session.activationState == .activated },
+            installed: { session.isCompanionAppInstalled },
+            reachable: { session.isReachable },
+            send: { data, within in
+                // WatchConnectivity can neither reply nor fail (seen on the simulator, possible on a watch): the watch
+                // would wait on its send screen with no words. Past the limit it's "Your phone didn't answer", and a Send
+                // tried again goes under the same id, which tafs cloud takes once.
+                let answer: Result<Data, PhoneFailure>? = await PhoneWait.first(within: within) { answer in
+                    session.sendMessageData(data, replyHandler: { @Sendable reply in
+                        answer(.success(reply))
+                    }, errorHandler: { @Sendable error in
+                        answer(.failure(PhoneLink.failure(error)))
+                    })
+                }
+                return answer ?? .failure(.noAnswer)
             })
-        }
+        let reached = await route.reach(request)
         // Whatever was asked, a signed-out phone drops the account's zone (agentgabo on #1590).
-        WatchAccountZone.heard(reply)
-        return reply
+        WatchAccountZone.heard(reached.reply)
+        return reached
     }
 }
 
