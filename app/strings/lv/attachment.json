@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} nevar pievienot.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs nevar pievienot šo failu: tas nav pieņemama veida vai izmēra. Izvēlies citu.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Šo foto nevarēja nolasīt.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} izmērs ir {size}; maksimums ir {limit}.",
+  "attachment.wrong_kind": "{name} nevar pievienot. Var pievienot fotoattēlus, PDF, teksta, CSV, Markdown, Word un Excel failus."
+}

@@ -1,6 +1,7 @@
 import { watchAskOn } from "./watch-ask.js";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { appSecret } from "./appsecret.js";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
 import { type AccountStore, keepAccount } from "./accounts.js";
 import { agentKeys } from "./agentkeys.js";
@@ -45,6 +46,14 @@ function agents(): Agents {
 }
 
 const secrets = new SecretsManagerClient({ region: AGENTS_REGION });
+
+/** tafs cloud's own keys: one secret (TAFS_SECRET_ID), falling back to each key's old secret until it's proven live. */
+const ownKeys = appSecret(
+  async (id, region) => (await new SecretsManagerClient({ region }).send(new GetSecretValueCommand({ SecretId: id }))).SecretString,
+  process.env,
+  // The push keys were read in DATA_REGION, else the function's own region, as the SDK picks it.
+  { agents: AGENTS_REGION, data: process.env.DATA_REGION || process.env.AWS_REGION || AGENTS_REGION },
+);
 
 /** Makes the secret, or gives it a new value when it exists. */
 async function putSecret(name: string, value: string, description: string): Promise<void> {
@@ -250,15 +259,13 @@ async function setEntry(tenant: string, map: "devices" | "secrets", key: string,
 
 /**
  * Google push for Android phones, with the Firebase project's service-account key, read from Secrets Manager on first
- * use. Off unless FCM_PROJECT_ID and FCM_SECRET_ID are set: an Android phone's registration is then refused.
+ * use (`ownKeys`, part `fcm`). Off unless FCM_PROJECT_ID is set and the key can be read: an Android phone's registration
+ * is then refused.
  */
-const fcm = process.env.FCM_PROJECT_ID && process.env.FCM_SECRET_ID
+const fcm = process.env.FCM_PROJECT_ID && ownKeys.configured("fcm")
   ? fcmSender({
     projectId: process.env.FCM_PROJECT_ID,
-    credentials: async () => {
-      const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: process.env.FCM_SECRET_ID }));
-      return JSON.parse(out.SecretString ?? "") as { client_email: string; private_key: string; token_uri?: string };
-    },
+    credentials: async () => JSON.parse((await ownKeys.text("fcm")) ?? "") as { client_email: string; private_key: string; token_uri?: string },
   })
   : undefined;
 
@@ -269,10 +276,8 @@ const fcm = process.env.FCM_PROJECT_ID && process.env.FCM_SECRET_ID
 const apns = silencing(routing({
   ios: apnsSender({
     keyPEM: async () => {
-      const id = process.env.APNS_SECRET_ID;
-      if (!id) throw new Error("APNS_SECRET_ID is not set");
-      const out = await new SecretsManagerClient({ region: DATA_REGION }).send(new GetSecretValueCommand({ SecretId: id }));
-      return (out.SecretString ?? "").trim();
+      if (!ownKeys.configured("apns")) throw new Error("neither TAFS_SECRET_ID nor APNS_SECRET_ID is set");
+      return ((await ownKeys.text("apns")) ?? "").trim();
     },
     keyID: process.env.APNS_KEY_ID ?? "",
     teamID: process.env.APNS_TEAM_ID ?? "",
@@ -581,14 +586,13 @@ const doorSecrets: DoorSecrets = {
 
 /**
  * Doors' setup, read once per container: the deployment's URL and email
- * domain from the environment, and the providers' keys from one secret
- * (DOORS_SECRET_ID, JSON). A provider whose keys aren't there isn't offered.
+ * domain from the environment, and the providers' keys from tafs cloud's
+ * secret (`ownKeys`, part `doors`, JSON). A provider whose keys aren't there isn't offered.
  */
 let doorsConfig: Promise<DoorsConfig> | undefined;
 function readDoorsConfig(): Promise<DoorsConfig> {
   doorsConfig ??= (async () => {
-    const id = process.env.DOORS_SECRET_ID;
-    const raw = id ? (await secrets.send(new GetSecretValueCommand({ SecretId: id }))).SecretString ?? "{}" : "{}";
+    const raw = ownKeys.configured("doors") ? (await ownKeys.text("doors")) ?? "{}" : "{}";
     const k = JSON.parse(raw) as Record<string, unknown>;
     const str = (name: string) => (typeof k[name] === "string" ? (k[name] as string) : "");
     const cfg: DoorsConfig = {

@@ -294,6 +294,38 @@ tafs cloud are never declined, and "taf" is the same in the plural ("{count} taf
 | plan | planas |
 | door / knock | durys / beldimas |
 
+### Latvian (lv)
+
+Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,
+Card and Coach take no endings, and the plural is "taf" ("{count} taf"), as the legal drafts write it; Setup stays a
+name. A value stands alone ("šajā ierīcē ({device})", "Durvis: {door}"), and a line another line fills is written in
+the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… locative).
+
+| English | Latvian |
+|---|---|
+| Needs you | Gaida tevi |
+| Approve / Approve once | Apstiprināt / Apstiprināt vienreiz |
+| Refuse | Atteikt |
+| held | aizturēts |
+| Halt / Halted | Apturēt / Apturēts |
+| Stopped | Pārtraukts |
+| Pause / Paused | Iepauzēt / Iepauzēts |
+| Resume | Turpināt |
+| Revoke | Atsaukt |
+| Record | Žurnāls |
+| Connect / connection | Pievienot / savienojums |
+| Pair | Savienot pārī |
+| Account | Konts |
+| limit / spend limit | limits / tēriņu limits |
+| credits / credit pack | kredīti / kredītu pakete |
+| Sign in / Sign out | Pierakstīties / Izrakstīties |
+| Inbox | Iesūtne |
+| Overview | Pārskats |
+| Calendar | Kalendārs |
+| Usage | Lietojums |
+| plan | plāns |
+| door / knock | durvis / klauvējiens |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
