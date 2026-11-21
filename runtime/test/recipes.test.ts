@@ -136,9 +136,16 @@ Bezahle meine Rechnungen unter 100 EUR.
     }
   });
 
+  it("reads the recipes in English in Korean, until they're written in it", () => {
+    const ko = recipesFor(undefined, "ko", true, null);
+    const enView = recipesFor(undefined, "en", true, null);
+    expect(ko.recipes.map((r) => r.title)).toEqual(enView.recipes.map((r) => r.title));
+  });
+
   it("has every recipe in every language the apps speak, each word translated", () => {
     // A recipe is written per base language; a regional variant (pt-BR) reads its base's (recipesFor).
-    expect(["en", ...LANGS].sort()).toEqual(LANGUAGES.filter((l) => baseLanguage(l) === l).sort());
+    // Korean reads the recipes in English until they're written in it (recipesFor falls back).
+    expect(["en", ...LANGS].sort()).toEqual(LANGUAGES.filter((l) => baseLanguage(l) === l && l !== "ko").sort());
     for (const r of RECIPES) {
       for (const lang of LANGS) {
         const w = r.languages[lang as keyof typeof r.languages];

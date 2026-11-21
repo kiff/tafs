@@ -153,7 +153,7 @@ nothing, since the door is the owner's to make. The apps draw the card from tafs
 `GET /v1/tafs/{id}/doors/drafts/{draft}` (`{draft_id, draft, made_at, expires_at, body}`, for the people who manage the
 taf; 404 once lapsed, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`.
 
-**Making one and its keys** (`TAFS_API_DOORS=on`; off, `POST …/doors` with `kind: "api"` is 400): each step is checked
+**Making one and its keys** (`TAFS_API_DOORS` on: `on` for every account, or a comma-separated list of the accounts it's on for, a test account first; off for the account, `POST …/doors` with `kind: "api"` is 400, Coach's `taf_door_api` drafts nothing, and the caller's routes answer 404): each step is checked
 with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature
 taken once), and is 403 unsigned (`signature_missing`) or signed with the device key (`critical_key_required`, in the
 door's own words):

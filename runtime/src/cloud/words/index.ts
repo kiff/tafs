@@ -10,6 +10,7 @@ import { type ConnectRoute, en, type When, type Words } from "./en.js";
 import { es } from "./es.js";
 import { fr } from "./fr.js";
 import { it } from "./it.js";
+import { ko } from "./ko.js";
 import { nl } from "./nl.js";
 import { pl } from "./pl.js";
 import { pt } from "./pt.js";
@@ -17,10 +18,10 @@ import { ptBR } from "./pt-BR.js";
 
 export type { ConnectRoute, When, Words };
 
-export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR"] as const;
+export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko"] as const;
 export type Lang = (typeof LANGUAGES)[number];
 
-const CATALOGS: Record<Lang, Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR };
+const CATALOGS: Record<Lang, Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR, ko };
 
 /** A regional variant's base language ("pt" for "pt-BR"), for what's kept per base language only (a recipe's words, kiff.dev's pages). */
 export function baseLanguage(lang: Lang): Exclude<Lang, "pt-BR"> {
@@ -79,7 +80,7 @@ export function midLine(phrase: string): string {
 /** Each language's name in English, for the lines Coach and the tafs read (they're written in English, as their instructions). */
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
-  "pt-BR": "Brazilian Portuguese",
+  "pt-BR": "Brazilian Portuguese", ko: "Korean",
 };
 
 /** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */

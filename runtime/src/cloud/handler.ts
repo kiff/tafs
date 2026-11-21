@@ -46,7 +46,7 @@ import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, 
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
-import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
+import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
 import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -9120,7 +9120,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_door_api") {
     // A door from another application, drafted: it makes nothing. The owner reads it in tafs and makes it with their
     // signed approval (POST …/doors {kind: "api", draft}), and its key is shown to them once, never to Coach.
-    if (process.env.TAFS_API_DOORS !== "on" || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
+    if (!apiDoorsOn(call.tenant) || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
     if (may && !may.manage) throw new ToolRefusal(`${taf.name}'s doors are for the people who manage it`);
     if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no doors");
     let draft: APIDraft;
@@ -10601,7 +10601,7 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   // application hand the taf work is signed on the phone. Pausing isn't: stopping is always safe.
   const kind = a && a !== "knocks" ? await doorKindOf(ctx, me.tenantID, taf.id, a) : undefined;
   if (parts.length === 4 && method === "POST" && body.kind === "api") {
-    if (process.env.TAFS_API_DOORS !== "on") throw new HTTPError(400, "that door isn't offered here");
+    if (!apiDoorsOn(me.tenantID)) throw new HTTPError(400, "that door isn't offered here");
     await doorSigned(event, me, deps);
     // Only the draft Coach made and tafs cloud keeps (design 4): the signed body names it by draft_id, its draft is that
     // draft byte for byte (canonical), and it's used once. A body made elsewhere, changed, lapsed or replayed makes nothing.

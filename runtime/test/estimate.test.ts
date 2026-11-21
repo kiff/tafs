@@ -101,7 +101,7 @@ describe("a taf's estimate, against the plan", () => {
     const e = { own: paced([40, 40, 40, 40, 40, 40, 40, 40, 60, 60]), plan: company, now: NOW };
     // A regional variant may read as its base: the eight are each their own.
     const lines = LANGUAGES.filter((lang) => baseLanguage(lang) === lang).map((lang) => estimate(e, lang).words);
-    expect(new Set(lines).size).toBe(8);
+    expect(new Set(lines).size).toBe(LANGUAGES.filter((lang) => baseLanguage(lang) === lang).length);
     expect(estimate(e, "de").words).toContain("Ausgabenlimit");
     expect(estimate({ now: NOW, plan: solo }, "pl").words).toBe(`${wordsIn("pl").est_unknown} ${wordsIn("pl").est_first_week} ${wordsIn("pl").est_never_past_solo}`);
     for (const lang of LANGUAGES) expect(weekOneWords("Refunds", { at: "", credits: 120, month: 510 }, lang)).toContain("Refunds");
