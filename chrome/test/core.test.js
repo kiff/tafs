@@ -161,3 +161,25 @@ test("the extension's guard refuses what planque's does", () => {
     assert.ok(PAY_WORDS.test(words), words);
   }
 });
+
+test("every locale has English's keys and placeholders, and a description Chrome takes", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const dir = new URL("../_locales/", import.meta.url);
+  const read = (loc) => JSON.parse(readFileSync(new URL(loc + "/messages.json", dir), "utf8"));
+  const en = read("en");
+  // Waiting for legal-i18n's words, so Chrome shows English for them meanwhile. Empty before the switch goes on.
+  const awaiting = new Set(["vault_body", "vault_error", "vault_password", "vault_remove", "vault_save", "vault_saved", "vault_site", "vault_title", "vault_username", "vault_with_username"]);
+  const locales = readdirSync(dir).filter((l) => l !== "en");
+  assert.deepEqual(locales.sort(), ["de", "es", "fr", "it", "ja", "ko", "nl", "pl", "pt_BR", "pt_PT"]);
+  for (const loc of ["en", ...locales]) {
+    const m = read(loc);
+    assert.deepEqual(Object.keys(m).sort(), Object.keys(en).filter((k) => loc === "en" || !awaiting.has(k) || k in m).sort(), loc);
+    for (const [key, { message, placeholders }] of Object.entries(m)) {
+      assert.ok(message.trim(), `${loc} ${key}`);
+      assert.deepEqual(Object.keys(placeholders || {}).sort(), Object.keys(en[key].placeholders || {}).sort(), `${loc} ${key}`);
+      const used = [...message.matchAll(/\$([A-Z_]+)\$/g)].map((x) => x[1].toLowerCase()).sort();
+      assert.deepEqual([...new Set(used)], Object.keys(placeholders || {}).sort(), `${loc} ${key} uses its placeholders`);
+    }
+    assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
+  }
+});
