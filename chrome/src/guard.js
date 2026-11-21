@@ -44,6 +44,16 @@ export function payment(page) {
   return (page.controls || []).some(pays);
 }
 
+function samePage(a, b) {
+  try {
+    const x = new URL(a);
+    const y = new URL(b);
+    return x.origin === y.origin && x.pathname === y.pathname;
+  } catch {
+    return true;
+  }
+}
+
 const KINDS = new Set(["click", "fill", "select", "check"]);
 
 /** Why `act` may not run on `page`: `{code, why}`, or null when it may. */
@@ -58,7 +68,16 @@ export function refuse(page, act) {
       if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf clicks no control" };
       return null;
     }
-    if ((page.links || []).some((l) => l.ref === act.ref)) return null;
+    const link = (page.links || []).find((l) => l.ref === act.ref);
+    if (link) {
+      // A link whose words pay is refused as a control would be; on a checkout or payment page, only a link to another
+      // page is followed (page.js already offers a link that acts, or that stays on this page, as a control).
+      if (PAY_WORDS.test(link.label || "")) return { code: CODE.paymentStep, why: "that link's words pay or place an order" };
+      if ((page.checkout || payment(page)) && samePage(link.url, page.url)) {
+        return { code: CODE.paymentStep, why: "on a checkout or payment page a taf follows only a link to another page" };
+      }
+      return null;
+    }
     return { code: CODE.refUnknown, why: "the page has no control or link " + act.ref };
   }
   const field = (page.fields || []).find((f) => f.ref === act.ref);

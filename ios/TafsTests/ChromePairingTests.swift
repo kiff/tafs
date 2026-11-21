@@ -39,20 +39,21 @@ final class ChromePairingTests: XCTestCase {
     func testAProofUnderAnotherSecretOrForAnotherKeyIsRefused() throws {
         let v = try vectors()
         let chromeKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.chromeKey))
-        XCTAssertFalse(ChromePairing.extensionProofHolds(secret: "AAAAAA", key: chromeKey, proof: v.extensionProof))
+        XCTAssertFalse(ChromePairing.extensionProofHolds(secret: "AAAAAAAAAAAAAAAAA", key: chromeKey, proof: v.extensionProof))
         XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey + Data([0]), proof: v.extensionProof))
         XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: "not+base64url"))
         XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: ""))
     }
 
-    func testTheSecretIsSixCharactersReadWithoutMistakes() {
+    func testTheSecretIsSeventeenCharactersReadWithoutMistakes() {
         for _ in 0..<50 {
             let s = ChromePairing.newSecret()
-            XCTAssertEqual(s.count, 6)
+            XCTAssertEqual(s.count, 17)
             XCTAssertTrue(s.allSatisfy { ChromePairing.alphabet.contains($0) })
         }
         XCTAssertFalse(ChromePairing.alphabet.contains { "01ILOU".contains($0) })
-        XCTAssertEqual(ChromePairing.code(lookup: "K7QF", secret: "29XMDP"), "K7QF-29XMDP")
+        XCTAssertEqual(ChromePairing.code(lookup: "K7QF", secret: "29XMDPQRSTVWXYZ23"), "K7QF-29XM-DPQR-STVW-XYZ2-3")
+        XCTAssertGreaterThan(log2(Double(ChromePairing.alphabet.count)) * Double(ChromePairing.secretLength), 80)
     }
 
     /// The keystore's DER signature goes as raw r‖s, base64url, and still verifies.

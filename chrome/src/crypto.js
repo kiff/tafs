@@ -79,10 +79,12 @@ export async function sign(privateKey, label, body) {
 export async function verify(publicKey, label, body, sig) {
   try {
     const key = typeof publicKey === "string" ? await importPublic(publicKey) : publicKey;
-    let raw = fromB64u(sig);
-    if (raw.length !== 64) raw = derToRaw(raw);
-    if (!raw) return false;
-    return await crypto.subtle.verify(SIGN, key, raw, signingBytes(label, body));
+    const given = fromB64u(sig);
+    const data = signingBytes(label, body);
+    // r‖s first, as the contract sends it; a DER signature (a phone's keystore) after, which can also be 64 bytes long.
+    if (given.length === 64 && (await crypto.subtle.verify(SIGN, key, given, data))) return true;
+    const raw = derToRaw(given);
+    return !!raw && (await crypto.subtle.verify(SIGN, key, raw, data));
   } catch {
     return false;
   }

@@ -66,9 +66,10 @@ The owner pairs from the phone, and only types a code into Chrome. A code shown 
 the owner to pair a stranger's Chrome, and planque never learns the part of the code that proves both keys.
 
 1. **The phone opens a pairing.** `POST /v1/accounts/{t}/chromes/pairings` is signed by the phone as every planque call
-   is, and answers `{pairing: "pr_…", lookup: "K7QF"}`. The phone makes a 6-character **secret** of its own that it never
-   sends, and shows `K7QF-29XMDP` (the lookup, then the secret) for 10 minutes, with "Pair only a Chrome on a computer
-   you're at". The characters exclude `0 1 I L O U`.
+   is, and answers `{pairing: "pr_…", lookup: "K7QF"}`. The phone makes a **17-character secret** of its own (about 83
+   bits, so a proof planque stores can't be searched offline) that it never sends. It shows `K7QF-29XM-DPQR-STVW-XYZ2-3`
+   (the lookup, then the secret in groups of four) for 10 minutes, with "Pair only a Chrome on a computer you're at". The
+   characters exclude `0 1 I L O U`, and the extension takes the code with or without dashes and in any case.
 2. **The owner types the code into the side panel.** The extension makes its key pair and calls
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
@@ -91,8 +92,8 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    offer them) and `DELETE …/chromes/{chrome_id}`.
 4. **The extension polls** `GET /v1/extension/pairings/{lookup}?key=…`. It gets `202` while the phone hasn't confirmed,
    then, once, `{pairing, chrome_id, name, phone_key, phone_proof, phone_sig}`; 404 for a key that isn't the pairing's.
-   Its `POST` answers 403 for a build that isn't released, 404 for an unknown or expired code, and 409 for a code
-   another Chrome used. It keeps the pairing only if `phone_proof`
+   Its `POST` answers 403 for a build that isn't released, and 404 for an unknown or expired code and for one another
+   Chrome used (planque spends it, and the phone reads `contested`), so a sweep can't tell them apart. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
@@ -198,6 +199,9 @@ error = {code, detail?}      // detail never carries page text
 - **`open.url` is never one the taf wrote:** the taf names a link ref or a start URL, and planque resolves and checks it.
   The tab keeps the full URL. Only the query-less URL goes up.
 - **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
+- **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
+  URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
+  payment page only a link to another page is followed. planque's guard does the same.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
 - **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's window

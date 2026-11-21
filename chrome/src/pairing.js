@@ -1,5 +1,5 @@
 // Pairing this Chrome with the owner's phone (docs/chrome.md, "Pairing"). It starts on the phone, which shows a code: four
-// characters that find the pairing, and six that are a secret planque never sees. The owner types the code here. The
+// characters that find the pairing, and 17 that are a secret planque never sees. The owner types the code here. The
 // extension proves its key under the secret; the phone checks that proof, then signs, and proves its own key under the same
 // secret. So neither planque nor anyone between can put another key in either place.
 
@@ -13,11 +13,18 @@ export function hex(data) {
 /** The code's characters: no 0, 1, I, L, O or U, so a code read aloud or by eye is typed right. */
 export const ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 
-/** The code as typed ("k7qf-29xmdp", "K7QF 29XMDP") as `{lookup, secret}`, or null when it isn't one. */
+/** The secret's length: 17 characters of 30, about 83 bits, so a proof planque stores can't be tried offline. */
+export const SECRET_LENGTH = 17;
+export const LOOKUP_LENGTH = 4;
+
+/**
+ * The code as typed ("K7QF-29XM-DPQR-STVW-XYZ2-3", spaces or dashes anywhere, any case) as `{lookup, secret}`: the first
+ * four characters find the pairing, the other 17 are the secret. Null when it isn't one.
+ */
 export function parseCode(text) {
   const s = String(text || "").toUpperCase().replace(/[\s-]/g, "");
-  if (s.length !== 10 || [...s].some((c) => !ALPHABET.includes(c))) return null;
-  return { lookup: s.slice(0, 4), secret: s.slice(4) };
+  if (s.length !== LOOKUP_LENGTH + SECRET_LENGTH || [...s].some((c) => !ALPHABET.includes(c))) return null;
+  return { lookup: s.slice(0, LOOKUP_LENGTH), secret: s.slice(LOOKUP_LENGTH) };
 }
 
 /**
