@@ -46,6 +46,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppModel
@@ -320,6 +322,9 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
       )
     }
+    // A step in the owner's Chrome: the site large, the origin small, planque's action words, what the page showed, a checkout's
+    // lines, and which Chrome. Under KIFF's amount and reason, never in their place (docs/chrome.md, "The phone approval card").
+    call.browser?.let { BrowserStepBlock(it) }
     // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
     // place of KIFF's amount, rule or action above.
     if (call.tafAbout != null || call.tafSays != null) {
@@ -492,3 +497,30 @@ internal fun viewOnlyLine(viewOnly: Boolean, noApprovalKeyHere: Boolean): String
   viewOnly -> Words.Approval.viewOnly
   else -> bot.tafs.app.signing.ApprovalKeyRenewed.WORDS
 }
+
+/** A held browser step's page, as the card draws it: nothing here decides, every word is planque's or KIFF's. */
+@Composable
+internal fun BrowserStepBlock(step: bot.tafs.app.model.BrowserStep) {
+  // As iOS's BrowserStepBlock (docs/chrome.md, "The approval card"): the site large, its exact origin small, which Chrome; then
+  // what the page showed, its own label for the element first; then the basket. The card's summary stays KIFF's, never the label.
+  Column(Modifier.fillMaxWidth().testTag(BROWSER_STEP), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(step.site, style = scaled(20, FontWeight.Bold, Theme.ink))
+      if (step.origin.isNotEmpty()) Text(step.origin, style = scaled(12, color = Theme.soft, mono = true))
+      step.chrome?.let { Text(Words.Chrome.heldIn(name = it), style = scaled(13, color = Theme.soft)) }
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(Words.Chrome.heldPage, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+      Text(step.action, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.testTag(BROWSER_STEP_ACTION))
+      step.pageTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
+      step.excerpt?.let { Text(it, style = scaled(13, color = Theme.ink)) }
+    }
+    if (step.lines.isNotEmpty()) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(Words.Chrome.heldBasket, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+      step.lines.forEach { Text(it, style = scaled(13, color = Theme.ink)) }
+    }
+  }
+}
+
+const val BROWSER_STEP_ACTION = "needs-you.browser-step.action"
+const val BROWSER_STEP = "needs-you.browser-step"

@@ -49,12 +49,13 @@ object ChromePairing {
     }
 
   /**
-   * Whether [proof] is the extension's proof of [key] (its SPKI DER) under our secret. A wrong one means another extension
-   * used the code's lookup: nothing is paired.
+   * Whether [proof] is the extension's proof of [key] (its SPKI DER) and [kiffOffer] (its KIFF device's `kiff.pair.v1` offer, as
+   * its text; empty when it sent none) under our secret: HMAC(secret, ext label ‖ key ‖ kiff_offer). A wrong one means another
+   * extension used the code's lookup, or planque swapped a key: nothing is paired.
    */
-  fun extensionProofHolds(secret: String, key: ByteArray, proof: String): Boolean {
+  fun extensionProofHolds(secret: String, key: ByteArray, proof: String, kiffOffer: String = ""): Boolean {
     val given = base64UrlDecoded(proof) ?: return false
-    return MessageDigest.isEqual(given, hmac(secret, EXTENSION_PROOF_LABEL, key))
+    return MessageDigest.isEqual(given, hmac(secret, EXTENSION_PROOF_LABEL, key + kiffOffer.toByteArray(Charsets.UTF_8)))
   }
 
   /** The SHA-256 of the extension's SPKI DER, in lowercase hex, as the signed body names it. */
