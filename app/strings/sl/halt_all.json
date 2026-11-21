@@ -1,0 +1,21 @@
+{
+  "halt_all.description": "Ustavi vse tafe naenkrat. Nič novega se ne pošlje, dokler jih v tafs ne zaženete znova.",
+  "halt_all.failed": "tafs ni mogel ustaviti vaših tafov. {why} Ustavite jih v aplikaciji tafs.",
+  "halt_all.halted": {
+    "one": "Ustavljen {count} taf. Nič novega se ne pošlje, dokler jih ne zaženete znova.",
+    "two": "Ustavljena {count} tafa. Nič novega se ne pošlje, dokler jih ne zaženete znova.",
+    "few": "Ustavljeni {count} tafi. Nič novega se ne pošlje, dokler jih ne zaženete znova.",
+    "other": "Ustavljenih {count} tafov. Nič novega se ne pošlje, dokler jih ne zaženete znova."
+  },
+  "halt_all.halted_all": "Vaši tafi so ustavljeni. Nič novega se ne pošlje, dokler jih ne zaženete znova.",
+  "halt_all.halting": {
+    "one": "Ustavljam {count} taf: noben zagon se ne začne. KIFF še ni potrdil vseh delov; tafs bo pokazal, ko jih.",
+    "two": "Ustavljam {count} tafa: noben zagon se ne začne. KIFF še ni potrdil vseh delov; tafs bo pokazal, ko jih.",
+    "few": "Ustavljam {count} tafe: noben zagon se ne začne. KIFF še ni potrdil vseh delov; tafs bo pokazal, ko jih.",
+    "other": "Ustavljam {count} tafov: noben zagon se ne začne. KIFF še ni potrdil vseh delov; tafs bo pokazal, ko jih."
+  },
+  "halt_all.halting_all": "Ustavljam vaše tafe: noben zagon se ne začne. KIFF še ni potrdil vseh delov; tafs bo pokazal, ko jih.",
+  "halt_all.running": "tafs ni mogel ustaviti vaših tafov. Ustavite jih v aplikaciji tafs.",
+  "halt_all.signed_out": "Iz tafs ste odjavljeni. Prijavite se, da boste lahko ustavili svoje tafe.",
+  "halt_all.title": "Ustavi vse tafe"
+}

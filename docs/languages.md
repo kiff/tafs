@@ -397,6 +397,39 @@ only. The plural forms are one, few (2–4) and other.
 | plan (billing) | tarif |
 | Cancel / Continue | Zrušiť / Pokračovať |
 
+### Slovenian (sl)
+
+Addressed as **vi**; buttons are the short imperative Slovenian software uses ("Odobri", "Zavrni", "Prekliči"). taf
+declines with the dual (taf, tafa, tafi, tafov); Card, Coach, KIFF and Setup stay as names. Every device word is
+masculine (telefon, tablični računalnik, računalnik, Mac), so "ta {device}" agrees; elsewhere a value stands alone ("na
+tej napravi ({device})"). A door is "vrata", plural only. iOS and macOS have no Slovenian, so their menu paths stay as
+the system shows them, in English; Windows' are in Slovenian. The plural forms are one, two, few (3–4) and other.
+
+| English | Slovenian |
+|---|---|
+| Needs you | Čaka na vas |
+| Approve / Approve once | Odobri / Odobri enkrat |
+| Refuse | Zavrni |
+| held | zadržano |
+| Halt / Halted | Ustavi / Ustavljeno |
+| Stopped | Končano |
+| Pause / Paused | Začasno ustavi / Začasno ustavljeno |
+| Resume | Nadaljuj |
+| Revoke | Odvzemi |
+| Record | Dnevnik |
+| Connect / connection | Poveži / povezava |
+| Pair / Unpair | Seznani / Prekini seznanitev |
+| Account | Račun |
+| limit / spend limit | omejitev / omejitev porabe |
+| credits / credit pack | krediti / paket kreditov |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Prejeto |
+| Overview | Pregled |
+| Calendar | Koledar |
+| Usage | Poraba |
+| plan (billing) | paket |
+| Cancel / Continue | Prekliči / Naprej |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

@@ -224,7 +224,7 @@ IOS_LANGUAGE_KEY = "_language"
 # The plural forms a language's whole numbers take (CLDR), beside "other".
 PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["one"], "pt": ["one"], "fr": ["one"],
            "pl": ["one", "few", "many"], "ja": [], "ko": [], "et": ["one"], "el": ["one"], "lt": ["one", "few"], "lv": ["zero", "one"],
-           "cs": ["one", "few"], "sk": ["one", "few"]}
+           "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"]}
 
 
 def ios_text(text, key, source, owned=()):

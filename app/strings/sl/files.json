@@ -1,0 +1,49 @@
+{
+  "files.account_row": {
+    "one": "{count} datoteka · hranjena 30 dni",
+    "two": "{count} datoteki · hranjeni 30 dni",
+    "few": "{count} datoteke · hranjene 30 dni",
+    "other": "{count} datotek · hranjenih 30 dni"
+  },
+  "files.all": "Vse",
+  "files.all_tafs": "Vsi tafi",
+  "files.by_run": "Po zagonu",
+  "files.by_taf": "Po tafu",
+  "files.delete_body": "Takoj izgine iz Datotek za vse v tem računu. Tega ni mogoče razveljaviti.",
+  "files.delete_now": "Izbriši zdaj",
+  "files.delete_question": "Izbrišem »{name}« zdaj?",
+  "files.deleted": "Izbrisano za vse",
+  "files.download": "Prenesi",
+  "files.empty": "Še nič. Ko taf med zagonom ustvari poročilo, preglednico ali dokument, se tu hrani 30 dni, da ga lahko vsi v tem računu odprejo, shranijo ali delijo.",
+  "files.everyone": "Vsi v tem računu",
+  "files.goes_away": "Izgine",
+  "files.goes_in_days": {
+    "one": "izgine čez {count} dan",
+    "two": "izgine čez {count} dni",
+    "few": "izgine čez {count} dni",
+    "other": "izgine čez {count} dni"
+  },
+  "files.goes_on": "{date} (30 dni po svojem zagonu)",
+  "files.goes_today": "izgine danes",
+  "files.goes_tomorrow": "izgine jutri",
+  "files.in_run": "V zagonu",
+  "files.kept_line": "Vsaka datoteka se hrani 30 dni od svojega zagona, nato izgine sama. Te datoteke vidijo vsi v tem računu. Priponke vaših klepetov ostanejo pri svojih sporočilih.",
+  "files.kept_until": "Njegove datoteke se hranijo do {date}",
+  "files.made_by": "Ustvaril",
+  "files.none_yet": "Še nobene · hranjene 30 dni",
+  "files.pick_one": "Izberite datoteko, da jo vidite tukaj.",
+  "files.preview_start": "Prikazan je samo začetek. Prenesite datoteko, da jo preberete v celoti.",
+  "files.saved": "Shranjeno v to napravo",
+  "files.see_in_chat": "Prikaži v klepetu",
+  "files.share": "Deli",
+  "files.size": "Velikost",
+  "files.taf_row": {
+    "one": "{count} datoteka iz njegovih zagonov",
+    "two": "{count} datoteki iz njegovih zagonov",
+    "few": "{count} datoteke iz njegovih zagonov",
+    "other": "{count} datotek iz njegovih zagonov"
+  },
+  "files.title": "Datoteke",
+  "files.type": "Vrsta",
+  "files.who_sees": "Kdo jo vidi"
+}
