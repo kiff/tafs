@@ -94,7 +94,11 @@ asked for).
 - **Continue** (`OnboardingView`): it calls `signInInApp` with the terms version read when the tick showed
   (`appTermsVersion`), and waits while it runs. Then the sign-in sheet's own celebration (`InAppSignedIn`). How it
   ends when it doesn't sign in (`continueOutcome`):
-  - **closing KIFF's page** (`access_denied`, or the tab closed) says nothing, and the welcome is as it was;
+  - **KIFF's page refused** (`access_denied`) says nothing, and the welcome is as it was;
+  - **back in tafs from the tab with no answer** (the tab closed, or tafs brought back in front: `AppModel.appSignInLeft`,
+    1.5 s after) ends the wait (`endAppSignIn`) and says "Signing in didn't work.", with Continue free again. Before, Continue
+    stayed greyed with nothing said for the tab's 15 minutes; K5 found it when KIFF's page ended on "This sign-in has
+    expired" and was closed. iOS's sheet ends as it closes, so it never waited;
   - **terms that changed** since the tick (409 `terms_outdated`) untick the box and say so (`onboarding.terms_changed`).
     KIFF refuses the terms before it spends the code, so the code is kept in memory for 50 of its 60 seconds, and the
     new tick sends it again with the new version without opening KIFF's page twice. Past that, or after any other

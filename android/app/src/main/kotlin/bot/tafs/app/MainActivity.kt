@@ -372,6 +372,8 @@ fun RootView(model: AppModel) {
           signingInWithPhone = true
         }) else null,
         phoneTermsChanged = phoneTermsChanged,
+        signInLeft = model.appSignInLeft.collectAsState().value,
+        endSignIn = model::endAppSignIn,
       )
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
