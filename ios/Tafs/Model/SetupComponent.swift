@@ -297,6 +297,8 @@ struct SetupThread: Equatable {
         /// kiff/agents' words for it, when the answer came as data (the card's `answer`):
         /// what the card shows, as recorded.
         var words: String? = nil
+        /// A refused approval's line as tafs cloud words it for the owner (tafs#1640), drawn whole under the card.
+        var refused: String? = nil
 
         init(type: String, id: String, text: String, words: String? = nil) {
             self.type = type
@@ -366,31 +368,21 @@ struct SetupThread: Equatable {
             text = words
         }
         // Why an approval or a sign-in didn't go through: the settled `answer` ("failed: …") is written for Coach ("Show the
-        // rules again as a new notice…"), never for the owner (the owner's emulator pass, 21 Nov). Since tafs#1640, tafs
-        // cloud's `words` after " · it didn't go through: " are only the owner's own note, so the card shows that note,
-        // as Android draws `words`. One recorded before then may still carry Coach's text: it shows none.
+        // rules again as a new notice…"), never for the owner (the owner's emulator pass, 21 Nov), so it's never the why.
+        // A refused approval's `words` are tafs cloud's line for the owner, in the owner's language: built when the thread
+        // is read, from the owner's own note only (tafs#1640), so they're drawn whole (`refused`), as Android draws `words`.
+        // A sign-in's words aren't built so: it says only that it didn't go through.
         if c.type == .approval || c.type == .signIn, text.hasPrefix("failed") {
-            let note = Self.ownerNote(recorded)
-            return Answer(type: c.type.rawValue, id: c.id, text: note.map { "failed: " + $0 } ?? "failed", words: words)
+            var a = Answer(type: c.type.rawValue, id: c.id, text: "failed", words: words)
+            let line = words.trimmingCharacters(in: .whitespacesAndNewlines)
+            if c.type == .approval, recorded.answer?.hasPrefix("failed: ") == true, !line.isEmpty { a.refused = line }
+            return a
         }
         return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }
 
     /// What tafs cloud's English words for a failed answer put before why.
     static let didntGoThrough = " · it didn't go through: "
-
-    /// When tafs cloud's words for a failed answer became the owner's own note only (tafs#1640, live at 09:04 UTC on 21 Nov
-    /// 2026): what follows `didntGoThrough` in words recorded since then is never written for Coach.
-    static let ownerWordsSince = ISO8601DateFormatter().date(from: "2026-11-21T09:04:00Z")!
-
-    /// The owner's note after a failed approval's or sign-in's words, only where tafs cloud wrote it for the owner: recorded
-    /// since `ownerWordsSince`, in its English form, and not blank. Otherwise none, and the card says only that it didn't go
-    /// through.
-    static func ownerNote(_ recorded: TafsCloud.CardAnswer) -> String? {
-        guard let at = recorded.at, at >= ownerWordsSince, let r = recorded.words.range(of: didntGoThrough) else { return nil }
-        let note = recorded.words[r.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
-        return note.isEmpty ? nil : note
-    }
 
     /// An approval's settled answer (tafs#1283): approved, or connected with its Card next, is done;
     /// already approved; declined; failed with why. Any other value isn't approved. As Android's

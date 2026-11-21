@@ -96,8 +96,8 @@ final class ApprovalAnswerTests: XCTestCase {
         XCTAssertNil(older.answer)
     }
 
-    /// A refused approval's or sign-in's line is never tafs cloud's text for Coach: the card says only that it didn't go
-    /// through (the owner's emulator pass, 21 Nov). A refusal this phone wrote itself, as a message, keeps its words.
+    /// A refused approval's or sign-in's why is never the settled answer's text for Coach (the owner's emulator pass, 21 Nov).
+    /// A refusal this phone wrote itself, as a message, keeps its words.
     func testARefusalsTextForCoachNeverReachesTheOwner() throws {
         let forCoach = "Approve · it didn't go through: Show the rules again as a new notice, never end a turn saying you're waiting"
         let approval = SetupThread.answer(TafsCloud.CardAnswer(words: forCoach, answer: "failed: Show the rules again as a new notice"), to: try card())
@@ -110,21 +110,24 @@ final class ApprovalAnswerTests: XCTestCase {
         XCTAssertEqual(SetupThread.Answer("[approval c1] failed: The approval window has ended.")?.why, "The approval window has ended.")
     }
 
-    /// Since tafs#1640, tafs cloud's words after "didn't go through: " are only the owner's note: a card answered since then
-    /// shows it; one answered before, or the settled answer's Coach text, never.
-    func testTheOwnersNoteShowsSinceTafsCloudSendsOnlyIt() throws {
-        let note = "Stripe is already connected. There's nothing new to approve, so nothing was approved."
-        let words = "Approve · it didn't go through: " + note
+    /// Since tafs#1640, a refused approval's words are tafs cloud's line for the owner, in the owner's language, built when
+    /// the thread is read: drawn whole, in any language and whenever it was answered; the settled answer's Coach text never.
+    func testARefusedApprovalShowsTafsCloudsLineWhole() throws {
         let forCoach = "failed: Show the rules again as a new notice"
-        var since = TafsCloud.CardAnswer(words: words, answer: forCoach)
-        since.at = SetupThread.ownerWordsSince.addingTimeInterval(60)
-        XCTAssertEqual(SetupThread.answer(since, to: try card())?.why, note)
-        var before = since
-        before.at = SetupThread.ownerWordsSince.addingTimeInterval(-60)
-        XCTAssertNil(SetupThread.answer(before, to: try card())?.why, "words recorded before #1640 may be Coach's")
-        var bare = TafsCloud.CardAnswer(words: "Approve · it didn't go through", answer: forCoach)
-        bare.at = since.at
-        XCTAssertNil(SetupThread.answer(bare, to: try card())?.why, "no note: only that it didn't go through")
-        XCTAssertEqual(SetupThread.answer(bare, to: try card())?.failed, true)
+        for words in ["Approve · it didn't go through: Stripe is already connected. There's nothing new to approve.",
+                      "Approuver · cela n'a pas abouti : Stripe est déjà connecté.",
+                      "Zatwierdź · nie powiodło się"] {
+            var old = TafsCloud.CardAnswer(words: words, answer: forCoach)
+            old.at = Date(timeIntervalSince1970: 0)
+            let answer = SetupThread.answer(old, to: try card())
+            XCTAssertEqual(answer?.refused, words)
+            XCTAssertEqual(answer?.failed, true)
+            XCTAssertNil(answer?.why, "the settled answer is Coach's")
+        }
+        // A sign-in's words aren't built from the owner's note: only that it didn't go through.
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"s1","grant":"g_01"}"#)
+        let refused = SetupThread.answer(TafsCloud.CardAnswer(words: "Sign in · it didn't go through: Show the rules again", answer: nil), to: signIn)
+        XCTAssertNil(refused?.refused)
+        XCTAssertNil(refused?.why)
     }
 }

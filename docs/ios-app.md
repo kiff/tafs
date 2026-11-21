@@ -438,10 +438,10 @@ the app in sample mode.
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
   **A refused approval or sign-in** never shows the settled `answer`'s why, which is written for Coach ("Show the rules
-  again as a new notice…"). Since tafs#1640 (live 09:04 UTC, 21 Nov), tafs cloud's `words` after " · it didn't go
-  through: " are only the owner's own note, so a card answered since then shows that note (`SetupThread.ownerNote`), as
-  Android draws `words`; one answered before shows only that it didn't go through. A refusal the phone wrote itself keeps
-  its words.
+  again as a new notice…"). A refused approval's `words` are tafs cloud's line for the owner, in the owner's language,
+  built when the thread is read from the owner's own note only (tafs#1640), so the card draws them whole
+  (`SetupThread.Answer.refused`), as Android draws `words`. A refused sign-in says only that it didn't go through. A
+  refusal the phone wrote itself keeps its words.
   **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
   as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
   card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint

@@ -1749,7 +1749,9 @@ struct SetupApproval: View {
                 Text(Words.Coach.newerRequestConnectionBelow)
                     .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
             } else if case .failed(let why) = state {
-                Text(why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.didNotGoThroughNothing)
+                // tafs cloud's line for a refused approval, whole; else the phone's own why.
+                Text(model.setupThread.answer(to: component.id)?.refused
+                     ?? why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.didNotGoThroughNothing)
                     .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }
             if !replaced, state.isFailure && model.requestRefused(component) {

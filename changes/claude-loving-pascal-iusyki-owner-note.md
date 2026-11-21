@@ -1,1 +1,1 @@
-- **iPhone and iPad: a refused approval shows the owner's own note again** (tafs#1640's words, recorded since it went live); never the reason written for Coach.
+- **iPhone and iPad: a refused approval shows tafs cloud's line for the owner again**, with the owner's own note, in the owner's language (tafs#1640); never the reason written for Coach.
