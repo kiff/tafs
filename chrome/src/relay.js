@@ -127,13 +127,13 @@ export class Relay {
       if (checked.why) {
         // Not run, and said so only when it carries an id we can answer: an unsigned message gets no signed answer.
         const id = m.step && typeof m.step.id === "string" ? m.step.id : null;
-        if (id) this.send(await result(keys.privateKey, id, { error: { code: "bad_step", detail: checked.why } }));
+        if (id) this.send(await result(keys.privateKey, { id, nonce: m.step.nonce }, pairing.chromeId, { error: { code: "bad_step", detail: checked.why } }));
         return;
       }
       const out = await this.runner.handle(checked.step);
-      let answer = await result(keys.privateKey, checked.step.id, out);
+      let answer = await result(keys.privateKey, checked.step, pairing.chromeId, out);
       if (new TextEncoder().encode(JSON.stringify(answer)).length > MAX_RESULT_BYTES) {
-        answer = await result(keys.privateKey, checked.step.id, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
+        answer = await result(keys.privateKey, checked.step, pairing.chromeId, { error: { code: "page_too_large", detail: "the answer is over " + MAX_RESULT_BYTES + " bytes" } });
       }
       this.send(answer);
       return;

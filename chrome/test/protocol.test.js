@@ -44,9 +44,13 @@ test("a step runs only when planque signed it for this Chrome, unexpired and new
 
 test("each answer, hello and welcome is signed for its purpose", async () => {
   const ext = await newKeyPair();
-  const r = await result(ext.privateKey, "op_1", { error: { code: "page_changed" } });
+  const r = await result(ext.privateKey, { id: "op_1", nonce: "n1" }, "chr_1", { error: { code: "page_changed" } });
   assert.equal(r.ok, false);
-  assert.equal(await verify(await pub(ext), LABEL.result, { id: "op_1", ok: false, page: null, error: { code: "page_changed" } }, r.sig), true);
+  const body = { id: "op_1", nonce: "n1", chrome_id: "chr_1", ok: false, page: null, error: { code: "page_changed" } };
+  assert.equal(await verify(await pub(ext), LABEL.result, body, r.sig), true);
+  // The step's nonce and the Chrome are signed: the same answer can't be filed against another step or Chrome.
+  assert.equal(await verify(await pub(ext), LABEL.result, { ...body, nonce: "n2" }, r.sig), false);
+  assert.equal(await verify(await pub(ext), LABEL.result, { ...body, chrome_id: "chr_2" }, r.sig), false);
 
   const h = await hello(ext.privateKey, { chromeId: "chr_1", nonceP: "p", nonceE: "e", version: "0.1.0", manifestHash: "h" });
   assert.equal(await verify(await pub(ext), LABEL.hello, { chrome_id: "chr_1", nonce_p: "p", nonce_e: "e", version: "0.1.0", manifest_hash: "h" }, h.sig), true);
@@ -174,6 +178,10 @@ test("the relay takes steps only after both ends proved themselves", async () =>
   const answer = ws.sent.at(-1);
   assert.equal(answer.type, "result");
   assert.equal(answer.ok, true);
+  assert.equal(answer.nonce, s.nonce, "the answer names the step's own nonce");
+  assert.equal(answer.chrome_id, "chr_1");
+  const { sig, type, ...signedBody } = answer;
+  assert.equal(await verify(await pub(ext), LABEL.result, signedBody, sig), true);
 
   const bad = step({ nonce: "n2" });
   await ws.deliver({ type: "step", step: bad, sig: "AAAA" });
