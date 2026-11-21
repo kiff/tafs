@@ -43,7 +43,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are thirteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@31", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@32", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -55,13 +55,15 @@ describe("Coach's skills, as files", () => {
       // set-up-a-taf is the one exception, at 2,000: sizing the job first (A4) on top of rules from earlier Evals, and finding
       // things by id, never by name (a taf that searched Sheets by name needed Drive, which its sign-in didn't give).
       // connect-an-app is the other, at 1,900: what a sign-in allows is never called read-only (the Sheets proof, 16 Nov); at
-      // 1,960, no narrowing in any language, the sign-in's 60 minutes and account, and no new sign-in for a tool it lacks (Eval 44806446879).
+      // 1,960, no narrowing in any language, the sign-in's 60 minutes and account, and no new sign-in for a tool it lacks (Eval 44806446879);
+      // at 2,040, a failed grant asks a new sign-in only for a sign-in cause, and a connect goes on to its request's next step
+      // (two phone tests, 21 Nov: a new Stripe sign-in for a tool's name, and Calendly connected with no taf drafted).
       // draft-the-card, at 1,880: a held per-action limit's Card carries KIFF's count as its only total (Eval 43975057022),
       // and where an instructions-only rule is kept, and a pin said only as wide as it holds (Eval 44036967781); at 1,915,
       // the notice says every limit in digits (Eval 44765665210).
       // name-the-tools, at 1,860: a pinned argument is never resource_argument, and a row's values name their columns
       // (Eval 44876949969, replay refused 9 times).
-      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 1960, "draft-the-card": 1970, "name-the-tools": 1860 };
+      const budget: Record<string, number> = { "set-up-a-taf": 2000, "connect-an-app": 2040, "draft-the-card": 1970, "name-the-tools": 1860 };
       expect(approxTokens(s.body), s.name).toBeLessThanOrEqual(budget[s.name] ?? 1800);
     }
     expect(skillFiles().map((f) => `${f.name}@${f.version}`)).toEqual(allSkillRefs());
@@ -225,6 +227,15 @@ describe("Coach's core", () => {
     expect(connect).toContain("You choose the name: the taf's name in lower case, words joined by hyphens (introduction-drafts)");
   });
 
+  // Two phone tests, 21 Nov: a Stripe grant failed on a tool's name and Coach asked a new Stripe sign-in for it; Calendly
+  // connected and Coach stopped at "signed in", drafting no taf, so the owner read it as "didn't connect" (connect-an-app@32).
+  it("asks a new sign-in only for a sign-in cause, and goes on after a connect", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("only a sign-in cause (401, signed out, refused) asks a new sign-in. Else (a tool it doesn't list, an argument) fix what it named in a new request reusing the same sign-in");
+    expect(body).not.toContain("say in one sentence it didn't work and connect again with a new planque request");
+    expect(body).toContain("Once a sign-in made for a request is connected, go on in that reply to the request's next step (tools, rules, Card), or say why not; never stop at \"signed in\".");
+  });
+
   it("answers a question written while a card waits, then shows the card again", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("What they wrote instead that doesn't answer it (a question) isn't an answer: answer it, then show the card again (a new id), still waiting.");
@@ -246,7 +257,7 @@ describe("Coach's core", () => {
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
-    expect(toolSkills("web_read")).toEqual(["connect-an-app@31"]);
+    expect(toolSkills("web_read")).toEqual(["connect-an-app@32"]);
   });
 
   // planque declares a key request's tools to KIFF before the key only when the request names them, and only
@@ -542,15 +553,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@31", "draft-the-card@45", "halting@1", "name-the-tools@20", "set-up-a-taf@14", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@31", "draft-the-card@45", "improve-a-taf@3", "name-the-tools@20"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@32", "draft-the-card@45", "halting@1", "name-the-tools@20", "set-up-a-taf@14", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@32", "draft-the-card@45", "improve-a-taf@3", "name-the-tools@20"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@31", "draft-the-card@45", "halting@1", "name-the-tools@20", "set-up-a-taf@14", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@31", "draft-the-card@45", "halting@1", "improve-a-taf@3", "name-the-tools@20"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@32", "draft-the-card@45", "halting@1", "name-the-tools@20", "set-up-a-taf@14", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@32", "draft-the-card@45", "halting@1", "improve-a-taf@3", "name-the-tools@20"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
