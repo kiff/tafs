@@ -1494,6 +1494,11 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   - **A phone without an approval key can't pair.** Unlike iOS, Android's other key signs with no prompt the Keystore enforces,
     so it could never stand for the owner's presence when a sealed value is released. Pairing says so instead of starting.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- **Approving a browser grant (groundwork, not wired into approval yet):** `ChromePairing.sitesBytes` and `sensitiveBytes`
+  build `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}` and `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`,
+  as iOS's. `ChromePairing.isSensitive` marks the sites the extension blocks unless the owner allows them by name: the
+  extension's list and label pattern, with the host read as its `hostOf` reads it (lower case, an ideographic full stop as a
+  dot, no trailing dot). `ChromePairingTest` checks all three against vectors/chrome-grant.json and chrome-sensitive.json.
 - Its lines are `chrome.*`, shared with iOS.
 - **Tests:** `ChromePairingTest` (the shared vector, a refused proof, raw `r‖s` verified as P1363) and `ChromesTest`:
   - the row only once planque offers Chromes;
