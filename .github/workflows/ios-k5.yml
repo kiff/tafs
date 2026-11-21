@@ -3,7 +3,8 @@ name: iOS K5
 # K5, the end-to-end pass of row 39: the app built with TAFS_K5, which
 # turns the in-app sign-in and the illustrated onboarding on (ios/Tafs/Model/Onboarding.swift), on an iPhone
 # simulator, walked by K5UITests with a screenshot kept at each step. Manual only. It never archives, signs or
-# uploads: an App Store or TestFlight build from ios.yml never has TAFS_K5, so shipping users keep today's welcome.
+# uploads. ios.yml has TAFS_K5 only with its k5 input, a TestFlight build kept to Team; an App Store build never
+# has it, so shipping users keep today's welcome.
 
 on:
   workflow_dispatch:
