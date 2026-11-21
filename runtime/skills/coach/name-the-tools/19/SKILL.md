@@ -57,10 +57,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   properties: {"Status": {type: "string"}}}`). A field is plain or an array; a
   nested one's fields are arguments at their paths.
   Leave every other argument to the taf (arguments): its Card limits what
-  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit and scale,
+  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit (EUR, never "cents": cents are scale 2),
   and make it required: only an argument the vendor's operation takes for the
-  money it moves, in its own units, named from that operation's fields as
-  the vendor's docs give them, never one you make up. A tool that changes
+  money it moves, named from its fields as the vendor's docs give them, never one you make up. A tool that changes
   data but moves no money (posting a reply, moving a meeting, sharing a file)
   has no amount argument. The operation's fields say whether it moves money,
   not what it is about: one about money that takes no amount field
