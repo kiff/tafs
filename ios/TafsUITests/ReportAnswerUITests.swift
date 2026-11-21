@@ -45,16 +45,31 @@ final class ReportAnswerUITests: TafsUITestCase {
         // A slow simulator can take the press before the menu is ready: press again, up to
         // three times, until the menu shows. Shown means its item can be tapped: while the menu
         // still animates in, the item exists with no hit point, and a tap then fails.
+        // Springboard's "Sign in to Apple Account" can also come up just as the item is tapped:
+        // the monitor's Cancel closes the menu with it, and the tap lands on nothing (main at
+        // ada9c47). So an alert already up is closed first, and the menu is opened and its item
+        // tapped again until the sheet shows, three times at most.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let item = app.buttons["Report this answer"]
-        var shown = false
-        for _ in 0..<3 where !shown {
-            answer.press(forDuration: 1.2)
-            shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
-        }
-        XCTAssertTrue(shown, "Report this answer in the answer's menu")
-        item.tap()
         let send = app.buttons["report-send"]
-        XCTAssertTrue(send.waitForExistence(timeout: 5), "the sheet")
+        // No assertion inside the loop: with continueAfterFailure off, a failed attempt would end
+        // the test before the next one (agentgabo on #1600). Each check is asserted after it.
+        var menuShown = false
+        var sheet = false
+        for _ in 0..<3 where !sheet {
+            if springboard.alerts.firstMatch.exists { letTheMonitorRun(app) }
+            var shown = false
+            for _ in 0..<3 where !shown {
+                answer.press(forDuration: 1.2)
+                shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
+            }
+            if !shown { continue }   // this attempt didn't get the menu: try again
+            menuShown = true
+            item.tap()
+            sheet = send.waitForExistence(timeout: 5)
+        }
+        XCTAssertTrue(menuShown, "Report this answer in the answer's menu")
+        XCTAssertTrue(sheet, "the sheet")
         XCTAssertFalse(send.isEnabled, "Send waits for a reason")
         app.buttons["report-reason-\(reason)"].tap()
         if let note {
