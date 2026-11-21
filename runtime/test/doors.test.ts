@@ -1755,11 +1755,21 @@ describe("an api door's keys and signed steps", () => {
   /** Every key record the store holds: hashes, never a key. */
   const storeText = (w: World) => JSON.stringify([...w.store.held.entries()]);
 
-  it("is offered only with TAFS_API_DOORS on", async () => {
+  it("is offered only with TAFS_API_DOORS on, for every account or the accounts it lists", async () => {
     const w = world();
     const s = signing(w);
     expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(400);
     expect(s.asked).toEqual([]);
+    const was = process.env.TAFS_API_DOORS;
+    try {
+      process.env.TAFS_API_DOORS = "t_other";
+      expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(400);
+      expect(s.asked).toEqual([]);
+      process.env.TAFS_API_DOORS = "t_other,t_acme";
+      expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(200);
+    } finally {
+      if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was;
+    }
   });
 
   it("makes the door and its first key only signed, shows the key once, and keeps only its hash", () => withFlag(async () => {
@@ -2146,6 +2156,11 @@ describe("an api door's keys and signed steps", () => {
       // Off: nothing is there.
       delete process.env.TAFS_API_DOORS;
       expect((await c.submit("off")).status).toBe(404);
+      // On for other accounts only: this account's door is as if it weren't there; on for it, it takes work.
+      process.env.TAFS_API_DOORS = "t_other";
+      expect((await c.submit("listed-other")).status).toBe(404);
+      process.env.TAFS_API_DOORS = "t_other, t_acme";
+      expect((await c.submit("listed")).status).not.toBe(404);
       process.env.TAFS_API_DOORS = "on";
     }));
 
