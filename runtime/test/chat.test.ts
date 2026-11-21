@@ -144,6 +144,17 @@ describe("conversation", () => {
       refused: { vendor: "Shippo", next }, resolved: true }], new Date(NOW.getTime() + 3600_000));
     const again = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
     expect(again.body.messages.find((m: { from: string }) => m.from === "taf").refused).toBeUndefined();
+    // Connected in a later turn of the same chat (21 Nov, the emulator's Calendar): the earlier run's refusal is past too.
+    // One connected before that run started isn't.
+    await w.coach.put(stepWhyKey("t_acme", chat.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet",
+      refused: { vendor: "Shippo", reason: "Why: managed sign-in isn't set up for this app", next } }], new Date(NOW.getTime() + 3600_000));
+    const connectedAt = async (iso: string) => {
+      await w.coach.put(`t_acme#coach-connected#${chat.session}`, [{ vendor: "Shippo", at: iso }], new Date(NOW.getTime() + 3600_000));
+      const read = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+      return read.body.messages.find((m: { from: string }) => m.from === "taf").refused;
+    };
+    expect(await connectedAt(at(-60))).toEqual({ words: "Coach couldn't connect Shippo yet", why: "Why: managed sign-in isn't set up for this app", next });
+    expect(await connectedAt(at(600))).toBeUndefined();
   });
 
   it("gives each step its words: KIFF's title for a tool through KIFF, an own tool's by what it does, none for a tool nothing names", async () => {
