@@ -1,0 +1,1 @@
+- **Wear OS 0.4.5-timing (400,000,010), to Play's internal track only:** a test build with every change of the owner's watch review (one tap to talk, no cut-off, icons, times in every chat, opens at once, fewer false "phone not reachable") and the timing line. Never sent to production ([watch-wear.md](docs/watch-wear.md)).
