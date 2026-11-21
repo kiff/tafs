@@ -17,8 +17,8 @@
   "watch.coach_needs_consent": "Prieš kalbėdami su Coach, telefone leiskite tafs naudoti AI.",
   "watch.deleted_nothing_sent": "Ištrinta. Niekas neišsiųsta.",
   "watch.didnt_catch": "Nesupratau. Palieskite ir bandykite dar kartą.",
-  "watch.dismiss": "Atmesti",
-  "watch.glance_description": "Kiek jūsų laukia, niekada – kas ar kieno.",
+  "watch.dismiss": "Paslėpti",
+  "watch.glance_description": "Kiek užklausų jūsų laukia, bet niekada – kokios ar nuo ko.",
   "watch.halt_all_q": "Sustabdyti visus jūsų taf?",
   "watch.halt_now_count": {
     "one": "Sustabdyti dabar · {count}",

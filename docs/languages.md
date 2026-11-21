@@ -200,8 +200,8 @@ word, the app uses the same one. The legal pages address people formally; the ap
 
 ### Lithuanian (lt)
 
-Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF and tafs
-cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
+Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF, Setup and
+tafs cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
 (`{taf}`, `{device}`, `{biometry}`) stands alone in the nominative ("taf {taf} Card", "Patvirtinti: {biometry}").
 
 | English | Lithuanian |
@@ -225,7 +225,7 @@ cloud are never declined, and "taf" is the same in the plural ("{count} taf"), a
 | Inbox | Gautieji |
 | Overview | Apžvalga |
 | Calendar | Kalendorius |
-| Setup | Sąranka |
+| Setup | Setup (a name, never declined) |
 | Usage | Naudojimas |
 | plan | planas |
 | door / knock | durys / beldimas |

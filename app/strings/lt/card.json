@@ -1,6 +1,6 @@
 {
   "card.all_of": {
-    "one": "Visa Card",
+    "one": "Visos Card",
     "few": "Visos Card",
     "other": "Visos Card"
   },
@@ -33,7 +33,7 @@
   "card.card_revoked": "Card atšaukta",
   "card.check.always_asks": "{rule}: visada klausia jūsų",
   "card.check.never_allowed": "{rule}: niekada neleidžiama",
-  "card.check.not_on_card": "Nėra šio taf Card",
+  "card.check.not_on_card": "Neįtraukta į šio taf Card",
   "card.check.over_count": {
     "one": "Daugiau nei {count} {window}",
     "few": "Daugiau nei {count} {window}",
@@ -121,7 +121,7 @@
   "card.outcome.outside": "Už Card ribų",
   "card.outcome.over_one_action": "Viršija Card limitą vienam veiksmui",
   "card.outcome.over_total": "Viršija Card bendrą sumą",
-  "card.outside_held": "Už ribų: sulaikyta jums",
+  "card.outside_held": "Už ribų: sulaikyta, laukia jūsų",
   "card.outside_refused": "Už ribų: atmesta",
   "card.over_limit_calls_would": "Viršijamas {limit} užklausų limitas: ši būtų {nth}",
   "card.revoke_failed": "KIFF neatšaukė Card. {why}",

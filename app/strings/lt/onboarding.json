@@ -1,5 +1,5 @@
 {
-  "onboarding.age": "Jums turi būti ne mažiau kaip 16 metų arba jūsų šalies skaitmeninio sutikimo amžius, jei jis didesnis.",
+  "onboarding.age": "Jums turi būti ne mažiau kaip 16 metų arba tiek, koks yra jūsų šalies skaitmeninio sutikimo amžius, jei jis didesnis.",
   "onboarding.age_n": "Jums turi būti ne mažiau kaip {age} metų.",
   "onboarding.card_lead": "Kiekvienas taf dirba jūsų išduotos Card ribose: ką jis gali daryti, su kuria programėle ir už kiek. Už šių ribų jis klausia jūsų.",
   "onboarding.card_title": "Card – tai jūsų leidimas",

@@ -74,7 +74,7 @@
     "other": "{names} taip pat sustos."
   },
   "connect.disconnect.no_taf_uses": "Dabar joks taf nenaudoja {vendor}.",
-  "connect.disconnect.rest": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei jokis kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor} pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",
+  "connect.disconnect.rest": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor} pusėje; kitu atveju – kai pašalinamas paskutinis. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir prisijungti.",
   "connect.disconnect.rest_key": "Kiti {vendor} naudojantys taf išlaiko savo prieigą. Raktas ištrinamas iš tafs, kai jo nebenaudoja nė vienas taf. Norint vėl naudoti {vendor}, reikės dar kartą patvirtinti ir įklijuoti raktą.",
   "connect.disconnect.title": "Pašalinti prieigą prie {vendor}?",
   "connect.disconnect.title_from": "Pašalinti taf {taf} prieigą prie {vendor}?",
@@ -130,7 +130,7 @@
   "connect.open_browser_again": "Dar kartą atidaryti naršyklę",
   "connect.opening_sign_in": "Atidaromas prisijungimas…",
   "connect.other_connections": "Kiti ryšiai",
-  "connect.other_connections_stay_connected_no": " Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei jokis kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor_2} pusėje; kitu atveju – kai pašalinamas paskutinis.",
+  "connect.other_connections_stay_connected_no": " Kiti {vendor} naudojantys taf išlaiko savo prieigą. Jei joks kitas taf nenaudoja tos pačios paskyros ten, prisijungimas atšaukiamas {vendor_2} pusėje; kitu atveju – kai pašalinamas paskutinis.",
   "connect.profile_words_not_read": "Nepavyko nuskaityti KIFF formuluotės šiam ryšiui. {why}",
   "connect.profile_words_unread": "KIFF formuluotė šiam ryšiui dar neperskaityta. Niekas nepatvirtinta.",
   "connect.prompt.connect": "Prijungti {vendor} prie {agent}",

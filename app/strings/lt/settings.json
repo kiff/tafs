@@ -87,7 +87,7 @@
   "settings.devices.unnamed": "Įrenginys",
   "settings.devices.used_just_now": "Paskutinį kartą naudota ką tik",
   "settings.dispute_over_limit": "Užsakymas #5098 · Pakartotinis siuntimas laukia jūsų sutikimo",
-  "settings.each_sends_who_answered_through": "Kiekvienas praneša, kam atsakyta ir per kurias duris, bet niekada ne atsakymo žodžius. Išjunkite tai taf skiltyje Sąranka › Rezultatai siunčiami.",
+  "settings.each_sends_who_answered_through": "Kiekvienas praneša, kam atsakyta ir per kurias duris, bet niekada ne atsakymo žodžius. Išjunkite tai taf skiltyje Setup › Rezultatai siunčiami.",
   "settings.find_time_zone": "Rasti laiko juostą",
   "settings.kiff_account": "KIFF paskyra",
   "settings.language_device": "Šio įrenginio ({device}) kalba",

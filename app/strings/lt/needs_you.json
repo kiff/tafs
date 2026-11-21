@@ -18,10 +18,10 @@
   "needs_you.approve_once": "Patvirtinti vieną kartą",
   "needs_you.approve_once_with": "Patvirtinti vieną kartą: {biometry}",
   "needs_you.asks_lapses": "{taf} prašo: {what}. {reason}. Nebegalios {time}. {nothing_sent}",
-  "needs_you.card_unit.changed": "Šis prašymas pasikeitė. Prieš atmesdami perskaitykite jį dar kartą.",
-  "needs_you.card_unit.dismiss_prompt": "Atmesti: {title}",
-  "needs_you.card_unit.not_dismissed": "Prašymas neatmestas. {why}",
-  "needs_you.card_unit.not_dismissed_unconfirmed": "Neatmesta: nepatvirtinta.",
+  "needs_you.card_unit.changed": "Šis prašymas pasikeitė. Prieš atsisakydami perskaitykite jį dar kartą.",
+  "needs_you.card_unit.dismiss_prompt": "Atsisakyti: {title}",
+  "needs_you.card_unit.not_dismissed": "Prašymo neatsisakyta. {why}",
+  "needs_you.card_unit.not_dismissed_unconfirmed": "Neatsisakyta: nepatvirtinta.",
   "needs_you.change_limit": "Keisti limitą Coach režimu",
   "needs_you.check_code": "Patikrinkite, ar KIFF rodo tą patį kodą, ir tvirtinkite tik laikydami šį telefoną rankose.",
   "needs_you.count": {
@@ -39,7 +39,7 @@
   "needs_you.install_from_card": "Įdiekite ją iš jos kortelės: versija aktyvuojama, tada apie tai sužino Coach.",
   "needs_you.ios_asks_next_confirming_sets": "Toliau paklaus iOS, tada – {biometry}.",
   "needs_you.knocks": {
-    "one": "Kažkas pasibeldė į jo duris. Nieko nepadaryta.",
+    "one": "{count} beldimas į jo duris. Nieko nepadaryta.",
     "few": "{count} beldimai į jo duris. Nieko nepadaryta.",
     "other": "{count} beldimų į jo duris. Nieko nepadaryta."
   },
