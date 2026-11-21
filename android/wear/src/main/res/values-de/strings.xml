@@ -101,6 +101,7 @@
         <item quantity="one">%1$s braucht dich</item>
         <item quantity="other">%1$s brauchen dich</item>
     </plurals>
+    <string name="watch_no_offline_speech">Dein Handy kann Gesprochenes in dieser Sprache nicht selbst in Text umwandeln. Tipp stattdessen.</string>
     <string name="watch_not_sure">Unklar, ob es ankam</string>
     <string name="watch_nothing_sent_until">Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="watch_nothing_waits">Nichts wartet auf dich.</string>
@@ -142,6 +143,7 @@
     <string name="watch_swipe_settings">Nach links wischen für seine Einstellungen</string>
     <string name="watch_tap_start">Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.</string>
     <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>
+    <string name="watch_transcribing">Dein Handy macht Text daraus…</string>
     <string name="watch_trust">Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.</string>
     <string name="watch_type">Tippen</string>
     <string name="watch_type_hint">Schreib an Coach…</string>

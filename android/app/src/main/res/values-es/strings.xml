@@ -890,7 +890,7 @@
         <item quantity="other">%2$s también se detienen.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Ningún taf usa %1$s ahora.</string>
-    <string name="connect_disconnect_rest">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %1$s. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
+    <string name="connect_disconnect_rest">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en %1$s; si no, cuando se quita el último. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
     <string name="connect_disconnect_rest_key">Los demás tafs que usan %1$s conservan su acceso. La clave se elimina de tafs cuando ya ningún taf la use. Usar %1$s de nuevo te pide aprobar y pegar una clave otra vez.</string>
     <string name="connect_disconnect_title">¿Quitar el acceso a %1$s?</string>
     <string name="connect_disconnect_title_from">¿Quitar el acceso a %1$s para %2$s?</string>
@@ -943,7 +943,7 @@
     <string name="connect_open_browser_again">Volver a abrir el navegador</string>
     <string name="connect_opening_sign_in">Abriendo el inicio de sesión…</string>
     <string name="connect_other_connections">Otras conexiones</string>
-    <string name="connect_other_connections_stay_connected_no">" Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en %2$s; si no, cuando se quita el último."</string>
     <string name="connect_profile_words_not_read">No se pudieron leer las palabras de KIFF para esta conexión. %1$s</string>
     <string name="connect_profile_words_unread">Las palabras de KIFF para esta conexión aún no se han leído. No se aprobó nada.</string>
     <string name="connect_prompt_connect">Conectar %1$s a %2$s</string>
@@ -2719,6 +2719,7 @@
         <item quantity="one">%1$s te necesita</item>
         <item quantity="other">%1$s te necesitan</item>
     </plurals>
+    <string name="watch_no_offline_speech">Tu teléfono no puede pasar la voz a texto por sí solo en este idioma. Escribe en su lugar.</string>
     <string name="watch_not_sure">No se sabe si llegó</string>
     <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
     <string name="watch_nothing_waits">Nada te espera.</string>
@@ -2760,6 +2761,7 @@
     <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
+    <string name="watch_transcribing">Tu teléfono lo está pasando a texto…</string>
     <string name="watch_trust">Este reloj no guarda contraseñas ni claves y no aprueba nada: lo que necesita tu sí espera a tu teléfono. Tus tafs solo hacen lo que permiten sus Cards.</string>
     <string name="watch_type">Escribir</string>
     <string name="watch_type_hint">Escribe a Coach…</string>

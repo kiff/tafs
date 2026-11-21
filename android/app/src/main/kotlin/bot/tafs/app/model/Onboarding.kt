@@ -3,9 +3,10 @@ package bot.tafs.app.model
 /**
  * The first run after one sign-in (docs/onboarding.md): the welcome with one tick for the terms, KIFF's sign-in in a Custom
  * Tab (`kiff/AppSignIn`), three cards on how tafs works, and the first Home. Off until the end-to-end test on real devices with
- * the owner: while it's off, the welcome and the sign-in are as they ship.
+ * the owner: while it's off, the welcome and the sign-in are as they ship. On only in a K5 debug build (`-Pk5` or `TAFS_K5=1`,
+ * for a test device or the emulator); a release build, every one for Play, has it off whatever is passed.
  */
-const val ONBOARDING_ON = false
+val ONBOARDING_ON: Boolean = bot.tafs.app.BuildConfig.K5
 
 /**
  * The welcome's one tick: the person agrees to KIFF's Terms and the tafs Terms before Continue. Privacy is linked beside it,

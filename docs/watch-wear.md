@@ -488,7 +488,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask twelve things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -503,6 +503,7 @@ The watch may ask eleven things (`WatchRequest`), each a path under `/tafs/watch
 | `taf` | One taf's page (Wear v2), by `taf_id`: its state and job, each Card's title, face (figure and line) and rules as the phone's Card tab draws them, and how many of its calls wait on the person (`taf`); read again within the same floor as Needs you |
 | `calendar` | A calendar day (Wear v2), `day` as `YYYY-MM-DD` or today in the account's zone: tafs cloud's `GET /v1/calendar` for that day alone, its line and that day's events in time order with each taf's name (`calendar`); the phone's own calendar screen keeps its read |
 | `account` | Who is signed in, the account's name and the plan's line as Account shows it (`account`) |
+| `transcribe` | Turns the recording the watch just sent over its channel (`voice/{id}`) into text with the phone's **on-device** recognizer, in the app's language, and deletes it: `transcribed` with the text, or `no_offline_speech` (below, "When the watch's recognizer gives up") |
 
 **Chatting with a taf, the phone's half** (behind tafs cloud's `TAFS_WATCH_TAF_CHAT`, off; the wrist's screens follow the
 owner's picks; docs/watch-ask.md). An `ask` with `taf_id` names the phone's taf: the phone sends that taf's tafs cloud id as
@@ -546,7 +547,7 @@ the phone's approval key behind its fingerprint, so on the watch each says **App
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the eleven (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
+- a path that isn't one of the twelve (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message or an ask that's empty or over 2,000 characters, or an ask whose id isn't 8 to 64 letters, digits, `_`
   or `-`, a taf's page with no `taf_id`, or a calendar day that isn't `YYYY-MM-DD`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;
@@ -575,16 +576,35 @@ watch doesn't know is shown as Open on phone, never guessed at.
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.
+  - `watch-cache.bin` (`WatchCache`, row 44, D), so the watch opens at once: Needs you's count, and each taf's
+    name and whether it's halted or paused. Not Needs you's line, never a held call's details, never a taf's state line (it can name what a call wants),
+    never a taf's chat. Encrypted with AES-GCM under a key in the watch's Android Keystore (`KeystoreCacheStore`). Cleared on
+    either sign-out, whenever the app opens or refreshes while the watch is locked or has no screen lock (Wear OS locks a watch
+    taken off the wrist), and after 24 hours. On start, the pages draw it at once with a small dot at the top ("Loading" for
+    TalkBack) while the phone is asked; the phone's read replaces it. If the phone doesn't answer, the last read stays, with the
+    dot, for 30 s (`UNREACHABLE_AFTER_MS`), and only then is the phone called unreachable (`WatchCacheTest`).
   - `files/voice/`, in a test version only (`KEEP_AUDIO`): the review's recording, erased when the review is left and swept at
     start, put-away and sign-out here. A production build keeps no recording.
   - The result notifications (a taf's name and its line), cancelled on Sign out on this watch.
 
-  In memory only, forgotten when the app is put away: the reads, the asks, an open result, a taf's page, the halt pick, the
+  In memory only, forgotten when the app is put away: the reads (apart from the cache above), the asks, an open result, a taf's page, the halt pick, the
   calendar day, and Account's read (email, account name, plan). No tokens or keys, and no amount, merchant or person's name in a
   log on the watch or in the phone's relay.
-- **Voice:** the watch's own speech recognizer makes text, and only the text goes to the phone and tafs cloud, after the AI
-  consent already given on the phone. No audio is sent anywhere, and a production build keeps none; only a test version keeps
-  the review's recording on the watch, until it's sent or deleted (Play and Pause, step iii). Speaking is an instruction to a taf, never an
+- **Voice:** the watch's own speech recognizer makes text, and only text goes to tafs cloud, after the AI consent already given
+  on the phone. A test version keeps the review's recording on the watch, until it's sent or deleted (Play and Pause, step iii).
+- **When the watch's recognizer gives up** (row 44, A; `Listener.recordForPhone`, `WatchModel.transcribeOnPhone`,
+  `WearRelayService.onChannelOpened`, `VoiceInbox`, `OnDeviceTranscriber`): on an error that isn't the person's own quiet (no
+  network, the server, the language unavailable, the recognizer busy; `Dictation.fallsBackToPhone`), the watch records the
+  rest itself, with its own microphone, until ✓ or the 30 s limit, while the screen goes on listening. On ✓ the recording goes
+  to the paired phone over its own Data Layer channel (`voice/{id}`, at most 31 s), and the watch asks `transcribe`, showing
+  "Turning it into text on your phone…" with Cancel. The phone turns it into text with its **on-device** recognizer only
+  (`createOnDeviceSpeechRecognizer`, Android 13 and later, fed the file); with none for the language, it answers
+  `no_offline_speech` and the watch says so (`watch.no_offline_speech`): nothing goes to a server. Only the text comes back,
+  joined to what was heard first, to the same review as words heard, so nothing is sent before Send. **Deleted:** on the phone
+  as soon as it's read, whatever the outcome, and otherwise after 2 minutes on its own timer, even if no request ever comes
+  (and any a killed process left, when the relay service next starts); on the watch once the text
+  is back, on Cancel, and after 2 minutes at most (`VOICE_KEEP_MS`; `TranscribeOnPhoneTest`, `VoiceTranscribeTest`). A phone
+  from before refuses `transcribe` as an unknown path, and what was heard first stands. Production builds only (`WATCH_V2`). Speaking is an instruction to a taf, never an
   approval: the taf acts under its own Cards.
 - **A locked watch** shows only "A taf needs you" for an alert the phone bridges to it, as a locked phone does.
 - **Words** come from `app/strings` (`watch.*` and the phone's own keys), in all 8 languages.

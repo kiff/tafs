@@ -890,7 +890,7 @@
         <item quantity="other">%2$s s\'arrêtent aussi.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Aucun taf n\'utilise %1$s désormais.</string>
-    <string name="connect_disconnect_rest">Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise cet identifiant, il est révoqué chez %1$s. Utiliser %1$s à nouveau vous demande d\'approuver et de vous reconnecter.</string>
+    <string name="connect_disconnect_rest">Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise le même compte, l\'identifiant est révoqué chez %1$s ; sinon, quand le dernier est retiré. Utiliser %1$s à nouveau vous demande d\'approuver et de vous reconnecter.</string>
     <string name="connect_disconnect_rest_key">Les autres tafs qui utilisent %1$s gardent leur accès. La clé est supprimée de tafs dès qu\'aucun taf ne l\'utilise. Utiliser %1$s à nouveau vous demande d\'approuver et de coller une clé à nouveau.</string>
     <string name="connect_disconnect_title">Retirer l\'accès à %1$s ?</string>
     <string name="connect_disconnect_title_from">Retirer l\'accès à %1$s pour %2$s ?</string>
@@ -943,7 +943,7 @@
     <string name="connect_open_browser_again">Rouvrir le navigateur</string>
     <string name="connect_opening_sign_in">Ouverture de la connexion…</string>
     <string name="connect_other_connections">Autres connexions</string>
-    <string name="connect_other_connections_stay_connected_no">" Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise cet identifiant, il est révoqué chez %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise le même compte, l\'identifiant est révoqué chez %2$s ; sinon, quand le dernier est retiré."</string>
     <string name="connect_profile_words_not_read">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. %1$s</string>
     <string name="connect_profile_words_unread">Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n\'a été approuvé.</string>
     <string name="connect_prompt_connect">Connecter %1$s à %2$s</string>
@@ -2719,6 +2719,7 @@
         <item quantity="one">%1$s vous attend</item>
         <item quantity="other">%1$s vous attendent</item>
     </plurals>
+    <string name="watch_no_offline_speech">Votre téléphone ne peut pas transformer seul la parole en texte dans cette langue. Écrivez plutôt.</string>
     <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_nothing_sent_until">Rien n\'est envoyé avant votre approbation.</string>
     <string name="watch_nothing_waits">Rien ne vous attend.</string>
@@ -2760,6 +2761,7 @@
     <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_transcribing">Votre téléphone le transforme en texte…</string>
     <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
     <string name="watch_type">Écrire</string>
     <string name="watch_type_hint">Écrire à Coach…</string>

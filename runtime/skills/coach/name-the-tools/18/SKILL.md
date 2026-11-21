@@ -39,7 +39,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   look for it: search for it by its name in KIFF, as planque's status lists it, then call it. A vendor's own server, whose
   tools you can't name before its sign-in, gets its describing tool connected
   by planque with the sign-in when it has one: never ask for it, or any read,
-  alone. When you must pin the account, pin the grant's own account, as
+  alone. Pin the account on every tool that takes it, reads too: the grant's own account, as
   planque's status lists it: never a read of the accounts. The connection's
   one approval and sign-in then cover it, with no question of its own and no
   second approval. setup_reads goes on that one only, never on the taf's own

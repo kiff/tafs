@@ -139,10 +139,15 @@ struct WatchReply: Codable, Equatable, Sendable {
     var answering: Bool?
     /// `tafChat`: the last turns of the person's chat with the taf, oldest first.
     var chat: [WatchChatLine]?
+    /// `tafs` and `tafChat`: the account's time zone (an IANA identifier), so the wrist's times and days read as the
+    /// phone's from the first screen (row 44, C), as Wear OS's `WatchReply.Tafs.zone`. None from an older phone: the
+    /// watch's own.
+    var zone: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
-         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil) {
+         line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil,
+         zone: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -155,6 +160,7 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.ticket = ticket
         self.answering = answering
         self.chat = chat
+        self.zone = zone
     }
 }
 
@@ -291,6 +297,8 @@ struct WatchCoachAnswer: Codable, Equatable, Sendable {
     var more: Bool
     /// The answer holds a card or a step: "Approve on your phone", and nothing of it here.
     var approveOnPhone: Bool
+    /// When the answer came, shown under it on the wrist (row 44, C), as Wear OS does. None from an older phone.
+    var at: Date? = nil
 
     /// The most of a whole answer (Read more) the wrist takes: tafs cloud caps it at 16 KB, and the watch never holds more.
     static let wholeLength = 16_000

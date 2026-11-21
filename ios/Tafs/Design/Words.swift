@@ -1688,7 +1688,7 @@ enum Words {
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
             /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
-            /// Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.
+            /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor}; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
             /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
@@ -1781,7 +1781,7 @@ enum Words {
         static var openingSignIn: String { Words.line("connect.opening_sign_in") }
         /// Other connections
         static var otherConnections: String { Words.line("connect.other_connections") }
-        ///  Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor_2}.
+        ///  Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor_2}; otherwise, when the last one is removed.
         static func otherConnectionsStayConnectedNo(vendor: String, vendor2: String) -> String { Words.line("connect.other_connections_stay_connected_no", vendor, vendor2) }
         /// KIFF's words for this connection couldn't be read. {why}
         static func profileWordsNotRead(why: String) -> String { Words.line("connect.profile_words_not_read", why) }
@@ -5377,6 +5377,8 @@ enum Words {
         static var needsLock: String { Words.line("watch.needs_lock") }
         /// {count} need you
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
+        /// Your phone can't turn speech into text in this language by itself. Type instead.
+        static var noOfflineSpeech: String { Words.line("watch.no_offline_speech") }
         /// Not sure it arrived
         static var notSure: String { Words.line("watch.not_sure") }
         /// Nothing is sent until you approve.
@@ -5457,6 +5459,8 @@ enum Words {
         static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// Turning it into text on your phone…
+        static var transcribing: String { Words.line("watch.transcribing") }
         /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
         static var trust: String { Words.line("watch.trust") }
         /// Type

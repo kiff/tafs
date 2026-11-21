@@ -51,6 +51,7 @@
     "one": "{count} wacht op jou",
     "other": "{count} wachten op jou"
   },
+  "watch.no_offline_speech": "Je telefoon kan spraak in deze taal niet zelf omzetten in tekst. Typ in plaats daarvan.",
   "watch.not_sure": "Onzeker of het aankwam",
   "watch.nothing_sent_until": "Er wordt niets verstuurd tot je goedkeurt.",
   "watch.nothing_waits": "Er wacht niets op je.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Veeg naar links voor zijn instellingen",
   "watch.tap_start": "Tik op Starten en spreek. Je woorden verschijnen hier terwijl je praat.",
   "watch.timing": "Luisteren {listen} ms · ontvangst {receipt} ms · resultaat {result} ms",
+  "watch.transcribing": "Je telefoon maakt er tekst van…",
   "watch.trust": "Dit horloge bewaart geen wachtwoord of sleutel en keurt niets goed: wat jouw ja nodig heeft, wacht op je telefoon. Je tafs doen alleen wat hun Cards toestaan.",
   "watch.type": "Typen",
   "watch.type_hint": "Schrijf aan Coach…",

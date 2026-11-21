@@ -70,7 +70,7 @@
     "other": "Si fermano anche {names}."
   },
   "connect.disconnect.no_taf_uses": "Nessun taf usa {vendor} ora.",
-  "connect.disconnect.rest": "Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato presso {vendor}. Usare di nuovo {vendor} ti chiede di approvare e accedere di nuovo.",
+  "connect.disconnect.rest": "Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso {vendor}; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo {vendor} ti chiede di approvare e accedere di nuovo.",
   "connect.disconnect.rest_key": "Gli altri taf che usano {vendor} mantengono il loro accesso. La chiave viene eliminata da tafs quando nessun taf la usa più. Usare di nuovo {vendor} ti chiede di approvare e incollare di nuovo una chiave.",
   "connect.disconnect.title": "Rimuovere l'accesso a {vendor}?",
   "connect.disconnect.title_from": "Rimuovere l'accesso a {vendor} per {taf}?",
@@ -123,7 +123,7 @@
   "connect.open_browser_again": "Apri di nuovo il browser",
   "connect.opening_sign_in": "Apertura dell'accesso…",
   "connect.other_connections": "Altri collegamenti",
-  "connect.other_connections_stay_connected_no": " Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su {vendor_2}.",
+  "connect.other_connections_stay_connected_no": " Gli altri taf che usano {vendor} mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso {vendor_2}; altrimenti, quando viene rimosso l'ultimo.",
   "connect.profile_words_not_read": "Non è stato possibile leggere le parole di KIFF per questo collegamento. {why}",
   "connect.profile_words_unread": "Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.",
   "connect.prompt.connect": "Collega {vendor} a {agent}",

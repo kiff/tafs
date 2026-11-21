@@ -30,6 +30,9 @@ import kotlinx.coroutines.flow.first
  * input), sent as the phone's own message to Coach, after the AI consent given on the phone. Ask tafs from the wrist is text
  * too, sent to tafs cloud as this phone's, signed with its device key: tafs cloud marks it as the watch's and hands it to one taf.
  */
+/** How long the phone waits for a recording's channel to finish after the watch asks for its text. */
+internal const val VOICE_WAIT_MS = 15_000L
+
 class WatchRelay(
   /** The app's model, its session restored; null when there's none to read with. */
   private val model: suspend () -> AppModel?,
@@ -38,6 +41,10 @@ class WatchRelay(
   private val coachWaitMs: Long = 8_000,
   /** Shared by every request in the process (WearRelayService): a watch asking in a loop reads tafs cloud and KIFF at most this often. */
   private val floor: RefreshFloor = RefreshFloor(),
+  /** The watch's recordings, as they arrive over their channels (row 44, A); none where the phone takes none. */
+  private val voice: VoiceInbox? = null,
+  /** The phone's on-device recognizer, for a recording the watch's own gave up on; none, and it's [WatchReply.NoOfflineSpeech]. */
+  private val transcriber: Transcriber? = null,
 ) {
   suspend fun answer(path: String, data: ByteArray): WatchReply {
     val request = when (val accepted = WatchLink.accept(path, data, now())) {
@@ -72,6 +79,7 @@ class WatchRelay(
         if (floor.due(now())) model.refresh()
         tafPage(model.state.value, request.tafId) ?: WatchReply.Failed(Words.Watch.openOnPhone)
       }
+      is WatchRequest.Transcribe -> transcribe(request)
       is WatchRequest.Calendar -> calendar(request.day)
       is WatchRequest.Account -> {
         val model = signedIn() ?: return WatchReply.SignedOut
@@ -116,6 +124,24 @@ class WatchRelay(
     } catch (_: java.io.IOException) {
       // Sent, perhaps, with no answer back: only a retry with the same id tells.
       WatchReply.Unsure
+    }
+  }
+
+  /**
+   * A recording the watch's recognizer gave up on (row 44, A): its text from this phone's on-device recognizer, and only the text
+   * goes back. The recording is deleted whatever happens; it never leaves the phone. Nothing here reads the account: the words
+   * reach Coach or a taf only later, through Send and the same checks as typed words.
+   */
+  private suspend fun transcribe(request: WatchRequest.Transcribe): WatchReply {
+    val file = voice?.take(request.voiceId, waitMs = VOICE_WAIT_MS) ?: return WatchReply.Failed(Words.Watch.openOnPhone)
+    return try {
+      when (val heard = transcriber?.transcribe(file, request.language) ?: Transcription.NoOffline) {
+        is Transcription.Text -> WatchReply.Transcribed(heard.text)
+        Transcription.NoOffline -> WatchReply.NoOfflineSpeech
+        Transcription.Failed -> WatchReply.Failed(Words.Watch.openOnPhone)
+      }
+    } finally {
+      file.delete()
     }
   }
 

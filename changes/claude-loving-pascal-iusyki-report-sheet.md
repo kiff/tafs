@@ -1,0 +1,1 @@
+- **Tests:** the iOS test that reports an answer no longer fails when the simulator's Apple Account prompt closes the answer's menu.

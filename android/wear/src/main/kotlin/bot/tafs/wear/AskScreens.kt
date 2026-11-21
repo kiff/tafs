@@ -283,6 +283,17 @@ internal fun VoiceScreen(voice: WatchModel.Voice, act: Actions) {
         if (voice.words != null) QuietButton(Words.Watch.openOnPhone) { act.openOnPhone("") }
         QuietButton(Words.Common.close, act.closeVoice)
       }
+      // The phone turning the recording into text, on the phone itself (row 44, A): Cancel deletes it.
+      is WatchModel.Voice.Transcribing -> Centered {
+        SpinnerAround(64.dp, Look.send) {
+          Box(Modifier.size(44.dp).background(Look.surface, CircleShape), contentAlignment = Alignment.Center) {
+            Glyph(Modifier.size(24.dp)) { micGlyph(Look.send) }
+          }
+        }
+        Spacer(Modifier.height(10.dp))
+        T(Words.Watch.transcribing, 14.sp, Look.text, modifier = Modifier.width(150.dp).testTag(TRANSCRIBING), lines = 3, lineHeight = 17.sp)
+        QuietButton(Words.Common.cancel, act.closeVoice)
+      }
       WatchModel.Voice.HeardNothing -> Centered(Modifier.clickable(onClick = act.listen)) {
         Box(Modifier.size(48.dp).background(Look.surface, CircleShape), contentAlignment = Alignment.Center) {
           Glyph(Modifier.size(26.dp)) { micGlyph(Look.send) }
@@ -391,3 +402,5 @@ internal fun DoneScreen(words: String, dismiss: () -> Unit) {
     T(words, 16.sp, Look.text, FontWeight.SemiBold, Modifier.width(150.dp), lines = 2)
   }
 }
+
+internal const val TRANSCRIBING = "transcribing"

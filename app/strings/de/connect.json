@@ -70,7 +70,7 @@
     "other": "{names} stoppen ebenfalls."
   },
   "connect.disconnect.no_taf_uses": "Kein taf nutzt {vendor} mehr.",
-  "connect.disconnect.rest": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei {vendor} widerrufen. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.",
+  "connect.disconnect.rest": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei {vendor} widerrufen; sonst, wenn der letzte entfernt wird. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.",
   "connect.disconnect.rest_key": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht, sobald ihn kein taf mehr nutzt. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen.",
   "connect.disconnect.title": "Zugriff auf {vendor} entfernen?",
   "connect.disconnect.title_from": "Zugriff auf {vendor} für {taf} entfernen?",
@@ -123,7 +123,7 @@
   "connect.open_browser_again": "Browser erneut öffnen",
   "connect.opening_sign_in": "Anmeldung wird geöffnet…",
   "connect.other_connections": "Andere Verbindungen",
-  "connect.other_connections_stay_connected_no": " Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei {vendor_2} widerrufen.",
+  "connect.other_connections_stay_connected_no": " Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei {vendor_2} widerrufen; sonst, wenn der letzte entfernt wird.",
   "connect.profile_words_not_read": "KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. {why}",
   "connect.profile_words_unread": "KIFFs Worte zu dieser Verbindung sind noch nicht gelesen. Es wurde nichts genehmigt.",
   "connect.prompt.connect": "{vendor} mit {agent} verbinden",

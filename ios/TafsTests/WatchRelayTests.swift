@@ -521,7 +521,8 @@ final class WatchRelayTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[{"at":"2026-10-14T10:44:00Z","from":"taf","kind":"message","text":"An older answer","session":"s1"},{"id":"m1","at":"2026-10-14T10:45:00Z","from":"owner","kind":"message","text":"Pause Rae","session":"s1"},{"at":"2026-10-14T10:45:05Z","from":"taf","kind":"message","text":"Rae is paused.","session":"s1"}],"components":[]}"#)
         let messageID = UUID()
         let reply = await reading.coach(text: "Pause Rae", messageID: messageID)
-        XCTAssertEqual(reply, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)))
+        XCTAssertEqual(reply, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false,
+                                                                      at: ISO8601DateFormatter().date(from: "2026-10-14T10:45:05Z"))))
         XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" }.map { $0.url?.path }, ["/v1/tafs/taf-setup/messages"],
                        "the words, once, and nothing signed or approved")
         let body = sent("POST", "/v1/tafs/taf-setup/messages").last?.httpBody
@@ -768,7 +769,8 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(working, WatchReply(.ok, answering: true))
         StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[\#(mine),{"at":"2026-10-14T10:45:05Z","from":"taf","kind":"message","text":"Rae is paused.","session":"s1"}],"components":[]}"#)
         let done = await reading.coachRead(ticket)
-        XCTAssertEqual(done, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false), answering: false))
+        XCTAssertEqual(done, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false,
+                                                                     at: ISO8601DateFormatter().date(from: "2026-10-14T10:45:05Z")), answering: false))
         XCTAssertTrue(StubProtocol.sent.filter { $0.httpMethod == "POST" }.isEmpty, "a read sends nothing")
     }
 
@@ -836,8 +838,8 @@ final class WatchRelayTests: XCTestCase {
         thread.messages += [TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Pause Rae", session: "s1", serverID: "m1"),
                             TafsCloud.ChatMessage(at: at(4), from: .taf, text: "Rae is paused.", session: "s1")]
         let answer = try XCTUnwrap(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"))
-        XCTAssertEqual(answer, WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false),
-                       "the older card isn't this answer's")
+        XCTAssertEqual(answer, WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false, at: at(4)),
+                       "the older card isn't this answer's; it carries when Coach's reply came")
     }
 
     func testCoachsWordsOverTwoThousandCharactersAreRefused() async {

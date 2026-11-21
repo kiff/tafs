@@ -134,7 +134,7 @@ enum WatchRelay {
             }
         case .tafs:
             do {
-                return WatchReply(.ok, tafs: try await reading.tafs())
+                return WatchReply(.ok, tafs: try await reading.tafs(), zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
@@ -170,7 +170,7 @@ enum WatchRelay {
             // Read only: the person's own chat with a taf the phone lists.
             do {
                 guard let chat = try await reading.tafChat(request.taf ?? "") else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
-                return WatchReply(.ok, chat: chat)
+                return WatchReply(.ok, chat: chat, zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
@@ -601,7 +601,9 @@ struct KeptWatchReading: WatchReading {
 
     nonisolated static func reply(_ asked: TafsCloud.WatchAsk) -> WatchReply {
         guard asked.ended || asked.held else { return WatchReply(.ok, answering: true) }
-        return WatchReply(.ok, coach: WatchCoachAnswer.cut(asked.shown, more: asked.more, approveOnPhone: asked.held), answering: false)
+        var answer = WatchCoachAnswer.cut(asked.shown, more: asked.more, approveOnPhone: asked.held)
+        answer.at = asked.updated
+        return WatchReply(.ok, coach: answer, answering: false)
     }
 
     /// Coach's answer to the person's message: Coach's words written after it in that chat, and
@@ -612,11 +614,14 @@ struct KeptWatchReading: WatchReading {
         guard let mine = thread.messages.last(where: { $0.session == session && $0.from == .owner && (sentID == nil || $0.serverID == sentID) })
         else { return nil }
         let since = mine.at
-        let words = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }.map(\.text)
-            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let answered = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let words = answered.map(\.text)
         let cards = thread.components.contains { $0.session == session && $0.firstAt >= since }
         guard !words.isEmpty || cards else { return nil }
-        return WatchCoachAnswer.cut(words.joined(separator: "\n\n"), more: false, approveOnPhone: cards)
+        var answer = WatchCoachAnswer.cut(words.joined(separator: "\n\n"), more: false, approveOnPhone: cards)
+        answer.at = answered.last?.at
+        return answer
     }
 
     func halt(taf: String?) async -> HaltAll.Outcome {
