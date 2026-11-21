@@ -1,0 +1,12 @@
+{
+  "about": "Pairing a Chrome (docs/chrome.md): the same inputs give the same proofs and signed bytes in the extension (chrome/test/vectors.test.js) and on the phones (ios/TafsTests/ChromePairingTests.swift).",
+  "secret": "29XMDP",
+  "chrome_key": "AwoRGB8mLTQ7QklQV15lbHN6gYiPlp2kq7K5wMfO1dzj6vH4_wYNFBsiKTA3PkVMU1phaG92fYSLkpmgp661vMPK0djf5u30-wIJEBceJSwzOkFIT1ZdZGtyeQ",
+  "phone_key": "BRAbJjE8R1JdaHN-iZSfqrXAy9bh7PcCDRgjLjlET1plcHuGkZynsr3I097p9P8KFSArNkFMV2JteIOOmaSvusXQ2-bx_AcSHSgzPklUX2p1gIuWoay3ws3Y4w",
+  "pairing": "pr_1",
+  "name": "Work Mac",
+  "extension_proof": "WBXdHZvcYLdg8I2fm0OJ-KVTItv8aa9gkucjI8d5e2I",
+  "chrome_key_sha256": "85373e64524dff047f5423100fa3b9328efed49f49bf9ba752aa1e01708137f8",
+  "phone_proof": "Pkjo0PN-HYyY_ZA-5cvmD3jQErePEaQFSrQmr84sqK4",
+  "signed_bytes": "dGFmcy1jaHJvbWUvcGFpci92MQB7ImNocm9tZV9rZXlfc2hhMjU2IjoiODUzNzNlNjQ1MjRkZmYwNDdmNTQyMzEwMGZhM2I5MzI4ZWZlZDQ5ZjQ5YmY5YmE3NTJhYTFlMDE3MDgxMzdmOCIsIm5hbWUiOiJXb3JrIE1hYyIsInBhaXJpbmciOiJwcl8xIiwicGhvbmVfa2V5IjoiQlJBYkpqRThSMUpkYUhOLWlaU2ZxclhBeTliaDdQY0NEUmdqTGpsRVQxcGxjSHVHa1p5bnNyM0kwOTdwOVA4S0ZTQXJOa0ZNVjJKdGVJT09tYVN2dXNYUTItYnhfQWNTSFNnelBrbFVYMnAxZ0l1V29heTN3czNZNHciLCJwaG9uZV9wcm9vZiI6IlBram8wUE4tSFl5WV9aQS01Y3ZtRDNqUUVyZVBFYVFGU3JRbXI4NHNxSzQifQ"
+}

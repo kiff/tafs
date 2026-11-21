@@ -245,6 +245,9 @@ only on the paired phone's own release, which planque relays and can't make:
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
   Off-site opens, navigations and pop-ups are stopped. The guard runs before the page is touched. There are the pauses,
   Stop, and the site permission.
+- **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
+  against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
+  `ios/Tafs/KIFF/ChromePairing.swift`.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
   input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
   covered button that isn't clicked, and dialogs.
