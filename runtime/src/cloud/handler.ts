@@ -5199,9 +5199,23 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title,
       ...(out.fresh
         ? { fresh: true, words: w.connect_again_fresh_words(out.name, taf.name), done_words: w.connect_again_fresh_done(out.name) }
-        : { words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
+        : { words: connectAgainWords(w, out.signed_out_cause, out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) }) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
+}
+
+/**
+ * What Coach tells the owner about a connection planque signed out, by the cause planque kept: "expired" only for a
+ * sign-in that really ran out (`no_refresh_token`); a vendor that stopped taking it, a removed connection's shared
+ * sign-in, and any other cause or none (an older planque) each have their own line, none says expired.
+ */
+export function connectAgainWords(w: ReturnType<typeof wordsIn>, cause: string | undefined, app: string, taf: string): string {
+  switch (cause) {
+    case "no_refresh_token": return w.connect_again_words(app, taf);
+    case "refresh_refused": return w.connect_again_refused_words(app, taf);
+    case "reused_sign_in_gone": return w.connect_again_shared_gone_words(app, taf);
+    default: return w.connect_again_signed_out_words(app, taf);
+  }
 }
 
 async function knobRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {

@@ -2,6 +2,7 @@ import { fcmMessage } from "../src/cloud/fcm.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
 import { sweepBriefs, approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
@@ -1004,20 +1005,38 @@ describe("tafs cloud", () => {
   // taf names its own signed-out connection, and the app signs that same grant in again.
   it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
     const w = world();
-    const setup = async (status: string, lang = "en", reconnect?: string) => {
+    const setup = async (status: string, lang = "en", reconnect?: string, cause?: string) => {
       const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, requestContext: { http: { method: "GET" } },
         headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
         { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
           if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
-            { id: "grt_gmail", status, vendor: "Gmail", ...(reconnect ? { reconnect } : {}), request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
+            { id: "grt_gmail", status, vendor: "Gmail", ...(reconnect ? { reconnect } : {}), ...(cause ? { signed_out_cause: cause } : {}), request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
           ] }), { status: 200 });
           return depsOf(w).fetch!(url, init);
         }) as Deps["fetch"] });
       return JSON.parse(r.body) as { connect_again?: Record<string, string>; connections?: Array<Record<string, unknown>> };
     };
     expect((await setup("needs_reconnect")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again",
-      words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
+      words: "Gmail was signed out, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
+    // The words follow the cause planque kept (kiff/work#17, 21 Nov 2026: a Drive sign-in revoked by another connection's
+    // removal read "expired"): "expired" only for a sign-in that really ran out, never for a revoke, a removed shared
+    // sign-in, an unknown cause, or none (an older planque).
+    const says = async (cause: string | undefined, lang = "en") => (await setup("needs_reconnect", lang, undefined, cause)).connect_again?.words;
+    expect(await says("no_refresh_token")).toBe("Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.");
+    expect(await says("refresh_refused")).toBe("Gmail no longer takes this sign-in, so Rae can't use it. Connect again to sign in.");
+    expect(await says("reused_sign_in_gone")).toBe("Rae used the Gmail sign-in of a connection that was removed, so it can't use Gmail now. Connect again to sign in.");
+    expect(await says("some_future_cause")).toBe("Gmail was signed out, so Rae can't use it. Connect again to sign in.");
+    expect(await says(undefined)).toBe("Gmail was signed out, so Rae can't use it. Connect again to sign in.");
+    for (const cause of ["refresh_refused", "reused_sign_in_gone", "some_future_cause", undefined]) {
+      for (const lang of LANGUAGES) expect(await says(cause, lang), `${cause} in ${lang}`).not.toBe(await says("no_refresh_token", lang));
+    }
+    expect(await says("refresh_refused", "de")).toBe("Gmail nimmt diese Anmeldung nicht mehr an, daher kann Rae es nicht nutzen. Verbinde erneut, um dich anzumelden.");
+    // Korean isn't served yet (its catalog is on main, not wired), but its lines are there for when it is.
+    expect(ko.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Rae이(가) 제거된 연결의 Gmail 로그인을 사용하고 있었기 때문에 지금은 Gmail을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.");
+    expect(ko.connect_again_refused_words("Gmail", "Rae")).not.toBe(ko.connect_again_words("Gmail", "Rae"));
+    expect((await setup("needs_reconnect", "en", undefined, "refresh_refused")).connections?.[0]).toMatchObject({ signed_out_cause: "refresh_refused" });
+    expect((await setup("connected", "en", undefined, "refresh_refused")).connections?.[0]).not.toHaveProperty("signed_out_cause");
     expect((await setup("connected")).connect_again).toBeUndefined();
     // planque can't sign this one in again on the same account: a new sign-in, which brings back every taf that used it.
     // The app calls connect-fresh straight away, never a reconnect bound to be refused first.
