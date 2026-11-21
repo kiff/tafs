@@ -890,7 +890,7 @@
         <item quantity="other">%2$s s\'arrêtent aussi.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Aucun taf n\'utilise %1$s désormais.</string>
-    <string name="connect_disconnect_rest">Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise cet identifiant, il est révoqué chez %1$s. Utiliser %1$s à nouveau vous demande d\'approuver et de vous reconnecter.</string>
+    <string name="connect_disconnect_rest">Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise le même compte, l\'identifiant est révoqué chez %1$s ; sinon, quand le dernier est retiré. Utiliser %1$s à nouveau vous demande d\'approuver et de vous reconnecter.</string>
     <string name="connect_disconnect_rest_key">Les autres tafs qui utilisent %1$s gardent leur accès. La clé est supprimée de tafs dès qu\'aucun taf ne l\'utilise. Utiliser %1$s à nouveau vous demande d\'approuver et de coller une clé à nouveau.</string>
     <string name="connect_disconnect_title">Retirer l\'accès à %1$s ?</string>
     <string name="connect_disconnect_title_from">Retirer l\'accès à %1$s pour %2$s ?</string>
@@ -943,7 +943,7 @@
     <string name="connect_open_browser_again">Rouvrir le navigateur</string>
     <string name="connect_opening_sign_in">Ouverture de la connexion…</string>
     <string name="connect_other_connections">Autres connexions</string>
-    <string name="connect_other_connections_stay_connected_no">" Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise cet identifiant, il est révoqué chez %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Les autres tafs qui utilisent %1$s gardent leur accès. Si aucun autre taf n\'utilise le même compte, l\'identifiant est révoqué chez %2$s ; sinon, quand le dernier est retiré."</string>
     <string name="connect_profile_words_not_read">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. %1$s</string>
     <string name="connect_profile_words_unread">Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n\'a été approuvé.</string>
     <string name="connect_prompt_connect">Connecter %1$s à %2$s</string>

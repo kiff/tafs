@@ -48857,55 +48857,55 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %1$@ widerrufen. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden."
+            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei %1$@ widerrufen; sonst, wenn der letzte entfernt wird. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Other tafs that use %1$@ keep their access. If no other taf uses this sign-in, it's revoked at %1$@. Using %1$@ again asks you to approve and sign in again."
+            "value": "Other tafs that use %1$@ keep their access. If no other taf uses the same account there, the sign-in is revoked at %1$@; otherwise, when the last one is removed. Using %1$@ again asks you to approve and sign in again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %1$@. Usar %1$@ de nuevo te pide aprobar e iniciar sesión otra vez."
+            "value": "Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en %1$@; si no, cuando se quita el último. Usar %1$@ de nuevo te pide aprobar e iniciar sesión otra vez."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez %1$@. Utiliser %1$@ à nouveau vous demande d'approuver et de vous reconnecter."
+            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez %1$@ ; sinon, quand le dernier est retiré. Utiliser %1$@ à nouveau vous demande d'approuver et de vous reconnecter."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato presso %1$@. Usare di nuovo %1$@ ti chiede di approvare e accedere di nuovo."
+            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso %1$@; altrimenti, quando viene rimosso l'ultimo. Usare di nuovo %1$@ ti chiede di approvare e accedere di nuovo."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 이 로그인을 쓰는 다른 taf가 없으면 %1$@에서 취소됩니다. %1$@을(를) 다시 쓰려면 다시 승인하고 로그인해야 합니다."
+            "value": "%1$@을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 같은 계정을 쓰는 다른 taf가 없으면 %1$@에서 로그인이 취소되고, 있으면 마지막 taf를 제거할 때 취소됩니다. %1$@을(를) 다시 쓰려면 다시 승인하고 로그인해야 합니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij %1$@ ingetrokken. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden."
+            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij %1$@ ingetrokken; anders pas als de laatste wordt verwijderd. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego logowania, zostanie ono cofnięte w %1$@. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne zalogowanie."
+            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie cofnięte w %1$@; w przeciwnym razie, gdy usuniesz ostatni. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne zalogowanie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar este início de sessão, é revogado em %1$@. Usar %1$@ novamente pede-lhe que aprove e inicie sessão de novo."
+            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar a mesma conta, o início de sessão é revogado em %1$@; caso contrário, quando o último for removido. Usar %1$@ novamente pede-lhe que aprove e inicie sessão de novo."
           }
         }
       }
@@ -51678,55 +51678,55 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": " Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %2$@ widerrufen."
+            "value": " Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei %2$@ widerrufen; sonst, wenn der letzte entfernt wird."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " Other tafs that use %1$@ keep their access. If no other taf uses this sign-in, it's revoked at %2$@."
+            "value": " Other tafs that use %1$@ keep their access. If no other taf uses the same account there, the sign-in is revoked at %2$@; otherwise, when the last one is removed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": " Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %2$@."
+            "value": " Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa la misma cuenta, el inicio de sesión se revoca en %2$@; si no, cuando se quita el último."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": " Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez %2$@."
+            "value": " Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez %2$@ ; sinon, quand le dernier est retiré."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": " Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su %2$@."
+            "value": " Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa lo stesso account, il login viene revocato presso %2$@; altrimenti, quando viene rimosso l'ultimo."
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 이 로그인을 쓰는 다른 taf가 없으면 %2$@에서 취소됩니다."
+            "value": " %1$@을(를) 쓰는 다른 tafs는 접근 권한을 유지합니다. 같은 계정을 쓰는 다른 taf가 없으면 %2$@에서 로그인이 취소되고, 있으면 마지막 taf를 제거할 때 취소됩니다."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf deze login gebruikt, wordt die bij %2$@ ingetrokken."
+            "value": " Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij %2$@ ingetrokken; anders pas als de laatste wordt verwijderd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego logowania, zostanie ono unieważnione w %2$@."
+            "value": " Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego samego konta, logowanie zostanie cofnięte w %2$@; w przeciwnym razie, gdy usuniesz ostatni."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": " Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar este início de sessão, é revogado em %2$@."
+            "value": " Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar a mesma conta, o início de sessão é revogado em %2$@; caso contrário, quando o último for removido."
           }
         }
       }

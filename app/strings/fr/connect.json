@@ -70,7 +70,7 @@
     "other": "{names} s'arrêtent aussi."
   },
   "connect.disconnect.no_taf_uses": "Aucun taf n'utilise {vendor} désormais.",
-  "connect.disconnect.rest": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez {vendor}. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
+  "connect.disconnect.rest": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez {vendor} ; sinon, quand le dernier est retiré. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
   "connect.disconnect.rest_key": "Les autres tafs qui utilisent {vendor} gardent leur accès. La clé est supprimée de tafs dès qu'aucun taf ne l'utilise. Utiliser {vendor} à nouveau vous demande d'approuver et de coller une clé à nouveau.",
   "connect.disconnect.title": "Retirer l'accès à {vendor} ?",
   "connect.disconnect.title_from": "Retirer l'accès à {vendor} pour {taf} ?",
@@ -123,7 +123,7 @@
   "connect.open_browser_again": "Rouvrir le navigateur",
   "connect.opening_sign_in": "Ouverture de la connexion…",
   "connect.other_connections": "Autres connexions",
-  "connect.other_connections_stay_connected_no": " Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez {vendor_2}.",
+  "connect.other_connections_stay_connected_no": " Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise le même compte, l'identifiant est révoqué chez {vendor_2} ; sinon, quand le dernier est retiré.",
   "connect.profile_words_not_read": "Les textes de KIFF pour cette connexion n'ont pas pu être lus. {why}",
   "connect.profile_words_unread": "Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n'a été approuvé.",
   "connect.prompt.connect": "Connecter {vendor} à {agent}",

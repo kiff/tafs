@@ -1735,9 +1735,9 @@ class PlanqueTest {
     assertFalse(body, body.contains("The key is deleted from tafs."))
     assertFalse(body, body.contains("revoked"))
     assertFalse(body, body.contains("leave KIFF"))
-    // A sign-in, by contrast, is revoked at the vendor when nothing else uses it.
+    // A sign-in, by contrast, is revoked at the vendor once no other taf uses the same account there.
     val signIn = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", "connected", extra = ",\"vendor\":\"Stripe\""))
-    assertTrue(words.disconnectBody(signIn, null).contains("it's revoked at Stripe"))
+    assertTrue(words.disconnectBody(signIn, null).contains("the sign-in is revoked at Stripe"))
   }
 
   // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)

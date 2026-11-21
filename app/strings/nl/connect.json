@@ -70,7 +70,7 @@
     "other": "{names} stoppen ook."
   },
   "connect.disconnect.no_taf_uses": "Geen taf gebruikt {vendor} nu.",
-  "connect.disconnect.rest": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij {vendor} ingetrokken. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",
+  "connect.disconnect.rest": "Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij {vendor} ingetrokken; anders pas als de laatste wordt verwijderd. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.",
   "connect.disconnect.rest_key": "Andere tafs die {vendor} gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd zodra geen enkel taf hem nog gebruikt. Als je {vendor} weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.",
   "connect.disconnect.title": "Toegang tot {vendor} intrekken?",
   "connect.disconnect.title_from": "Toegang tot {vendor} voor {taf} intrekken?",
@@ -123,7 +123,7 @@
   "connect.open_browser_again": "De browser opnieuw openen",
   "connect.opening_sign_in": "De login openen…",
   "connect.other_connections": "Andere koppelingen",
-  "connect.other_connections_stay_connected_no": " Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf deze login gebruikt, wordt die bij {vendor_2} ingetrokken.",
+  "connect.other_connections_stay_connected_no": " Andere tafs die {vendor} gebruiken, houden hun toegang. Als geen andere taf hetzelfde account gebruikt, wordt de aanmelding bij {vendor_2} ingetrokken; anders pas als de laatste wordt verwijderd.",
   "connect.profile_words_not_read": "De woorden van KIFF voor deze koppeling konden niet worden gelezen. {why}",
   "connect.profile_words_unread": "De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.",
   "connect.prompt.connect": "{vendor} koppelen aan {agent}",
