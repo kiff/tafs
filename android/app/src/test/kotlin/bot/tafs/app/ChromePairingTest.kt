@@ -8,6 +8,8 @@ import java.security.KeyPairGenerator
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
@@ -35,6 +37,42 @@ class ChromePairingTest {
     assertEquals(v("phone_proof"), c.phoneProof)
     assertEquals(v("phone_key"), c.phoneKey)
     assertEquals(v("signed_bytes"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c)))
+  }
+
+  private fun repoJson(path: String): JsonObject = KiffClient.json.parseToJsonElement(File("../../$path").readText()).jsonObject
+
+  /**
+   * Approving a browser grant: the bytes for its sites and for one sensitive site are the extension's
+   * (vectors/chrome-grant.json), so what the phone signs is what `checkSites` and `checkAllowances` verify.
+   */
+  @Test fun aGrantsSitesAndASensitiveAllowanceSignTheExtensionsBytes() {
+    val g = repoJson("vectors/chrome-grant.json")
+    fun s(k: String) = g[k]!!.jsonPrimitive.content
+    val sites = g["sites"]!!.jsonArray.map { it.jsonPrimitive.content }
+    assertEquals(s("sites_signed_bytes"), ChromePairing.base64Url(ChromePairing.sitesBytes(s("chrome_id"), s("grant"), sites)))
+    assertEquals(s("sensitive_signed_bytes"), ChromePairing.base64Url(ChromePairing.sensitiveBytes(s("chrome_id"), s("grant"), s("site"))))
+    assertFalse(
+      "another site list is other bytes",
+      ChromePairing.sitesBytes(s("chrome_id"), s("grant"), sites + "evil.example").contentEquals(ChromePairing.sitesBytes(s("chrome_id"), s("grant"), sites)),
+    )
+  }
+
+  /** The sensitive list is the extension's (vectors/chrome-sensitive.json), and reads each sample host as it does. */
+  @Test fun theSensitiveListIsTheExtensions() {
+    val v = repoJson("vectors/chrome-sensitive.json")
+    assertEquals(v["sites"]!!.jsonArray.map { it.jsonPrimitive.content }, ChromePairing.SENSITIVE_SITES)
+    assertEquals(v["labels"]!!.jsonPrimitive.content, ChromePairing.SENSITIVE_LABELS)
+    for ((host, want) in v["hosts"]!!.jsonObject) {
+      assertEquals(host, want.jsonPrimitive.boolean, ChromePairing.isSensitive(host))
+    }
+  }
+
+  /** A host is read as the extension's `hostOf` reads it, so a trailing dot or an ideographic one changes nothing. */
+  @Test fun aSensitiveHostIsReadAsTheExtensionReadsIt() {
+    assertTrue(ChromePairing.isSensitive("PayPal.com."))
+    assertTrue(ChromePairing.isSensitive("www。paypal。com"))
+    assertTrue(ChromePairing.isSensitive("impots．gouv．fr"))
+    assertFalse(ChromePairing.isSensitive("notpaypal.com."))
   }
 
   @Test fun theProofCoversTheExtensionsKiffOfferAsTheVectorSays() {

@@ -5,6 +5,8 @@ import java.security.SecureRandom
 import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
@@ -24,6 +26,10 @@ object ChromePairing {
   const val PAIR_LABEL = "tafs-chrome/pair/v1"
   const val EXTENSION_PROOF_LABEL = "tafs-chrome/ext/v1"
   const val PHONE_PROOF_LABEL = "tafs-chrome/phone/v1"
+
+  /** What the phone signs when the owner approves a browser grant: its sites, and each sensitive site allowed by name. */
+  const val SITES_LABEL = "tafs-chrome/sites/v1"
+  const val SENSITIVE_LABEL = "tafs-chrome/sensitive/v1"
 
   /** A name the owner gives a Chrome is at most this long. */
   const val NAME_MAX = 40
@@ -84,6 +90,63 @@ object ChromePairing {
       put("phone_proof", JsonPrimitive(c.phoneProof))
     }
     return PAIR_LABEL.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
+  }
+
+  /**
+   * The bytes the phone signs for a browser grant's sites on one paired Chrome: label ‖ 0x00 ‖ JCS of
+   * `{chrome_id, grant, sites}`. The extension runs a step only on sites inside them (`protocol.checkSites`).
+   */
+  fun sitesBytes(chromeId: String, grant: String, sites: List<String>): ByteArray = labelled(
+    SITES_LABEL,
+    buildJsonObject {
+      put("chrome_id", JsonPrimitive(chromeId))
+      put("grant", JsonPrimitive(grant))
+      put("sites", JsonArray(sites.map { JsonPrimitive(it) }))
+    },
+  )
+
+  /**
+   * The bytes the phone signs to allow one sensitive site for one grant on one paired Chrome: label ‖ 0x00 ‖ JCS of
+   * `{chrome_id, grant, site}`. Without it, the extension never opens that site (`protocol.checkAllowances`).
+   */
+  fun sensitiveBytes(chromeId: String, grant: String, site: String): ByteArray = labelled(
+    SENSITIVE_LABEL,
+    buildJsonObject {
+      put("chrome_id", JsonPrimitive(chromeId))
+      put("grant", JsonPrimitive(grant))
+      put("site", JsonPrimitive(site))
+    },
+  )
+
+  private fun labelled(label: String, body: JsonObject): ByteArray =
+    label.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
+
+  /**
+   * The sites the extension blocks unless the phone allows them one by one (`chrome/src/sites.js` `SENSITIVE`,
+   * vectors/chrome-sensitive.json): each a site and its subdomains. The approval card marks a grant's sensitive sites from
+   * this, and signs an allowance only for one the owner ticked.
+   */
+  val SENSITIVE_SITES: List<String> = listOf(
+    "1password.com", "lastpass.com", "bitwarden.com", "dashlane.com", "keepersecurity.com", "nordpass.com", "proton.me",
+    "coinbase.com", "binance.com", "kraken.com", "metamask.io", "blockchain.com", "crypto.com", "ledger.com", "bitstamp.net",
+    "paypal.com", "wise.com", "revolut.com", "n26.com", "venmo.com", "cash.app", "klarna.com", "payoneer.com",
+    "ameli.fr", "nhs.uk", "mychart.com", "healthcare.gov",
+  )
+
+  /** A host with one of these labels names a bank, a government or a health account. The extension's own pattern. */
+  const val SENSITIVE_LABELS =
+    "(^|[.-])(bank|banking|banque|bancaire|banca|banco|bancario|sparkasse|volksbank|bausparkasse|credit-?union|tresor|impots|" +
+      "irs|hmrc|gov|gouv|gob|bund|gc|nic|health|sante|gesundheit|salud|saude|patient|medicare|medicaid)([.-]|$)"
+
+  private val sensitiveLabels = Regex(SENSITIVE_LABELS)
+
+  /**
+   * Whether the extension treats [host] as sensitive, read as its `hostOf` reads a host: lower case, an ideographic full stop
+   * as a dot, and no trailing dot. So the card marks exactly the sites the extension blocks.
+   */
+  fun isSensitive(host: String): Boolean {
+    val h = host.lowercase().replace(Regex("[。．｡]"), ".").removeSuffix(".")
+    return SENSITIVE_SITES.any { h == it || h.endsWith(".$it") } || sensitiveLabels.containsMatchIn(h)
   }
 
   /**
