@@ -575,6 +575,47 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
+## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese (being written)
+
+For the countries whose language the apps don't have yet. Each catalog is in `all`, not `shipped`, until its review: no app
+shows it yet. Arabic is its own piece (tafs#1697), with the right-to-left rules.
+
+### Turkish (tr)
+
+Addressed as **siz** (the polite plural, as Turkish business software writes it); buttons are plain imperatives ("Onayla",
+"Reddet", "Devam et"), and sentences address the reader with -(y)In forms ("Tekrar deneyin"). taf, Card, Coach, KIFF and
+Setup are names and stay as they are. A value is a name and doesn't take Turkish's suffixes, so a line that would need
+one words around it: "{taf} taf'ı", "şu Card: {owner}", "bu {device} cihazı". A door is "kapı", a call "çağrı", a request
+"istek", a held call "tutulan çağrı", a receipt "makbuz", a brief "özet". Apple's menu paths are the Turkish ones ("Ayarlar",
+"Sistem Ayarları", "Gizlilik ve Güvenlik"). The plural forms are one and other, and a number takes the singular noun
+("5 görev").
+
+| English | Turkish |
+|---|---|
+| Needs you | Sizi bekliyor |
+| Approve / Approve once | Onayla / Bir kez onayla |
+| Refuse | Reddet |
+| held | tutuldu |
+| Halt / Halted | Dondur / Donduruldu |
+| Stopped | Durduruldu |
+| Pause / Paused | Duraklat / Duraklatıldı |
+| Resume | Sürdür |
+| Revoke | İptal et |
+| Record | Kayıt |
+| Connect / connection | Bağla / bağlantı |
+| Pair / Unpair | Eşleştir / Eşleştirmeyi kaldır |
+| Account | Hesap |
+| limit / spend limit | limit / harcama limiti |
+| credits / credit pack | krediler / kredi paketi |
+| passkey | geçiş anahtarı |
+| security key | güvenlik anahtarı |
+| Sign in / Sign out | Oturum aç / Oturumu kapat |
+| Inbox | Gelen kutusu |
+| Overview | Genel bakış |
+| Calendar | Takvim |
+| Usage | Kullanım |
+| Cancel / Continue | Vazgeç / Devam et |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

@@ -1,0 +1,13 @@
+{
+  "halt.again": "Tekrar dondur",
+  "halt.all_now": "Hepsini şimdi dondur",
+  "halt.explain.halted": "Donduruldu. Devam ettirmek yalnızca yeni işi başlatır.",
+  "halt.explain.halted_since": "{time} tarihinden beri. Devam ettirmek yalnızca yeni işi başlatır.",
+  "halt.explain.halting": "Yeni bir şey başlamaz. KIFF ve bağlantı ikisi de onaylayınca Donduruldu görünür.",
+  "halt.explain.running_all": "Dondurma, siz devam ettirene kadar tafs'larınızı durdurur. Gönderilmiş bir çağrı yine de ulaşabilir.",
+  "halt.explain.running_one": "Dondurma, siz devam ettirene kadar onu durdurur. Gönderilmiş bir çağrı yine de ulaşabilir.",
+  "halt.halting_stops_no_run_starts": "Dondurma, siz devam ettirene kadar şunu durdurur: {who}. Gönderilmiş bir çağrı yine de ulaşabilir.",
+  "halt.now": "Şimdi dondur",
+  "halt.row_running": "Siz devam ettirene kadar durdur",
+  "halt.your_tafs_lower": "tafs'larınızı"
+}
