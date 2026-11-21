@@ -47640,6 +47640,12 @@
             "value": "%1$@ en %2$@"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ süsteemis %2$@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -47662,6 +47668,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@의 %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sistemoje %2$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sistēmā %2$@"
           }
         },
         "nl": {
@@ -47711,6 +47729,12 @@
             "value": "En Chrome, abre la extensión de tafs y escribe este código. Sirve durante 10 minutos."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ava Chrome'is tafsi laiendus ja sisesta see kood. See kehtib 10 minutit."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -47733,6 +47757,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome에서 tafs 확장 프로그램을 열고 이 코드를 입력하세요. 10분 동안 유효합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome naršyklėje atidarykite tafs plėtinį ir įveskite šį kodą. Jis galioja 10 minučių."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pārlūkā Chrome atver tafs paplašinājumu un ievadi šo kodu. Tas derīgs 10 minūtes."
           }
         },
         "nl": {
@@ -47782,6 +47818,12 @@
             "value": "Escribe este código en Chrome"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sisesta see kood Chrome'is"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -47804,6 +47846,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome에 이 코드를 입력하세요"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įveskite šį kodą Chrome naršyklėje"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ievadi šo kodu pārlūkā Chrome"
           }
         },
         "nl": {
@@ -47853,6 +47907,12 @@
             "value": "Vincular"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seo"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -47875,6 +47935,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "페어링"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susieti"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savienot pārī"
           }
         },
         "nl": {
@@ -47924,6 +47996,12 @@
             "value": "El código caducó, así que no se vinculó nada. Empieza de nuevo."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kood aegus, seega midagi ei seotud. Alusta uuesti."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -47946,6 +48024,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "코드가 만료되어 아무것도 페어링되지 않았습니다. 다시 시작하세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kodas nebegalioja, todėl niekas nesusieta. Pradėkite iš naujo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koda derīgums beidzās, tāpēc nekas netika savienots pārī. Sāc no jauna."
           }
         },
         "nl": {
@@ -47995,6 +48085,12 @@
             "value": "Tus tafs solo pueden usar un Chrome vinculado en los sitios que indica una conexión, y tú apruebas aquí los pasos arriesgados."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinu tafid saavad seotud Chrome'i kasutada ainult ühenduses loetletud saitidel ja riskantsed sammud kinnitad sina siin."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48017,6 +48113,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "tafs는 페어링된 Chrome을 연결에 지정된 사이트에서만 사용할 수 있으며, 위험한 단계는 여기서 승인합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jūsų taf susietą Chrome gali naudoti tik ryšyje nurodytose svetainėse, o rizikingus veiksmus patvirtinate čia."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tavi taf var izmantot savienoto Chrome tikai savienojumā norādītajās vietnēs, un riskantus soļus tu apstiprini šeit."
           }
         },
         "nl": {
@@ -48066,6 +48174,12 @@
             "value": "Nombre"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimi"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48088,6 +48202,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "이름"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pavadinimas"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nosaukums"
           }
         },
         "nl": {
@@ -48137,6 +48263,12 @@
             "value": "No hay ningún Chrome vinculado."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ühtegi Chrome'i pole seotud."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48159,6 +48291,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "페어링된 Chrome이 없습니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nesusieta jokia Chrome naršyklė."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neviens Chrome nav savienots pārī."
           }
         },
         "nl": {
@@ -48208,6 +48352,12 @@
             "value": "No se pudieron leer tus Chrome: %1$@"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sinu Chrome'e ei õnnestunud lugeda: %1$@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48230,6 +48380,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome 목록을 읽지 못했습니다: %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nepavyko nuskaityti jūsų Chrome naršyklių: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neizdevās nolasīt tavus Chrome: %1$@"
           }
         },
         "nl": {
@@ -48279,6 +48441,12 @@
             "value": "Dice ser %1$@ en %2$@."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See ütleb, et on %1$@ süsteemis %2$@."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48301,6 +48469,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@의 %1$@(이)라고 합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ji teigia, kad yra %1$@ sistemoje %2$@."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tas norāda, ka ir %1$@ sistēmā %2$@."
           }
         },
         "nl": {
@@ -48350,6 +48530,12 @@
             "value": "¿Vincular este Chrome?"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kas siduda see Chrome?"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48372,6 +48558,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "이 Chrome을 페어링할까요?"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susieti šią Chrome naršyklę?"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savienot šo Chrome pārī?"
           }
         },
         "nl": {
@@ -48421,6 +48619,12 @@
             "value": "Vincula solo un Chrome de un ordenador que tengas delante."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seo ainult Chrome arvutis, mille taga sa praegu oled."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48443,6 +48647,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "지금 앞에 있는 컴퓨터의 Chrome만 페어링하세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susiekite tik Chrome naršyklę kompiuteryje, prie kurio dabar esate."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savieno pārī tikai Chrome datorā, pie kura tu tagad esi."
           }
         },
         "nl": {
@@ -48492,6 +48708,12 @@
             "value": "Vincular un Chrome"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seo Chrome"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48514,6 +48736,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome 페어링"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susieti Chrome"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savienot Chrome pārī"
           }
         },
         "nl": {
@@ -48563,6 +48797,12 @@
             "value": "No se pudo empezar a vincular: %1$@"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidumist ei õnnestunud alustada: %1$@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48585,6 +48825,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "페어링을 시작하지 못했습니다: %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nepavyko pradėti susiejimo: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neizdevās sākt savienošanu pārī: %1$@"
           }
         },
         "nl": {
@@ -48634,6 +48886,12 @@
             "value": "Vincular %1$@ con tus tafs"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seo %1$@ oma tafidega"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48656,6 +48914,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@을(를) tafs와 페어링"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susieti %1$@ su jūsų taf"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savienot %1$@ pārī ar taviem taf"
           }
         },
         "nl": {
@@ -48705,6 +48975,12 @@
             "value": "%1$@ está vinculado."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ on seotud."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48727,6 +49003,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@이(가) 페어링되었습니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ susieta."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ir savienots pārī."
           }
         },
         "nl": {
@@ -48776,6 +49064,12 @@
             "value": "tafs trabaja en su propio perfil de Chrome. Inicia sesión ahí solo en los sitios que quieras que usen tus tafs."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs töötab oma Chrome'i profiilis. Logi seal sisse ainult saitidele, mida tahad, et su tafid kasutaksid."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48798,6 +49092,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "tafs는 자체 Chrome 프로필에서 작동합니다. 그곳에서는 tafs가 사용할 사이트에만 로그인하세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs veikia savo Chrome profilyje. Ten prisijunkite tik prie svetainių, kurias norite, kad naudotų jūsų taf."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs strādā savā Chrome profilā. Piesakies tur tikai vietnēs, kuras vēlies, lai tavi taf izmanto."
           }
         },
         "nl": {
@@ -48847,6 +49153,12 @@
             "value": "Otro Chrome usó este código, así que no se vinculó nada. Empieza de nuevo."
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seda koodi kasutas teine Chrome, seega midagi ei seotud. Alusta uuesti."
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48869,6 +49181,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "다른 Chrome이 이 코드를 사용해 아무것도 페어링되지 않았습니다. 다시 시작하세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna."
           }
         },
         "nl": {
@@ -48918,6 +49242,12 @@
             "value": "Desvincular"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tühista sidumine"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48940,6 +49270,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "페어링 해제"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atsieti"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atvienot"
           }
         },
         "nl": {
@@ -48989,6 +49331,12 @@
             "value": "Desvincular %1$@"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tühista sidumine: %1$@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -49011,6 +49359,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ 페어링 해제"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atsieti %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atvienot %1$@"
           }
         },
         "nl": {
@@ -49060,6 +49420,12 @@
             "value": "Chrome"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -49079,6 +49445,18 @@
           }
         },
         "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome"
+          }
+        },
+        "lv": {
           "stringUnit": {
             "state": "translated",
             "value": "Chrome"
@@ -49131,6 +49509,12 @@
             "value": "Esperando a Chrome…"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome'i ootamine…"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -49153,6 +49537,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Chrome을 기다리는 중…"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laukiama Chrome…"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gaida Chrome…"
           }
         },
         "nl": {
