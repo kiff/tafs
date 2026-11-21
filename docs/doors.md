@@ -134,10 +134,10 @@ from the door's Remove, which never sends an `api` door's removal unsigned; nor 
 over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
 removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
 closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.
-**Android does the same** (`AppModel.newApiKey`, `revokeApiKey`, `reopenApiDoor` and `removeApiDoor`, drawn wherever tafs cloud sends them (`ApiDoorFeature` is on: tafs cloud's `TAFS_API_DOORS` alone decides, per account),
-off), signed by the approval key behind the fingerprint (`TafsCloud.doorSignature`, as a taf's removal). Its plain
+**Android does the same** (`AppModel.newApiKey`, `revokeApiKey`, `reopenApiDoor` and `removeApiDoor`, drawn wherever tafs cloud sends them (`ApiDoorFeature` is on: tafs cloud's `TAFS_API_DOORS` alone decides, per account)), signed by the approval key behind the fingerprint (`TafsCloud.doorSignature`, as a taf's removal). Its plain
 `setDoorOpen(open = true)` and `removeDoor` send nothing for an `api` door. The new key is held in `TafDoors.issued` until its
-screen closes (`apiKeyShown`), and a last request's `words` are drawn as tafs cloud sends them
+screen closes (`apiKeyShown`). A door made, changed or removed reads the taf's dial again, so Setup's "Starts when" never
+shows a door that's gone (`removingADoorReadsWhatStartsTheTafAgain`). A last request's `words` are drawn as tafs cloud sends them
 (`anApiDoorsNewKeyIsSignedOverItsBodyAndShownOnce`, `anApiDoorsRevokeReopenAndRemoveAreSignedAndNeverGoUnsigned`).
 
 **tafs cloud keeps an `api` door** (`kind: "api"`, `doors/model.ts`) with its keys as `APIKey`s: an id, the owner's name for

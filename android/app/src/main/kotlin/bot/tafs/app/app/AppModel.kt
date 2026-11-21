@@ -7581,6 +7581,9 @@ class AppModel(
       if (generation == accountGeneration && door != null) {
         updateDoors(tafId) { d -> d.copy(doors = if (d.doors.any { it.id == door.id }) d.doors.map { if (it.id == door.id) door else it } else d.doors + door, error = null) }
       }
+      // A door made, changed or removed changes what starts the taf: Setup's "Starts when" is tafs cloud's dial, read again so it
+      // never shows a door that's gone (the doors proof, 21 Nov). Only where the dial was read; loadKnob keeps it on a failed read.
+      if (generation == accountGeneration && _state.value.knobs.containsKey(tafId)) loadKnob(tafId)
       door
     } catch (e: CancellationException) {
       throw e
