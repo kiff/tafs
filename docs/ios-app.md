@@ -1079,7 +1079,8 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
   you're at".
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`). An
   offer that doesn't hold means another extension used the lookup: nothing is paired, and the sheet says so.
-- **One prompt, naming the Chrome, signs the confirmation.** The approval key (the device key on a device without one)
+- **One prompt, naming the Chrome, signs the confirmation.** Only the approval key pairs a Chrome, since the extension
+  later opens a sealed sign-in only on that key's release. A phone without one doesn't open a pairing, as on Android. It
   signs `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's key and its proof under
   the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
