@@ -70,18 +70,18 @@ class WatchCacheTest {
     val phone = Phone(reads)
     val m = model(phone)
     m.refresh()
-    phone.answer = { Asked.Unreachable }
+    phone.answer = { Asked.Unreachable() }
     clock += 5_000
     m.refresh()
     assertTrue("kept, marked updating", (m.shown.value as WatchModel.Shown.Read).updating)
     clock += UNREACHABLE_AFTER_MS
     m.refresh()
-    assertEquals(WatchModel.Shown.PhoneUnreachable, m.shown.value)
+    assertEquals(WatchModel.Shown.PhoneUnreachable(), m.shown.value)
   }
 
   @Test fun aLockedWatchSignOutAndADayEachClearIt() = runTest {
     model(Phone(reads)).refresh()
-    model(Phone { Asked.Unreachable }, unlocked = { false }).refresh()
+    model(Phone { Asked.Unreachable() }, unlocked = { false }).refresh()
     assertNull("locked: cleared, as a watch taken off the wrist locks", store.text)
 
     model(Phone(reads)).refresh()

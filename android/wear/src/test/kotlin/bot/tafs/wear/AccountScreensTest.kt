@@ -108,7 +108,7 @@ class AccountModelTest {
   @Test fun theCalendarSaysWhyThereIsNoDay() = runTest {
     val cases = mapOf<Asked, WatchModel.Reading<WatchModel.DayRead>>(
       Asked.Answered(WatchReply.SignedOut) to WatchModel.Reading.SignedOut,
-      Asked.Unreachable to WatchModel.Reading.PhoneUnreachable,
+      Asked.Unreachable() to WatchModel.Reading.PhoneUnreachable(),
       Asked.NotUnderstood to WatchModel.Reading.OpenOnPhone,
       Asked.Answered(WatchReply.Failed("Open on phone")) to WatchModel.Reading.OpenOnPhone,
       Asked.Answered(WatchReply.Refused(NotAccepted.UNKNOWN_PATH)) to WatchModel.Reading.OpenOnPhone,
@@ -135,7 +135,7 @@ class AccountModelTest {
     assertEquals(listOf(WatchRequest.Account(t)), phone.asked)
     for ((answer, shown) in mapOf<Asked, WatchModel.Reading<WatchReply.AccountPage>>(
       Asked.Answered(WatchReply.SignedOut) to WatchModel.Reading.SignedOut,
-      Asked.Unreachable to WatchModel.Reading.PhoneUnreachable,
+      Asked.Unreachable() to WatchModel.Reading.PhoneUnreachable(),
       Asked.NotUnderstood to WatchModel.Reading.OpenOnPhone,
       Asked.Answered(needsYou) to WatchModel.Reading.OpenOnPhone,
     )) {
@@ -147,7 +147,7 @@ class AccountModelTest {
 
   @Test fun signingOutOnTheWatchForgetsEverythingItHolds() = runTest {
     // The phone out of reach for asks, so the kept message stays until the sign-out.
-    val phone = Phone { if (it is WatchRequest.Ask) Asked.Unreachable else reads(it) }
+    val phone = Phone { if (it is WatchRequest.Ask) Asked.Unreachable() else reads(it) }
     val drafts = Drafts().apply { kept = WatchModel.Draft("Thanks", "w_00000009", null) }
     val tile = Tile()
     val signIn = SignIn()
@@ -377,8 +377,20 @@ class AccountScreensTest {
     assertEquals(listOf("account", "open on phone needs-you"), did)
   }
 
+  // Row 44, D (the Apple Watch's tafs#1632, in the same lines): each failure says which, never "not in reach" for all.
+  @Test fun eachLinkFailureSaysWhich() {
+    show(read(), Page.Account, account = WatchModel.Reading.PhoneUnreachable(LinkFailure.NoApp))
+    compose.onNodeWithText(Words.Watch.phoneNoApp).assertExists()
+    compose.onAllNodesWithText(Words.Watch.phoneNotReachable).assertCountEquals(0)
+    assertEquals(
+      listOf(Words.Watch.phoneNotReachable, Words.Watch.phoneNoAnswer, Words.Watch.phoneNoApp, Words.Watch.phoneLinkFailed),
+      LinkFailure.entries.map { it.line },
+    )
+    assertEquals(4, LinkFailure.entries.map { it.line }.toSet().size)
+  }
+
   @Test fun accountOutOfReachStillSignsOutOnTheWatch() {
-    show(read(), Page.Account, account = WatchModel.Reading.PhoneUnreachable)
+    show(read(), Page.Account, account = WatchModel.Reading.PhoneUnreachable())
     compose.onNodeWithText(Words.Watch.phoneNotReachable).assertExists()
     compose.onAllNodesWithText(Words.Watch.signedIn).assertCountEquals(0)
     compose.onNodeWithText(Words.Common.tryAgain).performClick()

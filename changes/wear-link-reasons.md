@@ -1,0 +1,1 @@
+- **Wear OS:** when the phone gives no answer, the watch says why: not in reach, didn't answer in time, tafs isn't on the phone, or the link failed, as the Apple Watch does ([watch-wear.md](docs/watch-wear.md)).

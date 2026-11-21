@@ -224,7 +224,7 @@ class WatchBackTest {
       override val durationMs = 12_000L
       override fun delete() { erased++ }
     }
-    val model = WatchModel({ Asked.Unreachable }, unlocked = { true }, reviewFirst = true)
+    val model = WatchModel({ Asked.Unreachable() }, unlocked = { true }, reviewFirst = true)
     model.listen()
     runBlocking { model.heard("Move my call to six", recording) }
     assertTrue(model.voice.value is WatchModel.Voice.Review)

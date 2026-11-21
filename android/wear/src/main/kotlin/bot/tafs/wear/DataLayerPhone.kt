@@ -18,6 +18,7 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
   private val capabilities = Wearable.getCapabilityClient(context)
   private val messages = Wearable.getMessageClient(context)
   private val channels = Wearable.getChannelClient(context)
+  private val nodes = Wearable.getNodeClient(context)
   private val route = PhoneRoute(
     lookup = {
       capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
@@ -49,11 +50,11 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
         when (val tried = route.ask(request, path, data) { lookupMs = android.os.SystemClock.elapsedRealtime() - started }) {
           is PhoneRoute.Tried.NoPhone -> {
             outcome = LinkTrace.NO_PHONE + if (tried.retried) " ↻" else ""
-            Asked.Unreachable
+            Asked.Unreachable(noPhone(paired = paired(), everOffered = everOffered()))
           }
           is PhoneRoute.Tried.Failed -> {
             outcome = "error: ${tried.error.javaClass.simpleName}" + if (tried.retried) " ↻" else ""
-            Asked.Unreachable
+            Asked.Unreachable(failureOf(tried.error))
           }
           is PhoneRoute.Tried.Reply -> {
             sendMs = android.os.SystemClock.elapsedRealtime() - started - (lookupMs ?: 0L)
@@ -64,7 +65,7 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
             decoded?.let { Asked.Answered(it) } ?: Asked.NotUnderstood
           }
         }
-      } ?: Asked.Unreachable
+      } ?: Asked.Unreachable(LinkFailure.NoAnswer)
     } catch (e: CancellationException) {
       // The screen closed or the ask was cancelled: not the link's failure, so not recorded as a timeout.
       outcome = LinkTrace.CANCELLED
@@ -72,11 +73,21 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     } catch (e: Exception) {
       // The Data Layer's own failures (no connection, the phone app not answering): the same to the person.
       outcome = "error: ${e.javaClass.simpleName}"
-      Asked.Unreachable
+      Asked.Unreachable(failureOf(e))
     } finally {
       trace()
     }
   }
+
+  /** A phone is paired and connected now, whether or not tafs is on it. */
+  private suspend fun paired(): Boolean = runCatching { nodes.connectedNodes.await().isNotEmpty() }.getOrDefault(false)
+
+  /**
+   * A phone ever offered tafs's capability to this watch (`FILTER_ALL`, reachable now or not). Unsure counts as yes, so a watch
+   * never says tafs is missing on a guess.
+   */
+  private suspend fun everOffered(): Boolean =
+    runCatching { capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_ALL).await().nodes.isNotEmpty() }.getOrDefault(true)
 
   /** A recording to the phone over its own channel (row 44, A); the phone closes it once it has read the whole. */
   override suspend fun sendVoice(id: String, file: java.io.File): Boolean = runCatching {
@@ -94,3 +105,18 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     const val TRANSCRIBE_MS = 30_000L
   }
 }
+
+/**
+ * No phone with tafs was found (row 44, D): tafs isn't on it only when a phone is paired and connected and none ever offered
+ * tafs's capability; the first seconds after start, before the capability shows, read as not in reach, never as missing.
+ */
+internal fun noPhone(paired: Boolean, everOffered: Boolean): LinkFailure =
+  if (paired && !everOffered) LinkFailure.NoApp else LinkFailure.NotReachable
+
+/** The Data Layer's own failure, as the wrist says it: its "not connected" is the phone out of reach, any other the link's. */
+internal fun failureOf(error: Exception): LinkFailure =
+  if ((error as? com.google.android.gms.common.api.ApiException)?.statusCode == com.google.android.gms.wearable.WearableStatusCodes.TARGET_NODE_NOT_CONNECTED) {
+    LinkFailure.NotReachable
+  } else {
+    LinkFailure.Link
+  }

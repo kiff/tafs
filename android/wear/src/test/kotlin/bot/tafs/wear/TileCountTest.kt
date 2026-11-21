@@ -22,7 +22,7 @@ class TileCountTest {
   @Test fun theModelKeepsOnlyTheCountAndItsTime() = runTest {
     val memory = Memory()
     val call = HeldLine("hold_1", "Refunds", "Refund order 1042", "€64.00", "Over €50 each", refusable = true)
-    val model = WatchModel({ r -> if (r is WatchRequest.NeedsYou) Asked.Answered(WatchReply.NeedsYou(3, "3 need you", listOf(call))) else Asked.Unreachable }, now = { t }, tile = TileCount(memory))
+    val model = WatchModel({ r -> if (r is WatchRequest.NeedsYou) Asked.Answered(WatchReply.NeedsYou(3, "3 need you", listOf(call))) else Asked.Unreachable() }, now = { t }, tile = TileCount(memory))
     model.refresh()
     assertEquals(3 to t, memory.kept)
   }
@@ -46,7 +46,7 @@ class TileCountTest {
 
   @Test fun noPhoneLeavesTheLastCountAsItWas() = runTest {
     val memory = Memory().apply { kept = 2 to t }
-    WatchModel({ Asked.Unreachable }, now = { t + 60_000 }, tile = TileCount(memory)).refresh()
+    WatchModel({ Asked.Unreachable() }, now = { t + 60_000 }, tile = TileCount(memory)).refresh()
     assertEquals(2 to t, memory.kept)
   }
 }

@@ -482,6 +482,19 @@ app starts) is looked for once more after half a second; and a read whose send f
 A write (Refuse, Halt, an ask, a Coach message) is never sent twice, since a failed send may still have arrived. All of it
 stays inside the same 10 s. A timing build's line marks a second try with ↻ ("tafs 0.0s + 1.2s · 709 B ↻", "✕ no phone ↻").
 
+**Each failure says which** (`LinkFailure`, as the Apple Watch's `PhoneFailure`, tafs#1632, in the same lines), never "not in
+reach" for all of them. The four lines are:
+- "Your phone isn't in reach. Bring it closer, then try again." when no phone is found, or the Data Layer says it isn't
+  connected (`TARGET_NODE_NOT_CONNECTED`).
+- "Your phone didn't answer in time. Try again." when the 10 s ran out.
+- "tafs isn't on your phone. Install it there, then try again." only when a phone is paired and connected and none ever
+  offered tafs's capability (`FILTER_ALL`, `noPhone`). The first seconds after start, before the capability shows, read as not
+  in reach, never as tafs missing.
+- "Couldn't talk to your phone. Try again." for any other failure of the link (`failureOf`).
+
+Every screen that says the phone gave no answer shows its own reason (`Asked.Unreachable.why`), with Try again
+(`WatchModelTest`, `AccountScreensTest`).
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
