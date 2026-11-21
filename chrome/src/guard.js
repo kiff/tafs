@@ -44,16 +44,6 @@ export function payment(page) {
   return (page.controls || []).some(pays);
 }
 
-function samePage(a, b) {
-  try {
-    const x = new URL(a);
-    const y = new URL(b);
-    return x.origin === y.origin && x.pathname === y.pathname;
-  } catch {
-    return true;
-  }
-}
-
 const KINDS = new Set(["click", "fill", "select", "check"]);
 
 /** Why `act` may not run on `page`: `{code, why}`, or null when it may. */
@@ -70,12 +60,10 @@ export function refuse(page, act) {
     }
     const link = (page.links || []).find((l) => l.ref === act.ref);
     if (link) {
-      // A link whose words pay is refused as a control would be; on a checkout or payment page, only a link to another
-      // page is followed (page.js already offers a link that acts, or that stays on this page, as a control).
+      // A link whose words pay is refused as a control would be. On a checkout or payment page no link is followed at
+      // all: neither its URL nor its words can prove that following it places no order (a GET to /place-order).
       if (PAY_WORDS.test(link.label || "")) return { code: CODE.paymentStep, why: "that link's words pay or place an order" };
-      if ((page.checkout || payment(page)) && samePage(link.url, page.url)) {
-        return { code: CODE.paymentStep, why: "on a checkout or payment page a taf follows only a link to another page" };
-      }
+      if (page.checkout || payment(page)) return { code: CODE.paymentStep, why: "on a checkout or payment page a taf follows no link" };
       return null;
     }
     return { code: CODE.refUnknown, why: "the page has no control or link " + act.ref };

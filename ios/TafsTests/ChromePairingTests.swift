@@ -8,6 +8,7 @@ import XCTest
 final class ChromePairingTests: XCTestCase {
     private struct Vectors: Decodable {
         let secret, chromeKey, phoneKey, pairing, name, extensionProof, chromeKeySha256, phoneProof, signedBytes: String
+        let kiffOffer, extensionProofWithKiffOffer: String
     }
 
     private func vectors() throws -> Vectors {
@@ -23,6 +24,10 @@ final class ChromePairingTests: XCTestCase {
         let chromeKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.chromeKey))
         let phoneKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.phoneKey))
         XCTAssertTrue(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: v.extensionProof))
+        XCTAssertTrue(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: v.extensionProofWithKiffOffer, kiffOffer: v.kiffOffer))
+        XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: v.extensionProofWithKiffOffer), "the KIFF offer is covered")
+        XCTAssertFalse(ChromePairing.extensionProofHolds(secret: v.secret, key: chromeKey, proof: v.extensionProofWithKiffOffer,
+                                                         kiffOffer: v.kiffOffer.replacingOccurrences(of: "extension", with: "hello")), "a changed KIFF offer")
         let c = ChromePairing.confirmation(secret: v.secret, chromeKey: chromeKey, name: v.name, phoneKey: phoneKey)
         XCTAssertEqual(c.chromeKeySHA256, v.chromeKeySha256)
         XCTAssertEqual(c.phoneProof, v.phoneProof)
@@ -104,5 +109,24 @@ final class ChromePairingTests: XCTestCase {
         for (host, want) in s.hosts {
             XCTAssertEqual(ChromePairing.isSensitive(host), want, host)
         }
+    }
+
+    /// The extension's KIFF device offer reads only as a view-only browser extension: never with an approval key, never as
+    /// a computer's kind.
+    func testTheExtensionsKIFFOfferIsViewOnlyOrRefused() throws {
+        let v = try vectors()
+        guard case .success(let r) = PairingRequest.read(v.kiffOffer, now: ISO8601DateFormatter().date(from: "2026-11-21T12:00:00Z")!) else {
+            return XCTFail("the extension's offer reads")
+        }
+        XCTAssertEqual(r.platform, "chrome")
+        XCTAssertEqual(r.kind, "extension")
+        XCTAssertTrue(r.softwareKey)
+        let now = ISO8601DateFormatter().date(from: "2026-11-21T12:00:00Z")!
+        let keyed = v.kiffOffer.replacingOccurrences(of: #""key_store":"software","#, with: "")
+        guard case .failure = PairingRequest.read(keyed, now: now) else { return XCTFail("an extension that could approve") }
+        let asComputer = v.kiffOffer.replacingOccurrences(of: #""kind":"extension""#, with: #""kind":"hello""#)
+        guard case .failure = PairingRequest.read(asComputer, now: now) else { return XCTFail("chrome as a computer's kind") }
+        let elsewhere = v.kiffOffer.replacingOccurrences(of: #""platform":"chrome""#, with: #""platform":"macos""#)
+        guard case .failure = PairingRequest.read(elsewhere, now: now) else { return XCTFail("an extension that says it's a Mac") }
     }
 }

@@ -18,6 +18,8 @@ test("the extension's proof, the phone's proof and the signed bytes are the vect
   assert.equal(b64u(await hmac(v.secret, LABEL.phoneProof, concat(phoneKey, hash))), v.phone_proof);
   const body = { pairing: v.pairing, chrome_key_sha256: v.chrome_key_sha256, name: v.name, phone_key: v.phone_key, phone_proof: v.phone_proof };
   assert.equal(b64u(signingBytes(LABEL.pair, body)), v.signed_bytes);
+  // With the KIFF device's offer, the proof covers it too, as the phones check it.
+  assert.equal(await extensionProof(v.secret, chromeKey, v.kiff_offer), v.extension_proof_with_kiff_offer);
 });
 
 // vectors/chrome-grant.json and chrome-sensitive.json: what the phones sign when they approve a browser grant, and the
