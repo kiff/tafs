@@ -1,0 +1,1 @@
+- **Tests:** the iOS test that reports an answer taps its reason again when the simulator's Apple Account prompt takes the first tap.
