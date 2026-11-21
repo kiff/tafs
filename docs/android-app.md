@@ -1503,13 +1503,15 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
 
 A step a taf takes in the owner's Chrome that KIFF holds is a hold like any other, drawn in Needs you with KIFF's amount, action
 and reason. KIFF keeps planque's words for the page on the hold (`browser` on the held call: docs/chrome.md, "The phone
-approval card"), and the card draws them under KIFF's own lines, never in their place (`BrowserStepBlock`):
+approval card"), and the card draws them under KIFF's own lines, never in their place (`BrowserStepBlock`, as iOS's):
 
-- the site large, and the full origin small, as sent (an internationalised domain stays in its xn-- form);
-- planque's action words, the verb with the element's own label ("Click “Place order”");
-- the page's title and an excerpt of at most 600 characters, masked by planque;
-- a checkout's lines, one each ("2 × Blue pen · 3.00"); its total is KIFF's amount;
-- which Chrome ("Chrome · Work Mac").
+- the site large, the full origin small, as sent (an internationalised domain stays in its xn-- form), and which
+  Chrome ("In Work Mac", `chrome.held_in`);
+- under "On the page" (`chrome.held_page`): the element's own label as planque read it ("Click “Place order”") first,
+  then the page's title and an excerpt of at most 600 characters, masked by planque. **The label is the page's words, so
+  it never becomes the card's summary**: that stays KIFF's, the tool's, as for any hold (`aHostileLabelNeverBecomesTheSummary`);
+- under "In the basket" (`chrome.held_basket`), a checkout's lines, one each ("2 × Blue pen · 3.00"); the total is KIFF's
+  amount, at the top.
 
 Each piece is plain text, one paragraph, with no character that reorders or hides words (`KiffMapping.browserStep`, as the
 taf's own line). A block with no site or no action draws nothing. With no block (until KIFF carries it, or any other hold),

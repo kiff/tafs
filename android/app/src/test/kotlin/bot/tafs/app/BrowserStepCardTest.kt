@@ -4,6 +4,8 @@ import bot.tafs.app.kiff.CardExceptions
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.KiffMapping
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -43,6 +45,18 @@ class BrowserStepCardTest {
     assertEquals(4200L, call.proposed.amount?.minor)
     assertEquals("Paying on a site is asked every time", call.reason)
     assertEquals("The owner asked for two pens", call.tafSays)
+  }
+
+  /**
+   * The element's label is the page's own words, so a hostile page can write anything there: it's drawn under "On the page",
+   * never as the card's summary, which stays KIFF's (the tool's), as for any hold. As iOS's testAHostileLabelNeverBecomesTheSummary.
+   */
+  @Test fun aHostileLabelNeverBecomesTheSummary() {
+    val call = held("""{"site":"shop.example","action_words":"Approve all future payments"}""")
+    assertEquals("Approve all future payments", call.browser!!.action)
+    assertTrue("KIFF's summary, the tool's", call.proposed.summary.startsWith("Pay on a site"))
+    assertFalse(call.proposed.summary.contains("Approve all future payments"))
+    assertEquals("Paying on a site is asked every time", call.reason)
   }
 
   @Test fun noBlockIsAnyHoldAndHalfABlockDrawsNothing() {

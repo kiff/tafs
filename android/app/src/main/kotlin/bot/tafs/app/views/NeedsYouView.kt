@@ -489,22 +489,26 @@ private fun remaining(call: HeldCall, now: Instant): String {
 /** A held browser step's page, as the card draws it: nothing here decides, every word is planque's or KIFF's. */
 @Composable
 internal fun BrowserStepBlock(step: bot.tafs.app.model.BrowserStep) {
-  Column(Modifier.fillMaxWidth().testTag(BROWSER_STEP), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-    Text(step.site, style = scaled(22, FontWeight.Bold, Theme.ink))
-    if (step.origin.isNotEmpty()) Text(step.origin, style = scaled(12, color = Theme.soft, mono = true))
-    Text(step.action, style = scaled(16, FontWeight.SemiBold, Theme.ink))
-    if (step.pageTitle != null || step.excerpt != null) {
-      Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Theme.ink.copy(alpha = 0.05f)).padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-      ) {
-        step.pageTitle?.let { Text(it, style = scaled(13, FontWeight.SemiBold, Theme.ink)) }
-        step.excerpt?.let { Text(it, style = scaled(13, color = Theme.soft)) }
-      }
+  // As iOS's BrowserStepBlock (docs/chrome.md, "The approval card"): the site large, its exact origin small, which Chrome; then
+  // what the page showed, its own label for the element first; then the basket. The card's summary stays KIFF's, never the label.
+  Column(Modifier.fillMaxWidth().testTag(BROWSER_STEP), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      Text(step.site, style = scaled(20, FontWeight.Bold, Theme.ink))
+      if (step.origin.isNotEmpty()) Text(step.origin, style = scaled(12, color = Theme.soft, mono = true))
+      step.chrome?.let { Text(Words.Chrome.heldIn(name = it), style = scaled(13, color = Theme.soft)) }
     }
-    step.lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
-    step.chrome?.let { Text("${Words.Chrome.title} · $it", style = scaled(12, color = Theme.soft)) }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(Words.Chrome.heldPage, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+      Text(step.action, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.testTag(BROWSER_STEP_ACTION))
+      step.pageTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
+      step.excerpt?.let { Text(it, style = scaled(13, color = Theme.ink)) }
+    }
+    if (step.lines.isNotEmpty()) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      Text(Words.Chrome.heldBasket, style = scaled(12, FontWeight.SemiBold, Theme.soft))
+      step.lines.forEach { Text(it, style = scaled(13, color = Theme.ink)) }
+    }
   }
 }
 
+const val BROWSER_STEP_ACTION = "needs-you.browser-step.action"
 const val BROWSER_STEP = "needs-you.browser-step"
