@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s heeft het geweigerd, en het telt nog wel mee voor de limieten van vandaag</string>
     <string name="record_tool_refused_counts_why">%1$s heeft het geweigerd, en het telt nog wel mee voor de limieten van vandaag%2$s</string>
     <string name="record_tool_refused_money">%1$s heeft het geweigerd. Er is geen geld verplaatst, maar het telt nog wel mee voor het totaal van vandaag.</string>
+    <string name="record_tool_refused_not_counted">%1$s heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag</string>
+    <string name="record_tool_refused_not_counted_why">%1$s heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag%2$s</string>
     <string name="record_waiting_for_you">Wacht op jou</string>
     <string name="record_within_card">%1$s, binnen de Card</string>
     <string name="record_within_card_alone">Binnen de Card</string>

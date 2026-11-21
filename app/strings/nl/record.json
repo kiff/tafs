@@ -122,6 +122,8 @@
   "record.tool_refused_counts": "{who} heeft het geweigerd, en het telt nog wel mee voor de limieten van vandaag",
   "record.tool_refused_counts_why": "{who} heeft het geweigerd, en het telt nog wel mee voor de limieten van vandaag{why}",
   "record.tool_refused_money": "{who} heeft het geweigerd. Er is geen geld verplaatst, maar het telt nog wel mee voor het totaal van vandaag.",
+  "record.tool_refused_not_counted": "{who} heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag",
+  "record.tool_refused_not_counted_why": "{who} heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag{why}",
   "record.waiting_for_you": "Wacht op jou",
   "record.within_card": "{amount}, binnen de Card",
   "record.within_card_alone": "Binnen de Card"

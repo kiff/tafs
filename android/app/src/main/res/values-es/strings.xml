@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s lo rechazó, y sigue contando para los límites de hoy</string>
     <string name="record_tool_refused_counts_why">%1$s lo rechazó, y sigue contando para los límites de hoy%2$s</string>
     <string name="record_tool_refused_money">%1$s lo rechazó. No se movió dinero, pero sigue contando para el total de hoy.</string>
+    <string name="record_tool_refused_not_counted">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy</string>
+    <string name="record_tool_refused_not_counted_why">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy%2$s</string>
     <string name="record_waiting_for_you">Te necesita</string>
     <string name="record_within_card">%1$s, dentro de la Card</string>
     <string name="record_within_card_alone">Dentro de la Card</string>

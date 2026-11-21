@@ -122,6 +122,8 @@
   "record.tool_refused_counts": "{who} hat es abgelehnt, und es zählt trotzdem zu den heutigen Limits",
   "record.tool_refused_counts_why": "{who} hat es abgelehnt, und es zählt trotzdem zu den heutigen Limits{why}",
   "record.tool_refused_money": "{who} hat es abgelehnt. Es wurde kein Geld bewegt, aber es zählt trotzdem zur heutigen Summe.",
+  "record.tool_refused_not_counted": "{who} hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits",
+  "record.tool_refused_not_counted_why": "{who} hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits{why}",
   "record.waiting_for_you": "Wartet auf dich",
   "record.within_card": "{amount}, innerhalb der Card",
   "record.within_card_alone": "Innerhalb der Card"
