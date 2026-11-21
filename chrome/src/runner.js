@@ -7,11 +7,7 @@ import { refuseURL, bareURL } from "./sites.js";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
-<<<<<<< HEAD
-import { checkRelease, checkAllowances, Nonces } from "./protocol.js";
-=======
-import { checkAllowances, checkSites } from "./protocol.js";
->>>>>>> claude/loving-pascal-iusyki-chrome
+import { checkRelease, checkAllowances, checkSites, Nonces } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
