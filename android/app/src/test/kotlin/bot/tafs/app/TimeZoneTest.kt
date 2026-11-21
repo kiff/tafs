@@ -83,6 +83,18 @@ class TimeZoneTest {
     assertEquals(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, bot.tafs.app.views.viewOnlyLine(viewOnly = false, noApprovalKeyHere = false))
   }
 
+  /** K5, 21 Nov: a phone on GMT was asked to "Use GMT" for an account on UTC. One fixed offset under two names is the same time. */
+  @Test fun zonesThatKeepTheSameTimeAreNeverOffered() = runTest {
+    val m = model(other)
+    assertTrue(m.sameTime("GMT", "UTC"))
+    assertTrue(m.sameTime("Etc/UTC", "UTC"))
+    assertTrue(m.sameTime("Z", "UTC"))
+    // A zone with a summer time is another time, though it matches GMT in winter.
+    assertFalse(m.sameTime("Europe/London", "GMT"))
+    assertFalse(m.sameTime("Asia/Tokyo", "UTC"))
+    assertFalse(m.sameTime("Not/AZone", "UTC"))
+  }
+
   @Test fun thisDevicesZoneIsOfferedWhenItDiffers() = runTest {
     assertEquals(device, model(other).state.value.timeZoneOffer)
   }
