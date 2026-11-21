@@ -326,6 +326,45 @@ the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… 
 | plan | plāns |
 | door / knock | durvis / klauvējiens |
 
+## Batch 2: Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian and Croatian (being written)
+
+For the countries on sale without their language's app screens (CZ, SK, SI, HU, RO, BG, HR). Each catalog is in `all`,
+not `shipped`, until its review: no app shows it yet. Where the legal pages (kiff/cloud#77) decided a word, the app uses
+the same one.
+
+### Czech (cs)
+
+Addressed as **vy** (plural verb forms, as Czech software does); buttons are infinitives ("Schválit", "Zkusit znovu"). taf
+declines as the legal pages write it (taf, tafu, tafy, tafů); Card, Coach, KIFF and Setup are names and stay as they are
+("jeho Card", "Card tafu {taf}"). A device word is masculine in every case (telefon, tablet, počítač, Mac), so "tento
+{device}" agrees; elsewhere a value stands alone ("na tomto zařízení ({device})"). A door is "dveře", plural only:
+"dveře {door}". The plural forms are one, few (2–4) and other.
+
+| English | Czech |
+|---|---|
+| Needs you | Čeká na vás |
+| Approve / Approve once | Schválit / Schválit jednou |
+| Refuse | Odmítnout |
+| held | pozdrženo |
+| Halt / Halted | Zastavit / Zastaveno |
+| Stopped | Ukončeno |
+| Pause / Paused | Pozastavit / Pozastaveno |
+| Resume | Obnovit |
+| Revoke | Odvolat |
+| Record | Záznam |
+| Connect / connection | Připojit / připojení |
+| Pair / Unpair | Spárovat / Zrušit spárování |
+| Account | Účet |
+| limit / spend limit | limit / limit útraty |
+| credits / credit pack | kredity / balíček kreditů |
+| Sign in / Sign out | Přihlásit se / Odhlásit se |
+| Inbox | Doručená pošta |
+| Overview | Přehled |
+| Calendar | Kalendář |
+| Usage | Využití |
+| plan (billing) | tarif |
+| Cancel / Continue | Zrušit / Pokračovat |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
