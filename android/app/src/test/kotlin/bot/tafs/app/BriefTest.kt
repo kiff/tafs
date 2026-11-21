@@ -170,7 +170,9 @@ class BriefTest {
     val start = app.indexOf("// MARK: Your brief")
     val section = app.substring(start, app.indexOf("fun askCoachAboutMission(", start))
     val routes = File("src/main/kotlin/bot/tafs/app/app/BriefRoutes.kt").readText()
-    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText()
+    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText().replace("
+", "
+")
     for ((name, text) in listOf("AppModel's brief" to section, "BriefRoutes" to routes, "BriefView" to view)) {
       forbidden.forEach { assertFalse("$name has $it", code(text).contains(it)) }
     }
@@ -453,7 +455,9 @@ class BriefTest {
     assertEquals(listOf("a"), m.missionLog("m 1")!!.items.map { it.id })
     assertTrue(transport.requestsTo("GET /v1/missions/m 1/log").single().url.endsWith("/v1/missions/m%201/log"))
     assertNull("a log that can't be read is none: the view offers Try again", m.missionLog("gone"))
-    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText()
+    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText().replace("
+", "
+")
     assertTrue("one log view, the tafs list's", view.contains("MissionLogView(HomeLabelMission(id = shownLog[0], name = shownLog[1])"))
     assertFalse(view.contains("fun MissionLogView"))
   }
@@ -551,7 +555,9 @@ class BriefTest {
     val state = AppState()
     assertNull(state.brief)
     assertEquals(Words.NeedsYou.title, state.needsYouTabTitle)
-    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText()
+    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText().replace("
+", "
+")
     assertTrue("no brief: Needs you, as today", view.contains("if (brief == null) {\n    needsYou()\n    return\n  }"))
     val main = File("src/main/kotlin/bot/tafs/app/MainActivity.kt").readText()
     assertTrue(main.contains("Tab.NeedsYou -> BriefTab(state, briefActions"))
