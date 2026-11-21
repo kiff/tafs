@@ -27,6 +27,10 @@ on:
         description: "Only with a named owner decision on the thread: \"<base Eval run id> <check run id> <touched run ids, comma-separated, or -> <reason>\" (blank: none)"
         type: string
         default: ""
+      eval_report_only:
+        description: "Only with the owner's go on the thread, before launch: the latest Eval is read as a report, not a gate. A short reason (blank: the gate stands)"
+        type: string
+        default: ""
 permissions:
   contents: read
   id-token: write
@@ -49,6 +53,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RULE_B_RUN: ${{ inputs.rule_b_run }}
           OWNER_OVERRIDE: ${{ inputs.owner_override }}
+          EVAL_REPORT_ONLY: ${{ inputs.eval_report_only }}
         run: |
           set -euo pipefail
           # An Eval job's log, as GitHub serves it. Not through gh: its newer releases refuse a response holding the
@@ -127,6 +132,14 @@ jobs:
             conclusion=success
             { echo "Owner override: Eval $base (kiff/tafs@${base_ref:0:12}), red only in \"$(head -1 <<<"$out")\"; later runs at kiff/tafs@${ref:0:12}: $(sed -n 2p <<<"$out")."
               echo "Reason: $reason"; } | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          # The owner's go before launch: the Eval is a report, not a gate. Its conclusion and run are this run's record; the
+          # definitions rolled out must still be the ones it measured (the sources check below), so nothing unmeasured ships.
+          if [ -n "$EVAL_REPORT_ONLY" ]; then
+            [ -z "$RULE_B_RUN$OWNER_OVERRIDE" ] || { echo "::error::eval_report_only goes alone, without rule_b_run or owner_override"; exit 1; }
+            [ ${#EVAL_REPORT_ONLY} -le 200 ] || { echo "::error::eval_report_only is a short reason, 200 characters at most"; exit 1; }
+            echo "Eval as a report (the owner's go before launch): run $run_id concluded $conclusion. Reason: $EVAL_REPORT_ONLY" | tee -a "$GITHUB_STEP_SUMMARY"
+            conclusion=success
           fi
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then
             echo "evaluated=true" >> "$GITHUB_OUTPUT"

@@ -1,0 +1,1 @@
+- **Upgrade:** before launch, with the owner's go, `eval_report_only` reads the latest Eval as a report, not a gate: its run and conclusion are recorded, and the definitions rolled out must still be the ones it measured.
