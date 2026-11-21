@@ -2369,7 +2369,7 @@ describe("Setup (kiff/agents#91)", () => {
     // Its skills are stored first, each at its version, then its definition names them (the Coach skills design).
     expect(w.agents.calls.filter((c) => !c.startsWith("putSkill "))).toEqual([`putAgent ${NEW}`]);
     expect(w.agents.calls.filter((c) => c.startsWith("putSkill ")).length).toBe(def.skills?.length);
-    expect(def.skills?.length).toBe(13);
+    expect(def.skills?.length).toBe(14);
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
@@ -6683,6 +6683,18 @@ describe("the account's connections a Coach conversation starts with", () => {
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
+  });
+
+  it("says the owner's paired Chromes after the connections only while planque offers them", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const offered = planque(w, () => new Response(JSON.stringify({ connections, chromes: [{ name: "Work Mac" }] }), { status: 200 }));
+    const on = (await firstMessage(w, (await send(offered, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(on).toContain("- Stripe, for Bo: provider, entry connector:composio:stripe; mode: Mode not known yet: treated as live\n- Chrome: paired: Work Mac\n");
+    expect(ownerWords(on)).toBe("watch my shop's orders page");
+    const off = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
+    const said = (await firstMessage(w, (await send(off, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(said).not.toContain("Chrome");
   });
 
   it("starts with the guides of the apps the account's tafs hold, after their connections, read with the person's session", async () => {
