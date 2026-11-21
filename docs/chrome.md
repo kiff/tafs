@@ -236,7 +236,7 @@ error = {code, detail?}      // detail never carries page text
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
 | `ref_unknown` | the read has no such ref, or its element is gone |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
-| `secret_field` | a fill of a password or one-time-code field |
+| `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
 | `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `stopped` | the run is paused or stopped |
@@ -315,24 +315,41 @@ browser: {
 
 ## What's kept
 
-- **In IndexedDB:** the key pair, whose private key can't be exported, and the pairing (`chrome_id`, its name, the phone's
-  key). No page, step or value read is ever written to disk.
+- **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
+  key), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
 - **Unpairing wipes it all** and closes every run's window. It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
 
-## Sealed values (not in this build)
+## Sealed values
 
-A later slice. The taf sees only a handle (`act.sealed`), and the value is kept in the extension. It opens for one fill
-only on the paired phone's own release, which planque relays and can't make:
-- `release` is the phone's `tafs-chrome/release/v1` signature over
-  `{chrome_id, op: step.id, sealed, origin, field_ref, nonce, exp}`, with `exp` at most 2 minutes ahead.
-- The extension checks it with the phone key it learned at pairing (`protocol.checkRelease`), and takes its nonce once.
-- The page must be on that exact origin, in the top frame, and the field must be a password, username or one-time-code
-  field.
+A sign-in the owner saves in the side panel ("Saved sign-ins": site, an optional username or email, password), kept for
+one exact origin (`chrome/src/vault.js`).
 
-**Until then, a sealed act is refused as `secret_field`.**
+- **Sealed on the computer.** Each value is encrypted with AES-GCM under a key that can't be exported, kept in
+  IndexedDB, with the origin, the entry and the part (username or password) bound in as additional data. So an entry
+  moved to another origin can't be opened, and neither can an entry's username and password swapped in storage. The
+  side panel lists only each site and whether a username is saved, never a value. One sign-in is kept per site: saving
+  another for the same site replaces it, and the panel says so. Unpairing wipes the vault with everything else.
+- **The taf sees handles only.** A read of a page on that exact origin carries `page.sealed:
+  ["sec_…:username", "sec_…:password"]`. A taf names one in `act.sealed` to ask for a fill.
+- **Only the paired phone's own release opens one, for one fill.** `step.release` is the phone's `tafs-chrome/release/v1`
+  signature, with the `phone_key` the extension learned at pairing, over
+  `{chrome_id, op: step.id, sealed, origin, field_ref, read_id, nonce, exp}`, with `exp` at most 2 minutes ahead. Refs are
+  renumbered on every read, so `read_id` makes the release name the exact field the owner saw. planque relays it and can't make one, and a
+  compromised planque can't either. The extension checks it (`protocol.checkRelease`), takes its nonce once, then
+  opens the value.
+- **It goes only where it fits:** a `:password` handle only into a password field, and a `:username` handle only into a
+  text, email or username field. It goes on the tab's exact origin, in the top frame, on the read the step was planned
+  from. The value goes from the vault into that field and nowhere else. The page is read back, the field masked as
+  always.
+- **A one-time code is never sealed.** The owner types it in the run's tab, which pauses the run until Resume.
+
+| Code | When |
+|---|---|
+| `release_missing` | no release, one not signed by the paired phone, for another step, field or origin, expired, or already used |
+| `sealed_unknown` | no sign-in is saved under that handle for this origin |
 
 ## Coach in the side panel
 
@@ -372,6 +389,10 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 - **`coach.test.js`** and **`kiff.test.js`:** the shared page fenced, cut and unclosable; Coach read and written through
   tafs cloud's routes with the session's own bearer; the KIFF offer as a view-only extension; the claim's DER proof
   verified; and a claim that waits, and a session that could approve, ended and never kept.
+- **`sealed.test.js`:** the vault (sealed per exact origin, never listed or kept in clear, an entry moved to another
+  origin or its parts swapped unreadable), handles on a read, and a sealed fill that runs only on the paired phone's
+  release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
+  checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
   input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
   covered button that isn't clicked, and dialogs.
@@ -385,6 +406,5 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
-- **The sealed-value release on the card** (`tafs-chrome/release/v1`), with sealed values.
-- **Sealed values,** with their own security review.
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is still to build.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

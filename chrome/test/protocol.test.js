@@ -66,8 +66,8 @@ test("each answer, hello and welcome is signed for its purpose", async () => {
 test("a sealed value opens only on the paired phone's own release, never planque's", async () => {
   const phone = await newKeyPair();
   const p = await planque();
-  const s = step({ op: "act", act: { kind: "fill", ref: "f2", sealed: "sec_1" } });
-  const body = { chrome_id: "chr_1", op: "op_1", sealed: "sec_1", origin: "https://shop.example", field_ref: "f2", nonce: "r1", exp: NOW + 30_000 };
+  const s = step({ op: "act", read_id: "rd_1", act: { kind: "fill", ref: "f2", sealed: "sec_1" } });
+  const body = { chrome_id: "chr_1", op: "op_1", sealed: "sec_1", origin: "https://shop.example", field_ref: "f2", read_id: "rd_1", nonce: "r1", exp: NOW + 30_000 };
   const release = { ...body, sig: await sign(phone.privateKey, LABEL.release, body) };
   const ctx = { phoneKey: await pub(phone), chromeId: "chr_1", step: s, origin: "https://shop.example", now: NOW };
   assert.equal(await checkRelease(release, ctx), true);
@@ -75,6 +75,8 @@ test("a sealed value opens only on the paired phone's own release, never planque
   assert.equal(await checkRelease(release, { ...ctx, origin: "https://evil.example" }), false, "another origin");
   assert.equal(await checkRelease(release, { ...ctx, now: NOW + 60_000 }), false, "expired");
   assert.equal(await checkRelease(release, { ...ctx, step: { ...s, act: { ...s.act, ref: "f3" } } }), false, "another field");
+  assert.equal(await checkRelease(release, { ...ctx, step: { ...s, read_id: "rd_2" } }), false, "the same ref on another read");
+  assert.equal(await checkRelease(release, { ...ctx, step: { ...s, read_id: undefined } }), false, "no read named");
 });
 
 test("a pairing code is four characters of lookup and a 17-character secret, about 83 bits", () => {
