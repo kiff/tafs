@@ -1,0 +1,13 @@
+{
+  "halt.again": "Znova ustavi",
+  "halt.all_now": "Takoj ustavi vse",
+  "halt.explain.halted": "Ustavljeno. Nadaljevanje zažene samo novo delo.",
+  "halt.explain.halted_since": "Od {time}. Nadaljevanje zažene samo novo delo.",
+  "halt.explain.halting": "Nič novega se ne začne. Ustavljeno se pokaže, ko to potrdita KIFF in povezava.",
+  "halt.explain.running_all": "Ustavitev zadrži vaše tafe, dokler jih ne nadaljujete. Klic, ki je že odšel, lahko še prispe.",
+  "halt.explain.running_one": "Ustavitev ga zadrži, dokler ga ne nadaljujete. Klic, ki je že odšel, lahko še prispe.",
+  "halt.halting_stops_no_run_starts": "Ustavitev zadrži {who}, dokler ne nadaljujete. Klic, ki je že odšel, lahko še prispe.",
+  "halt.now": "Takoj ustavi",
+  "halt.row_running": "Ustavi, dokler ne nadaljujete",
+  "halt.your_tafs_lower": "vaše tafe"
+}

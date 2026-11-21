@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "Cijeli Card",
+    "few": "Svi Cardovi",
+    "other": "Svi Cardovi"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, zatim pita vas",
+  "card.calls_left": {
+    "one": "Preostao je {count} poziv",
+    "few": "Preostala su {count} poziva",
+    "other": "Preostalo je {count} poziva"
+  },
+  "card.calls_left_line": {
+    "one": "Preostao je {count} poziv {window} od {limit}",
+    "few": "Preostala su {count} poziva {window} od {limit}",
+    "other": "Preostalo je {count} poziva {window} od {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} od {count} poziva {window}",
+    "few": "{used} od {count} poziva {window}",
+    "other": "{used} od {count} poziva {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} poziv {window}",
+    "few": "{count} poziva {window}",
+    "other": "{count} poziva {window}"
+  },
+  "card.card_confirmed_kiff": "Card · potvrdio KIFF",
+  "card.card_draft_kiff": "Card · nacrt · KIFF",
+  "card.card_got_room_call_needed": "Njegov je Card dobio prostor koji je ovaj poziv trebao, do ponovnog postavljanja tog ukupnog iznosa",
+  "card.card_not_issued": "Card nije izdan. ",
+  "card.card_revoked": "Card opozvan",
+  "card.check.always_asks": "{rule}: uvijek pita vas",
+  "card.check.never_allowed": "{rule}: nikad dopušteno",
+  "card.check.not_on_card": "Nije na Cardu ovog tafa",
+  "card.check.over_count": {
+    "one": "Iznad {count} {window}",
+    "few": "Iznad {count} {window}",
+    "other": "Iznad {count} {window}"
+  },
+  "card.check.over_each": "Iznad {amount} po pozivu",
+  "card.check.over_total": "Iznad {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "few": "{count} Carda",
+    "other": "{count} Cardova"
+  },
+  "card.ended": "Završeno",
+  "card.ended_on": "Završeno {date}",
+  "card.ends": "Završava",
+  "card.extra_room": "+{extra} dodatnog prostora {window}",
+  "card.extra_room_prefix": "+{formatted} dodatnog prostora ",
+  "card.extra_room_until": "+{extra} dodatnog prostora do {ends}",
+  "card.figure_left": "preostalo: {figure}",
+  "card.heading": {
+    "one": "Card",
+    "few": "Cardovi",
+    "other": "Cardovi"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} poziv {window}{each}: ovo bi bio {nth} poziv{item}",
+    "few": "{count} poziva {window}{each}: ovo bi bio {nth} poziv{item}",
+    "other": "{count} poziva {window}{each}: ovo bi bio {nth} poziv{item}"
+  },
+  "card.held.each_call_asks": "Svaki poziv najprije pita vas",
+  "card.held.for_each": " za svaki: {name}",
+  "card.held.for_each_join": " za svaki: ",
+  "card.held.for_item": " za: {item}",
+  "card.held.over_count": {
+    "one": "Iznad ograničenja od {count} poziva: ovo bi bio {nth} poziv",
+    "few": "Iznad ograničenja od {count} poziva: ovo bi bio {nth} poziv",
+    "other": "Iznad ograničenja od {count} poziva: ovo bi bio {nth} poziv"
+  },
+  "card.held.over_one_call": "{amount} je iznad ograničenja od {cap} za jedan poziv",
+  "card.held.over_total": "{amount} bi premašilo ukupni iznos od {cap}",
+  "card.hero.calls_left_of": {
+    "one": "poziv preostao {window} od {limit}",
+    "few": "poziva preostalo {window} od {limit}",
+    "other": "poziva preostalo {window} od {limit}"
+  },
+  "card.hero.calls_use_unavailable": "pozivi {window} · potrošnja nedostupna",
+  "card.hero.left_of": "preostalo {window} od {limit}",
+  "card.hero.left_of_extra": "preostalo {window} od {base} + {extra} dodatnog prostora",
+  "card.hero.left_of_extra_until": "preostalo {window} od {base} + {extra} dodatnog prostora do {ends}",
+  "card.hero.left_of_note": "preostalo {window} od {limit}{note}",
+  "card.hero.no_currency": "bez valute",
+  "card.hero.no_currency_suffix": " · bez valute",
+  "card.hero.use_unavailable": "{window} · potrošnja nedostupna",
+  "card.hero.use_unavailable_note": "{label} · potrošnja nedostupna{note}",
+  "card.how_counted": "Kako se ovo računa",
+  "card.issue_prompt": "Izdajte Card za taf {taf}",
+  "card.issued_by": "Izdao",
+  "card.issued_by_account": "Račun",
+  "card.issued_by_named": "Izdao: {who}",
+  "card.its_card": "Njegov Card",
+  "card.kiff_did_not_revoke_cards": "KIFF nije opozvao {cards_left} njegovih Cardova: opozovite ih u KIFF-u.",
+  "card.left": "preostalo {amount} {window}",
+  "card.left_extra_room": "preostalo {current} od {own} + {extra} dodatnog prostora{until}{note}",
+  "card.limit_can_not_raised_right": "Ograničenje se trenutačno ne može podići odavde.",
+  "card.limit_raised_read_balance_again": "Ograničenje je podignuto. Pročitajte stanje ponovno prije nego što ga podignete još jednom.",
+  "card.line.calls_in_window": {
+    "one": "{count} poziv {window}{then}",
+    "few": "{count} poziva {window}{then}",
+    "other": "{count} poziva {window}{then}"
+  },
+  "card.line.more_asks": "; više pita vas najprije",
+  "card.line.then_asks": ", zatim pita vas",
+  "card.line.total_in_window": "{amount} ukupno {window}{then}",
+  "card.line.up_to_each": "do {amount} po pozivu",
+  "card.more": {
+    "one": "još {count}",
+    "few": "još {count}",
+    "other": "još {count}"
+  },
+  "card.no_actions": "Još nema radnji",
+  "card.no_actions_short": "još nema radnji",
+  "card.no_currency": "{amount} (bez valute)",
+  "card.no_end_date": "Bez datuma završetka",
+  "card.outcome.not_a_resource": "Nije jedan od resursa Carda",
+  "card.outcome.outside": "Izvan Carda",
+  "card.outcome.over_one_action": "Iznad ograničenja Carda za jednu radnju",
+  "card.outcome.over_total": "Iznad ukupnog iznosa Carda",
+  "card.outside_held": "Izvan: zadržano za vas",
+  "card.outside_refused": "Izvan: odbijeno",
+  "card.over_limit_calls_would": "Iznad ograničenja od {limit} poziva: ovo bi bio {nth} poziv",
+  "card.revoke_failed": "KIFF nije opozvao Card. {why}",
+  "card.revoked": "Opozvano",
+  "card.rule.always_asks": "uvijek pita vas",
+  "card.rule.at_most_each": "≤ {amount} po pozivu",
+  "card.rule.at_most_each_refused_above": "≤ {amount} po pozivu · iznad toga odbijeno",
+  "card.rule.calls": {
+    "one": "{count} poziv {window}",
+    "few": "{count} poziva {window}",
+    "other": "{count} poziva {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} poziv {window}, zatim pita vas",
+    "few": "{count} poziva {window}, zatim pita vas",
+    "other": "{count} poziva {window}, zatim pita vas"
+  },
+  "card.rule.in_total": "{amount} ukupno {window}",
+  "card.rule.never": "nikad",
+  "card.rule.total_then_asks": "{amount} ukupno {window}, zatim pita vas",
+  "card.rule.up_to_each": "do {amount} po pozivu; više pita vas najprije",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card tafa",
+  "card.tools": {
+    "one": "{count} alat",
+    "few": "{count} alata",
+    "other": "{count} alata"
+  },
+  "card.until": "Do",
+  "card.until_date": "Do {date}",
+  "card.until_ends": " do {ends}",
+  "card.used_of": "{used} od {limit} {window}",
+  "card.window.a_day": "dnevno",
+  "card.window.a_month": "mjesečno",
+  "card.window.a_week": "tjedno",
+  "card.window.any_day": "u bilo kojih 24 sata",
+  "card.window.any_hour": "u bilo kojem satu",
+  "card.window.any_week": "u bilo kojih 7 dana",
+  "card.window.in_total": "ukupno",
+  "card.window.in_total_window": "ukupno {window}",
+  "card.window.last_day": "u zadnja 24 sata",
+  "card.window.last_hour": "u zadnjem satu",
+  "card.window.last_week": "u zadnjih 7 dana",
+  "card.window.so_far": "do sada",
+  "card.window.this_month": "ovaj mjesec",
+  "card.window.this_week": "ovaj tjedan",
+  "card.window.today": "danas",
+  "card.within_card": "unutar Carda"
+}

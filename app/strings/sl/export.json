@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Vaši klepeti niso bili izvoženi. {why}",
+  "export.not_offered": "Datotek ni bilo mogoče shraniti v ta telefon. Sprostite nekaj prostora in poskusite znova.",
+  "export.own_chats_each_taf_coach": "Vaši klepeti z vsakim tafom, vključno s Coachem, imena datotek, ki ste jih priložili, in vaši zapiski, kot berljiva datoteka in kot JSON. Izvozite jih lahko samo vi.",
+  "export.preparing": "Pripravljam vaše klepete…",
+  "export.ready_share_again": "Pripravljeno: {files}. Deli znova",
+  "export.row": "Izvozi moje klepete",
+  "export.sign_in_first": "Za izvoz klepetov se prijavite s KIFF."
+}

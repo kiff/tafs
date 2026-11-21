@@ -1,0 +1,19 @@
+{
+  "halt_all.description": "Oprește toate tafurile deodată. Nimic nou nu se trimite până nu le reluați în tafs.",
+  "halt_all.failed": "tafs nu a putut opri tafurile dvs. {why} Deschideți tafs pentru a le opri.",
+  "halt_all.halted": {
+    "one": "{count} taf oprit. Nimic nou nu se trimite până nu reluați.",
+    "few": "{count} tafuri oprite. Nimic nou nu se trimite până nu reluați.",
+    "other": "{count} de tafuri oprite. Nimic nou nu se trimite până nu reluați."
+  },
+  "halt_all.halted_all": "Tafurile dvs. sunt oprite. Nimic nou nu se trimite până nu reluați.",
+  "halt_all.halting": {
+    "one": "Se oprește {count} taf: nu pornește nicio rulare. KIFF nu a confirmat încă fiecare parte; tafs arată când a confirmat.",
+    "few": "Se opresc {count} tafuri: nu pornește nicio rulare. KIFF nu a confirmat încă fiecare parte; tafs arată când a confirmat.",
+    "other": "Se opresc {count} de tafuri: nu pornește nicio rulare. KIFF nu a confirmat încă fiecare parte; tafs arată când a confirmat."
+  },
+  "halt_all.halting_all": "Se opresc tafurile dvs.: nu pornește nicio rulare. KIFF nu a confirmat încă fiecare parte; tafs arată când a confirmat.",
+  "halt_all.running": "tafs nu a putut opri tafurile dvs. Deschideți tafs pentru a le opri.",
+  "halt_all.signed_out": "Sunteți deconectat de la tafs. Conectați-vă pentru a opri tafurile.",
+  "halt_all.title": "Opriți toate tafurile"
+}

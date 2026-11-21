@@ -1,0 +1,17 @@
+{
+  "report.already": "Вече сте докладвали този отговор.",
+  "report.cant_from_here": "Този отговор не може да бъде докладван оттук.",
+  "report.menu": "Докладване на този отговор",
+  "report.not_sent": "Докладът ви не беше изпратен. {why}",
+  "report.not_sent_why": "Не е изпратено: {failed}",
+  "report.note_hint": "Добавете бележка (по избор)",
+  "report.note_most_characters": "Бележката е най-много 1000 знака.",
+  "report.person_kiff_reads_your_report": "Човек от KIFF чете доклада ви заедно с отговора, както е бил написан.",
+  "report.reason.harmful": "Вредно",
+  "report.reason.offensive": "Обидно",
+  "report.reason.other": "Друго",
+  "report.reason.wrong": "Грешно",
+  "report.runs_not_loaded": "Изпълненията му не можаха да се заредят. {why}",
+  "report.thanks": "Благодарим. Някой от KIFF ще прочете доклада ви.",
+  "report.what_wrong": "Какво не е наред?"
+}
