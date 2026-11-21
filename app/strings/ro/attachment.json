@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} nu poate fi atașat.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs nu poate atașa acest fișier: nu are un tip sau o dimensiune acceptată. Alegeți altul.",
+  "attachment.photo": "Fotografie",
+  "attachment.photo_could_not_read": "Fotografia nu a putut fi citită.",
+  "attachment.photo_numbered": "Fotografia {n}",
+  "attachment.too_large": "{name} are {size}; maximul este {limit}.",
+  "attachment.wrong_kind": "{name} nu poate fi atașat. Se pot atașa fotografii, PDF-uri, text, CSV, Markdown și fișiere Word și Excel."
+}

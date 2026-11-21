@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} не може да бъде прикачен.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs не може да прикачи този файл: типът или размерът му не се приемат. Изберете друг.",
+  "attachment.photo": "Снимка",
+  "attachment.photo_could_not_read": "Снимката не можа да бъде прочетена.",
+  "attachment.photo_numbered": "Снимка {n}",
+  "attachment.too_large": "{name} е {size}; максимумът е {limit}.",
+  "attachment.wrong_kind": "{name} не може да бъде прикачен. Могат да се прикачват снимки, PDF, текст, CSV, Markdown и файлове на Word и Excel."
+}

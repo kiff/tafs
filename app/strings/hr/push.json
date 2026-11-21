@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Sažeci",
+  "push.channel.briefs_description": "Vaš sažetak u zadano vrijeme.",
+  "push.channel.holds_description": "Poziv je zadržan do vašeg odgovora. Ništa se ne šalje dok ga ne odobrite.",
+  "push.channel.other": "Ostale obavijesti",
+  "push.channel.other_description": "Zahtjevi za zadatke i odgovori na njih, bez zvuka.",
+  "push.channel.urgent_description": "Ono što ne može čekati vaš sljedeći sažetak, sa zvukom.",
+  "push.open_needs_you": "Otvorite Čeka vas da odgovorite.",
+  "push.open_taf": "Otvorite taf da vidite.",
+  "push.open_usage": "Otvorite Plan i potrošnja da vidite."
+}
