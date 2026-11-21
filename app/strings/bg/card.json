@@ -6,24 +6,24 @@
   "card.amount_window": "{amount} {window}",
   "card.asks_you": "{formatted} {sum_label}, след това ви пита",
   "card.calls_left": {
-    "one": "остава {count} повикване",
-    "other": "остават {count} повиквания"
+    "one": "остава {count} заявка",
+    "other": "остават {count} заявки"
   },
   "card.calls_left_line": {
-    "one": "остава {count} повикване {window} от {limit}",
-    "other": "остават {count} повиквания {window} от {limit}"
+    "one": "остава {count} заявка {window} от {limit}",
+    "other": "остават {count} заявки {window} от {limit}"
   },
   "card.calls_used_of": {
-    "one": "{used} от {count} повикване {window}",
-    "other": "{used} от {count} повиквания {window}"
+    "one": "{used} от {count} заявка {window}",
+    "other": "{used} от {count} заявки {window}"
   },
   "card.calls_window": {
-    "one": "{count} повикване {window}",
-    "other": "{count} повиквания {window}"
+    "one": "{count} заявка {window}",
+    "other": "{count} заявки {window}"
   },
   "card.card_confirmed_kiff": "Card · потвърдена от KIFF",
   "card.card_draft_kiff": "Card · чернова · от KIFF",
-  "card.card_got_room_call_needed": "Неговата Card получи лимита, от който това повикване имаше нужда, докато общият лимит не се нулира",
+  "card.card_got_room_call_needed": "Неговата Card получи лимита, от който тази заявка имаше нужда, докато общият лимит не се нулира",
   "card.card_not_issued": "Card не беше издадена. ",
   "card.card_revoked": "Card е оттеглена",
   "card.check.always_asks": "{rule}: винаги ви пита",
@@ -51,24 +51,24 @@
     "other": "Cards"
   },
   "card.held.count_in_window": {
-    "one": "{count} повикване {window}{each}: това би било {nth} поред{item}",
-    "other": "{count} повиквания {window}{each}: това би било {nth} поред{item}"
+    "one": "{count} заявка {window}{each}: тази би била {nth} поред{item}",
+    "other": "{count} заявки {window}{each}: тази би била {nth} поред{item}"
   },
-  "card.held.each_call_asks": "Всяко повикване първо ви пита",
+  "card.held.each_call_asks": "Всяка заявка първо ви пита",
   "card.held.for_each": " за всеки {name}",
   "card.held.for_each_join": " за всеки ",
   "card.held.for_item": " за {item}",
   "card.held.over_count": {
-    "one": "Над лимита му от {count} повикване: това би било {nth} поред",
-    "other": "Над лимита му от {count} повиквания: това би било {nth} поред"
+    "one": "Над лимита му от {count} заявка: тази би била {nth} поред",
+    "other": "Над лимита му от {count} заявки: тази би била {nth} поред"
   },
-  "card.held.over_one_call": "{amount} надвишава лимита от {cap} за едно повикване",
+  "card.held.over_one_call": "{amount} надвишава лимита от {cap} за една заявка",
   "card.held.over_total": "{amount} би надвишило общия лимит от {cap}",
   "card.hero.calls_left_of": {
-    "one": "повикване остава {window} от {limit}",
-    "other": "повиквания остават {window} от {limit}"
+    "one": "заявка остава {window} от {limit}",
+    "other": "заявки остават {window} от {limit}"
   },
-  "card.hero.calls_use_unavailable": "повиквания {window} · използването не е налично",
+  "card.hero.calls_use_unavailable": "заявки {window} · използването не е налично",
   "card.hero.left_of": "остава {window} от {limit}",
   "card.hero.left_of_extra": "остава {window} от {base} + {extra} допълнителен лимит",
   "card.hero.left_of_extra_until": "остава {window} от {base} + {extra} допълнителен лимит до {ends}",
@@ -89,8 +89,8 @@
   "card.limit_can_not_raised_right": "Лимитът не може да бъде увеличен оттук в момента.",
   "card.limit_raised_read_balance_again": "Лимитът беше увеличен. Прочетете наличността отново, преди да го увеличите пак.",
   "card.line.calls_in_window": {
-    "one": "{count} повикване {window}{then}",
-    "other": "{count} повиквания {window}{then}"
+    "one": "{count} заявка {window}{then}",
+    "other": "{count} заявки {window}{then}"
   },
   "card.line.more_asks": "; за повече първо ви пита",
   "card.line.then_asks": ", след това ви пита",
@@ -110,19 +110,19 @@
   "card.outcome.over_total": "Над общия лимит на Card",
   "card.outside_held": "Извън: задържано за вас",
   "card.outside_refused": "Извън: отказано",
-  "card.over_limit_calls_would": "Над лимита му от {limit} повиквания: това би било {nth} поред",
+  "card.over_limit_calls_would": "Над лимита му от {limit} заявки: тази би била {nth} поред",
   "card.revoke_failed": "KIFF не оттегли Card. {why}",
   "card.revoked": "Оттеглена",
   "card.rule.always_asks": "винаги ви пита",
   "card.rule.at_most_each": "≤ {amount} всяко",
   "card.rule.at_most_each_refused_above": "≤ {amount} всяко · над това се отказва",
   "card.rule.calls": {
-    "one": "{count} повикване {window}",
-    "other": "{count} повиквания {window}"
+    "one": "{count} заявка {window}",
+    "other": "{count} заявки {window}"
   },
   "card.rule.calls_then_asks": {
-    "one": "{count} повикване {window}, след това ви пита",
-    "other": "{count} повиквания {window}, след това ви пита"
+    "one": "{count} заявка {window}, след това ви пита",
+    "other": "{count} заявки {window}, след това ви пита"
   },
   "card.rule.in_total": "общо {amount} {window}",
   "card.rule.never": "никога",

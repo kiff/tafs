@@ -76,19 +76,19 @@
   "version.trial_card_unreadable": "Card на тази проба не можа да бъде прочетена.",
   "version.trial_has_ended": "Тази проба приключи.",
   "version.tried.calls": {
-    "one": "{count} повикване",
-    "other": "{count} повиквания"
+    "one": "{count} заявка",
+    "other": "{count} заявки"
   },
   "version.tried.ended": "приключила",
   "version.tried.ended_unused": "приключила неизползвана",
   "version.tried.held": {
-    "one": "{count} задържано",
+    "one": "{count} задържана",
     "other": "{count} задържани"
   },
   "version.tried.installed": "инсталирана",
   "version.tried.on": "Пробвана на {date}",
   "version.tried.refused": {
-    "one": "{count} отказано",
+    "one": "{count} отказана",
     "other": "{count} отказани"
   },
   "version.tried.went_back": "върната",

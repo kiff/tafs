@@ -27,7 +27,7 @@
   "record.did_this_happen.title": "Случи ли се това?",
   "record.did_this_happen.what_no_does": "„Не“ връща лимита на Card. „Да“ го оставя отчетен.",
   "record.did_this_happen.why_lost": "Отговорът му се изгуби, така че KIFF не може да каже дали е минало.",
-  "record.did_this_happen.why_probation": "Това е едно от първите повиквания на нова финансова операция, затова KIFF ви пита какво се е случило.",
+  "record.did_this_happen.why_probation": "Това е една от първите заявки на нова финансова операция, затова KIFF ви пита какво се е случило.",
   "record.did_this_happen.why_refused": "Приложението го отказа, но нищо не показва, че не е имало ефект.",
   "record.did_this_happen.yes": "Да, случи се",
   "record.done_within_card": "Направено в рамките на неговата Card",
@@ -56,14 +56,14 @@
     "other": "Последните {count} дни"
   },
   "record.export_missing": {
-    "one": "{count} повикване още няма разписка.",
-    "other": "{count} повиквания още нямат разписка."
+    "one": "{count} заявка още няма разписка.",
+    "other": "{count} заявки още нямат разписка."
   },
   "record.export_not_exported": "Не можаха да бъдат експортирани. {why}",
   "record.export_preparing": "Подготвяне на разписките…",
   "record.export_receipts": "Експортиране на разписките",
   "record.extra_room": "Допълнителен лимит от вас · {at} · {summary}",
-  "record.extra_room_detail": "Неговата Card получи лимита за този общ лимит, докато не се нулира. Ако е и над лимита за едно повикване, повикването се задържа отново заради това",
+  "record.extra_room_detail": "Неговата Card получи лимита за този общ лимит, докато не се нулира. Ако е и над лимита за една заявка, заявката се задържа отново заради това",
   "record.filter.all": "Всички",
   "record.filter.done": "Направени",
   "record.filter.held": "Задържани",

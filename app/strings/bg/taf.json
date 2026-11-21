@@ -14,7 +14,7 @@
   "taf.halt.halting_wait": "Спиране… изчакване всяка част да потвърди.",
   "taf.halt.kiff_not_resumed": "KIFF не възобнови {taf}. {why}",
   "taf.halt.kiff_not_resumed_all": "KIFF не възобнови вашите tafs. {why}",
-  "taf.halt.kiff_refuses": "KIFF отказва повикванията му",
+  "taf.halt.kiff_refuses": "KIFF отказва заявките му",
   "taf.halt.no_run_starts": "Не започва изпълнение",
   "taf.halt.not_halted": "tafs не можа да го спре. {why}",
   "taf.halt.not_halted_all": "tafs не можа да спре вашите tafs. {why}",

@@ -11,7 +11,7 @@
   "watch.asking_phone": "Питане на телефона ви…",
   "watch.calendar_today": "Днешният календар",
   "watch.check_phone": "Проверете връзката на телефона си",
-  "watch.check_phone_sub": "„Чака ви“ е отворено там. Одобрете повикването там.",
+  "watch.check_phone_sub": "„Чака ви“ е отворено там. Одобрете заявката там.",
   "watch.check_phone_title": "Проверете телефона си",
   "watch.clear_read": "Изчистване на прочетените",
   "watch.coach_needs_consent": "Преди да говорите с Coach, разрешете използването на ИИ в tafs на телефона си.",
@@ -30,8 +30,8 @@
   "watch.halting_all": "Спиране на всички ваши tafs…",
   "watch.hear": "Слушане",
   "watch.held_calls": {
-    "one": "{count} задържано повикване ви чака",
-    "other": "{count} задържани повиквания ви чакат"
+    "one": "{count} задържана заявка ви чака",
+    "other": "{count} задържани заявки ви чакат"
   },
   "watch.inbox_empty": "Нищо ново. Отговорите на Coach и известията от вашите tafs идват тук.",
   "watch.inbox_unread": {

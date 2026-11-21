@@ -514,7 +514,8 @@ Card"), and neither takes the article. Every device word is masculine (теле�
 | Needs you | Чака ви |
 | Approve / Approve once | Одобряване / Еднократно одобрение |
 | Refuse | Отказ |
-| held | задържано |
+| held | задържана (заявка) |
+| call (an action a taf asks for) | заявка |
 | Halt / Halted | Спиране / Спряно |
 | Stopped | Приключил |
 | Pause / Paused | Пауза / На пауза |
