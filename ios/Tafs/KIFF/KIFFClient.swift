@@ -1660,7 +1660,7 @@ final class KIFFClient {
         return [tag] + languages
     }
 
-    static func acceptLanguage(_ preferred: [String]) -> String {
+    nonisolated static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
         if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
         return tags.enumerated().map { i, tag in
