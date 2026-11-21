@@ -37629,6 +37629,12 @@
             "value": "%1$@ su %2$@"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@上の%1$@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -37692,6 +37698,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "In Chrome, apri l'estensione tafs e inserisci questo codice. Vale 10 minuti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chromeでtafs拡張機能を開き、このコードを入力してください。10分間有効です。"
           }
         },
         "ko": {
@@ -37759,6 +37771,12 @@
             "value": "Inserisci questo codice in Chrome"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chromeにこのコードを入力"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -37822,6 +37840,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Associa"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペアリング"
           }
         },
         "ko": {
@@ -37889,6 +37913,12 @@
             "value": "Il codice è scaduto, quindi non è stato associato nulla. Ricomincia."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードの有効期限が切れたため、何もペアリングされませんでした。もう一度やり直してください。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -37954,6 +37984,12 @@
             "value": "I tuoi tafs possono usare un Chrome associato solo sui siti indicati da un collegamento, e i passaggi rischiosi li approvi qui."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafsがペアリング済みのChromeを使えるのは、接続に指定されたサイトだけです。リスクのある操作はここで承認します。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -37982,6 +38018,219 @@
           "stringUnit": {
             "state": "translated",
             "value": "Seus tafs só podem usar um Chrome associado nos sites que uma conexão indica, e você aprova aqui os passos arriscados."
+          }
+        }
+      }
+    },
+    "chrome.held_basket": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Warenkorb"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the basket"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la cesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans le panier"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nel carrello"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カートの中身"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장바구니"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In het winkelmandje"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W koszyku"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No cesto"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No carrinho"
+          }
+        }
+      }
+    },
+    "chrome.held_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@で"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@에서"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No %1$@"
+          }
+        }
+      }
+    },
+    "chrome.held_page": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf der Seite"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the page"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la página"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur la page"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sulla pagina"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ページの内容"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "페이지 내용"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op de pagina"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na stronie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na página"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na página"
           }
         }
       }
@@ -38017,6 +38266,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nome"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前"
           }
         },
         "ko": {
@@ -38084,6 +38339,12 @@
             "value": "Nessun Chrome è associato."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペアリング済みのChromeはありません。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38147,6 +38408,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Non è stato possibile leggere i tuoi Chrome: %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chromeの一覧を読み込めませんでした: %1$@"
           }
         },
         "ko": {
@@ -38214,6 +38481,12 @@
             "value": "Dice di essere %1$@ su %2$@."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@上の%1$@と表示されています。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38277,6 +38550,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Associare questo Chrome?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このChromeをペアリングしますか？"
           }
         },
         "ko": {
@@ -38344,6 +38623,12 @@
             "value": "Associa solo un Chrome su un computer davanti a cui ti trovi."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今使っているコンピュータのChromeだけをペアリングしてください。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38407,6 +38692,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Associa un Chrome"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chromeをペアリング"
           }
         },
         "ko": {
@@ -38474,6 +38765,12 @@
             "value": "Non è stato possibile iniziare l'associazione: %1$@"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペアリングを開始できませんでした: %1$@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38537,6 +38834,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Associa %1$@ ai tuoi tafs"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@をtafsとペアリング"
           }
         },
         "ko": {
@@ -38604,6 +38907,12 @@
             "value": "%1$@ è associato."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@をペアリングしました。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38667,6 +38976,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "tafs lavora in un proprio profilo di Chrome. Lì accedi solo ai siti che vuoi far usare ai tuoi tafs."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafsは専用のChromeプロファイルで動作します。そこでは、tafsに使わせたいサイトだけにサインインしてください。"
           }
         },
         "ko": {
@@ -38734,6 +39049,12 @@
             "value": "Un altro Chrome ha usato questo codice, quindi non è stato associato nulla. Ricomincia."
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のChromeがこのコードを使ったため、何もペアリングされませんでした。もう一度やり直してください。"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38797,6 +39118,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dissocia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ペアリングを解除"
           }
         },
         "ko": {
@@ -38864,6 +39191,12 @@
             "value": "Dissocia %1$@"
           }
         },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@のペアリングを解除"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
@@ -38924,6 +39257,12 @@
           }
         },
         "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chrome"
+          }
+        },
+        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Chrome"
@@ -38992,6 +39331,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "In attesa di Chrome…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chromeを待っています…"
           }
         },
         "ko": {
