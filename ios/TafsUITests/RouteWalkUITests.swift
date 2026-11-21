@@ -54,7 +54,10 @@ final class RouteWalkUITests: TafsUITestCase {
         var entries: [Entry] = []
         for route in routes {
             let path = route.route.replacingOccurrences(of: "{taf}", with: taf)
-            typeInto(field, text: path + "\n")
+            guard enter(path, into: field) else {
+                XCTFail("\(route.route): \(path) couldn't be typed whole into the hook's field (\(field.value ?? "-"))")
+                continue
+            }
             // As long as a loaded runner takes to open a screen (#1350's rule): the sample's own load gets 30 s above.
             guard within(30, { answer.label.hasPrefix(path + "|") }) else {
                 XCTFail("\(route.route): no answer for \(path) (\(answer.label))")
@@ -124,6 +127,31 @@ final class RouteWalkUITests: TafsUITestCase {
             if swipes < 2, Date().timeIntervalSince(start) > 3 + 1.5 * Double(swipes) { app.swipeUp(); swipes += 1 }
             return false
         }
+    }
+
+    /// Types `path` into the hook's field and presses Return only once the field reads exactly that path. A screen
+    /// the walk just opened can take the keyboard for its own field a moment later (the Setup chat focuses its box
+    /// once it has slid in), and keys typed then land there: half a path stays in the hook's field, the Return never
+    /// reaches it, and the next path is typed after the half ("no answer"). So what's left is deleted first, and the
+    /// path is typed again until it's whole, at most three times.
+    @MainActor
+    private func enter(_ path: String, into field: XCUIElement) -> Bool {
+        for _ in 0..<3 {
+            let left = Self.typed(field)
+            typeInto(field, text: String(repeating: XCUIKeyboardKey.delete.rawValue, count: left.count) + path)
+            if within(2, { Self.typed(field) == path }) {
+                field.typeText("\n")
+                return true
+            }
+        }
+        return false
+    }
+
+    /// What's typed in the field: its value, or nothing while it shows its placeholder.
+    @MainActor
+    private static func typed(_ field: XCUIElement) -> String {
+        let value = field.value as? String ?? ""
+        return value == field.placeholderValue ? "" : value
     }
 
     /// Polls until `check` holds or the time is up.
