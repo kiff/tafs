@@ -106,6 +106,9 @@ export const de: Words = {
   connect_again_done: (app: string, taf: string) => `${app} ist wieder verbunden. ${taf} kann es nutzen.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} nimmt die alte Anmeldung nicht mehr an, daher kann ${taf} es nicht nutzen. Verbinde erneut mit einer neuen Anmeldung: Eine Anmeldung bringt jeden taf zurück, der es genutzt hat.`,
   connect_again_fresh_done: (app: string) => `${app} ist mit der neuen Anmeldung wieder verbunden. Jeder taf, der es genutzt hat, kann es wieder nutzen.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} nimmt diese Anmeldung nicht mehr an, daher kann ${taf} es nicht nutzen. Verbinde erneut, um dich anzumelden.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} nutzte die ${app}-Anmeldung einer Verbindung, die entfernt wurde, und kann ${app} daher jetzt nicht nutzen. Verbinde erneut, um dich anzumelden.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} wurde abgemeldet, daher kann ${taf} es nicht nutzen. Verbinde erneut, um dich anzumelden.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf, den du nicht siehst" : `${n} tafs, die du nicht siehst`] : [])]);

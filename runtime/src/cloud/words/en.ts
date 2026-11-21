@@ -112,6 +112,10 @@ export const en = {
   connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} no longer takes the old sign-in, so ${taf} can't use it. Connect again with a new sign-in: one sign-in brings back every taf that used it.`,
   connect_again_fresh_done: (app: string) => `${app} is connected again on the new sign-in. Every taf that used it can use it again.`,
+  /** A signed-out connection, worded by the cause planque kept: the vendor stopped taking the sign-in, a removed connection's shared sign-in, and any other cause or none ("expired" stays connect_again_words, for a sign-in that really ran out). */
+  connect_again_refused_words: (app: string, taf: string) => `${app} no longer takes this sign-in, so ${taf} can't use it. Connect again to sign in.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} used the ${app} sign-in of a connection that was removed, so it can't use ${app} now. Connect again to sign in.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} was signed out, so ${taf} can't use it. Connect again to sign in.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf you don't see" : `${n} tafs you don't see`] : [])]);
