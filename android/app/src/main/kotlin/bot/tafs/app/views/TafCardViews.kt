@@ -108,7 +108,8 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
         card.environmentLabel?.let { EnvironmentPill(it) }
       }
       Spacer(Modifier.weight(1f))
-      card.hero?.let { hero ->
+      // A revoked Card is used by nothing: no "left today" on its face (a Card's figure is for one still in use).
+      card.hero?.takeUnless { revoked }?.let { hero ->
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text(hero.figure, style = scaled(34, FontWeight.Bold, white).copy(fontFeatureSettings = "tnum"), maxLines = 1, softWrap = false)
           Text(hero.words, style = scaled(12, FontWeight.Medium, white), modifier = Modifier.alpha(0.9f), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -125,12 +126,17 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
           Text(issuedBy, style = scaled(12, FontWeight.SemiBold, white), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(1.dp)) {
-          // A Card with no end says so, never a far-off date (kiff/tafs#96).
-          Text(
-            if (revoked) Words.Card.revoked else if (!card.active) Words.Card.ended else if (card.expires == null) Words.Card.ends else Words.Card.until,
-            style = scaled(10, color = white), modifier = Modifier.alpha(0.75f),
-          )
-          Text(card.expires?.let(::shownDate) ?: Words.Card.noEndDate, style = scaled(12, FontWeight.SemiBold, white))
+          if (revoked) {
+            // Revoked is the whole of it: no end date beneath, which would read as if it still ran.
+            Text(Words.Card.revoked, style = scaled(12, FontWeight.SemiBold, white), modifier = Modifier.testTag(CARD_REVOKED))
+          } else {
+            // A Card with no end says so, never a far-off date (kiff/tafs#96).
+            Text(
+              if (!card.active) Words.Card.ended else if (card.expires == null) Words.Card.ends else Words.Card.until,
+              style = scaled(10, color = white), modifier = Modifier.alpha(0.75f),
+            )
+            Text(card.expires?.let(::shownDate) ?: Words.Card.noEndDate, style = scaled(12, FontWeight.SemiBold, white))
+          }
         }
       }
     }
@@ -271,3 +277,5 @@ fun CardLines(rules: List<CardRule>) {
     }
   }
 }
+
+internal const val CARD_REVOKED = "card-revoked"

@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac:** a connection that was signed out, when planque sends no words of its own, reads "Signed out · sign in again". It no longer reads "Signed out by {app}", which wasn't true when another connection's removal signed it out.

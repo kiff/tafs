@@ -1,0 +1,1 @@
+- **Android:** a revoked Card's face says "Revoked", without "No end date" under it or what's left today, which read as if it still ran ([android-app.md](docs/android-app.md)).
