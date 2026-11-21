@@ -46,6 +46,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppModel
@@ -315,6 +317,9 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
       )
     }
+    // A step in the owner's Chrome: the site large, the origin small, planque's action words, what the page showed, a checkout's
+    // lines, and which Chrome. Under KIFF's amount and reason, never in their place (docs/chrome.md, "The phone approval card").
+    call.browser?.let { BrowserStepBlock(it) }
     // The taf's line on why, under its own heading: the taf's words, from text a customer wrote, drawn as plain text and never in
     // place of KIFF's amount, rule or action above.
     if (call.tafAbout != null || call.tafSays != null) {
@@ -480,3 +485,26 @@ private fun remaining(call: HeldCall, now: Instant): String {
   if (seconds < 1) return Words.NeedsYou.expired
   return Words.NeedsYou.left("%d:%02d".format(seconds / 60, seconds % 60))
 }
+
+/** A held browser step's page, as the card draws it: nothing here decides, every word is planque's or KIFF's. */
+@Composable
+internal fun BrowserStepBlock(step: bot.tafs.app.model.BrowserStep) {
+  Column(Modifier.fillMaxWidth().testTag(BROWSER_STEP), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(step.site, style = scaled(22, FontWeight.Bold, Theme.ink))
+    if (step.origin.isNotEmpty()) Text(step.origin, style = scaled(12, color = Theme.soft, mono = true))
+    Text(step.action, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    if (step.pageTitle != null || step.excerpt != null) {
+      Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Theme.ink.copy(alpha = 0.05f)).padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+      ) {
+        step.pageTitle?.let { Text(it, style = scaled(13, FontWeight.SemiBold, Theme.ink)) }
+        step.excerpt?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+      }
+    }
+    step.lines.forEach { Text(it, style = scaled(14, color = Theme.ink)) }
+    step.chrome?.let { Text("${Words.Chrome.title} · $it", style = scaled(12, color = Theme.soft)) }
+  }
+}
+
+const val BROWSER_STEP = "needs-you.browser-step"
