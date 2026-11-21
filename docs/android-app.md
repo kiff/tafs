@@ -1482,7 +1482,9 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
   `ChromePairingInProgress` leaves the secret out of its `toString`.
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
-  constant time). The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the
+  constant time), over its key and its KIFF device's offer (`kiff_offer`, empty when it sent none), so planque can swap
+  neither. That offer must be KIFF's `kiff.pair.v1` for a `chrome` `extension` in `software`, with no approval key
+  (`PairQr.readChromeExtension`, as iOS's `PairingRequest.read`); any other is refused. The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the
   lookup: nothing is paired, and the sheet says so (`chrome.refused`). So does a pairing planque marks `contested` (more than
   one Chrome tried the code, so it's spent). An expired pairing says `chrome.expired`.
 - **One fingerprint, naming the Chrome, signs the confirmation** with the **approval key** only (`signCritical`):
@@ -1490,13 +1492,20 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   secret. The Keystore's DER signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
   - **A phone without an approval key can't pair.** Unlike iOS, Android's other key signs with no prompt the Keystore enforces,
     so it could never stand for the owner's presence when a sealed value is released. Pairing says so instead of starting.
+- **Then a second fingerprint, also naming the Chrome, pairs its view-only KIFF device** (`POST /v1/me/pairings` with the
+  offer's fields, signed by the approval key, as Add a device pairs a computer), and only then does planque hear the
+  confirmation, so a Chrome is never confirmed without its device. iOS signs both behind one Face ID; Android's approval key
+  unlocks for one signature, so it asks twice. KIFF's refusal, in its own words, confirms nothing.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
 - Its lines are `chrome.*`, shared with iOS.
-- **Tests:** `ChromePairingTest` (the shared vector, a refused proof, raw `r‖s` verified as P1363) and `ChromesTest`:
+- **Tests:** `ChromePairingTest` (the shared vector with and without `kiff_offer`, a refused proof, the KIFF offer read only
+  as a Chrome extension in software, raw `r‖s` verified as P1363) and `ChromesTest`:
   - the row only once planque offers Chromes;
   - an offer shown only on its proof, and the secret never in a request;
   - one fingerprint naming the Chrome, and the approval key's `r‖s` verifying where the device key's doesn't;
   - a closed prompt sends nothing;
+  - an offer whose KIFF device could approve, or whose proof leaves it out, is refused;
+  - the KIFF device paired by the approval key before planque's confirm, and KIFF's refusal confirming nothing;
   - Unpair with no prompt.
 
 ### A held step in Chrome

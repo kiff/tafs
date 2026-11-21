@@ -115,7 +115,8 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 - **One Face ID on the phone** signs the Chrome confirmation, then KIFF's `POST /v1/me/pairings` for that offer, as Add a
   device does, with the approval key and no second prompt (`AppModel.confirmChrome`). KIFF's pairing goes first, so a
   Chrome is never confirmed without its device. iOS reads the offer with `PairingRequest.read`, which takes `chrome` and
-  `extension` only together and only with `key_store: "software"`.
+  `extension` only together and only with `key_store: "software"`. Android reads it with `PairQr.readChromeExtension`, to
+  the same rule, and asks a second fingerprint for KIFF's pairing: its approval key unlocks for one signature.
 - **The extension claims its session** as an iPad does: `POST /v1/pair/claim` with the nonce, its KIFF key and the
   `kiff.pair.claim.v1` proof (a DER signature, standard base64), every 3 s while the offer lives. A session that isn't
   `approval_mode: "view"` is ended at once with `POST /v1/auth/device/logout` and never kept.
@@ -384,7 +385,6 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
-- **Android's pairing screens and approval card** for browser steps.
 - **The sealed-value release on the card** (`tafs-chrome/release/v1`), with sealed values.
 - **Sealed values,** with their own security review.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.
