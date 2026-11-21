@@ -33,6 +33,10 @@
 #                              (its secret id in UPLOAD_KEY_SECRET_ID).
 #   FCM_SECRET_ID              the secret holding the Firebase service account key for
 #                              Android alerts; a person puts it there.
+#   TAFS_SECRET_ID             tafs cloud's one secret, JSON {apns, fcm, doors}, in
+#                              eu-west-1 (TAFS_SECRET_REGION for another). A part it
+#                              doesn't hold is still read from its old secret above, so
+#                              the old ones go only once this one is proven live.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
 # eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
@@ -173,6 +177,23 @@ for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_ST
   fi
   [ -n "${!v}" ] && FLAGS_ENV="$FLAGS_ENV,$v=${!v}"
 done
+# tafs cloud's one secret (runtime/src/cloud/appsecret.ts), kept from tafs-cloud on a rerun like the others: tafs
+# cloud may read it, nothing more.
+TAFS_SECRET_ENV=""
+for v in TAFS_SECRET_ID TAFS_SECRET_REGION; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && TAFS_SECRET_ENV="$TAFS_SECRET_ENV,$v=${!v}"
+done
+TAFS_SECRET_READ=""
+if [ -n "$TAFS_SECRET_ID" ]; then
+  TAFS_SECRET_ARN=$(command aws --region "${TAFS_SECRET_REGION:-$AGENTS_REGION}" secretsmanager describe-secret --secret-id "$TAFS_SECRET_ID" --query ARN --output text)
+  TAFS_SECRET_READ=",
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$TAFS_SECRET_ARN\"]}"
+fi
 # tafs cloud may read that one secret, nothing more.
 FCM_READ=""
 if [ -n "$FCM_SECRET_ID" ]; then
@@ -190,7 +211,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
     {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ$TAFS_SECRET_READ
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
@@ -198,7 +219,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$FLAGS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$TAFS_SECRET_ENV$FLAGS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \
