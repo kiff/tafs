@@ -14,6 +14,7 @@ export const LABEL = Object.freeze({
   release: "tafs-chrome/release/v1", // the phone releases one sealed value for one fill
   unpair: "tafs-chrome/unpair/v1", // the extension unpairs itself
   sensitive: "tafs-chrome/sensitive/v1", // the phone allows one sensitive site for one grant
+  sites: "tafs-chrome/sites/v1", // the phone signs a grant's sites when the owner approves it
   extProof: "tafs-chrome/ext/v1", // HMAC: the extension's key, under the pairing code's secret
   phoneProof: "tafs-chrome/phone/v1", // HMAC: the phone's key and the extension's, under the same secret
 });

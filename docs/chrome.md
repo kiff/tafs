@@ -16,7 +16,7 @@ it changes all three.
 
 | File | What it does |
 |---|---|
-| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`. **No host permissions at install**: each site is asked for, once, when a run needs it (`optional_host_permissions`). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
+| `chrome/manifest.json` | MV3. Permissions at install: `storage`, `alarms`, `scripting`, `sidePanel`, `tabs`, `tabGroups`, `webNavigation`, `declarativeNetRequest` (to fence a run's tabs; it widens no access). **No host permissions at install**: each site is asked for, once, when a run needs it (`optional_host_permissions`). No `debugger`, `downloads`, `cookies`, `history`, `webRequest` or `nativeMessaging`. |
 | `chrome/src/sw.js` | The service worker: keeps the pairing, connects to planque when paired, runs what planque sends, answers the side panel. |
 | `chrome/src/relay.js` | The one connection to planque, always opened by the extension. Nothing connects in. |
 | `chrome/src/protocol.js` | Checks each step as planque's and signs each answer. |
@@ -53,6 +53,7 @@ it changes all three.
 | `tafs-chrome/release/v1` | the phone | one sealed value for one fill |
 | `tafs-chrome/unpair/v1` | the extension | its own unpairing |
 | `tafs-chrome/sensitive/v1` | the phone | one sensitive site allowed for one grant: `{chrome_id, grant, site}` |
+| `tafs-chrome/sites/v1` | the phone | a grant's sites, when the owner approves the grant: `{chrome_id, grant, sites}` |
 
 - **HMACs** are HMAC-SHA256 under the pairing code's secret, over `label ‖ 0x00 ‖ data`, with `tafs-chrome/ext/v1` and
   `tafs-chrome/phone/v1`.
@@ -127,7 +128,8 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 
 ```
 step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run, taf, grant,
-        sites: ["shop.example", …], sensitive_allowed?: [{site, sig}],   // sig: the phone's, tafs-chrome/sensitive/v1
+        sites: ["shop.example", …], sites_signed: {sites, sig},        // sig: the phone's, tafs-chrome/sites/v1
+        sensitive_allowed?: [{site, sig}],                            // sig: the phone's, tafs-chrome/sensitive/v1
         op: "open" | "read" | "act" | "close",
         url?,                          // open: a start URL or a link from the current read, already checked by planque
         read_id?,                      // act: the read it was planned from
@@ -138,6 +140,10 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
 **The extension runs nothing that isn't planque's, for this Chrome, unexpired and new** (`protocol.checkStep`). A nonce
 is remembered for 10 minutes, in `chrome.storage.session`, so a step replayed after MV3 stops the service worker is still
 refused.
+- **A run's sites are the phone's, never planque's word alone.** When the owner approves a grant, the phone signs its
+  sites (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`). A run's first step carries that as `sites_signed`, and
+  its `sites` must lie within the signed list (`protocol.checkSites`, with the paired `phone_key`). Later steps can never
+  widen them. Chrome's per-site permission stays the second gate.
 - **A grant's `sites` never name a public suffix** (`com`, `co.uk`, `github.io`, …: `sites.siteOK`). Such an entry
   reaches nothing.
 - **A sensitive site opens only on the paired phone's own allowance** (`sensitive_allowed[].sig`, the phone's
@@ -203,7 +209,11 @@ done.
   to the front, never takes focus from the owner, and closes when the run ends.
 - **The runner touches only tabs it opened.** It never lists the owner's tabs, and it ignores navigation events from
   any other tab. A tab a run's page opens joins the run only on the run's sites; anything else is closed.
-- **A navigation that leaves the run's sites is stopped in the tab,** whatever started it.
+- **A request off the run's sites never leaves.** As a run's tab opens, before it loads anything, the runner gives
+  Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
+  sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
+  another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
+  rules go when the run ends. `webNavigation`'s record of a refused move stays as the log.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
   "Paused: you're using this tab", with Resume.
 - **Three failed acts in a row pause the run,** with what it read so far.
