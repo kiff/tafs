@@ -168,7 +168,7 @@ test("every locale has English's keys and placeholders, and a description Chrome
   const read = (loc) => JSON.parse(readFileSync(new URL(loc + "/messages.json", dir), "utf8"));
   const en = read("en");
   // Waiting for legal-i18n's words, so Chrome shows English for them meanwhile. Empty before the switch goes on.
-  const awaiting = new Set(["coach_error", "coach_not_started", "coach_working", "share_chars", "share_error_bad_url", "share_error_site_blocked"]);
+  const awaiting = new Set([]);
   const locales = readdirSync(dir).filter((l) => l !== "en");
   assert.deepEqual(locales.sort(), ["de", "es", "fr", "it", "ja", "ko", "nl", "pl", "pt_BR", "pt_PT"]);
   for (const loc of ["en", ...locales]) {

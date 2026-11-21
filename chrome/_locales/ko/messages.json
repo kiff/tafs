@@ -56,5 +56,11 @@
   "coach_empty_body": { "message": "tafs 앱과 같은 채팅입니다. 이 페이지를 공유할 때만 Coach가 볼 수 있습니다.", "description": "Empty chat: body" },
   "share_note": { "message": "이 페이지 하나만 Coach에게 보냅니다. 비밀번호, 카드, 코드 입력란은 제외됩니다.", "description": "Note under Share this page" },
   "share_declined": { "message": "공유되지 않음: Chrome에서 tafs가 이 사이트에 접근하도록 허용되지 않았습니다.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "사이트에서 처음 공유할 때 Chrome이 tafs의 접근을 허용할지 묻습니다.", "description": "Shown before Chrome's site prompt, first share on a site" }
+  "share_permission": { "message": "사이트에서 처음 공유할 때 Chrome이 tafs의 접근을 허용할지 묻습니다.", "description": "Shown before Chrome's site prompt, first share on a site" },
+  "coach_error": { "message": "Coach에게 전달되지 않았습니다. 다시 시도하세요." },
+  "coach_not_started": { "message": "먼저 휴대폰에서 Coach를 시작하세요." },
+  "coach_working": { "message": "Coach가 작업 중…" },
+  "share_chars": { "message": "$N$자", "placeholders": { "n": { "content": "$1" } } },
+  "share_error_bad_url": { "message": "https 페이지만 공유할 수 있습니다." },
+  "share_error_site_blocked": { "message": "이런 페이지는 공유되지 않습니다: 은행, 지갑, 비밀번호, 결제, 건강, 정부." }
 }

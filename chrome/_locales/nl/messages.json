@@ -56,5 +56,11 @@
   "coach_empty_body": { "message": "Het is dezelfde chat als in de tafs-app. Coach ziet deze pagina alleen als je hem deelt.", "description": "Empty chat: body" },
   "share_note": { "message": "Stuurt alleen deze ene pagina naar Coach, zonder wachtwoord-, kaart- en codevelden.", "description": "Note under Share this page" },
   "share_declined": { "message": "Niet gedeeld: tafs heeft in Chrome geen toegang tot deze site.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "De eerste keer op een site vraagt Chrome of je tafs daar toegang geeft.", "description": "Shown before Chrome's site prompt, first share on a site" }
+  "share_permission": { "message": "De eerste keer op een site vraagt Chrome of je tafs daar toegang geeft.", "description": "Shown before Chrome's site prompt, first share on a site" },
+  "coach_error": { "message": "Dat is niet bij Coach aangekomen. Probeer het opnieuw." },
+  "coach_not_started": { "message": "Start Coach eerst op je telefoon." },
+  "coach_working": { "message": "Coach is bezig…" },
+  "share_chars": { "message": "$N$ tekens", "placeholders": { "n": { "content": "$1" } } },
+  "share_error_bad_url": { "message": "Alleen https-pagina's kunnen worden gedeeld." },
+  "share_error_site_blocked": { "message": "Pagina's zoals deze worden nooit gedeeld: banken, wallets, wachtwoorden, betalingen, gezondheid en overheid." }
 }

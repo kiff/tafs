@@ -56,5 +56,11 @@
   "coach_empty_body": { "message": "É o mesmo chat da app tafs. O Coach só vê esta página se a partilhar.", "description": "Empty chat: body" },
   "share_note": { "message": "Envia só esta página ao Coach, sem os campos de palavra-passe, cartão e código.", "description": "Note under Share this page" },
   "share_declined": { "message": "Não partilhada: o tafs não tem permissão neste site no Chrome.", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "Na primeira vez num site, o Chrome pergunta se permite o tafs nesse site.", "description": "Shown before Chrome's site prompt, first share on a site" }
+  "share_permission": { "message": "Na primeira vez num site, o Chrome pergunta se permite o tafs nesse site.", "description": "Shown before Chrome's site prompt, first share on a site" },
+  "coach_error": { "message": "Isso não chegou ao Coach. Tente de novo." },
+  "coach_not_started": { "message": "Inicie primeiro o Coach no telemóvel." },
+  "coach_working": { "message": "O Coach está a trabalhar…" },
+  "share_chars": { "message": "$N$ caracteres", "placeholders": { "n": { "content": "$1" } } },
+  "share_error_bad_url": { "message": "Só é possível partilhar páginas https." },
+  "share_error_site_blocked": { "message": "Páginas como esta nunca são partilhadas: bancos, carteiras, palavras-passe, pagamentos, saúde e administração pública." }
 }

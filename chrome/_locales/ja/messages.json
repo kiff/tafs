@@ -56,5 +56,11 @@
   "coach_empty_body": { "message": "tafsアプリと同じチャットです。Coachがこのページを見るのは、あなたが共有したときだけです。", "description": "Empty chat: body" },
   "share_note": { "message": "このページだけをCoachに送ります。パスワード、カード、コードの欄は除かれます。", "description": "Note under Share this page" },
   "share_declined": { "message": "共有されませんでした：Chromeでtafsがこのサイトへのアクセスを許可されていません。", "description": "Owner said no to Chrome's site prompt" },
-  "share_permission": { "message": "サイトで初めて共有するとき、Chromeがtafsのアクセスを許可するか確認します。", "description": "Shown before Chrome's site prompt, first share on a site" }
+  "share_permission": { "message": "サイトで初めて共有するとき、Chromeがtafsのアクセスを許可するか確認します。", "description": "Shown before Chrome's site prompt, first share on a site" },
+  "coach_error": { "message": "Coachに届きませんでした。もう一度お試しください。" },
+  "coach_not_started": { "message": "先にスマートフォンでCoachを開始してください。" },
+  "coach_working": { "message": "Coachが作業中…" },
+  "share_chars": { "message": "$N$文字", "placeholders": { "n": { "content": "$1" } } },
+  "share_error_bad_url": { "message": "共有できるのはhttpsのページだけです。" },
+  "share_error_site_blocked": { "message": "このようなページは共有されません：銀行、ウォレット、パスワード、支払い、健康、行政。" }
 }
