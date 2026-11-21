@@ -48,7 +48,7 @@ class LanguagePickerTest {
     rule.onNodeWithText("Change language").performScrollTo().performClick()
     // The picker's own rows: the theme's three choices behind it, in the Account sheet's own dialog, are radio buttons too.
     rule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton) and hasAnyAncestor(hasTestTag("language-picker"))).assertCountEquals(AppLocale.TAGS.size + 1)
-    listOf("This phone's language", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Eesti", "Lietuvių", "Latviešu").forEach {
+    listOf("This phone's language", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Eesti", "Lietuvių", "Latviešu", "Čeština", "Slovenčina", "Slovenščina", "Magyar", "Română", "Български", "Hrvatski").forEach {
       rule.onAllNodesWithText(it).assertCountEquals(1)
     }
     // English is the row, and the language shown beside Language.

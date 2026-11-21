@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Vaše chaty se nevyexportovaly. {why}",
+  "export.not_offered": "Soubory nešlo v tomto telefonu uložit. Uvolněte místo a zkuste to znovu.",
+  "export.own_chats_each_taf_coach": "Vaše vlastní chaty s každým tafem, včetně Coache, názvy souborů, které jste přiložili, a vaše poznámky, jako čitelný soubor a jako JSON. Exportovat je můžete jen vy.",
+  "export.preparing": "Připravuji vaše chaty…",
+  "export.ready_share_again": "Připraveno: {files}. Sdílet znovu",
+  "export.row": "Exportovat mé chaty",
+  "export.sign_in_first": "Pro export chatů se přihlaste přes KIFF."
+}

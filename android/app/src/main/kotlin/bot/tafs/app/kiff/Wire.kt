@@ -578,7 +578,39 @@ data class CardException(
   @SerialName("taf_reason") val tafReason: String? = null,
   /** What the call is on, in the taf's words (its `kiff_about`): a business reference only, such as "Order 1042". As [tafReason]. */
   @SerialName("taf_about") val tafAbout: String? = null,
+  /**
+   * A held step in the owner's own Chrome (docs/chrome.md, "The phone approval card"): what planque read of the page the step was
+   * built on, masked, kept by KIFF on the hold. Absent for any other hold, and until KIFF carries it: the card is then as any hold.
+   */
+  val browser: HeldBrowser? = null,
 )
+
+/** The page a held browser step acts on, in planque's words: the site, the action, an excerpt, a checkout's lines, which Chrome. */
+@Serializable
+data class HeldBrowser(
+  /** The registrable domain, drawn large. */
+  val site: String = "",
+  /** The full origin, drawn small, as sent (punycode stays punycode). */
+  val origin: String = "",
+  /** planque's words for the step: the verb and the element's own visible label ("Click “Place order”"). */
+  @SerialName("action_words") val actionWords: String = "",
+  val context: HeldBrowserContext? = null,
+  val checkout: HeldCheckout? = null,
+  val chrome: HeldChrome? = null,
+)
+
+@Serializable
+data class HeldBrowserContext(val title: String? = null, val text: String? = null)
+
+/** A checkout's lines as read at that moment; its total and currency are KIFF's `amount`, drawn as any hold's. */
+@Serializable
+data class HeldCheckout(val lines: List<HeldCheckoutLine> = emptyList())
+
+@Serializable
+data class HeldCheckoutLine(val item: String = "", val quantity: JsonElement? = null, val price: JsonElement? = null)
+
+@Serializable
+data class HeldChrome(val id: String = "", val name: String = "")
 
 @Serializable
 data class CardExceptions(val exceptions: List<CardException> = emptyList())

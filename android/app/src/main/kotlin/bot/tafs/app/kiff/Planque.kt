@@ -726,8 +726,18 @@ private data class ChromeList(val chromes: List<Chrome> = emptyList())
 @Serializable
 data class ChromePairingOpened(val pairing: String, val lookup: String)
 
-/** What an extension sent for a pairing: its key (SPKI DER, base64url), what it says it is, and its proof under the code's secret. */
-data class ChromeOffer(val key: String, val version: String = "", val browser: String = "", val os: String = "", val proof: String)
+/**
+ * What an extension sent for a pairing: its key (SPKI DER, base64url), what it says it is, its KIFF device's `kiff.pair.v1` offer
+ * as its text (empty when it sent none), and its proof of both under the code's secret.
+ */
+data class ChromeOffer(
+  val key: String,
+  val version: String = "",
+  val browser: String = "",
+  val os: String = "",
+  val proof: String,
+  val kiffOffer: String = "",
+)
 
 /** A pairing's state, with the extension's offer once it sent one. */
 data class ChromePairingState(val status: String, val offer: ChromeOffer? = null) {
@@ -737,7 +747,11 @@ data class ChromePairingState(val status: String, val offer: ChromeOffer? = null
       fun field(k: String) = (o[k] as? JsonPrimitive)?.takeIf { it.isString }?.content
       val key = field("key")
       val proof = field("proof")
-      val offer = if (key != null && proof != null) ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof) else null
+      val offer = if (key != null && proof != null) {
+        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty())
+      } else {
+        null
+      }
       return ChromePairingState(field("status").orEmpty(), offer)
     }
   }

@@ -1,0 +1,17 @@
+{
+  "report.already": "Ezt a választ már jelentetted.",
+  "report.cant_from_here": "Ez a válasz innen nem jelenthető.",
+  "report.menu": "Válasz jelentése",
+  "report.not_sent": "A jelentésed nem ment el. {why}",
+  "report.not_sent_why": "Nem ment el: {failed}",
+  "report.note_hint": "Megjegyzés hozzáadása (nem kötelező)",
+  "report.note_most_characters": "A megjegyzés legfeljebb 1000 karakter lehet.",
+  "report.person_kiff_reads_your_report": "A jelentésedet egy ember olvassa el a KIFF-nél, a válasszal együtt, ahogy íródott.",
+  "report.reason.harmful": "Ártalmas",
+  "report.reason.offensive": "Sértő",
+  "report.reason.other": "Egyéb",
+  "report.reason.wrong": "Helytelen",
+  "report.runs_not_loaded": "A futásait nem sikerült betölteni. {why}",
+  "report.thanks": "Köszönjük. Valaki a KIFF-nél elolvassa a jelentésedet.",
+  "report.what_wrong": "Mi a baj vele?"
+}

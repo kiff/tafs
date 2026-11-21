@@ -1,0 +1,7 @@
+{
+  "device.linux": "počítač",
+  "device.mac": "Mac",
+  "device.phone": "telefón",
+  "device.tablet": "tablet",
+  "device.windows": "počítač s Windows"
+}

@@ -30,7 +30,7 @@ import org.robolectric.annotation.GraphicsMode
 class IconsTest(private val language: String) {
   companion object {
     @JvmStatic @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-    fun languages() = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv")
+    fun languages() = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr")
   }
 
   @get:Rule val compose = createComposeRule()

@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Rezumate",
+  "push.channel.briefs_description": "Rezumatul dvs., la orele stabilite.",
+  "push.channel.holds_description": "Un apel este reținut pentru răspunsul dvs. Nimic nu se trimite până nu îl aprobați.",
+  "push.channel.other": "Alte alerte",
+  "push.channel.other_description": "Solicitări de sarcini și răspunsurile lor, fără sunet.",
+  "push.channel.urgent_description": "Ce nu poate aștepta următorul rezumat, cu sunet.",
+  "push.open_needs_you": "Deschideți Vă așteaptă pentru a răspunde.",
+  "push.open_taf": "Deschideți taful pentru a vedea.",
+  "push.open_usage": "Deschideți Plan și utilizare pentru a vedea."
+}

@@ -127,7 +127,7 @@ final class SignInTests: XCTestCase {
     func testTheLegalLinksOpenTafssOwnPagesInTheAppsLanguage() {
         XCTAssertEqual(Legal.page("terms", language: "en").absoluteString, "https://kiff.dev/tafs/terms")
         XCTAssertEqual(Legal.page("privacy", language: "en").absoluteString, "https://kiff.dev/tafs/privacy", "English has no /en/")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"] {
             XCTAssertEqual(Legal.page("terms", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/terms")
             XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
         }
@@ -143,7 +143,7 @@ final class SignInTests: XCTestCase {
     func testKiffsOwnLegalPagesOpenInTheAppsLanguage() {
         XCTAssertEqual(Legal.kiffPage("terms", language: "en").absoluteString, "https://kiff.dev/terms")
         XCTAssertEqual(Legal.kiffPage("privacy", language: "en").absoluteString, "https://kiff.dev/privacy")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"] {
             XCTAssertEqual(Legal.kiffPage("terms", language: language).absoluteString, "https://kiff.dev/\(language)/terms")
             XCTAssertEqual(Legal.kiffPage("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/privacy")
         }

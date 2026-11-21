@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "{count} soubor · uchováván 30 dní",
+    "few": "{count} soubory · uchovávány 30 dní",
+    "other": "{count} souborů · uchováváno 30 dní"
+  },
+  "files.all": "Vše",
+  "files.all_tafs": "Všechny tafy",
+  "files.by_run": "Podle běhu",
+  "files.by_taf": "Podle tafu",
+  "files.delete_body": "Zmizí ze Souborů pro všechny v tomto účtu, hned. Nelze to vrátit.",
+  "files.delete_now": "Smazat hned",
+  "files.delete_question": "Smazat „{name}“ hned?",
+  "files.deleted": "Smazáno pro všechny",
+  "files.download": "Stáhnout",
+  "files.empty": "Zatím nic. Když taf při běhu vytvoří zprávu, tabulku nebo dokument, uchová se tu 30 dní a všichni v tomto účtu ho mohou otevřít, uložit nebo sdílet.",
+  "files.everyone": "Všichni v tomto účtu",
+  "files.goes_away": "Zmizí",
+  "files.goes_in_days": {
+    "one": "zmizí za {count} den",
+    "few": "zmizí za {count} dny",
+    "other": "zmizí za {count} dní"
+  },
+  "files.goes_on": "{date} (30 dní po svém běhu)",
+  "files.goes_today": "zmizí dnes",
+  "files.goes_tomorrow": "zmizí zítra",
+  "files.in_run": "V běhu",
+  "files.kept_line": "Každý soubor se uchovává 30 dní od svého běhu a pak sám zmizí. Tyto soubory vidí všichni v tomto účtu. Přílohy vašich chatů zůstávají u svých zpráv.",
+  "files.kept_until": "Jeho soubory se uchovávají do {date}",
+  "files.made_by": "Vytvořil",
+  "files.none_yet": "Zatím žádné · uchovávány 30 dní",
+  "files.pick_one": "Vyberte soubor, ať ho vidíte tady.",
+  "files.preview_start": "Zobrazuje se jen začátek. Stáhněte si soubor a přečtěte si ho celý.",
+  "files.saved": "Uloženo do tohoto zařízení",
+  "files.see_in_chat": "Zobrazit v chatu",
+  "files.share": "Sdílet",
+  "files.size": "Velikost",
+  "files.taf_row": {
+    "one": "{count} soubor z jeho běhů",
+    "few": "{count} soubory z jeho běhů",
+    "other": "{count} souborů z jeho běhů"
+  },
+  "files.title": "Soubory",
+  "files.type": "Typ",
+  "files.who_sees": "Kdo to vidí"
+}

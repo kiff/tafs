@@ -46,15 +46,15 @@ def glossary():
 
 
 def glossary_being_written():
-    """The tables under "Korean and Japanese" and "Batch 1" (docs/languages.md): a language that ships before its column joins the
+    """The tables under "Korean and Japanese", "Batch 1" and "Batch 2" (docs/languages.md): a language that ships before its column joins the
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
-    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Regional variants"):
+    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Batch 2", "\n## Regional variants"):
         start = md.index(section)
         end = md.find("\n## ", start + 1)
         text += md[start:end if end > 0 else len(md)] + "\n"
@@ -102,9 +102,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 

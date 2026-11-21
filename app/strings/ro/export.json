@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Conversațiile dvs. nu au fost exportate. {why}",
+  "export.not_offered": "Fișierele nu au putut fi salvate pe acest telefon. Eliberați spațiu, apoi încercați din nou.",
+  "export.own_chats_each_taf_coach": "Propriile conversații cu fiecare taf, inclusiv cu Coach, numele fișierelor atașate și notițele dvs., ca fișier lizibil și ca JSON. Doar dvs. le puteți exporta.",
+  "export.preparing": "Se pregătesc conversațiile…",
+  "export.ready_share_again": "Gata: {files}. Distribuiți din nou",
+  "export.row": "Exportați conversațiile mele",
+  "export.sign_in_first": "Conectați-vă cu KIFF pentru a exporta conversațiile."
+}

@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Odpovedať do",
+  "work.answer_within_days": {
+    "one": "{count} dňa",
+    "few": "{count} dní",
+    "other": "{count} dní"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} hodiny",
+    "few": "{count} hodín",
+    "other": "{count} hodín"
+  },
+  "work.answer_within_line": "Dáme vám vedieť, keď prípad čaká dlhšie.",
+  "work.answer_within_none": "Nenastavené",
+  "work.answer_within_not_set": "Nepodarilo sa to nastaviť. {why}",
+  "work.asking_kiff_run": "Žiadam KIFF o spustenie {tool}…",
+  "work.did_not_stop": "Nezastavilo sa: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Jeho behy",
+  "work.not_read": "Jeho prácu sa nepodarilo načítať. {why}",
+  "work.not_sent_again": "Znova sa neodoslalo. {why}",
+  "work.request.try_reply_now": "Skúsiť odpoveď hneď",
+  "work.requests_need_you": {
+    "one": "{count} žiadosť čaká na vás",
+    "few": "{count} žiadosti čakajú na vás",
+    "other": "{count} žiadostí čaká na vás"
+  },
+  "work.send_again": "Odoslať znova",
+  "work.sending_again": "Odosielam znova…",
+  "work.stop_run": "Ukončiť beh",
+  "work.stopped_part_way_before_finished": "{taf} sa zastavil v polovici, kým skončil."
+}
