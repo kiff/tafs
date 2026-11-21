@@ -2,7 +2,7 @@
 
 The App Store and Play Store listings, in English (the source) and the seven other languages tafs
 speaks ([languages.md](languages.md)). Wave 1's two App Store localizations for Latin America and Brazil, es-MX
-and pt-BR, are drafts below Portuguese: those storefronts read the primary English listing until they're added. Australia and
+and pt-BR, are below Portuguese: new in App Store Connect, those storefronts read the primary English listing until they're added. Australia and
 Canada read the primary English (US) listing as it is. Each language has its App Store fields and its Play fields,
 ready to paste: the store's default listing comes from English, and each language's listing from its
 section. The number beside each field is its length and the store's limit.
@@ -658,10 +658,11 @@ Privacidade (em inglês): https://kiff.dev/tafs/privacy
 
 ## Spanish, Latin America (es-MX)
 
-**Draft for Wave 1 (Latin America), App Store only, repo only.** It starts as a copy of es (es-ES), above, for legal-i18n to
-adapt to Latin American Spanish: the same claims and limits, the glossary's words, and what iOS calls things in es-MX
-(Settings is "Configuración", not "Ajustes"). Lengths are re-counted once the text is final. Applying it in App Store
-Connect waits for the owner's Wave 1 yes. Play's Latin American listing is es-419, dev-android's.
+**Wave 1 (Latin America), App Store only, repo only:** a new localization, Spanish (Mexico), which App Store Connect doesn't have
+yet (mac-local's read, 21 Nov). Adapted from es (es-ES), above, with the same claims and limits, in Mexican usage ("celular",
+"envío", "molesto", "vencen"). The names it quotes are the app's own, as a phone in Mexico shows them in Spanish (Te necesita,
+Registro, ¿Ocurrió esto?, Cuenta, Bloquear). Written by mac12 under the PM's 06:06 takeover; legal-i18n reads it before it's
+applied. Applying it waits for the owner's Wave 1 yes. Play's Latin American listing is es-419, dev-android's.
 
 ### App Store
 
@@ -669,49 +670,49 @@ Connect waits for the owner's Wave 1 yes. Play's Latin American listing is es-41
 
 **Subtitle** (20/30): Recupera tus mañanas
 
-**Promotional text** (163/170):
+**Promotional text** (160/170):
 
 ```
-Tickets de soporte, contactos nuevos, paquetes con retraso: pásaselos a un taf y recupera tus mañanas. Trabaja dentro de tus límites, y lo importante espera tu sí.
+Tickets de soporte, contactos nuevos, envíos retrasados: pásaselos a un taf y recupera tus mañanas. Trabaja dentro de tus límites, y lo importante espera tu sí.
 ```
 
-**Keywords** (92/100):
+**Keywords** (90/100):
 
 ```
-automatización,asistente,soporte,tickets,contactos,paquetes,clientes,aprobación,flujo,rutina
+automatización,asistente,soporte,tickets,contactos,envíos,clientes,aprobación,flujo,rutina
 ```
 
-**Description** (3044/4000):
+**Description** (3042/4000):
 
 ```
 They taf. You kiff.
 Automatiza tu negocio sin perder el control.
 
-Cada día se acumulan las mismas tareas. Un ticket que se queda sin respuesta de un día para otro acaba en un cliente enfadado. Un contacto que espera un día compra en otro sitio. Un paquete con retraso del que nadie avisa acaba en una solicitud de reembolso.
+Cada día se acumulan las mismas tareas. Un ticket que se queda sin respuesta de un día para otro acaba en un cliente molesto. Un contacto que espera un día le compra a alguien más. Un envío retrasado del que nadie avisa acaba en una solicitud de reembolso.
 
 Con tafs, delegas esas tareas. Cuéntale a Coach la tarea con tus palabras o elige una ya hecha. Coach, el asistente de IA de tafs, conecta tus apps y crea un taf: un agente de IA, o compañero de IA, que hace esa tarea cada día. Así dedicas tu tiempo al trabajo que de verdad te gusta.
 
 POR QUÉ PUEDES DEJARLO HACER
-Cada taf trabaja con una Card que tú firmas: lo que hace por su cuenta, lo que te pregunta primero y lo que nunca hace. KIFF comprueba cada acción contra su Card, fuera de la IA, antes de que llegue a tus apps. Ningún prompt cambia un límite, ni siquiera un truco en un correo. Todo lo importante espera tu sí en tu teléfono, con Face ID o Touch ID. Sin respuesta, es un no.
+Cada taf trabaja con una Card que tú firmas: lo que hace por su cuenta, lo que te pregunta primero y lo que nunca hace. KIFF comprueba cada acción contra su Card, fuera de la IA, antes de que llegue a tus apps. Ningún prompt cambia un límite, ni siquiera un truco en un correo. Todo lo importante espera tu sí en tu celular, con Face ID o Touch ID. Sin respuesta, es un no.
 
 TAREAS QUE PUEDES DELEGAR HOY
 • Ningún ticket espera: acusa recibo de cada ticket de soporte el mismo día y te pasa todo lo que prometa dinero.
 • No pierdas ni un contacto por responder tarde: convierte cada nueva entrada del formulario en una oportunidad y envía una primera respuesta en menos de una hora.
-• Avisa a los clientes antes de que pregunten: les avisa cuando un paquete va con retraso. Un reenvío espera tu sí.
+• Avisa a los clientes antes de que pregunten: les avisa cuando un envío se retrasa. Un reenvío espera tu sí.
 • Conserva a los clientes que cancelan: ofrece lo que tu Card permite, y todo lo demás te espera.
 Vienen más: responder preguntas sobre pedidos de tu tienda, dar sus apps a quien entra y quitárselas a quien se va, reservas y recibos. Cada límite lo cambias tú.
 
 LO QUE VES
 • Te necesita: lo que espera tu sí.
 • Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
-• Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
+• Chat: pregúntale a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que una acción se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/privacy#delete-account.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu celular. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en la app, en Cuenta, o consulta kiff.dev/privacy#delete-account.
 
 PLANES
-Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
+Solo, con 500 créditos al mes, y paquetes de créditos que nunca vencen, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una revisión tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Después de eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
 
 Condiciones de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Condiciones de tafs (en inglés): https://kiff.dev/terms
@@ -720,62 +721,64 @@ Privacidad (en inglés): https://kiff.dev/privacy
 
 ## Portuguese, Brazil (pt-BR)
 
-**Draft for Wave 1 (Brazil), App Store only, repo only.** It starts as a copy of pt (pt-PT), above, for legal-i18n to adapt
-to Brazilian Portuguese: the same claims and limits, the glossary's words, and Brazilian usage ("celular", "tela",
-"aplicativo"). Lengths are re-counted once the text is final. Applying it in App Store Connect waits for the owner's
+**Wave 1 (Brazil), App Store only, repo only:** a new localization, Portuguese (Brazil), which App Store Connect doesn't have
+yet (mac-local's read, 21 Nov). Adapted from pt (pt-PT), above, with the same claims and limits, in Brazilian usage ("você",
+"celular", "contato", "controle", "senhas", "app" masculine). The names it quotes are the app's own, as a phone in Brazil shows
+them in the app's Portuguese (Precisa de si, Registo, Isto aconteceu?, Conta, Bloquear), so the listing and the screens match.
+Written by mac12 under the PM's 06:06 takeover; legal-i18n reads it before it's applied. Applying it waits for the owner's
 Wave 1 yes. Play's pt-BR listing is dev-android's.
 
 ### App Store
 
 **Name** (30/30): tafs: agentes IA para empresas
 
-**Subtitle** (23/30): Recupere as suas manhãs
+**Subtitle** (20/30): Recupere suas manhãs
 
-**Promotional text** (167/170):
-
-```
-Tickets de suporte, novos contactos, encomendas atrasadas: entregue-os a um taf e recupere as suas manhãs. Trabalha nos seus limites, e o importante aguarda o seu sim.
-```
-
-**Keywords** (93/100):
+**Promotional text** (164/170):
 
 ```
-automatização,assistente,suporte,tickets,contactos,encomendas,clientes,aprovação,fluxo,rotina
+Tickets de suporte, novos contatos, entregas atrasadas: passe tudo para um taf e recupere suas manhãs. Ele trabalha nos seus limites, e o importante espera seu sim.
 ```
 
-**Description** (3124/4000):
+**Keywords** (86/100):
+
+```
+automação,assistente,suporte,tickets,contatos,entregas,clientes,aprovação,fluxo,rotina
+```
+
+**Description** (3095/4000):
 
 ```
 They taf. You kiff.
-Automatize o seu negócio sem perder o controlo.
+Automatize seu negócio sem perder o controle.
 
-Todos os dias acumulam-se as mesmas tarefas. Um ticket deixado para o dia seguinte torna-se um cliente zangado. Um contacto que espera um dia compra noutro lado. Uma encomenda atrasada de que ninguém fala torna-se um pedido de reembolso.
+Todo dia as mesmas tarefas se acumulam. Um ticket deixado para o dia seguinte vira um cliente irritado. Um contato que espera um dia compra em outro lugar. Uma entrega atrasada sobre a qual ninguém avisa vira um pedido de reembolso.
 
-Com tafs, entrega essas tarefas. Diga ao Coach a tarefa por palavras suas, ou escolha uma já pronta. O Coach, o assistente de IA do tafs, liga as suas apps e cria um taf: um agente de IA, ou colega de IA, que faz essa tarefa todos os dias. Assim dedica o seu tempo ao trabalho de que realmente gosta.
+Com o tafs, você delega essas tarefas. Conte ao Coach a tarefa com suas palavras, ou escolha uma pronta. O Coach, o assistente de IA do tafs, conecta seus apps e cria um taf: um agente de IA, ou colega de IA, que faz essa tarefa todos os dias. Assim você dedica seu tempo ao trabalho de que realmente gosta.
 
-PORQUE PODE DEIXÁ-LO TRABALHAR
-Cada taf trabalha com um Card que assina: o que faz sozinho, o que lhe pergunta primeiro e o que nunca faz. O KIFF verifica cada ação face ao seu Card, fora da IA, antes de chegar às suas apps. Nenhum prompt muda um limite, nem sequer um truque num email. Tudo o que é importante aguarda o seu sim no seu telemóvel, com Face ID ou Touch ID. Sem resposta, é não.
+POR QUE VOCÊ PODE DEIXÁ-LO TRABALHAR
+Cada taf trabalha com um Card que você assina: o que ele faz sozinho, o que pergunta antes e o que nunca faz. O KIFF confere cada ação com o Card, fora da IA, antes que ela chegue aos seus apps. Nenhum prompt muda um limite, nem mesmo um truque em um email. Tudo o que é importante espera seu sim no seu celular, com Face ID ou Touch ID. Sem resposta, é não.
 
-TAREFAS QUE PODE ENTREGAR HOJE
-• Nenhum ticket fica à espera: confirma a receção de cada ticket de suporte no próprio dia e passa-lhe tudo o que prometa dinheiro.
-• Nunca perca um contacto por responder tarde: transforma cada novo preenchimento do formulário numa oportunidade e envia uma primeira resposta em menos de uma hora.
-• Avise os clientes antes de perguntarem: avisa-os quando uma encomenda se atrasa. Um reenvio aguarda o seu sim.
-• Mantenha os clientes que cancelam: oferece o que o seu Card permite, e tudo o resto aguarda por si.
-Há mais a caminho: responder a perguntas sobre encomendas da sua loja, dar as apps a quem entra e retirá-las a quem sai, marcações e recibos. Cada limite é seu para mudar.
+TAREFAS QUE VOCÊ PODE DELEGAR HOJE
+• Nenhum ticket fica esperando: confirma o recebimento de cada ticket de suporte no mesmo dia e passa para você tudo o que prometa dinheiro.
+• Nunca perca um contato por responder tarde: transforma cada novo envio do formulário em uma oportunidade e manda uma primeira resposta em menos de uma hora.
+• Avise os clientes antes que perguntem: avisa quando uma entrega atrasa. Um reenvio espera seu sim.
+• Mantenha os clientes que cancelam: oferece o que o seu Card permite, e todo o resto espera por você.
+Vem mais por aí: responder a perguntas sobre pedidos da sua loja, dar os apps a quem entra e tirá-los de quem sai, agendamentos e recibos. Cada limite é seu para mudar.
 
-O QUE VÊ
-• Precisa de si: o que espera pelo seu sim.
-• Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
-• Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
-• Decide o que aconteceu mesmo: quando uma app não consegue confirmar que uma ação foi feita, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
+O QUE VOCÊ VÊ
+• Precisa de si: o que espera seu sim.
+• Registo: tudo o que seus tafs fizeram, do mais recente ao mais antigo, com um recibo para cada ação que foi adiante.
+• Chat: pergunte a um taf o que ele fez, ou diga como fazer de outro jeito, e acompanhe o trabalho enquanto acontece.
+• Você decide o que aconteceu de verdade: quando um app não consegue confirmar que uma ação foi feita, o tafs pergunta «Isto aconteceu?». Nada é dado como feito por suposição.
 
-OS SEUS DADOS
-O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/privacy#delete-account.
+SEUS DADOS
+O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta no app, em Conta, ou consulte kiff.dev/privacy#delete-account.
 
 PLANOS
-Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através da App Store. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito.
+Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados no app pela App Store. Cada execução de um taf usa créditos pela IA que usou. Uma verificação tranquila, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa seus créditos. Não há período de teste gratuito.
 
-Termos de Utilização (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+Termos de Uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Termos do tafs (em inglês): https://kiff.dev/terms
 Privacidade (em inglês): https://kiff.dev/privacy
 ```

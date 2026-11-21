@@ -1,0 +1,1 @@
+- **Docs:** the App Store listing in Spanish (Mexico) and Portuguese (Brazil), for Wave 1, ready to add in App Store Connect on the owner's yes ([store-listing.md](docs/store-listing.md)).
