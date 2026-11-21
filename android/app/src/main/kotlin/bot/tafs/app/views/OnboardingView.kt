@@ -120,6 +120,8 @@ fun OnboardingView(
           ContinueOutcome.TermsChanged -> untick()
           // KIFF's own words where it refuses for good (not offered where the person is), else ours.
           ContinueOutcome.Problem -> problem = bot.tafs.app.model.ErrorWords.kiffWords(e) ?: Words.SignIn.didntWork
+          // Signing in inside the app isn't on (KIFF's switch): said plainly, in KIFF's words when it sends them.
+          ContinueOutcome.NotOn -> problem = (e as? bot.tafs.app.kiff.KiffError.Server)?.words?.takeIf { it.isNotBlank() } ?: Words.SignIn.inAppNotOn
         }
       } finally {
         busy = false
@@ -213,7 +215,7 @@ internal fun linked(line: String, links: List<Pair<String, String>>): AnnotatedS
 }
 
 /** How Continue's sign-in ended, when it didn't sign in. */
-internal enum class ContinueOutcome { Quiet, TermsChanged, Problem }
+internal enum class ContinueOutcome { Quiet, TermsChanged, Problem, NotOn }
 
 /**
  * The welcome's line for a sign-in that didn't sign in: closing KIFF's page says nothing (the welcome is as it was), terms that
@@ -223,8 +225,15 @@ internal fun continueOutcome(e: Throwable): ContinueOutcome = when {
   e is bot.tafs.app.kiff.VendorSignInCancelled -> ContinueOutcome.Quiet
   e is bot.tafs.app.kiff.AppSignInRefused && e.error == "access_denied" -> ContinueOutcome.Quiet
   e is bot.tafs.app.kiff.AppSignInRefused && e.error == bot.tafs.app.app.AppModel.TERMS_OUTDATED -> ContinueOutcome.TermsChanged
+  // The same refusal from KIFF's authorize page, sent back to the app.
+  e is bot.tafs.app.kiff.AppSignInRefused && e.error == UNSUPPORTED_CLIENT -> ContinueOutcome.NotOn
+  // Continue's KIFF calls are all row 39's (`/v1/auth/app/…`), so a 400 `unsupported_client` here is that sign-in being off.
+  e is bot.tafs.app.kiff.KiffError.Server && e.status == 400 && e.refused(UNSUPPORTED_CLIENT) -> ContinueOutcome.NotOn
   else -> ContinueOutcome.Problem
 }
+
+/** KIFF's code while signing in inside the app is off for this app or account. */
+internal const val UNSUPPORTED_CLIENT = "unsupported_client"
 
 internal const val ONBOARDING_TICK = "onboarding.tick"
 internal const val ONBOARDING_TERMS_CHANGED = "onboarding.terms_changed"

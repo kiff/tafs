@@ -53,6 +53,10 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 
 Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
 
+**Signing in inside the app not on** (KIFF's `unsupported_client`, from its API or its authorize page): Continue says so, in
+KIFF's `words` when it sends them, else "Signing in inside the app isn't on yet." (`sign_in.in_app_not_on`), never "didn't work"
+(`ContinueOutcome.NotOn`, as iOS's `KIFFError.signInNotOn`).
+
 **K5, the end-to-end pass on a test device** (`BuildConfig.K5`, as iOS's `TAFS_K5`): `ONBOARDING_ON` is on only in a **debug**
 build made with `-Pk5` or `TAFS_K5=1` (`./gradlew :app:assembleDebug -Pk5`, or `android.yml` run by hand with `k5`, whose
 `k5` job leaves the APK as a run artifact for 7 days). That job builds without Firebase's settings (alerts off), since the
