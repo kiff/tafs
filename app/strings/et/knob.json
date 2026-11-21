@@ -25,7 +25,7 @@
     "other": "Võta {count} muudatust kasutusele {biometry} abil"
   },
   "knob.no_requests": "Veel pole päringuid.",
-  "knob.no_stops": ", peatusteta",
+  "knob.no_stops": ", etappideta",
   "knob.not_live": "MUSTAND · V{version} · POLE KASUTUSEL",
   "knob.not_read_back": "Muudatus tehti, kuid seda ei õnnestunud tagasi lugeda. Puuduta, et valikuketas uuesti lugeda.",
   "knob.not_recorded": "Ühendus ootab sündmusi, kuid valikuketas pole seda veel salvestanud. Salvestamiseks kinnita uuesti.",
@@ -49,7 +49,7 @@
   "knob.use_size": "Kasuta − ja +",
   "knob.why": "MIKS",
   "knob.with_stops": {
-    "one": "{name} · {count} peatus",
-    "other": "{name} · {count} peatust"
+    "one": "{name} · {count} etapp",
+    "other": "{name} · {count} etappi"
   }
 }

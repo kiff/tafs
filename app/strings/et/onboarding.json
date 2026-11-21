@@ -1,5 +1,5 @@
 {
-  "onboarding.age": "Pead olema vähemalt 16-aastane või sinu riigi digitaalse nõusoleku vanuses, kui see on kõrgem.",
+  "onboarding.age": "Pead olema vähemalt 16-aastane või, kui sinu riigis on digitaalse nõusoleku vanus kõrgem, vähemalt selles vanuses.",
   "onboarding.age_n": "Pead olema vähemalt {age}-aastane.",
   "onboarding.card_lead": "Iga taf töötab sinu väljastatud Cardi piires: mida see tohib teha, millise rakendusega ja kui palju. Sellest kaugemale minnes küsib see sinult.",
   "onboarding.card_title": "Card on sinu luba",

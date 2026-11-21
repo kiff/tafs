@@ -59,8 +59,8 @@
   "card.held.for_each_join": " iga ",
   "card.held.for_item": " ({item})",
   "card.held.over_count": {
-    "one": "Üle limiidi {count} päringut: see oleks {nth}",
-    "other": "Üle limiidi {count} päringut: see oleks {nth}"
+    "one": "Üle {count} päringu limiidi: see oleks {nth}",
+    "other": "Üle {count} päringu limiidi: see oleks {nth}"
   },
   "card.held.over_one_call": "{amount} ületab ühe päringu limiidi {cap}",
   "card.held.over_total": "{amount} ületaks kogusumma {cap}",
@@ -83,7 +83,7 @@
   "card.issued_by_account": "Konto",
   "card.issued_by_named": "Väljastaja: {who}",
   "card.its_card": "Selle Card",
-  "card.kiff_did_not_revoke_cards": "KIFF ei tühistanud selle Carde ({cards_left}): tühista need KIFFis.",
+  "card.kiff_did_not_revoke_cards": "KIFF ei tühistanud selle Cardidest {cards_left}: tühista need KIFFis.",
   "card.left": "{amount} jäänud {window}",
   "card.left_extra_room": "jäänud {current}, limiit {own} + {extra} lisaruumi{until}{note}",
   "card.limit_can_not_raised_right": "Limiiti ei saa praegu siit suurendada.",

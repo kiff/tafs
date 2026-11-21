@@ -37,7 +37,7 @@
   "people.member": "Liige",
   "people.name_manager": "{name} (haldur)",
   "people.new_group": "Uus grupp",
-  "people.new_group_hint": "Lisa järgmiseks selle inimesed, siis jaga sellega tafi tafi lehelt.",
+  "people.new_group_hint": "Lisa järgmiseks selle inimesed. Tafi saad sellega jagada tafi enda lehelt.",
   "people.no_groups": "Veel pole gruppe.",
   "people.no_one_yet": "Veel pole kedagi",
   "people.not_read": "Inimesi ja gruppe ei õnnestunud lugeda. {why}",

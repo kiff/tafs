@@ -1,6 +1,6 @@
 {
   "door.add_door": "Lisa uks",
-  "door.add_intro": "Anna tafile {taf} aadress, kuhu inimesed saavad kirjutada. Sellel pole ühtegi, kuni sa mõne sisse lülitad, ja selle Card otsustab ikka, mida see teeb.",
+  "door.add_intro": "Anna tafile {taf} aadress, kuhu inimesed saavad kirjutada. Sellel pole ühtegi enne, kui sa mõne sisse lülitad, ja selle Card otsustab ikka, mida see teeb.",
   "door.add_short": "Lisa",
   "door.anyone_else_today": "Täna kõigilt teistelt {others}/{cap}.",
   "door.api.boundary": "Ukse võti saab tafile {taf} ainult tööd anda. See ei saa kunagi maksta ega osta.",
@@ -41,8 +41,8 @@
   "door.api.paused": "Päringutest keeldutakse, kuni selle avad. Juba tehtut tagasi ei võeta.",
   "door.api.per_minute": "Minutis",
   "door.api.read_how": "Loe, kuidas läks",
-  "door.api.remove_body": "Selle võtmed lakkavad töötamast ja {app} ei saa enam tafile {taf} tööd anda. Alustamata päringud tühistatakse; käimasolev lõpetatakse. Juba tehtut tagasi ei võeta.",
-  "door.api.revoke_body": "Selle saadetud alustamata päringud tühistatakse. Käimasolev lõpetatakse. Kohe lõpetamiseks peata taf. Tühistatud võtit ei saa tagasi tuua: uus võti on uus võti.",
+  "door.api.remove_body": "Selle võtmed lakkavad töötamast ja {app} ei saa enam tafile {taf} tööd anda. Alustamata päringud tühistatakse; käimasolev päring viiakse lõpuni. Juba tehtut tagasi ei võeta.",
+  "door.api.revoke_body": "Selle saadetud alustamata päringud tühistatakse. Käimasolev päring viiakse lõpuni. Kohe lõpetamiseks peata taf. Tühistatud võtit ei saa tagasi tuua: uus võti on uus võti.",
   "door.api.revoke_reason": "Tühista „{key}”",
   "door.api.revoke_title": "Kas tühistada „{key}”?",
   "door.api.row": {
@@ -53,7 +53,7 @@
   "door.api.shown_once": "Näidatakse ainult praegu.",
   "door.api.shown_once_body": "Kopeeri see rakenduse {app} saladustesse. tafs ei hoia koopiat, mida saaks uuesti näidata.",
   "door.api.today": "Täna",
-  "door.api.two_keys": "Kõige rohkem kaks võtit, et saaksid ühe asendada teist peatamata.",
+  "door.api.two_keys": "Kõige rohkem kaks võtit, et saaksid ühe asendada nii, et teine töötab edasi.",
   "door.api.up_to": {
     "one": "kuni {count}",
     "other": "kuni {count}"
@@ -74,8 +74,8 @@
     "other": "Täna kõigilt teistelt {others}/{count}."
   },
   "door.day.resting": {
-    "one": "Täna sinult ja seotud saatjatelt {count}/{count}. Rohkemad jäetakse homseni kõrvale.",
-    "other": "Täna sinult ja seotud saatjatelt {count}/{count}. Rohkemad jäetakse homseni kõrvale."
+    "one": "Täna sinult ja seotud saatjatelt {count}/{count}. Rohkem sõnumeid jäetakse homseni vastu võtmata.",
+    "other": "Täna sinult ja seotud saatjatelt {count}/{count}. Rohkem sõnumeid jäetakse homseni vastu võtmata."
   },
   "door.dial.add_position": "Lisa uks, {stops}/{stops_2}",
   "door.dial.add_stamp": "LISA UKS",
@@ -90,7 +90,7 @@
   "door.door_dial": "Uste valikuketas",
   "door.door_removed": "See uks eemaldati.",
   "door.doors_turn_pick_press_open": "Uksed · keera valimiseks, vajuta avamiseks",
-  "door.footer": "Uksele võib kirjutada igaüks. Tafile {taf} saavad tööd anda ainult inimesed, kelle sa sead, ja ülejäänu otsustab selle Card.",
+  "door.footer": "Uksele võib kirjutada igaüks. Tafile {taf} saavad tööd anda ainult inimesed, kelle sa seod, ja ülejäänu otsustab selle Card.",
   "door.hi_like_back_order": "Tere, sooviksin tellimuselt T-3001 15 $ tagasi.",
   "door.ignore": "Eira",
   "door.key.foot": "{how}. Sõnum loetakse nende omaks ainult siis, kui see kehtib; kõik teised koputavad.",
@@ -108,16 +108,16 @@
   "door.knock.pair": "Seo {name}",
   "door.knock.pair_them": "Seo nad",
   "door.knock.paired_by": "SEOTUD · {app} KAUDU",
-  "door.knock.paired_line": "Seotud · Tee ära või Eira see sõnum",
+  "door.knock.paired_line": "Seotud · Tee ära või Eira seda sõnumit",
   "door.knock.proof_failed": "See väidab, et on saatjalt {from}, kuid ei läbinud saatja kontrolli, seega koheldakse seda võõra omana.",
   "door.knock.proof_none": "See uks ei saa tõestada, kes selle kirjutas.",
   "door.knock.rest_keys": {
-    "one": "See uks sai tänaseks kõik sõnumid sinult ja seotud saatjatelt. Veel {count} jäeti kõrvale.",
-    "other": "See uks sai tänaseks kõik sõnumid sinult ja seotud saatjatelt. Veel {count} jäeti kõrvale."
+    "one": "Selle ukse sõnumid sinult ja seotud saatjatelt on tänaseks täis. Veel {count} jäeti vastu võtmata.",
+    "other": "Selle ukse sõnumid sinult ja seotud saatjatelt on tänaseks täis. Veel {count} jäeti vastu võtmata."
   },
   "door.knock.rest_others": {
-    "one": "See uks sai tänaseks kõik sõnumid inimestelt, kes pole seotud. Veel {count} jäeti kõrvale.",
-    "other": "See uks sai tänaseks kõik sõnumid inimestelt, kes pole seotud. Veel {count} jäeti kõrvale."
+    "one": "Selle ukse sõnumid inimestelt, kes pole seotud, on tänaseks täis. Veel {count} jäeti vastu võtmata.",
+    "other": "Selle ukse sõnumid inimestelt, kes pole seotud, on tänaseks täis. Veel {count} jäeti vastu võtmata."
   },
   "door.knock.too_many": "Paari minutiga on see palju sõnumeid. Oota veidi ja saada see siis uuesti: midagi ei saadetud.",
   "door.knock.wrote": "{who} kirjutas. Midagi ei tehtud.",
@@ -140,7 +140,7 @@
   "door.pair_intro": "Nende sõnumid sellele uksele ({door}) annavad tööd, Cardi piires. Kõigi teiste omad ainult koputavad.",
   "door.pair_someone": "Seo keegi",
   "door.paired": "Seotud",
-  "door.paired_senders_today_more_dropped": "Täna sinult ja seotud saatjatelt {limit}/{limit_2}. Rohkemad jäetakse homseni kõrvale.",
+  "door.paired_senders_today_more_dropped": "Täna sinult ja seotud saatjatelt {limit}/{limit_2}. Rohkem sõnumeid jäetakse homseni vastu võtmata.",
   "door.paired_senders_today_text_only": "Täna sinult ja seotud saatjatelt {today}/{limit}. Ainult tekst: manuseid ei avata ja vastus ütleb seda.",
   "door.press_add_door": "Ukse lisamiseks vajuta nuppu {taf}",
   "door.press_close": "Vajuta nuppu {taf}, et sulgeda uks {door}",

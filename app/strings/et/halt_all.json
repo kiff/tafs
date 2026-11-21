@@ -1,11 +1,11 @@
 {
-  "halt_all.description": "Peatab kõik tafid korraga. Midagi uut ei saadeta, kuni jätkad neid tafsis.",
+  "halt_all.description": "Peatab kõik tafid korraga. Midagi uut ei saadeta enne, kui jätkad neid tafsis.",
   "halt_all.failed": "tafs ei saanud sinu tafisid peatada. {why} Peatamiseks ava tafs.",
   "halt_all.halted": {
-    "one": "{count} taf peatatud. Midagi uut ei saadeta, kuni jätkad.",
-    "other": "{count} tafi peatatud. Midagi uut ei saadeta, kuni jätkad."
+    "one": "{count} taf peatatud. Midagi uut ei saadeta enne, kui jätkad.",
+    "other": "{count} tafi peatatud. Midagi uut ei saadeta enne, kui jätkad."
   },
-  "halt_all.halted_all": "Sinu tafid on peatatud. Midagi uut ei saadeta, kuni jätkad.",
+  "halt_all.halted_all": "Sinu tafid on peatatud. Midagi uut ei saadeta enne, kui jätkad.",
   "halt_all.halting": {
     "one": "{count} tafi peatamine: ükski käivitus ei alga. KIFF pole veel iga osa kinnitanud; tafs näitab, kui on.",
     "other": "{count} tafi peatamine: ükski käivitus ei alga. KIFF pole veel iga osa kinnitanud; tafs näitab, kui on."

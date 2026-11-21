@@ -54,7 +54,7 @@
   "receipt.not_signed_yet": "KIFFi kviitung · veel allkirjastamata",
   "receipt.outcome.card_refused": "Saatmata. Selle Card keeldus.",
   "receipt.outcome.done": "Tehtud.",
-  "receipt.outcome.moved": "Tehtud. Liigutati {amount}.",
+  "receipt.outcome.moved": "Tehtud. Kanti üle {amount}.",
   "receipt.outcome.refused_by": "Saatmata. Keeldus: {who}.",
   "receipt.outcome.waiting": "Ootab sinu vastust.",
   "receipt.refused_by": "Keeldus: {who}",

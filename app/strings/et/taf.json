@@ -27,10 +27,10 @@
   "taf.halt.resuming": "Jätkamine…",
   "taf.halt.title": "Peata",
   "taf.halt.title_all": "Peata kõik",
-  "taf.halt.who_holds": "Kes peatust hoiab",
+  "taf.halt.who_holds": "Kes peatamist hoiab",
   "taf.its_work": "Selle töö",
   "taf.job_label": "Tafi {taf} töö",
-  "taf.keys_kept_sealed": "Ükski taf ei näe oma võtmeid",
+  "taf.keys_kept_sealed": "Ükski taf ei näe selle võtmeid",
   "taf.last_run": "Viimane käivitus",
   "taf.memory.empty": "Veel midagi pole. See paneb kirja, mida õpib selle kohta, kuidas sulle töö tegemine meeldib.",
   "taf.memory.explains": "Iga käivitus ja vestlus algab nendega. Need mõjutavad seda, kuidas see töötab, mitte kunagi seda, mida selle Card lubab. Unusta eemaldab selle ühe märkme ja selle varasemad versioonid; varasemad vestlused ja käivituste aruanded jäävad alles, kuni taf eemaldatakse.",
@@ -65,8 +65,8 @@
   "taf.refresh": "Värskenda",
   "taf.remove.button": "Eemalda",
   "taf.remove.cards_left": {
-    "one": "KIFF ei tühistanud {count} selle Cardi: tühista see KIFFis.",
-    "other": "KIFF ei tühistanud {count} selle Cardi: tühista need KIFFis."
+    "one": "KIFF ei tühistanud selle Cardidest {count}: tühista see KIFFis.",
+    "other": "KIFF ei tühistanud selle Cardidest {count}: tühista need KIFFis."
   },
   "taf.remove.cards_revoked": "Selle Cardid on KIFFis tühistatud.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud ei vastanud ({why}). Kui eemaldamine algas, lõpetab tafs selle järgmisel värskendusel; kui mitte, puuduta uuesti Eemalda.",

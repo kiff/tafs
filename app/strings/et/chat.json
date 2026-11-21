@@ -85,7 +85,7 @@
   "chat.steer.taf_reads_next": "{taf} loeb seda oma järgmisel sammul",
   "chat.steer.taf_reads_paused": "{taf} loeb seda, kui jätkab",
   "chat.stop": "Lõpeta",
-  "chat.stopped.declined": "{taf} lõpetas: AI keeldus jätkamast. Proovi küsida teisiti.",
+  "chat.stopped.declined": "{taf} lõpetas: tehisintellekt (AI) keeldus jätkamast. Proovi küsida teisiti.",
   "chat.stopped.out_of_room": "{taf} lõpetas: selle vastusel sai ruum otsa. Küsi midagi lühemat või üks osa korraga.",
   "chat.taf_is_answering": "{taf} vastab",
   "chat.the_taf": "Taf",
