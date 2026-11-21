@@ -345,10 +345,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 
 ## Known limits
 
-- **A window a page's script opens** (from a blank frame, say) is fenced from its first request on, not before: Chrome gives
-  the extension its tab only once it navigates, so its first load is what the fence sees first. The run's own window never
+- **A window a page's script opens** (from a blank frame, say) is fenced only *after* its first request: Chrome gives the
+  extension its tab only once it navigates, so that first request goes out before the fence holds it. The run's own window never
   opens one (`window.open` is off in its tabs, and `target` is forced to `_self`).
-- **A screenshot** of a page isn't something the extension takes or sends.
 
 ## Not done yet
 
