@@ -319,11 +319,9 @@ enum KIFFMapping {
         call.tafReason = tafWords(e.tafReason, max: 280)
         call.agent = e.subject
         call.breachOutcomes = e.breaches.map(\.outcome)
-        if let step = browserStep(e.browser) {
-            call.browser = step
-            // The act in planque's words is what the card asks, not the tool's name.
-            call.proposed.summary = step.actionWords
-        }
+        // The summary stays KIFF's: planque's words for the act carry the element's own label, which the page wrote,
+        // so they're drawn only in the block's page part, never as what the card asks.
+        call.browser = browserStep(e.browser)
         return call
     }
 

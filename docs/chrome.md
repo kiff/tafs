@@ -275,7 +275,8 @@ browser: {
 }
 ```
 
-- **The act is what the card asks.** `action_words` takes the place of the tool's name. The total is the hold's own
+- **The card's summary stays KIFF's.** `action_words` holds the element's own label, which the page wrote, so it's
+  drawn under "On the page" with the page's title and text, never as what the card asks. The total is the hold's own
   amount, the taf's reason is its own `taf_reason`, and the rule and answers stay as they are for any held call.
 - **The words approved are the words shown.** The hold's signed answer covers the block's JCS SHA-256, so the phone signs
   over what it drew. Until that's in the answer's signed message, the phone signs as for any hold.

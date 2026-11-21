@@ -607,8 +607,10 @@ struct SetAllAsideButton: View {
 }
 
 /// A held browser step's place on the card (docs/chrome.md, "The approval card"): the site large and its exact origin
-/// small, the paired Chrome it would run in, what the page showed around the element, and the basket's lines when it's
-/// a checkout (its total is KIFF's amount, at the top of the card). Every line is planque's or the page's, drawn verbatim: never markup, never a link.
+/// small, the paired Chrome it would run in, then under "On the page" the act with the element's own label, the page's
+/// title and what it showed around the element, and the basket's lines when it's a checkout (its total is KIFF's
+/// amount, at the top of the card). Every line is planque's or the page's, drawn verbatim: never markup, never a link,
+/// and never the card's summary, which stays KIFF's.
 struct BrowserStepBlock: View {
     let step: BrowserStep
 
@@ -626,18 +628,19 @@ struct BrowserStepBlock: View {
                         .scaledFont(13).foregroundColor(Theme.soft)
                 }
             }
-            if step.pageTitle != nil || step.pageText != nil {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(Words.Chrome.heldPage)
-                        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
-                    if let title = step.pageTitle {
-                        Text(verbatim: title).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if let text = step.pageText {
-                        Text(verbatim: text).scaledFont(13).foregroundColor(Theme.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Words.Chrome.heldPage)
+                    .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
+                Text(verbatim: step.actionWords).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("held.browser.act")
+                if let title = step.pageTitle {
+                    Text(verbatim: title).scaledFont(13, weight: .semibold).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let text = step.pageText {
+                    Text(verbatim: text).scaledFont(13).foregroundColor(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             if !step.basket.isEmpty {

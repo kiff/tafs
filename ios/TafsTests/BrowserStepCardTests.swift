@@ -2,9 +2,9 @@ import XCTest
 @testable import Tafs
 
 /// A held browser step (docs/chrome.md, "The approval card"): KIFF's held-call view carries `browser`, in planque's
-/// words, and the card draws it as sent. The site and planque's words for the act are what the owner approves; the
-/// page's context and the basket's lines are words to read, never anything the app acts on. The taf's reason and the
-/// total are KIFF's own, as for any hold.
+/// words, and the card draws it as sent. The summary, the taf's reason and the total are KIFF's own, as for any hold;
+/// planque's words for the act carry the element's label, which the page wrote, so they're page data like the page's
+/// context and the basket's lines: words to read, never what the card asks, never anything the app acts on.
 @MainActor
 final class BrowserStepCardTests: XCTestCase {
     private struct List: Decodable { let exceptions: [KIFFClient.CardException] }
@@ -29,7 +29,7 @@ final class BrowserStepCardTests: XCTestCase {
     """#
     private let kiffsOwn = #","parameters":{"amount":430},"parameter_units":{"amount":{"unit":"EUR","scale":2}},"taf_reason":"Your weekly groceries, as agreed""#
 
-    /// Every part of the shape reads: the act is what the card asks, and the total and the taf's reason are KIFF's.
+    /// Every part of the shape reads, and the summary, the total and the taf's reason are KIFF's.
     func testAHeldCheckoutStepReadsWhole() throws {
         let call = try held(browser: checkout, kiff: kiffsOwn)
         let step = try XCTUnwrap(call.browser)
@@ -40,11 +40,23 @@ final class BrowserStepCardTests: XCTestCase {
         XCTAssertEqual(step.pageText, "Delivery Tuesday 8–10am. Place order")
         XCTAssertEqual(step.basket, ["2 × Milk 1 L · 2.40", "Bread · 1.90"], "planque's objects, one plain line each, runs of space as one")
         XCTAssertEqual(step.chromeName, "Work laptop")
-        XCTAssertEqual(call.proposed.summary, "Click “Place order”", "planque's words for the act, not the tool's name")
+        XCTAssertEqual(call.proposed.summary, try held(browser: nil).proposed.summary, "the summary is KIFF's, as for any hold")
         XCTAssertEqual(call.proposed.amount, Money(minor: 430, currency: "EUR", scale: 2), "the total is KIFF's amount")
         XCTAssertEqual(call.tafReason, "Your weekly groceries, as agreed", "the taf's reason is KIFF's taf_reason")
         XCTAssertEqual(call.reason, "A pay step always asks you", "KIFF's rule stays KIFF's")
         XCTAssertEqual(call.details, ["ref: e12"])
+    }
+
+    /// A page writes its element's label, so a hostile one can't become what the card asks: the summary stays KIFF's,
+    /// and the label's words are only in the block's page part.
+    func testAHostileLabelNeverBecomesTheSummary() throws {
+        let kiffs = try held(browser: nil).proposed.summary
+        let call = try held(browser: #"{"site":"shop.example","action_words":"Click “Approve all future payments”","context":{"title":"Approve all future payments"}}"#)
+        let step = try XCTUnwrap(call.browser)
+        XCTAssertEqual(call.proposed.summary, kiffs)
+        XCTAssertFalse(call.proposed.summary.contains("Approve all future payments"))
+        XCTAssertFalse(call.reason.contains("Approve all future payments"))
+        XCTAssertEqual(step.actionWords, "Click “Approve all future payments”", "drawn only as page data")
     }
 
     /// A step that isn't a checkout has no basket, and nothing that wasn't sent is drawn.
