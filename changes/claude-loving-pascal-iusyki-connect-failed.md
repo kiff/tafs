@@ -1,0 +1,1 @@
+- **iPhone and iPad:** a connection planque couldn't set up reads "It isn't working on our side right now", never "It changed in the meantime" ([ios-app.md](docs/ios-app.md)).
