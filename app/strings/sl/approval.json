@@ -84,7 +84,7 @@
   },
   "approval.security_key.wrong_pin_no_count": "Napačen PIN. Poskusite znova.",
   "approval.set_a_screen_lock": "Za odobravanje v tem telefonu nastavite zaklepanje zaslona",
-  "approval.settings_face_id_passcode_touch": "Settings → Face ID & Passcode (Touch ID & Passcode na napravi s Touch ID)",
+  "approval.settings_face_id_passcode_touch": "Nastavitve → Face ID in koda (Touch ID in koda na napravi s Touch ID)",
   "approval.settings_path.face_id": "Nastavitve → Face ID in koda",
   "approval.settings_path.mac_touch_id": "Sistemske nastavitve → Touch ID in geslo",
   "approval.settings_path.touch_id": "Nastavitve → Touch ID in koda",
