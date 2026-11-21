@@ -48174,6 +48174,12 @@
             "value": "En la cesta"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostukorvis"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48196,6 +48202,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "장바구니"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krepšelyje"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grozā"
           }
         },
         "nl": {
@@ -48245,6 +48263,12 @@
             "value": "En %1$@"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brauseris: %1$@"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48267,6 +48291,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@에서"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naršyklėje: %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pārlūkā: %1$@"
           }
         },
         "nl": {
@@ -48316,6 +48352,12 @@
             "value": "En la página"
           }
         },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lehel"
+          }
+        },
         "fr": {
           "stringUnit": {
             "state": "translated",
@@ -48338,6 +48380,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "페이지 내용"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puslapyje"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lapā"
           }
         },
         "nl": {

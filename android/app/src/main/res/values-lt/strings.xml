@@ -628,6 +628,9 @@
     <string name="chrome_confirm">Susieti</string>
     <string name="chrome_expired">Kodas nebegalioja, todėl niekas nesusieta. Pradėkite iš naujo.</string>
     <string name="chrome_footer">Jūsų taf susietą Chrome gali naudoti tik ryšyje nurodytose svetainėse, o rizikingus veiksmus patvirtinate čia.</string>
+    <string name="chrome_held_basket">Krepšelyje</string>
+    <string name="chrome_held_in">Naršyklėje: %1$s</string>
+    <string name="chrome_held_page">Puslapyje</string>
     <string name="chrome_name_label">Pavadinimas</string>
     <string name="chrome_none">Nesusieta jokia Chrome naršyklė.</string>
     <string name="chrome_not_loaded">Nepavyko nuskaityti jūsų Chrome naršyklių: %1$s</string>

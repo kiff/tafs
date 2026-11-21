@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Seo</string>
     <string name="chrome_expired">Kood aegus, seega midagi ei seotud. Alusta uuesti.</string>
     <string name="chrome_footer">Sinu tafid saavad seotud Chrome\'i kasutada ainult ühenduses loetletud saitidel ja riskantsed sammud kinnitad sina siin.</string>
+    <string name="chrome_held_basket">Ostukorvis</string>
+    <string name="chrome_held_in">Brauseris: %1$s</string>
+    <string name="chrome_held_page">Lehel</string>
     <string name="chrome_name_label">Nimi</string>
     <string name="chrome_none">Ühtegi Chrome\'i pole seotud.</string>
     <string name="chrome_not_loaded">Sinu Chrome\'e ei õnnestunud lugeda: %1$s</string>

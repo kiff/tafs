@@ -628,6 +628,9 @@
     <string name="chrome_confirm">Savienot pārī</string>
     <string name="chrome_expired">Koda derīgums beidzās, tāpēc nekas netika savienots pārī. Sāc no jauna.</string>
     <string name="chrome_footer">Tavi taf var izmantot savienoto Chrome tikai savienojumā norādītajās vietnēs, un riskantus soļus tu apstiprini šeit.</string>
+    <string name="chrome_held_basket">Grozā</string>
+    <string name="chrome_held_in">Pārlūkā: %1$s</string>
+    <string name="chrome_held_page">Lapā</string>
     <string name="chrome_name_label">Nosaukums</string>
     <string name="chrome_none">Neviens Chrome nav savienots pārī.</string>
     <string name="chrome_not_loaded">Neizdevās nolasīt tavus Chrome: %1$s</string>
