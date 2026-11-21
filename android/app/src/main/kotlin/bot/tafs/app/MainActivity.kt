@@ -406,7 +406,7 @@ fun RootView(model: AppModel) {
           )
         },
       ) {
-        SignedInView(model, onSignIn = { signingIn = true })
+        SignedInView(model, onSignIn = { signingIn = true }, celebrating = celebrating)
       }
     }
   }
@@ -466,7 +466,7 @@ fun RootView(model: AppModel) {
 internal fun accountShown(state: bot.tafs.app.app.AppState): String = "${state.mode}/${state.kiffAccount?.tenantId.orEmpty()}"
 
 @Composable
-internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
+internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Boolean = false) {
   val state by model.state.collectAsState()
   val scope = rememberCoroutineScope()
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
@@ -1095,7 +1095,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).
-    state.aiConsent?.takeIf { state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
+    // Never under the celebration of a sign-in inside the app: it opens once that's gone, in order (K5, 21 Nov).
+    state.aiConsent?.takeIf { !celebrating && state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
       bot.tafs.app.views.AIConsentSheet(
         consent, busy = state.aiConsentBusy, error = state.aiConsentError,
         onAllow = { scope.launch { model.allowAI() } }, onNotNow = model::notNowAI,
