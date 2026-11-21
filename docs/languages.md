@@ -198,6 +198,38 @@ For the countries on sale without their language's app screens (GR, CY, EE, LV, 
 `shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
 word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
 
+### Estonian (et)
+
+Addressed as **sina**; buttons are sina imperatives. taf, Coach and Card take Estonian endings with no apostrophe (tafi,
+tafsi, Cardi, Coachilt). A value (`{taf}`, `{device}`, `{vendor}`) never takes an ending, so a sentence stands it in the
+nominative ("tafi {taf} Card", "see {device}").
+
+| English | Estonian |
+|---|---|
+| Needs you | Vajab sind |
+| Approve / Approve once | Kinnita / Kinnita üks kord |
+| Refuse | Keeldu |
+| held | kinni peetud |
+| Halt / Halted | Peata / Peatatud |
+| Stopped | Lõpetatud |
+| Pause / Paused | Pausile / Pausil |
+| Resume | Jätka |
+| Revoke | Tühista |
+| Record | Logi |
+| Connect / connection | Ühenda / ühendus |
+| Pair | Seo |
+| Account | Konto |
+| limit / spend limit | limiit / kululimiit |
+| credits / credit pack | krediidid / krediidipakett |
+| Sign in / Sign out | Logi sisse / Logi välja |
+| Inbox | Postkast |
+| Overview | Ülevaade |
+| Calendar | Kalender |
+| Setup | Seadistus |
+| Usage | Kasutus |
+| plan (billing) | pakett |
+| Cancel / Continue | Loobu / Edasi |
+
 ### Latvian (lv)
 
 Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,

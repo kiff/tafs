@@ -8063,7 +8063,7 @@ class AppModel(
   private fun showAccount(account: Account) {
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
-    val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
+    val offer = device.takeIf { !sameTime(it, account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
     // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
     // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
     val viewOnly = account.viewOnly
@@ -8076,6 +8076,18 @@ class AppModel(
         noApprovalKeyHere = noApprovalKey,
       )
     }
+  }
+
+  /**
+   * Whether two zones keep the same time always: the same name, or names for one fixed offset ("GMT", "UTC", "Etc/UTC", "Z"). A
+   * phone on GMT is never asked to move an account on UTC (K5, 21 Nov). Zones that differ in any season (Europe/London and GMT)
+   * still differ.
+   */
+  internal fun sameTime(a: String, b: String): Boolean {
+    if (a == b) return true
+    val za = runCatching { java.time.ZoneId.of(a).normalized() }.getOrNull() ?: return false
+    val zb = runCatching { java.time.ZoneId.of(b).normalized() }.getOrNull() ?: return false
+    return za == zb
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
