@@ -1,6 +1,6 @@
 [versions]
 androidxFragment = "1.9.1"
-androidGradlePlugin = "9.1.1"
+androidGradlePlugin = "9.5.2"
 androidxCore = "1.19.1"
 androidxLifecycle = "2.10.0"
 androidxActivity = "1.13.0"
