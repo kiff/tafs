@@ -3278,7 +3278,7 @@ export function settledApprovalAnswer(answer: unknown): string | undefined {
   return undefined;
 }
 
-export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
+export function approvalAnswerWords(b: { type?: unknown; answer?: unknown; note?: unknown }, lang: Lang): string | undefined {
   if (b.type !== "approval" || typeof b.answer !== "string") return undefined;
   const w = wordsIn(lang);
   if (b.answer === "approved") return w.approval_answer_approved;
@@ -3288,7 +3288,10 @@ export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lan
     // A connect step that worked by design, its Card next: never "it didn't go through".
     const next = why.endsWith(`; ${CARD_NEXT}`) ? / is connected$/.exec(why.slice(0, -`; ${CARD_NEXT}`.length)) : null;
     if (next) return w.approval_connected_card_next(why.slice(0, next.index));
-    return w.approval_answer_failed(why);
+    // The reason after "failed: " is written for Coach (what to draft again, what never to say), never for the owner
+    // (21 Nov, the owner on the emulator: a refused Card's line carried "Show the rules again as a new notice…"). The
+    // owner reads the line alone, or the owner's own note where tafs cloud kept one (the precheck's).
+    return w.approval_answer_failed(typeof b.note === "string" && b.note ? b.note : undefined);
   }
   return undefined;
 }
@@ -3460,7 +3463,7 @@ const splitKeys = {
 async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
   if (!deps.coach || !me.capabilities.includes("cards.manage")) return;
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
     ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   for (const c of components) {
     const card = c.component as { type?: unknown; grant?: unknown; draft?: unknown; id?: unknown } | undefined;
@@ -3505,7 +3508,7 @@ const precheckKeys = {
   told: (tenant: string, draft: string, version: string) => `${tenant}#draft-precheck-told#${draft}#${version}`,
 };
 /** A refusal Coach was told on a chat's read: its answer, so every phone draws the card as answered. */
-interface PrecheckTold { answer: string; at: string }
+interface PrecheckTold { answer: string; at: string; note?: string }
 
 /**
  * A Card draft checked as the phone reads the chat, before its card is drawn (Eval 43690861487's Refunds: the owner
@@ -3524,7 +3527,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
   if (!component) return undefined;
   const now = nowOf(deps);
   const lang = langOf(event);
-  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at,
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer, note: t.note }, lang) ?? "", at: t.at,
     ...(settledApprovalAnswer(t.answer) ? { answer: settledApprovalAnswer(t.answer) } : {}) });
   const claim = precheckKeys.claim(me.tenantID, ask.draft, ask.version);
   const toldKey = precheckKeys.told(me.tenantID, ask.draft, ask.version);
@@ -3556,7 +3559,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
     if (!(err instanceof HTTPError && err.status === 409)) await release();
     return undefined;
   }
-  const told: PrecheckTold = { answer: out.answer, at: now.toISOString() };
+  const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), ...(out.note ? { note: out.note } : {}) };
   await deps.coach.put(toldKey, told, kept).catch(() => undefined);
   return shown(told);
 }

@@ -221,7 +221,7 @@ export const en = {
   // An approval card's answer in the thread, as the app words it (coach.answer.approve_failed).
   approval_answer_approved: "Approved",
   approval_answer_declined: "Declined",
-  approval_answer_failed: (why: string) => `Approve · it didn't go through: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Approve · it didn't go through: ${why}` : `Approve · it didn't go through`,
   /** The phone's Face ID or Touch ID line for signing a connection, and a Card: the app and the taf by name, never a slug or an agent id. */
   approval_reason_connect: (vendor: string, taf: string) => `Connect ${vendor} to ${taf}`,
   approval_reason_card: (taf: string) => `Give ${taf} its Card`,

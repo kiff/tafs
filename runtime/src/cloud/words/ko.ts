@@ -205,7 +205,7 @@ export const ko: Words = {
   approval_status: (status: string) => ({ pending: "대기 중", approved: "승인됨", signed_in: "로그인됨", needs_reconnect: "다시 로그인 필요", listed: "목록에 있음", connected: "연결됨", failed: "실패", revoked: "취소됨", unknown: "알 수 없음" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "승인됨",
   approval_answer_declined: "거부됨",
-  approval_answer_failed: (why: string) => `승인 · 처리되지 않았습니다: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `승인 · 처리되지 않았습니다: ${why}` : `승인 · 처리되지 않았습니다`,
   approval_reason_connect: (vendor: string, taf: string) => `${taf}에 ${vendor} 연결`,
   approval_reason_card: (taf: string) => `${taf}에 Card 주기`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} 연결`,

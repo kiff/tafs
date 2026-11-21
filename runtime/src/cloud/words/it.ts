@@ -207,7 +207,7 @@ export const it: Words = {
   approval_status: (status: string) => ({ pending: "in attesa", approved: "approvato", signed_in: "con accesso eseguito", needs_reconnect: "in attesa di un nuovo accesso", listed: "elencato", connected: "collegato", failed: "non riuscito", revoked: "scollegato", unknown: "sconosciuto" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Approvato",
   approval_answer_declined: "Rifiutato",
-  approval_answer_failed: (why: string) => `Approva · non è andata a buon fine: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Approva · non è andata a buon fine: ${why}` : `Approva · non è andata a buon fine`,
   approval_reason_connect: (vendor: string, taf: string) => `Collega ${vendor} a ${taf}`,
   approval_reason_card: (taf: string) => `Dai a ${taf} la sua Card`,
   approval_reason_connect_unnamed: (vendor: string) => `Collega ${vendor}`,
