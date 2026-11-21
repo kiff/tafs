@@ -34,6 +34,9 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case askFull = "ask_full"
         /// Chatting with a taf: the last turns of the person's own chat with the taf in `taf`, as the phone shows it. Read only.
         case tafChat = "taf_chat"
+        /// The watch's own recording, sent ahead as a file (`WatchVoice`), turned into text on the phone with its on-device
+        /// recognizer only, by the recording's id in `message`; only the text comes back (`WatchReply.text`). Never sent twice.
+        case transcribe
     }
 
     /// How old a request may be when the phone reads it, either way.
@@ -95,6 +98,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .coachRead: return ticket?.isComplete ?? false
         case .askFull: return (ticket?.isComplete ?? false) && ticket?.askID != nil
         case .tafChat: return given(taf) && (taf ?? "").count <= Self.tafIDLimit
+        case .transcribe: return WatchVoice.isID(message)
         }
     }
 }
@@ -143,11 +147,13 @@ struct WatchReply: Codable, Equatable, Sendable {
     /// phone's from the first screen (row 44, C), as Wear OS's `WatchReply.Tafs.zone`. None from an older phone: the
     /// watch's own.
     var zone: String?
+    /// `transcribe`: the recording's words, as the phone's on-device recognizer heard them.
+    var text: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
          brief: WatchBrief? = nil, tafPage: WatchTafPage? = nil, calendar: WatchCalendarDay? = nil, account: WatchAccount? = nil,
          line: String? = nil, ticket: WatchCoachTicket? = nil, answering: Bool? = nil, chat: [WatchChatLine]? = nil,
-         zone: String? = nil) {
+         zone: String? = nil, text: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
@@ -161,6 +167,30 @@ struct WatchReply: Codable, Equatable, Sendable {
         self.answering = answering
         self.chat = chat
         self.zone = zone
+        self.text = text
+    }
+}
+
+/// The watch's own recording for the phone to turn into text (row 44, A; as Wear OS's tafs#1596), behind `on` (off): the
+/// watch records itself, so a pause doesn't cut it off, and the phone's on-device recognizer makes the text. The file goes
+/// over WatchConnectivity's `transferFile` with its id in the metadata, then `transcribe` asks for its text by that id.
+enum WatchVoice {
+    /// Off until the privacy page's Apple Watch paragraph says the watch records and the phone turns it into text, and the
+    /// owner says yes: it says today that the watch makes no recording.
+    static let on = false
+    /// The metadata key that marks a file as a recording and gives its id.
+    static let metadataKey = "tafs_voice"
+    /// The longest recording, as Wear OS's.
+    static let limit: TimeInterval = 30
+    /// About this long with nothing said ends the recording, as Wear OS's.
+    static let quietEnds: TimeInterval = 8
+    /// The longest either copy is kept, however it ends: on the phone from when it arrives, on the watch from when it's made.
+    static let keepFor: TimeInterval = 120
+
+    /// A recording's id: a UUID, so it can name nothing else, and a file named by it can't leave its folder.
+    static func isID(_ value: String?) -> Bool {
+        guard let value else { return false }
+        return UUID(uuidString: value)?.uuidString.lowercased() == value.lowercased()
     }
 }
 

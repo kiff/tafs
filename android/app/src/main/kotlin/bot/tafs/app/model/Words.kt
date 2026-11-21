@@ -2928,6 +2928,7 @@ object Words {
     fun readyCount(count: Int): String = Res.p(R.plurals.watch_ready_count, count, Res.number(count))
     val recentChats: String get() = Res.s(R.string.watch_recent_chats)
     val recording: String get() = Res.s(R.string.watch_recording)
+    val recordingNotReceived: String get() = Res.s(R.string.watch_recording_not_received)
     val refused: String get() = Res.s(R.string.watch_refused)
     val reply: String get() = Res.s(R.string.watch_reply)
     val rerecord: String get() = Res.s(R.string.watch_rerecord)

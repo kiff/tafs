@@ -74,6 +74,7 @@
   },
   "watch.recent_chats": "Chat recenti",
   "watch.recording": "Registrazione",
+  "watch.recording_not_received": "La registrazione non è arrivata al telefono. Riprova, oppure scrivi.",
   "watch.refused": "Rifiutata. Non è stato inviato nulla.",
   "watch.reply": "Rispondi",
   "watch.rerecord": "Registra di nuovo",

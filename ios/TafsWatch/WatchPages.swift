@@ -109,6 +109,8 @@ struct CoachHome: View {
     let openInbox: () -> Void
     let openMenu: () -> Void
     @State private var asking = false
+    /// The watch's own recording, behind `WatchVoice.on` (row 44, A): its text then opens Check before sending.
+    @State private var recording = false
 
     var body: some View {
         NavigationStack {
@@ -117,7 +119,14 @@ struct CoachHome: View {
                 ForEach(coach.turns) { turn in
                     CoachTurnRow(turn: turn)
                 }
-                Button { Task { if await WatchDictation.talk(to: coach) { asking = true } } } label: {
+                Button {
+                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+                    if WatchVoice.on, coach.listensFirst {
+                        recording = true
+                    } else {
+                        Task { if await WatchDictation.talk(to: coach) { asking = true } }
+                    }
+                } label: {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
                 }
@@ -136,6 +145,9 @@ struct CoachHome: View {
         }
         .sheet(isPresented: $asking) {
             CoachAsk(model: coach)
+        }
+        .sheet(isPresented: $recording, onDismiss: { if coach.reviewing { asking = true } }) {
+            VoiceRecordScreen(model: VoiceModel { words in coach.review(words) })
         }
         .task { await needsYou.load() }
     }

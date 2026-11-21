@@ -5429,6 +5429,8 @@ enum Words {
         static var recentChats: String { Words.line("watch.recent_chats") }
         /// Recording
         static var recording: String { Words.line("watch.recording") }
+        /// The recording didn't reach your phone. Try again, or type instead.
+        static var recordingNotReceived: String { Words.line("watch.recording_not_received") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
