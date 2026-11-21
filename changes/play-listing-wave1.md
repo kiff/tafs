@@ -1,0 +1,1 @@
+- **Store listing (draft):** Google Play's Latin American Spanish (es-419) and Brazilian Portuguese (pt-BR) listings for Wave 1, as copies of es and pt for legal-i18n to adapt; nothing is applied in Play Console yet ([store-listing.md](docs/store-listing.md)).

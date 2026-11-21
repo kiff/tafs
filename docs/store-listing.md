@@ -902,3 +902,105 @@ taf는 내 비밀번호나 토큰을 절대 보지 않습니다. 승인은 휴�
 tafs 서비스 약관(영어): https://kiff.dev/tafs/terms
 개인정보처리방침(영어): https://kiff.dev/tafs/privacy
 ```
+
+## Spanish, Latin America (es-419)
+
+**Draft for Wave 1 (Latin America), Google Play only, repo only.** It starts as a copy of es (es-ES)'s Play fields, above, for legal-i18n to
+adapt to Latin American Spanish: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
+things in Latin American Spanish, and the Plans paragraph's price link, which opens the euro prices, while the Terms say the store's local
+price applies outside the euro area (kiff/cloud#50). Lengths are re-counted once the text is final. Applying it in Play Console
+waits for the owner's Wave 1 yes. The App Store's es-MX is mac12's (tafs#1625).
+
+### Google Play
+
+**Title** (30/30): tafs: agentes IA para empresas
+
+**Short description** (78/80): Delega reembolsos, disputas y facturas en agentes de IA. Tú tienes el control.
+
+**Full description** (3257/4000):
+
+```
+They taf. You kiff.
+Automatiza tu negocio sin perder el control.
+
+Cada día se acumulan las mismas tareas. Un reembolso que espera hasta mañana puede acabar en un contracargo, con una comisión que quizá pagues aunque ganes. Una disputa que nadie responde a tiempo se pierde. Quien paga tarde sigue pagando tarde. Un lead que espera un día compra en otra parte.
+
+Con tafs, delegas esas tareas. Cuéntale a Coach la tarea con tus palabras o elige una ya hecha. Coach, el asistente de IA de tafs, conecta tus apps y crea un taf: un agente de IA, o compañero de IA, que hace esa tarea cada día. Así dedicas tu tiempo al trabajo que de verdad te gusta.
+
+POR QUÉ PUEDES DEJARLO HACER
+Cada taf trabaja con una Card que tú firmas: lo que hace por su cuenta, lo que te pregunta primero y lo que nunca hace. KIFF comprueba cada acción contra su Card, fuera de la IA, antes de que llegue a tus apps. Ningún prompt cambia un límite, ni siquiera un truco en un correo. Todo lo importante espera tu sí en tu teléfono, con tu huella o tu cara. Sin respuesta, es un no.
+
+TAREAS QUE PUEDES DELEGAR HOY
+• Ningún reembolso espera hasta mañana: responde las solicitudes de reembolso del servicio de atención y reembolsa dentro de la Card, por ejemplo hasta 150 € cada uno y 2.000 € al día.
+• Deja de perder disputas que podrías ganar: responde las disputas de tarjeta antes del plazo con el pedido, la prueba de entrega y los mensajes del cliente.
+• Cobra sin perseguir a nadie: recuerda a los clientes sus facturas vencidas según un calendario y no mueve dinero.
+• No pierdas ni un contacto por responder tarde: convierte cada nueva entrada del formulario en una oportunidad y envía una primera respuesta en menos de una hora.
+• Deja de responder «¿dónde está mi pedido?»: responde las preguntas sobre pedidos consultando la tienda y te pasa todo lo que tenga que ver con dinero.
+Vienen más ya listas: reservas, recibos y retener a clientes que cancelan. Cada límite lo puedes cambiar tú.
+
+LO QUE VES
+• Te necesita: lo que espera tu sí.
+• Registro: todo lo que hicieron tus tafs, lo más reciente primero, con un recibo por cada acción que salió adelante.
+• Chat: pregunta a un taf qué hizo, o dile qué hacer de otra forma, y sigue su trabajo mientras avanza.
+• Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
+
+TUS DATOS
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/tafs/privacy#rights.
+
+PLANES
+Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través de Google Play. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita. Planes y precios: kiff.dev/es/tafs
+
+Condiciones de tafs (en inglés): https://kiff.dev/tafs/terms
+Privacidad (en inglés): https://kiff.dev/tafs/privacy
+```
+
+## Portuguese, Brazil (pt-BR)
+
+**Draft for Wave 1 (Brazil), Google Play only, repo only.** It starts as a copy of pt (pt-PT)'s Play fields, above, for legal-i18n to
+adapt to Brazilian Portuguese: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
+things in Brazilian Portuguese, and the Plans paragraph's price link, which opens the euro prices, while the Terms say the store's local
+price applies outside the euro area (kiff/cloud#50). Lengths are re-counted once the text is final. Applying it in Play Console
+waits for the owner's Wave 1 yes. The App Store's pt-BR is mac12's (tafs#1625).
+
+### Google Play
+
+**Title** (30/30): tafs: agentes IA para empresas
+
+**Short description** (74/80): Entregue reembolsos, disputas e faturas a agentes de IA. O controlo é seu.
+
+**Full description** (3347/4000):
+
+```
+They taf. You kiff.
+Automatize o seu negócio sem perder o controlo.
+
+Todos os dias acumulam-se as mesmas tarefas. Um reembolso que fica para o dia seguinte pode acabar num estorno, com uma taxa que pode pagar mesmo que ganhe. Uma disputa a que ninguém responde a tempo está perdida. Quem paga tarde continua a pagar tarde. Um contacto que espera um dia compra noutro lado.
+
+Com tafs, entrega essas tarefas. Diga ao Coach a tarefa por palavras suas, ou escolha uma já pronta. O Coach, o assistente de IA do tafs, liga as suas apps e cria um taf: um agente de IA, ou colega de IA, que faz essa tarefa todos os dias. Assim dedica o seu tempo ao trabalho de que realmente gosta.
+
+PORQUE PODE DEIXÁ-LO TRABALHAR
+Cada taf trabalha com um Card que assina: o que faz sozinho, o que lhe pergunta primeiro e o que nunca faz. O KIFF verifica cada ação face ao seu Card, fora da IA, antes de chegar às suas apps. Nenhum prompt muda um limite, nem sequer um truque num email. Tudo o que é importante aguarda o seu sim no seu telemóvel, com a sua impressão digital ou o seu rosto. Sem resposta, é não.
+
+TAREFAS QUE PODE ENTREGAR HOJE
+• Nenhum reembolso fica para amanhã: responde aos pedidos de reembolso do apoio ao cliente e reembolsa dentro do Card, por exemplo até 150 € cada e 2000 € por dia.
+• Deixe de perder disputas que podia ganhar: responde às disputas de cartão dentro do prazo com a encomenda, a prova de entrega e as mensagens do cliente.
+• Receba sem andar atrás de ninguém: lembra os clientes das faturas em atraso segundo um calendário e não movimenta dinheiro.
+• Nunca perca um contacto por responder tarde: transforma cada novo preenchimento do formulário numa oportunidade e envia uma primeira resposta em menos de uma hora.
+• Deixe de responder a «onde está a minha encomenda?»: responde às perguntas sobre encomendas consultando a loja e passa-lhe tudo o que envolva dinheiro.
+Há mais prontas: marcações, recibos e manter clientes que cancelam. Cada limite pode ser alterado por si.
+
+O QUE VÊ
+• Precisa de si: o que espera pelo seu sim.
+• Registo: tudo o que os seus tafs fizeram, do mais recente para o mais antigo, com um recibo por cada ação que avançou.
+• Chat: pergunte a um taf o que fez, ou diga-lhe o que fazer de outra forma, e acompanhe o trabalho enquanto decorre.
+• Decide o que aconteceu mesmo: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
+
+OS SEUS DADOS
+O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/tafs/privacy#rights.
+
+PLANOS
+Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através do Google Play. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito. Planos e preços: kiff.dev/pt/tafs
+
+Termos do tafs (em inglês): https://kiff.dev/tafs/terms
+Privacidade (em inglês): https://kiff.dev/tafs/privacy
+```
