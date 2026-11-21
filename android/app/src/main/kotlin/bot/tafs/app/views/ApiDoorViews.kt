@@ -247,6 +247,8 @@ internal fun ApiKeyShownOnce(door: Door, issued: bot.tafs.app.kiff.IssuedKey, en
   var copied by remember { mutableStateOf(false) }
   DriveAlert(
     onDismissRequest = {},
+    // The key never shows in a screenshot, the recents screen or a shared screen: its window is secure.
+    properties = androidx.compose.ui.window.DialogProperties(securePolicy = androidx.compose.ui.window.SecureFlagPolicy.SecureOn),
     title = { Text(Words.Door.Api.shownOnce) },
     text = {
       Column(Modifier.testTag(API_KEY_SHOWN).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
