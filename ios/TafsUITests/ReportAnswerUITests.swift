@@ -52,6 +52,9 @@ final class ReportAnswerUITests: TafsUITestCase {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let item = app.buttons["Report this answer"]
         let send = app.buttons["report-send"]
+        // No assertion inside the loop: with continueAfterFailure off, a failed attempt would end
+        // the test before the next one (agentgabo on #1600). Each check is asserted after it.
+        var menuShown = false
         var sheet = false
         for _ in 0..<3 where !sheet {
             if springboard.alerts.firstMatch.exists { letTheMonitorRun(app) }
@@ -60,10 +63,12 @@ final class ReportAnswerUITests: TafsUITestCase {
                 answer.press(forDuration: 1.2)
                 shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
             }
-            XCTAssertTrue(shown, "Report this answer in the answer's menu")
+            if !shown { continue }   // this attempt didn't get the menu: try again
+            menuShown = true
             item.tap()
             sheet = send.waitForExistence(timeout: 5)
         }
+        XCTAssertTrue(menuShown, "Report this answer in the answer's menu")
         XCTAssertTrue(sheet, "the sheet")
         XCTAssertFalse(send.isEnabled, "Send waits for a reason")
         app.buttons["report-reason-\(reason)"].tap()
