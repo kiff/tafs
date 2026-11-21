@@ -127,6 +127,7 @@
     </plurals>
     <string name="watch_recent_chats">Chats récents</string>
     <string name="watch_recording">Enregistrement</string>
+    <string name="watch_recording_not_received">L\'enregistrement n\'est pas arrivé sur votre téléphone. Réessayez, ou saisissez votre texte.</string>
     <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
     <string name="watch_reply">Répondre</string>
     <string name="watch_rerecord">Réenregistrer</string>

@@ -1,0 +1,1 @@
+- **Docs:** each store listing outside English links its own translated Terms and Privacy pages, not the English ones; Korean keeps English until its pages exist ([store-listing.md](docs/store-listing.md)).

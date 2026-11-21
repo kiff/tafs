@@ -177,8 +177,15 @@ Sign out on this watch was live in 8 languages; turned off, a watch shows v1 who
 
 **Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
 Nothing leaves the watch before Send:
-- **Ask Coach** on the home opens the ask: the system's input (Type: dictation, Scribble or the keyboard, which watchOS
-  offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
+- **One tap to talk** (`WatchDictation`, `WatchDictationTests`; row 44, A, as Wear OS's tafs#1582): **Ask Coach** on the
+  home, and a taf chat's microphone, open the system's dictation at once (`presentTextInputController` with no suggestions
+  and plain text, which watchOS opens on the microphone), and the words go straight to Check before sending. Cancelled,
+  the ask opens on Type and Quick reply. It doesn't listen without a passcode (as Wear OS without a screen lock), while
+  words are on their way, or while words kept after a failed Send wait in the review: the ask opens as before, on them.
+  **To verify on a real watch:** that watchOS opens on listening, not on its own choices first (the simulator has no
+  dictation); if it does show them, it's still one tap to the input.
+- **The ask** (Re-record, and Ask when it doesn't listen first): the system's input (Type: dictation, Scribble or the
+  keyboard, which watchOS offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
   app can drive, so the system's input is the microphone: there's no Start, Stop, timer or recording of the app's own, and
   no Play. Only the words leave, as text ("Coach gets your words as text, never your voice.", as Wear OS says it).
 - **Check before sending** shows the words in full, scrolled with the crown, and under them, pinned at the foot in one row
@@ -367,6 +374,35 @@ in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved 
   Android's relay does; what was asked before then went to Coach's chat and isn't listed.
 - **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
   `calendar.today` and tafs cloud's own.
+
+**Row 44, A on Apple Watch: not cut off by a pause, and the phone turns it into text (built, behind `WatchVoice.on`, off;
+as Wear OS's tafs#1587 and #1596).** W12's path below, without Play and Pause. `VoiceModel`, `AudioRecorderMic`,
+`VoiceRecordScreen` on the watch; `WatchVoiceInbox`, `OnDeviceWatchTranscriber` and `WatchLink`'s file delegate on the phone;
+`VoiceModelTests`, `WatchVoiceInboxTests`.
+- **Ask Coach and a taf chat's microphone** open the recording at once (a watch with a passcode, nothing in flight or kept in
+  the review; otherwise the ask as before): "● Recording", the time against 0:30, and ✓. It ends on ✓, at 30 s, or after
+  about 8 s with nothing said (`QuietRule`: the level under -40 dBFS, counted from the start or the last word), never on a
+  shorter pause.
+- **To the phone:** `transferFile` with the recording's id (a UUID) in its metadata, then `transcribe` by that id, 45 s at
+  most for the file's way and the recognizer. "Turning it into text on your phone…" with Cancel. The phone moves the file
+  in before its delegate returns, waits for it up to 20 s if the request comes first, and reads it with its on-device
+  recognizer only (`requiresOnDeviceRecognition`), in the language the person dictates in on the phone, else the app's.
+  Only the text comes back, to **Check before sending**: nothing is sent before Send.
+- **Can't, and says why:** the microphone not allowed (`watch.mic_needed`); speech recognition not allowed on the phone
+  (`voice.speech_recognition_off_tafs_turn`); no on-device model (`watch.no_offline_speech`); nothing heard
+  (`watch.didnt_catch`); the file never arrived (`watch.recording_not_received`, new); a phone from before
+  (`watch.update_phone`); no answer (`watch.phone_not_reachable`). Try again; Type stays offered.
+- **Deleted:** on the phone as soon as it's read, whatever the outcome, and otherwise 2 minutes after it arrived, even if no
+  request comes (`WatchVoice.keepFor`), and anything a process left when the phone's link starts; on the watch once the
+  text is back, on Cancel or when the screen closes (any transfer still on its way is cancelled first), and when the app or
+  a recording starts. The phone's copy is protected until the phone's first unlock, so it can be read while the phone is
+  locked in a pocket; only a recording's id (a UUID) names a file, and the recognizer gets 20 s at most, then its task is
+  cancelled.
+- **Switched on only** with the privacy page's Apple Watch paragraph saying so (today: "It makes no recording"), its
+  microphone prompt (`NSMicrophoneUsageDescription`, in English as the phone's) read by legal-i18n, the owner's yes, and the
+  real-device checks: that iOS runs the on-device recognizer while tafs on the phone is in the background, and that a
+  `transferFile` reaches a backgrounded phone app within the 20 s the phone waits for it. Both decide whether it works with
+  the phone in a pocket.
 
 **W12, Play and Pause on Apple Watch: the plan (not built; held for the owner's yes)**, as the owner asked for the next
 version ("on the watch first", 19 Nov). On Apple Watch only the phone's path exists: watchOS gives an app no speech

@@ -154146,6 +154146,65 @@
         }
       }
     },
+    "watch.recording_not_received": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Aufnahme ist nicht auf deinem Handy angekommen. Versuch es erneut oder tippe stattdessen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording didn't reach your phone. Try again, or type instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La grabación no llegó a tu teléfono. Vuelve a intentarlo o escribe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'enregistrement n'est pas arrivé sur votre téléphone. Réessayez, ou saisissez votre texte."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La registrazione non è arrivata al telefono. Riprova, oppure scrivi."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "녹음이 휴대폰에 전달되지 않았습니다. 다시 시도하거나 직접 입력하세요."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nagranie nie dotarło do telefonu. Spróbuj ponownie albo wpisz tekst."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A gravação não chegou ao telemóvel. Tente novamente ou escreva."
+          }
+        }
+      }
+    },
     "watch.refused": {
       "extractionState": "manual",
       "localizations": {

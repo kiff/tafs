@@ -77,7 +77,8 @@ final class PhoneRouteTests: XCTestCase {
     /// A write's failed send may still have arrived: it's never sent twice, whatever it is.
     func testAWriteIsNeverSentTwice() async {
         for request in [WatchRequest(.refuse, made: Date(), hold: "h_1"), WatchRequest(.halt, made: Date(), taf: "t_1"), WatchRequest(.haltAll, made: Date()),
-                        WatchRequest(.coach, made: Date(), text: "hi", message: "m"), WatchRequest(.coachSend, made: Date(), text: "hi", message: "m")] {
+                        WatchRequest(.coach, made: Date(), text: "hi", message: "m"), WatchRequest(.coachSend, made: Date(), text: "hi", message: "m"),
+                        WatchRequest(.transcribe, made: Date(), message: UUID().uuidString.lowercased())] {
             let link = Link(sends: [.failure(.link), .success(ok)])
             let reached = await link.route.reach(request)
             XCTAssertEqual(reached, .failed(.link), "\(request.kind)")

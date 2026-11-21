@@ -2669,6 +2669,7 @@
     </plurals>
     <string name="watch_recent_chats">최근 채팅</string>
     <string name="watch_recording">녹음 중</string>
+    <string name="watch_recording_not_received">녹음이 휴대폰에 전달되지 않았습니다. 다시 시도하거나 직접 입력하세요.</string>
     <string name="watch_refused">거절했습니다. 아무것도 보내지 않았습니다.</string>
     <string name="watch_reply">답장</string>
     <string name="watch_rerecord">다시 녹음</string>

@@ -99,8 +99,8 @@ struct WatchPagesView: View {
     }
 }
 
-/// Coach's home: the microphone first, named for Coach, which opens the ask (`CoachAsk`: the system's input, Type and Quick
-/// reply, then Check before sending); then how many wait in the Inbox (a tap goes there), the line that Coach gets words
+/// Coach's home: the microphone first, named for Coach, which opens the system's dictation in one tap (`WatchDictation`, row
+/// 44, A), then Check before sending (`CoachAsk`; cancelled, the ask with Type and Quick reply); then how many wait in the Inbox (a tap goes there), the line that Coach gets words
 /// and never a voice, and the menu at the foot. The last chats come with tafs cloud's chats read.
 struct CoachHome: View {
     @ObservedObject var needsYou: NeedsYouModel
@@ -109,6 +109,8 @@ struct CoachHome: View {
     let openInbox: () -> Void
     let openMenu: () -> Void
     @State private var asking = false
+    /// The watch's own recording, behind `WatchVoice.on` (row 44, A): its text then opens Check before sending.
+    @State private var recording = false
 
     var body: some View {
         NavigationStack {
@@ -117,7 +119,14 @@ struct CoachHome: View {
                 ForEach(coach.turns) { turn in
                     CoachTurnRow(turn: turn)
                 }
-                Button { asking = true } label: {
+                Button {
+                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+                    if WatchVoice.on, coach.listensFirst {
+                        recording = true
+                    } else {
+                        Task { if await WatchDictation.talk(to: coach) { asking = true } }
+                    }
+                } label: {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
                 }
@@ -136,6 +145,9 @@ struct CoachHome: View {
         }
         .sheet(isPresented: $asking) {
             CoachAsk(model: coach)
+        }
+        .sheet(isPresented: $recording, onDismiss: { if coach.reviewing { asking = true } }) {
+            VoiceRecordScreen(model: VoiceModel { words in coach.review(words) })
         }
         .task { await needsYou.load() }
     }
