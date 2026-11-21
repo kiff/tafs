@@ -37,6 +37,16 @@ struct WatchRequest: Codable, Equatable, Sendable {
         /// The watch's own recording, sent ahead as a file (`WatchVoice`), turned into text on the phone with its on-device
         /// recognizer only, by the recording's id in `message`; only the text comes back (`WatchReply.text`). Never sent twice.
         case transcribe
+
+        /// A read changes nothing, so one whose send failed may go once more (`PhoneRoute`). A write (Refuse, Halt, Halt
+        /// all, a Coach message) is never sent twice: a send that failed may still have arrived. Nor is a recording's
+        /// `transcribe`: the phone erases the file once it's read, so a second ask would find nothing.
+        var isRead: Bool {
+            switch self {
+            case .needsYou, .tafs, .brief, .taf, .calendar, .account, .coachRead, .askFull, .tafChat: return true
+            case .refuse, .halt, .haltAll, .coach, .coachSend, .transcribe: return false
+            }
+        }
     }
 
     /// How old a request may be when the phone reads it, either way.

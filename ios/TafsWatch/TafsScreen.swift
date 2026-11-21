@@ -84,8 +84,8 @@ struct TafsScreen: View {
             } message: {
                 Text(Words.Halt.Explain.runningAll)
             }
-        case .unreachable:
-            WatchNotice(line: Words.Watch.phoneNotReachable) { await model.load() }
+        case .unreachable(let why):
+            WatchNotice(line: why.line) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .failed(let why):

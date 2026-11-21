@@ -8,8 +8,8 @@ final class NeedsYouModel: ObservableObject {
         /// Asking the phone; nothing shown yet, never "nothing is waiting".
         case loading
         case loaded(WatchNeedsYou)
-        /// The phone isn't in reach, or didn't answer.
-        case unreachable
+        /// The phone isn't in reach, or didn't answer: why, in its own words.
+        case unreachable(PhoneFailure)
         /// The phone isn't signed in: nothing of the account is shown.
         case signedOut
         /// The phone answered that it couldn't read it, in its words.
@@ -47,9 +47,10 @@ final class NeedsYouModel: ObservableObject {
         asking = true
         defer { asking = false }
         if case .loaded = state {} else { state = .loading }
-        guard let reply = await phone.ask(WatchRequest(.needsYou, made: clock())) else {
-            state = .unreachable
-            return
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.needsYou, made: clock())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .unreachable(why); return
         }
         switch reply.outcome {
         case .ok:
@@ -63,7 +64,7 @@ final class NeedsYouModel: ObservableObject {
         case .refused, .stale, .notYet, .answered:
             // The phone dropped it, is an older version, or answered as if to a Refuse: ask again
             // from the screen.
-            state = .unreachable
+            state = .unreachable(.notReachable)
         }
     }
 
@@ -101,9 +102,9 @@ final class NeedsYouModel: ObservableObject {
         // No passcode on this watch: nothing is asked of the phone.
         guard lock.isSecure else { answers[hold] = .failed(Words.Watch.needsLock); return }
         answers[hold] = .sending
-        let reply = await phone.ask(WatchRequest(.refuse, made: clock(), hold: hold))
-        if reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
-        answers[hold] = WatchAnswer.from(reply, notDone: Words.Alert.notRefused)
+        let reached = await phone.reach(WatchRequest(.refuse, made: clock(), hold: hold))
+        if reached.reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
+        answers[hold] = WatchAnswer.from(reached, notDone: Words.Alert.notRefused)
     }
 
     /// The app left the screen: what was read goes.

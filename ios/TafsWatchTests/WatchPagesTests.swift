@@ -38,7 +38,7 @@ final class WatchPagesTests: XCTestCase {
                        "the calls the Inbox shows, not steps answered on the phone")
         XCTAssertNil(WatchPage.unread(.loaded(WatchNeedsYou(count: 0, calls: [], at: now))), "nothing waits: no line")
         XCTAssertNil(WatchPage.unread(.loading))
-        XCTAssertNil(WatchPage.unread(.unreachable))
+        XCTAssertNil(WatchPage.unread(.unreachable(.notReachable)))
         XCTAssertNil(WatchPage.unread(.signedOut))
         XCTAssertNil(WatchPage.unread(.failed("Couldn't reach KIFF")))
     }

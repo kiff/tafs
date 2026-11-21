@@ -139,8 +139,11 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased()))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             draft = ""
@@ -180,9 +183,12 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
-                                                 ticket: lastTicket))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
+                                              ticket: lastTicket)) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             guard let ticket = reply.ticket else { state = .failed(Words.Watch.phoneNotReachable); return }

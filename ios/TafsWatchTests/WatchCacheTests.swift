@@ -80,7 +80,7 @@ final class WatchCacheTests: XCTestCase {
         XCTAssertTrue(model.updating)
         while phone.asked < 3 || model.updating { await Task.yield() }
         XCTAssertEqual(waited, [ReadGrace.limit])
-        XCTAssertEqual(model.state, .unreachable)
+        XCTAssertEqual(model.state, .unreachable(.notReachable))
     }
 
     func testTheGraceEndsWithAnAnswer() {
@@ -97,7 +97,7 @@ final class WatchCacheTests: XCTestCase {
     func testWithNothingShownUnreachableIsAtOnce() async {
         let model = TafsModel(phone: Phone([nil]), clock: { self.now }, lock: Unlocked(), cache: cache())
         await model.load()
-        XCTAssertEqual(model.state, .unreachable)
+        XCTAssertEqual(model.state, .unreachable(.notReachable))
         XCTAssertFalse(model.updating)
     }
 

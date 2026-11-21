@@ -7,7 +7,7 @@ final class TafsModel: ObservableObject {
     enum State: Equatable {
         case loading
         case loaded([WatchTaf])
-        case unreachable
+        case unreachable(PhoneFailure)
         case signedOut
         case failed(String)
     }
@@ -56,9 +56,10 @@ final class TafsModel: ObservableObject {
         } else {
             state = .loading
         }
-        guard let reply = await phone.ask(WatchRequest(.tafs, made: clock())) else {
-            unreachable()
-            return
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.tafs, made: clock())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): unreachable(why); return
         }
         switch reply.outcome {
         case .ok:
@@ -82,9 +83,9 @@ final class TafsModel: ObservableObject {
 
     /// The phone didn't answer: what's shown stays, with the dot, through a short drop, and the phone is asked once more as
     /// the grace ends; past it, or with nothing shown, the phone isn't in reach.
-    private func unreachable() {
+    private func unreachable(_ why: PhoneFailure = .notReachable) {
         guard case .loaded = state, grace.keeps(at: clock()) else {
-            state = .unreachable
+            state = .unreachable(why)
             answered()
             return
         }
@@ -116,10 +117,10 @@ final class TafsModel: ObservableObject {
         guard lock.isSecure else { halts[key] = .failed(Words.Watch.needsLock); return }
         halts[key] = .sending
         let request = taf.map { WatchRequest(.halt, made: clock(), taf: $0) } ?? WatchRequest(.haltAll, made: clock())
-        let reply = await phone.ask(request)
-        if reply?.outcome == .signedOut { state = .signedOut; halts = [:]; return }
-        halts[key] = WatchAnswer.from(reply)
-        if reply?.outcome == .ok { await load() }
+        let reached = await phone.reach(request)
+        if reached.reply?.outcome == .signedOut { state = .signedOut; halts = [:]; return }
+        halts[key] = WatchAnswer.from(reached)
+        if reached.reply?.outcome == .ok { await load() }
     }
 
     /// A taf's chat: the same one each time it's opened this visit.

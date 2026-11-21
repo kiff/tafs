@@ -78,7 +78,7 @@ final class CalendarDayModelTests: XCTestCase {
 
     func testEachWayThePhoneCantAnswer() async {
         let cases: [(WatchReply?, CalendarDayModel.State)] = [
-            (nil, .unreachable),
+            (nil, .unreachable(.notReachable)),
             (WatchReply(.signedOut), .signedOut),
             (WatchReply(.notYet), .updatePhone),
             (WatchReply(.failed, line: "tafs couldn't read it."), .failed("tafs couldn't read it.")),

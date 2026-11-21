@@ -7,7 +7,7 @@ final class CalendarDayModel: ObservableObject {
     enum State: Equatable {
         case reading
         case loaded(WatchCalendarDay)
-        case unreachable
+        case unreachable(PhoneFailure)
         case signedOut
         /// A phone from before the read: "Update tafs on your phone".
         case updatePhone
@@ -38,9 +38,13 @@ final class CalendarDayModel: ObservableObject {
         asked += 1
         let this = asked
         state = .reading
-        let reply = await phone.ask(WatchRequest(.calendar, made: clock(), day: day))
+        let reached = await phone.reach(WatchRequest(.calendar, made: clock(), day: day))
         guard this == asked else { return }
-        guard let reply else { state = .unreachable; return }
+        let reply: WatchReply
+        switch reached {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .unreachable(why); return
+        }
         switch reply.outcome {
         case .ok:
             guard let read = reply.calendar else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
@@ -53,7 +57,7 @@ final class CalendarDayModel: ObservableObject {
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:
-            state = .unreachable
+            state = .unreachable(.notReachable)
         }
     }
 
@@ -151,8 +155,8 @@ struct CalendarDayScreen: View {
                 Button(Words.Calendar.previousDay) { Task { await model.previous() } }
                 Button(Words.Calendar.nextDay) { Task { await model.next() } }
             }
-        case .unreachable:
-            WatchNotice(line: Words.Watch.phoneNotReachable) { await model.load() }
+        case .unreachable(let why):
+            WatchNotice(line: why.line) { await model.load() }
         case .signedOut:
             WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .updatePhone:

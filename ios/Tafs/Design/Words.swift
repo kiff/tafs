@@ -5403,6 +5403,12 @@ enum Words {
         }
         /// Paused: its schedule is off. It still answers what you send.
         static var pausedStillAnswers: String { Words.line("watch.paused_still_answers") }
+        /// Couldn't talk to your phone. Try again.
+        static var phoneLinkFailed: String { Words.line("watch.phone_link_failed") }
+        /// Your phone didn't answer in time. Try again.
+        static var phoneNoAnswer: String { Words.line("watch.phone_no_answer") }
+        /// tafs isn't on your phone. Install it there, then try again.
+        static var phoneNoApp: String { Words.line("watch.phone_no_app") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
         /// Play
