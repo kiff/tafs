@@ -73,12 +73,12 @@ final class AcceptLanguageTests: XCTestCase {
     /// The servers hear the languages the screens are in: the one they resolved to first, then the
     /// phone's others the app ships, by the app's own code, at most four, English last.
     func testTheServersHearTheScreensLanguages() {
-        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"]
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "de", preferred: ["de-CH", "fr-FR", "ja-JP"], shipped: all), ["de", "fr"])
+        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja"]
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "de", preferred: ["de-CH", "fr-FR", "tr-TR"], shipped: all), ["de", "fr"])
         XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.screenLanguages(resolved: "pt", preferred: ["pt-BR", "en-US"], shipped: all)), "pt, en;q=0.9")
         // A phone in a language the app doesn't ship gets the screens' language, then English.
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["ja-JP"], shipped: all), ["en"])
-        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "nl", preferred: ["ja-JP", "nl-BE", "pl-PL", "it-IT", "es-ES", "fr-FR"], shipped: all), ["nl", "pl", "it", "es"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "en", preferred: ["tr-TR"], shipped: all), ["en"])
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "nl", preferred: ["tr-TR", "nl-BE", "pl-PL", "it-IT", "es-ES", "fr-FR"], shipped: all), ["nl", "pl", "it", "es"])
         // A language only Siri's phrases are in never counts.
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "es", preferred: ["es-ES"], shipped: ["en"]), ["en"])
         // The app ships what languages.json ships: its languages, then each regional variant (pt-BR).
