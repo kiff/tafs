@@ -36,4 +36,9 @@ class KiffTabTest {
     assertTrue(app.contains("val appSignInTab: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this, privateBrowsing = true) }"))
     assertTrue("a vendor's tab shares the browser's sign-in", app.contains("val vendorSignIn: BrowserVendorSignIn by lazy { BrowserVendorSignIn(this) }"))
   }
+
+  /** The app waits as long as planque's sign-in link works (60 minutes since 21 Nov), never giving up before it does. */
+  @org.junit.Test fun theAppWaitsForAVendorsSignInAsLongAsPlanquesLinkWorks() {
+    org.junit.Assert.assertEquals(60 * 60 * 1000L, bot.tafs.app.kiff.BrowserVendorSignIn.SIGN_IN_WINDOW_MS)
+  }
 }
