@@ -150,6 +150,13 @@ test("the extension's guard refuses what planque's does", () => {
   assert.equal(refuse(plain, { kind: "fill", ref: "f9", value: "x" }).code, "ref_unknown");
   assert.equal(refuse(plain, { kind: "submit", ref: "c1" }).code, "bad_step");
   assert.equal(refuse(plain, { kind: "fill", ref: "f1" }).code, "bad_step", "a fill has a value");
+  // A link whose words pay is refused like a control; on a payment page, only a link to another page is followed.
+  const shop = { url: "https://shop.example/cart", fields: [], controls: [], links: [{ ref: "l1", label: "Buy now", url: "https://shop.example/buy" }, { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(shop, { kind: "click", ref: "l1" }).code, "payment_step");
+  assert.equal(refuse(shop, { kind: "click", ref: "l2" }), null);
+  const pay = { url: "https://shop.example/checkout", payment_frame: true, fields: [], controls: [], links: [{ ref: "l1", label: "Continue", url: "https://shop.example/checkout#pay" }, { ref: "l2", label: "Help", url: "https://shop.example/help" }] };
+  assert.equal(refuse(pay, { kind: "click", ref: "l1" }).code, "payment_step", "a link back to the payment page itself");
+  assert.equal(refuse(pay, { kind: "click", ref: "l2" }), null, "a link to another page");
   for (const words of ["Pay now", "Commander", "Jetzt kaufen", "Finalizar compra", "Acquista ora", "Afrekenen", "Fazer pedido"]) {
     assert.ok(PAY_WORDS.test(words), words);
   }

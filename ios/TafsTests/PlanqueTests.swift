@@ -1053,7 +1053,7 @@ extension PlanqueTests {
         let maybeOpened = await model.openChromePairing()
         let opened = try XCTUnwrap(maybeOpened)
         XCTAssertEqual(opened.lookup, "K7QF")
-        XCTAssertEqual(opened.secret.count, 6)
+        XCTAssertEqual(opened.secret.count, 17)
         XCTAssertFalse(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings").contains { String(decoding: $0.httpBody ?? Data(), as: UTF8.self).contains(opened.secret) }, "the secret never leaves the phone")
 
         let chromeKey = P256.Signing.PrivateKey().publicKey.derRepresentation
