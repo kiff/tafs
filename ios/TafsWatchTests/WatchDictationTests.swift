@@ -26,7 +26,7 @@ final class WatchDictationTests: XCTestCase {
     func testWordsHeardGoToTheReviewAndNothingIsSent() async {
         let phone = Phone()
         let model = CoachModel(phone: phone, lock: Unlocked())
-        await WatchDictation.talk(to: model) { .words("Chase the overdue invoices") }
+        _ = await WatchDictation.talk(to: model) { .words("Chase the overdue invoices") }
         XCTAssertTrue(model.reviewing)
         XCTAssertEqual(model.draft, "Chase the overdue invoices")
         XCTAssertEqual(phone.asked, [])
@@ -35,7 +35,7 @@ final class WatchDictationTests: XCTestCase {
     /// Cancelled: no review; the ask opens on Type and Quick reply.
     func testNothingHeardLeavesTheAskAsItWas() async {
         let model = CoachModel(phone: Phone(), lock: Unlocked())
-        await WatchDictation.talk(to: model) { .nothing }
+        _ = await WatchDictation.talk(to: model) { .nothing }
         XCTAssertFalse(model.reviewing)
         XCTAssertEqual(model.draft, "")
     }
@@ -45,7 +45,7 @@ final class WatchDictationTests: XCTestCase {
         let model = CoachModel(phone: Phone(), lock: NoPasscode())
         XCTAssertFalse(model.listensFirst)
         var listened = false
-        await WatchDictation.talk(to: model) { listened = true; return .words("hi") }
+        _ = await WatchDictation.talk(to: model) { listened = true; return .words("hi") }
         XCTAssertFalse(listened)
         XCTAssertFalse(model.reviewing)
     }
@@ -59,8 +59,32 @@ final class WatchDictationTests: XCTestCase {
         XCTAssertTrue(model.reviewing, "a Send the phone didn't answer keeps the words")
         XCTAssertFalse(model.listensFirst)
         var listened = false
-        await WatchDictation.talk(to: model) { listened = true; return .words("Other words") }
+        _ = await WatchDictation.talk(to: model) { listened = true; return .words("Other words") }
         XCTAssertFalse(listened)
         XCTAssertEqual(model.draft, "First words")
+    }
+
+    /// A second tap while the input is open is nothing: one input at a time, and the ask opens once.
+    func testASecondTapWhileTheInputIsOpenIsNothing() async {
+        final class Gate { var release: CheckedContinuation<Void, Never>? }
+        let model = CoachModel(phone: Phone(), lock: Unlocked())
+        let gate = Gate()
+        let first = Task {
+            await WatchDictation.talk(to: model) {
+                await withCheckedContinuation { gate.release = $0 }
+                return .words("First")
+            }
+        }
+        while gate.release == nil { await Task.yield() }
+        var listenedAgain = false
+        let second = await WatchDictation.talk(to: model) { listenedAgain = true; return .words("Second") }
+        XCTAssertFalse(second)
+        XCTAssertFalse(listenedAgain)
+        gate.release?.resume()
+        let opened = await first.value
+        XCTAssertTrue(opened)
+        XCTAssertEqual(model.draft, "First")
+        let third = await WatchDictation.talk(to: model) { .nothing }
+        XCTAssertTrue(third, "free again once the first input closed")
     }
 }

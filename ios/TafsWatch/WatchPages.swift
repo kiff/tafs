@@ -117,7 +117,7 @@ struct CoachHome: View {
                 ForEach(coach.turns) { turn in
                     CoachTurnRow(turn: turn)
                 }
-                Button { Task { await WatchDictation.talk(to: coach); asking = true } } label: {
+                Button { Task { if await WatchDictation.talk(to: coach) { asking = true } } } label: {
                     Label(Words.Coach.ask, systemImage: "mic.fill")
                         .font(.headline)
                 }

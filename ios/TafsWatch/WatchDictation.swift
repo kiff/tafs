@@ -37,11 +37,19 @@ enum WatchDictation {
 
 extension WatchDictation {
     /// The microphone's tap, on Coach's home or in a taf's chat: dictation first when the ask has nothing to come back to,
-    /// and the words to Check before sending. The ask opens after it either way: on the review with words, or, cancelled,
-    /// on Type and Quick reply. Nothing leaves the watch before Send.
+    /// and the words to Check before sending. True opens the ask after it: on the review with words, or, cancelled, on
+    /// Type and Quick reply. Nothing leaves the watch before Send. A second tap while the input is open is nothing
+    /// (false), so there's one input at a time, as Wear OS's `talk`.
     @MainActor
-    static func talk(to model: CoachModel, listen: () async -> Heard = { await WatchDictation.listen() }) async {
-        guard model.listensFirst else { return }
+    static func talk(to model: CoachModel, listen: () async -> Heard = { await WatchDictation.listen() }) async -> Bool {
+        guard !open else { return false }
+        open = true
+        defer { open = false }
+        guard model.listensFirst else { return true }
         if case .words(let words) = await listen() { model.review(words) }
+        return true
     }
+
+    /// The system's input is open from a tap.
+    @MainActor private static var open = false
 }

@@ -81,7 +81,7 @@ struct TafChatPage: View {
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
                 }
-                Button { Task { await WatchDictation.talk(to: chat); asking = true } } label: {
+                Button { Task { if await WatchDictation.talk(to: chat) { asking = true } } } label: {
                     Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
                         .font(.headline)
                 }
