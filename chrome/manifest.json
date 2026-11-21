@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_name__",
+  "short_name": "tafs",
+  "description": "__MSG_description__",
+  "version": "0.1.0",
+  "default_locale": "en",
+  "minimum_chrome_version": "116",
+  "background": { "service_worker": "src/sw.js", "type": "module" },
+  "action": { "default_title": "__MSG_name__" },
+  "side_panel": { "default_path": "sidepanel/index.html" },
+  "permissions": ["storage", "alarms", "scripting", "sidePanel", "tabs", "tabGroups", "webNavigation", "declarativeNetRequest"],
+  "optional_host_permissions": ["https://*/*"],
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" }
+}

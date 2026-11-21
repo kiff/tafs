@@ -336,10 +336,13 @@ struct SettingsView: View {
                     Section(Words.Settings.peopleApps) {
                         NavigationLink(PeopleGroupsView.title) { PeopleGroupsView() }
                         NavigationLink(DevicesView.title) { DevicesView() }
+                        // Chrome (docs/chrome.md): only once planque offers Chromes.
+                        if model.chromes != nil { NavigationLink(ChromesView.title) { ChromesView() } }
                         NavigationLink(ConnectAppsView.title) { ConnectAppsView() }
                         // Files (docs/files.md): every file the account's tafs delivered.
                         NavigationLink(FilesView.title) { FilesView(store: CloudFilesStore(cloud: model.cloud)) }
                     }
+                    .task { await model.refreshChromes() }
                     Section(Words.Settings.plan) {
                         NavigationLink { UsageView() } label: { PlanRow(balance: model.balance) }.accessibilityIdentifier("plan-card")
                     }

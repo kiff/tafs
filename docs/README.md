@@ -27,6 +27,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [drive.md](drive.md) | The drive's contract between tafs cloud and the apps: routes, the stream, requests and results, never confirming, never captured, and how a drive ends |
 | [secure-connection.md](secure-connection.md) | The secure sheet for an app's key (its words from tafs cloud, Paste the key, Details, the receipt) and one signature for the key and its Card (the contract) |
 | [connect-apps.md](connect-apps.md) | Connect apps, for the person running tafs: connecting, what you approve, what a taf can do, app events, the Slack door vs an action, disconnecting |
+| [chrome.md](chrome.md) | tafs in your Chrome (behind a switch): the extension, pairing from the phone, the signed steps between it and planque, what it refuses, and its tests (the contract) |
 | [doors.md](doors.md) | Doors: email, Slack and WhatsApp addresses a taf takes work from |
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |

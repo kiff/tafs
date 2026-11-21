@@ -1068,6 +1068,52 @@ enum Words {
         /// your taf
         static var yourTaf: String { Words.line("chat.your_taf") }
     }
+    enum Chrome {
+        /// {browser} on {system}
+        static func browserOn(browser: String, system: String) -> String { Words.line("chrome.browser_on", browser, system) }
+        /// In Chrome, open the tafs extension and type this code. It works for 10 minutes.
+        static var codeBody: String { Words.line("chrome.code_body") }
+        /// Type this code in Chrome
+        static var codeTitle: String { Words.line("chrome.code_title") }
+        /// Pair
+        static var confirm: String { Words.line("chrome.confirm") }
+        /// The code expired, so nothing was paired. Start again.
+        static var expired: String { Words.line("chrome.expired") }
+        /// Your tafs can use a paired Chrome only on the sites a connection lists, and you approve risky steps here.
+        static var footer: String { Words.line("chrome.footer") }
+        /// Name
+        static var nameLabel: String { Words.line("chrome.name_label") }
+        /// No Chrome is paired.
+        static var none: String { Words.line("chrome.none") }
+        /// Your Chromes couldn't be read: {why}
+        static func notLoaded(why: String) -> String { Words.line("chrome.not_loaded", why) }
+        /// It says it's {browser} on {system}.
+        static func offeredSays(browser: String, system: String) -> String { Words.line("chrome.offered_says", browser, system) }
+        /// Pair this Chrome?
+        static var offeredTitle: String { Words.line("chrome.offered_title") }
+        /// Pair only a Chrome on a computer you're at.
+        static var onlyYours: String { Words.line("chrome.only_yours") }
+        /// Pair a Chrome
+        static var pair: String { Words.line("chrome.pair") }
+        /// Pairing couldn't start: {why}
+        static func pairNotStarted(why: String) -> String { Words.line("chrome.pair_not_started", why) }
+        /// Pair {name} with your tafs
+        static func pairPrompt(name: String) -> String { Words.line("chrome.pair_prompt", name) }
+        /// {name} is paired.
+        static func paired(name: String) -> String { Words.line("chrome.paired", name) }
+        /// tafs works in its own Chrome profile. Sign in there only to the sites you want your tafs to use.
+        static var profileNote: String { Words.line("chrome.profile_note") }
+        /// Another Chrome used this code, so nothing was paired. Start again.
+        static var refused: String { Words.line("chrome.refused") }
+        /// Unpair
+        static var remove: String { Words.line("chrome.remove") }
+        /// Unpair {name}
+        static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// Chrome
+        static var title: String { Words.line("chrome.title") }
+        /// Waiting for Chrome…
+        static var waiting: String { Words.line("chrome.waiting") }
+    }
     enum Coach {
         enum Activity {
             /// Preparing the Card…

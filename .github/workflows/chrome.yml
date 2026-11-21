@@ -1,0 +1,31 @@
+# tafs in your Chrome (docs/chrome.md): the extension's tests, with Chromium for the content script's.
+name: Chrome
+
+on:
+  push:
+    branches: [main]
+    paths: ["chrome/**", "docs/chrome.md", ".github/workflows/chrome.yml"]
+  pull_request:
+    paths: ["chrome/**", "docs/chrome.md", ".github/workflows/chrome.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Playwright and Chromium, for the page tests
+        working-directory: chrome
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: The extension's tests
+        working-directory: chrome
+        run: node --test test/*.test.js

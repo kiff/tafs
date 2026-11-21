@@ -1,0 +1,1 @@
+- **tafs in your Chrome, the extension (behind a switch, off):** pairing from the phone (iPhone and iPad: Account › Chrome), signed steps from planque, the extension's own site rules, masking and act guard, a run in its own background window, and the side panel ([chrome.md](docs/chrome.md)).
