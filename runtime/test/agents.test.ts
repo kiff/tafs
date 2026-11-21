@@ -245,6 +245,23 @@ describe("kiff/agents client", () => {
     await expect(down.agents.removeKey("t1", "taf_1")).rejects.toBeInstanceOf(AgentsError);
   });
 
+  it("keeps a tenant's alert secret with kiff/agents: the secret alone in the body, the tenant signed, and 404 means it keeps none yet", async () => {
+    const { agents, sent } = server(() => new Response(null, { status: 204 }));
+    expect(await agents.putAlertSecret("t1", "whsec_x")).toBe(true);
+    expect(sent.map((s) => `${s.method} ${s.url.pathname}`)).toEqual(["PUT /tenant/alert-secret"]);
+    expect(JSON.parse(sent[0].body ?? "")).toEqual({ secret: "whsec_x" });
+    expect(sent[0].headers["kiff-tenant"]).toBe("t1");
+    expect((/SignedHeaders=([^,]+)/.exec(sent[0].headers.authorization ?? "")?.[1] ?? "").split(";")).toContain("kiff-tenant");
+
+    const off = server(() => new Response(JSON.stringify({ code: "not_found", message: "not found" }), { status: 404 }));
+    expect(await off.agents.putAlertSecret("t1", "whsec_x")).toBe(false);
+
+    const down = server(() => new Response(JSON.stringify({ code: "internal", message: "internal error" }), { status: 500 }));
+    const err = await down.agents.putAlertSecret("t1", "whsec_secret").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(AgentsError);
+    expect(String((err as Error).message)).not.toContain("whsec_secret");
+  });
+
   it("is only ever called over https", () => {
     expect(() => new Agents({ url: "http://abc123.lambda-url.eu-west-1.on.aws", region: "eu-west-1", credentials: async () => CREDS })).toThrow(/https/);
   });

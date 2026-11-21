@@ -3,7 +3,7 @@ import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { appSecret } from "./appsecret.js";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
-import { type AccountStore, keepAccount } from "./accounts.js";
+import { type AccountStore, agentAlertSecrets, keepAccount } from "./accounts.js";
 import { agentKeys } from "./agentkeys.js";
 import { Agents, envCredentials } from "./agents.js";
 import { apnsSender } from "./apns.js";
@@ -104,8 +104,12 @@ const accountStore: AccountStore = {
       throw err;
     }
   },
-  writeSecret: (account, tenant, secret) =>
-    putSecret(`${ACCOUNTS_PREFIX}${account}`, JSON.stringify({ tenant, secret }), "A KIFF account's alert secret, for kiff/agents' alerts"),
+  // Through kiff/agents once it keeps them; until then, a secret each.
+  writeSecret: agentAlertSecrets(
+    { putAlertSecret: (tenant, secret) => agents().putAlertSecret(tenant, secret) },
+    (account, tenant, secret) =>
+      putSecret(`${ACCOUNTS_PREFIX}${account}`, JSON.stringify({ tenant, secret }), "A KIFF account's alert secret, for kiff/agents' alerts"),
+  ),
 };
 const accounts: Accounts = { put: (account, tenant, secret) => keepAccount(accountStore, account, tenant, secret) };
 
@@ -412,8 +416,11 @@ const archived: Archived = {
 /**
  * What tafs cloud keeps for an account beyond its tafs, erased when its owner
  * deletes it (kiff/tafs#185): every table item whose id names the account
- * (account.ts), found by a scan, and the account's alert secret for
- * kiff/agents. The tafs' keys go with each taf's removal, before this.
+ * (account.ts), found by a scan, and the account's old alert secret for
+ * kiff/agents (`agents-accounts/<tenant>`): kiffalerts still falls back to it
+ * until the old secrets are deleted. The copy kiff/agents keeps in its table
+ * goes with its own erase (DELETE /tenant), just before. The tafs' keys go
+ * with each taf's removal, before this.
  */
 const accountData: AccountData = {
   async erase(tenant) {

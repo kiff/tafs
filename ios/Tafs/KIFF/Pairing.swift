@@ -54,10 +54,13 @@ struct PairingRequest: Equatable {
     static let computers: Set<String> = ["windows", "macos", "linux"]
     /// A phone or tablet paired from another phone (§5.8).
     static let phones: Set<String> = ["ios", "ipados", "android"]
-    static let platforms: Set<String> = computers.union(phones)
+    /// A browser extension: the tafs extension for Chrome, paired in the same step as its Chrome (docs/chrome.md), always
+    /// view-only (`key_store: "software"`), so it reads and chats and never approves.
+    static let browsers: Set<String> = ["chrome"]
+    static let platforms: Set<String> = computers.union(phones).union(browsers)
     /// The kinds that hold an approval key; a `passkey` computer holds none.
     static let approvalKinds: Set<String> = ["hello", "enclave", "keystore"]
-    static let kinds: Set<String> = approvalKinds.union(["passkey"])
+    static let kinds: Set<String> = approvalKinds.union(["passkey", "extension"])
 
     /// A phone or tablet, not a computer.
     var isPhone: Bool { Self.phones.contains(platform) }
@@ -90,6 +93,10 @@ struct PairingRequest: Equatable {
         let keyStore = object["key_store"]
         if keyStore != nil, keyStore as? String != "software" { return .failure(.badField) }
         let software = keyStore != nil
+        // A browser extension is only ever view-only, and only a browser extension is one.
+        if kind == "extension" || browsers.contains(platform) {
+            guard software, kind == "extension", browsers.contains(platform) else { return .failure(.badField) }
+        }
 
         let approvalPub = object["approval_pub"]
         if approvalPub != nil, !(approvalPub is String) { return .failure(.badKeys) }
