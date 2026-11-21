@@ -90,6 +90,7 @@ final class K5UITests: TafsUITestCase {
         for (name, words) in Self.ways {
             XCTAssertTrue(control(words).exists, "KIFF's sign-in page offers \(name)")
         }
+        XCTAssertTrue(page.textFields.firstMatch.exists, "KIFF's sign-in page has an email field")
         XCTAssertTrue(page.secureTextFields.firstMatch.exists, "KIFF's sign-in page offers email with a password")
         XCTAssertFalse(control(Self.emailCodeWords).exists, "no sign-in with a code sent by email: email-code sign-in stays off")
     }
