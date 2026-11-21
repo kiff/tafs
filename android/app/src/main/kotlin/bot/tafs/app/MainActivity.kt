@@ -481,6 +481,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
+  var showingChromes by rememberSaveable { mutableStateOf(false) }
   // Files (docs/android-app.md, Files), over tafs cloud's routes.
   val files = remember { bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) }
   val filesShowing = files.state.collectAsState().value.showing
@@ -1027,12 +1028,20 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         focus = settingsFocus,
         onFocused = { settingsFocus = null },
         onFiles = { showingSettings = false; filesFromAccount = true; files.show() },
+        onChromes = { showingSettings = false; showingChromes = true },
+        onLoadChromes = { scope.launch { model.refreshChromes() } },
       )
     }
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (!wide && filesShowing) {
       bot.tafs.app.views.FilesSheet(files, onClose = { files.close(); if (filesFromAccount) showingSettings = true; filesFromAccount = false }, seeInChat = filesSeeInChat)
+    }
+    if (showingChromes) {
+      bot.tafs.app.views.ChromesSheet(
+        state, refresh = model::refreshChromes, open = model::openChromePairing, step = model::chromePairingStep,
+        confirm = model::confirmChrome, remove = model::removeChrome, onClose = { showingChromes = false; showingSettings = true },
+      )
     }
     if (showingDevices) {
       DevicesSheet(
