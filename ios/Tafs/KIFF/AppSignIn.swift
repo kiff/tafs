@@ -104,6 +104,11 @@ enum AppSignIn {
 }
 
 extension AppSignIn.Failure: LocalizedError {
-    /// Closing the sheet says nothing (the welcome is as it was); anything else, that signing in didn't work.
-    var errorDescription: String? { Words.SignIn.didntWork }
+    /// Closing the sheet says nothing (the welcome is as it was); KIFF's authorize page sending back
+    /// `unsupported_client` (signing in inside the app isn't on), that plainly, as `KIFFError.signInNotOn` does for
+    /// its API; anything else, that signing in didn't work.
+    var errorDescription: String? {
+        if case .refused(KIFFClient.unsupportedClient) = self { return Words.SignIn.inAppNotOn }
+        return Words.SignIn.didntWork
+    }
 }

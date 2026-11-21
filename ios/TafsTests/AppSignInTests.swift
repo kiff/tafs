@@ -152,6 +152,9 @@ final class AppSignInTests: XCTestCase {
         XCTAssertEqual(failure("error=invalid_request&error_description=missing%20state"), .refused("invalid_request"))
         XCTAssertEqual(failure("code="), .refused("no_code"))
         XCTAssertEqual(AppSignIn.Failure.unavailable.localizedDescription, Words.SignIn.didntWork)
+        // Signing in inside the app isn't on: said so, as for KIFF's API (`KIFFError.signInNotOn`), never "didn't work".
+        XCTAssertEqual(AppSignIn.Failure.refused("unsupported_client").localizedDescription, "Signing in inside the app isn't on yet.")
+        XCTAssertEqual(AppSignIn.Failure.refused("invalid_request").localizedDescription, Words.SignIn.didntWork)
     }
 
     // MARK: Signing in
