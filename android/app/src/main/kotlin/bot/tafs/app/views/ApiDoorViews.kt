@@ -310,6 +310,8 @@ internal fun DoorDraftCard(c: bot.tafs.app.kiff.SetupComponent, state: bot.tafs.
   val scope = rememberCoroutineScope()
   var draft by remember(cloudTaf, draftId) { mutableStateOf<bot.tafs.app.kiff.DoorDraft?>(null) }
   var failed by remember(cloudTaf, draftId) { mutableStateOf<String?>(null) }
+  // A door was made from this draft already (tafs cloud's 410 `draft_used`): its words, said as done, never as a failure.
+  var made by remember(cloudTaf, draftId) { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
   var approved by remember(cloudTaf, draftId) { mutableStateOf(false) }
   // The door the approval opened and its first key, held only until its screen closes.
@@ -322,7 +324,7 @@ internal fun DoorDraftCard(c: bot.tafs.app.kiff.SetupComponent, state: bot.tafs.
     } catch (e: kotlinx.coroutines.CancellationException) {
       throw e
     } catch (e: Exception) {
-      failed = bot.tafs.app.model.ErrorWords.of(e)
+      if (doorDraftUsed(e)) made = bot.tafs.app.model.ErrorWords.of(e) else failed = bot.tafs.app.model.ErrorWords.of(e)
     }
   }
   // Signs the draft's exact body (the fingerprint) and opens the door; a closed fingerprint sends nothing.
@@ -369,7 +371,13 @@ internal fun DoorDraftCard(c: bot.tafs.app.kiff.SetupComponent, state: bot.tafs.
         )
       }
     }
+    made?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ok), modifier = Modifier.testTag(DOOR_DRAFT_MADE)) }
     failed?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
   added?.let { a -> ApiKeyShownOnce(a.door, a.key, actions.endpoint(a.door)) { added = null } }
 }
+
+/** tafs cloud says a door was already made from this draft (410 `draft_used`): done, not a failure. */
+internal fun doorDraftUsed(e: Throwable): Boolean = e is bot.tafs.app.kiff.CloudError && e.status == 410 && e.code == "draft_used"
+
+const val DOOR_DRAFT_MADE = "door-draft-made"

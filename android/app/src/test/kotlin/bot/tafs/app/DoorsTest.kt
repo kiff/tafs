@@ -346,6 +346,19 @@ class DoorsTest {
       "fields":[{"name":"order","type":"string","max":40},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]}],
       "outcomes":["refunded","refused","needs_review"]}}}"""
 
+  /**
+   * A draft a door was made from answers 410 `draft_used` with tafs cloud's words: the card says them as done, not as a failure.
+   * Any other refusal (a lapsed draft's 404 `draft_lapsed`, or another 410) stays a problem line.
+   */
+  @Test fun aUsedDoorDraftReadsAsDoneNotAsAFailure() {
+    val used = bot.tafs.app.kiff.CloudError(410, "a door was made from this draft", words = "Door made from this draft.", code = "draft_used")
+    assertTrue(bot.tafs.app.views.doorDraftUsed(used))
+    assertEquals("Door made from this draft.", bot.tafs.app.model.ErrorWords.of(used))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(bot.tafs.app.kiff.CloudError(404, "lapsed", words = "This draft lapsed: ask Coach again.", code = "draft_lapsed")))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(bot.tafs.app.kiff.CloudError(410, "gone", code = "other")))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(java.io.IOException("offline")))
+  }
+
   @Test fun coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm() {
     val d = bot.tafs.app.kiff.DoorDraft.read(draftAnswer)!!
     assertEquals("draft-0123456789abcdef", d.id)

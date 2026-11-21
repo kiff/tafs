@@ -243,7 +243,9 @@ do, what the taf does, the fields it sends, the outcomes it gets back, its own w
 Approve, for whoever manages the taf, signs `POST …/doors` over `body` in its canonical form (RFC 8785, `Jcs`) with the
 fingerprint and sends those same bytes (`AppModel.approveDoorDraft`); the door's first key is then shown once, as New key's, in a secure window (never in a screenshot or the recents
 screen: `SecureFlagPolicy.SecureOn` on the key's own dialog, `SecretWindowsTest`)
-(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`).
+(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`). Read again once a door was made
+from it, the card says tafs cloud's `draft_used` words as done (the ok colour, with no Approve), and a lapsed draft's
+`draft_lapsed` words as a problem (`aUsedDoorDraftReadsAsDoneNotAsAFailure`).
 
 ### Setting up a deployment
 
