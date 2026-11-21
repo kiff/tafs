@@ -1,0 +1,1 @@
+- **iPhone, iPad, Mac and Android:** Brazilian Portuguese. A phone set to Brazilian Portuguese reads tafs in pt-BR ("Precisa de você", "celular", "Entrar"), and Portugal keeps European Portuguese. Lines that state a legal rule read as in Portuguese until they're reviewed ([languages.md](docs/languages.md)).

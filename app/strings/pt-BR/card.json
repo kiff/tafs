@@ -1,0 +1,6 @@
+{
+  "card.hero.calls_use_unavailable": "chamadas {window} · uso indisponível",
+  "card.hero.use_unavailable": "{window} · uso indisponível",
+  "card.hero.use_unavailable_note": "{label} · uso indisponível{note}",
+  "card.outside_held": "Fora: retida para você"
+}

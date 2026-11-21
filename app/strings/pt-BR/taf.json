@@ -1,0 +1,18 @@
+{
+  "taf.activity.checking_waits": "A verificar o que aguarda por você…",
+  "taf.halt.connection_sends_nothing": "A conexão não envia nada às suas apps",
+  "taf.now.paused_by_you": "Posto em pausa por você",
+  "taf.now.waiting_on": "Precisa de você · {summary}",
+  "taf.now.waiting_on_you": "Precisa de você",
+  "taf.remove.connections_left": {
+    "one": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Conectar apps.",
+    "other": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Conectar apps."
+  },
+  "taf.remove.done": "O seu agendamento, chats, relatórios de execução, memória e chave foram excluídos, e o nome {taf} está livre. Os recibos do KIFF mantêm-se.",
+  "taf.remove_body": "Os seus Cards são revogados, o seu agendamento parado, os seus chats, relatórios de execução, memória e chave excluídos, e o seu nome libertado. Os recibos do KIFF mantêm-se.",
+  "taf.report.still_running": "ainda em andamento",
+  "taf.signed_tools_being_chosen": "Conectado · as ferramentas estão sendo escolhidas",
+  "taf.signed_tools_waiting_your_approval": "Conectado · ferramentas à espera da sua aprovação",
+  "taf.try_version_first_you_chat": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua trabalhando. Instalar uma coloca-a em produção.",
+  "taf.unless_you_approve_tools_sign": "A menos que aprove as suas ferramentas, o login é revogado {time}."
+}

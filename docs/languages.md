@@ -42,7 +42,7 @@ The same as English: plain, short, specific. Say what happened and what the pers
 | French | `fr` | vous | French business software addresses people as vous. |
 | Spanish | `es` | tú | Neutral Spanish, understood in Spain and Latin America. |
 | Italian | `it` | tu | Informal, as business apps in Italian do. |
-| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe, and a `pt-BR` phone reads it fine. |
+| Portuguese | `pt` | você | European Portuguese (`pt-PT`), decided: the customers are in Europe. Brazil reads its own regional variant, `pt-BR` (below, "Regional variants"). |
 | Dutch | `nl` | je | Informal, as Dutch apps do. |
 | Polish | `pl` | Ty | Buttons in the infinitive or imperative, sentences addressing Ty. |
 
@@ -212,9 +212,30 @@ in `locales_config.xml` (tested in `test_strings.py`). **Before shipping one, ea
 language** to kiff.dev's pages and KIFF's (`KIFFClient`'s app language, `AppSignIn.pageLanguages`, the translated-pages
 set in `Components.swift`, and Android's twins): a variant reads its base's pages, as `pt-BR` reads `/pt/`.
 
-**pt-BR** (Wave 1, Brazil) is declared, with no lines of its own yet. Brazil opens on the `pt` (pt-PT) lines, and pt-BR's
-lines follow as a priority, written by the language reviewer: "Precisa de você", "Registro", "celular" and the
-like, each a line that reads differently in Brazil.
+**pt-BR** (Wave 1, Brazil) ships: Brazilian forms over `pt`'s, "você" throughout, "celular", "tela", "arquivo", "senha",
+"Entrar" for signing in, "conexão" for a connection, and the system's own names on each platform (iOS "Ajustes", macOS
+"Ajustes do Sistema", Windows and Android "Configurações"). A line that states a legal rule (the terms, the age, a
+consent) isn't in it: it reads as `pt`'s until the language reviewer writes it. iOS picks pt-BR for a phone set to
+Brazilian Portuguese and keeps pt for Portugal's (`AppLanguage.deviceLanguage`); Android picks `values-pt-rBR` itself.
+Its glossary, where it differs from Portuguese's:
+
+| English | pt-BR |
+|---|---|
+| Needs you | Precisa de você |
+| Record | Registro |
+| Connect apps | Conectar apps |
+| connection | conexão |
+| Sign in again | Entrar novamente |
+| Disconnect | Desconectar |
+| Settings | Configurações |
+| Plan & usage | Plano e uso |
+| Working on it | Em andamento |
+| Your step | Seu passo |
+| Your brief | Seu resumo |
+| Skip it | Pular |
+| Approve once | Aprovar uma vez |
+| Refuse | Recusar |
+| Halt | Bloquear |
 
 ## How it's built
 

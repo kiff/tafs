@@ -1,0 +1,9 @@
+{
+  "onboarding.control_lead": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.",
+  "onboarding.control_lead_android": "Quando um taf precisa de você, espera em «Precisa de você» e, se tiver um, no relógio. Aprova com o bloqueio de tela, ou recusa.",
+  "onboarding.control_lead_mac": "Quando um taf precisa de você, espera em «Precisa de você». Aprova com Touch ID ou no celular, ou recusa.",
+  "onboarding.control_title": "O controle é seu",
+  "onboarding.home_lead": "Diga ao Coach, por palavras suas, o que quer que seja feito. Ele configura o taf com você e mostra-lhe a Card antes de qualquer coisa correr.",
+  "onboarding.tafs_lead": "Um taf faz um trabalho por você, como respostas de suporte, encomendas atrasadas ou acompanhamento de contatos. Peça ao Coach e ele configura um com você.",
+  "onboarding.tafs_title": "Os seus tafs trabalham para você"
+}

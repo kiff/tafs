@@ -1,0 +1,7 @@
+{
+  "usage.manage": "Gerenciar",
+  "usage.not_read": "Não foi possível ler o uso. {why}",
+  "usage.raise_limit.sign_in_first": "Entre com o KIFF para aumentar o limite.",
+  "usage.title": "Plano e uso",
+  "usage.use_unavailable": "uso indisponível"
+}

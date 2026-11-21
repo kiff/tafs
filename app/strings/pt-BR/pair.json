@@ -1,0 +1,14 @@
+{
+  "pair.added_passkey": "Este {device} não pode assinar aprovações sozinho. Aprove no celular ou com uma chave de acesso.",
+  "pair.check_code_lead": "O seu celular pergunta se o seu {device} mostra este código:",
+  "pair.from_sign_in": "Já usa o tafs no celular? Adicione este {device} com ele.",
+  "pair.keychain_refused": "Este Mac não conseguiu guardar o login no porta-chaves (erro {code}), por isso não foi adicionado. Mostre um código novo e tente outra vez.",
+  "pair.keyring_refused": "Este computador não conseguiu guardar o login, por isso não foi adicionado: precisa de um porta-chaves ativo e desbloqueado, como o GNOME Keyring, o KWallet ou o KeePassXC. Configure um ou desbloqueie-o e, depois, mostre um código novo e tente outra vez.",
+  "pair.refused_key_registered": "O celular indica que este {device} já está associado à sua conta. Mostre um código novo e leia-o de novo.",
+  "pair.refused_other": "O celular não conseguiu adicionar este {device}. Mostre um código novo e leia-o de novo.",
+  "pair.refused_title": "O celular não adicionou este {device}",
+  "pair.steps": "No celular, abra o tafs e depois {account}, {devices}, {pair}. Leia este código.",
+  "pair.title": "Adicione este {device} com o seu celular",
+  "pair.view_only.lead": "Este {device} mostra os seus tafs, Precisa de você e o Registro. Não pode aprovar até o adicionar com o seu celular.",
+  "pair.waiting": "À espera do seu celular…"
+}

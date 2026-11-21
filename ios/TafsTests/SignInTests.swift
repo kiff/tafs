@@ -135,7 +135,8 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
         XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages)), "kiff.dev serves pages only in languages the app ships")
-        XCTAssertEqual(Set(Words.languages).subtracting(["en"]).subtracting(Legal.translated), ["ko"], "every shipped language has its page but Korean, which opens English, marked, until kiff.dev serves it")
+        // A regional variant (pt-BR) opens its language's pages (`Legal.language` is "pt"), so it needs none of its own.
+        XCTAssertEqual(Set(Words.languages.filter { !$0.contains("-") }).subtracting(["en"]).subtracting(Legal.translated), ["ko"], "every shipped language has its page but Korean, which opens English, marked, until kiff.dev serves it")
     }
 
     /// KIFF's own Terms and Privacy, the account's, beside tafs's: in the app's language where kiff.dev serves it.

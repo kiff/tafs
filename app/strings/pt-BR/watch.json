@@ -1,0 +1,34 @@
+{
+  "watch.approve_on_phone": "Aprove no celular",
+  "watch.asking_phone": "A perguntar ao celular…",
+  "watch.check_phone": "Verifique a conexão do celular",
+  "watch.check_phone_sub": "Precisa de você está aberto lá. Aprove a chamada lá.",
+  "watch.check_phone_title": "Veja o celular",
+  "watch.glance_description": "Quantos precisam de você, nunca o quê nem quem.",
+  "watch.held_calls": {
+    "one": "{count} chamada retida precisa de você",
+    "other": "{count} chamadas retidas precisam de você"
+  },
+  "watch.kept_to_send": "Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.",
+  "watch.more_on_phone": "O resto está no celular.",
+  "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de tela e desbloqueie-o.",
+  "watch.needs_you_count": {
+    "one": "{count} precisa de você",
+    "other": "{count} precisam de você"
+  },
+  "watch.no_offline_speech": "O celular não consegue converter sozinho a voz em texto neste idioma. Escreva em vez disso.",
+  "watch.nothing_waits": "Nada espera por você.",
+  "watch.open_on_phone": "Abrir no celular",
+  "watch.phone_not_reachable": "O celular não está ao alcance. Aproxime-o e tente novamente.",
+  "watch.resume_on_phone": "Retomar no celular",
+  "watch.sign_in_on_phone": "Primeiro, entre no tafs no celular.",
+  "watch.sign_out_q": "Sair neste relógio?",
+  "watch.sign_out_sub": "O celular continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada.",
+  "watch.signed_in": "Conectado",
+  "watch.signed_out_here": "Sessão terminada neste relógio. O celular continua com sessão iniciada.",
+  "watch.timing": "Escuta {listen} ms · recepção {receipt} ms · resultado {result} ms",
+  "watch.transcribing": "O celular está a convertê-lo em texto…",
+  "watch.trust": "Este relógio não guarda senhas nem chaves e não aprova nada: o que precisa do seu sim espera pelo celular. Os seus tafs só fazem o que os seus Cards permitem.",
+  "watch.update_phone": "Atualize o tafs no celular e tente novamente.",
+  "watch.view_only_phone": "Este celular só pode ver, por isso não pode pedir a partir do relógio. Entre em um celular que possa aprovar."
+}

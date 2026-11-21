@@ -81,7 +81,9 @@ final class AcceptLanguageTests: XCTestCase {
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "nl", preferred: ["ja-JP", "nl-BE", "pl-PL", "it-IT", "es-ES", "fr-FR"], shipped: all), ["nl", "pl", "it", "es"])
         // A language only Siri's phrases are in never counts.
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "es", preferred: ["es-ES"], shipped: ["en"]), ["en"])
-        // The app ships what languages.json ships.
-        XCTAssertEqual(Words.languages, all)
+        // The app ships what languages.json ships: its languages, then each regional variant (pt-BR).
+        XCTAssertEqual(Words.languages, all + ["pt-BR"])
+        // A variant's screens are its language's to the servers: a phone in Brazil sends pt.
+        XCTAssertEqual(KIFFClient.screenLanguages(resolved: "pt-BR", preferred: ["pt-BR"], shipped: Words.languages), ["pt"])
     }
 }

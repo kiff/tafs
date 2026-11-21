@@ -1,0 +1,22 @@
+{
+  "record.answer_lost": "{allowed}, e enviado, mas a resposta da app perdeu-se: verifique os registros da própria app",
+  "record.approved_by_you": "Aprovado por você",
+  "record.approved_once": "Aprovado uma vez por você · {at} · {summary}",
+  "record.approved_then_done": "Aprovado por você, depois concluído",
+  "record.connection_refused_before_sending": "A conexão recusou antes do envio. Nada foi enviado.",
+  "record.decided.approved_by_you": "aprovada por você",
+  "record.decided.waiting_for_you": "precisa de você",
+  "record.did_this_happen.see_vendor_record": "Ver o registro do fornecedor",
+  "record.extra_room": "Margem extra dada por você · {at} · {summary}",
+  "record.not_recorded": "{allowed}, mas não ficou registrado se a app o fez: verifique os registros da própria app",
+  "record.refused_by_you": "Recusada por você · {at} · {summary}",
+  "record.refused_next_step": "Recusada por você · {at}, com um próximo passo · {summary}",
+  "record.removed.detail": "Agendamento, memória e chave excluídos; nome livre",
+  "record.the_connection": "A conexão",
+  "record.title": "Registro",
+  "record.tool_refused_amount": "{who} recusou. Nada foi feito, mas continua contando para o total de hoje.",
+  "record.tool_refused_counts": "{who} recusou, e continua contando para os limites de hoje",
+  "record.tool_refused_counts_why": "{who} recusou, e continua contando para os limites de hoje{why}",
+  "record.tool_refused_money": "{who} recusou. Nenhum dinheiro foi movimentado, mas continua contando para o total de hoje.",
+  "record.waiting_for_you": "Precisa de você"
+}

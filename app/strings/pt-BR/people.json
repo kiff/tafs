@@ -1,0 +1,16 @@
+{
+  "people.delete": "Excluir",
+  "people.delete_group": "Excluir o grupo {group}",
+  "people.delete_group_body": "As suas pessoas perdem os tafs que usavam através dele, a menos que outro grupo ou um compartilhamento próprio lhes dê esses tafs. Os seus chats continuam sendo seus.",
+  "people.delete_group_button": "Excluir {group}",
+  "people.delete_group_title": "Excluir {group}?",
+  "people.delete_this_group_title": "Excluir este grupo?",
+  "people.manager_explains": "Um gestor adiciona e remove os membros do grupo. Gerenciar não lhe permite alterar os Cards de um taf.",
+  "people.new_group_hint": "A seguir, adicione as suas pessoas e depois compartilhe um taf com ele a partir da página do taf.",
+  "people.not_shared": "Não compartilhado",
+  "people.share.action": "Compartilhar",
+  "people.share.not_shared": "{taf} não será compartilhado",
+  "people.share.title": "Compartilhar {taf}",
+  "people.sharing": "Compartilhando…",
+  "people.stops_using": "{who} deixa de usar {taf}. Os seus chats continuam sendo seus."
+}

@@ -1,0 +1,9 @@
+{
+  "setup.add_place": "Adicionar um destino a partir de uma app conectada…",
+  "setup.connect_app": "Conectar uma app…",
+  "setup.connected_apps": "Apps conectadas",
+  "setup.follow_ups": "Acompanhamentos que definiu para você",
+  "setup.in_apps": "Nas suas apps conectadas",
+  "setup.knob.no_subscription": "A conexão não indicou que subscrição fez. Tente novamente.",
+  "setup.skip_it": "Pular"
+}

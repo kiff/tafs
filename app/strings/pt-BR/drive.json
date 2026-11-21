@@ -1,0 +1,9 @@
+{
+  "drive.caption": "O Coach está conduzindo: {task}",
+  "drive.ended.left_app": "A app saiu da tela, por isso o Coach parou",
+  "drive.ended.owner_took_over": "Assumiu o controle, por isso o Coach deixa que continue",
+  "drive.needs_you_let_coach_drive": "Precisa de você · deixar o Coach conduzir",
+  "drive.not_on_screen": "Isso não está na tela agora",
+  "drive.yours_to_confirm": "Cabe a você confirmar isso",
+  "drive.yours_to_fill": "Cabe a você preencher isso"
+}
