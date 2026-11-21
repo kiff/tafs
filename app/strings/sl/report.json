@@ -1,0 +1,17 @@
+{
+  "report.already": "Ta odgovor ste že prijavili.",
+  "report.cant_from_here": "Tega odgovora od tu ni mogoče prijaviti.",
+  "report.menu": "Prijavi ta odgovor",
+  "report.not_sent": "Vaša prijava ni bila poslana. {why}",
+  "report.not_sent_why": "Ni poslano: {failed}",
+  "report.note_hint": "Dodajte opombo (neobvezno)",
+  "report.note_most_characters": "Opomba ima lahko največ 1.000 znakov.",
+  "report.person_kiff_reads_your_report": "Vašo prijavo bo pri KIFF prebral človek, skupaj z odgovorom, kot je bil napisan.",
+  "report.reason.harmful": "Škodljivo",
+  "report.reason.offensive": "Žaljivo",
+  "report.reason.other": "Drugo",
+  "report.reason.wrong": "Napačno",
+  "report.runs_not_loaded": "Njegovih zagonov ni bilo mogoče naložiti. {why}",
+  "report.thanks": "Hvala. Nekdo pri KIFF bo prebral vašo prijavo.",
+  "report.what_wrong": "Kaj je narobe z njim?"
+}

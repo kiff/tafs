@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} nem csatolható.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "A tafs nem tudja csatolni ezt a fájlt: ilyen típust vagy méretet nem fogad. Válassz másikat.",
+  "attachment.photo": "Fotó",
+  "attachment.photo_could_not_read": "A fotót nem sikerült beolvasni.",
+  "attachment.photo_numbered": "{n}. fotó",
+  "attachment.too_large": "{name} mérete {size}; legfeljebb {limit} lehet.",
+  "attachment.wrong_kind": "{name} nem csatolható. Fotók, PDF-ek, szövegek, CSV, Markdown, Word- és Excel-fájlok csatolhatók."
+}

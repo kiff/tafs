@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Sprašujem KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Ni prišlo do KIFF. Poskusite znova.",
+  "kiff.kiff_can_not_do_sign": "KIFF tega še ne zmore: znova se prijavite v Nastavitvah, da boste lahko odobravali s te naprave ({device}).",
+  "kiff.kiff_did_not_answer_expected": "KIFF ni odgovoril po pričakovanjih. Poskusite znova.",
+  "kiff.kiff_words_do_not_match": "Besede KIFF se ne ujemajo z njihovim preverjanjem. Ničesar ni mogoče odobriti."
+}

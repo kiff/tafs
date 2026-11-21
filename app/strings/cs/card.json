@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "Celá Card",
+    "few": "Všechny Card",
+    "other": "Všechny Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, pak se zeptá vás",
+  "card.calls_left": {
+    "one": "Zbývá {count} volání",
+    "few": "Zbývají {count} volání",
+    "other": "Zbývá {count} volání"
+  },
+  "card.calls_left_line": {
+    "one": "Zbývá {count} volání {window} z {limit}",
+    "few": "Zbývají {count} volání {window} z {limit}",
+    "other": "Zbývá {count} volání {window} z {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} z {count} volání {window}",
+    "few": "{used} ze {count} volání {window}",
+    "other": "{used} z {count} volání {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} volání {window}",
+    "few": "{count} volání {window}",
+    "other": "{count} volání {window}"
+  },
+  "card.card_confirmed_kiff": "Card · potvrzeno KIFF",
+  "card.card_draft_kiff": "Card · návrh · od KIFF",
+  "card.card_got_room_call_needed": "Jeho Card dostala prostor, který toto volání potřebovalo, dokud se ten celkový limit nevynuluje",
+  "card.card_not_issued": "Card nebyla vydána. ",
+  "card.card_revoked": "Card odvolána",
+  "card.check.always_asks": "{rule}: vždy se zeptá vás",
+  "card.check.never_allowed": "{rule}: nikdy nepovoleno",
+  "card.check.not_on_card": "Není na Card tohoto tafu",
+  "card.check.over_count": {
+    "one": "Přes {count} {window}",
+    "few": "Přes {count} {window}",
+    "other": "Přes {count} {window}"
+  },
+  "card.check.over_each": "Přes {amount} za každé",
+  "card.check.over_total": "Přes {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "few": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Skončila",
+  "card.ended_on": "Skončila {date}",
+  "card.ends": "Končí",
+  "card.extra_room": "+{extra} prostoru navíc {window}",
+  "card.extra_room_prefix": "+{formatted} prostoru navíc ",
+  "card.extra_room_until": "+{extra} prostoru navíc do {ends}",
+  "card.figure_left": "zbývá {figure}",
+  "card.heading": {
+    "one": "Card",
+    "few": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} volání {window}{each}: tohle by bylo {nth}{item}",
+    "few": "{count} volání {window}{each}: tohle by bylo {nth}{item}",
+    "other": "{count} volání {window}{each}: tohle by bylo {nth}{item}"
+  },
+  "card.held.each_call_asks": "Každé volání se vás nejdřív zeptá",
+  "card.held.for_each": " pro každé {name}",
+  "card.held.for_each_join": " pro každé ",
+  "card.held.for_item": " pro {item}",
+  "card.held.over_count": {
+    "one": "Přes jeho limit {count} volání: tohle by bylo {nth}",
+    "few": "Přes jeho limit {count} volání: tohle by bylo {nth}",
+    "other": "Přes jeho limit {count} volání: tohle by bylo {nth}"
+  },
+  "card.held.over_one_call": "{amount} je přes limit {cap} na jedno volání",
+  "card.held.over_total": "{amount} by překročilo celkový limit {cap}",
+  "card.hero.calls_left_of": {
+    "one": "volání zbývá {window} z {limit}",
+    "few": "volání zbývají {window} z {limit}",
+    "other": "volání zbývá {window} z {limit}"
+  },
+  "card.hero.calls_use_unavailable": "volání {window} · využití není k dispozici",
+  "card.hero.left_of": "zbývá {window} z {limit}",
+  "card.hero.left_of_extra": "zbývá {window} z {base} + {extra} prostoru navíc",
+  "card.hero.left_of_extra_until": "zbývá {window} z {base} + {extra} prostoru navíc do {ends}",
+  "card.hero.left_of_note": "zbývá {window} z {limit}{note}",
+  "card.hero.no_currency": "bez měny",
+  "card.hero.no_currency_suffix": " · bez měny",
+  "card.hero.use_unavailable": "{window} · využití není k dispozici",
+  "card.hero.use_unavailable_note": "{label} · využití není k dispozici{note}",
+  "card.how_counted": "Jak se to počítá",
+  "card.issue_prompt": "Vydat Card pro {taf}",
+  "card.issued_by": "Vydal(a)",
+  "card.issued_by_account": "Účet",
+  "card.issued_by_named": "Vydal(a) {who}",
+  "card.its_card": "Jeho Card",
+  "card.kiff_did_not_revoke_cards": "KIFF neodvolal {cards_left} jeho Card: odvolejte je v KIFF.",
+  "card.left": "zbývá {amount} {window}",
+  "card.left_extra_room": "zbývá {current} z {own} + {extra} prostoru navíc{until}{note}",
+  "card.limit_can_not_raised_right": "Limit teď odsud nelze zvýšit.",
+  "card.limit_raised_read_balance_again": "Limit byl zvýšen. Než ho zvýšíte znovu, načtěte zůstatek znovu.",
+  "card.line.calls_in_window": {
+    "one": "{count} volání {window}{then}",
+    "few": "{count} volání {window}{then}",
+    "other": "{count} volání {window}{then}"
+  },
+  "card.line.more_asks": "; víc se vás nejdřív zeptá",
+  "card.line.then_asks": ", pak se zeptá vás",
+  "card.line.total_in_window": "celkem {amount} {window}{then}",
+  "card.line.up_to_each": "až {amount} za každé",
+  "card.more": {
+    "one": "ještě {count}",
+    "few": "ještě {count}",
+    "other": "ještě {count}"
+  },
+  "card.no_actions": "Zatím žádné akce",
+  "card.no_actions_short": "zatím žádné akce",
+  "card.no_currency": "{amount} (bez měny)",
+  "card.no_end_date": "Bez data konce",
+  "card.outcome.not_a_resource": "Není to jeden ze zdrojů Card",
+  "card.outcome.outside": "Mimo Card",
+  "card.outcome.over_one_action": "Přes limit Card na jednu akci",
+  "card.outcome.over_total": "Přes celkový limit Card",
+  "card.outside_held": "Mimo: zadrženo pro vás",
+  "card.outside_refused": "Mimo: odmítnuto",
+  "card.over_limit_calls_would": "Přes jeho limit {limit} volání: tohle by bylo {nth}",
+  "card.revoke_failed": "KIFF Card neodvolal. {why}",
+  "card.revoked": "Odvoláno",
+  "card.rule.always_asks": "vždy se zeptá vás",
+  "card.rule.at_most_each": "≤ {amount} za každé",
+  "card.rule.at_most_each_refused_above": "≤ {amount} za každé · nad to odmítnuto",
+  "card.rule.calls": {
+    "one": "{count} volání {window}",
+    "few": "{count} volání {window}",
+    "other": "{count} volání {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} volání {window}, pak se zeptá vás",
+    "few": "{count} volání {window}, pak se zeptá vás",
+    "other": "{count} volání {window}, pak se zeptá vás"
+  },
+  "card.rule.in_total": "celkem {amount} {window}",
+  "card.rule.never": "nikdy",
+  "card.rule.total_then_asks": "celkem {amount} {window}, pak se zeptá vás",
+  "card.rule.up_to_each": "až {amount} za každé; víc se vás nejdřív zeptá",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card tafu",
+  "card.tools": {
+    "one": "{count} nástroj",
+    "few": "{count} nástroje",
+    "other": "{count} nástrojů"
+  },
+  "card.until": "Do",
+  "card.until_date": "Do {date}",
+  "card.until_ends": " do {ends}",
+  "card.used_of": "{used} z {limit} {window}",
+  "card.window.a_day": "denně",
+  "card.window.a_month": "měsíčně",
+  "card.window.a_week": "týdně",
+  "card.window.any_day": "za libovolných 24 hodin",
+  "card.window.any_hour": "za libovolnou hodinu",
+  "card.window.any_week": "za libovolných 7 dní",
+  "card.window.in_total": "celkem",
+  "card.window.in_total_window": "celkem {window}",
+  "card.window.last_day": "za posledních 24 hodin",
+  "card.window.last_hour": "za poslední hodinu",
+  "card.window.last_week": "za posledních 7 dní",
+  "card.window.so_far": "zatím",
+  "card.window.this_month": "tento měsíc",
+  "card.window.this_week": "tento týden",
+  "card.window.today": "dnes",
+  "card.within_card": "v rámci Card"
+}

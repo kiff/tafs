@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Összefoglalók",
+  "push.channel.briefs_description": "Az összefoglalód a beállított időpontokban.",
+  "push.channel.holds_description": "Egy hívás a válaszodra vár. Semmi sem megy ki, amíg jóvá nem hagyod.",
+  "push.channel.other": "Egyéb értesítések",
+  "push.channel.other_description": "Feladatkérések és a rájuk adott válaszok, hang nélkül.",
+  "push.channel.urgent_description": "Ami nem várhat a következő összefoglalóig, hanggal.",
+  "push.open_needs_you": "Nyisd meg a Rád vár részt a válaszhoz.",
+  "push.open_taf": "Nyisd meg a tafot a megtekintéshez.",
+  "push.open_usage": "Nyisd meg a Csomag és használat részt a megtekintéshez."
+}

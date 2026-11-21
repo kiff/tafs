@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "A csevegéseid exportálása nem sikerült. {why}",
+  "export.not_offered": "A fájlokat nem sikerült menteni erre a telefonra. Szabadíts fel helyet, majd próbáld újra.",
+  "export.own_chats_each_taf_coach": "A saját csevegéseid minden taffal, a Coach-csal is, a csatolt fájlok nevei és a jegyzeteid, olvasható fájlként és JSON-ként. Csak te exportálhatod őket.",
+  "export.preparing": "Csevegések előkészítése…",
+  "export.ready_share_again": "Kész: {files}. Újbóli megosztás",
+  "export.row": "Csevegéseim exportálása",
+  "export.sign_in_first": "A csevegések exportálásához jelentkezz be a KIFF-fel."
+}
