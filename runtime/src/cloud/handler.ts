@@ -36,7 +36,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -4565,14 +4565,15 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
   if (!deps.planqueBase) return { lines: [], guides: [] };
   try {
     const token = bearer(event);
-    const [conns, records, access] = await Promise.all([
-      accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
+    const [{ connections: conns, chromes }, records, access] = await Promise.all([
+      accountConnectionsAndChromes(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
       deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
     ]);
     const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t.name]));
     // The guides of the apps those tafs hold, the most used first: Coach has read them before it offers a job with one.
     const guides = await heldGuides(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token, conns, tafs).catch(() => []);
-    return { lines: connectionLines(conns, tafs), guides };
+    // The owner's own Chrome, only while planque offers a taf in one: Coach offers it only then.
+    return { lines: [...connectionLines(conns, tafs), ...chromeLine(chromes)], guides };
   } catch (err) {
     console.error(`coach connections for ${me.tenantID}:`, err);
     return { lines: [], guides: [] };
