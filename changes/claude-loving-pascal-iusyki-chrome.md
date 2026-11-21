@@ -1,1 +1,2 @@
 - **tafs in your Chrome, the extension (behind a switch, off):** pairing from the phone (iPhone and iPad: Account › Chrome), signed steps from planque, the extension's own site rules, masking and act guard, a run in its own background window, and the side panel ([chrome.md](docs/chrome.md)).
+- **tafs in your Chrome, Coach in the side panel (behind a switch, off):** talk to Coach from Chrome, and share the page in front only when you tap Share; approvals stay on your phone ([chrome.md](docs/chrome.md)).

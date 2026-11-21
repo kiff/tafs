@@ -215,7 +215,8 @@ error = {code, detail?}      // detail never carries page text
 - **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
-  payment page only a link to another page is followed. planque's guard does the same.
+  payment page no link is followed at all: neither a URL nor its words can prove a link places no order. planque's
+  guard does the same.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
 - **`stop`:** planque may send `{type: "stop", run}` unsigned, since stopping only takes power away. The run's window

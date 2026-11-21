@@ -1,1 +1,0 @@
-- **tafs in your Chrome, Coach in the side panel (behind a switch, off):** talk to Coach from Chrome, and share the page in front only when you tap Share; approvals stay on your phone ([chrome.md](docs/chrome.md)).
