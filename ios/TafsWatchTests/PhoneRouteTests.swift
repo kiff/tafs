@@ -7,6 +7,7 @@ import XCTest
 @MainActor
 final class PhoneRouteTests: XCTestCase {
     /// A link whose answers are scripted: reachable as listed, look after look, and each send's outcome in turn.
+    @MainActor
     private final class Link {
         var activated = true
         var installed = true
