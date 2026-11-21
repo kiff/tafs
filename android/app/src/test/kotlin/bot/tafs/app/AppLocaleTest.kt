@@ -47,19 +47,34 @@ class AppLocaleTest {
     assertNull(AppLocale.fromLocales(""))
   }
 
+  // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
+  @Test fun aRegionalVariantTafsShipsIsKeptAsItself() {
+    assertEquals("pt-BR", AppLocale.known("pt-BR"))
+    assertEquals("pt-BR", AppLocale.known("pt_BR"))
+    assertEquals("pt-BR", AppLocale.fromLocales("pt-BR,en"))
+    assertEquals("pt", AppLocale.known("pt-PT"))
+    assertEquals("pt", AppLocale.known("pt"))
+    assertEquals("es", AppLocale.known("es-MX"))
+    val kept = Kept("pt")
+    assertTrue(AppLocale.keep(kept, "pt-BR"))
+    assertEquals("pt-BR", AppLocale.stored(kept))
+    assertTrue(AppLocale.keep(kept, "pt"))
+    assertEquals("pt", AppLocale.stored(kept))
+  }
+
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(10, rows.size)
+    assertEquals(11, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "pt-BR" to "Português (Brasil)"),
       rows.drop(1).map { it.tag to it.title },
     )
     assertEquals("This tablet's language", AppLocale.choices(device = "tablet").first().title)
   }
 
   @Test fun theEightAreTheGeneratedLocalesInTheirOrder() {
-    val declared = Regex("""android:name="([a-z-]+)"""").findAll(File("src/main/res/xml/locales_config.xml").readText()).map { it.groupValues[1] }.toList()
+    val declared = Regex("""android:name="([A-Za-z-]+)"""").findAll(File("src/main/res/xml/locales_config.xml").readText()).map { it.groupValues[1] }.toList()
     assertEquals(declared, AppLocale.TAGS)
   }
 }

@@ -664,7 +664,7 @@ final class PlanqueClient {
         request.setValue("tafs-ios", forHTTPHeaderField: "User-Agent")
         // The person's languages, as tafs cloud gets them: planque writes the words they approve in the first it has.
         // Not part of what's signed (the method, the path and query, the body).
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         // This phone's zone, for the times in planque's words ("last used 00:32"); not part of what's signed either.
         request.setValue(TimeZone.current.identifier, forHTTPHeaderField: "X-Time-Zone")
         if let body {

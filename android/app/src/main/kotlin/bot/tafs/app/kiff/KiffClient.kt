@@ -61,7 +61,7 @@ data class DeviceStart(
  * The approval page's link in the language the app's lines resolved to (`lang`), so KIFF's page speaks the app's language
  * whatever the browser's; a link that already names one keeps it.
  */
-fun DeviceStart.inAppLanguage(language: String = bot.tafs.app.model.Res.language): DeviceStart {
+fun DeviceStart.inAppLanguage(language: String = bot.tafs.app.model.Res.pageLanguage): DeviceStart {
   val link = verificationUriComplete
   if (link.isEmpty() || Regex("[?&]lang=").containsMatchIn(link)) return this
   return copy(verificationUriComplete = link + (if ('?' in link) "&" else "?") + "lang=" + language)
@@ -259,7 +259,7 @@ class KiffClient(
 
   /** The held call's page in KIFF, where it can be answered today. */
   /** The held call's page in KIFF, in the language the app's lines resolved to (`lang`); the browser's is KIFF's fallback. */
-  fun answerPage(exceptionId: String, language: String = bot.tafs.app.model.Res.language): String =
+  fun answerPage(exceptionId: String, language: String = bot.tafs.app.model.Res.pageLanguage): String =
     "$webUrl/needs-you/$exceptionId?lang=$language"
 
   // MARK: Device sign-in
@@ -1131,8 +1131,13 @@ class KiffClient(
      * held call's reason, a Record line's) in the app's language at its source, never translated by the
      * app (kiff/tafs#75). English is the last fallback.
      */
-    /** `Accept-Language` for the language the app's lines resolved to, English after it: "de, en;q=0.9". */
-    fun screenLanguage(): String = acceptLanguage(listOf(bot.tafs.app.model.Res.language))
+    /**
+     * `Accept-Language` for the language the app's lines resolved to, English after it: "de, en;q=0.9". A regional variant
+     * comes first and its language after it ("pt-BR, pt;q=0.9, en;q=0.8"): a service that has the variant's words can use
+     * them, and one that matches tags exactly still finds the language.
+     */
+    fun screenLanguage(language: String = bot.tafs.app.model.Res.language): String =
+      acceptLanguage(listOf(language, language.substringBefore('-')).distinct())
 
     fun acceptLanguage(preferred: List<String>): String {
       val tags = preferred.take(4).map { it.replace('_', '-') }.toMutableList()

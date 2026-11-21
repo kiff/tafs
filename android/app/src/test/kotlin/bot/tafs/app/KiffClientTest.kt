@@ -413,5 +413,8 @@ class KiffClientTest {
     assertEquals("en-GB, fr;q=0.9", KiffClient.acceptLanguage(listOf("en-GB", "fr")))
     // The app's own: the language its lines resolved to (English in unit tests), never the phone's setting.
     assertEquals("en", KiffClient.screenLanguage())
+    // A regional variant, then its language: tafs cloud reads "pt" today, and Brazil's words when it has them.
+    assertEquals("pt-BR, pt;q=0.9, en;q=0.8", KiffClient.screenLanguage("pt-BR"))
+    assertEquals("pt, en;q=0.9", KiffClient.screenLanguage("pt"))
   }
 }

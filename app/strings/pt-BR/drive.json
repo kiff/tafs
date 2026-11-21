@@ -1,0 +1,18 @@
+{
+  "drive.approval": "Deixar o Coach conduzir o app: {task}",
+  "drive.cant_do_step": "Este app não consegue fazer esse passo",
+  "drive.caption": "O Coach está conduzindo: {task}",
+  "drive.card_note_pauses": "O Coach toca e escreve neste app enquanto você observa, apenas para este pedido. Nunca confirma nada. Toque no app para pausar ou em Parar para terminar.",
+  "drive.card_note_scrolls_pauses": "O Coach toca, escreve e desliza neste app enquanto você observa. Nunca confirma nada. Toque no app para pausar ou em Parar para terminar.",
+  "drive.card_title": "O Coach pede para conduzir o app",
+  "drive.coach_drove_app": "O Coach conduziu o app · {task}",
+  "drive.declined_line": "Agora não: o Coach não conduziu o app",
+  "drive.drive_app": "Conduzir o app",
+  "drive.ended.left_app": "O app saiu da tela, por isso o Coach parou",
+  "drive.ended.owner_took_over": "Assumiu o controle, por isso o Coach deixa que continue",
+  "drive.ended.signed_out": "Você saiu, por isso o Coach parou",
+  "drive.needs_you_let_coach_drive": "Precisa de você · deixar o Coach conduzir",
+  "drive.not_on_screen": "Isso não está na tela agora",
+  "drive.yours_to_confirm": "Cabe a você confirmar isso",
+  "drive.yours_to_fill": "Cabe a você preencher isso"
+}

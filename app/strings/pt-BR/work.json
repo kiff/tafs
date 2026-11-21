@@ -1,0 +1,8 @@
+{
+  "work.asking_kiff_run": "Pedindo ao KIFF para executar {tool}…",
+  "work.requests_need_you": {
+    "one": "{count} pedido precisa de você",
+    "other": "{count} pedidos precisam de você"
+  },
+  "work.sending_again": "Enviando novamente…"
+}

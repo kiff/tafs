@@ -508,6 +508,14 @@ per-app language once the phone moves to 13. Either way the words are installed 
 screen change too, and every request's `Accept-Language` follows. The session and what's open stay: the model lives in
 `TafsApplication`, not the screen, and the Account sheet stays open.
 
+**Brazilian Portuguese (pt-BR)** ships beside pt as a regional variant: its lines are pt's with Brazil's own on top
+(`app/strings/pt-BR/`), generated into `values-pt-rBR`, so a phone set to Brazil reads them and one set to Portugal, or any
+other Portuguese, reads pt's. The list names it "Português (Brasil)", after "Português", and keeps it as itself
+(`AppLocale.known`: "pt-BR" stays, "pt-PT" is "pt", "de-DE" is "de"). Only the app's own lines are regional: KIFF's
+pages and kiff.dev's open in its language (`Res.pageLanguage`, "pt"): the Terms and Privacy links, the sign-in and the
+held call's page. `Accept-Language` sends the variant, then its language ("pt-BR, pt;q=0.9, en;q=0.8"), so tafs cloud and
+planque answer in pt today and can tell Brazil apart once they have its words.
+
 **Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
 region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
 symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are

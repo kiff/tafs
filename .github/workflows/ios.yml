@@ -40,7 +40,7 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, light and dark, no keyboard focus: docs/screenshots/ipad/) or rtl (the main screens laid out right to left, with English words, and the iPad's Overview and Calendar) or preview (the main screens in a language not shipped yet, from the preview input: its missing lines read in English). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
+        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each language the app ships, pt-BR included, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, light and dark, no keyboard focus: docs/screenshots/ipad/) or rtl (the main screens laid out right to left, with English words, and the iPad's Overview and Calendar) or preview (the main screens in a language not shipped yet, from the preview input: its missing lines read in English). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
         type: choice
         options: [none, full, key, languages, reference, rtl, preview]
         default: none
@@ -606,11 +606,13 @@ jobs:
           # After the iPhone's, an iPad pass in French and Portuguese: the Overview, Calendar
           # and Week on the 13-inch iPad.
           if [ "$SET" = languages ]; then
-            for lang in en de fr es it pt nl pl; do
+            # pt-BR is a regional variant (docs/languages.md): Brazilian Portuguese, set as a phone in Brazil sets it.
+            for lang in en de fr es it pt pt-BR nl pl; do
               xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
               xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
               region=$(echo "$lang" | tr a-z A-Z); [ "$lang" = en ] && region=US
-              loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
+              case "$lang" in *-*) region=${lang#*-}; loc=(-AppleLanguages "($lang)" -AppleLocale "${lang%-*}_${region}") ;;
+                *) loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}") ;; esac
               shoot "$lang-1-welcome" "${loc[@]}"
               shoot "$lang-2-tafs" -screenshots YES -tab tafs "${loc[@]}"
               shoot "$lang-3-needs-you" -screenshots YES -tab needs-you "${loc[@]}"
