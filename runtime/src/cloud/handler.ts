@@ -839,7 +839,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     // Only the tafs KIFF says the person may use or oversee are.
-    const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
+    // Newest first, as Home lists them.
+    const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent))
+      .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
     // Leftover connections of tafs gone end here, on the read of a person who may manage tafs (their session), at most hourly.
     if (me.capabilities.includes("cards.manage")) await within(sweepLeftovers(me, bearer(event), deps), 2000).catch((err) => console.warn(`connections sweep: ${(err as Error)?.message ?? "timed out"}`));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
@@ -7540,7 +7542,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     colors.set(t.id, color);
     await deps.tafs.putIf(me.tenantID, { ...t, color }, t);
   }
-  const tafs = all.filter((t) => listable(access, t.kiffAgent));
+  // Newest first, as the owner looks for the taf they just made (21 Nov, the owner on the emulator's pass): only the
+  // list's order, after the colours, which are still handed out oldest first so each taf keeps the one it started with.
+  const tafs = all.filter((t) => listable(access, t.kiffAgent))
+    .sort((a, b) => b.created.localeCompare(a.created) || b.id.localeCompare(a.id));
   // Where each taf's work stands (docs/reliability.md): one read of its recent runs, for its
   // last run and its work line. A read that fails leaves both out.
   const now = deps.now?.() ?? new Date();
