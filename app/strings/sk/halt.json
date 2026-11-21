@@ -1,0 +1,13 @@
+{
+  "halt.again": "Zastaviť znova",
+  "halt.all_now": "Zastaviť všetko hneď",
+  "halt.explain.halted": "Zastavené. Obnovenie spustí len novú prácu.",
+  "halt.explain.halted_since": "Od {time}. Obnovenie spustí len novú prácu.",
+  "halt.explain.halting": "Nič nové sa nespustí. Zastavené sa ukáže, keď to potvrdí KIFF aj pripojenie.",
+  "halt.explain.running_all": "Zastavenie drží vaše tafy, kým ich neobnovíte. Volanie, ktoré už odišlo, môže ešte doraziť.",
+  "halt.explain.running_one": "Zastavenie ho drží, kým ho neobnovíte. Volanie, ktoré už odišlo, môže ešte doraziť.",
+  "halt.halting_stops_no_run_starts": "Zastavenie drží {who}, kým ich neobnovíte. Volanie, ktoré už odišlo, môže ešte doraziť.",
+  "halt.now": "Zastaviť hneď",
+  "halt.row_running": "Zastaviť, kým neobnovíte",
+  "halt.your_tafs_lower": "vaše tafy"
+}

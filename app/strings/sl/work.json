@@ -1,0 +1,36 @@
+{
+  "work.answer_within": "Odgovorite v",
+  "work.answer_within_days": {
+    "one": "{count} dnevu",
+    "two": "{count} dneh",
+    "few": "{count} dneh",
+    "other": "{count} dneh"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} uri",
+    "two": "{count} urah",
+    "few": "{count} urah",
+    "other": "{count} urah"
+  },
+  "work.answer_within_line": "Obvestimo vas, ko primer čaka dlje.",
+  "work.answer_within_none": "Ni nastavljeno",
+  "work.answer_within_not_set": "Tega ni bilo mogoče nastaviti. {why}",
+  "work.asking_kiff_run": "Prosim KIFF, naj zažene {tool}…",
+  "work.did_not_stop": "Ni se ustavilo: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Njegovi zagoni",
+  "work.not_read": "Njegovega dela ni bilo mogoče prebrati. {why}",
+  "work.not_sent_again": "Ni bilo znova poslano. {why}",
+  "work.request.try_reply_now": "Poskusi z odgovorom zdaj",
+  "work.requests_need_you": {
+    "one": "{count} zahteva čaka na vas",
+    "two": "{count} zahtevi čakata na vas",
+    "few": "{count} zahteve čakajo na vas",
+    "other": "{count} zahtev čaka na vas"
+  },
+  "work.send_again": "Pošlji znova",
+  "work.sending_again": "Znova pošiljam…",
+  "work.stop_run": "Ustavi zagon",
+  "work.stopped_part_way_before_finished": "{taf} se je ustavil na pol poti, preden je končal."
+}

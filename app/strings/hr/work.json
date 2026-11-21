@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Odgovorite u roku od",
+  "work.answer_within_days": {
+    "one": "{count} dan",
+    "few": "{count} dana",
+    "other": "{count} dana"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} sat",
+    "few": "{count} sata",
+    "other": "{count} sati"
+  },
+  "work.answer_within_line": "Dobit ćete obavijest kad slučaj čeka dulje.",
+  "work.answer_within_none": "Nije postavljeno",
+  "work.answer_within_not_set": "Nije bilo moguće postaviti. {why}",
+  "work.asking_kiff_run": "Traženje od KIFF-a da pokrene {tool}…",
+  "work.did_not_stop": "Nije zaustavljeno: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Njegova izvođenja",
+  "work.not_read": "Njegov rad nije bilo moguće pročitati. {why}",
+  "work.not_sent_again": "Nije ponovno poslano. {why}",
+  "work.request.try_reply_now": "Isprobajte odgovor sada",
+  "work.requests_need_you": {
+    "one": "{count} zahtjev čeka vas",
+    "few": "{count} zahtjeva čekaju vas",
+    "other": "{count} zahtjeva čeka vas"
+  },
+  "work.send_again": "Pošaljite ponovno",
+  "work.sending_again": "Ponovno slanje…",
+  "work.stop_run": "Zaustavite izvođenje",
+  "work.stopped_part_way_before_finished": "Taf {taf} zaustavio se usred posla, prije nego što je završio."
+}

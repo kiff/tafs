@@ -1,0 +1,13 @@
+{
+  "halt.again": "Újbóli leállítás",
+  "halt.all_now": "Összes leállítása most",
+  "halt.explain.halted": "Leállítva. A folytatás csak új munkát indít.",
+  "halt.explain.halted_since": "{time} óta. A folytatás csak új munkát indít.",
+  "halt.explain.halting": "Semmi új nem indul. A Leállítva akkor látszik, ha a KIFF és a kapcsolat is megerősíti.",
+  "halt.explain.running_all": "A leállítás megállítja a tafjaidat, amíg nem folytatod őket. Egy már elküldött hívás még megérkezhet.",
+  "halt.explain.running_one": "A leállítás megállítja, amíg nem folytatod. Egy már elküldött hívás még megérkezhet.",
+  "halt.halting_stops_no_run_starts": "A leállítás megállítja ezt: {who}, amíg nem folytatod. Egy már elküldött hívás még megérkezhet.",
+  "halt.now": "Leállítás most",
+  "halt.row_running": "Leállítás a folytatásig",
+  "halt.your_tafs_lower": "a tafjaid"
+}

@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} fájl · 30 napig megőrizve",
+    "other": "{count} fájl · 30 napig megőrizve"
+  },
+  "files.all": "Összes",
+  "files.all_tafs": "Összes taf",
+  "files.by_run": "Futás szerint",
+  "files.by_taf": "Taf szerint",
+  "files.delete_body": "Azonnal eltűnik a Fájlokból a fiók minden tagja számára. Ez nem vonható vissza.",
+  "files.delete_now": "Törlés most",
+  "files.delete_question": "Törlöd most ezt: „{name}”?",
+  "files.deleted": "Törölve mindenki számára",
+  "files.download": "Letöltés",
+  "files.empty": "Még semmi. Ha egy taf egy futás során jelentést, táblázatot vagy dokumentumot készít, 30 napig itt marad, hogy a fiók minden tagja megnyithassa, mentse vagy megossza.",
+  "files.everyone": "A fiók minden tagja",
+  "files.goes_away": "Eltűnik",
+  "files.goes_in_days": {
+    "one": "{count} nap múlva eltűnik",
+    "other": "{count} nap múlva eltűnik"
+  },
+  "files.goes_on": "{date} (30 nappal a futása után)",
+  "files.goes_today": "ma eltűnik",
+  "files.goes_tomorrow": "holnap eltűnik",
+  "files.in_run": "A futásban",
+  "files.kept_line": "Minden fájl 30 napig marad meg a futásától számítva, aztán magától eltűnik. Ezeket a fájlokat a fiók minden tagja látja. A saját csevegésmellékleteid az üzeneteiknél maradnak.",
+  "files.kept_until": "A fájljai eddig maradnak meg: {date}",
+  "files.made_by": "Készítette",
+  "files.none_yet": "Még nincs · 30 napig megőrizve",
+  "files.pick_one": "Válassz egy fájlt, hogy itt lásd.",
+  "files.preview_start": "Csak az eleje látszik. Töltsd le a fájlt, hogy az egészet elolvasd.",
+  "files.saved": "Mentve erre az eszközre",
+  "files.see_in_chat": "Megtekintés a csevegésben",
+  "files.share": "Megosztás",
+  "files.size": "Méret",
+  "files.taf_row": {
+    "one": "{count} fájl a futásaiból",
+    "other": "{count} fájl a futásaiból"
+  },
+  "files.title": "Fájlok",
+  "files.type": "Típus",
+  "files.who_sees": "Ki látja"
+}

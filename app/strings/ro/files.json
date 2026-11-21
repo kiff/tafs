@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "{count} fișier · păstrat 30 de zile",
+    "few": "{count} fișiere · păstrate 30 de zile",
+    "other": "{count} de fișiere · păstrate 30 de zile"
+  },
+  "files.all": "Toate",
+  "files.all_tafs": "Toate tafurile",
+  "files.by_run": "După rulare",
+  "files.by_taf": "După taf",
+  "files.delete_body": "Dispare din Fișiere pentru toată lumea din acest cont, imediat. Acțiunea nu poate fi anulată.",
+  "files.delete_now": "Ștergeți acum",
+  "files.delete_question": "Ștergeți „{name}” acum?",
+  "files.deleted": "Șters pentru toată lumea",
+  "files.download": "Descărcați",
+  "files.empty": "Nimic deocamdată. Când un taf face un raport, un tabel sau un document într-o rulare, acesta se păstrează aici 30 de zile, pentru ca oricine din acest cont să-l deschidă, să-l salveze sau să-l distribuie.",
+  "files.everyone": "Toată lumea din acest cont",
+  "files.goes_away": "Dispare",
+  "files.goes_in_days": {
+    "one": "dispare peste {count} zi",
+    "few": "dispare peste {count} zile",
+    "other": "dispare peste {count} de zile"
+  },
+  "files.goes_on": "{date} (la 30 de zile după rulare)",
+  "files.goes_today": "dispare azi",
+  "files.goes_tomorrow": "dispare mâine",
+  "files.in_run": "În rulare",
+  "files.kept_line": "Fiecare fișier se păstrează 30 de zile de la rularea sa, apoi dispare singur. Toată lumea din acest cont vede aceste fișiere. Atașamentele din propriile conversații rămân cu mesajele lor.",
+  "files.kept_until": "Fișierele sale se păstrează până la {date}",
+  "files.made_by": "Creat de",
+  "files.none_yet": "Niciunul deocamdată · păstrate 30 de zile",
+  "files.pick_one": "Alegeți un fișier pentru a-l vedea aici.",
+  "files.preview_start": "Se afișează doar începutul. Descărcați fișierul pentru a-l citi integral.",
+  "files.saved": "Salvat pe acest dispozitiv",
+  "files.see_in_chat": "Vedeți-l în conversație",
+  "files.share": "Distribuiți",
+  "files.size": "Dimensiune",
+  "files.taf_row": {
+    "one": "{count} fișier din rulările sale",
+    "few": "{count} fișiere din rulările sale",
+    "other": "{count} de fișiere din rulările sale"
+  },
+  "files.title": "Fișiere",
+  "files.type": "Tip",
+  "files.who_sees": "Cine îl vede"
+}

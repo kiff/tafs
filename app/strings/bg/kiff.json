@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Запитване към KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Не стигна до KIFF. Опитайте отново.",
+  "kiff.kiff_can_not_do_sign": "KIFF още не може да направи това: влезте отново от Настройки, за да одобрявате от този {device}.",
+  "kiff.kiff_did_not_answer_expected": "KIFF не отговори както се очакваше. Опитайте отново.",
+  "kiff.kiff_words_do_not_match": "Текстът на KIFF не съвпада с проверката му. Нищо не може да бъде одобрено."
+}

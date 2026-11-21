@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Pregledi",
+  "push.channel.briefs_description": "Vaš pregled ob nastavljenih časih.",
+  "push.channel.holds_description": "Klic čaka na vaš odgovor. Nič se ne pošlje, dokler ga ne odobrite.",
+  "push.channel.other": "Druga opozorila",
+  "push.channel.other_description": "Zahteve za opravila in njihovi odgovori, brez zvoka.",
+  "push.channel.urgent_description": "Kar ne more počakati do naslednjega pregleda, z zvokom.",
+  "push.open_needs_you": "Odprite Čaka na vas in odgovorite.",
+  "push.open_taf": "Odprite taf in si oglejte.",
+  "push.open_usage": "Odprite Paket in poraba in si oglejte."
+}

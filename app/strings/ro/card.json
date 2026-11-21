@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "Tot Cardul",
+    "few": "Toate Cardurile",
+    "other": "Toate Cardurile"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, apoi vă întreabă",
+  "card.calls_left": {
+    "one": "a rămas {count} apel",
+    "few": "au rămas {count} apeluri",
+    "other": "au rămas {count} de apeluri"
+  },
+  "card.calls_left_line": {
+    "one": "a rămas {count} apel {window} din {limit}",
+    "few": "au rămas {count} apeluri {window} din {limit}",
+    "other": "au rămas {count} de apeluri {window} din {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} din {count} apel {window}",
+    "few": "{used} din {count} apeluri {window}",
+    "other": "{used} din {count} de apeluri {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} apel {window}",
+    "few": "{count} apeluri {window}",
+    "other": "{count} de apeluri {window}"
+  },
+  "card.card_confirmed_kiff": "Card · confirmat de KIFF",
+  "card.card_draft_kiff": "Card · schiță · de KIFF",
+  "card.card_got_room_call_needed": "Cardul său a primit spațiul de care avea nevoie acest apel, până se resetează totalul",
+  "card.card_not_issued": "Cardul nu a fost emis. ",
+  "card.card_revoked": "Card revocat",
+  "card.check.always_asks": "{rule}: vă întreabă mereu",
+  "card.check.never_allowed": "{rule}: niciodată permis",
+  "card.check.not_on_card": "Nu este pe Cardul acestui taf",
+  "card.check.over_count": {
+    "one": "Peste {count} {window}",
+    "few": "Peste {count} {window}",
+    "other": "Peste {count} {window}"
+  },
+  "card.check.over_each": "Peste {amount} fiecare",
+  "card.check.over_total": "Peste {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "few": "{count} Carduri",
+    "other": "{count} de Carduri"
+  },
+  "card.ended": "Încheiat",
+  "card.ended_on": "Încheiat pe {date}",
+  "card.ends": "Se încheie",
+  "card.extra_room": "+{extra} spațiu suplimentar {window}",
+  "card.extra_room_prefix": "+{formatted} spațiu suplimentar ",
+  "card.extra_room_until": "+{extra} spațiu suplimentar până la {ends}",
+  "card.figure_left": "au rămas {figure}",
+  "card.heading": {
+    "one": "Card",
+    "few": "Carduri",
+    "other": "Carduri"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} apel {window}{each}: acesta ar fi apelul {nth}{item}",
+    "few": "{count} apeluri {window}{each}: acesta ar fi apelul {nth}{item}",
+    "other": "{count} de apeluri {window}{each}: acesta ar fi apelul {nth}{item}"
+  },
+  "card.held.each_call_asks": "Fiecare apel vă întreabă mai întâi",
+  "card.held.for_each": " pentru fiecare {name}",
+  "card.held.for_each_join": " pentru fiecare ",
+  "card.held.for_item": " pentru {item}",
+  "card.held.over_count": {
+    "one": "Peste limita sa de {count} apel: acesta ar fi apelul {nth}",
+    "few": "Peste limita sa de {count} apeluri: acesta ar fi apelul {nth}",
+    "other": "Peste limita sa de {count} de apeluri: acesta ar fi apelul {nth}"
+  },
+  "card.held.over_one_call": "{amount} depășește limita de {cap} pentru un apel",
+  "card.held.over_total": "{amount} ar depăși totalul de {cap}",
+  "card.hero.calls_left_of": {
+    "one": "apel rămas {window} din {limit}",
+    "few": "apeluri rămase {window} din {limit}",
+    "other": "de apeluri rămase {window} din {limit}"
+  },
+  "card.hero.calls_use_unavailable": "apeluri {window} · utilizare indisponibilă",
+  "card.hero.left_of": "rămas {window} din {limit}",
+  "card.hero.left_of_extra": "rămas {window} din {base} + {extra} spațiu suplimentar",
+  "card.hero.left_of_extra_until": "rămas {window} din {base} + {extra} spațiu suplimentar până la {ends}",
+  "card.hero.left_of_note": "rămas {window} din {limit}{note}",
+  "card.hero.no_currency": "fără monedă",
+  "card.hero.no_currency_suffix": " · fără monedă",
+  "card.hero.use_unavailable": "{window} · utilizare indisponibilă",
+  "card.hero.use_unavailable_note": "{label} · utilizare indisponibilă{note}",
+  "card.how_counted": "Cum se numără",
+  "card.issue_prompt": "Emiteți Cardul pentru {taf}",
+  "card.issued_by": "Emis de",
+  "card.issued_by_account": "Contul",
+  "card.issued_by_named": "Emis de {who}",
+  "card.its_card": "Cardul său",
+  "card.kiff_did_not_revoke_cards": "KIFF nu a revocat {cards_left} dintre Cardurile sale: revocați-le în KIFF.",
+  "card.left": "au rămas {amount} {window}",
+  "card.left_extra_room": "rămas {current} din {own} + {extra} spațiu suplimentar{until}{note}",
+  "card.limit_can_not_raised_right": "Limita nu poate fi mărită de aici acum.",
+  "card.limit_raised_read_balance_again": "Limita a fost mărită. Citiți din nou soldul înainte de a o mări încă o dată.",
+  "card.line.calls_in_window": {
+    "one": "{count} apel {window}{then}",
+    "few": "{count} apeluri {window}{then}",
+    "other": "{count} de apeluri {window}{then}"
+  },
+  "card.line.more_asks": "; pentru mai mult vă întreabă mai întâi",
+  "card.line.then_asks": ", apoi vă întreabă",
+  "card.line.total_in_window": "{amount} în total {window}{then}",
+  "card.line.up_to_each": "până la {amount} fiecare",
+  "card.more": {
+    "one": "încă {count}",
+    "few": "încă {count}",
+    "other": "încă {count}"
+  },
+  "card.no_actions": "Nicio acțiune deocamdată",
+  "card.no_actions_short": "nicio acțiune deocamdată",
+  "card.no_currency": "{amount} (fără monedă)",
+  "card.no_end_date": "Fără dată de încheiere",
+  "card.outcome.not_a_resource": "Nu este una dintre resursele Cardului",
+  "card.outcome.outside": "În afara Cardului",
+  "card.outcome.over_one_action": "Peste limita Cardului pentru o acțiune",
+  "card.outcome.over_total": "Peste totalul Cardului",
+  "card.outside_held": "În afară: reținut pentru dvs.",
+  "card.outside_refused": "În afară: refuzat",
+  "card.over_limit_calls_would": "Peste limita sa de {limit} apeluri: acesta ar fi apelul {nth}",
+  "card.revoke_failed": "KIFF nu a revocat Cardul. {why}",
+  "card.revoked": "Revocat",
+  "card.rule.always_asks": "vă întreabă mereu",
+  "card.rule.at_most_each": "≤ {amount} fiecare",
+  "card.rule.at_most_each_refused_above": "≤ {amount} fiecare · refuzat peste",
+  "card.rule.calls": {
+    "one": "{count} apel {window}",
+    "few": "{count} apeluri {window}",
+    "other": "{count} de apeluri {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} apel {window}, apoi vă întreabă",
+    "few": "{count} apeluri {window}, apoi vă întreabă",
+    "other": "{count} de apeluri {window}, apoi vă întreabă"
+  },
+  "card.rule.in_total": "{amount} în total {window}",
+  "card.rule.never": "niciodată",
+  "card.rule.total_then_asks": "{amount} în total {window}, apoi vă întreabă",
+  "card.rule.up_to_each": "până la {amount} fiecare; pentru mai mult vă întreabă mai întâi",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Cardul tafului",
+  "card.tools": {
+    "one": "{count} instrument",
+    "few": "{count} instrumente",
+    "other": "{count} de instrumente"
+  },
+  "card.until": "Până la",
+  "card.until_date": "Până la {date}",
+  "card.until_ends": " până la {ends}",
+  "card.used_of": "{used} din {limit} {window}",
+  "card.window.a_day": "pe zi",
+  "card.window.a_month": "pe lună",
+  "card.window.a_week": "pe săptămână",
+  "card.window.any_day": "în orice 24 de ore",
+  "card.window.any_hour": "în orice oră",
+  "card.window.any_week": "în orice 7 zile",
+  "card.window.in_total": "în total",
+  "card.window.in_total_window": "în total {window}",
+  "card.window.last_day": "în ultimele 24 de ore",
+  "card.window.last_hour": "în ultima oră",
+  "card.window.last_week": "în ultimele 7 zile",
+  "card.window.so_far": "până acum",
+  "card.window.this_month": "luna aceasta",
+  "card.window.this_week": "săptămâna aceasta",
+  "card.window.today": "azi",
+  "card.within_card": "în limitele Cardului"
+}

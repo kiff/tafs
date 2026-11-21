@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Egyszerre leállítja az összes tafot. Semmi új nem megy ki, amíg a tafsban nem folytatod őket.",
+  "halt_all.failed": "A tafs nem tudta leállítani a tafjaidat. {why} Nyisd meg a tafst a leállításukhoz.",
+  "halt_all.halted": {
+    "one": "{count} taf leállítva. Semmi új nem megy ki, amíg nem folytatod.",
+    "other": "{count} taf leállítva. Semmi új nem megy ki, amíg nem folytatod."
+  },
+  "halt_all.halted_all": "A tafjaid leállítva. Semmi új nem megy ki, amíg nem folytatod.",
+  "halt_all.halting": {
+    "one": "{count} taf leállítása: nem indul futás. A KIFF még nem erősített meg minden részt; a tafs jelzi, ha megtörtént.",
+    "other": "{count} taf leállítása: nem indul futás. A KIFF még nem erősített meg minden részt; a tafs jelzi, ha megtörtént."
+  },
+  "halt_all.halting_all": "A tafjaid leállítása: nem indul futás. A KIFF még nem erősített meg minden részt; a tafs jelzi, ha megtörtént.",
+  "halt_all.running": "A tafs nem tudta leállítani a tafjaidat. Nyisd meg a tafst a leállításukhoz.",
+  "halt_all.signed_out": "Ki vagy jelentkezve a tafsből. Jelentkezz be a tafjaid leállításához.",
+  "halt_all.title": "Összes taf leállítása"
+}
