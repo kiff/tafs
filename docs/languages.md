@@ -227,7 +227,8 @@ always agrees. A line that fills "από {who}" is written in the accusative.
 | Overview | Επισκόπηση |
 | Calendar | Ημερολόγιο |
 | Setup (a taf's screen) | Διαμόρφωση |
-| Usage / plan | Χρήση / πρόγραμμα |
+| Usage / plan (the subscription) | Χρήση / πρόγραμμα |
+| Coach's plan (its steps) | Σχέδιο |
 | Decline | Απόρριψη |
 
 ## The AI disclosure

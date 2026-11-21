@@ -15,13 +15,13 @@
   "billing.ask.someone_pack": "Κάποιος ζητά: {pack}.",
   "billing.ask.someone_raise": "Κάποιος ζητά αύξηση του ορίου δαπανών.",
   "billing.bought_not_recorded": "Αγοράστηκε. Η KIFF δεν το έχει προσθέσει ακόμα: το tafs θα ξαναδοκιμάσει όταν ανοίξει.",
-  "billing.by_agreement": "Διαχειρίζεται βάσει της σύμβασης της εταιρείας σου",
+  "billing.by_agreement": "Ρυθμίζεται από τη σύμβαση της εταιρείας σου",
   "billing.by_apple": "Χρέωση από την Apple",
   "billing.by_google_play": "Χρέωση από το Google Play",
   "billing.by_kiff": "Χρέωση από την KIFF",
   "billing.cancel_any_time_least_day": "Ακύρωσε οποιαδήποτε στιγμή, τουλάχιστον μία ημέρα πριν την ανανέωση, στις Συνδρομές του λογαριασμού σου Apple.",
   "billing.contact_support": "Η KIFF δεν μπορεί να προσθέσει αυτή την αγορά σε αυτόν τον λογαριασμό. Την έχεις πληρώσει, οπότε επικοινώνησε με την υποστήριξη στο support@kiff.dev και θα το τακτοποιήσουμε.",
-  "billing.conversation_goes_plan_tools_being": "Καθώς προχωρά η συζήτηση, εδώ εμφανίζονται το πρόγραμμα, οι εφαρμογές που συνδέονται και η Card του taf.",
+  "billing.conversation_goes_plan_tools_being": "Καθώς προχωρά η συζήτηση, εδώ εμφανίζονται το σχέδιο, οι εφαρμογές που συνδέονται και η Card του taf.",
   "billing.length.days": {
     "one": "{count} ημέρα",
     "other": "{count} ημέρες"
@@ -67,10 +67,10 @@
   "billing.solo.free_then": "Δωρεάν για {trial}, μετά {price} ανά {period}.",
   "billing.solo.subscribe_for": "Συνδρομή με {price}",
   "billing.solo_not_available_app_store": "Το Solo δεν είναι διαθέσιμο στο App Store αυτή τη στιγμή.",
-  "billing.solo_subscription_one_charged_your": "Το Solo είναι συνδρομή {price} για {period}, με χρέωση στον λογαριασμό σου Apple. Ανανεώνεται κάθε {period_2} μέχρι να την ακυρώσεις.",
+  "billing.solo_subscription_one_charged_your": "Το Solo είναι συνδρομή {price} ανά {period}, με χρέωση στον λογαριασμό σου Apple. Ανανεώνεται κάθε {period_2} μέχρι να την ακυρώσεις.",
   "billing.starts_free": "Ξεκινά με {trial} δωρεάν.",
   "billing.tafs_kiff_one_person_every": "Tafs για ένα άτομο, κάθε μήνα.",
-  "billing.terms_use": "Όροι Χρήσης",
+  "billing.terms_use": "Άδεια Χρήσης Τελικού Χρήστη (EULA)",
   "billing.test_purchase_credits": "Οι δοκιμαστικές αγορές δεν προσθέτουν μονάδες σε αυτόν τον λογαριασμό.",
   "billing.try_free": "Δοκίμασε {trial} δωρεάν",
   "billing.what_credits": "Σε τι χρησιμεύουν οι μονάδες"

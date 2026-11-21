@@ -51,16 +51,16 @@
     "other": "Cards"
   },
   "card.held.count_in_window": {
-    "one": "{count} κλήση {window}{each}: αυτή θα ήταν η {nth}{item}",
-    "other": "{count} κλήσεις {window}{each}: αυτή θα ήταν η {nth}{item}"
+    "one": "{count} κλήση {window}{each}: αυτή θα ήταν η {nth} κλήση{item}",
+    "other": "{count} κλήσεις {window}{each}: αυτή θα ήταν η {nth} κλήση{item}"
   },
   "card.held.each_call_asks": "Κάθε κλήση σε ρωτά πρώτα",
   "card.held.for_each": " για κάθε {name}",
   "card.held.for_each_join": " για κάθε ",
   "card.held.for_item": " για {item}",
   "card.held.over_count": {
-    "one": "Πάνω από το όριό του της {count} κλήσης: αυτή θα ήταν η {nth}",
-    "other": "Πάνω από το όριό του των {count} κλήσεων: αυτή θα ήταν η {nth}"
+    "one": "Πάνω από το όριό του της {count} κλήσης: αυτή θα ήταν η {nth} κλήση",
+    "other": "Πάνω από το όριό του των {count} κλήσεων: αυτή θα ήταν η {nth} κλήση"
   },
   "card.held.over_one_call": "{amount}: πάνω από το όριο των {cap} για μία κλήση",
   "card.held.over_total": "{amount}: θα ξεπερνούσε το σύνολο των {cap}",
@@ -110,7 +110,7 @@
   "card.outcome.over_total": "Πάνω από το σύνολο της Card",
   "card.outside_held": "Εκτός: σε αναμονή για σένα",
   "card.outside_refused": "Εκτός: άρνηση",
-  "card.over_limit_calls_would": "Πάνω από το όριό του των {limit} κλήσεων: αυτή θα ήταν η {nth}",
+  "card.over_limit_calls_would": "Πάνω από το όριό του των {limit} κλήσεων: αυτή θα ήταν η {nth} κλήση",
   "card.revoke_failed": "Η KIFF δεν ανακάλεσε την Card. {why}",
   "card.revoked": "Ανακλήθηκε",
   "card.rule.always_asks": "σε ρωτά πάντα",
@@ -142,7 +142,7 @@
   "card.window.a_month": "τον μήνα",
   "card.window.a_week": "την εβδομάδα",
   "card.window.any_day": "σε οποιοδήποτε 24ωρο",
-  "card.window.any_hour": "σε οποιαδήποτε ώρα",
+  "card.window.any_hour": "μέσα σε οποιαδήποτε μία ώρα",
   "card.window.any_week": "σε οποιοδήποτε 7ήμερο",
   "card.window.in_total": "συνολικά",
   "card.window.in_total_window": "συνολικά {window}",

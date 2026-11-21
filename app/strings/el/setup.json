@@ -35,7 +35,7 @@
   "setup.open": "Άνοιγμα",
   "setup.pause_every": "Παύση κάθε έναρξης",
   "setup.place.app_title": "Ειδοποίησε τα τηλέφωνά μας",
-  "setup.place.app_words": "Σε ποιον απάντησε και από ποια πόρτα, ποτέ τα λόγια της απάντησης",
+  "setup.place.app_words": "Σε ποιον απάντησε και από ποια πόρτα, ποτέ το κείμενο της απάντησης",
   "setup.place.email_title": "Στείλε μου email",
   "setup.place.email_words": "Η απάντησή του στο {email}· όχι όταν έγραψες εσύ το μήνυμα",
   "setup.place.email_words_yours": "Η απάντησή του στο email σου· όχι όταν έγραψες εσύ το μήνυμα",

@@ -115,8 +115,8 @@
     "other": "Δούλεψε {took} · {count} βήματα"
   },
   "chat.worked_steps_failed": {
-    "one": "Δούλεψε {took} · {count} βήμα, {failed} απέτυχαν",
-    "other": "Δούλεψε {took} · {count} βήματα, {failed} απέτυχαν"
+    "one": "Δούλεψε {took} · {count} βήμα, αποτυχίες: {failed}",
+    "other": "Δούλεψε {took} · {count} βήματα, αποτυχίες: {failed}"
   },
   "chat.working": "Δουλεύει…",
   "chat.working_on": "{step}…",

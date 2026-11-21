@@ -29,7 +29,7 @@
   "people.groups": "Ομάδες",
   "people.last_ran": "Τελευταία εκτέλεση στις {time}",
   "people.make_manager": "Ορισμός ως συντονιστή",
-  "people.make_member": "Ορισμός ως μέλους",
+  "people.make_member": "Ορισμός ως μέλος",
   "people.make_role_manager": "Όρισε τον/την {who} συντονιστή της ομάδας {group}",
   "people.make_role_member": "Όρισε τον/την {who} μέλος της ομάδας {group}",
   "people.manager": "Συντονιστής",

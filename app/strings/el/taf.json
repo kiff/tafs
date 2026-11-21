@@ -69,7 +69,7 @@
     "other": "Η KIFF δεν ανακάλεσε {count} από τις Cards του: ανακάλεσέ τες στην KIFF."
   },
   "taf.remove.cards_revoked": "Οι Cards του ανακλήθηκαν στην KIFF.",
-  "taf.remove.cloud_did_not_answer": "{cards} Το tafs cloud δεν απάντησε ({why}). Αν ξεκίνησε, το tafs θα την ολοκληρώσει στην επόμενη ανανέωση· αν όχι, πάτησε ξανά «Αφαίρεση».",
+  "taf.remove.cloud_did_not_answer": "{cards} Το tafs cloud δεν απάντησε ({why}). Αν η αφαίρεση ξεκίνησε, το tafs θα την ολοκληρώσει στην επόμενη ανανέωση· αν όχι, πάτησε ξανά «Αφαίρεση».",
   "taf.remove.connections_disconnected": "Η πρόσβασή του σε εφαρμογές αφαιρέθηκε.",
   "taf.remove.connections_left": {
     "one": "Η πρόσβαση σε {count} από τις εφαρμογές του δεν αφαιρέθηκε: αφαίρεσέ τη στη Σύνδεση εφαρμογών.",
