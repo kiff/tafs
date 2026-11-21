@@ -34,7 +34,7 @@
   "record.event.a_door": "窓口",
   "record.event.door_removed": "{door}窓口を削除しました",
   "record.event.door_removed_detail": "そのアドレスからはもう届きません",
-  "record.event.halted": "遮断",
+  "record.event.halted": "遮断済み",
   "record.event.halted_all": "すべてのtafとともに遮断",
   "record.event.halted_detail": "再開するまで何も実行されません",
   "record.event.knock_done": "{who}のメッセージに対応させました",
