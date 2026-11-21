@@ -1,0 +1,1 @@
+- **Brazilian Portuguese: two more of tafs cloud's lines read Brazilian:** "o último app" and "fora do ar".
