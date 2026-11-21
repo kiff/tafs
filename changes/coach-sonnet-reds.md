@@ -1,0 +1,1 @@
+- **Coach answers in the owner's language on Sonnet too:** its examples of how it talks are in English and said in the owner's language, with no Spanish example left to copy. On Sonnet, 15 of 61 lines to an English owner were in Spanish. Coach also pins the account on reads too, never counts calls on a money tool, and always writes the result's text.

@@ -225,10 +225,13 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT).toContain("In the owner's language: every message, and every component's title");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Concisely: say what you did and what the owner does next, first, then stop.");
     // The first sentence leads: the outcome, what waits on the owner, or the question; what was
-    // checked comes after, if at all, with an example in the owner's language (Eval 41013084238).
+    // checked comes after, if at all (Eval 41013084238). The examples are English and said in the owner's language: a
+    // Spanish one had Coach on Sonnet answer an English owner in Spanish (Eval 44848284846, 15 of 61 lines).
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Every message's first sentence is the outcome, or what waits on the owner, or the question asked.");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("What you checked on the way comes after it, briefly, or not at all.");
-    expect(COACH_TEXT).toContain("Falta que apruebes las herramientas de Reembolsos");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Refunds' tools wait for your approval: list payments, read one and refund in EUR, in test mode.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("these examples are English, and you say them in theirs.");
+    expect(COACH_TEXT).not.toMatch(/Falta que|al día|dímelo/);
     // After tafs cloud answers the result, one closing message, always (Eval 41042518957).
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("always write one closing message, even when nothing more is needed");
     expect(COACH_TEXT).not.toContain("The app starts the taf from that draft.");
@@ -237,7 +240,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Before saying it's ready or fixed, check it: one read through it");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("A 401 or 403 there is the key or sign-in refused");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("never the names of your tools or KIFF's and planque's parts");
-    // No closing offer of more help (Eval 41024236766: "Si quieres cambiarlos, dímelo aquí.").
+    // No closing offer of more help (Eval 41024236766: "if you want to change them, tell me here").
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("End when it's said: no offer of more help");
     expect(COACH_TEXT).not.toMatch(/\d+ words/);
     // The proposal goes in a component, so the message stays short (kiff/agents#111's "brief").
@@ -406,7 +409,8 @@ describe("Setup's definition on kiff/agents", () => {
     // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).
     expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it in the first planque request");
     // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("When you must pin the account, pin the grant's own account, as planque's status lists it: never a read of the accounts.");
+    // Reads too: left open, the taf looks the account up on every message (Eval 44848284846, read_charge on Sonnet).
+    expect(flat).toContain("Pin the account on every tool that takes it, reads too: the grant's own account, as planque's status lists it: never a read of the accounts.");
     expect(flat).toContain("gets its describing tool connected by planque with the sign-in when it has one: never ask for it, or any read, alone.");
     expect(flat).toContain("Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known.");
     expect(flat).toContain("A managed app's connect names the taf's planned tools (uses).");
