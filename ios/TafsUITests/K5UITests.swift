@@ -53,15 +53,28 @@ final class K5UITests: TafsUITestCase {
         keep("ticked")
         next.tap()
 
-        // iOS asks before the app opens a sign-in sheet: "“tafs” Wants to Use “kiff.dev” to Sign In".
+        // KIFF's sheet is private (`VendorSignIn.kiffSheet()`, ephemeral), and iOS asks "“tafs” Wants to Use “kiff.dev” to
+        // Sign In" only for a sheet that shares Safari's. Its ask is taken if it comes; the sheet is what's waited for.
+        // A screen is kept along the way, so a run that stops says where: still on Continue, or the sheet loading.
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         let allow = springboard.alerts.firstMatch.buttons["Continue"]
-        XCTAssertTrue(allow.waitForExistence(timeout: 15), "iOS's ask before the sign-in sheet")
-        keep("system-ask")
-        allow.tap()
-
         let sheet = XCUIApplication(bundleIdentifier: "com.apple.SafariViewService")
-        XCTAssertTrue(sheet.webViews.firstMatch.waitForExistence(timeout: 30), "KIFF's sign-in page in the sheet")
+        let page = sheet.webViews.firstMatch
+        let started = Date()
+        var kept: Set<Int> = []
+        while !page.exists, Date().timeIntervalSince(started) < 60 {
+            if allow.exists {
+                keep("system-ask")
+                allow.tap()
+            }
+            let waited = Int(Date().timeIntervalSince(started))
+            for mark in [5, 20, 40] where waited >= mark && !kept.contains(mark) {
+                kept.insert(mark)
+                keep("after-continue-\(mark)s")
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        }
+        XCTAssertTrue(page.exists, "KIFF's sign-in page in the sheet, within 60 s of Continue")
         // The page's own words take a moment after the web view shows.
         RunLoop.current.run(until: Date().addingTimeInterval(5))
         keep("kiff-sign-in")

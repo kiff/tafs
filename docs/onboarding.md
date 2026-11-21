@@ -7,8 +7,10 @@ ship. It goes on only after an end-to-end test on real devices with the owner pr
 **K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
 no other does. Two builds have it:
 - **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
-  Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue,
-  iOS's ask and KIFF's sign-in page, with a screenshot kept at each step (the `k5` artifact).
+  Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue
+  and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
+  KIFF's sheet is private (ephemeral), so iOS shows no "Wants to Use kiff.dev to Sign In" ask for it; one that comes is
+  taken.
 - **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
   testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
   (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
