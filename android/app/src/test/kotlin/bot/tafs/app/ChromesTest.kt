@@ -55,8 +55,8 @@ class ChromesTest {
 
   /** An extension's key pair, and what it posts for [secret]: its SPKI and its proof under the secret. */
   private val extension = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
-  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded) =
-    """{"pairing":"pr_1","status":"waiting_for_phone","key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
+  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer) =
+    """{"pairing":"pr_1","status":"waiting_for_phone",${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
 
   @Test fun theRowShowsOnlyOncePlanqueOffersChromes() = runTest {
     val m = model()
@@ -124,6 +124,60 @@ class ChromesTest {
     assertFalse("never the key that signs with no prompt", Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(device); update(signed); verify(raw) })
     assertFalse(String(transport.requestsTo(confirm).single().body!!).contains(p.secret))
     assertEquals(listOf("Work Mac"), m.state.value.chromes?.map { it.name })
+  }
+
+  /** The extension's own KIFF device, as `chrome/src/kiff.js` offers it. */
+  private val kiffKey = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+  private fun kiffOffer(kind: String = "extension", keyStore: String = "software") =
+    """{"exp":"2026-11-21T12:04:30Z","key_store":"$keyStore","kind":"$kind","name":"tafs for Chrome","nonce":"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8","platform":"chrome","pub":"${ChromePairing.base64Url(kiffKey.public.encoded)}","v":"kiff.pair.v1"}"""
+  private val kiffPair = "POST /v1/me/pairings"
+
+  @Test fun anOfferWhoseKiffDeviceCouldApproveOrWhoseProofLeavesItOutIsRefused() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer(kind = "enclave", keyStore = "hardware")))
+    assertEquals(AppModel.ChromePairingStep.Refused, m.chromePairingStep(p))
+    // planque swapped the KIFF offer: the proof was over another one.
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer(), proofOffer = ""))
+    assertEquals(AppModel.ChromePairingStep.Refused, m.chromePairingStep(p))
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer()))
+    assertTrue(m.chromePairingStep(p) is AppModel.ChromePairingStep.Offered)
+  }
+
+  @Test fun theExtensionsKiffDeviceIsPairedByTheApprovalKeyBeforePlanqueHearsTheConfirmation() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer()))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    transport.answer(kiffPair, 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-21T12:05:00Z"}}""")
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac"))
+    // One fingerprint for each signature the approval key makes, both naming the Chrome.
+    assertEquals(listOf("Pair Work Mac with your tafs", "Pair Work Mac with your tafs"), auth.fingerprints)
+    val sent = transport.requests.map { "${it.method} ${java.net.URI(it.url).path}" }
+    assertTrue("KIFF's pairing first", sent.indexOf(kiffPair) in 0 until sent.indexOf(confirm))
+    val pairing = transport.requestsTo(kiffPair).single()
+    assertEquals(KiffClient.json.parseToJsonElement(offered.kiffOffer), KiffClient.json.parseToJsonElement(String(pairing.body!!)))
+    val (at, sig) = pairing.headers.getValue("KIFF-Device-Signature").split(",").let { it[0].removePrefix("t=") to it[1].removePrefix("v1=") }
+    val message = KiffClient.requestMessage("t_01", "POST", "/v1/me/pairings", pairing.body!!, at)
+    val approval = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue(Signature.getInstance("SHA256withECDSA").run { initVerify(approval); update(message); verify(java.util.Base64.getDecoder().decode(sig)) })
+    assertNull(m.state.value.chromesError)
+  }
+
+  @Test fun aKiffRefusalOfTheExtensionsDeviceConfirmsNoChrome() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer()))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    transport.answer(kiffPair, 410, """{"error":"pairing_expired","message":"This pairing expired. Start again on the computer."}""")
+    assertFalse(m.confirmChrome(p, offered, "Work Mac"))
+    assertTrue("planque hears nothing", transport.requestsTo(confirm).isEmpty())
+    assertTrue(m.state.value.chromesError!!.isNotBlank())
   }
 
   @Test fun aClosedPromptConfirmsNothing() = runTest {
