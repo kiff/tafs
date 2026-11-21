@@ -320,7 +320,7 @@ struct TafKnobView: View {
             press(chosen.ring, item)
         } label: {
             VStack(spacing: 4 * k) {
-                Text(kicker).scaledFont(10, weight: .bold, relativeTo: .caption2).tracking(1.2).foregroundColor(Theme.dim)
+                Text(kicker).scaledFont(10, weight: .bold, relativeTo: .caption2).tracking(Eyebrow.ideographic(kicker) ? 0 : 1.2).foregroundColor(Theme.dim)
                     .lineLimit(1).truncationMode(.tail)
                 Text(big).scaledFont(big.count > 5 ? 24 : 32, weight: .heavy, relativeTo: .title).foregroundColor(tint)
                     .lineLimit(3).truncationMode(.tail)
