@@ -200,8 +200,10 @@ describe("Home's first line", () => {
     for (const lang of LANGUAGES) {
       for (const n of [0, 1, 2, 5]) {
         const line = headlineOf(Array(n).fill(working), lang).words;
-        expect(line, lang).toMatch(new RegExp(`^${n} taf`));
-        expect(line, lang).toMatch(/[^.]\.$/);
+        // Korean and Japanese count after the noun, with their counter ("taf 0개 작동 중.", "taf0件が作業中。").
+        expect(line, lang).toMatch(new RegExp(lang === "ko" ? `^taf ${n}개` : lang === "ja" ? `^taf${n}件` : `^${n} taf`));
+        // One full stop at the end: Japanese writes its own (。).
+        expect(line, lang).toMatch(lang === "ja" ? /[^。]。$/ : /[^.]\.$/);
       }
       expect(headlineOf([fromChat], lang).words, lang).not.toBe(headlineOf([working], lang).words);
     }

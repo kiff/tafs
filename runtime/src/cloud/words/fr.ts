@@ -481,6 +481,8 @@ export const fr: Words = {
   waited_follow_up: "Une relance qu'il s'était fixée n'a pas eu lieu : vos tafs attendaient des crédits. Elle ne sera pas réessayée. Ouvrez-le pour en savoir plus.",
   door_name: (id, label) => (id === "email" ? "e-mail" : label),
   door_a: "une porte",
+  door_draft_used: "La porte a été créée à partir de ce brouillon.",
+  door_draft_lapsed: "Ce brouillon a expiré : redemandez à Coach.",
   door_knock: (who, door, spoofed) => `${who} a écrit par ${door}${spoofed ? " (la vérification de l'expéditeur a échoué)" : ""}. Rien n'a été fait.`,
   door_full_keys: (door, n) => `Votre porte ${door} a reçu aujourd'hui ses ${n} messages de vous et des expéditeurs associés. Les suivants sont ignorés jusqu'à demain.`,
   door_full_others: (door, n) => `Votre porte ${door} a reçu aujourd'hui ${n} messages de personnes non associées. Les suivants sont ignorés jusqu'à demain.`,

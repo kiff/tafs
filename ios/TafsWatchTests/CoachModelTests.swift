@@ -393,6 +393,18 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(CoachTurnRow.line(WatchCoachAnswer(text: "", more: false, approveOnPhone: true)), Words.Watch.approveOnPhone)
     }
 
+    /// VoiceOver hears Coach's side with when the answer came, in the account's zone (dev-android on #1590, point 2), and
+    /// without a time from a phone too old to send one.
+    func testCoachsSideIsHeardWithWhenItCame() {
+        let paris = TimeZone(identifier: "Europe/Paris")!
+        var answer = Self.rae
+        answer.at = Date(timeIntervalSince1970: 1_795_000_000)
+        let time = ChatTime.time(answer.at!, zone: paris)
+        XCTAssertEqual(CoachTurnRow.spoken(answer, zone: paris), Words.Coach.title + ": Rae is paused., " + time)
+        XCTAssertNotEqual(ChatTime.time(answer.at!, zone: TimeZone(identifier: "Asia/Tokyo")!), time, "the zone decides the time")
+        XCTAssertEqual(CoachTurnRow.spoken(Self.rae, zone: paris), Words.Coach.title + ": Rae is paused.")
+    }
+
     /// A phone that refuses one kind, as one from before it would, and answers the rest.
     private final class V1Phone: PhoneAsking {
         var asked: [WatchRequest] = []

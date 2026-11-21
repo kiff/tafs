@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "{count} failas · saugomas 30 dienų",
+    "few": "{count} failai · saugomi 30 dienų",
+    "other": "{count} failų · saugoma 30 dienų"
+  },
+  "files.all": "Visi",
+  "files.all_tafs": "Visi taf",
+  "files.by_run": "Pagal paleidimą",
+  "files.by_taf": "Pagal taf",
+  "files.delete_body": "Jis iš karto dings iš skilties „Failai“ visiems šios paskyros nariams. To negalima atšaukti.",
+  "files.delete_now": "Ištrinti dabar",
+  "files.delete_question": "Ištrinti „{name}“ dabar?",
+  "files.deleted": "Ištrinta visiems",
+  "files.download": "Atsisiųsti",
+  "files.empty": "Kol kas nieko. Kai taf paleidimo metu sukuria ataskaitą, skaičiuoklę ar dokumentą, jis čia saugomas 30 dienų, kad visi šios paskyros nariai galėtų jį atidaryti, išsaugoti ar bendrinti.",
+  "files.everyone": "Visi šios paskyros nariai",
+  "files.goes_away": "Bus ištrintas",
+  "files.goes_in_days": {
+    "one": "bus ištrintas po {count} dienos",
+    "few": "bus ištrintas po {count} dienų",
+    "other": "bus ištrintas po {count} dienų"
+  },
+  "files.goes_on": "{date} (30 dienų po jo paleidimo)",
+  "files.goes_today": "bus ištrintas šiandien",
+  "files.goes_tomorrow": "bus ištrintas rytoj",
+  "files.in_run": "Paleidime",
+  "files.kept_line": "Kiekvienas failas saugomas 30 dienų nuo jo paleidimo, tada ištrinamas automatiškai. Šiuos failus mato visi šios paskyros nariai. Jūsų pačių pokalbių priedai lieka su savo žinutėmis.",
+  "files.kept_until": "Jo failai saugomi iki {date}",
+  "files.made_by": "Sukūrė",
+  "files.none_yet": "Kol kas nėra · saugoma 30 dienų",
+  "files.pick_one": "Pasirinkite failą, kad jį čia pamatytumėte.",
+  "files.preview_start": "Rodoma tik pradžia. Atsisiųskite failą, kad perskaitytumėte visą.",
+  "files.saved": "Išsaugota šiame įrenginyje",
+  "files.see_in_chat": "Žiūrėti pokalbyje",
+  "files.share": "Bendrinti",
+  "files.size": "Dydis",
+  "files.taf_row": {
+    "one": "{count} failas iš jo paleidimų",
+    "few": "{count} failai iš jo paleidimų",
+    "other": "{count} failų iš jo paleidimų"
+  },
+  "files.title": "Failai",
+  "files.type": "Tipas",
+  "files.who_sees": "Kas mato"
+}

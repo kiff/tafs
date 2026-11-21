@@ -384,7 +384,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
-- **Android's pairing screens and approval card** for browser steps.
+- **Android's approval card** for browser steps.
 - **The sealed-value release on the card** (`tafs-chrome/release/v1`), with sealed values.
 - **Sealed values,** with their own security review.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

@@ -75,10 +75,30 @@ final class K5UITests: TafsUITestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         }
         XCTAssertTrue(page.exists, "KIFF's sign-in page in the sheet, within 60 s of Continue")
-        // The page's own words take a moment after the web view shows.
-        RunLoop.current.run(until: Date().addingTimeInterval(5))
+        // A page is not a way in: on 21 Nov KIFF's page drew its title and one line, and no way to sign in. So the test
+        // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email with a password. Email-code sign-in
+        // stays off, so a way to sign in with a code sent by email is a finding, never a pass. (A new sign-up's one-time
+        // check of the address isn't a sign-in, and isn't on this page.)
+        func control(_ words: String) -> XCUIElement {
+            page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@",
+                                                                  XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.link.rawValue,
+                                                                  ".*(\(words)).*")).firstMatch
+        }
+        let drawn = control("google").waitForExistence(timeout: 30)
         keep("kiff-sign-in")
+        XCTAssertTrue(drawn, "KIFF's sign-in page draws its ways to sign in, within 30 s")
+        for (name, words) in Self.ways {
+            XCTAssertTrue(control(words).exists, "KIFF's sign-in page offers \(name)")
+        }
+        XCTAssertTrue(page.textFields.firstMatch.exists, "KIFF's sign-in page has an email field")
+        XCTAssertTrue(page.secureTextFields.firstMatch.exists, "KIFF's sign-in page offers email with a password")
+        XCTAssertFalse(control(Self.emailCodeWords).exists, "no sign-in with a code sent by email: email-code sign-in stays off")
     }
+
+    /// The four ways the owner keeps on (21 Nov), by the words on their controls.
+    static let ways: [(String, String)] = [("Apple", "apple"), ("Google", "google"), ("GitHub", "github")]
+    /// A control that signs in with a code sent by email instead of a password.
+    static let emailCodeWords = "email me a code|send me a code|sign in with a code|use a code|code by email|magic link"
 
     /// The app signed out, as on a fresh install, in English with `region` as the device's country.
     @MainActor

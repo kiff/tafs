@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Jūsų pokalbiai neeksportuoti. {why}",
+  "export.not_offered": "Failų nepavyko išsaugoti šiame telefone. Atlaisvinkite vietos ir bandykite dar kartą.",
+  "export.own_chats_each_taf_coach": "Jūsų pačių pokalbiai su kiekvienu taf, įskaitant Coach, pridėtų failų pavadinimai ir jūsų pastabos – kaip skaitomas failas ir kaip JSON. Juos eksportuoti galite tik jūs.",
+  "export.preparing": "Ruošiami jūsų pokalbiai…",
+  "export.ready_share_again": "Paruošta: {files}. Bendrinti dar kartą",
+  "export.row": "Eksportuoti mano pokalbius",
+  "export.sign_in_first": "Prisijunkite su KIFF, kad galėtumėte eksportuoti savo pokalbius."
+}

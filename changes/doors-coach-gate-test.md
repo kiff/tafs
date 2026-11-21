@@ -1,0 +1,1 @@
+- **Coach drafts a door from another application only for an account the switch lists.** A test pins it: with `TAFS_API_DOORS` naming another account, Coach refuses the draft ([doors.md](docs/doors.md)).

@@ -19,11 +19,6 @@
 #                              (push#tenant), and delivered alert ids (ttl).
 #                              And the chats each taf's owner archived
 #                              (archived#tenant#taf, ttl), kiff/tafs#82.
-#   tafs/anthropic-api-key     the model key; a person creates it before this script
-#                              runs and replicates it to eu-west-1 (see README). Made
-#                              here only when it doesn't exist, holding "unset".
-#                              tafs cloud doesn't read it: kiff/agents reads its
-#                              replica in eu-west-1, which runs the model.
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
 #                              Developer portal; a person puts it there.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
@@ -33,6 +28,10 @@
 #                              (its secret id in UPLOAD_KEY_SECRET_ID).
 #   FCM_SECRET_ID              the secret holding the Firebase service account key for
 #                              Android alerts; a person puts it there.
+#   TAFS_SECRET_ID             tafs cloud's one secret, JSON {apns, fcm, doors}, in
+#                              eu-west-1 (TAFS_SECRET_REGION for another). A part it
+#                              doesn't hold is still read from its old secret above, so
+#                              the old ones go only once this one is proven live.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
 # eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
@@ -50,7 +49,6 @@ REGION=eu-west-1
 DATA_REGION=eu-west-1
 TAFS_PUBLIC_URL=https://cloud.tafs.kiff.dev
 FN=tafs-cloud
-SECRET=tafs/anthropic-api-key
 APNS_SECRET=tafs/apns-key
 # The "tafs push" key (Sandbox & Production, team scoped), and the app it pushes to.
 # Its id and the Apple team come from the environment: this repository is public.
@@ -77,13 +75,6 @@ if ! aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_
   aws iam create-open-id-connect-provider --url https://token.actions.githubusercontent.com \
     --client-id-list sts.amazonaws.com >/dev/null
   echo "created the GitHub OIDC provider"
-fi
-
-# The secret, created as a placeholder. A person puts the real key in it.
-if ! SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$SECRET" --query ARN --output text 2>/dev/null); then
-  SECRET_ARN=$(aws secretsmanager create-secret --name "$SECRET" --description "tafs cloud: Anthropic API key" \
-    --secret-string unset --tags Key=project,Value=tafs --query ARN --output text)
-  echo "created secret $SECRET"
 fi
 
 # The APNs key, as a placeholder until a person puts the .p8 in it.
@@ -173,6 +164,23 @@ for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_ST
   fi
   [ -n "${!v}" ] && FLAGS_ENV="$FLAGS_ENV,$v=${!v}"
 done
+# tafs cloud's one secret (runtime/src/cloud/appsecret.ts), kept from tafs-cloud on a rerun like the others: tafs
+# cloud may read it, nothing more.
+TAFS_SECRET_ENV=""
+for v in TAFS_SECRET_ID TAFS_SECRET_REGION; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && TAFS_SECRET_ENV="$TAFS_SECRET_ENV,$v=${!v}"
+done
+TAFS_SECRET_READ=""
+if [ -n "$TAFS_SECRET_ID" ]; then
+  TAFS_SECRET_ARN=$(command aws --region "${TAFS_SECRET_REGION:-$AGENTS_REGION}" secretsmanager describe-secret --secret-id "$TAFS_SECRET_ID" --query ARN --output text)
+  TAFS_SECRET_READ=",
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$TAFS_SECRET_ARN\"]}"
+fi
 # tafs cloud may read that one secret, nothing more.
 FCM_READ=""
 if [ -n "$FCM_SECRET_ID" ]; then
@@ -190,7 +198,7 @@ aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-acce
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunction\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"Bool\": {\"lambda:InvokedViaFunctionUrl\": \"true\"}}},
     {\"Effect\": \"Allow\", \"Action\": [\"secretsmanager:CreateSecret\", \"secretsmanager:PutSecretValue\", \"secretsmanager:DeleteSecret\", \"secretsmanager:DescribeSecret\"],
-     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ
+     \"Resource\": [\"$AGENTS_SECRETS:agents/*\", \"$AGENTS_SECRETS:agents-accounts/*\"]}$DOORS_READ$FCM_READ$TAFS_SECRET_READ
   ]
 }"
 LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn --output text)
@@ -198,7 +206,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$FLAGS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$TAFS_SECRET_ENV$FLAGS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

@@ -481,6 +481,8 @@ export const nl: Words = {
   waited_follow_up: "Een opvolging die het zichzelf had gezet, is niet uitgevoerd: je tafs wachtten op credits. Het wordt niet opnieuw geprobeerd. Open het voor meer.",
   door_name: (id, label) => (id === "email" ? "e-mail" : label),
   door_a: "een deur",
+  door_draft_used: "De deur is gemaakt van dit concept.",
+  door_draft_lapsed: "Dit concept is verlopen: vraag het Coach opnieuw.",
   door_knock: (who, door, spoofed) => `${who} schreef via ${door}${spoofed ? " (de afzendercontrole is mislukt)" : ""}. Er is niets gedaan.`,
   door_full_keys: (door, n) => `Je ${door}-deur had vandaag zijn ${n} berichten van jou en gekoppelde afzenders. Meer worden tot morgen genegeerd.`,
   door_full_others: (door, n) => `Je ${door}-deur had vandaag ${n} berichten van mensen die niet gekoppeld zijn. Meer worden tot morgen genegeerd.`,

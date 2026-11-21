@@ -1283,8 +1283,9 @@ struct SetupComponentView: View {
         case .signIn: signIn(c)
         case .result: result(c)
         case .knob: KnobDraftCard(component: c)
-        // Coach's drafted door "From another application", approved signed (APIDoorViews.swift), behind its switch.
-        case .door: if APIDoorFeature.on { DoorDraftCard(component: c) }
+        // Coach's drafted door "From another application", approved signed (APIDoorViews.swift). Coach drafts one only
+        // where tafs cloud offers them (`TAFS_API_DOORS`): its switch alone decides, never the app.
+        case .door: DoorDraftCard(component: c)
         case .drive: DriveCard(shown: shown)
         case .steps: EmptyView()
         }

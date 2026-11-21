@@ -86,6 +86,7 @@ final class RouteWalk: ObservableObject {
 /// The hook's field and its two lines.
 private struct RouteWalkPanel: View {
     @ObservedObject var walk: RouteWalk
+    @FocusState private var typing: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -93,7 +94,11 @@ private struct RouteWalkPanel: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .textFieldStyle(.roundedBorder)
+                .focused($typing)
                 .onSubmit { walk.submit() }
+                // Taking the keyboard back starts an empty path: what a screen's own field took the rest of
+                // (RouteWalkUITests.enter) is never walked.
+                .onChange(of: typing) { focused in if focused { walk.path = "" } }
                 .accessibilityIdentifier("route-walk.path")
             Text(walk.answer).accessibilityIdentifier("route-walk.answer")
             Text(walk.state).accessibilityIdentifier("route-walk.state")

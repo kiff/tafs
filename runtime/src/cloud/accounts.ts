@@ -38,3 +38,21 @@ export async function keepAccount(store: AccountStore, account: string, tenant: 
   }
   throw new Error(`the alert secret of ${account} changed while it was written; try again`);
 }
+
+/** Where kiff/agents keeps each tenant's alert secret: false, it keeps none yet (its route answers 404). */
+export interface AlertSecretStore {
+  putAlertSecret(tenant: string, secret: string): Promise<boolean>;
+}
+
+/**
+ * The alert secret written through kiff/agents (PUT /tenant/alert-secret), which keeps it sealed in its table, keyed
+ * by the signed tenant; kiffalerts reads the table first. Until kiff/agents keeps them, or for an account that isn't
+ * its tenant (tafs cloud always writes the account as the tenant), it's written as before: `old`, the
+ * `agents-accounts/<account>` secret. So this ships before kiff/agents turns its store on.
+ */
+export function agentAlertSecrets(store: AlertSecretStore, old: AccountStore["writeSecret"]): AccountStore["writeSecret"] {
+  return async (account, tenant, secret) => {
+    if (account === tenant && (await store.putAlertSecret(tenant, secret))) return;
+    await old(account, tenant, secret);
+  };
+}
