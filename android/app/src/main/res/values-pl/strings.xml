@@ -1980,6 +1980,8 @@
     <string name="record_tool_refused_counts">%1$s to odrzucił i nadal liczy się to do dzisiejszych limitów</string>
     <string name="record_tool_refused_counts_why">%1$s to odrzucił i nadal liczy się to do dzisiejszych limitów%2$s</string>
     <string name="record_tool_refused_money">%1$s to odrzucił. Pieniądze nie zostały przelane, ale nadal liczy się to do dzisiejszej sumy.</string>
+    <string name="record_tool_refused_not_counted">%1$s to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów</string>
+    <string name="record_tool_refused_not_counted_why">%1$s to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów%2$s</string>
     <string name="record_waiting_for_you">Czeka na Ciebie</string>
     <string name="record_within_card">%1$s, w ramach Card</string>
     <string name="record_within_card_alone">W ramach Card</string>

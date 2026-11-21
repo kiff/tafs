@@ -122,6 +122,8 @@
   "record.tool_refused_counts": "{who} lo rechazó, y sigue contando para los límites de hoy",
   "record.tool_refused_counts_why": "{who} lo rechazó, y sigue contando para los límites de hoy{why}",
   "record.tool_refused_money": "{who} lo rechazó. No se movió dinero, pero sigue contando para el total de hoy.",
+  "record.tool_refused_not_counted": "{who} lo rechazó. No se hizo nada, y no cuenta para los límites de hoy",
+  "record.tool_refused_not_counted_why": "{who} lo rechazó. No se hizo nada, y no cuenta para los límites de hoy{why}",
   "record.waiting_for_you": "Te necesita",
   "record.within_card": "{amount}, dentro de la Card",
   "record.within_card_alone": "Dentro de la Card"

@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi</string>
     <string name="record_tool_refused_counts_why">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi%2$s</string>
     <string name="record_tool_refused_money">%1$s l\'ha rifiutata. Nessun denaro trasferito, ma conta comunque nel totale di oggi.</string>
+    <string name="record_tool_refused_not_counted">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi</string>
+    <string name="record_tool_refused_not_counted_why">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi%2$s</string>
     <string name="record_waiting_for_you">Ti aspetta</string>
     <string name="record_within_card">%1$s, entro la Card</string>
     <string name="record_within_card_alone">Entro la Card</string>

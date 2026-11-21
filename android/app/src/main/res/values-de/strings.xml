@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s hat es abgelehnt, und es zählt trotzdem zu den heutigen Limits</string>
     <string name="record_tool_refused_counts_why">%1$s hat es abgelehnt, und es zählt trotzdem zu den heutigen Limits%2$s</string>
     <string name="record_tool_refused_money">%1$s hat es abgelehnt. Es wurde kein Geld bewegt, aber es zählt trotzdem zur heutigen Summe.</string>
+    <string name="record_tool_refused_not_counted">%1$s hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits</string>
+    <string name="record_tool_refused_not_counted_why">%1$s hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits%2$s</string>
     <string name="record_waiting_for_you">Wartet auf dich</string>
     <string name="record_within_card">%1$s, innerhalb der Card</string>
     <string name="record_within_card_alone">Innerhalb der Card</string>
