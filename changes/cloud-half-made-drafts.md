@@ -1,0 +1,1 @@
+- **A taf whose setup stopped before Coach showed its result, but whose Card was approved, now shows on Home as being set up, with Discard.** Before, its Card and connection stayed with no screen showing them. Needs kiff/agents to list a setup's unclaimed drafts; until then nothing changes.
