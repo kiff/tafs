@@ -134,7 +134,7 @@ enum WatchRelay {
             }
         case .tafs:
             do {
-                return WatchReply(.ok, tafs: try await reading.tafs())
+                return WatchReply(.ok, tafs: try await reading.tafs(), zone: AccountTime.zone.identifier)
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }

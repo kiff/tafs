@@ -65,9 +65,9 @@ final class CoachModel: ObservableObject {
     /// A taf's chat: its last turns from before this visit, read through the phone when the chat opens. Forgotten with the
     /// turns; never kept on the watch.
     @Published private(set) var history: [WatchChatLine] = []
-    /// The account's zone, as the phone sends it with a taf's chat, so times and days read as on the phone; the
-    /// watch's own until the phone says (row 44, C).
-    @Published private(set) var zone: TimeZone = .current
+    /// The account's zone, as the phone sends it with Your tafs and a taf's chat, so times and days read as on the
+    /// phone; the watch's own until the phone says (row 44, C).
+    var zone: TimeZone { WatchAccountZone.zone }
 
     /// A calendar in `zone`, for where a chat's days start.
     var calendar: Calendar {
@@ -255,7 +255,7 @@ final class CoachModel: ObservableObject {
         let visit = self.visit
         let reply = await phone.ask(WatchRequest(.tafChat, made: clock(), taf: taf))
         guard visit == self.visit, let reply, reply.outcome == .ok, let chat = reply.chat else { return }
-        if let id = reply.zone, let given = TimeZone(identifier: id) { zone = given }
+        WatchAccountZone.learn(reply.zone)
         // This visit's turns are shown below them: only what came before the first is history, so none shows twice.
         guard let first = turns.first?.at else { history = chat; return }
         history = chat.filter { $0.at < first }

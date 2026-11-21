@@ -139,8 +139,9 @@ struct WatchReply: Codable, Equatable, Sendable {
     var answering: Bool?
     /// `tafChat`: the last turns of the person's chat with the taf, oldest first.
     var chat: [WatchChatLine]?
-    /// `tafChat`: the account's time zone (an IANA identifier), so the wrist's times and days read as the phone's
-    /// (row 44, C). None from an older phone: the watch's own.
+    /// `tafs` and `tafChat`: the account's time zone (an IANA identifier), so the wrist's times and days read as the
+    /// phone's from the first screen (row 44, C), as Wear OS's `WatchReply.Tafs.zone`. None from an older phone: the
+    /// watch's own.
     var zone: String?
 
     init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil,
