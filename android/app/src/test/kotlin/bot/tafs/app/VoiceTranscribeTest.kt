@@ -10,6 +10,7 @@ import bot.tafs.watchlink.WatchRequest
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Files
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -40,7 +41,7 @@ class VoiceTranscribeTest {
   }
 
   @Test fun theTextGoesBackAndTheRecordingIsDeleted() = runTest {
-    val inbox = VoiceInbox(dir) { t }
+    val inbox = VoiceInbox(dir, { t })
     assertTrue(inbox.receive(id, wav()))
     var read: Pair<File, String>? = null
     val reply = ask(relay(inbox) { file, language -> read = file to language; Transcription.Text("Move my call to Thursday") })
@@ -50,7 +51,7 @@ class VoiceTranscribeTest {
   }
 
   @Test fun noOnDeviceRecognizerIsSaidAndTheRecordingIsDeletedAllTheSame() = runTest {
-    val inbox = VoiceInbox(dir) { t }
+    val inbox = VoiceInbox(dir, { t })
     inbox.receive(id, wav())
     assertEquals(WatchReply.NoOfflineSpeech, ask(relay(inbox) { _, _ -> Transcription.NoOffline }))
     assertTrue(dir.listFiles()!!.isEmpty())
@@ -61,28 +62,40 @@ class VoiceTranscribeTest {
   }
 
   @Test fun aFailedTranscriptionDeletesTheRecordingToo() = runTest {
-    val inbox = VoiceInbox(dir) { t }
+    val inbox = VoiceInbox(dir, { t })
     inbox.receive(id, wav())
     assertTrue(ask(relay(inbox) { _, _ -> Transcription.Failed }) is WatchReply.Failed)
     assertTrue(dir.listFiles()!!.isEmpty())
   }
 
   @Test fun aRecordingTooLongIsNotKept() {
-    val inbox = VoiceInbox(dir) { t }
+    val inbox = VoiceInbox(dir, { t })
     assertFalse(inbox.receive(id, wav((WatchLink.MAX_VOICE_BYTES + 1).toInt())))
     assertTrue(dir.listFiles()!!.isEmpty())
   }
 
   @Test fun aBadIdOrLanguageIsRefusedBeforeAnything() = runTest {
-    val inbox = VoiceInbox(dir) { t }
+    val inbox = VoiceInbox(dir, { t })
     assertFalse(inbox.receive("../x", wav()))
     val (path, data) = WatchLink.encode(WatchRequest.Transcribe(t, id, "en; rm"))
     assertTrue(relay(inbox) { _, _ -> error("never") }.answer(path, data) is WatchReply.Refused)
   }
 
+  /** agentgabo's point: a recording no request ever takes goes after 2 minutes on its own, with nothing else arriving. */
+  @Test fun aRecordingNoRequestTakesDeletesItselfAfterTwoMinutes() = runTest {
+    val inbox = VoiceInbox(dir, { t }, scope = this)
+    inbox.receive(id, wav())
+    val file = dir.listFiles()!!.single()
+    advanceTimeBy(VoiceInbox.MAX_AGE_MS - 1)
+    assertTrue(file.exists())
+    advanceTimeBy(2)
+    assertFalse("gone with nothing else arriving", file.exists())
+    assertNull("and a late request finds none", inbox.take(id, waitMs = 1))
+  }
+
   @Test fun aRecordingLeftWithNoRequestGoesAfterTwoMinutes() = runTest {
     var now = t
-    val inbox = VoiceInbox(dir) { now }
+    val inbox = VoiceInbox(dir, { now })
     inbox.receive(id, wav())
     val file = dir.listFiles()!!.single()
     file.setLastModified(t)

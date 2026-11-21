@@ -594,7 +594,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
   (`createOnDeviceSpeechRecognizer`, Android 13 and later, fed the file); with none for the language, it answers
   `no_offline_speech` and the watch says so (`watch.no_offline_speech`): nothing goes to a server. Only the text comes back,
   joined to what was heard first, to the same review as words heard, so nothing is sent before Send. **Deleted:** on the phone
-  as soon as it's read, whatever the outcome, and anything left without a request after 2 minutes; on the watch once the text
+  as soon as it's read, whatever the outcome, and otherwise after 2 minutes on its own timer, even if no request ever comes
+  (and any a killed process left, when the relay service next starts); on the watch once the text
   is back, on Cancel, and after 2 minutes at most (`VOICE_KEEP_MS`; `TranscribeOnPhoneTest`, `VoiceTranscribeTest`). A phone
   from before refuses `transcribe` as an unknown path, and what was heard first stands. Production builds only (`WATCH_V2`). Speaking is an instruction to a taf, never an
   approval: the taf acts under its own Cards.

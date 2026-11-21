@@ -66,6 +66,12 @@ class WearRelayService : WearableListenerService() {
     }
   }
 
+  override fun onCreate() {
+    super.onCreate()
+    // Recordings a killed process left behind: older than 2 minutes, they go now.
+    runCatching { voice().sweep() }
+  }
+
   private fun voice(): VoiceInbox = inbox ?: synchronized(WearRelayService::class.java) {
     inbox ?: VoiceInbox(java.io.File(cacheDir, "watch-voice")).also { inbox = it }
   }

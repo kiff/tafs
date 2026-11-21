@@ -5,15 +5,23 @@ import java.io.File
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Recordings from the Wear OS watch, held only until they're transcribed (row 44, A; docs/watch-wear.md, "When the watch's
  * recognizer gives up"): the watch sends one over a Data Layer channel, then asks for its text ([WatchRelay], `transcribe`).
  * Each is a file in the app's private cache, at most [WatchLink.MAX_VOICE_BYTES]; it's deleted once taken and transcribed, and
- * anything left (a channel with no request after it) is swept after [MAX_AGE_MS].
+ * each deletes itself after [MAX_AGE_MS] on its own timer ([scope], the process's), even when no request ever comes (the watch
+ * gone, out of reach, or cancelled between the channel and the request). Files a killed process left are swept when the relay
+ * service starts ([sweep]).
  */
-class VoiceInbox(private val dir: File, private val now: () -> Long = System::currentTimeMillis) {
+class VoiceInbox(
+  private val dir: File,
+  private val now: () -> Long = System::currentTimeMillis,
+  /** Where each recording's own 2-minute delete waits: the process's, not a service's, so it outlives the service. */
+  private val scope: kotlinx.coroutines.CoroutineScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO),
+) {
   private val arrived = ConcurrentHashMap<String, CompletableDeferred<File?>>()
 
   private fun slot(id: String) = arrived.getOrPut(id) { CompletableDeferred() }
@@ -39,6 +47,11 @@ class VoiceInbox(private val dir: File, private val now: () -> Long = System::cu
       }
     }.isSuccess && total > 44
     if (!kept) file.delete()
+    else scope.launch {
+      kotlinx.coroutines.delay(MAX_AGE_MS)
+      // Still here 2 minutes on: no request took it. Gone, and a request now finds none.
+      if (file.delete()) arrived.remove(id)
+    }
     slot(id).complete(if (kept) file else null)
     return kept
   }
@@ -140,6 +153,11 @@ class OnDeviceTranscriber(private val context: android.content.Context) : Transc
         }
       }
     }
-    return kotlinx.coroutines.withTimeoutOrNull(20_000) { done.await() } ?: Transcription.Failed.also { runCatching { read.close() } }
+    return try {
+      kotlinx.coroutines.withTimeoutOrNull(20_000) { done.await() } ?: Transcription.Failed
+    } finally {
+      // The phone's own copy of the pipe's read end: closed once the recognizer has answered, or given up on.
+      runCatching { read.close() }
+    }
   }
 }
