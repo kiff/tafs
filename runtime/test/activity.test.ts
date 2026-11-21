@@ -289,6 +289,21 @@ describe("Activity in the person's language", () => {
     expect(seen[0]!.get("accept-language")).toBe("pl");
   });
 
+  it("sends KIFF a regional variant with its base after it, so KIFF's words stay Portuguese for a Brazilian phone", async () => {
+    const seen: Headers[] = [];
+    const deps = {
+      kiffBase: "https://kiff.test",
+      fetch: (async (_input: string | URL | Request, init?: RequestInit) => {
+        seen.push(new Headers(init?.headers));
+        return new Response("{}");
+      }) as typeof fetch,
+    } as unknown as Deps;
+    const { withKIFFLanguage } = await import("../src/cloud/handler.js");
+    const wrapped = withKIFFLanguage({ rawPath: "/", headers: { "accept-language": "pt-BR, pt;q=0.9, en;q=0.8" }, requestContext: { http: { method: "GET" } } }, deps).fetch!;
+    await wrapped("https://kiff.test/v1/me", { headers: { authorization: "Bearer synthetic-session" } });
+    expect(seen[0]!.get("accept-language")).toBe("pt-BR, pt;q=0.9");
+  });
+
   it("adds the language only to KIFF's own host, and never over a language the caller set", async () => {
     const seen: Array<{ url: string; lang: string | null }> = [];
     const deps = {

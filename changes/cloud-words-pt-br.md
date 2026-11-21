@@ -1,0 +1,1 @@
+- **tafs cloud: Brazilian Portuguese.** A phone set to Brazilian Portuguese reads tafs cloud's lines as Brazil says them ("4 precisam de você.", "Seu resumo", "Conectado", "Entrar novamente"), and Portugal keeps European Portuguese. Lines that state a legal rule read as in Portuguese until they're reviewed ([languages.md](docs/languages.md)).

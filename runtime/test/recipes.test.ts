@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
 import { CATEGORIES, categoriesIn, connectsOf, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
 import type { CatalogApp } from "../src/cloud/connect.js";
-import { LANGUAGES } from "../src/cloud/words/index.js";
+import { baseLanguage, LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
 import { LANGS, MODULE, parseRecipe, readRecipes, RECIPES_DIR, render } from "../scripts/recipes.mjs";
 
@@ -137,7 +137,8 @@ Bezahle meine Rechnungen unter 100 EUR.
   });
 
   it("has every recipe in every language the apps speak, each word translated", () => {
-    expect(["en", ...LANGS].sort()).toEqual([...LANGUAGES].sort());
+    // A recipe is written per base language; a regional variant (pt-BR) reads its base's (recipesFor).
+    expect(["en", ...LANGS].sort()).toEqual(LANGUAGES.filter((l) => baseLanguage(l) === l).sort());
     for (const r of RECIPES) {
       for (const lang of LANGS) {
         const w = r.languages[lang as keyof typeof r.languages];

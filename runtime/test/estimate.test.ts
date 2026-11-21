@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { type CreditRun, type KIFFBalance, type KIFFRun, readCoachCredits } from "../src/cloud/credits.js";
 import { estimate, ESTIMATES_KEY, type Own, paceLine, testsFor, testsIn, weekOneWords } from "../src/cloud/estimate.js";
 import { coachTool, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
-import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
+import { baseLanguage, LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -99,7 +99,8 @@ describe("a taf's estimate, against the plan", () => {
 
   it("is in all eight languages, each line its own", () => {
     const e = { own: paced([40, 40, 40, 40, 40, 40, 40, 40, 60, 60]), plan: company, now: NOW };
-    const lines = LANGUAGES.map((lang) => estimate(e, lang).words);
+    // A regional variant may read as its base: the eight are each their own.
+    const lines = LANGUAGES.filter((lang) => baseLanguage(lang) === lang).map((lang) => estimate(e, lang).words);
     expect(new Set(lines).size).toBe(8);
     expect(estimate(e, "de").words).toContain("Ausgabenlimit");
     expect(estimate({ now: NOW, plan: solo }, "pl").words).toBe(`${wordsIn("pl").est_unknown} ${wordsIn("pl").est_first_week} ${wordsIn("pl").est_never_past_solo}`);

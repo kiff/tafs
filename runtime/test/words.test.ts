@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, withZone, wordsIn } from "../src/cloud/words/index.js";
+import { baseLanguage, LANGUAGES, languageFrom, ownerLanguageIn, ownerLanguageLine, plural, withLanguage, withZone, wordsIn } from "../src/cloud/words/index.js";
 import { ownerWords } from "../src/cloud/improve.js";
+import { legalLinks } from "../src/cloud/sheet.js";
 import { jobById, systemPrompt } from "../src/jobs.js";
 import { doorView, offered } from "../src/cloud/doors/doors.js";
 import { APPS } from "../src/cloud/doors/apps.js";
@@ -90,7 +91,8 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
   it("isn't English in another language: a line copied over untranslated would read the same", () => {
     for (const lang of LANGUAGES.filter((l) => l !== "en")) {
       const words = wordsIn(lang) as Record<string, unknown>;
-      const allowed = new Set([...SAME_AS_ENGLISH.all!, ...(SAME_AS_ENGLISH[lang] ?? [])]);
+      // A regional variant writes alike what its base does ("80%", "Email" and "App" in pt-BR as in pt).
+      const allowed = new Set([...SAME_AS_ENGLISH.all!, ...(SAME_AS_ENGLISH[lang] ?? SAME_AS_ENGLISH[baseLanguage(lang)] ?? [])]);
       const same = Object.keys(en).filter((k) => !allowed.has(k) && JSON.stringify(sample(words[k], k)) === JSON.stringify(sample((en as Record<string, unknown>)[k], k)));
       expect(same, lang).toEqual([]);
     }
@@ -101,7 +103,13 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     expect(languageFrom("")).toBe("en");
     expect(languageFrom("de")).toBe("de");
     expect(languageFrom("de-AT,de;q=0.9,en;q=0.5")).toBe("de");
-    expect(languageFrom("pt-BR")).toBe("pt");
+    // A regional variant tafs cloud has is kept as itself; any other region reads its base.
+    expect(languageFrom("pt-BR")).toBe("pt-BR");
+    expect(languageFrom("pt_br")).toBe("pt-BR");
+    expect(languageFrom("pt-BR, pt;q=0.9, en;q=0.8")).toBe("pt-BR");
+    expect(languageFrom("pt-PT")).toBe("pt");
+    expect(languageFrom("pt")).toBe("pt");
+    expect(languageFrom("es-MX")).toBe("es");
     expect(languageFrom("ja,fr;q=0.8,en;q=0.5")).toBe("fr");
     expect(languageFrom("en;q=0.5,nl;q=0.9")).toBe("nl");
     expect(languageFrom("pl;q=0,es;q=0.1")).toBe("es");
@@ -230,6 +238,9 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
    * with a capital is a label (a button, a state) and matches as written; a lowercase one is a noun and matches in
    * any case. Its words in each language match in any case.
    */
+  /** The languages with a column in the Terms table: every one but a regional variant, which has its own glossary. */
+  const BASES = LANGUAGES.filter((l) => baseLanguage(l) === l);
+
   function glossary(): Array<{ en: string; label: boolean; words: Record<string, string> }> {
     const md = readFileSync(new URL("../../docs/languages.md", import.meta.url), "utf8");
     const from = md.indexOf("\n## Terms");
@@ -239,7 +250,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     return table.slice(2).map((row) => {
       const cells = row.split("|").slice(1, -1).map((c) => c.trim());
       const en = cells[0]!.replace(/\s*\(.*\)$/, "");
-      return { en, label: /^[A-Z]/.test(en), words: Object.fromEntries(LANGUAGES.map((l, i) => [l, cells[i]!.toLowerCase()])) };
+      return { en, label: /^[A-Z]/.test(en), words: Object.fromEntries(BASES.map((l, i) => [l, cells[i]!.toLowerCase()])) };
     });
   }
 
@@ -292,7 +303,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
         if (!pattern.test(english)) continue;
         english = english.replace(pattern, " ");
         if (NOT_THE_TERM[term.en]?.includes(key)) continue;
-        for (const lang of LANGUAGES.filter((l) => l !== "en")) {
+        for (const lang of BASES.filter((l) => l !== "en")) {
           const line = sample((wordsIn(lang) as Record<string, unknown>)[key], key).join(" ").toLowerCase();
           const want = term.words[lang]!;
           const forms = [want, ...(FORMS[lang]?.[want] ?? [])];
@@ -312,5 +323,44 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     const rows = md.slice(from + 1, md.indexOf("\n## ", from + 1)).split("\n").filter((l) => l.startsWith("|"));
     const digest = createHash("sha256").update(rows.map((r) => `${r}\n`).join("")).digest("hex");
     expect(readFileSync(new URL("../../docs/glossary.sha256", import.meta.url), "utf8").split(/\s+/)[0]).toBe(digest);
+  });
+});
+
+describe("Brazilian Portuguese, pt-BR over pt (docs/languages.md, Regional variants)", () => {
+  const pt = wordsIn("pt") as Record<string, unknown>;
+  const br = wordsIn("pt-BR") as Record<string, unknown>;
+
+  it("reads Brazil's lines where they differ, and pt's everywhere else", () => {
+    expect(wordsIn("pt-BR").home_needs_you(4, plural("pt-BR", 4))).toBe("4 precisam de você.");
+    expect(wordsIn("pt").home_needs_you(4, plural("pt", 4))).toBe("4 precisam de si.");
+    expect(wordsIn("pt-BR").brief_title).toBe("Seu resumo");
+    expect(wordsIn("pt-BR").work_from_chat).toBe(wordsIn("pt").work_from_chat);
+    expect(wordsIn("pt-BR").apps_connected).toBe("Conectado");
+    // Every key pt has, pt-BR has: it never falls behind.
+    expect(Object.keys(br).sort()).toEqual(Object.keys(pt).sort());
+  });
+
+  it("keeps pt's words for every line that states a legal rule, until the language reviewer writes them", () => {
+    const legal = Object.keys(pt).filter((k) => /consent|legal|terms|privacy|(^|_)age(_|$)|agree/.test(k));
+    expect(legal.length).toBeGreaterThan(0);
+    for (const k of legal) expect(JSON.stringify(sample(br[k], k)), k).toBe(JSON.stringify(sample(pt[k], k)));
+  });
+
+  it("counts as Brazil does: 0 is singular in pt-BR, plural in pt", () => {
+    expect(plural("pt-BR", 0)).toBe("one");
+    expect(plural("pt", 0)).toBe("other");
+    expect(plural("pt-BR", 2)).toBe("other");
+  });
+
+  it("says pt-BR to Coach and the tafs, and reads it back from a taf's instructions", () => {
+    const line = ownerLanguageLine("pt-BR")!;
+    expect(line).toContain("Brazilian Portuguese (pt-BR)");
+    expect(ownerLanguageIn(line)).toBe("pt-BR");
+    expect(ownerLanguageIn(ownerLanguageLine("pt")!)).toBe("pt");
+  });
+
+  it("opens pt's legal pages: kiff.dev serves them per language, not per region", () => {
+    expect(legalLinks("pt-BR")).toEqual({ terms: "https://kiff.dev/pt/terms", privacy: "https://kiff.dev/pt/privacy" });
+    expect(legalLinks("pt")).toEqual(legalLinks("pt-BR"));
   });
 });
