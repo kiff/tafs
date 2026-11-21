@@ -299,6 +299,13 @@ only on the paired phone's own release, which planque relays and can't make:
   input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
   covered button that isn't clicked, and dialogs.
 
+## Known limits
+
+- **A window a page's script opens** (from a blank frame, say) is fenced from its first request on, not before: Chrome gives
+  the extension its tab only once it navigates, so its first load is what the fence sees first. The run's own window never
+  opens one (`window.open` is off in its tabs, and `target` is forced to `_self`).
+- **A screenshot** of a page isn't something the extension takes or sends.
+
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
