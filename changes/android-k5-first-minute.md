@@ -1,0 +1,1 @@
+- **Android, first sign-in:** "Your data and the AI" and the time-zone question wait until "You're connected" is gone, and a phone on GMT is no longer asked to switch an account on UTC.

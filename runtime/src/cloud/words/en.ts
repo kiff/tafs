@@ -513,6 +513,8 @@ export const en = {
   // named by door_name: "email" is a word in each language, every other door is its app's own name.
   door_name: (_id: string, label: string) => label.toLowerCase(),
   door_a: "a door",
+  door_draft_used: "Door made from this draft.",
+  door_draft_lapsed: "This draft lapsed: ask Coach again.",
   door_knock: (who: string, door: string, spoofed: boolean) => `${who} wrote by ${door}${spoofed ? " (the sender check failed)" : ""}. Nothing was done.`,
   door_full_keys: (door: string, n: number) => `Your ${door} door had its ${n} messages from you and paired senders today. More are dropped until tomorrow.`,
   door_full_others: (door: string, n: number) => `Your ${door} door had ${n} messages from people who aren't paired today. More are dropped until tomorrow.`,

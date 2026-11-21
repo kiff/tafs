@@ -1,0 +1,7 @@
+{
+  "device.linux": "arvuti",
+  "device.mac": "Mac",
+  "device.phone": "telefon",
+  "device.tablet": "tahvelarvuti",
+  "device.windows": "Windowsi arvuti"
+}

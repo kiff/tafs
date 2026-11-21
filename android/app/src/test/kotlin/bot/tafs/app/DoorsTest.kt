@@ -317,6 +317,27 @@ class DoorsTest {
     assertTrue(m.state.value.doors["refunds-1"]!!.doors.isEmpty())
   }
 
+  /**
+   * Setup's "Starts when" is tafs cloud's dial: a door made or removed changes it, so it's read again then (the doors proof,
+   * 21 Nov: the removed door still showed there until the next read). Only where the dial was read already.
+   */
+  @Test fun removingADoorReadsWhatStartsTheTafAgain() = runTest {
+    reads()
+    transport.answer(doors, 200, doorsBody(doors = apiDoorJson, knocks = ""))
+    transport.answer("DELETE $base/door_ord7", 200, """{"removed":"door_ord7"}""")
+    val knob = base.substringBeforeLast("/doors") + "/knob"
+    transport.answer("GET $knob", 200, """{"wakes":[{"id":"door_ord7","kind":"door","label":"Order system","words":"Open: an application with one of its keys can hand this taf work."}]}""")
+    val m = model()
+    m.loadDoors("refunds-1")
+    m.loadKnob("refunds-1")
+    assertEquals(1, m.state.value.knobs["refunds-1"]!!.wakes.size)
+    transport.answer("GET $knob", 200, """{"wakes":[]}""")
+    val reads = transport.requestsTo("GET $knob").size
+    m.removeApiDoor("refunds-1", m.state.value.doors["refunds-1"]!!.doors.single(), "Remove the Order system door?")
+    assertEquals("read again after the removal", reads + 1, transport.requestsTo("GET $knob").size)
+    assertTrue(m.state.value.knobs["refunds-1"]!!.wakes.isEmpty())
+  }
+
   /** contracts/doors-api-draft.json's answer, with the `draft` copy beside the body changed: what's drawn must be the body's. */
   private val draftAnswer = """{"draft_id":"draft-0123456789abcdef",
     "draft":{"name":"Not what is signed","fields":[],"job":"Something else","outcomes":["x"],"text":true},
@@ -324,6 +345,19 @@ class DoorsTest {
     "body":{"kind":"api","draft":{"text":false,"name":"Order system","job":"Check the return and refund it if the Card allows",
       "fields":[{"name":"order","type":"string","max":40},{"name":"reason","type":"enum","values":["damaged","late","wrong_item"]}],
       "outcomes":["refunded","refused","needs_review"]}}}"""
+
+  /**
+   * A draft a door was made from answers 410 `draft_used` with tafs cloud's words: the card says them as done, not as a failure.
+   * Any other refusal (a lapsed draft's 404 `draft_lapsed`, or another 410) stays a problem line.
+   */
+  @Test fun aUsedDoorDraftReadsAsDoneNotAsAFailure() {
+    val used = bot.tafs.app.kiff.CloudError(410, "a door was made from this draft", words = "Door made from this draft.", code = "draft_used")
+    assertTrue(bot.tafs.app.views.doorDraftUsed(used))
+    assertEquals("Door made from this draft.", bot.tafs.app.model.ErrorWords.of(used))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(bot.tafs.app.kiff.CloudError(404, "lapsed", words = "This draft lapsed: ask Coach again.", code = "draft_lapsed")))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(bot.tafs.app.kiff.CloudError(410, "gone", code = "other")))
+    assertFalse(bot.tafs.app.views.doorDraftUsed(java.io.IOException("offline")))
+  }
 
   @Test fun coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm() {
     val d = bot.tafs.app.kiff.DoorDraft.read(draftAnswer)!!

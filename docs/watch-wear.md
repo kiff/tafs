@@ -432,7 +432,7 @@ tarjeta, scheda, mosaico, tegel, karta).
 **Releases to Play** (`android.yml`'s `wear-release` job), as the phone's, on their own:
 - **When:** by hand (Run workflow, form `wear`), or on a merge to main that raises the watch's `versionCode` (the `version`
   job compares the phone's and the watch's each on their own), once `test` passed, which runs the watch's tests.
-- **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key from Secrets Manager, in the `android-release`
+- **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key (GitHub's `ANDROID_UPLOAD_KEY`, else Secrets Manager's copy), in the `android-release`
   environment. The Data Layer joins the two apps only when Play signs both with one key, and Play's app signing re-signs
   every upload with the listing's key. It isn't kept as a run artifact: the repository is public, so Play holds the only copy.
 - **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear

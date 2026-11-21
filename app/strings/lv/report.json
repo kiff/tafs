@@ -1,0 +1,17 @@
+{
+  "report.already": "Tu jau ziņoji par šo atbildi.",
+  "report.cant_from_here": "Par šo atbildi nevar ziņot no šejienes.",
+  "report.menu": "Ziņot par šo atbildi",
+  "report.not_sent": "Tavs ziņojums netika nosūtīts. {why}",
+  "report.not_sent_why": "Nav nosūtīts: {failed}",
+  "report.note_hint": "Pievieno piezīmi (nav obligāti)",
+  "report.note_most_characters": "Piezīmē var būt ne vairāk kā 1000 rakstzīmju.",
+  "report.person_kiff_reads_your_report": "Cilvēks KIFF izlasa tavu ziņojumu kopā ar atbildi tādu, kāda tā tika uzrakstīta.",
+  "report.reason.harmful": "Kaitīga",
+  "report.reason.offensive": "Aizskaroša",
+  "report.reason.other": "Cits iemesls",
+  "report.reason.wrong": "Nepareiza",
+  "report.runs_not_loaded": "Tā palaišanas nevarēja ielādēt. {why}",
+  "report.thanks": "Paldies. Kāds KIFF izlasīs tavu ziņojumu.",
+  "report.what_wrong": "Kas ar to nav kārtībā?"
+}

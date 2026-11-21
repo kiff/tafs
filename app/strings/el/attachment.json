@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "Το {name} δεν μπορεί να επισυναφθεί.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "Το tafs δεν μπορεί να επισυνάψει αυτό το αρχείο: δεν είναι είδος ή μέγεθος που δέχεται. Διάλεξε άλλο.",
+  "attachment.photo": "Φωτογραφία",
+  "attachment.photo_could_not_read": "Αυτή η φωτογραφία δεν διαβάστηκε.",
+  "attachment.photo_numbered": "Φωτογραφία {n}",
+  "attachment.too_large": "Το {name} είναι {size}· το μέγιστο είναι {limit}.",
+  "attachment.wrong_kind": "Το {name} δεν μπορεί να επισυναφθεί. Επισυνάπτονται φωτογραφίες, PDF, κείμενο, CSV, Markdown, Word και Excel."
+}

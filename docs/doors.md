@@ -127,17 +127,17 @@ every field today's builds require, so older builds show it as a plain door. Bot
 fields when they're present: `counts` (today, waiting), `last_request` (`{status, at, words}`; iOS shows only tafs cloud's `words` (`APIDoorText.lastRequestWords`), and no line until they're sent, never the raw `status`), and each key's `last4`, `made_at`
 and `last_used_at` (Android also takes a key's id as `key_id`), never the key.
 
-**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; the
-first three behind `APIDoorFeature`, off): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
+**An `api` door's keys are changed only signed** (iOS `DoorsModel.newKey`, `revoke`, `reopen` and `removeAPI`; offered
+where tafs cloud's `TAFS_API_DOORS` is on): New key (`POST …/{door}/keys`), Revoke (`DELETE …/{door}/keys/{key}`),
 opening a paused door again (`PATCH …/{door}` `{open: true}`) and removing the door (`DELETE …/{door}`, its keys with it,
 from the door's Remove, which never sends an `api` door's removal unsigned; nor does the door's open switch send its reopening unsigned) each send `KIFF-Device-Signature`, made by the approval key behind Face ID or Touch ID
 over `kiff.request.v1`: the method, the exact path and the exact bytes sent (`AppModel.signDoorRequest`, as a taf's
 removal). A key comes back in the answer that made it, is shown once on its screen, and is forgotten when that screen
 closes (`keyShown`); the list only ever has its last four. Pausing (`{open: false}`) isn't signed: stopping is always safe.
-**Android does the same** (`AppModel.newApiKey`, `revokeApiKey`, `reopenApiDoor` and `removeApiDoor`, behind `ApiDoorFeature`,
-off), signed by the approval key behind the fingerprint (`TafsCloud.doorSignature`, as a taf's removal). Its plain
+**Android does the same** (`AppModel.newApiKey`, `revokeApiKey`, `reopenApiDoor` and `removeApiDoor`, drawn wherever tafs cloud sends them (`ApiDoorFeature` is on: tafs cloud's `TAFS_API_DOORS` alone decides, per account)), signed by the approval key behind the fingerprint (`TafsCloud.doorSignature`, as a taf's removal). Its plain
 `setDoorOpen(open = true)` and `removeDoor` send nothing for an `api` door. The new key is held in `TafDoors.issued` until its
-screen closes (`apiKeyShown`), and a last request's `words` are drawn as tafs cloud sends them
+screen closes (`apiKeyShown`). A door made, changed or removed reads the taf's dial again, so Setup's "Starts when" never
+shows a door that's gone (`removingADoorReadsWhatStartsTheTafAgain`). A last request's `words` are drawn as tafs cloud sends them
 (`anApiDoorsNewKeyIsSignedOverItsBodyAndShownOnce`, `anApiDoorsRevokeReopenAndRemoveAreSignedAndNeverGoUnsigned`).
 
 **tafs cloud keeps an `api` door** (`kind: "api"`, `doors/model.ts`) with its keys as `APIKey`s: an id, the owner's name for
@@ -151,7 +151,11 @@ below does, refuses a second `api` door, and keeps it 7 days (`door-api-draft`),
 `next: show {type: "door", taf_id, draft_id}`. Nothing is made: Coach's Card for it (`coach-taf-door`, 20 a day) asks
 nothing, since the door is the owner's to make. The apps draw the card from tafs cloud's own copy,
 `GET /v1/tafs/{id}/doors/drafts/{draft}` (`{draft_id, draft, made_at, expires_at, body}`, for the people who manage the
-taf; 404 once lapsed, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`.
+taf, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`. Once a door
+is made from it, the draft keeps only which door and when, until it would have lapsed: read again (the card, when the
+chat is opened again), it answers **410** `{code: "draft_used", words, door_id}`, "Door made from this draft." in
+the person's language; once lapsed, **404** `{code: "draft_lapsed", words}`, "This draft lapsed: ask Coach again." The
+apps show `words` as sent. A used draft makes nothing if sent again (404).
 
 **Making one and its keys** (`TAFS_API_DOORS` on: `on` for every account, or a comma-separated list of the accounts it's on for, a test account first; off for the account, `POST …/doors` with `kind: "api"` is 400, Coach's `taf_door_api` drafts nothing, and the caller's routes answer 404): each step is checked
 with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature
@@ -210,11 +214,11 @@ outcomes to end with. It's started with the door's `outcomes`, so kiff/agents gi
 those, and keeps the one it accepted on the run as `outcome`: that is the outcome, checked again against the door's list.
 Words that only say one, or none at all, are `failed` (`bad_outcome`). A run that ends in error is `failed` (`run_failed`); cancelled, `cancelled` (`halted`).
 
-**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, behind `APIDoorFeature`, off), from the owner's
+**iPhone and iPad's screens for an `api` door** (`APIDoorViews.swift`, drawn for what tafs cloud sends, so `TAFS_API_DOORS` alone decides), from the owner's
 mockup v1.1, in the shared `door.api.*` words: the door's panel (its name, today's count against its cap, its last request
 in tafs cloud's words, paused or open); its keys, each by name, when made and last used and its last four, with Revoke
 (asked once more, in the owner's words: requests not started are cancelled, one running finishes) and New key (its name,
-the door's own when left blank; at most two); the key shown once (Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
+the door's own when left blank; at most two); the key shown once (covered whenever the app isn't in front, so the app switcher's snapshot never holds it, and while the screen is recorded or mirrored, as Android's `FLAG_SECURE`; Copy key (to this device only, and off the pasteboard a minute later), where to send work, and an example that
 reads the key from `$TAFS_API_KEY`, never the key itself), forgotten when it's closed; and API instructions, everything
 but the key. Each of New key, Revoke, opening it again and Remove asks for Face ID or Touch ID.
 
@@ -228,7 +232,7 @@ while tafs runs; Done forgets the key. API instructions show where to send reque
 host, `AppModel.apiEndpoint`) and the example, which reads the key from the caller's own `$TAFS_API_KEY` and never holds
 one. Removing an `api` door says its keys stop working and is signed (`ApiDoorScreensTest`).
 
-**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, behind `APIDoorFeature`, off). Coach's `taf_door_api`
+**Coach's drafted door, approved on the phone** (iOS `DoorDraftCard`, drawn when Coach sends the card, which it does only where `TAFS_API_DOORS` is on). Coach's `taf_door_api`
 shows a `door` card (`{taf_id, draft_id}`, no words of Coach's); the app reads the draft from tafs cloud
 (`GET /v1/tafs/{id}/doors/drafts/{draft}`, `contracts/doors-api-draft.json`) and draws it **from `body`, the bytes it signs and
 sends**, never from the copy beside it: the application's name, what it can do (`draft_scope`), what the taf does with its
@@ -237,12 +241,15 @@ signs `POST /v1/tafs/{id}/doors` over `body` in its canonical form (Face ID or T
 and shows the door's first key once, as New key does. A cancelled Face ID sends nothing.
 
 **Android draws Coach's drafted door** (`show {type: "door", taf_id, draft_id}`, `DoorDraftCard` in `views/ApiDoorViews.kt`,
-behind `ApiDoorFeature`, off) as iOS does: it reads `GET /v1/tafs/{id}/doors/drafts/{draft}` (`contracts/doors-api-draft.json`)
+drawn wherever tafs cloud sends them (`ApiDoorFeature` is on: tafs cloud's `TAFS_API_DOORS` alone decides, per account)) as iOS does: it reads `GET /v1/tafs/{id}/doors/drafts/{draft}` (`contracts/doors-api-draft.json`)
 and draws from `body`, never the `draft` copy beside it or Coach's words (`DoorDraft.read`): the application's name, what it may
 do, what the taf does, the fields it sends, the outcomes it gets back, its own words' risk when `text` is on, and the boundary.
 Approve, for whoever manages the taf, signs `POST …/doors` over `body` in its canonical form (RFC 8785, `Jcs`) with the
-fingerprint and sends those same bytes (`AppModel.approveDoorDraft`); the door's first key is then shown once, as New key's
-(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`).
+fingerprint and sends those same bytes (`AppModel.approveDoorDraft`); the door's first key is then shown once, as New key's, in a secure window (never in a screenshot or the recents
+screen: `SecureFlagPolicy.SecureOn` on the key's own dialog, `SecretWindowsTest`)
+(`coachsDoorDraftIsDrawnFromTheBodyItSignsInCanonicalForm`, `approvingCoachsDoorDraftSignsExactlyItsBodyAndSendsThoseBytes`). Read again once a door was made
+from it, the card says tafs cloud's `draft_used` words as done (the ok colour, with no Approve), and a lapsed draft's
+`draft_lapsed` words as a problem (`aUsedDoorDraftReadsAsDoneNotAsAFailure`).
 
 ### Setting up a deployment
 
