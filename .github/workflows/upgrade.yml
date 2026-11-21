@@ -28,7 +28,7 @@ on:
         type: string
         default: ""
       eval_report_only:
-        description: "Only with the owner's go on the thread, before launch: the latest Eval is read as a report, not a gate. A short reason (blank: the gate stands)"
+        description: "Only with the owner's go on the thread, before launch (until 28 Nov 2026): \"<the latest completed Eval run id> <reason>\", that run read as a report, not a gate (blank: the gate stands)"
         type: string
         default: ""
 permissions:
@@ -135,10 +135,16 @@ jobs:
           fi
           # The owner's go before launch: the Eval is a report, not a gate. Its conclusion and run are this run's record; the
           # definitions rolled out must still be the ones it measured (the sources check below), so nothing unmeasured ships.
+          # Bound as the decision is: the run it names (the latest completed Eval, as rule_b_run), and a date after which the gate
+          # is a gate again without anyone removing this.
           if [ -n "$EVAL_REPORT_ONLY" ]; then
             [ -z "$RULE_B_RUN$OWNER_OVERRIDE" ] || { echo "::error::eval_report_only goes alone, without rule_b_run or owner_override"; exit 1; }
-            [ ${#EVAL_REPORT_ONLY} -le 200 ] || { echo "::error::eval_report_only is a short reason, 200 characters at most"; exit 1; }
-            echo "Eval as a report (the owner's go before launch): run $run_id concluded $conclusion. Reason: $EVAL_REPORT_ONLY" | tee -a "$GITHUB_STEP_SUMMARY"
+            [ "$(date -u +%Y%m%d)" -le 20261128 ] || { echo "::error::eval_report_only was the owner's pre-launch go; it has expired"; exit 1; }
+            read -r named reason <<<"$EVAL_REPORT_ONLY"
+            [[ "$named" =~ ^[0-9]+$ && -n "$reason" && ${#EVAL_REPORT_ONLY} -le 200 ]] \
+              || { echo "::error::eval_report_only is \"<Eval run id> <reason>\", 200 characters at most"; exit 1; }
+            [ "$named" = "$run_id" ] || { echo "::error::eval_report_only names $named, not the latest completed Eval on main ($run_id)"; exit 1; }
+            echo "Eval as a report (the owner's go before launch): run $run_id concluded $conclusion. Reason: $reason" | tee -a "$GITHUB_STEP_SUMMARY"
             conclusion=success
           fi
           if [ "$conclusion" = success ] && git diff --quiet "$ref" HEAD -- $sources; then

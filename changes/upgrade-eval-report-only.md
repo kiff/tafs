@@ -1,1 +1,1 @@
-- **Upgrade:** before launch, with the owner's go, `eval_report_only` reads the latest Eval as a report, not a gate: its run and conclusion are recorded, and the definitions rolled out must still be the ones it measured.
+- **Upgrade:** before launch (until 28 Nov 2026), with the owner's go, `eval_report_only` ("<run id> <reason>") reads the latest Eval, the run it names, as a report, not a gate: its run and conclusion are recorded, and the definitions rolled out must still be the ones it measured.
