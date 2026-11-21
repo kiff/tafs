@@ -198,6 +198,10 @@ struct TafTurnRow: View {
                 case nil:
                     EmptyView()
                 }
+                // When the answer came (row 44, C), small, under it, as Wear OS shows it.
+                if let at = answer?.at {
+                    Text(ChatTime.time(at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
+                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)

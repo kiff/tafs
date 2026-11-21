@@ -55,4 +55,16 @@ final class ChatTimeTests: XCTestCase {
         let read = try! JSONDecoder().decode(WatchReply.self, from: JSONEncoder().encode(reply))
         XCTAssertEqual(read.zone, "Europe/Paris", "the phone sends the account's zone with a taf's chat")
     }
+
+    /// dev-android's parity point 2: an ended request carries when its answer came (tafs cloud's `updated`), and the
+    /// answer the watch gets keeps it, so the wrist shows it under the answer as Wear OS does.
+    func testAnAnswerCarriesWhenItCame() throws {
+        let json = #"{"id":"a1","state":"done","words":"Done","updated":"2026-11-20T13:05:00.123Z"}"#
+        let asked = try JSONDecoder().decode(TafsCloud.WatchAsk.self, from: Data(json.utf8))
+        XCTAssertEqual(asked.updated, TafsCloud.WatchAsk.instant("2026-11-20T13:05:00.123Z"))
+        XCTAssertNotNil(asked.updated)
+        let reply = KeptWatchReading.reply(asked)
+        XCTAssertEqual(reply.coach?.at, asked.updated)
+        XCTAssertNil(TafsCloud.WatchAsk.instant("not a time"))
+    }
 }

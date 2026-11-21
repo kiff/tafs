@@ -297,6 +297,8 @@ struct WatchCoachAnswer: Codable, Equatable, Sendable {
     var more: Bool
     /// The answer holds a card or a step: "Approve on your phone", and nothing of it here.
     var approveOnPhone: Bool
+    /// When the answer came, shown under it on the wrist (row 44, C), as Wear OS does. None from an older phone.
+    var at: Date? = nil
 
     /// The most of a whole answer (Read more) the wrist takes: tafs cloud caps it at 16 KB, and the watch never holds more.
     static let wholeLength = 16_000
