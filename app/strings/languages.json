@@ -1,5 +1,5 @@
 {
-  "all": ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el"],
+  "all": ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt"],
   "shipped": ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"],
   "variants": {
     "pt-BR": "pt"

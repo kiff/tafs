@@ -1,0 +1,13 @@
+{
+  "halt.again": "Sustabdyti dar kartą",
+  "halt.all_now": "Sustabdyti visus dabar",
+  "halt.explain.halted": "Sustabdyta. Tęsiant pradedamas tik naujas darbas.",
+  "halt.explain.halted_since": "Nuo {time}. Tęsiant pradedamas tik naujas darbas.",
+  "halt.explain.halting": "Nieko naujo nepradedama. „Sustabdyta“ rodoma, kai tai patvirtina ir KIFF, ir ryšys.",
+  "halt.explain.running_all": "Sustabdžius jūsų taf nedirbs, kol netęsite. Jau išsiųsta užklausa vis tiek gali būti gauta.",
+  "halt.explain.running_one": "Sustabdžius jis nedirbs, kol netęsite. Jau išsiųsta užklausa vis tiek gali būti gauta.",
+  "halt.halting_stops_no_run_starts": "Sustabdžius {who} nedirbs, kol netęsite. Jau išsiųsta užklausa vis tiek gali būti gauta.",
+  "halt.now": "Sustabdyti dabar",
+  "halt.row_running": "Sustabdyti, kol netęsite",
+  "halt.your_tafs_lower": "jūsų taf"
+}
