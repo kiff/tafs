@@ -1,0 +1,8 @@
+{
+  "chrome.code_body": "No Chrome, abra a extensão tafs e digite este código. Ele vale por 10 minutos.",
+  "chrome.code_title": "Digite este código no Chrome",
+  "chrome.footer": "Seus tafs só podem usar um Chrome associado nos sites que uma conexão indica, e você aprova aqui os passos arriscados.",
+  "chrome.only_yours": "Associe apenas um Chrome em um computador que esteja à sua frente.",
+  "chrome.profile_note": "O tafs trabalha em seu próprio perfil do Chrome. Faça login lá apenas nos sites que você quer que seus tafs usem.",
+  "chrome.waiting": "Aguardando o Chrome…"
+}
