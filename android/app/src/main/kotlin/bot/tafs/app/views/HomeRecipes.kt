@@ -112,7 +112,14 @@ private fun CategoryChip(title: String, selected: Boolean, color: androidx.compo
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun JobRow(recipe: Recipe, color: androidx.compose.ui.graphics.Color?, onClick: () -> Unit) {
-  val edge = Modifier.drawBehind { if (color != null) drawRect(color, size = androidx.compose.ui.geometry.Size(4.dp.toPx(), size.height)) }
+  // On the start edge: the right, in right to left.
+  val edge = Modifier.drawBehind {
+    if (color != null) {
+      val bar = 4.dp.toPx()
+      val x = bot.tafs.app.design.Directions.startEdgeX(size.width, bar, layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
+      drawRect(color, topLeft = androidx.compose.ui.geometry.Offset(x, 0f), size = androidx.compose.ui.geometry.Size(bar, size.height))
+    }
+  }
   Panel(modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).then(edge).tapping(onClick = onClick)) {
     Text(recipe.headline.ifBlank { recipe.title }, style = scaled(16, FontWeight.SemiBold, Theme.ink))
     if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(14, color = Theme.soft))

@@ -1710,11 +1710,18 @@ on the left.
 - **A value inside a right-to-left line is set apart** (`Res.isolated`): in Arabic, Hebrew and the other right-to-left
   languages, each text value `Res.s` and `Res.p` fill in is wrapped in U+2068 … U+2069 with its own direction characters
   taken out, so a Latin name or an amount keeps its direction without turning the sentence (as iOS's #1557). Left to
-  right, values are as passed. **What the app copies** (`Res.clip`: a key, an address, a receipt, a sign-in link, a
+  right, values are as passed. The rule is `watchlink`'s `Bidi`, so the watch fills its lines the same way
+  (docs/watch-wear.md). A count (`%d`) is written in the line's language's digits, as `String.format` does: Arabic-Indic
+  in Arabic (٣ for 3). An amount or a code, sent as text, stays as sent. **What the app copies** (`Res.clip`: a key, an address, a receipt, a sign-in link, a
   message, an answer) carries no direction character.
 - **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
   text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
   the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.
+- **What's drawn, slid or dragged by hand mirrors too** (`design/Directions`): Compose mirrors a layout, but not a
+  `drawBehind`'s coordinates, a slide's pixels or a drag's delta, which are always from the left. So a job's colour edge is
+  on the start side, the Card's ring at the top end corner, and Coach comes in from the end edge (the left, in right to
+  left), on a phone as a screen and on a tablet as the panel, whose handle widens it when dragged towards the start.
+  `RtlTest` checks each rule and refuses a slide or a drag fixed to the right.
 - **The pictures:** `RtlScreenshots` draws sign-in, the tafs, a taf's chat, Account, Files and Devices right to left, on a
   tablet's 1280 × 800 dp window, into `docs/screenshots/android/rtl/` (`-PrtlScreenshots`). With the app's English, so what
   moves is the layout. Each test checks it was laid out right to left.
