@@ -222,7 +222,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "unclaimedDrafts" | "getRun" | "runByKey" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "checkTool" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" | "listFiles" | "readDeliveredFile" | "downloadDeliveredFile" | "deleteDeliveredFile" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
@@ -7667,6 +7667,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     // on its agent, listed here as Home lists a live taf's `card.ids`, then asks tafs cloud.
     return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? {
       finish: { taf: half.coach, session: half.session, words: w.home_finish_setup },
+    } : {}), ...(half.own ? {
       discard: { cards: (cards.get(agent) ?? []).map((c) => c.id), words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
     } : {}) }];
   });
@@ -7725,7 +7726,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
  * A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped while that
  * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
  */
-interface HalfMade { name: string; coach?: string; session?: string }
+/** `own`: its starter is the person reading, so Home offers Discard (and Finish, with the chat). */
+interface HalfMade { name: string; coach?: string; session?: string; own?: boolean }
 
 /**
  * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (a Discard
@@ -7752,7 +7754,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
       if (held && held.agent_id === agent && !held.claimed) found = r;
     }
   }
-  if (!found || !coach) {
+  // No chat shows its result any more: the setup's own unclaimed draft for that agent, started by this person, proves it.
+  const drafted = !found && coach ? (await (deps.agents.unclaimedDrafts?.(me.tenantID) ?? Promise.resolve([])).catch(() => []))
+    .some((d) => d.agent_id === agent && d.requester?.kind === "member" && d.requester.id === me.subject) : false;
+  if ((!found && !drafted) || !coach) {
     // A discard of a draft this person already discarded (a phone's HTTP stack resends a POST on a dropped connection, and the
     // app sees only the resend's answer) answers done again, marked already: 404 stays for a draft that never was, or isn't theirs.
     const done = (await deps.coach?.get(discardedKey(me.tenantID, agent)).catch(() => undefined)) as { by?: string } | undefined;
@@ -7780,10 +7785,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
   }
   // A run that already moved on is a chat that no longer waits: that's done too. One kiff/agents can't cancel (paused on its
   // result card) is kept as ended here (endCoachRun).
-  await endCoachRun(deps, me.tenantID, coach.id, found, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
+  if (found) await endCoachRun(deps, me.tenantID, coach.id, found, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
   await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
-  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
+  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, ...(found ? { run: found.id } : { by: "draft" }) }));
   await tellChange(me.tenantID, "taf", agent, deps);
   return { discarded: true, kiff_agent: agent };
 }
@@ -8188,8 +8193,24 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
       // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
       // would answer "no such chat" (#873).
       const own = r.requester?.kind === "member" && r.requester.id === me.subject;
-      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session } : {}) });
+      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session, own } : {}) });
     }
+  }
+  // A Card approved for the setup's draft whose chat never showed its result (it ended first, or its result was answered
+  // "never approved" before the Card was): no result names it, but kiff/agents still holds the setup's unclaimed draft for
+  // that agent. That's proof too, so the agent is listed as being set up, with Discard for its starter, never left acting
+  // where no screen shows it. A read that fails, or a kiff/agents without the route, adds none.
+  const drafts = coach ? await (deps.agents.unclaimedDrafts?.(tenant) ?? Promise.resolve([])).catch(() => []) : [];
+  for (const d of drafts) {
+    if (!agents.has(d.agent_id) || out.has(d.agent_id) || named.has(d.agent_id)) continue;
+    const own = d.requester?.kind === "member" && d.requester.id === me.subject;
+    const name = typeof d.name === "string" ? d.name.trim() : "";
+    const kept = name ? undefined : await deps.coach?.get(halfMadeKey(tenant, d.agent_id)).catch(() => undefined) as { name?: unknown } | undefined;
+    const shown = name || (typeof kept?.name === "string" ? kept.name : "");
+    // Listed by the name Coach gave it, never by its agent's id: without one it stays as before.
+    if (!shown) continue;
+    named.add(d.agent_id);
+    out.set(d.agent_id, { name: shown, ...(own ? { own } : {}) });
   }
   if (!deps.coach) return out;
   const store = deps.coach;

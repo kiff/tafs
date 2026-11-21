@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { AgentsError, type AIBound, type AttachmentRef, type DeliveredFile, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
+import { AgentsError, type AIBound, type AttachmentRef, type DeliveredFile, type Notify, type AgentDefinition, type AgentVersion, type Fired, type Note, type Requester, type Run, type RunAt, type Schedule, type Session, type SessionEvent, type Switching, type Trial, type TrialSummary, type TrialWrite } from "../src/cloud/agents.js";
 import type { CoachStore } from "../src/cloud/coach.js";
 import type { Accounts, AgentsAPI, Archived, Claim, Claims, Keys, Names, Removal, Removals, Slots, Taf, Tafs } from "../src/cloud/handler.js";
 
@@ -49,7 +49,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
   const events = new Map<string, SessionEvent[]>();
   const notes = new Map<string, Note[]>();
   /** Drafts Setup submitted (kiff/agents#94): draft id → its agent, and where its key was claimed. */
-  const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string }>();
+  const setupDrafts = new Map<string, { tenant: string; agent: string; keyRef?: string; name?: string; requester?: Requester }>();
   const fail = new Map<string, AgentsError | Error>();
   /** Schedules whose check finds nothing new: firing one by hand starts no run, as a quiet firing in kiff/agents. */
   const quiet = new Set<string>();
@@ -592,6 +592,12 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (o?.outcome === "failed_check") throw new AgentsError(409, o.reason ?? "the check couldn't read", undefined, "failed_check");
       if (o) return { outcome: o.outcome };
       return newRun(tenant, s.agent, openSession(tenant, s.agent, "run").id, "schedule", s.input, id);
+    },
+    async unclaimedDrafts(tenant) {
+      calls.push("unclaimedDrafts");
+      failing("unclaimedDrafts");
+      return [...setupDrafts].filter(([, d]) => d.tenant === tenant && !d.keyRef)
+        .map(([id, d]) => ({ draft_id: id, agent_id: d.agent, ...(d.name ? { name: d.name } : {}), ...(d.requester ? { requester: d.requester } : {}) }));
     },
     async tafDraft(tenant, draftID) {
       calls.push(`tafDraft ${draftID}`);
