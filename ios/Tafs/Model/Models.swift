@@ -511,9 +511,8 @@ struct BrowserStep: Hashable, Codable {
     /// The masked page's title and a short excerpt around the element.
     var pageTitle: String?
     var pageText: String?
-    /// The basket as read at that moment, when it's a checkout: its lines and total, as sent.
+    /// The basket's lines as read at that moment, when it's a checkout. Its total is KIFF's amount on the card.
     var basket: [String] = []
-    var total: String?
     /// The paired Chrome it would run in, by the name the owner gave it.
     var chromeName: String?
 }

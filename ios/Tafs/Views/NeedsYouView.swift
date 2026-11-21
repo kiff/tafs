@@ -607,8 +607,8 @@ struct SetAllAsideButton: View {
 }
 
 /// A held browser step's place on the card (docs/chrome.md, "The approval card"): the site large and its exact origin
-/// small, the paired Chrome it would run in, what the page showed around the element, and the basket when it's a
-/// checkout. Every line is planque's or the page's, drawn verbatim: never markup, never a link.
+/// small, the paired Chrome it would run in, what the page showed around the element, and the basket's lines when it's
+/// a checkout (its total is KIFF's amount, at the top of the card). Every line is planque's or the page's, drawn verbatim: never markup, never a link.
 struct BrowserStepBlock: View {
     let step: BrowserStep
 
@@ -640,16 +640,13 @@ struct BrowserStepBlock: View {
                     }
                 }
             }
-            if !step.basket.isEmpty || step.total != nil {
+            if !step.basket.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Words.Chrome.heldBasket)
                         .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
                     ForEach(Array(step.basket.enumerated()), id: \.offset) { _, line in
                         Text(verbatim: line).scaledFont(13).foregroundColor(Theme.ink)
                             .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if let total = step.total {
-                        Text(verbatim: total).scaledFont(15, weight: .bold).foregroundColor(Theme.ink)
                     }
                 }
             }

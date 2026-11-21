@@ -323,8 +323,6 @@ enum KIFFMapping {
             call.browser = step
             // The act in planque's words is what the card asks, not the tool's name.
             call.proposed.summary = step.actionWords
-            // The taf's reason rides with the step when KIFF kept none of its own.
-            if call.tafReason == nil { call.tafReason = tafWords(e.browser?.reason, max: 280) }
         }
         return call
     }
@@ -336,8 +334,6 @@ enum KIFFMapping {
         guard let b, let site = tafWords(b.site, max: 253), let act = tafWords(b.actionWords, max: 200) else { return nil }
         let context = b.context?.value
         let checkout = b.checkout?.value
-        let total = checkout?.total.flatMap { tafWords($0.text, max: 60) }
-        let currency = checkout?.currency.flatMap { tafWords($0, max: 8) }
         return BrowserStep(
             site: site,
             origin: tafWords(b.origin, max: 300),
@@ -345,8 +341,6 @@ enum KIFFMapping {
             pageTitle: tafWords(context?.title, max: 200),
             pageText: tafWords(context?.text, max: 600),
             basket: Array((checkout?.lines ?? []).compactMap { tafWords($0.value, max: 200) }.prefix(20)),
-            // A bare number gets its currency beside it; a total planque already wrote out ("€4.30") is drawn as sent.
-            total: total.map { t in currency.map { t.allSatisfy { $0.isNumber || $0 == "." || $0 == "," } ? "\(t) \($0)" : t } ?? t },
             chromeName: tafWords(b.chrome?.value?.name, max: 80)
         )
     }

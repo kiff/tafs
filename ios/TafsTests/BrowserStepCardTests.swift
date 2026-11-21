@@ -1,19 +1,20 @@
 import XCTest
 @testable import Tafs
 
-/// A held browser step (docs/chrome.md, "The approval card"): planque sends `browser` beside the held operation, and
-/// the card draws it as sent. The site and planque's words for the act are what the owner approves; the page's
-/// context and the basket are words to read, never anything the app acts on.
+/// A held browser step (docs/chrome.md, "The approval card"): KIFF's held-call view carries `browser`, in planque's
+/// words, and the card draws it as sent. The site and planque's words for the act are what the owner approves; the
+/// page's context and the basket's lines are words to read, never anything the app acts on. The taf's reason and the
+/// total are KIFF's own, as for any hold.
 @MainActor
 final class BrowserStepCardTests: XCTestCase {
     private struct List: Decodable { let exceptions: [KIFFClient.CardException] }
 
-    private func held(browser: String?, arguments: String = #"{"ref":"e12","kiff_operation_id":"op_1"}"#) throws -> HeldCall {
+    private func held(browser: String?, kiff: String = "") throws -> HeldCall {
         let block = browser.map { #","browser":"# + $0 } ?? ""
         let body = #"""
         {"exceptions":[{"id":"ce_1","subject":"shopper-k5j6m5qx","action":"browse_click","title":"Click in Chrome","entity_id":"st_1",
           "status":"held","breaches":[{"outcome":"held_always","reason":"A pay step always asks you"}],
-          "arguments":\#(arguments)\#(block),
+          "arguments":{"ref":"e12","kiff_operation_id":"op_1"}\#(kiff)\#(block),
           "created_at":"2026-11-21T14:00:00.000Z","expires_at":"2026-11-21T14:10:00Z"}]}
         """#
         let e = try KIFFClient.decoder.decode(List.self, from: Data(body.utf8)).exceptions[0]
@@ -22,16 +23,15 @@ final class BrowserStepCardTests: XCTestCase {
 
     private let checkout = #"""
     {"site":"shop.example","origin":"https://checkout.shop.example","action_words":"Click “Place order”",
-     "reason":"Your weekly groceries, as agreed",
      "context":{"title":"Checkout – Shop","text":"Delivery Tuesday 8–10am. Place order"},
-     "checkout":{"lines":["Milk ×2  €2.40","Bread  €1.90"],"total":"€4.30","currency":"EUR"},
+     "checkout":{"lines":["Milk ×2  €2.40","Bread  €1.90"]},
      "chrome":{"id":"chr_1","name":"Work laptop"}}
     """#
+    private let kiffsOwn = #","parameters":{"amount":430},"parameter_units":{"amount":{"unit":"EUR","scale":2}},"taf_reason":"Your weekly groceries, as agreed""#
 
-    /// Every part of the shape reads: the act is what the card asks, the taf's reason sits under "The taf says", and
-    /// the block itself isn't listed again under Details.
+    /// Every part of the shape reads: the act is what the card asks, and the total and the taf's reason are KIFF's.
     func testAHeldCheckoutStepReadsWhole() throws {
-        let call = try held(browser: checkout)
+        let call = try held(browser: checkout, kiff: kiffsOwn)
         let step = try XCTUnwrap(call.browser)
         XCTAssertEqual(step.site, "shop.example")
         XCTAssertEqual(step.origin, "https://checkout.shop.example")
@@ -39,26 +39,24 @@ final class BrowserStepCardTests: XCTestCase {
         XCTAssertEqual(step.pageTitle, "Checkout – Shop")
         XCTAssertEqual(step.pageText, "Delivery Tuesday 8–10am. Place order")
         XCTAssertEqual(step.basket, ["Milk ×2 €2.40", "Bread €1.90"], "one plain line each, runs of space as one")
-        XCTAssertEqual(step.total, "€4.30", "the currency isn't added twice")
         XCTAssertEqual(step.chromeName, "Work laptop")
         XCTAssertEqual(call.proposed.summary, "Click “Place order”", "planque's words for the act, not the tool's name")
-        XCTAssertEqual(call.tafReason, "Your weekly groceries, as agreed")
+        XCTAssertEqual(call.proposed.amount, Money(minor: 430, currency: "EUR", scale: 2), "the total is KIFF's amount")
+        XCTAssertEqual(call.tafReason, "Your weekly groceries, as agreed", "the taf's reason is KIFF's taf_reason")
         XCTAssertEqual(call.reason, "A pay step always asks you", "KIFF's rule stays KIFF's")
         XCTAssertEqual(call.details, ["ref: e12"])
     }
 
-    /// A step that isn't a checkout has no basket; a total without its currency sign gets the currency beside it.
+    /// A step that isn't a checkout has no basket, and nothing that wasn't sent is drawn.
     func testOnlyWhatsSentIsDrawn() throws {
         let call = try held(browser: #"{"site":"news.example","action_words":"Click “Next page”"}"#)
         let step = try XCTUnwrap(call.browser)
         XCTAssertNil(step.origin)
         XCTAssertNil(step.pageTitle)
         XCTAssertEqual(step.basket, [])
-        XCTAssertNil(step.total)
         XCTAssertNil(step.chromeName)
         XCTAssertNil(call.tafReason)
-        let bare = try held(browser: #"{"site":"s.example","action_words":"Click “Pay”","checkout":{"total":4.3,"currency":"EUR"}}"#)
-        XCTAssertEqual(bare.browser?.total, "4.3 EUR")
+        XCTAssertNil(call.proposed.amount)
     }
 
     /// The page's words come from the site, so they're plain lines: no control or direction character, never markup,

@@ -245,24 +245,26 @@ planque masks again whatever the extension sends.
 
 ## The approval card
 
-A step that waits for the owner reaches the phone as any held operation does, with a `browser` block beside it. The
-phone signs it exactly as it signs any held operation, over the operation's digest, so the `browser` block it draws is
-inside what's signed. Every word comes from planque, and the apps only draw it:
+A step that waits for the owner is a hold like any other, and the phone reads it from the same held-call view. When the
+held call is a browser tool's, the view also carries a `browser` block, in planque's words, from the read the step was
+built on, masked. The apps only draw it:
 
 ```
 browser: {
   site: "shop.example",                     // the registrable domain, drawn large
   origin: "https://checkout.shop.example",  // drawn small, punycode as sent
   action_words: "Click “Place order”",      // the verb and the element's own visible label
-  reason: "…",                              // the taf's own words, under "The taf says"
   context: {title, text},                   // the masked page's title and an excerpt around the element (≤ 600)
-  checkout: {lines, total, currency},       // only on a checkout, as read at that moment
+  checkout: {lines},                        // only on a checkout, the basket's lines as read at that moment
   chrome: {id, name}                        // which paired Chrome
 }
 ```
 
-- **The act is what the card asks.** `action_words` takes the place of the tool's name, and KIFF's amount, rule and
-  answers stay as they are for any held call.
+- **The act is what the card asks.** `action_words` takes the place of the tool's name. The total is the hold's own
+  amount, the taf's reason is its own `taf_reason`, and the rule and answers stay as they are for any held call.
+- **The words approved are the words shown.** The hold's signed answer covers the block's JCS SHA-256, so the phone signs
+  over what it drew. Until that's in the answer's signed message, the phone signs as for any hold.
+- **Without the block,** a held browser step shows the hold's summary, amount and reason, as any hold does.
 - **The page's words come from the site.** Each is drawn as one plain line, verbatim: no markup, no link, no control or
   direction character, cut to its cap. The app never acts on them.
 - **A block that can't be read is left out, never the hold.** Without a `site` or `action_words`, the hold reads as
