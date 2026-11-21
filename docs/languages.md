@@ -192,6 +192,44 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
 
+## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
+`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
+
+### Latvian (lv)
+
+Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,
+Card and Coach take no endings, and the plural is "taf" ("{count} taf"), as the legal drafts write it; Setup stays a
+name. A value stands alone ("šajā ierīcē ({device})", "Durvis: {door}"), and a line another line fills is written in
+the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… locative).
+
+| English | Latvian |
+|---|---|
+| Needs you | Gaida tevi |
+| Approve / Approve once | Apstiprināt / Apstiprināt vienreiz |
+| Refuse | Atteikt |
+| held | aizturēts |
+| Halt / Halted | Apturēt / Apturēts |
+| Stopped | Pārtraukts |
+| Pause / Paused | Iepauzēt / Iepauzēts |
+| Resume | Turpināt |
+| Revoke | Atsaukt |
+| Record | Žurnāls |
+| Connect / connection | Pievienot / savienojums |
+| Pair | Savienot pārī |
+| Account | Konts |
+| limit / spend limit | limits / tēriņu limits |
+| credits / credit pack | kredīti / kredītu pakete |
+| Sign in / Sign out | Pierakstīties / Izrakstīties |
+| Inbox | Iesūtne |
+| Overview | Pārskats |
+| Calendar | Kalendārs |
+| Usage | Lietojums |
+| plan | plāns |
+| door / knock | durvis / klauvējiens |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Jautā KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Tas nesasniedza KIFF. Mēģini vēlreiz.",
+  "kiff.kiff_can_not_do_sign": "KIFF to vēl nevar izdarīt: vēlreiz pieraksties no iestatījumiem, lai apstiprinātu no šīs ierīces ({device}).",
+  "kiff.kiff_did_not_answer_expected": "KIFF neatbildēja, kā gaidīts. Mēģini vēlreiz.",
+  "kiff.kiff_words_do_not_match": "KIFF formulējums neatbilst tā pārbaudei. Neko nevar apstiprināt."
+}
