@@ -843,7 +843,7 @@ struct SetupChatsList: View {
     @State private var notArchived: String?
     /// The conversation waiting for the owner's yes to archive it.
     @State private var confirming: TafsCloud.Chat?
-    /// W11: the watch's conversations, one a day (`WatchDaysFeature`, off).
+    /// W11: the watch's conversations, one a day.
     @State private var watchDays: WatchDaysModel?
 
     var body: some View {
@@ -894,7 +894,7 @@ struct SetupChatsList: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
             .task {
                 await model.loadSetupChats()
-                guard WatchDaysFeature.on, model.mode == .kiff else { return }
+                guard model.mode == .kiff else { return }
                 let zone = model.kiffAccount?.timeZone.flatMap(TimeZone.init(identifier:)) ?? .current
                 let days = watchDays ?? WatchDaysModel(reading: model.cloud, zone: zone)
                 watchDays = days

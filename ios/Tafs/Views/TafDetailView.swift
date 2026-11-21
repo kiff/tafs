@@ -212,7 +212,7 @@ struct TafDetailView: View {
         VStack(alignment: .leading, spacing: 6) {
             // One line, Files first: "Files · Version 5 · live" (docs/files.md, the owner's 19 Nov test).
             HStack(spacing: 2) {
-                if FilesFeature.on, let cloud = model.cloudTaf(for: taf.id) {
+                if let cloud = model.cloudTaf(for: taf.id) {
                     TafFilesEntry(taf: cloud.id, store: CloudFilesStore(cloud: model.cloud))
                     if showsVersions(taf) {
                         Text(verbatim: "·").scaledFont(15, weight: .bold).foregroundColor(Theme.dim).accessibilityHidden(true)

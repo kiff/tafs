@@ -59,19 +59,11 @@ final class WatchDaysTests: XCTestCase {
         XCTAssertNotEqual(WatchTurnRow.time(late, zone: paris, locale: en), WatchTurnRow.time(late, zone: utc, locale: en))
     }
 
-    func testWithTheSwitchOffNothingIsRead() async {
-        let reading = Reading()
-        reading.days = .init(days: [.init(date: "2026-11-19", count: 1)], today: "2026-11-19")
-        let model = WatchDaysModel(reading: reading, on: false)
-        await model.load()
-        XCTAssertTrue(model.days.isEmpty)
-    }
-
-    /// A read that fails shows no section, as with the switch off: never an error in Previous conversations.
+    /// A read that fails shows no section: never an error in Previous conversations.
     func testTheDaysOrNoneWhenTheReadFails() async {
         let reading = Reading()
         reading.days = .init(days: [.init(date: "2026-11-19", count: 3), .init(date: "2026-11-18", count: 8)], today: "2026-11-18")
-        let model = WatchDaysModel(reading: reading, on: true)
+        let model = WatchDaysModel(reading: reading)
         await model.load()
         XCTAssertEqual(model.days.map(\.date), ["2026-11-19", "2026-11-18"], "newest first, as tafs cloud sends them")
         // The account's today, not the phone's: on an account a day behind the phone, "Today" is the 18th (agentgabo's read).
@@ -85,7 +77,7 @@ final class WatchDaysTests: XCTestCase {
     func testADayOpensWithItsTurnsOrSaysWhy() async {
         let reading = Reading()
         reading.turns = TafsCloud.watchTurns(decoding: Data(dayJSON.utf8))
-        let model = WatchDaysModel(reading: reading, on: true)
+        let model = WatchDaysModel(reading: reading)
         await model.open("2026-11-19")
         XCTAssertEqual(model.day, .loaded(reading.turns))
         XCTAssertEqual(reading.dayReads, ["2026-11-19"])
@@ -103,7 +95,7 @@ final class WatchDaysTests: XCTestCase {
     func testALateDayIsNeverDrawn() async {
         let reading = Reading()
         reading.holds = true
-        let model = WatchDaysModel(reading: reading, on: true)
+        let model = WatchDaysModel(reading: reading)
         let opening = Task { await model.open("2026-11-18") }
         while reading.held == nil { await Task.yield() }
         model.close()
