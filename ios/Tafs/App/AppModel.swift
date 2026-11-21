@@ -1334,6 +1334,12 @@ final class AppModel: ObservableObject {
 
     func openChromePairing() async -> ChromePairingInProgress? {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        // Only the approval key pairs a Chrome: the extension later opens a sealed sign-in only on that key's release, and
+        // only that key checks the Face ID itself. A phone without one says so, as Android does.
+        guard !signer.approvalPublicKeyDER.isEmpty else {
+            chromesError = Words.Chrome.pairNotStarted(why: Words.Approval.viewOnly)
+            return nil
+        }
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
@@ -1374,14 +1380,15 @@ final class AppModel: ObservableObject {
             guard let offer = state.offer, let key = ChromePairing.base64URLDecoded(offer.key),
                   ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof) else { return .refused }
             return .offered(offer)
-        case "confirmed":
-            return .refused // confirmed already, and not by this sheet: nothing more to do here
+        case "contested", "confirmed":
+            // Another Chrome posted on this code (planque spends it), or it's confirmed already, not by this sheet.
+            return .refused
         default:
             return .waiting
         }
     }
 
-    /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key signs this phone's proof and
+    /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key, and only it, signs this phone's proof and
     /// the extension's key under the secret, and the extension later checks that signature itself. False when it didn't
     /// go through.
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String) async -> Bool {
@@ -1390,13 +1397,13 @@ final class AppModel: ObservableObject {
               ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof) else { return false }
         let gen = accountGeneration
         let name = ChromePairing.name(typed, browser: Words.Chrome.browserOn(browser: offer.browser, system: offer.os))
-        let approvalKey = signer.approvalPublicKeyDER
-        let phoneKey = approvalKey.isEmpty ? signer.publicKeyDER : approvalKey
+        let phoneKey = signer.approvalPublicKeyDER
+        guard !phoneKey.isEmpty else { return false }
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
         let reason = Words.Chrome.pairPrompt(name: name)
         do {
             let bytes = try ChromePairing.signedBytes(pairing: p.pairing, confirmation)
-            let der = approvalKey.isEmpty ? try await signer.sign(bytes, reason: reason, grants: true) : try await signer.signApproval(bytes, reason: reason)
+            let der = try await signer.signApproval(bytes, reason: reason)
             confirmation.phoneSig = try ChromePairing.rawSignature(fromDER: der)
         } catch {
             if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }

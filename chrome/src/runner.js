@@ -7,6 +7,7 @@ import { refuseURL, bareURL } from "./sites.js";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
+import { checkAllowances, checkSites } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
@@ -18,8 +19,9 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null }) {
     this.chrome = chrome;
+    this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
@@ -56,6 +58,7 @@ export class Runner {
       }
       run.tabs.add(d.tabId);
       this.tabRun.set(d.tabId, run.id);
+      this.fence(run, d.tabId).catch(() => {});
       if (run.groupId != null) c.tabs.group({ groupId: run.groupId, tabIds: [d.tabId] });
     });
     c.tabs.onRemoved.addListener((tabId) => {
@@ -65,6 +68,34 @@ export class Runner {
       this.tabRun.delete(tabId);
       if (run.tab === tabId) run.tab = [...run.tabs][0] ?? null;
     });
+  }
+
+  /**
+   * Chrome's own rules for a run's tab (declarativeNetRequest session rules): a page or frame request to any host
+   * outside the run's sites, or over plain http, is blocked before it's sent, whatever started it (a link, a redirect, a
+   * form). onBeforeNavigate stays as the record of a refused move, not the guard.
+   */
+  async fence(run, tabId) {
+    const dnr = this.chrome.declarativeNetRequest;
+    if (!dnr) return;
+    const base = tabId * 4;
+    const frames = ["main_frame", "sub_frame"];
+    const domains = [...new Set([...run.sites, ...run.allowed])];
+    await dnr.updateSessionRules({
+      removeRuleIds: [base + 1, base + 2, base + 3],
+      addRules: [
+        { id: base + 1, priority: 1, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames } },
+        { id: base + 2, priority: 2, action: { type: "allow" }, condition: { tabIds: [tabId], resourceTypes: frames, requestDomains: domains } },
+        { id: base + 3, priority: 3, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames, regexFilter: "^http://" } },
+      ],
+    });
+  }
+
+  async unfence(tabId) {
+    const dnr = this.chrome.declarativeNetRequest;
+    if (!dnr) return;
+    const base = tabId * 4;
+    await dnr.updateSessionRules({ removeRuleIds: [base + 1, base + 2, base + 3] }).catch(() => {});
   }
 
   runOfTab(tabId) {
@@ -138,7 +169,10 @@ export class Runner {
   }
 
   async closeRun(run) {
-    for (const t of run.tabs) this.tabRun.delete(t);
+    for (const t of run.tabs) {
+      this.tabRun.delete(t);
+      await this.unfence(t);
+    }
     if (run.windowId != null) await this.chrome.windows.remove(run.windowId).catch(() => {});
     run.tabs.clear();
     run.tab = null;
@@ -150,12 +184,18 @@ export class Runner {
    */
   async handle(step) {
     let run = this.runs.get(step.run);
+    if (run && !(Array.isArray(step.sites) && step.sites.every((s) => run.sites.includes(s)))) {
+      return { error: { code: "bad_step", detail: "a run's sites never grow" } };
+    }
     if (!run) {
+      // The grant's sites, as the paired phone signed them when the owner approved the grant: never planque's word alone.
+      if (!(await checkSites(step, this.paired()))) return { error: { code: "bad_step", detail: "the sites aren't the phone's" } };
       run = {
         id: step.run,
         taf: String(step.taf || "").slice(0, 60),
         sites: step.sites,
-        allowed: Array.isArray(step.sensitive_allowed) ? step.sensitive_allowed : [],
+        // A sensitive site opens only on the paired phone's own signed allowance for this grant, never planque's word.
+        allowed: await checkAllowances(step.sensitive_allowed, { ...(this.paired() || {}), grant: step.grant }),
         windowId: null,
         groupId: null,
         tabs: new Set(),
@@ -216,6 +256,8 @@ export class Runner {
       run.tab = tabId;
       run.tabs.add(tabId);
       this.tabRun.set(tabId, run.id);
+      // Fenced before it loads anything of the run's.
+      await this.fence(run, tabId);
       run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId: win.id } });
       await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
     }

@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Runner } from "../src/runner.js";
+import { LABEL, sign, newKeyPair, publicSPKI, b64u } from "../src/crypto.js";
+
+// The paired phone: it signs each grant's sites (tafs-chrome/sites/v1) and sensitive allowances.
+const phone = await newKeyPair();
+const paired = { chromeId: "chr_1", phoneKey: b64u(await publicSPKI(phone.publicKey)) };
+const signedSites = async (sites, grant = "g_1") => ({ sites, sig: await sign(phone.privateKey, LABEL.sites, { chrome_id: "chr_1", grant, sites }) });
+const SHOP = await signedSites(["shop.example"]);
+const PAYPAL = await signedSites(["paypal.com"]);
 
 /** A fake of the parts of Chrome's extension API the runner uses, recording every call. */
 function fakeChrome({ permitted = true, page = null } = {}) {
@@ -42,6 +50,7 @@ function fakeChrome({ permitted = true, page = null } = {}) {
       remove: async (id) => calls.push(["windows.remove", id]),
     },
     permissions: { contains: async () => permitted },
+    declarativeNetRequest: { updateSessionRules: async (o) => calls.push(["dnr", o]) },
     scripting: {
       executeScript: async (o) => {
         calls.push(["executeScript", o.files ? o.files.join(",") : o.world || "isolated", o.target.tabId]);
@@ -59,12 +68,14 @@ function fakeChrome({ permitted = true, page = null } = {}) {
 const sleep = async () => {};
 
 function step(extra) {
-  return { id: "op", run: "run_1", taf: "Rae", sites: ["shop.example"], op: "open", url: "https://shop.example/", ...extra };
+  return { id: "op", run: "run_1", taf: "Rae", grant: "g_1", sites: ["shop.example"], sites_signed: SHOP, op: "open", url: "https://shop.example/", ...extra };
 }
+
+const runner = (c) => new Runner({ chrome: c, sleep, paired: () => paired });
 
 test("a run opens in a background window of its own, grouped and named, and reads the page", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   const out = await r.handle(step());
   assert.equal(out.page.url, "https://shop.example/");
   const win = c.calls.find((x) => x[0] === "windows.create");
@@ -76,7 +87,7 @@ test("a run opens in a background window of its own, grouped and named, and read
 
 test("the runner never lists the owner's tabs", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   const opened = await r.handle(step());
   await r.handle(step({ op: "read" }));
   await r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c1" } }));
@@ -88,15 +99,17 @@ test("the runner never lists the owner's tabs", async () => {
 
 test("an open off the run's sites is refused before any window opens", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   assert.equal((await r.handle(step({ url: "https://evil.example/" }))).error.code, "site_not_listed");
-  assert.equal((await r.handle(step({ url: "https://www.paypal.com/", sites: ["paypal.com"], run: "run_2" }))).error.code, "site_blocked");
+  assert.equal((await r.handle(step({ url: "https://www.paypal.com/", sites: ["paypal.com"], sites_signed: PAYPAL, run: "run_2" }))).error.code, "site_blocked");
+  // planque saying the owner allowed it isn't enough: the allowance must be the paired phone's signature.
+  assert.equal((await r.handle(step({ url: "https://www.paypal.com/", sites: ["paypal.com"], sites_signed: PAYPAL, run: "run_3", sensitive_allowed: ["paypal.com", { site: "paypal.com", sig: "AAAA" }] }))).error.code, "site_blocked");
   assert.ok(!c.calls.some((x) => x[0] === "windows.create"));
 });
 
 test("a navigation in a run's tab that leaves its sites is stopped, and a pop-up off them is closed", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
   c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/steal" });
@@ -109,7 +122,7 @@ test("a navigation in a run's tab that leaves its sites is stopped, and a pop-up
 
 test("an act needs the read it was planned from, and the guard holds before the page is touched", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   const opened = await r.handle(step());
   assert.equal((await r.handle(step({ op: "act", read_id: "rd_unknown", act: { kind: "click", ref: "c1" } }))).error.code, "page_changed");
   const before = c.calls.filter((x) => x[0] === "executeScript").length;
@@ -120,7 +133,7 @@ test("an act needs the read it was planned from, and the guard holds before the 
 
 test("three failed acts in a row pause the run; Resume goes on", async () => {
   const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   await r.handle(step());
   c.setAct({ ok: false, code: "not_visible" });
   for (let i = 0; i < 3; i++) await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
@@ -132,7 +145,7 @@ test("three failed acts in a row pause the run; Resume goes on", async () => {
 
 test("the owner's input in a run's tab pauses it, and Stop closes its window", async () => {
   const c = fakeChrome();
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   await r.handle(step());
   const tab = [...c.tabsMap.keys()][0];
   r.ownerInput(tab);
@@ -145,9 +158,42 @@ test("the owner's input in a run's tab pauses it, and Stop closes its window", a
 
 test("a site Chrome hasn't let the extension into waits for the owner's yes in the side panel", async () => {
   const c = fakeChrome({ permitted: false });
-  const r = new Runner({ chrome: c, sleep });
+  const r = runner(c);
   const out = await r.handle(step());
   assert.equal(out.error.code, "needs_site_permission");
   assert.deepEqual(r.state()[0].asks, ["shop.example"]);
   assert.ok(!c.calls.some((x) => x[0] === "executeScript" && x[1] === "src/mask.js,src/page.js"), "nothing read without it");
+});
+
+test("a run's tab is fenced by Chrome's own rules before it loads: only its sites, never plain http", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const [, rules] = c.calls.find((x) => x[0] === "dnr");
+  const byPriority = Object.fromEntries(rules.addRules.map((x) => [x.priority, x]));
+  assert.deepEqual(byPriority[1].condition, { tabIds: [tab], resourceTypes: ["main_frame", "sub_frame"] });
+  assert.equal(byPriority[1].action.type, "block");
+  assert.deepEqual(byPriority[2].condition.requestDomains, ["shop.example"]);
+  assert.equal(byPriority[2].action.type, "allow");
+  assert.equal(byPriority[3].condition.regexFilter, "^http://");
+  const fenced = c.calls.findIndex((x) => x[0] === "dnr");
+  const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
+  assert.ok(fenced < loaded, "fenced before the run's page loads");
+  await r.stop("run_1");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, [tab * 4 + 1, tab * 4 + 2, tab * 4 + 3]);
+});
+
+test("a run's sites are the phone's signed list for the grant, never planque's word, and never grow", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  assert.equal((await r.handle(step({ sites_signed: undefined }))).error.code, "bad_step", "unsigned");
+  const planque = await newKeyPair();
+  const forged = { sites: ["shop.example"], sig: await sign(planque.privateKey, LABEL.sites, { chrome_id: "chr_1", grant: "g_1", sites: ["shop.example"] }) };
+  assert.equal((await r.handle(step({ sites_signed: forged }))).error.code, "bad_step", "signed by planque");
+  assert.equal((await r.handle(step({ grant: "g_2" }))).error.code, "bad_step", "another grant's list");
+  assert.equal((await r.handle(step({ sites: ["evil.example"] }))).error.code, "bad_step", "a site the list lacks");
+  assert.ok((await r.handle(step())).page);
+  assert.equal((await r.handle(step({ op: "read", sites: ["shop.example", "evil.example"] }))).error.code, "bad_step", "a run's sites never grow");
+  assert.ok(!c.calls.some((x) => x[0] === "windows.create" && false));
 });

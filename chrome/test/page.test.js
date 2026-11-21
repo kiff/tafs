@@ -40,6 +40,9 @@ const SHOP = `<!doctype html><html><head><title>Shop · checkout key sk_live_${"
 <label><input type="radio" name="ship" value="std"> Standard</label>
 <form id="pay"><input autocomplete="cc-number" aria-label="Card number"><button type="submit">Continue</button></form>
 <div><button class="paypal-button">→</button></div>
+<a href="#" onclick="window.__ordered = true">Place order</a>
+<a href="#top">Back to top</a>
+<a href="https://shop.example/help" target="_blank">Help in a new tab</a>
 </body></html>`;
 
 let browser;
@@ -92,6 +95,14 @@ test("a read names fields, controls and links by ref, and masks every secret", {
   assert.equal(read.controls.find((c) => c.label === "Continue").places_order, true, "the submit of a form with a card field");
   assert.equal(read.controls.find((c) => c.label === "→").places_order, true, "a payment provider's button");
   assert.equal(read.controls.find((c) => c.label === "Save").places_order, undefined);
+  // A link that acts (a script handler, or this page plus a fragment) is offered as a control, never as a link to follow.
+  assert.ok(read.controls.some((c) => c.label === "Place order"), "an onclick link is a control");
+  assert.ok(!read.links.some((l) => l.label === "Place order"));
+  assert.ok(read.controls.some((c) => c.label === "Back to top"), "a link to this page plus a fragment is a control");
+  assert.ok(read.links.some((l) => l.label === "Reset"), "a link to another page stays a link");
+  const help = read.links.find((l) => l.label === "Help in a new tab");
+  await page.evaluate(([r, id]) => TafsPage.act({ kind: "click", ref: r }, id), [help.ref, read.read_id]);
+  assert.equal(page.context().pages().length, 1, "it opened in this tab, inside the fence, not a new one");
   await page.close();
 });
 
@@ -153,6 +164,7 @@ test("the page's dialogs don't block: a confirm is never accepted, and the next 
   const read = await page.evaluate(() => TafsPage.read());
   assert.deepEqual(read.dialog, { kind: "confirm", text: "Delete everything?" });
   assert.equal(await page.evaluate(() => prompt("Your password?")), null);
+  assert.equal(await page.evaluate(() => window.open("https://evil.example/")), null, "no new window");
   assert.deepEqual(await page.evaluate((id) => TafsPage.act({ kind: "click", ref: "c1" }, id), read.read_id), { ok: false, code: "dialog_open" });
   await page.close();
 });

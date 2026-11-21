@@ -1000,6 +1000,14 @@ final class P256Signer: ApprovalSigning {
         return try key.signature(for: message).derRepresentation.base64EncodedString()
     }
     func signConfirmed(_ message: Data) throws -> String { try key.signature(for: message).derRepresentation.base64EncodedString() }
+    /// The approval key: the one that pairs a Chrome.
+    let approvalKey = P256.Signing.PrivateKey()
+    var withApprovalKey = true
+    var approvalPublicKeyDER: Data { withApprovalKey ? approvalKey.publicKey.derRepresentation : Data() }
+    func signApproval(_ message: Data, reason: String) async throws -> String {
+        prompts.append(reason)
+        return try approvalKey.signature(for: message).derRepresentation.base64EncodedString()
+    }
 }
 
 // MARK: Chrome (docs/chrome.md)
@@ -1045,7 +1053,7 @@ extension PlanqueTests {
         let maybeOpened = await model.openChromePairing()
         let opened = try XCTUnwrap(maybeOpened)
         XCTAssertEqual(opened.lookup, "K7QF")
-        XCTAssertEqual(opened.secret.count, 6)
+        XCTAssertEqual(opened.secret.count, 17)
         XCTAssertFalse(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings").contains { String(decoding: $0.httpBody ?? Data(), as: UTF8.self).contains(opened.secret) }, "the secret never leaves the phone")
 
         let chromeKey = P256.Signing.PrivateKey().publicKey.derRepresentation
@@ -1060,6 +1068,9 @@ extension PlanqueTests {
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(bad))
         let refused = await model.chromePairingStep(opened)
         XCTAssertEqual(refused, .refused, "another extension used the lookup")
+        StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, #"{"pairing":"pr_1","status":"contested"}"#)
+        let contested = await model.chromePairingStep(opened)
+        XCTAssertEqual(contested, .refused, "planque spent a code two Chromes posted on")
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (200, offer(good))
         guard case .offered(let proven) = await model.chromePairingStep(opened) else { return XCTFail("a proven offer is shown") }
         StubProtocol.responses["GET /v1/accounts/t_01/chromes/pairings/pr_1"] = (404, #"{"error":"no such pairing, or it expired"}"#)
@@ -1070,16 +1081,30 @@ extension PlanqueTests {
         StubProtocol.responses["GET /v1/accounts/t_01/chromes"] = (200, #"{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}"#)
         let paired = await model.confirmChrome(opened, offer: proven, name: " Work Mac ")
         XCTAssertTrue(paired, model.chromesError ?? "")
-        XCTAssertEqual(signer.prompts, [Words.Chrome.pairPrompt(name: "Work Mac")])
+        XCTAssertEqual(signer.prompts.filter { $0 == Words.Chrome.pairPrompt(name: "Work Mac") }.count, 1, "one prompt, naming the Chrome")
+        XCTAssertEqual(signer.prompts.last, Words.Chrome.pairPrompt(name: "Work Mac"))
         let sentBody = body(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings/pr_1/confirm").first)
-        let confirmation = ChromePairing.confirmation(secret: opened.secret, chromeKey: chromeKey, name: "Work Mac", phoneKey: signer.publicKeyDER)
+        let confirmation = ChromePairing.confirmation(secret: opened.secret, chromeKey: chromeKey, name: "Work Mac", phoneKey: signer.approvalPublicKeyDER)
         XCTAssertEqual(sentBody["phone_proof"] as? String, confirmation.phoneProof)
         XCTAssertEqual(sentBody["chrome_key_sha256"] as? String, ChromePairing.chromeKeyHash(chromeKey))
         let raw = try XCTUnwrap(ChromePairing.base64URLDecoded(try XCTUnwrap(sentBody["phone_sig"] as? String)))
         XCTAssertEqual(raw.count, 64)
-        XCTAssertTrue(signer.key.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw),
+        XCTAssertTrue(signer.approvalKey.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw),
                                                             for: try ChromePairing.signedBytes(pairing: "pr_1", confirmation)))
         XCTAssertEqual(model.chromes?.map(\.id), ["chr_1"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Only the approval key pairs a Chrome: a phone without one doesn't open a pairing, and says why.
+    func testAPhoneWithoutAnApprovalKeyDoesntPairAChrome() async {
+        let signer = P256Signer()
+        signer.withApprovalKey = false
+        let model = await planqueModel(signer: signer)
+        StubProtocol.responses["POST /v1/accounts/t_01/chromes/pairings"] = (201, #"{"pairing":"pr_1","lookup":"K7QF"}"#)
+        let opened = await model.openChromePairing()
+        XCTAssertNil(opened)
+        XCTAssertEqual(model.chromesError, Words.Chrome.pairNotStarted(why: Words.Approval.viewOnly))
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/chromes/pairings").isEmpty)
         Keychain.delete(AppModel.planqueAccount)
     }
 }
