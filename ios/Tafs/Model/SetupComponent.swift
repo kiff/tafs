@@ -365,6 +365,12 @@ struct SetupThread: Equatable {
         default:
             text = words
         }
+        // Why an approval or a sign-in didn't go through, as tafs cloud records it, is written for Coach ("Show the rules
+        // again as a new notice…"), never for the owner: the card says only that it didn't, and tafs cloud's own note
+        // for the owner, when it sends one, is the card's note (the owner's emulator pass, 21 Nov; as Android).
+        if c.type == .approval || c.type == .signIn, text.hasPrefix("failed") {
+            return Answer(type: c.type.rawValue, id: c.id, text: "failed", words: words)
+        }
         return Answer(type: c.type.rawValue, id: c.id, text: text, words: words)
     }
 

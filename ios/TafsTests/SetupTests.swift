@@ -1530,7 +1530,8 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Declined"), to: approval)?.text, "declined")
         let failed = SetupThread.answer(TafsCloud.CardAnswer(words: "Approve · it didn't go through: the grant expired"), to: approval)
         XCTAssertEqual(failed?.failed, true)
-        XCTAssertEqual(failed?.why, "the grant expired")
+        // Why it failed, as tafs cloud recorded it, is Coach's: the card says only that it didn't go through.
+        XCTAssertNil(failed?.why)
         let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","service":"mcp.stripe.com","grant":"g_01"}"#)
         XCTAssertEqual(SetupThread.answer(TafsCloud.CardAnswer(words: "Not now"), to: signIn)?.text, "not now")
         let questions = try SetupTests.component(#"{"type":"questions","id":"q","questions":[]}"#)

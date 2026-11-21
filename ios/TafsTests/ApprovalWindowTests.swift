@@ -349,6 +349,25 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertTrue(planqueHeaders().allSatisfy { !$0.contains(",w=") })
     }
 
+    /// A window is used only on a card that says Approve is a tap: one whose line still says Face ID is asked (no
+    /// `signs.takes`, or `fingerprint`) asks it, even while this phone holds a window and tafs cloud's ask says
+    /// "window" (the owner's emulator pass, 21 Nov: Approve never approves without the Face ID it promised).
+    func testACardThatPromisesFaceIDAsksItEvenInsideAWindow() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses[askRoute] = (200, ask(key: "window"))
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses["GET /v1/me/window"] = (200, windowOpened)
+        try await approveCard(model)
+        XCTAssertNotNil(model.kiff.window)
+        for marks in [#""signs":{"card":false}"#, #""signs":{"card":false,"takes":"fingerprint"}"#] {
+            let card = try SetupTests.component(#"{"type":"approval","id":"connect-stripe","grant":"g_01",\#(marks)}"#)
+            await model.approve(card, shown: model.grants.first?.digest, shownDraft: nil)
+        }
+        XCTAssertEqual(signer.currentPrompted.count, 3, "Face ID for the tap card's window, then for each card that promised it")
+        XCTAssertEqual(planqueHeaders().filter { $0.contains(",w=") }.count, 1, "only the tap card went in the window")
+    }
+
     /// A critical ask while a window is held still takes Face ID, and signs outside the window.
     func testACriticalAskInsideAWindowStillTakesFaceID() async throws {
         let signer = TwoKeySigner()

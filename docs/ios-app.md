@@ -437,6 +437,9 @@ the app in sample mode.
   At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
+  **A refused approval or sign-in** reads only "didn't go through" on the card: tafs cloud's recorded why is written
+  for Coach ("Show the rules again as a new notice…"), so `SetupThread.answer` keeps no why for them, as Android; tafs
+  cloud's note for the owner, when it sends one, is the card's note. A refusal the phone wrote itself keeps its words.
   **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
   as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
   card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint
@@ -447,8 +450,9 @@ the app in sample mode.
   ask's message opens a window (the approval key signs `kiff.window.v1`, five minutes) unless one is held, and the
   step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
   device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
-  `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
-  before, with Face ID. **A connection approved outside Coach's step** (`AppModel.connect(grantID:)`: Connect apps, Connect
+  `critical` ask, no hint, a card not marked `"tap"` (whose line names Face ID: a window held is never used for it, so
+  Approve never approves without the Face ID it promised; the owner's emulator pass, 21 Nov), a session without the
+  approval key, a drive, or a KIFF without the route (404) signs as before, with Face ID. **A connection approved outside Coach's step** (`AppModel.connect(grantID:)`: Connect apps, Connect
   again, an approval card's Connect) has no ask, so its own Face ID opens the window, as on Android (tafs#1272): a
   window held from before is closed first, planque's approve and confirm go as a tap for that call alone, KIFF's
   refusal of the open (other than 404 or 405) stops it with nothing sent to planque, and the connection's window is

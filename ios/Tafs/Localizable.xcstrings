@@ -168696,7 +168696,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível comunicar com o telemóvel. Tente novamente."
+            "value": "Não foi possível se comunicar com o celular. Tente novamente."
           }
         }
       }
@@ -168761,7 +168761,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O telemóvel não respondeu a tempo. Tente novamente."
+            "value": "O celular não respondeu a tempo. Tente novamente."
           }
         }
       }
@@ -168826,7 +168826,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A app tafs não está no telemóvel. Instale-a e tente novamente."
+            "value": "O app tafs não está no celular. Instale-o e tente novamente."
           }
         }
       }

@@ -168,7 +168,7 @@ class TafChatModelTest {
   /** Not sure a taf's message arrived: Retry or Cancel, never Keep for later (kept on the watch, then sent as Coach's). */
   @Test fun aTafsMessageIsNeverKeptForLater() = runTest {
     val drafts = mutableListOf<WatchModel.Draft>()
-    val phone = Phone { if (it is WatchRequest.Ask) Asked.Unreachable else reads(it) }
+    val phone = Phone { if (it is WatchRequest.Ask) Asked.Unreachable() else reads(it) }
     val m = WatchModel(phone, now = { t }, unlocked = { true }, newClientId = { "w_00000001" }, reviewFirst = true,
       drafts = object : DraftStore { override fun read() = drafts.lastOrNull(); override fun write(d: WatchModel.Draft) { drafts += d }; override fun clear() { drafts.clear() } })
     m.tafChatOn = true

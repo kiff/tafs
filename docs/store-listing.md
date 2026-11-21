@@ -728,7 +728,7 @@ Privacidad: https://kiff.dev/es/privacy
 **Wave 1 (Brazil), App Store only, repo only:** a new localization, Portuguese (Brazil), which App Store Connect doesn't have
 yet (mac-local's read, 21 Nov). Adapted from pt (pt-PT), above, with the same claims and limits, in Brazilian usage ("você",
 "celular", "contato", "controle", "senhas", "app" masculine). The names it quotes are the app's own, as a phone in Brazil shows
-them in the app's Portuguese (Precisa de si, Registo, Isto aconteceu?, Conta, Bloquear), so the listing and the screens match.
+them in the app's Brazilian Portuguese (Precisa de você, Registro, Isto aconteceu?, Conta, Bloquear; tafs#1629), so the listing and the screens match.
 Its words are read by the language reviewer before it's applied. Applying it waits for the owner's
 Wave 1 yes. Play's pt-BR listing is dev-android's.
 
@@ -750,7 +750,7 @@ Tickets de suporte, novos contatos, entregas atrasadas: passe tudo para um taf e
 automação,assistente,suporte,tickets,contatos,entregas,clientes,aprovação,fluxo,rotina
 ```
 
-**Description** (3080/4000):
+**Description** (3083/4000):
 
 ```
 They taf. You kiff.
@@ -771,8 +771,8 @@ TAREFAS QUE VOCÊ PODE DELEGAR HOJE
 Vem mais por aí: responder a perguntas sobre pedidos da sua loja, dar os apps a quem entra e tirá-los de quem sai, agendamentos e recibos. Cada limite é seu para mudar.
 
 O QUE VOCÊ VÊ
-• Precisa de si: o que espera seu sim.
-• Registo: tudo o que seus tafs fizeram, do mais recente ao mais antigo, com um recibo para cada ação que foi adiante.
+• Precisa de você: o que espera seu sim.
+• Registro: tudo o que seus tafs fizeram, do mais recente ao mais antigo, com um recibo para cada ação que foi adiante.
 • Chat: pergunte a um taf o que ele fez, ou diga como fazer de outro jeito, e acompanhe o trabalho enquanto acontece.
 • Você decide o que aconteceu de verdade: quando um app não consegue confirmar que uma ação foi feita, o tafs pergunta «Isto aconteceu?». Nada é dado como feito por suposição.
 
@@ -1092,8 +1092,8 @@ Privacidad: https://kiff.dev/es/tafs/privacy
 
 **Draft, Google Play only, not yet in Play Console.** Adapted from pt (pt-PT)'s Play fields, above, to Brazilian
 Portuguese: the same claims and limits, with *você*, *celular*, *apps* and Brazil's everyday words (for example
-*contato*, *controle*, *exclua*). Screen names stay the app's own (*Precisa de si*, *Registo*, *Conta*, *Bloquear*, "Isto
-aconteceu?"): the app has no pt-BR strings, so Android shows it in pt. If pt-BR strings are added, these follow them.
+*contato*, *controle*, *exclua*). Screen names stay the app's own, in its Brazilian Portuguese (*Precisa de você*, *Registro*, *Conta*, *Bloquear*, "Isto
+aconteceu?"; tafs#1629).
 Amounts stay in euros, written the Brazilian way. The Plans link opens kiff.dev's euro prices; in the app, Google Play
 charges the local price. It goes into Play Console when this market opens. The App Store's pt-BR is drafted separately.
 
@@ -1103,7 +1103,7 @@ charges the local price. It goes into Play Console when this market opens. The A
 
 **Short description** (73/80): Delegue reembolsos, disputas e faturas a agentes de IA. O controle é seu.
 
-**Full description** (3346/4000):
+**Full description** (3349/4000):
 
 ```
 They taf. You kiff.
@@ -1125,8 +1125,8 @@ TAREFAS QUE VOCÊ PODE DELEGAR HOJE
 Há mais prontas: agendamentos, recibos e reter clientes que cancelam. Você pode alterar cada limite.
 
 O QUE VOCÊ VÊ
-• Precisa de si: o que espera o seu sim.
-• Registo: tudo o que seus tafs fizeram, do mais recente para o mais antigo, com um recibo para cada ação que foi adiante.
+• Precisa de você: o que espera o seu sim.
+• Registro: tudo o que seus tafs fizeram, do mais recente para o mais antigo, com um recibo para cada ação que foi adiante.
 • Chat: pergunte a um taf o que ele fez, ou diga como fazer de outro jeito, e acompanhe o trabalho enquanto ele acontece.
 • Você decide o que aconteceu de verdade: quando um app não consegue confirmar que um pagamento foi feito, o tafs pergunta “Isto aconteceu?”. Nada é dado como feito às cegas.
 

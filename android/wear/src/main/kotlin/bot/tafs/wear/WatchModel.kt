@@ -37,11 +37,37 @@ fun interface PhoneLink {
 /** The longest a recording for the phone is kept on the watch, whatever happens: 2 minutes (row 44, A). */
 internal const val VOICE_KEEP_MS = 2 * 60 * 1000L
 
+/**
+ * Why the phone gave no answer, so the wrist says which, never "not in reach" for all of them (row 44, D; the Apple Watch's
+ * `PhoneFailure`, tafs#1632, in the same lines).
+ */
+enum class LinkFailure {
+  /** No phone with tafs is in reach: none found after the second look, or the link says it isn't connected. */
+  NotReachable,
+
+  /** The phone was asked and didn't answer within the limit. */
+  NoAnswer,
+
+  /** The paired phone is there, but tafs isn't on it (or isn't one that answers the watch). */
+  NoApp,
+
+  /** The link itself failed, or the reply couldn't be read. */
+  Link;
+
+  /** What the watch says, with Try again under it. */
+  val line: String get() = when (this) {
+    NotReachable -> Words.Watch.phoneNotReachable
+    NoAnswer -> Words.Watch.phoneNoAnswer
+    NoApp -> Words.Watch.phoneNoApp
+    Link -> Words.Watch.phoneLinkFailed
+  }
+}
+
 sealed interface Asked {
   data class Answered(val reply: WatchReply) : Asked
 
-  /** No phone with tafs is connected, or it didn't answer in time. */
-  data object Unreachable : Asked
+  /** No phone with tafs answered, and [why]. */
+  data class Unreachable(val why: LinkFailure = LinkFailure.NotReachable) : Asked
 
   /** The phone answered with something this watch doesn't understand (a newer phone): it says Open on phone, never guesses. */
   data object NotUnderstood : Asked
@@ -108,7 +134,7 @@ class WatchModel(
     data object SignedOut : Shown
 
     /** No phone answered: keep it close and try again. */
-    data object PhoneUnreachable : Shown
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Shown
 
     /** The phone said something this watch can't draw, or refused the read: Open on phone. */
     data object OpenOnPhone : Shown
@@ -138,7 +164,7 @@ class WatchModel(
     /** The watch has no screen lock, or is locked: nothing was sent. */
     data object NeedsLock : Outcome
 
-    data object PhoneUnreachable : Outcome
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Outcome
 
     /** v2: several tafs halted one after the other, each taf's name with what came of its Halt. */
     data class Several(val each: List<Pair<String, Outcome>>) : Outcome {
@@ -207,7 +233,7 @@ class WatchModel(
       is WatchReply.Failed -> Outcome.NotDone(reply.words)
       else -> Outcome.NotDone(null)
     }
-    Asked.Unreachable -> Outcome.PhoneUnreachable
+    is Asked.Unreachable -> Outcome.PhoneUnreachable(asked.why)
     Asked.NotUnderstood -> Outcome.NotDone(null)
   }
 
@@ -226,7 +252,7 @@ class WatchModel(
 
     data object SignedOut : TafRead
 
-    data object PhoneUnreachable : TafRead
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : TafRead
 
     /** A phone with an older tafs, which doesn't know the page: update it. */
     data object UpdatePhone : TafRead
@@ -333,7 +359,7 @@ class WatchModel(
         is WatchReply.Refused -> if (reply.reason == NotAccepted.UNKNOWN_PATH) TafRead.UpdatePhone else TafRead.Failed(null)
         else -> TafRead.Failed(null)
       }
-      Asked.Unreachable -> TafRead.PhoneUnreachable
+      is Asked.Unreachable -> TafRead.PhoneUnreachable(asked.why)
       Asked.NotUnderstood -> TafRead.Failed(null)
     }
     // Only while this taf is still the one open: closed, or another opened meanwhile, its answer is dropped.
@@ -695,7 +721,7 @@ class WatchModel(
         else -> Voice.NotSent(null)
       }
       // No answer in the watch's time: the phone may have sent it.
-      Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
+      is Asked.Unreachable -> Voice.Unsure(sending.text, sending.clientId, sending.replyTo, sending.tafId)
       Asked.NotUnderstood -> Voice.NotSent(null)
     }
   }
@@ -950,7 +976,7 @@ class WatchModel(
         }
         else -> return show(Shown.OpenOnPhone)
       }
-      Asked.Unreachable -> return unreachable()
+      is Asked.Unreachable -> return unreachable(asked.why)
       Asked.NotUnderstood -> return show(Shown.OpenOnPhone)
     }
     failingSince = null
@@ -972,13 +998,13 @@ class WatchModel(
    * No phone answered: a short drop keeps the last read on screen, marked as updating; only after [UNREACHABLE_AFTER_MS] of
    * failing is the phone called unreachable (row 44, D: "a short disconnect must not flash 'Asking your phone'").
    */
-  private fun unreachable() {
+  private fun unreachable(why: LinkFailure = LinkFailure.NotReachable) {
     val shown = _shown.value
     if (shown is Shown.Read) {
       val since = failingSince ?: now().also { failingSince = it }
       if (now() - since < UNREACHABLE_AFTER_MS) return show(shown.copy(updating = true))
     }
-    show(Shown.PhoneUnreachable)
+    show(Shown.PhoneUnreachable(why))
   }
 
   // MARK: Keep for later (v2, docs/watch-wear.md)
@@ -1055,7 +1081,7 @@ class WatchModel(
 
     data object SignedOut : Reading<Nothing>
 
-    data object PhoneUnreachable : Reading<Nothing>
+    data class PhoneUnreachable(val why: LinkFailure = LinkFailure.NotReachable) : Reading<Nothing>
 
     /** An answer this watch can't draw (an older phone, a failed read): Open on phone, never a guess. */
     data object OpenOnPhone : Reading<Nothing>
@@ -1091,7 +1117,7 @@ class WatchModel(
       is Reading.Read -> Reading.Read(DayRead(read.value, read.value.day == today))
       Reading.Asking -> Reading.Asking
       Reading.SignedOut -> Reading.SignedOut
-      Reading.PhoneUnreachable -> Reading.PhoneUnreachable
+      is Reading.PhoneUnreachable -> read
       Reading.OpenOnPhone -> Reading.OpenOnPhone
     }
   }
@@ -1116,7 +1142,7 @@ class WatchModel(
       WatchReply.SignedOut -> Reading.SignedOut
       else -> Reading.OpenOnPhone
     }
-    Asked.Unreachable -> Reading.PhoneUnreachable
+    is Asked.Unreachable -> Reading.PhoneUnreachable(asked.why)
     Asked.NotUnderstood -> Reading.OpenOnPhone
   }
 
