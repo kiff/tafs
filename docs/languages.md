@@ -536,6 +536,45 @@ Card"), and neither takes the article. Every device word is masculine (теле�
 | plan (billing) | план |
 | Cancel / Continue | Отказ / Продължаване |
 
+### Croatian (hr)
+
+Addressed as **vi** (plural verb forms, as the legal pages write it); buttons are polite imperatives ("Odobrite", "Odbijte",
+"Nastavite"). taf declines as the legal pages write it (taf, tafa, tafu, tafovi, tafova) and stays animate ("zaustaviti
+tafa"); Card is masculine and declines too ("Card", "Carda", "Cardovi", "Cardova"); Coach, KIFF and Setup are names and
+stay as they are. A value is a name and doesn't decline, so a line that would need a case words around it: "taf {taf}",
+"za: {name}", "ovaj uređaj ({device})". A device word is masculine in every case (telefon, tablet, PC, Mac), so "ovaj
+{device}" agrees. A door is "vrata", plural only. A call is "poziv", a request "zahtjev", a held call "zadržan poziv". Apple's
+menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i sigurnost"). The plural forms are one, few
+(2–4) and other.
+
+| English | Croatian |
+|---|---|
+| Needs you | Čeka vas |
+| Approve / Approve once | Odobrite / Odobrite jednom |
+| Refuse | Odbijte |
+| held | zadržan |
+| Halt / Halted | Blokirajte / Blokirano |
+| Stopped | Zaustavljeno |
+| Pause / Paused | Pauzirajte / Pauzirano |
+| Resume | Nastavite |
+| Revoke | Opozovite |
+| Record | Zapisnik |
+| Connect / connection | Povežite / veza |
+| Pair / Unpair | Uparite / Prekinite uparivanje |
+| Account | Račun |
+| limit / spend limit | ograničenje / ograničenje potrošnje |
+| credits / credit pack | krediti / paket kredita |
+| passkey | pristupni ključ |
+| security key | sigurnosni ključ |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Pristigle |
+| Overview | Pregled |
+| Calendar | Kalendar |
+| Usage | Potrošnja |
+| brief | sažetak |
+| receipt | potvrda |
+| Cancel / Continue | Odustanite / Nastavite |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
