@@ -217,6 +217,8 @@ set in `Components.swift`, and Android's twins): a variant reads its base's page
 "Ajustes do Sistema", Windows and Android "Configurações"). A line that states a legal rule (the terms, the age, a
 consent) isn't in it: it reads as `pt`'s until the language reviewer writes it. iOS picks pt-BR for a phone set to
 Brazilian Portuguese and keeps pt for Portugal's (`AppLanguage.deviceLanguage`); Android picks `values-pt-rBR` itself.
+Both apps send `Accept-Language: pt-BR, pt;q=0.9, en;q=0.8` from a pt-BR phone: tafs cloud, planque and KIFF read `pt`
+today (their words stay `pt`'s), and can tell Brazil apart once they hold pt-BR words of their own.
 Its glossary, where it differs from Portuguese's:
 
 | English | pt-BR |

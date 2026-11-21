@@ -5,6 +5,7 @@
   "voice.microphone_off_tafs_turn_settings": "O microfone está desativado para o tafs. Ative-o em Ajustes › tafs › Microfone.",
   "voice.microphone_off_tafs_turn_settings_mac": "O microfone está desativado para o tafs. Ative-o em Ajustes do Sistema › Privacidade e Segurança › Microfone (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Microfone).",
   "voice.open_settings": "Abrir Ajustes",
+  "voice.puts_message_box_back": "Restaura a caixa de mensagem como estava.",
   "voice.speech_recognition_off_tafs_turn": "O reconhecimento de fala está desativado para o tafs. Ative-o em Ajustes › Privacidade e Segurança › Reconhecimento de Fala.",
   "voice.speech_recognition_off_tafs_turn_mac": "O reconhecimento de fala está desativado para o tafs. Ative-o em Ajustes do Sistema › Privacidade e Segurança › Reconhecimento de Fala (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Reconhecimento de Fala)."
 }

@@ -83,8 +83,8 @@
     <string name="approval_key_lost">Entre novamente com o KIFF para aprovar a partir deste telefone.</string>
     <string name="approval_key_not_accepted">O KIFF não aceitou a chave de aprovação deste dispositivo. Tente novamente.</string>
     <string name="approval_key_not_accepted_support">Continua a não funcionar? Escreva para support@kiff.dev.</string>
-    <string name="approval_locked_after_too_many_tries">%1$s está bloqueado após demasiadas tentativas. Bloqueie este %2$s, desbloqueie-o com o código e verifique novamente.</string>
-    <string name="approval_locked_unlock_device">%1$s está bloqueado após demasiadas tentativas. Desbloqueie este dispositivo com o código e tente novamente.</string>
+    <string name="approval_locked_after_too_many_tries">%1$s está bloqueado após muitas tentativas. Bloqueie este %2$s, desbloqueie-o com o código e verifique novamente.</string>
+    <string name="approval_locked_unlock_device">%1$s está bloqueado após muitas tentativas. Desbloqueie este dispositivo com o código e tente novamente.</string>
     <string name="approval_new_fingerprint">Se adicionar outra impressão digital mais tarde, as aprovações neste telefone param até o aprovar novamente.</string>
     <string name="approval_no_fingerprint">Adicione uma impressão digital a este telefone para aprovar a partir dele. Recusar continua funcionando.</string>
     <string name="approval_no_key">Sem chave para assinar</string>
@@ -92,7 +92,7 @@
     <string name="approval_not_recognized">Tente novamente, ou entre novamente se as suas impressões digitais mudaram.</string>
     <string name="approval_not_recognized_biometry">Tente novamente, ou entre novamente se o seu %1$s mudou.</string>
     <string name="approval_nothing_approved_request_kept_approve">Nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
-    <string name="approval_open_settings">Abrir definições</string>
+    <string name="approval_open_settings">Abrir configurações</string>
     <string name="approval_prompt_approve_on_kiff">Aprovar no KIFF</string>
     <string name="approval_ready_approve">Este %1$s está pronto para aprovar com %2$s.</string>
     <string name="approval_request_kept">" O pedido fica guardado."</string>
@@ -101,16 +101,16 @@
     <string name="approval_security_key_add_title">Adicionar a sua chave de segurança a este computador</string>
     <string name="approval_security_key_enter_pin">Digite o PIN da sua chave de segurança. O tafs pede-o sempre e nunca o guarda.</string>
     <string name="approval_security_key_failed">A chave de segurança não conseguiu assinar, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
-    <string name="approval_security_key_locked">Esta chave de segurança está bloqueada após demasiados PIN errados, por isso não pode aprovar. Aprove no seu telefone. Repor a chave apaga-a, por isso, para voltar a aprovar com uma chave, associe novamente este computador.</string>
+    <string name="approval_security_key_locked">Esta chave de segurança está bloqueada após muitos PINs errados, por isso não pode aprovar. Aprove no seu telefone. Redefinir a chave a apaga; então, para voltar a aprovar com uma chave, associe novamente este computador.</string>
     <string name="approval_security_key_no_key">Conecte a sua chave de segurança e tente novamente.</string>
-    <string name="approval_security_key_no_pin_set">Esta chave de segurança não tem PIN, por isso não pode aprovar. Conecte a que vai com este computador. Se foi reposta, aprove no seu telefone e associe novamente este computador para aprovar com uma chave.</string>
+    <string name="approval_security_key_no_pin_set">Esta chave de segurança não tem PIN, por isso não pode aprovar. Conecte a que vai com este computador. Se ela foi redefinida, aprove no seu telefone e associe novamente este computador para aprovar com uma chave.</string>
     <string name="approval_security_key_not_allowed">A chave de segurança não o permitiu, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
     <string name="approval_security_key_not_fido2">Esta chave de segurança não consegue verificar um PIN, por isso não pode aprovar. Conecte a que vai com este computador.</string>
     <string name="approval_security_key_not_this_key">Esta não é a chave de segurança que vai com este computador. Conecte essa e tente novamente, ou aprove no seu telefone.</string>
     <string name="approval_security_key_pair_without">Associar sem chave</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">São três PIN errados seguidos. Desconecte a chave, conecte-a novamente e tente novamente.</string>
-    <string name="approval_security_key_pin_too_long">Esse PIN é demasiado longo para uma chave de segurança.</string>
+    <string name="approval_security_key_pin_too_long">Esse PIN é longo demais para uma chave de segurança.</string>
     <string name="approval_security_key_pin_too_short">O PIN de uma chave de segurança tem pelo menos 4 caracteres.</string>
     <string name="approval_security_key_several_keys">Há mais de uma chave de segurança conectada. Desconecte as outras, mantenha a que vai com este computador e tente novamente.</string>
     <string name="approval_security_key_timed_out">A chave de segurança não foi tocada a tempo, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
@@ -132,7 +132,7 @@
     <string name="approval_settings_path_mac_touch_id">Ajustes do Sistema → Touch ID e Senha</string>
     <string name="approval_settings_path_touch_id">Ajustes → Touch ID e Código</string>
     <string name="approval_settings_path_windows">Configurações → Contas → Opções de entrada</string>
-    <string name="approval_state_none_enrolled">Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.</string>
+    <string name="approval_state_none_enrolled">Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas configurações e depois volte.</string>
     <string name="approval_state_ready">As aprovações estão configuradas neste telefone.</string>
     <string name="approval_state_temporarily_unavailable">Não é possível usar o sensor de impressões digitais neste momento. Aguarde um pouco, ou desbloqueie o telefone uma vez, e verifique novamente.</string>
     <string name="approval_state_unsupported">Este telefone não tem um sensor de impressões digitais que o tafs possa usar para aprovações. Aprove a partir de outro telefone ou de um dispositivo compatível.</string>
@@ -140,7 +140,7 @@
     <string name="approval_title">Configurar aprovações neste dispositivo</string>
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s está desativado para o tafs. Abra as Configurações e ative %2$s para o tafs.</string>
-    <string name="approval_turned_off_tafs_turn_tafs">%1$s está desativado para o tafs. Ative-o nas definições do tafs para aprovar.</string>
+    <string name="approval_turned_off_tafs_turn_tafs">%1$s está desativado para o tafs. Ative-o nas configurações do tafs para aprovar.</string>
     <string name="approval_view_only">Entre novamente neste telefone para aprovar, ou aprove a partir do seu outro telefone.</string>
     <string name="approval_view_only_mac">Este Mac só pode ver. Para aprovar aqui, adicione-o a partir do seu telefone: Conta › Dispositivos › Adicionar um dispositivo.</string>
     <string name="approval_why">Cada aprovação que dá no tafs, seja um Card, uma conexão ou um pagamento acima de um limite, é assinada neste telefone com uma chave que só a sua impressão digital desbloqueia. O seu PIN ou padrão não pode aprovar.</string>
@@ -176,7 +176,7 @@
     <string name="billing_by_google_play">Faturado pelo Google Play</string>
     <string name="billing_by_kiff">Faturado pelo KIFF</string>
     <string name="billing_cancel_any_time_least_day">Cancele quando quiser, pelo menos um dia antes da renovação, nas Subscrições da sua conta Apple.</string>
-    <string name="billing_contact_support">O KIFF não consegue adicionar esta compra a esta conta. Pagou por ela, por isso contacte o suporte em support@kiff.dev e resolveremos o assunto.</string>
+    <string name="billing_contact_support">O KIFF não consegue adicionar esta compra a esta conta. Você pagou por ela, então entre em contato com o suporte em support@kiff.dev e resolveremos isso.</string>
     <string name="billing_conversation_goes_plan_tools_being">À medida que a conversa avança, o plano, as apps a conectar e o Card do taf aparecem aqui.</string>
     <plurals name="billing_length_days">
         <item quantity="one">%1$s dia</item>
@@ -233,7 +233,7 @@
     <string name="brief_decisions">Decisões</string>
     <string name="brief_done">Concluído desde o último resumo</string>
     <string name="brief_evidence">Provas</string>
-    <string name="brief_meanwhile">Entretanto:</string>
+    <string name="brief_meanwhile">Enquanto isso:</string>
     <string name="brief_next_move">Próximo passo</string>
     <string name="brief_recommends">O Coach recomenda</string>
     <string name="brief_title">Seu resumo</string>
@@ -640,7 +640,7 @@
     <string name="coach_card_draft_not_read">Não foi possível ler o rascunho do KIFF deste Card. %1$s</string>
     <string name="coach_card_of">Card de %1$s</string>
     <string name="coach_chats_archive">Arquivar</string>
-    <string name="coach_chats_archive_body">Sai desta lista em todos os seus dispositivos. Encontra-a em Arquivadas, onde a pode abrir ou repor.</string>
+    <string name="coach_chats_archive_body">Sai desta lista em todos os seus dispositivos. Você a encontra em Arquivadas, onde pode abri-la ou restaurá-la.</string>
     <string name="coach_chats_archive_title">Arquivar esta conversa?</string>
     <string name="coach_chats_archived">Arquivadas</string>
     <string name="coach_chats_back">‹ Voltar</string>
@@ -648,7 +648,7 @@
     <string name="coach_chats_none">Ainda sem conversas.</string>
     <string name="coach_chats_nothing_archived">Nada arquivado.</string>
     <string name="coach_chats_previous">Conversas anteriores</string>
-    <string name="coach_chats_put_back">Repor</string>
+    <string name="coach_chats_put_back">Restaurar</string>
     <string name="coach_chats_sent_from_your_watch">⌚ Enviado do relógio</string>
     <string name="coach_chats_untitled">Conversa</string>
     <string name="coach_checking_sign_in">A verificar o login…</string>
@@ -658,7 +658,7 @@
     <string name="coach_coach_mode_has_change_request">O modo Coach tem de alterar este pedido antes de o poder aprovar.</string>
     <string name="coach_coach_mode_width">Largura do modo Coach</string>
     <string name="coach_connect_admin_only">Só um administrador desta conta KIFF pode conectar apps.</string>
-    <string name="coach_connect_other_device">Por agora, é outro dispositivo que conecta as apps desta conta. Conecte-as a partir desse.</string>
+    <string name="coach_connect_other_device">Por enquanto, é outro dispositivo que conecta as apps desta conta. Conecte-as a partir dele.</string>
     <string name="coach_connect_service">Conectar %1$s</string>
     <string name="coach_connected_keys_kept_sealed">%1$s está conectado</string>
     <string name="coach_connecting_failed">Não foi possível conectar as suas apps. Toque em Começar para tentar novamente.</string>
@@ -1181,7 +1181,7 @@
     <string name="door_what_do">O que fazer</string>
     <string name="door_what_should_it_do">O que deve fazer?</string>
     <string name="door_whatsapp_android">Ainda não é possível adicionar uma porta do WhatsApp na app Android. Adicione-a a partir do tafs em um iPhone.</string>
-    <string name="door_whatsapp_elsewhere">Por agora, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui.</string>
+    <string name="door_whatsapp_elsewhere">Por enquanto, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui.</string>
     <string name="door_whatsapp_signup_did_not_finish">O registro no WhatsApp não foi concluído.</string>
     <string name="drive_a_secret_field">um campo secreto</string>
     <string name="drive_a_text_field">um campo de texto</string>
@@ -1236,7 +1236,7 @@
     <string name="error_approval_window_ended">O prazo de aprovação terminou.</string>
     <string name="error_bad_path">Caminho inválido</string>
     <string name="error_busy">Demasiadas tentativas neste momento. Tente novamente daqui a um minuto.</string>
-    <string name="error_changed">Mudou entretanto. O que é mostrado agora é o estado atual.</string>
+    <string name="error_changed">Mudou nesse meio-tempo. O que aparece agora é o estado atual.</string>
     <string name="error_cloud_answered">O tafs cloud respondeu %1$s</string>
     <string name="error_cloud_no_coach">O tafs cloud não respondeu com o Coach.</string>
     <string name="error_connection_answered">A conexão respondeu %1$s</string>
@@ -1318,7 +1318,7 @@
     <string name="halt_explain_running_one">Bloquear para-o até retomar. Uma chamada já enviada pode ainda chegar.</string>
     <string name="halt_halting_stops_no_run_starts">Bloquear para %1$s até retomar. Uma chamada já enviada pode ainda chegar.</string>
     <string name="halt_now">Bloquear agora</string>
-    <string name="halt_row_running">Pará-lo até retomar</string>
+    <string name="halt_row_running">Parar até retomar</string>
     <string name="halt_your_tafs_lower">os seus tafs</string>
     <string name="halt_all_description">Bloqueia todos os tafs de uma vez. Nada de novo é enviado até os retomar no tafs.</string>
     <string name="halt_all_failed">O tafs não conseguiu bloquear os seus tafs. %1$s Abra o tafs para os bloquear.</string>
@@ -2156,7 +2156,7 @@
     <string name="settings_devices_passkey_remove_last">É a sua única chave de acesso que pode aprovar. Sem ela, precisa de outro dispositivo que possa aprovar.</string>
     <string name="settings_devices_passkey_remove_named">Remover %1$s?</string>
     <string name="settings_devices_passkey_remove_prompt">Remover a chave de acesso %1$s da sua conta</string>
-    <string name="settings_devices_passkey_too_slow">Demorou demasiado. Tente novamente.</string>
+    <string name="settings_devices_passkey_too_slow">Demorou demais. Tente novamente.</string>
     <string name="settings_devices_passkey_with_computer">Vai com o seu computador</string>
     <string name="settings_devices_passkeys_not_loaded">Não foi possível carregar as suas chaves de acesso. %1$s</string>
     <string name="settings_devices_passkeys_title">Chaves de acesso</string>
@@ -2217,7 +2217,7 @@
     <string name="settings_title">Conta</string>
     <string name="settings_use_device_zone">Usar o deste %1$s: %2$s</string>
     <string name="settings_version">Versão</string>
-    <string name="settings_your_account">A sua conta</string>
+    <string name="settings_your_account">Sua conta</string>
     <string name="settings_your_chats">Os seus chats</string>
     <string name="setup_add_door">Adicionar uma porta…</string>
     <string name="setup_add_place">Adicionar um destino a partir de uma app conectada…</string>
@@ -2464,7 +2464,7 @@
         <item quantity="other">Trabalha ao abrigo de %1$s Cards do KIFF.</item>
     </plurals>
     <string name="update_available">Há uma nova versão do tafs.</string>
-    <string name="update_downloading">A transferir a atualização…</string>
+    <string name="update_downloading">Baixando a atualização…</string>
     <string name="update_ready">A atualização está pronta.</string>
     <string name="update_restart">Reiniciar</string>
     <string name="update_update">Atualizar</string>
@@ -2483,7 +2483,7 @@
     <string name="usage_last_period">Período anterior</string>
     <string name="usage_last_period_credits_could_not">Não foi possível ler os créditos do período anterior. Escolha-o novamente para tentar outra vez.</string>
     <string name="usage_limit_ceiling">O limite está no máximo que pode ser aumentado a partir da app. Contacte o KIFF para o aumentar mais.</string>
-    <string name="usage_limit_changed">O limite mudou entretanto. Aqui está agora: aumente-o novamente se ainda for preciso.</string>
+    <string name="usage_limit_changed">O limite mudou nesse meio-tempo. Aqui está ele agora: aumente-o novamente se ainda for preciso.</string>
     <string name="usage_manage">Gerenciar</string>
     <string name="usage_month">mês</string>
     <string name="usage_more_runs">Mais execuções</string>
@@ -2596,7 +2596,7 @@
     <string name="version_removes_card">Remove um Card</string>
     <string name="version_resume_trial">Retomar a experiência</string>
     <string name="version_start_trying">Começar a experimentar</string>
-    <string name="version_stop_and_install">Pará-la e instalar</string>
+    <string name="version_stop_and_install">Parar e instalar</string>
     <string name="version_switch_not_cancelled">A mudança não foi cancelada. %1$s</string>
     <string name="version_that_taf">Esse taf</string>
     <string name="version_title">Versões</string>
@@ -2660,7 +2660,7 @@
     <string name="voice_no_microphone">Permita que o tafs use o microfone para ditar. A sua voz torna-se texto neste telefone e não é enviada para lado nenhum.</string>
     <string name="voice_not_on_device">Este telefone não consegue reconhecer a fala no próprio telefone, por isso o microfone não funciona aqui: a sua voz teria de sair dele. Pode escrever em vez disso.</string>
     <string name="voice_open_settings">Abrir Ajustes</string>
-    <string name="voice_puts_message_box_back">Repõe a caixa de mensagem como estava.</string>
+    <string name="voice_puts_message_box_back">Restaura a caixa de mensagem como estava.</string>
     <string name="voice_speech_recognition_not_available_language">O reconhecimento de fala não está disponível para este idioma.</string>
     <string name="voice_speech_recognition_off_tafs_turn">O reconhecimento de fala está desativado para o tafs. Ative-o em Ajustes › Privacidade e Segurança › Reconhecimento de Fala.</string>
     <string name="voice_speech_recognition_off_tafs_turn_mac">O reconhecimento de fala está desativado para o tafs. Ative-o em Ajustes do Sistema › Privacidade e Segurança › Reconhecimento de Fala (no macOS 12: Preferências do Sistema › Segurança e Privacidade › Privacidade › Reconhecimento de Fala).</string>
@@ -2710,7 +2710,7 @@
         <item quantity="one">%1$s por ler na Caixa de entrada</item>
         <item quantity="other">%1$s por ler na Caixa de entrada</item>
     </plurals>
-    <string name="watch_its_settings">As suas definições</string>
+    <string name="watch_its_settings">Suas configurações</string>
     <string name="watch_keep_for_later">Guardar para mais tarde</string>
     <string name="watch_kept_to_send">Guardado neste relógio. É enviado quando o celular voltar a estar ao alcance.</string>
     <string name="watch_limit">No máximo 30 s</string>
@@ -2756,13 +2756,13 @@
     <string name="watch_review">Verifique antes de enviar</string>
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
-    <string name="watch_settings_of">%1$s · definições</string>
+    <string name="watch_settings_of">%1$s · configurações</string>
     <string name="watch_sign_in_on_phone">Primeiro, entre no tafs no celular.</string>
     <string name="watch_sign_out_q">Sair neste relógio?</string>
     <string name="watch_sign_out_sub">O celular continua com sessão iniciada. Este relógio esquece os seus tafs, chats e Caixa de entrada.</string>
     <string name="watch_signed_in">Conectado</string>
     <string name="watch_signed_out_here">Sessão terminada neste relógio. O celular continua com sessão iniciada.</string>
-    <string name="watch_swipe_settings">Deslize para a esquerda para as definições</string>
+    <string name="watch_swipe_settings">Deslize para a esquerda para as configurações</string>
     <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · recepção %2$s ms · resultado %3$s ms</string>
     <string name="watch_transcribing">O celular está a convertê-lo em texto…</string>

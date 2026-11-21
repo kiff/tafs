@@ -48,6 +48,8 @@ final class AppLanguageTests: XCTestCase {
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["ja-JP", "pt-BR"]), "pt-BR", "Brazil reads pt-BR")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt-PT"]), "pt", "Portugal keeps pt")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt"]), "pt")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["es-419"]), "es", "a numeric region has no variant: its language")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["en-US"]), "en")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt_BR"]), "pt-BR")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt-BR"], shipped: ["en", "pt"]), "pt", "no variant shipped: its language")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["ja-JP"]), "en")

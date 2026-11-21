@@ -85,5 +85,10 @@ final class AcceptLanguageTests: XCTestCase {
         XCTAssertEqual(Words.languages, all + ["pt-BR"])
         // A variant's screens are its language's to the servers: a phone in Brazil sends pt.
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "pt-BR", preferred: ["pt-BR"], shipped: Words.languages), ["pt"])
+        // Accept-Language names the variant first, then its language, as Android sends it.
+        XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.withVariant("pt-BR", ["pt"], shipped: Words.languages)), "pt-BR, pt;q=0.9, en;q=0.8")
+        XCTAssertEqual(KIFFClient.withVariant("pt", ["pt"], shipped: Words.languages), ["pt"], "no variant: unchanged")
+        XCTAssertEqual(KIFFClient.withVariant("pt-BR", ["de", "pt"], shipped: Words.languages), ["de", "pt"], "only before its own language")
+        XCTAssertEqual(KIFFClient.withVariant("es-MX", ["es"], shipped: Words.languages), ["es"], "a variant the app doesn't ship: unchanged")
     }
 }

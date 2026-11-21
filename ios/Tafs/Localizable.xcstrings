@@ -5468,7 +5468,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está bloqueado após demasiadas tentativas. Bloqueie este %2$@, desbloqueie-o com o código e verifique novamente."
+            "value": "%1$@ está bloqueado após muitas tentativas. Bloqueie este %2$@, desbloqueie-o com o código e verifique novamente."
           }
         }
       }
@@ -5533,7 +5533,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está bloqueado após demasiadas tentativas. Desbloqueie este dispositivo com o código e tente novamente."
+            "value": "%1$@ está bloqueado após muitas tentativas. Desbloqueie este dispositivo com o código e tente novamente."
           }
         }
       }
@@ -6053,7 +6053,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir definições"
+            "value": "Abrir configurações"
           }
         }
       }
@@ -6638,7 +6638,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta chave de segurança está bloqueada após demasiados PIN errados, por isso não pode aprovar. Aprove no seu telefone. Repor a chave apaga-a, por isso, para voltar a aprovar com uma chave, associe novamente este computador."
+            "value": "Esta chave de segurança está bloqueada após muitos PINs errados, por isso não pode aprovar. Aprove no seu telefone. Redefinir a chave a apaga; então, para voltar a aprovar com uma chave, associe novamente este computador."
           }
         }
       }
@@ -6768,7 +6768,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta chave de segurança não tem PIN, por isso não pode aprovar. Conecte a que vai com este computador. Se foi reposta, aprove no seu telefone e associe novamente este computador para aprovar com uma chave."
+            "value": "Esta chave de segurança não tem PIN, por isso não pode aprovar. Conecte a que vai com este computador. Se ela foi redefinida, aprove no seu telefone e associe novamente este computador para aprovar com uma chave."
           }
         }
       }
@@ -7223,7 +7223,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esse PIN é demasiado longo para uma chave de segurança."
+            "value": "Esse PIN é longo demais para uma chave de segurança."
           }
         }
       }
@@ -8425,7 +8425,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte."
+            "value": "Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas configurações e depois volte."
           }
         }
       }
@@ -8945,7 +8945,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está desativado para o tafs. Ative-o nas definições do tafs para aprovar."
+            "value": "%1$@ está desativado para o tafs. Ative-o nas configurações do tafs para aprovar."
           }
         }
       }
@@ -11285,7 +11285,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O KIFF não consegue adicionar esta compra a esta conta. Pagou por ela, por isso contacte o suporte em support@kiff.dev e resolveremos o assunto."
+            "value": "O KIFF não consegue adicionar esta compra a esta conta. Você pagou por ela, então entre em contato com o suporte em support@kiff.dev e resolveremos isso."
           }
         }
       }
@@ -14534,7 +14534,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entretanto:"
+            "value": "Enquanto isso:"
           }
         }
       }
@@ -38025,7 +38025,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sai desta lista em todos os seus dispositivos. Encontra-a em Arquivadas, onde a pode abrir ou repor."
+            "value": "Sai desta lista em todos os seus dispositivos. Você a encontra em Arquivadas, onde pode abri-la ou restaurá-la."
           }
         }
       }
@@ -38545,7 +38545,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Repor"
+            "value": "Restaurar"
           }
         }
       }
@@ -39195,7 +39195,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Por agora, é outro dispositivo que conecta as apps desta conta. Conecte-as a partir desse."
+            "value": "Por enquanto, é outro dispositivo que conecta as apps desta conta. Conecte-as a partir dele."
           }
         }
       }
@@ -71252,7 +71252,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Por agora, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui."
+            "value": "Por enquanto, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui."
           }
         }
       }
@@ -74827,7 +74827,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mudou entretanto. O que é mostrado agora é o estado atual."
+            "value": "Mudou nesse meio-tempo. O que aparece agora é o estado atual."
           }
         }
       }
@@ -79815,7 +79815,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pará-lo até retomar"
+            "value": "Parar até retomar"
           }
         }
       }
@@ -132689,7 +132689,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demorou demasiado. Tente novamente."
+            "value": "Demorou demais. Tente novamente."
           }
         }
       }
@@ -136654,7 +136654,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua conta"
+            "value": "Sua conta"
           }
         }
       }
@@ -152367,7 +152367,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A transferir a atualização…"
+            "value": "Baixando a atualização…"
           }
         }
       }
@@ -153602,7 +153602,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O limite mudou entretanto. Aqui está agora: aumente-o novamente se ainda for preciso."
+            "value": "O limite mudou nesse meio-tempo. Aqui está ele agora: aumente-o novamente se ainda for preciso."
           }
         }
       }
@@ -160719,7 +160719,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pará-la e instalar"
+            "value": "Parar e instalar"
           }
         }
       }
@@ -164537,7 +164537,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Repõe a caixa de mensagem como estava."
+            "value": "Restaura a caixa de mensagem como estava."
           }
         }
       }
@@ -167445,7 +167445,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "As suas definições"
+            "value": "Suas configurações"
           }
         }
       }
@@ -170207,7 +170207,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · definições"
+            "value": "%1$@ · configurações"
           }
         }
       }
@@ -170597,7 +170597,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deslize para a esquerda para as definições"
+            "value": "Deslize para a esquerda para as configurações"
           }
         }
       }

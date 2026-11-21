@@ -1645,6 +1645,21 @@ final class KIFFClient {
         return out.isEmpty ? ["en"] : out
     }
 
+    /// What every call to KIFF, tafs cloud and planque sends as `Accept-Language`: the screens' languages, with the
+    /// app's regional variant first where its lines are one (pt-BR, then pt), as Android sends it. The services read the
+    /// language today and can tell Brazil apart once they have its words.
+    nonisolated static var acceptLanguageHeader: String {
+        acceptLanguage(withVariant(Words.locale.identifier, screenLanguages))
+    }
+
+    /// `languages` with `variant` first when it's a shipped regional variant of their first (pt-BR before pt).
+    nonisolated static func withVariant(_ variant: String, _ languages: [String], shipped: [String] = Words.languages) -> [String] {
+        let tag = variant.replacingOccurrences(of: "_", with: "-")
+        guard tag.contains("-"), shipped.contains(tag), let base = tag.split(separator: "-").first.map(String.init),
+              languages.first == base else { return languages }
+        return [tag] + languages
+    }
+
     static func acceptLanguage(_ preferred: [String]) -> String {
         var tags = preferred.prefix(4).map { $0.replacingOccurrences(of: "_", with: "-") }
         if !tags.contains(where: { $0 == "en" || $0.hasPrefix("en-") }) { tags.append("en") }
@@ -1672,7 +1687,7 @@ final class KIFFClient {
         // The language the app shows, not the device's list: an English app on a Spanish iPad
         // read KIFF's reasons in Spanish (kiff/tafs#138, 21 Oct). When the app is translated,
         // KIFF follows it.
-        request.setValue(Self.acceptLanguage(Self.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(Self.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = try (body as? RawJSON)?.data ?? JSONEncoder().encode(body)

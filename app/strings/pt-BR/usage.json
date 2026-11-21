@@ -1,4 +1,5 @@
 {
+  "usage.limit_changed": "O limite mudou nesse meio-tempo. Aqui está ele agora: aumente-o novamente se ainda for preciso.",
   "usage.manage": "Gerenciar",
   "usage.not_read": "Não foi possível ler o uso. {why}",
   "usage.raise_limit.sign_in_first": "Entre com o KIFF para aumentar o limite.",

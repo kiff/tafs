@@ -130,7 +130,7 @@ final class TafsCloud {
         var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.setValue(etag, forHTTPHeaderField: "If-None-Match")
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
         let (data, response) = try await session.data(for: request)
@@ -1715,7 +1715,7 @@ final class TafsCloud {
         // A run can think for minutes between two words.
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(MessageBody(text, target, files: files, messageID: messageID))
         guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
@@ -1734,7 +1734,7 @@ final class TafsCloud {
         request.httpMethod = "GET"
         request.timeoutInterval = 900
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         guard let token else { throw CloudError(status: 401, message: Words.Error.signInFirst) }
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return try await events(request)
@@ -2935,7 +2935,7 @@ final class TafsCloud {
         request.httpMethod = method
         request.timeoutInterval = 70
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        request.setValue(KIFFClient.acceptLanguageHeader, forHTTPHeaderField: "Accept-Language")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             // Bytes already encoded are sent as they are: a signed request's signature covers exactly them.

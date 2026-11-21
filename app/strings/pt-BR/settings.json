@@ -18,6 +18,7 @@
   "settings.devices.pair_code_differs": "O KIFF associou {device} com o código {kiff}, não {shown} como verificou. Se não for o seu computador, encerre a sessão dele aqui.",
   "settings.devices.pair_only_now": "Associe apenas um computador que esteja usando neste momento.",
   "settings.devices.passkey_not_registered": "A chave de acesso foi criada neste telefone, mas não foi adicionada à sua conta. Pode removê-la das senhas e chaves de acesso guardadas neste telefone.",
+  "settings.devices.passkey_too_slow": "Demorou demais. Tente novamente.",
   "settings.devices.sign_out": "Sair",
   "settings.mode_kiff": "Conectado com o KIFF",
   "settings.sign_in_again_confirm.body_device": "Este {device} encerra primeiro a sessão no KIFF, e depois faz login novamente no seu navegador.",
@@ -29,5 +30,6 @@
   "settings.sign_out_of_kiff.title": "Sair no KIFF?",
   "settings.signed_in_as": "Conectado como",
   "settings.time_zone.uses_this": "Os prazos das retenções, a Atividade, o Registro e o que os seus tafs escrevem usam este fuso horário.",
-  "settings.time_zone_offer.text_device": "Os prazos das retenções, a Atividade, o Registro e o que os seus tafs escrevem passariam a usar o fuso horário deste {device}. A sua conta usa agora {zone}."
+  "settings.time_zone_offer.text_device": "Os prazos das retenções, a Atividade, o Registro e o que os seus tafs escrevem passariam a usar o fuso horário deste {device}. A sua conta usa agora {zone}.",
+  "settings.your_account": "Sua conta"
 }

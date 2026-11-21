@@ -2,6 +2,7 @@
   "version.go_back_body": "O Card de experiência da versão {version} para de imediato, e este chat é excluído. {taf} continua funcionando como está.",
   "version.guide.keeps_working": "{name} continua funcionando como está. O que esta versão faz é real, ao abrigo do seu próprio Card.",
   "version.install_body": "A versão {version} passa a ser a versão em produção, com o seu Card. Este chat é excluído.",
+  "version.stop_and_install": "Parar e instalar",
   "version.try_first": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua trabalhando.",
   "version.while_you_try.live_keeps_working": "A versão em produção continua funcionando; em um dia, podem ser gastos os limites de ambos os Cards."
 }

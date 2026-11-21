@@ -19,6 +19,6 @@
   "door.start_connected_tools_first_slack": "Comece primeiro em Apps conectadas neste {device}. A subscrição do Slack tem de ser parada antes de remover a sua porta.",
   "door.unproven_section": "Não consegue provar quem escreve · só pedidos de contato",
   "door.whatsapp_android": "Ainda não é possível adicionar uma porta do WhatsApp na app Android. Adicione-a a partir do tafs em um iPhone.",
-  "door.whatsapp_elsewhere": "Por agora, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui.",
+  "door.whatsapp_elsewhere": "Por enquanto, as portas do WhatsApp são adicionadas a partir do tafs em um iPhone; depois de adicionadas, aparecem aqui.",
   "door.whatsapp_signup_did_not_finish": "O registro no WhatsApp não foi concluído."
 }

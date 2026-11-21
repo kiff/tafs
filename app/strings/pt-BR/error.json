@@ -1,4 +1,5 @@
 {
+  "error.changed": "Mudou nesse meio-tempo. O que aparece agora é o estado atual.",
   "error.connection_answered": "A conexão respondeu {status}",
   "error.down": "Neste momento não está funcionando do nosso lado. Tente novamente mais tarde.",
   "error.file_not_uploaded": "O arquivo não foi carregado. Tente anexá-lo novamente.",
