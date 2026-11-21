@@ -4,6 +4,7 @@
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
 for (const el of document.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
+for (const el of document.querySelectorAll("[data-m-placeholder]")) el.placeholder = t(el.dataset.mPlaceholder);
 
 const $ = (id) => document.getElementById(id);
 
@@ -107,3 +108,78 @@ $("unpair").onclick = async () => {
 
 chrome.storage.session.get("state").then(({ state }) => state && draw(state));
 send({ type: "state" });
+
+// Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone.
+let shared = null;
+
+async function drawCoach() {
+  const r = await send({ type: "coach_thread" });
+  const note = $("coachNote");
+  note.textContent = "";
+  if (r.error) {
+    note.textContent = t(r.error === "no_session" ? "unpaired" : "coach_error");
+    return;
+  }
+  if (!r.thread) {
+    note.textContent = t("coach_not_started");
+    return;
+  }
+  const list = $("coachThread");
+  list.textContent = "";
+  $("coachEmpty").hidden = r.thread.messages.length > 0;
+  for (const m of r.thread.messages.slice(-20)) {
+    const li = document.createElement("li");
+    li.className = m.from;
+    li.textContent = m.text;
+    list.append(li);
+  }
+  $("coachPhone").hidden = !r.thread.waitsOnPhone;
+  if (r.thread.working) note.textContent = t("coach_working");
+}
+
+$("share").onclick = async () => {
+  const target = await send({ type: "share_target" });
+  if (target.error) {
+    $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
+    return;
+  }
+  // Chrome asks the owner once for this site: the extension reads nothing it wasn't let into.
+  const ok = await chrome.permissions.request({ origins: [target.origin + "/*"] });
+  if (!ok) {
+    $("coachNote").textContent = t("share_declined");
+    return;
+  }
+  const read = await send({ type: "share_read", tabId: target.tabId });
+  if (read.error) {
+    $("coachNote").textContent = t("share_unavailable");
+    return;
+  }
+  shared = read.page;
+  $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
+  $("sharePreview").hidden = false;
+};
+
+$("share").title = t("share_permission");
+
+$("shareRemove").onclick = () => {
+  shared = null;
+  $("sharePreview").hidden = true;
+};
+
+$("coachForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const words = $("coachWords").value.trim();
+  if (!words) return;
+  const r = await send({ type: "coach_send", words, page: shared, clientID: crypto.randomUUID() });
+  if (r.error) {
+    $("coachNote").textContent = t("coach_error");
+    return;
+  }
+  $("coachWords").value = "";
+  shared = null;
+  $("sharePreview").hidden = true;
+  drawCoach();
+};
+
+drawCoach();
+setInterval(() => document.visibilityState === "visible" && drawCoach(), 4000);
