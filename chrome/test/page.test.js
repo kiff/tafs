@@ -40,6 +40,8 @@ const SHOP = `<!doctype html><html><head><title>Shop · checkout key sk_live_${"
 <label><input type="radio" name="ship" value="std"> Standard</label>
 <form id="pay"><input autocomplete="cc-number" aria-label="Card number"><button type="submit">Continue</button></form>
 <div><button class="paypal-button">→</button></div>
+<a href="#" onclick="window.__ordered = true">Place order</a>
+<a href="#top">Back to top</a>
 </body></html>`;
 
 let browser;
@@ -92,6 +94,11 @@ test("a read names fields, controls and links by ref, and masks every secret", {
   assert.equal(read.controls.find((c) => c.label === "Continue").places_order, true, "the submit of a form with a card field");
   assert.equal(read.controls.find((c) => c.label === "→").places_order, true, "a payment provider's button");
   assert.equal(read.controls.find((c) => c.label === "Save").places_order, undefined);
+  // A link that acts (a script handler, or this page plus a fragment) is offered as a control, never as a link to follow.
+  assert.ok(read.controls.some((c) => c.label === "Place order"), "an onclick link is a control");
+  assert.ok(!read.links.some((l) => l.label === "Place order"));
+  assert.ok(read.controls.some((c) => c.label === "Back to top"), "a link to this page plus a fragment is a control");
+  assert.ok(read.links.some((l) => l.label === "Reset"), "a link to another page stays a link");
   await page.close();
 });
 

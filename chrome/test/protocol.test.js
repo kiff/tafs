@@ -73,12 +73,13 @@ test("a sealed value opens only on the paired phone's own release, never planque
   assert.equal(await checkRelease(release, { ...ctx, step: { ...s, act: { ...s.act, ref: "f3" } } }), false, "another field");
 });
 
-test("a pairing code is ten unambiguous characters", () => {
-  assert.deepEqual(parseCode("k7qf-29xmdp"), { lookup: "K7QF", secret: "29XMDP" });
-  assert.deepEqual(parseCode("K7QF 29XMDP"), { lookup: "K7QF", secret: "29XMDP" });
-  assert.equal(parseCode("K7QF-29XMD0"), null, "a zero");
-  assert.equal(parseCode("K7QF-29XMD"), null, "too short");
+test("a pairing code is four characters of lookup and a 17-character secret, about 83 bits", () => {
+  assert.deepEqual(parseCode("k7qf-29xm-dpqr-stvw-xyz2-3"), { lookup: "K7QF", secret: "29XMDPQRSTVWXYZ23" });
+  assert.deepEqual(parseCode("K7QF 29XMDPQRSTVWXYZ23"), { lookup: "K7QF", secret: "29XMDPQRSTVWXYZ23" });
+  assert.equal(parseCode("K7QF-29XMDP"), null, "the old six-character secret is too short");
+  assert.equal(parseCode("K7QF-29XM-DPQR-STVW-XYZ2-0"), null, "a zero");
   assert.ok(!/[01ILOU]/.test(ALPHABET));
+  assert.ok(Math.log2(ALPHABET.length) * 17 > 80);
 });
 
 /** The phone's side of a pairing, as the apps do it: checks our proof, then signs and proves its own key. */
@@ -93,7 +94,7 @@ async function phoneConfirms(secret, offered, { phone, pairing = "pr_1", name = 
 }
 
 test("pairing binds the phone's key and ours under the code's secret, which planque never sees", async () => {
-  const secret = "29XMDP";
+  const secret = "29XMDPQRSTVWXYZ23";
   const ext = await newKeyPair();
   const phone = await newKeyPair();
   const offered = await offer(secret, ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS" });
@@ -103,13 +104,13 @@ test("pairing binds the phone's key and ours under the code's secret, which plan
 
   // planque swaps in a key of its own: it can sign, but it can't prove the key under the secret.
   const mallory = await newKeyPair();
-  const swapped = await phoneConfirms("ZZZZZZ", offered, { phone: mallory }).catch(() => null);
+  const swapped = await phoneConfirms("ZZZZZZZZZZZZZZZZZ", offered, { phone: mallory }).catch(() => null);
   assert.equal(swapped, null, "the phone itself refuses an offer proved under another secret");
   const forged = { ...answer, phone_key: await pub(mallory) };
   forged.phone_sig = await sign(mallory.privateKey, LABEL.pair, { pairing: "pr_1", chrome_key_sha256: "x", name: "Work Mac", phone_key: forged.phone_key, phone_proof: answer.phone_proof });
   assert.equal(await checkConfirmation(secret, ext, forged), null, "a substituted phone key");
   assert.equal(await checkConfirmation(secret, ext, { ...answer, name: "Other" }), null, "a renamed pairing");
-  assert.equal(await checkConfirmation("AAAAAA", ext, answer), null, "another secret");
+  assert.equal(await checkConfirmation("AAAAAAAAAAAAAAAAA", ext, answer), null, "another secret");
   const otherExt = await newKeyPair();
   assert.equal(await checkConfirmation(secret, otherExt, answer), null, "an answer for another extension's key");
 });
