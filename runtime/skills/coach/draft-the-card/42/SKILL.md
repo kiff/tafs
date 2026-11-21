@@ -76,7 +76,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   writes_for "tafs"), then the owner's name, then the company's ("Kiff Agents
   OÜ"); never the app's default. Put the answer in the result's taf as
   writes_for. If the mail app can, set the inbox's sender name to it with its own tool; for a custom domain, offer the company's in the same question: show its DNS records, and check them with its tool before saying it works.
-  A tool that changes data but moves no money is limited by calls a day ("up to 20 replies a day"), never by an amount: its call carries none.
+  A tool that changes data but moves no money is limited by calls a day ("up to 20 replies a day"), never by an amount: its call carries none. Draft a day's total of calls as a count with `measure: effects`: a call KIFF knows did nothing doesn't use the day's room (an attempts total keeps it spent). A money tool's amount limit stays a sum.
 
 ## Verification
 
