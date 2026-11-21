@@ -4,7 +4,7 @@ The first run after one sign-in, on iPhone, iPad and Mac (Android follows the sa
 `Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **off**: while it's off, the welcome and the sign-in are as they
 ship. It goes on only after an end-to-end test on real devices with the owner present.
 
-**K5, the end-to-end pass (the PM's 02:29 and 02:48 on kiff/work#17):** a build compiled with `TAFS_K5` has it on, and
+**K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
 no other does. Two builds have it:
 - **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue,

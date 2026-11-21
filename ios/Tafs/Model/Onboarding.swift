@@ -5,7 +5,7 @@ import Foundation
 /// with the owner: while it's off, the welcome and the sign-in are as they ship.
 enum Onboarding {
     /// On only in a build compiled with `TAFS_K5`: the K5 pass's simulator run (`.github/workflows/ios-k5.yml`) and a
-    /// TestFlight build kept to Team (the PM's 02:29 and 02:34). App Store and every other build never have it, so
+    /// TestFlight build kept to Team. App Store and every other build never have it, so
     /// shipping users keep today's welcome and sign-in.
     #if TAFS_K5
     static let on = true
