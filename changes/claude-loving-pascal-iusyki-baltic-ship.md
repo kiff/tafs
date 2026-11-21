@@ -1,0 +1,1 @@
+- **Estonian, Lithuanian and Latvian ship (iPhone, iPad, Mac, Watch, Android, Wear):** the app's screens in eesti, lietuvių and latviešu, chosen by the phone's language or in Change language, with Terms and Privacy, KIFF's and tafs's, opening in each ([languages.md](docs/languages.md#batch-1-greek-estonian-latvian-and-lithuanian)).

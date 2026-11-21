@@ -127,7 +127,7 @@ final class SignInTests: XCTestCase {
     func testTheLegalLinksOpenTafssOwnPagesInTheAppsLanguage() {
         XCTAssertEqual(Legal.page("terms", language: "en").absoluteString, "https://kiff.dev/tafs/terms")
         XCTAssertEqual(Legal.page("privacy", language: "en").absoluteString, "https://kiff.dev/tafs/privacy", "English has no /en/")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv"] {
             XCTAssertEqual(Legal.page("terms", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/terms")
             XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
         }
@@ -136,14 +136,14 @@ final class SignInTests: XCTestCase {
         XCTAssertTrue(Words.languages.contains(Legal.language))
         XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages)), "kiff.dev serves pages only in languages the app ships")
         // A regional variant (pt-BR) opens its language's pages (`Legal.language` is "pt"), so it needs none of its own.
-        XCTAssertEqual(Set(Words.languages.filter { !$0.contains("-") }).subtracting(["en"]).subtracting(Legal.translated), [], "every shipped language has its page (Korean and Japanese since 21 Nov)")
+        XCTAssertEqual(Set(Words.languages.filter { !$0.contains("-") }).subtracting(["en"]).subtracting(Legal.translated), [], "every shipped language has its page (Korean and Japanese since 21 Nov, Estonian, Lithuanian and Latvian with them)")
     }
 
     /// KIFF's own Terms and Privacy, the account's, beside tafs's: in the app's language where kiff.dev serves it.
     func testKiffsOwnLegalPagesOpenInTheAppsLanguage() {
         XCTAssertEqual(Legal.kiffPage("terms", language: "en").absoluteString, "https://kiff.dev/terms")
         XCTAssertEqual(Legal.kiffPage("privacy", language: "en").absoluteString, "https://kiff.dev/privacy")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv"] {
             XCTAssertEqual(Legal.kiffPage("terms", language: language).absoluteString, "https://kiff.dev/\(language)/terms")
             XCTAssertEqual(Legal.kiffPage("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/privacy")
         }
