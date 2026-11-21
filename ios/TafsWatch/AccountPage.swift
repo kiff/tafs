@@ -8,7 +8,7 @@ final class AccountPageModel: ObservableObject {
     enum State: Equatable {
         case reading
         case loaded(WatchAccount)
-        case unreachable
+        case unreachable(PhoneFailure)
         case signedOut
         /// A phone from before the read: "Update tafs on your phone".
         case updatePhone
@@ -30,9 +30,13 @@ final class AccountPageModel: ObservableObject {
         asked += 1
         let this = asked
         if case .loaded = state {} else { state = .reading }
-        let reply = await phone.ask(WatchRequest(.account, made: clock()))
+        let reached = await phone.reach(WatchRequest(.account, made: clock()))
         guard this == asked else { return }
-        guard let reply else { state = .unreachable; return }
+        let reply: WatchReply
+        switch reached {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .unreachable(why); return
+        }
         switch reply.outcome {
         case .ok:
             guard let account = reply.account else { state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff); return }
@@ -44,7 +48,7 @@ final class AccountPageModel: ObservableObject {
         case .notYet:
             state = .updatePhone
         case .refused, .stale, .answered:
-            state = .unreachable
+            state = .unreachable(.notReachable)
         }
     }
 
@@ -109,8 +113,8 @@ struct WatchAccountScreen: View {
                     if let plan = account.plan {
                         Section(Words.Settings.plan) { Text(plan).font(.footnote) }
                     }
-                case .unreachable:
-                    notice(Words.Watch.phoneNotReachable)
+                case .unreachable(let why):
+                    notice(why.line)
                 case .signedOut:
                     notice(Words.Watch.signInOnPhone)
                 case .updatePhone:

@@ -34,7 +34,7 @@ final class NeedsYouModelTests: XCTestCase {
     func testThePhoneOutOfReachIsSaidAsSuch() async {
         let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()
-        XCTAssertEqual(model.state, .unreachable)
+        XCTAssertEqual(model.state, .unreachable(.notReachable))
     }
 
     func testSignedOutShowsNothingOfTheAccount() async {

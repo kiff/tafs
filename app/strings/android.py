@@ -50,7 +50,11 @@ def res_name(key):
 
 
 def folder(lang):
-    return "values" if lang == "en" else f"values-{lang}"
+    """A language's resource folder: `values-pt`; a regional variant takes Android's region form, `values-pt-rBR`."""
+    if lang == "en":
+        return "values"
+    base, _, region = lang.partition("-")
+    return f"values-{base}-r{region}" if region else f"values-{base}"
 
 
 def values(key, source, lines):
@@ -272,6 +276,9 @@ def main(argv):
                 out[key] = value
         return dict(sorted(out.items()))
     lines = {lang: read(lang) for lang in langs["all"] if (here / lang).is_dir() or (here / f"{lang}.json").exists()}
+    # A regional variant: its base's lines with its own on top (generate.load_lines).
+    for variant, base in langs.get("variants", {}).items():
+        lines[variant] = {**lines[base], **(read(variant) if (here / variant).is_dir() else {})}
     stale = []
     for path, text in generated(lines["en"], lines, langs).items():
         p = Path(path)

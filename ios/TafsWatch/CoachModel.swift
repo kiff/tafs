@@ -120,6 +120,11 @@ final class CoachModel: ObservableObject {
     /// The words are on their way, or Coach is at them: nothing else is sent, re-recorded or deleted.
     var inFlight: Bool { state == .sending || state == .sent || state == .answering }
 
+    /// One tap to talk (row 44, A): Ask goes straight to the system's dictation only when there's nothing to come back to (no
+    /// words on their way, none kept in the review after a failed Send) and the watch has a passcode, as Wear OS never
+    /// listens without a screen lock. Otherwise Ask opens the ask as before.
+    var listensFirst: Bool { !inFlight && !reviewing && lock.isSecure }
+
     var canSend: Bool { !inFlight && !words.isEmpty && words.count <= WatchRequest.coachLimit }
     private var words: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -134,8 +139,11 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased()))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coach, made: clock(), text: text, message: id.uuidString.lowercased())) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             draft = ""
@@ -175,9 +183,12 @@ final class CoachModel: ObservableObject {
         let id = sending.flatMap { $0.words == text ? $0.id : nil } ?? newID()
         sending = (text, id)
         state = .sending
-        let reply = await phone.ask(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
-                                                 ticket: lastTicket))
-        guard let reply else { state = .failed(Words.Watch.phoneNotReachable); return }
+        let reply: WatchReply
+        switch await phone.reach(WatchRequest(.coachSend, made: clock(), taf: taf, text: text, message: id.uuidString.lowercased(),
+                                              ticket: lastTicket)) {
+        case .reply(let answered): reply = answered
+        case .failed(let why): state = .failed(why.line); return
+        }
         switch reply.outcome {
         case .ok:
             guard let ticket = reply.ticket else { state = .failed(Words.Watch.phoneNotReachable); return }

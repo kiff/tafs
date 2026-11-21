@@ -5403,6 +5403,12 @@ enum Words {
         }
         /// Paused: its schedule is off. It still answers what you send.
         static var pausedStillAnswers: String { Words.line("watch.paused_still_answers") }
+        /// Couldn't talk to your phone. Try again.
+        static var phoneLinkFailed: String { Words.line("watch.phone_link_failed") }
+        /// Your phone didn't answer in time. Try again.
+        static var phoneNoAnswer: String { Words.line("watch.phone_no_answer") }
+        /// tafs isn't on your phone. Install it there, then try again.
+        static var phoneNoApp: String { Words.line("watch.phone_no_app") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
         /// Play
@@ -5429,6 +5435,8 @@ enum Words {
         static var recentChats: String { Words.line("watch.recent_chats") }
         /// Recording
         static var recording: String { Words.line("watch.recording") }
+        /// The recording didn't reach your phone. Try again, or type instead.
+        static var recordingNotReceived: String { Words.line("watch.recording_not_received") }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
         /// Reply
@@ -5546,7 +5554,7 @@ enum Words {
 
     /// The languages the app's screens are written in, as `languages.json` ships them: what it
     /// asks the servers for, never a language only Siri's phrases are in.
-    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"]
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"]
 
     /// The catalog the lines are read from: the system's pick for the app, or the language picked
     /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.

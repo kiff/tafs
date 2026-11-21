@@ -106,6 +106,9 @@ export const fr: Words = {
   connect_again_done: (app: string, taf: string) => `${app} est de nouveau connecté. ${taf} peut l'utiliser.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} n'accepte plus l'ancienne connexion, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous avec une nouvelle connexion : une seule connexion rétablit chaque taf qui l'utilisait.`,
   connect_again_fresh_done: (app: string) => `${app} est de nouveau connecté avec la nouvelle connexion. Chaque taf qui l'utilisait peut à nouveau s'en servir.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} n'accepte plus cet identifiant, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous pour vous identifier.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} utilisait l'identifiant ${app} d'une connexion qui a été retirée, donc il ne peut plus utiliser ${app}. Reconnectez-vous pour vous identifier.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} a été déconnecté, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous pour vous identifier.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que vous ne voyez pas" : `${n} tafs que vous ne voyez pas`] : [])]);
@@ -204,7 +207,7 @@ export const fr: Words = {
   approval_status: (status: string) => ({ pending: "en attente", approved: "approuvée", signed_in: "identifiée", needs_reconnect: "en attente d'une reconnexion", listed: "listée", connected: "connectée", failed: "en échec", revoked: "déconnectée", unknown: "inconnu" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Approuvé",
   approval_answer_declined: "Refusé",
-  approval_answer_failed: (why: string) => `Approuver · cela n'a pas abouti : ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Approuver · cela n'a pas abouti : ${why}` : `Approuver · cela n'a pas abouti`,
   approval_reason_connect: (vendor: string, taf: string) => `Connecter ${vendor} à ${taf}`,
   approval_reason_card: (taf: string) => `Donner sa Card à ${taf}`,
   approval_reason_connect_unnamed: (vendor: string) => `Connecter ${vendor}`,

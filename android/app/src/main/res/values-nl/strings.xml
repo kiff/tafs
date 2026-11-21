@@ -2731,6 +2731,9 @@
     <string name="watch_page_brief">Overzicht</string>
     <string name="watch_page_inbox">Inbox</string>
     <string name="watch_paused_still_answers">Gepauzeerd: de planning staat stil. Het antwoordt nog steeds op wat je stuurt.</string>
+    <string name="watch_phone_link_failed">De verbinding met je telefoon is mislukt. Probeer het opnieuw.</string>
+    <string name="watch_phone_no_answer">Je telefoon antwoordde niet op tijd. Probeer het opnieuw.</string>
+    <string name="watch_phone_no_app">tafs staat niet op je telefoon. Installeer het daar en probeer het opnieuw.</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
     <string name="watch_play">Afspelen</string>
     <string name="watch_qr_needs_me_today">Wat wacht er vandaag op mij?</string>
@@ -2746,6 +2749,7 @@
     </plurals>
     <string name="watch_recent_chats">Recente chats</string>
     <string name="watch_recording">Opnemen</string>
+    <string name="watch_recording_not_received">De opname is niet op je telefoon aangekomen. Probeer het opnieuw, of typ het.</string>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_reply">Antwoorden</string>
     <string name="watch_rerecord">Opnieuw opnemen</string>

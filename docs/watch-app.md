@@ -177,8 +177,15 @@ Sign out on this watch was live in 8 languages; turned off, a watch shows v1 who
 
 **Step (iii), Check before sending** (`CoachAsk`, `CoachModel.review`, tested in `CoachModelTests`), as Wear OS's first half.
 Nothing leaves the watch before Send:
-- **Ask Coach** on the home opens the ask: the system's input (Type: dictation, Scribble or the keyboard, which watchOS
-  offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
+- **One tap to talk** (`WatchDictation`, `WatchDictationTests`; row 44, A, as Wear OS's tafs#1582): **Ask Coach** on the
+  home, and a taf chat's microphone, open the system's dictation at once (`presentTextInputController` with no suggestions
+  and plain text, which watchOS opens on the microphone), and the words go straight to Check before sending. Cancelled,
+  the ask opens on Type and Quick reply. It doesn't listen without a passcode (as Wear OS without a screen lock), while
+  words are on their way, or while words kept after a failed Send wait in the review: the ask opens as before, on them.
+  **To verify on a real watch:** that watchOS opens on listening, not on its own choices first (the simulator has no
+  dictation); if it does show them, it's still one tap to the input.
+- **The ask** (Re-record, and Ask when it doesn't listen first): the system's input (Type: dictation, Scribble or the
+  keyboard, which watchOS offers with dictation first) and **Quick reply**'s four lines, in Wear OS's order. watchOS has no speech recognizer an
   app can drive, so the system's input is the microphone: there's no Start, Stop, timer or recording of the app's own, and
   no Play. Only the words leave, as text ("Coach gets your words as text, never your voice.", as Wear OS says it).
 - **Check before sending** shows the words in full, scrolled with the crown, and under them, pinned at the foot in one row
@@ -293,6 +300,14 @@ Nothing leaves the watch before Send:
   fail (seen in the simulator on 19 Nov, its `wcd` dropping the message), and without a limit the watch stayed on its send
   screen with no words. Past it, the phone counts as not in reach; a Send tried again goes under the same id, which tafs
   cloud takes once.
+- **Reaching the phone** (`PhoneRoute`, `PhoneRouteTests`; row 44, D, as Wear OS's tafs#1588), so a phone that's there
+  isn't called unreachable: the link can say "not reachable" for a moment after the app starts or wakes, so it's looked at
+  once more half a second later; and a **read** whose send failed goes once more. A **write** (Refuse, Halt, Halt all, a
+  Coach message) is sent once, since a failed send may still have arrived; the person decides whether to try again, under
+  the same id. All of it stays inside the same 20 s.
+- **Each failure says which**, with Try again: the phone not in reach (`watch.phone_not_reachable`), no answer within the 20 s
+  (`watch.phone_no_answer`), tafs not on the phone (`watch.phone_no_app`), or the link's own error or a reply that can't be
+  read (`watch.phone_link_failed`).
 - **A phone that can only view** (KIFF's `view_only`: signed in with no approval key, as the simulator is) can't sign a watch
   request, and tafs cloud refuses it (403 `view_only`). The watch says so, `watch.view_only_phone` ("This phone can only view,
   so you can't ask from the watch. Sign in on a phone that can approve."), never "a reply wasn't sent".
@@ -359,6 +374,35 @@ with no app switch since row 35 (tafs cloud's own switch still decides):
   Android's relay does; what was asked before then went to Coach's chat and isn't listed.
 - **Words:** `coach.chats.from_your_watch` and `coach.chats.sent_from_your_watch` (legal-i18n's, in all 8). The rest are
   `calendar.today` and tafs cloud's own.
+
+**Row 44, A on Apple Watch: not cut off by a pause, and the phone turns it into text (built, behind `WatchVoice.on`, off;
+as Wear OS's tafs#1587 and #1596).** W12's path below, without Play and Pause. `VoiceModel`, `AudioRecorderMic`,
+`VoiceRecordScreen` on the watch; `WatchVoiceInbox`, `OnDeviceWatchTranscriber` and `WatchLink`'s file delegate on the phone;
+`VoiceModelTests`, `WatchVoiceInboxTests`.
+- **Ask Coach and a taf chat's microphone** open the recording at once (a watch with a passcode, nothing in flight or kept in
+  the review; otherwise the ask as before): "● Recording", the time against 0:30, and ✓. It ends on ✓, at 30 s, or after
+  about 8 s with nothing said (`QuietRule`: the level under -40 dBFS, counted from the start or the last word), never on a
+  shorter pause.
+- **To the phone:** `transferFile` with the recording's id (a UUID) in its metadata, then `transcribe` by that id, 45 s at
+  most for the file's way and the recognizer. "Turning it into text on your phone…" with Cancel. The phone moves the file
+  in before its delegate returns, waits for it up to 20 s if the request comes first, and reads it with its on-device
+  recognizer only (`requiresOnDeviceRecognition`), in the language the person dictates in on the phone, else the app's.
+  Only the text comes back, to **Check before sending**: nothing is sent before Send.
+- **Can't, and says why:** the microphone not allowed (`watch.mic_needed`); speech recognition not allowed on the phone
+  (`voice.speech_recognition_off_tafs_turn`); no on-device model (`watch.no_offline_speech`); nothing heard
+  (`watch.didnt_catch`); the file never arrived (`watch.recording_not_received`, new); a phone from before
+  (`watch.update_phone`); no answer (`watch.phone_not_reachable`). Try again; Type stays offered.
+- **Deleted:** on the phone as soon as it's read, whatever the outcome, and otherwise 2 minutes after it arrived, even if no
+  request comes (`WatchVoice.keepFor`), and anything a process left when the phone's link starts; on the watch once the
+  text is back, on Cancel or when the screen closes (any transfer still on its way is cancelled first), and when the app or
+  a recording starts. The phone's copy is protected until the phone's first unlock, so it can be read while the phone is
+  locked in a pocket; only a recording's id (a UUID) names a file, and the recognizer gets 20 s at most, then its task is
+  cancelled.
+- **Switched on only** with the privacy page's Apple Watch paragraph saying so (today: "It makes no recording"), its
+  microphone prompt (`NSMicrophoneUsageDescription`, in English as the phone's) read by legal-i18n, the owner's yes, and the
+  real-device checks: that iOS runs the on-device recognizer while tafs on the phone is in the background, and that a
+  `transferFile` reaches a backgrounded phone app within the 20 s the phone waits for it. Both decide whether it works with
+  the phone in a pocket.
 
 **W12, Play and Pause on Apple Watch: the plan (not built; held for the owner's yes)**, as the owner asked for the next
 version ("on the watch first", 19 Nov). On Apple Watch only the phone's path exists: watchOS gives an app no speech
@@ -476,6 +520,16 @@ phone has answered, never in place of loading. A locked watch doesn't show the a
   protection, and cleared on sign-out.
 - **v2, behind its switch:** after Sign out on this watch, one empty file, `tafs.signed_out_here`, until Sign in with your
   phone.
+- **So it opens at once, behind `WatchCache.on` (off; row 44, D, as Wear OS's tafs#1594):** `tafs.watch_cache`, Your
+  tafs as last read: each taf's id, name, and whether it's halted or paused. Never a taf's state line (it can name what a
+  held call wants), a held call's details, an amount, or a chat. Needs you isn't kept: with a passcode the Inbox already
+  opens at once with its count. Complete file protection, so it can't be read while the watch is locked or off the wrist;
+  cleared on either sign-out (any reply saying the phone is signed out), when the app opens or is put away without a
+  passcode, and after 24 hours; a file that won't read is none (`WatchCacheTests`). Your tafs draws it at once with a small
+  dot ("Loading" to VoiceOver) while the phone is asked, and the phone's read replaces it. **A short drop keeps the last
+  read** (`ReadGrace`, on whatever the switch): when the phone doesn't answer, what's shown stays with the dot for 30 s, the
+  phone is asked once more, and only then is it unreachable. **Switched on only with its sentence on the privacy page**
+  (the Apple Watch paragraph says it keeps nothing apart from the Inbox) and the owner's yes.
 - **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
   when the phone says it's signed out. (This comes with the complication.)
 - **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch

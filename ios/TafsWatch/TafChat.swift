@@ -45,6 +45,8 @@ struct TafChatPage: View {
     let taf: WatchTaf
     @ObservedObject var chat: CoachModel
     @State private var asking = false
+    /// The watch's own recording, behind `WatchVoice.on` (row 44, A): its text then opens Check before sending.
+    @State private var recording = false
 
     var body: some View {
         List {
@@ -81,7 +83,14 @@ struct TafChatPage: View {
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
                 }
-                Button { asking = true } label: {
+                Button {
+                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+                    if WatchVoice.on, chat.listensFirst {
+                        recording = true
+                    } else {
+                        Task { if await WatchDictation.talk(to: chat) { asking = true } }
+                    }
+                } label: {
                     Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
                         .font(.headline)
                 }
@@ -91,6 +100,9 @@ struct TafChatPage: View {
         .task { await chat.loadHistory() }
         .sheet(isPresented: $asking) {
             CoachAsk(model: chat, title: Words.Chat.messageTaf(taf: taf.name), answerer: taf.name)
+        }
+        .sheet(isPresented: $recording, onDismiss: { if chat.reviewing { asking = true } }) {
+            VoiceRecordScreen(model: VoiceModel { words in chat.review(words) })
         }
     }
 }

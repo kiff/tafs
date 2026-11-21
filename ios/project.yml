@@ -235,6 +235,8 @@ targets:
         # A watch app with a single target, installed with the iPhone app it belongs to.
         WKApplication: true
         WKCompanionAppBundleIdentifier: bot.tafs.app
+        # Asked only with WatchVoice.on (off): the watch's own recording, turned into text on the iPhone (row 44, A).
+        NSMicrophoneUsageDescription: tafs records what you say to Coach and sends it to your iPhone, which turns it into text on the phone itself and then deletes it.
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.watchkitapp

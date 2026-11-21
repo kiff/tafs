@@ -25,7 +25,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   the taf gets, by what it does ("List rows"), never "each read tool".
   Show them as a notice (tone info, a title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
-  instructions"), with rules: per tool, its over (or each figure's) and only
+  instructions"), with rules: per tool (by its name in the request), its over (or each figure's) and only
   the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
   first, and put the answer in the rules.
@@ -53,7 +53,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says it, a read's too. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's Card never gets that count: its total is the agreed limit. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never

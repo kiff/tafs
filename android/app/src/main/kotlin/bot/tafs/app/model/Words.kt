@@ -2914,6 +2914,9 @@ object Words {
       val inbox: String get() = Res.s(R.string.watch_page_inbox)
     }
     val pausedStillAnswers: String get() = Res.s(R.string.watch_paused_still_answers)
+    val phoneLinkFailed: String get() = Res.s(R.string.watch_phone_link_failed)
+    val phoneNoAnswer: String get() = Res.s(R.string.watch_phone_no_answer)
+    val phoneNoApp: String get() = Res.s(R.string.watch_phone_no_app)
     val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
     val play: String get() = Res.s(R.string.watch_play)
     object Qr {
@@ -2928,6 +2931,7 @@ object Words {
     fun readyCount(count: Int): String = Res.p(R.plurals.watch_ready_count, count, Res.number(count))
     val recentChats: String get() = Res.s(R.string.watch_recent_chats)
     val recording: String get() = Res.s(R.string.watch_recording)
+    val recordingNotReceived: String get() = Res.s(R.string.watch_recording_not_received)
     val refused: String get() = Res.s(R.string.watch_refused)
     val reply: String get() = Res.s(R.string.watch_reply)
     val rerecord: String get() = Res.s(R.string.watch_rerecord)

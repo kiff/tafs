@@ -50,11 +50,15 @@ def glossary_being_written():
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    start = md.index("\n## Korean and Japanese")
-    end = md.find("\n## ", start + 1)
-    codes = {"Korean": "ko", "Japanese": "ja"}
+    codes = {"Korean": "ko", "Japanese": "ja", "pt-BR": "pt-BR"}
     tables, rows = [], []
-    for line in md[start:end if end > 0 else len(md)].split("\n") + [""]:
+    # Korean and Japanese's tables, then each regional variant's (pt-BR, under "Regional variants").
+    text = ""
+    for section in ("\n## Korean and Japanese", "\n## Regional variants"):
+        start = md.index(section)
+        end = md.find("\n## ", start + 1)
+        text += md[start:end if end > 0 else len(md)] + "\n"
+    for line in text.split("\n") + [""]:
         if line.startswith("|"):
             rows.append(line)
         elif rows:
@@ -79,7 +83,8 @@ class SharedWords(unittest.TestCase):
     def setUp(self):
         self.langs = generate.languages()
         self.source = generate.load("en")
-        self.lines = {lang: generate.load(lang) for lang in self.langs["all"]}
+        # Every language and each regional variant as the apps read it: its base's lines with its own on top.
+        self.lines = generate.load_lines()
 
     def test_the_age_table_is_a_default_and_countries_that_ask_more(self):
         # legal-i18n's table: 16 by default (the GDPR's ceiling), and a country only where its law asks for more.
@@ -97,9 +102,10 @@ class SharedWords(unittest.TestCase):
         # The eight ship, and Korean with them (complete, PM 20 Nov). Japanese is being written: not shipped until
         # every key is there, so no app shows half a language.
         self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko"])
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko"])
+        # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
-        self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]))
+        self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
     def test_every_key_is_named_by_area_and_meaning(self):
         for key in self.source:
@@ -182,7 +188,7 @@ class SharedWords(unittest.TestCase):
                 if not isinstance(line, dict):
                     continue
                 self.assertEqual(sorted(set(line) - set(generate.PLURAL_FORMS)), [], f"{lang} {key}")
-                self.assertEqual(sorted((NEEDS[lang] | {"other"}) - set(line)), [], f"{lang} {key} lacks a plural form")
+                self.assertEqual(sorted((NEEDS[lang.split("-")[0]] | {"other"}) - set(line)), [], f"{lang} {key} lacks a plural form")
                 # A form needn't show the number ("All of the Cards"), but the count is always its first value.
                 self.assertEqual(generate.arguments(key, self.lines["en"])[0], "count", f"{lang} {key}")
 
@@ -240,7 +246,7 @@ class SharedWords(unittest.TestCase):
             if lang == "en":
                 continue
             same = [k for k, line in self.lines[lang].items()
-                    if line == self.source[k] and k not in SAME_AS_ENGLISH.get(lang, ())]
+                    if line == self.source[k] and k not in SAME_AS_ENGLISH.get(lang, SAME_AS_ENGLISH.get(lang.split("-")[0], ()))]
             self.assertEqual(same, [], lang)
 
     def test_every_line_kept_as_english_still_is(self):
@@ -319,6 +325,50 @@ class Generator(unittest.TestCase):
         catalog = json.loads(files["ios/Tafs/Localizable.xcstrings"])["strings"]
         self.assertEqual(catalog["usage.all"]["localizations"]["de"]["stringUnit"]["value"], "100% used")
         self.assertEqual(catalog["home.title"]["localizations"]["de"]["stringUnit"]["value"], "Tafs")
+
+    def test_a_regional_variant_is_its_base_with_its_own_lines_on_top(self):
+        # pt-BR (languages.json's "variants") holds only the lines that read differently in Brazil: every other key reads
+        # as pt's, so the variant never falls behind. Shipped, it's its own iOS localization and Android's values-pt-rBR.
+        folder = self.write({
+            "languages.json": {"all": ["en", "pt"], "shipped": ["en", "pt", "pt-BR"], "variants": {"pt-BR": "pt"}},
+            "ages.json": {"default": 16},
+            "en.json": {"home.title": "Tafs", "needs_you.title": "Needs you", "home.count": {"one": "{count} taf", "other": "{count} tafs"}},
+            "pt.json": {"home.title": "Tafs", "needs_you.title": "Precisa de si", "home.count": {"one": "{count} taf", "other": "{count} tafs"}},
+        })
+        os.makedirs(os.path.join(folder, "pt-BR"))
+        with open(os.path.join(folder, "pt-BR", "needs_you.json"), "w", encoding="utf-8") as f:
+            json.dump({"needs_you.title": "Precisa de você"}, f, ensure_ascii=False)
+        lines = generate.load_lines(folder)
+        self.assertEqual(lines["pt-BR"]["needs_you.title"], "Precisa de você", "the variant's own line")
+        self.assertEqual(lines["pt-BR"]["home.title"], "Tafs", "the base's line where the variant has none")
+        self.assertEqual(generate.base_of("pt-BR", folder), "pt")
+        self.assertEqual(generate.base_of("pt", folder), "pt")
+        files = {os.path.relpath(p, REPO): t for p, t in generate.generated(folder).items()}
+        catalog = json.loads(files["ios/Tafs/Localizable.xcstrings"])["strings"]
+        self.assertEqual(catalog["needs_you.title"]["localizations"]["pt-BR"]["stringUnit"]["value"], "Precisa de você")
+        self.assertEqual(catalog["needs_you.title"]["localizations"]["pt"]["stringUnit"]["value"], "Precisa de si")
+        self.assertEqual(catalog["home.title"]["localizations"]["pt-BR"]["stringUnit"]["value"], "Tafs")
+        counts = [k for k in catalog if k.startswith("home.count")]
+        self.assertTrue(counts, "the count is in the catalog")
+        self.assertTrue(all("pt-BR" in catalog[k]["localizations"] for k in counts), "a count takes its base's plural forms")
+        self.assertIn('"pt-BR"', files["ios/Tafs/Design/Words.swift"])
+        import android
+        self.assertEqual(android.folder("pt-BR"), "values-pt-rBR")
+        self.assertEqual(android.folder("pt"), "values-pt")
+        self.assertIn("android/app/src/main/res/values-pt-rBR/strings.xml", files)
+        self.assertIn("Precisa de você", files["android/app/src/main/res/values-pt-rBR/strings.xml"])
+        self.assertIn('<locale android:name="pt-BR" />', files["android/app/src/main/res/xml/locales_config.xml"])
+
+    def test_a_shipped_variant_ships_with_its_base(self):
+        # The repo's own languages.json: a variant's base is shipped too (pt-BR reads pt's lines where it has none), and
+        # every key a variant holds is one its base has, so a variant never carries a line English doesn't.
+        langs = generate.languages()
+        for variant, base in langs.get("variants", {}).items():
+            self.assertIn(base, langs["all"], variant)
+            if variant in langs["shipped"]:
+                self.assertIn(base, langs["shipped"], variant)
+            own = generate.load(variant)
+            self.assertEqual(sorted(set(own) - set(generate.load(base))), [], variant)
 
     def test_the_age_table_is_written_for_the_welcome(self):
         swift = self.files["ios/Tafs/Design/MinimumAge.swift"]

@@ -13,7 +13,10 @@ enum AppLanguage {
     static func name(of identifier: String = Words.locale.identifier) -> String {
         let locale = Locale(identifier: identifier)
         let code = locale.language.languageCode?.identifier ?? identifier
-        let name = locale.localizedString(forLanguageCode: code) ?? code
+        // A regional variant the app ships beside its language (pt-BR beside pt) is named with its region,
+        // "Português (Brasil)", so the two rows of the picker read apart.
+        let variant = Words.languages.contains(identifier) && identifier.contains("-")
+        let name = (variant ? locale.localizedString(forIdentifier: identifier) : nil) ?? locale.localizedString(forLanguageCode: code) ?? code
         return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
 
@@ -41,10 +44,19 @@ enum AppLanguage {
         }
     }
 
-    /// The device's language as the app ships it: the first of the person's languages the app has,
-    /// else English.
-    static func deviceLanguage(preferred: [String]) -> String {
-        KIFFClient.screenLanguages(resolved: nil, preferred: preferred, shipped: Words.languages).first ?? "en"
+    /// The device's language as the app ships it: the first of the person's languages the app has, a regional
+    /// variant first where the app ships one for that region (pt-BR in Brazil, pt in Portugal), else English. Only the
+    /// app's own lines read the variant: KIFF's pages and kiff.dev's open in its language (`KIFFClient.screenLanguages`).
+    static func deviceLanguage(preferred: [String], shipped: [String] = Words.languages) -> String {
+        for tag in preferred {
+            let parts = tag.replacingOccurrences(of: "_", with: "-").split(separator: "-").map(String.init)
+            guard let code = parts.first?.lowercased() else { continue }
+            if let region = parts.dropFirst().first(where: { $0.count == 2 }), shipped.contains("\(code)-\(region.uppercased())") {
+                return "\(code)-\(region.uppercased())"
+            }
+            if shipped.contains(code) { return code }
+        }
+        return "en"
     }
 
     /// A shipped language's catalog. One the app doesn't hold reads as the system's pick.

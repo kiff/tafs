@@ -102,7 +102,9 @@ taken becomes "Name 2", "Name 3"….
 
 ## The home list
 
-`GET /v1/home` is the app's list: tafs only, each with its state, colour and Card summary.
+`GET /v1/home` is the app's list: tafs only, newest first, each with its state, colour and Card summary
+(`GET /v1/tafs` lists them in the same order). Colours are still handed out oldest first, so each taf keeps the one it
+started with.
 tafs cloud builds it from its records and KIFF's Cards and held calls, read with the owner's
 session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists only what KIFF
 says the person may use or oversee. An agent made through KIFF's API isn't a taf: it's

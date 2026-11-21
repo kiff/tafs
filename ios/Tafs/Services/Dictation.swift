@@ -135,7 +135,7 @@ final class Dictation: ObservableObject {
     /// Whether the language chosen is kept for next time.
     private let remembers: Bool
 
-    static let lastLanguageKey = "dictation.language"
+    nonisolated static let lastLanguageKey = "dictation.language"
 
     var listening: Bool { state == .listening || state == .starting }
 

@@ -1,0 +1,21 @@
+{
+  "files.account_row": {
+    "one": "{count} arquivo · guardado 30 dias",
+    "other": "{count} arquivos · guardados 30 dias"
+  },
+  "files.delete_body": "Desaparece de Arquivos para todos nesta conta, de imediato. Não pode ser desfeito.",
+  "files.delete_now": "Excluir agora",
+  "files.delete_question": "Excluir «{name}» agora?",
+  "files.empty": "Ainda nada. Quando um taf cria um relatório, uma planilha ou um documento em uma execução, fica aqui guardado 30 dias, para todos nesta conta o abrir, salvar ou compartilhar.",
+  "files.kept_line": "Cada arquivo é guardado 30 dias a partir da sua execução e depois desaparece sozinho. Todos nesta conta veem estes arquivos. Os seus próprios anexos de chat ficam com as suas mensagens.",
+  "files.kept_until": "Os seus arquivos são guardados até {date}",
+  "files.pick_one": "Escolha um arquivo para o ver aqui.",
+  "files.preview_start": "Só o início é mostrado. Baixe o arquivo para ler tudo.",
+  "files.saved": "Salvo neste dispositivo",
+  "files.share": "Compartilhar",
+  "files.taf_row": {
+    "one": "{count} arquivo das suas execuções",
+    "other": "{count} arquivos das suas execuções"
+  },
+  "files.title": "Arquivos"
+}

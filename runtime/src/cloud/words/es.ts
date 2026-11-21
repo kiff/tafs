@@ -106,6 +106,9 @@ export const es: Words = {
   connect_again_done: (app: string, taf: string) => `${app} vuelve a estar conectado. ${taf} puede usarlo.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} ya no acepta el inicio de sesión anterior, así que ${taf} no puede usarlo. Conecta de nuevo con un inicio de sesión nuevo: uno solo recupera cada taf que lo usaba.`,
   connect_again_fresh_done: (app: string) => `${app} vuelve a estar conectado con el nuevo inicio de sesión. Cada taf que lo usaba puede volver a usarlo.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} ya no acepta este inicio de sesión, así que ${taf} no puede usarlo. Conecta de nuevo para iniciar sesión.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} usaba el inicio de sesión de ${app} de una conexión que se quitó, así que ahora no puede usar ${app}. Conecta de nuevo para iniciar sesión.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `Se cerró la sesión de ${app}, así que ${taf} no puede usarlo. Conecta de nuevo para iniciar sesión.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf que no ves" : `${n} tafs que no ves`] : [])]);
@@ -204,7 +207,7 @@ export const es: Words = {
   approval_status: (status: string) => ({ pending: "pendiente", approved: "aprobada", signed_in: "con sesión iniciada", needs_reconnect: "pendiente de volver a iniciar sesión", listed: "listada", connected: "conectada", failed: "fallida", revoked: "desconectada", unknown: "desconocido" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Aprobado",
   approval_answer_declined: "Rechazado",
-  approval_answer_failed: (why: string) => `Aprobar · no se completó: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Aprobar · no se completó: ${why}` : `Aprobar · no se completó`,
   approval_reason_connect: (vendor: string, taf: string) => `Conectar ${vendor} a ${taf}`,
   approval_reason_card: (taf: string) => `Dar a ${taf} su Card`,
   approval_reason_connect_unnamed: (vendor: string) => `Conectar ${vendor}`,

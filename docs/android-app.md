@@ -508,6 +508,14 @@ per-app language once the phone moves to 13. Either way the words are installed 
 screen change too, and every request's `Accept-Language` follows. The session and what's open stay: the model lives in
 `TafsApplication`, not the screen, and the Account sheet stays open.
 
+**Brazilian Portuguese (pt-BR)** ships beside pt as a regional variant: its lines are pt's with Brazil's own on top
+(`app/strings/pt-BR/`), generated into `values-pt-rBR`, so a phone set to Brazil reads them and one set to Portugal, or any
+other Portuguese, reads pt's. The list names it "Português (Brasil)", after "Português", and keeps it as itself
+(`AppLocale.known`: "pt-BR" stays, "pt-PT" is "pt", "de-DE" is "de"). Only the app's own lines are regional: KIFF's
+pages and kiff.dev's open in its language (`Res.pageLanguage`, "pt"): the Terms and Privacy links, the sign-in and the
+held call's page. `Accept-Language` sends the variant, then its language ("pt-BR, pt;q=0.9, en;q=0.8"), so tafs cloud and
+planque answer in pt today and can tell Brazil apart once they have its words.
+
 **Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
 region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and
 symbol, and is never converted (`Money.figure`, `MoneyFormatTest`). Amounts in KIFF's or tafs cloud's own words are
@@ -1784,7 +1792,17 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     `retryListApproval`); closing the sheet ends the reads (`ConnectAppsTest`).
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
-  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
+  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9). **What the button says is what
+  happens:** signing reads the same rule (`CoachWords.approvesAsTap`), so a card that says "Approve with your fingerprint"
+  asks for it even while this phone holds a window, and its call doesn't ride on that window. Before, a card tafs cloud didn't
+  mark could still go as a tap inside a held window, under the fingerprint's words (`PlanqueTest`,
+  `aCardThatSaysFingerprintAsksForItEvenInsideAWindow`).
+- **One approval runs at a time** (`AppState.connecting`), and a card another approval holds says so, "Another approval
+  is going through. Approve this one once it's done.", never a greyed button with no word (`approvalHeld`). A sign-in the
+  owner came back from with no link (its vendor's page left) holds nothing: approving another card gives it up, as
+  **Open … again** does (`AppModel.giveWayToNewApproval`). Its wait ends quietly, Coach hears nothing from it, its card shows
+  Approve again, and the new approval goes on. Before, it held every card in every chat until tafs was opened again
+  (`CoachStartTest`, `aSignInLeftOnItsVendorsPageGivesWayToANewApproval`).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under

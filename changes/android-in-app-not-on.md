@@ -1,0 +1,1 @@
+- **Android:** when signing in inside the app isn't on yet, the welcome's Continue says so plainly (in KIFF's words when it sends them), not "Signing in didn't work." ([onboarding.md](docs/onboarding.md)).

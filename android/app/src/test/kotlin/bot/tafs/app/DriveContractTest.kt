@@ -162,6 +162,7 @@ class DriveContractTest {
       "Text(\"Delete account\", style = scaled(28", // the screen's title
       "Text(if (tafId == null) \"Halt all\" else \"Halt\", style = scaled(", // the halt screen's title, and the row that opens it
       "title = { Text(", // a dialog's title, never touched
+      "Text(\"Another approval is going through.", // the line under a card another approval holds, saying why; never touched
     )
     // Words kept as constants count too: `ConnectAppsWords.DISCONNECT` is "Disconnect" wherever it's used, whether it's written
     // there or reads a `Words` line.

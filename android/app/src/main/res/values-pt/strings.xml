@@ -2731,6 +2731,9 @@
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
+    <string name="watch_phone_link_failed">Não foi possível comunicar com o telemóvel. Tente novamente.</string>
+    <string name="watch_phone_no_answer">O telemóvel não respondeu a tempo. Tente novamente.</string>
+    <string name="watch_phone_no_app">A app tafs não está no telemóvel. Instale-a e tente novamente.</string>
     <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
     <string name="watch_play">Reproduzir</string>
     <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
@@ -2746,6 +2749,7 @@
     </plurals>
     <string name="watch_recent_chats">Chats recentes</string>
     <string name="watch_recording">A gravar</string>
+    <string name="watch_recording_not_received">A gravação não chegou ao telemóvel. Tente novamente ou escreva.</string>
     <string name="watch_refused">Recusado. Nada foi enviado.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Gravar de novo</string>

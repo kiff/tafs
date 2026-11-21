@@ -38,7 +38,10 @@ describe("Setup's definition on kiff/agents", () => {
   // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
   it("writes even its first working line in the owner's language, never an example's", () => {
     const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
-    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    // Naming one language cued it: on Sonnet the waiting line went out in Spanish to English owners, with no Spanish
+    // left in the core but this rule's own example (Eval 44861045509, billing).
+    expect(core).toContain("the language they write in, and no other. Their last message sets it, never an example here.");
+    expect(core).not.toMatch(/Spanish|French|German/);
     expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
     expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
   });
@@ -150,8 +153,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("allow 0 calls a day and ask the owner: that means every call waits for the owner's approval, never that it's forbidden. So make the call");
   });
 
-  it("never writes an id to the owner", () => {
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's)");
+  // 21 Nov (the emulator's Moneybird pass): "Use none_until_approved for the draft." reached the owner as a Coach line.
+  it("never writes an id, or a field or value of its tools, to the owner", () => {
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Never write an id to the owner (a run's, a grant's, a session's, a Card's), nor a field or value of your tools (effect, none_until_approved, resource_argument)");
   });
 
   it("signs a signed-out grant in again, never with a new request", () => {
@@ -365,7 +369,11 @@ describe("Setup's definition on kiff/agents", () => {
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
     expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
-    expect(flat).toContain("named from that operation's fields as the vendor's docs give them, never one you make up");
+    // A money argument's unit is the currency code, cents being its scale: a Card in "cents" with the call in EUR had KIFF
+    // refuse every refund (Eval 44871215788, setup EN run 1), and an invalid unit wasn't registered (Eval 44861045509).
+    // Any currency, the one the operation uses, so a USD account's refund tool is in USD (mac-local, tafs#1631).
+    expect(flat).toContain('Name the argument that moves money, its unit the currency code the operation uses (EUR, USD…; never "cents": cents are scale 2), and make it required');
+    expect(flat).toContain("money it moves, in its own units, named from its fields as the vendor's docs give them, never one you make up");
     // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
     expect(flat).toContain("The operation's fields say whether it moves money, not what it is about: one about money that takes no amount field (contesting a claim on a payment, reminding a customer of an invoice) moves no money here. It has no amount argument, and its Card limits its calls a day.");
     // The owner's own limit is the limit (item 44).

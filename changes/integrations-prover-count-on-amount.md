@@ -1,0 +1,2 @@
+- **Coach keeps KIFF's reads count off a money tool's Card:** a write's total is its agreed limit, never an extra count. A count beside a refund's amount limits got the Card refused at the trial.
+- **Coach drafts a sheet write planque takes:** a pinned argument is never what the tool acts on, and a row's values name the columns the taf writes.

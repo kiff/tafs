@@ -106,6 +106,9 @@ export const de: Words = {
   connect_again_done: (app: string, taf: string) => `${app} ist wieder verbunden. ${taf} kann es nutzen.`,
   connect_again_fresh_words: (app: string, taf: string) => `${app} nimmt die alte Anmeldung nicht mehr an, daher kann ${taf} es nicht nutzen. Verbinde erneut mit einer neuen Anmeldung: Eine Anmeldung bringt jeden taf zurück, der es genutzt hat.`,
   connect_again_fresh_done: (app: string) => `${app} ist mit der neuen Anmeldung wieder verbunden. Jeder taf, der es genutzt hat, kann es wieder nutzen.`,
+  connect_again_refused_words: (app: string, taf: string) => `${app} nimmt diese Anmeldung nicht mehr an, daher kann ${taf} es nicht nutzen. Verbinde erneut, um dich anzumelden.`,
+  connect_again_shared_gone_words: (app: string, taf: string) => `${taf} nutzte die ${app}-Anmeldung einer Verbindung, die entfernt wurde, und kann ${app} daher jetzt nicht nutzen. Verbinde erneut, um dich anzumelden.`,
+  connect_again_signed_out_words: (app: string, taf: string) => `${app} wurde abgemeldet, daher kann ${taf} es nicht nutzen. Verbinde erneut, um dich anzumelden.`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
     const items = list([...tafs, ...(n > 0 ? [n === 1 ? "1 taf, den du nicht siehst" : `${n} tafs, die du nicht siehst`] : [])]);
@@ -204,7 +207,7 @@ export const de: Words = {
   approval_status: (status: string) => ({ pending: "ausstehend", approved: "genehmigt", signed_in: "angemeldet", needs_reconnect: "wartet auf erneute Anmeldung", listed: "gelistet", connected: "verbunden", failed: "fehlgeschlagen", revoked: "getrennt", unknown: "unbekannt" } as Record<string, string>)[status] ?? status.replace(/_/g, " "),
   approval_answer_approved: "Genehmigt",
   approval_answer_declined: "Abgelehnt",
-  approval_answer_failed: (why: string) => `Genehmigen · hat nicht geklappt: ${why}`,
+  approval_answer_failed: (why?: string) => why ? `Genehmigen · hat nicht geklappt: ${why}` : `Genehmigen · hat nicht geklappt`,
   approval_reason_connect: (vendor: string, taf: string) => `${vendor} mit ${taf} verbinden`,
   approval_reason_card: (taf: string) => `${taf} seine Card geben`,
   approval_reason_connect_unnamed: (vendor: string) => `${vendor} verbinden`,
