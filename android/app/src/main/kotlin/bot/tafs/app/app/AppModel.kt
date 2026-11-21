@@ -1294,6 +1294,19 @@ class AppModel(
     takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
 
+  /**
+   * True once the person is back in tafs from KIFF's sign-in tab with no answer from it (the tab closed, or tafs brought back in
+   * front): the welcome then ends the wait ([endAppSignIn]) rather than keep Continue busy for the tab's 15 minutes.
+   */
+  val appSignInLeft: kotlinx.coroutines.flow.StateFlow<Boolean> get() = appSignInTab.left
+
+  /**
+   * Ends a sign-in inside the app that's waiting on a tab the person left: [signInInApp] ends with [VendorSignInReplaced], which
+   * the welcome says as "Signing in didn't work." (the K5 pass of 21 Nov: KIFF's page ended on "This sign-in has expired", the tab
+   * was closed, and Continue stayed greyed with no line until the app was stopped).
+   */
+  fun endAppSignIn() = appSignInTab.replace()
+
   /** The terms version in force at KIFF, read when the welcome shows its tick, so the version sent is the one the person saw. */
   suspend fun appTermsVersion(): String = kiff.appTerms()
 

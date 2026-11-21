@@ -124,6 +124,39 @@ class OnboardingWelcomeTest {
     compose.onNodeWithTag("onboarding.continue").assertIsEnabled()
   }
 
+  /**
+   * The K5 pass of 21 Nov: KIFF's page ended on "This sign-in has expired" and the person closed the tab; Continue stayed greyed
+   * with nothing said, for the tab's 15 minutes. Back from the tab with no answer, the wait ends, Continue says it didn't work,
+   * and it can be tapped again. While the tab is open, Continue waits.
+   */
+  @Test fun backFromTheTabWithNoAnswerFreesContinueAndSaysSo() {
+    var left by androidx.compose.runtime.mutableStateOf(false)
+    var ended = 0
+    val waiting = kotlinx.coroutines.CompletableDeferred<Unit>()
+    compose.setContent {
+      TafsTheme {
+        OnboardingView(
+          onSignIn = {}, onSample = {}, onboarding = true, termsVersion = { "v" },
+          signInInApp = { waiting.await() },
+          signInLeft = left,
+          endSignIn = { ended++; waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) },
+        )
+      }
+    }
+    compose.onNodeWithTag("onboarding.tick").performScrollTo().performClick()
+    compose.onNodeWithTag("onboarding.continue").performClick()
+    compose.waitForIdle()
+    // The tab is open: Continue waits, and nothing is ended.
+    compose.onNodeWithTag("onboarding.continue").assertIsNotEnabled()
+    assertEquals(0, ended)
+    // The person is back in tafs with no answer from the tab.
+    left = true
+    compose.waitForIdle()
+    assertEquals(1, ended)
+    compose.onNodeWithText(Words.SignIn.didntWork).assertExists()
+    compose.onNodeWithTag("onboarding.continue").assertIsEnabled()
+  }
+
   /** Where KIFF isn't offered, Continue says so in KIFF's words, not "didn't work". */
   @Test fun aRegionRefusalSaysKiffsWords() {
     val words = "KIFF isn't available where you are right now. We offer it only in the countries and regions where Anthropic's Claude is available."
@@ -233,6 +266,8 @@ class OnboardingWelcomeTest {
     assertEquals(ContinueOutcome.NotOn, continueOutcome(bot.tafs.app.kiff.KiffError.Server(400, "unsupported_client")))
     assertEquals(ContinueOutcome.Problem, continueOutcome(bot.tafs.app.kiff.KiffError.Server(400, "invalid_grant")))
     assertEquals(ContinueOutcome.Problem, continueOutcome(java.io.IOException("offline")))
+    // The wait a left tab ended: said as "didn't work", never quiet.
+    assertEquals(ContinueOutcome.Problem, continueOutcome(bot.tafs.app.kiff.VendorSignInReplaced()))
   }
 
   @Test fun theTickAgreesOnlyWhenTicked() {
