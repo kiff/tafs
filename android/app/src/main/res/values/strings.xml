@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Pair</string>
     <string name="chrome_expired">The code expired, so nothing was paired. Start again.</string>
     <string name="chrome_footer">Your tafs can use a paired Chrome only on the sites a connection lists, and you approve risky steps here.</string>
+    <string name="chrome_held_basket">In the basket</string>
+    <string name="chrome_held_in">In %1$s</string>
+    <string name="chrome_held_page">On the page</string>
     <string name="chrome_name_label">Name</string>
     <string name="chrome_none">No Chrome is paired.</string>
     <string name="chrome_not_loaded">Your Chromes couldn\'t be read: %1$s</string>
