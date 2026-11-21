@@ -38,9 +38,13 @@ release.
   Apple's standard EULA (its URL exactly, `apple.com/legal/internet-services/itunes/dev/stdeula/`),
   the terms (`kiff.dev/terms`) and the privacy policy (`kiff.dev/privacy`), as the owner approved the
   App Store English on 18 Nov. The Play description ends with the two tafs lines, without Apple's. The labels are the app's own words for
-  terms of use and privacy; outside English the tafs pages are marked as in English, as the apps mark
-  them. Deleting an account points to `kiff.dev/privacy#delete-account` on the App Store, as approved,
-  and to `kiff.dev/tafs/privacy#rights` on Play until Play's listing is next changed.
+  terms of use and privacy. Each language links its own translated pages, which kiff.dev serves in German, French,
+  Spanish, Italian, Portuguese, Dutch and Polish (`kiff.dev/es/terms`, `kiff.dev/es/tafs/privacy`; es-MX and es-419 read
+  the Spanish pages, pt-BR the Portuguese ones), with no "in English" mark. Korean, which has no translated pages yet,
+  keeps the English pages marked as in English. Deleting an account points to the language's
+  `kiff.dev/xx/privacy#delete-account` on the App Store and `kiff.dev/xx/tafs/privacy#rights` on Play (English:
+  `kiff.dev/privacy#delete-account` and `kiff.dev/tafs/privacy#rights`). Every one of these pages and anchors answered on
+  21 Nov.
 - **App Store lengths:** name up to 30 characters, subtitle up to 30, promotional text up to 170,
   keywords up to 100, description up to 4,000.
 - **Play lengths:** title up to 30 characters, short description up to 80, full description up to
@@ -176,7 +180,7 @@ Support-Tickets, neue Leads, verspätete Pakete: Gib sie an einen taf ab und hol
 Automatisierung,Assistent,Support,Tickets,Leads,Pakete,Kunden,Freigabe,Workflow,Routine
 ```
 
-**Description** (3217/4000):
+**Description** (3196/4000):
 
 ```
 They taf. You kiff.
@@ -203,14 +207,14 @@ WAS DU SIEHST
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Aktion durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
 
 DEINE DATEN
-Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/privacy#delete-account.
+Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/de/privacy#delete-account.
 
 TARIFE
 Solo mit 500 Credits im Monat und Credit-Pakete, die nie verfallen, beides in der App über den App Store gekauft. Jeder Lauf eines tafs verbraucht Credits für die KI, die er genutzt hat. Eine ruhige Prüfung, wenn nichts neu ist, kostet nichts. Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits. Es gibt keine kostenlose Testphase.
 
 Nutzungsbedingungen (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-tafs-Bedingungen (auf Englisch): https://kiff.dev/terms
-Datenschutz (auf Englisch): https://kiff.dev/privacy
+tafs-Bedingungen: https://kiff.dev/de/terms
+Datenschutz: https://kiff.dev/de/privacy
 ```
 
 ### Google Play
@@ -219,7 +223,7 @@ Datenschutz (auf Englisch): https://kiff.dev/privacy
 
 **Short description** (79/80): KI-Agenten für Erstattungen, Streitfälle und Rechnungen. Du hast die Kontrolle.
 
-**Full description** (3461/4000):
+**Full description** (3440/4000):
 
 ```
 They taf. You kiff.
@@ -247,13 +251,13 @@ WAS DU SIEHST
 • Du entscheidest, was wirklich passiert ist: Wenn eine App nicht bestätigen kann, dass eine Zahlung durchging, fragt dich tafs „Ist das passiert?“ Nichts zählt auf Verdacht als erledigt.
 
 DEINE DATEN
-Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/tafs/privacy#rights.
+Der taf sieht nie deine Passwörter oder Tokens. Genehmigungen werden mit einem Schlüssel signiert, der in der Sicherheitshardware deines Handys liegt. Mit Anhalten stoppst du einen taf oder alle mit einem Tippen. Keine Werbung, keine Tracker. Lösch dein Konto in den Einstellungen, oder siehe kiff.dev/de/tafs/privacy#rights.
 
 TARIFE
 Solo mit 500 Credits im Monat und Credit-Pakete, die nie verfallen, beides in der App über Google Play gekauft. Jeder Lauf eines tafs verbraucht Credits für die KI, die er genutzt hat. Eine ruhige Prüfung, wenn nichts neu ist, kostet nichts. Coach ist inklusive: genug, um etwa 4 neue Aufgaben im Monat einzurichten. Darüber hinaus nutzt die Hilfe von Coach deine Credits. Es gibt keine kostenlose Testphase. Tarife und Preise: kiff.dev/de/tafs
 
-tafs-Bedingungen (auf Englisch): https://kiff.dev/tafs/terms
-Datenschutz (auf Englisch): https://kiff.dev/tafs/privacy
+tafs-Bedingungen: https://kiff.dev/de/tafs/terms
+Datenschutz: https://kiff.dev/de/tafs/privacy
 ```
 
 ## French (fr)
@@ -276,7 +280,7 @@ Tickets de support, nouveaux prospects, colis en retard : confiez-les à un taf 
 automatisation,assistant,support,tickets,prospects,colis,clients,validation,workflow,routine
 ```
 
-**Description** (3306/4000):
+**Description** (3289/4000):
 
 ```
 They taf. You kiff.
@@ -303,14 +307,14 @@ CE QUE VOUS VOYEZ
 • Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'une action est passée, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
 
 VOS DONNÉES
-Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/privacy#delete-account.
+Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/fr/privacy#delete-account.
 
 FORFAITS
 Solo, avec 500 crédits par mois, et des packs de crédits qui n'expirent jamais, tous deux achetés dans l'app via l'App Store. Chaque exécution d'un taf utilise des crédits pour l'IA qu'elle a utilisée. Une vérification quand rien n'est nouveau ne coûte rien. Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits. Il n'y a pas d'essai gratuit.
 
 Conditions d'utilisation (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Conditions de tafs (en anglais): https://kiff.dev/terms
-Confidentialité (en anglais): https://kiff.dev/privacy
+Conditions de tafs: https://kiff.dev/fr/terms
+Confidentialité: https://kiff.dev/fr/privacy
 ```
 
 ### Google Play
@@ -319,7 +323,7 @@ Confidentialité (en anglais): https://kiff.dev/privacy
 
 **Short description** (76/80): Confiez remboursements, litiges et factures à des agents IA. Gardez la main.
 
-**Full description** (3559/4000):
+**Full description** (3542/4000):
 
 ```
 They taf. You kiff.
@@ -347,13 +351,13 @@ CE QUE VOUS VOYEZ
 • Vous décidez de ce qui s'est vraiment passé : quand une app ne peut pas confirmer qu'un paiement est passé, tafs vous demande « Est-ce arrivé ? » Rien n'est compté comme fait sur une supposition.
 
 VOS DONNÉES
-Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/tafs/privacy#rights.
+Le taf ne voit jamais vos mots de passe ni vos jetons. Les approbations sont signées avec une clé conservée dans le matériel sécurisé de votre téléphone. Bloquer arrête un taf, ou tous, d'un geste. Pas de publicité, pas de traceurs. Supprimez votre compte dans Réglages, ou voir kiff.dev/fr/tafs/privacy#rights.
 
 FORFAITS
 Solo, avec 500 crédits par mois, et des packs de crédits qui n'expirent jamais, tous deux achetés dans l'app via Google Play. Chaque exécution d'un taf utilise des crédits pour l'IA qu'elle a utilisée. Une vérification quand rien n'est nouveau ne coûte rien. Coach est inclus : de quoi mettre en place environ 4 nouvelles tâches par mois. Au-delà, l'aide de Coach utilise vos crédits. Il n'y a pas d'essai gratuit. Forfaits et prix : kiff.dev/fr/tafs
 
-Conditions de tafs (en anglais): https://kiff.dev/tafs/terms
-Confidentialité (en anglais): https://kiff.dev/tafs/privacy
+Conditions de tafs: https://kiff.dev/fr/tafs/terms
+Confidentialité: https://kiff.dev/fr/tafs/privacy
 ```
 
 ## Spanish (es)
@@ -376,7 +380,7 @@ Tickets de soporte, contactos nuevos, paquetes con retraso: pásaselos a un taf 
 automatización,asistente,soporte,tickets,contactos,paquetes,clientes,aprobación,flujo,rutina
 ```
 
-**Description** (3044/4000):
+**Description** (3029/4000):
 
 ```
 They taf. You kiff.
@@ -403,14 +407,14 @@ LO QUE VES
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que una acción se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/privacy#delete-account.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/es/privacy#delete-account.
 
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
 
 Condiciones de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Condiciones de tafs (en inglés): https://kiff.dev/terms
-Privacidad (en inglés): https://kiff.dev/privacy
+Condiciones de tafs: https://kiff.dev/es/terms
+Privacidad: https://kiff.dev/es/privacy
 ```
 
 ### Google Play
@@ -419,7 +423,7 @@ Privacidad (en inglés): https://kiff.dev/privacy
 
 **Short description** (78/80): Delega reembolsos, disputas y facturas en agentes de IA. Tú tienes el control.
 
-**Full description** (3257/4000):
+**Full description** (3242/4000):
 
 ```
 They taf. You kiff.
@@ -447,13 +451,13 @@ LO QUE VES
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/tafs/privacy#rights.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en Ajustes, o consulta kiff.dev/es/tafs/privacy#rights.
 
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que no caducan nunca, ambos comprados en la app a través de Google Play. Cada ejecución de un taf usa créditos por la IA que utilizó. Una comprobación tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Pasado eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita. Planes y precios: kiff.dev/es/tafs
 
-Condiciones de tafs (en inglés): https://kiff.dev/tafs/terms
-Privacidad (en inglés): https://kiff.dev/tafs/privacy
+Condiciones de tafs: https://kiff.dev/es/tafs/terms
+Privacidad: https://kiff.dev/es/tafs/privacy
 ```
 
 ## Italian (it)
@@ -476,7 +480,7 @@ Ticket di assistenza, nuovi contatti, pacchi in ritardo: affidali a un taf e rip
 automazione,assistente,assistenza,ticket,contatti,pacchi,clienti,approvazione,workflow,routine
 ```
 
-**Description** (3127/4000):
+**Description** (3110/4000):
 
 ```
 They taf. You kiff.
@@ -503,14 +507,14 @@ COSA VEDI
 • Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un'azione è andata a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
 
 I TUOI DATI
-Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/privacy#delete-account.
+Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/it/privacy#delete-account.
 
 PIANI
 Solo, con 500 crediti al mese, e pacchetti di crediti che non scadono mai, entrambi acquistati nell'app tramite l'App Store. Ogni esecuzione di un taf usa crediti per l'IA che ha usato. Un controllo tranquillo, quando non c'è niente di nuovo, non costa nulla. Coach è incluso: abbastanza per configurare circa 4 nuovi lavori al mese. Oltre questa soglia, l'aiuto di Coach usa i tuoi crediti. Non c'è una prova gratuita.
 
 Condizioni d'uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Condizioni di tafs (in inglese): https://kiff.dev/terms
-Privacy (in inglese): https://kiff.dev/privacy
+Condizioni di tafs: https://kiff.dev/it/terms
+Privacy: https://kiff.dev/it/privacy
 ```
 
 ### Google Play
@@ -519,7 +523,7 @@ Privacy (in inglese): https://kiff.dev/privacy
 
 **Short description** (79/80): Affida rimborsi, contestazioni e fatture ad agenti IA. Il controllo resta a te.
 
-**Full description** (3389/4000):
+**Full description** (3372/4000):
 
 ```
 They taf. You kiff.
@@ -547,13 +551,13 @@ COSA VEDI
 • Decidi tu cosa è successo davvero: quando un'app non riesce a confermare che un pagamento è andato a buon fine, tafs ti chiede «È successo?». Niente viene considerato fatto per supposizione.
 
 I TUOI DATI
-Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/tafs/privacy#rights.
+Il taf non vede mai le tue password né i tuoi token. Le approvazioni sono firmate con una chiave custodita nell'hardware sicuro del tuo telefono. Blocca ferma un taf, o tutti, con un tocco. Niente pubblicità, niente tracker. Elimina il tuo account in Impostazioni, oppure vedi kiff.dev/it/tafs/privacy#rights.
 
 PIANI
 Solo, con 500 crediti al mese, e pacchetti di crediti che non scadono mai, entrambi acquistati nell'app tramite Google Play. Ogni esecuzione di un taf usa crediti per l'IA che ha usato. Un controllo tranquillo, quando non c'è niente di nuovo, non costa nulla. Coach è incluso: abbastanza per configurare circa 4 nuovi lavori al mese. Oltre questa soglia, l'aiuto di Coach usa i tuoi crediti. Non c'è una prova gratuita. Piani e prezzi: kiff.dev/it/tafs
 
-Condizioni di tafs (in inglese): https://kiff.dev/tafs/terms
-Privacy (in inglese): https://kiff.dev/tafs/privacy
+Condizioni di tafs: https://kiff.dev/it/tafs/terms
+Privacy: https://kiff.dev/it/tafs/privacy
 ```
 
 ## Portuguese (pt)
@@ -576,7 +580,7 @@ Tickets de suporte, novos contactos, encomendas atrasadas: entregue-os a um taf 
 automatização,assistente,suporte,tickets,contactos,encomendas,clientes,aprovação,fluxo,rotina
 ```
 
-**Description** (3124/4000):
+**Description** (3109/4000):
 
 ```
 They taf. You kiff.
@@ -603,14 +607,14 @@ O QUE VÊ
 • Decide o que aconteceu mesmo: quando uma app não consegue confirmar que uma ação foi feita, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
 
 OS SEUS DADOS
-O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/privacy#delete-account.
+O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/pt/privacy#delete-account.
 
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através da App Store. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito.
 
 Termos de Utilização (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Termos do tafs (em inglês): https://kiff.dev/terms
-Privacidade (em inglês): https://kiff.dev/privacy
+Termos do tafs: https://kiff.dev/pt/terms
+Privacidade: https://kiff.dev/pt/privacy
 ```
 
 ### Google Play
@@ -619,7 +623,7 @@ Privacidade (em inglês): https://kiff.dev/privacy
 
 **Short description** (74/80): Entregue reembolsos, disputas e faturas a agentes de IA. O controlo é seu.
 
-**Full description** (3347/4000):
+**Full description** (3332/4000):
 
 ```
 They taf. You kiff.
@@ -647,13 +651,13 @@ O QUE VÊ
 • Decide o que aconteceu mesmo: quando uma app não consegue confirmar que um pagamento foi feito, o tafs pergunta-lhe «Isto aconteceu?». Nada é dado como feito por palpite.
 
 OS SEUS DADOS
-O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/tafs/privacy#rights.
+O taf nunca vê as suas palavras-passe nem os seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu telemóvel. Bloquear para um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Elimine a sua conta em Definições, ou consulte kiff.dev/pt/tafs/privacy#rights.
 
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados na app através do Google Play. Cada execução de um taf usa créditos pela IA que utilizou. Uma verificação calma, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa os seus créditos. Não há período de teste gratuito. Planos e preços: kiff.dev/pt/tafs
 
-Termos do tafs (em inglês): https://kiff.dev/tafs/terms
-Privacidade (em inglês): https://kiff.dev/tafs/privacy
+Termos do tafs: https://kiff.dev/pt/tafs/terms
+Privacidade: https://kiff.dev/pt/tafs/privacy
 ```
 
 ## Spanish, Latin America (es-MX)
@@ -682,7 +686,7 @@ Tickets de soporte, contactos nuevos, envíos retrasados: pásaselos a un taf y 
 automatización,asistente,soporte,tickets,contactos,envíos,clientes,aprobación,flujo,rutina
 ```
 
-**Description** (3042/4000):
+**Description** (3027/4000):
 
 ```
 They taf. You kiff.
@@ -709,14 +713,14 @@ LO QUE VES
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que una acción se hizo, tafs te pregunta «¿Ocurrió esto?». Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu celular. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en la app, en Cuenta, o consulta kiff.dev/privacy#delete-account.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu celular. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Borra tu cuenta en la app, en Cuenta, o consulta kiff.dev/es/privacy#delete-account.
 
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que nunca vencen, ambos comprados en la app a través del App Store. Cada ejecución de un taf usa créditos por la IA que utilizó. Una revisión tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Después de eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita.
 
 Condiciones de uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Condiciones de tafs (en inglés): https://kiff.dev/terms
-Privacidad (en inglés): https://kiff.dev/privacy
+Condiciones de tafs: https://kiff.dev/es/terms
+Privacidad: https://kiff.dev/es/privacy
 ```
 
 ## Portuguese, Brazil (pt-BR)
@@ -746,7 +750,7 @@ Tickets de suporte, novos contatos, entregas atrasadas: passe tudo para um taf e
 automação,assistente,suporte,tickets,contatos,entregas,clientes,aprovação,fluxo,rotina
 ```
 
-**Description** (3095/4000):
+**Description** (3080/4000):
 
 ```
 They taf. You kiff.
@@ -773,14 +777,14 @@ O QUE VOCÊ VÊ
 • Você decide o que aconteceu de verdade: quando um app não consegue confirmar que uma ação foi feita, o tafs pergunta «Isto aconteceu?». Nada é dado como feito por suposição.
 
 SEUS DADOS
-O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta no app, em Conta, ou consulte kiff.dev/privacy#delete-account.
+O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta no app, em Conta, ou consulte kiff.dev/pt/privacy#delete-account.
 
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados no app pela App Store. Cada execução de um taf usa créditos pela IA que usou. Uma verificação tranquila, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novos trabalhos por mês. Depois disso, a ajuda do Coach usa seus créditos. Não há período de teste gratuito.
 
 Termos de Uso (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Termos do tafs (em inglês): https://kiff.dev/terms
-Privacidade (em inglês): https://kiff.dev/privacy
+Termos do tafs: https://kiff.dev/pt/terms
+Privacidade: https://kiff.dev/pt/privacy
 ```
 
 ## Dutch (nl)
@@ -803,7 +807,7 @@ Supporttickets, nieuwe leads, vertraagde pakketten: geef ze aan een taf en krijg
 automatisering,assistent,support,tickets,leads,pakketten,klanten,goedkeuring,workflow,routine
 ```
 
-**Description** (3105/4000):
+**Description** (3082/4000):
 
 ```
 They taf. You kiff.
@@ -830,14 +834,14 @@ WAT JE ZIET
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een actie is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
 
 JE GEGEVENS
-Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/privacy#delete-account.
+Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/nl/privacy#delete-account.
 
 ABONNEMENTEN
 Solo, met 500 credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via de App Store. Elke run van een taf gebruikt credits voor de AI die het gebruikte. Een rustige controle, als er niets nieuws is, kost niets. Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits. Er is geen gratis proefperiode.
 
 Gebruiksvoorwaarden (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Voorwaarden van tafs (in het Engels): https://kiff.dev/terms
-Privacy (in het Engels): https://kiff.dev/privacy
+Voorwaarden van tafs: https://kiff.dev/nl/terms
+Privacy: https://kiff.dev/nl/privacy
 ```
 
 ### Google Play
@@ -846,7 +850,7 @@ Privacy (in het Engels): https://kiff.dev/privacy
 
 **Short description** (79/80): Geef terugbetalingen, geschillen en facturen aan AI-agents. Jij houdt controle.
 
-**Full description** (3398/4000):
+**Full description** (3375/4000):
 
 ```
 They taf. You kiff.
@@ -874,13 +878,13 @@ WAT JE ZIET
 • Jij bepaalt wat er echt gebeurd is: als een app niet kan bevestigen dat een betaling is gelukt, vraagt tafs je „Is dit gebeurd?” Niets telt op goed geluk als gedaan.
 
 JE GEGEVENS
-Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/tafs/privacy#rights.
+Het taf ziet nooit je wachtwoorden of tokens. Goedkeuringen worden ondertekend met een sleutel in de beveiligde hardware van je telefoon. Stilzetten zet één taf, of allemaal, stil met één tik. Geen advertenties, geen trackers. Verwijder je account in Instellingen, of zie kiff.dev/nl/tafs/privacy#rights.
 
 ABONNEMENTEN
 Solo, met 500 credits per maand, en creditpakketten die nooit verlopen, allebei in de app gekocht via Google Play. Elke run van een taf gebruikt credits voor de AI die het gebruikte. Een rustige controle, als er niets nieuws is, kost niets. Coach is inbegrepen: genoeg om zo'n 4 nieuwe taken per maand in te stellen. Daarboven gebruikt de hulp van Coach je credits. Er is geen gratis proefperiode. Abonnementen en prijzen: kiff.dev/nl/tafs
 
-Voorwaarden van tafs (in het Engels): https://kiff.dev/tafs/terms
-Privacy (in het Engels): https://kiff.dev/tafs/privacy
+Voorwaarden van tafs: https://kiff.dev/nl/tafs/terms
+Privacy: https://kiff.dev/nl/tafs/privacy
 ```
 
 ## Polish (pl)
@@ -903,7 +907,7 @@ Zgłoszenia do supportu, nowe leady, spóźnione paczki: oddaj je tafowi i odzys
 automatyzacja,asystent,support,zgłoszenia,leady,paczki,klienci,zatwierdzanie,workflow,rutyna
 ```
 
-**Description** (3123/4000):
+**Description** (3102/4000):
 
 ```
 They taf. You kiff.
@@ -930,14 +934,14 @@ CO WIDZISZ
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że akcja przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
 
 TWOJE DANE
-Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/privacy#delete-account.
+Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/pl/privacy#delete-account.
 
 PLANY
 Solo z 500 kredytami miesięcznie oraz pakiety kredytów, które nigdy nie wygasają, oba kupowane w aplikacji przez App Store. Każde uruchomienie tafa zużywa kredyty za AI, której użyło. Spokojne sprawdzenie, gdy nie ma nic nowego, nic nie kosztuje. Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów. Nie ma bezpłatnego okresu próbnego.
 
 Warunki korzystania (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-Warunki tafs (po angielsku): https://kiff.dev/terms
-Prywatność (po angielsku): https://kiff.dev/privacy
+Warunki tafs: https://kiff.dev/pl/terms
+Prywatność: https://kiff.dev/pl/privacy
 ```
 
 ### Google Play
@@ -946,7 +950,7 @@ Prywatność (po angielsku): https://kiff.dev/privacy
 
 **Short description** (70/80): Oddaj zwroty, spory i faktury agentom AI. Kontrola zostaje przy Tobie.
 
-**Full description** (3298/4000):
+**Full description** (3277/4000):
 
 ```
 They taf. You kiff.
@@ -974,13 +978,13 @@ CO WIDZISZ
 • To Ty decydujesz, co naprawdę się stało: gdy aplikacja nie może potwierdzić, że płatność przeszła, tafs pyta Cię „Czy to się wydarzyło?”. Nic nie jest uznawane za wykonane na podstawie domysłów.
 
 TWOJE DANE
-Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/tafs/privacy#rights.
+Taf nigdy nie widzi Twoich haseł ani tokenów. Zatwierdzenia są podpisywane kluczem przechowywanym w bezpiecznym sprzęcie Twojego telefonu. Zablokuj zatrzymuje jednego tafa albo wszystkie jednym dotknięciem. Bez reklam, bez trackerów. Usuń konto w Ustawieniach albo zobacz kiff.dev/pl/tafs/privacy#rights.
 
 PLANY
 Solo z 500 kredytami miesięcznie oraz pakiety kredytów, które nigdy nie wygasają, oba kupowane w aplikacji przez Google Play. Każde uruchomienie tafa zużywa kredyty za AI, której użyło. Spokojne sprawdzenie, gdy nie ma nic nowego, nic nie kosztuje. Coach jest w cenie: wystarczy, by skonfigurować około 4 nowych zadań miesięcznie. Powyżej tego pomoc Coacha używa Twoich kredytów. Nie ma bezpłatnego okresu próbnego. Plany i ceny: kiff.dev/pl/tafs
 
-Warunki tafs (po angielsku): https://kiff.dev/tafs/terms
-Prywatność (po angielsku): https://kiff.dev/tafs/privacy
+Warunki tafs: https://kiff.dev/pl/tafs/terms
+Prywatność: https://kiff.dev/pl/tafs/privacy
 ```
 
 ## Korean (ko)
@@ -1047,7 +1051,7 @@ local price. It goes into Play Console when this market opens. The App Store's e
 
 **Short description** (78/80): Delega reembolsos, disputas y facturas en agentes de IA. Tú tienes el control.
 
-**Full description** (3290/4000):
+**Full description** (3275/4000):
 
 ```
 They taf. You kiff.
@@ -1075,13 +1079,13 @@ LO QUE VES
 • Tú decides qué pasó de verdad: cuando una app no puede confirmar que un pago se hizo, tafs te pregunta “¿Ocurrió esto?”. Nada se da por hecho a ciegas.
 
 TUS DATOS
-El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Elimina tu cuenta en Configuración, o consulta kiff.dev/tafs/privacy#rights.
+El taf nunca ve tus contraseñas ni tus tokens. Las aprobaciones se firman con una clave guardada en el hardware seguro de tu teléfono. Bloquear detiene un taf, o todos, con un toque. Sin anuncios, sin rastreadores. Elimina tu cuenta en Configuración, o consulta kiff.dev/es/tafs/privacy#rights.
 
 PLANES
 Solo, con 500 créditos al mes, y paquetes de créditos que nunca vencen, ambos comprados en la app a través de Google Play. Cada ejecución de un taf usa créditos por la IA que utilizó. Una revisión tranquila, cuando no hay nada nuevo, no cuesta nada. Coach está incluido: lo suficiente para configurar unos 4 trabajos nuevos al mes. Después de eso, la ayuda de Coach usa tus créditos. No hay prueba gratuita. Planes y precios: kiff.dev/es/tafs
 
-Condiciones de tafs (en inglés): https://kiff.dev/tafs/terms
-Privacidad (en inglés): https://kiff.dev/tafs/privacy
+Condiciones de tafs: https://kiff.dev/es/tafs/terms
+Privacidad: https://kiff.dev/es/tafs/privacy
 ```
 
 ## Portuguese, Brazil (pt-BR)
@@ -1099,7 +1103,7 @@ charges the local price. It goes into Play Console when this market opens. The A
 
 **Short description** (73/80): Delegue reembolsos, disputas e faturas a agentes de IA. O controle é seu.
 
-**Full description** (3362/4000):
+**Full description** (3347/4000):
 
 ```
 They taf. You kiff.
@@ -1127,11 +1131,11 @@ O QUE VOCÊ VÊ
 • Você decide o que aconteceu de verdade: quando um app não consegue confirmar que um pagamento foi feito, o tafs pergunta “Isto aconteceu?”. Nada é dado como feito às cegas.
 
 SEUS DADOS
-O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta em Configurações ou veja kiff.dev/tafs/privacy#rights.
+O taf nunca vê suas senhas nem seus tokens. As aprovações são assinadas com uma chave guardada no hardware seguro do seu celular. Bloquear interrompe um taf, ou todos, com um toque. Sem anúncios, sem rastreadores. Exclua sua conta em Configurações ou veja kiff.dev/pt/tafs/privacy#rights.
 
 PLANOS
 Solo, com 500 créditos por mês, e pacotes de créditos que nunca expiram, ambos comprados no app pelo Google Play. Cada execução de um taf usa créditos pela IA que usou. Uma verificação tranquila, quando não há nada de novo, não custa nada. O Coach está incluído: o suficiente para configurar cerca de 4 novas tarefas por mês. Depois disso, a ajuda do Coach usa seus créditos. Não há período de teste gratuito. Planos e preços: kiff.dev/pt/tafs
 
-Termos do tafs (em inglês): https://kiff.dev/tafs/terms
-Privacidade (em inglês): https://kiff.dev/tafs/privacy
+Termos do tafs: https://kiff.dev/pt/tafs/terms
+Privacidade: https://kiff.dev/pt/tafs/privacy
 ```
