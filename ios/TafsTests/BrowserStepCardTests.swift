@@ -24,7 +24,7 @@ final class BrowserStepCardTests: XCTestCase {
     private let checkout = #"""
     {"site":"shop.example","origin":"https://checkout.shop.example","action_words":"Click “Place order”",
      "context":{"title":"Checkout – Shop","text":"Delivery Tuesday 8–10am. Place order"},
-     "checkout":{"lines":["Milk ×2  €2.40","Bread  €1.90"]},
+     "checkout":{"lines":[{"item":"Milk  1 L","quantity":2,"price":"2.40"},{"item":"Bread","quantity":1,"price":"1.90"}]},
      "chrome":{"id":"chr_1","name":"Work laptop"}}
     """#
     private let kiffsOwn = #","parameters":{"amount":430},"parameter_units":{"amount":{"unit":"EUR","scale":2}},"taf_reason":"Your weekly groceries, as agreed""#
@@ -38,7 +38,7 @@ final class BrowserStepCardTests: XCTestCase {
         XCTAssertEqual(step.actionWords, "Click “Place order”")
         XCTAssertEqual(step.pageTitle, "Checkout – Shop")
         XCTAssertEqual(step.pageText, "Delivery Tuesday 8–10am. Place order")
-        XCTAssertEqual(step.basket, ["Milk ×2 €2.40", "Bread €1.90"], "one plain line each, runs of space as one")
+        XCTAssertEqual(step.basket, ["2 × Milk 1 L · 2.40", "Bread · 1.90"], "planque's objects, one plain line each, runs of space as one")
         XCTAssertEqual(step.chromeName, "Work laptop")
         XCTAssertEqual(call.proposed.summary, "Click “Place order”", "planque's words for the act, not the tool's name")
         XCTAssertEqual(call.proposed.amount, Money(minor: 430, currency: "EUR", scale: 2), "the total is KIFF's amount")
@@ -88,10 +88,10 @@ final class BrowserStepCardTests: XCTestCase {
 
     /// A step's context with the wrong shape loses that part only.
     func testAWrongPartLosesThatPartOnly() throws {
-        let call = try held(browser: #"{"site":"shop.example","action_words":"Click “Pay”","context":"x","checkout":{"lines":["a",3,"b"]},"chrome":[1]}"#)
+        let call = try held(browser: #"{"site":"shop.example","action_words":"Click “Pay”","context":"x","checkout":{"lines":[{"item":"a"},3,"b",{"quantity":2},{"item":"c","quantity":"x","price":1.5}]},"chrome":[1]}"#)
         let step = try XCTUnwrap(call.browser)
         XCTAssertNil(step.pageTitle)
-        XCTAssertEqual(step.basket, ["a", "b"])
+        XCTAssertEqual(step.basket, ["a", "c · 1.5"], "a line that isn't an object, or has no item, is left out; a bad quantity is dropped")
         XCTAssertNil(step.chromeName)
     }
 }

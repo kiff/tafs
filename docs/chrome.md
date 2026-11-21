@@ -270,7 +270,7 @@ browser: {
   origin: "https://checkout.shop.example",  // drawn small, punycode as sent
   action_words: "Click “Place order”",      // the verb and the element's own visible label
   context: {title, text},                   // the masked page's title and an excerpt around the element (≤ 600)
-  checkout: {lines},                        // only on a checkout, the basket's lines as read at that moment
+  checkout: {lines: [{item, quantity, price}]},  // only on a checkout, as read: price as the page shows it
   chrome: {id, name}                        // which paired Chrome
 }
 ```
