@@ -25,7 +25,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   the taf gets, by what it does ("List rows"), never "each read tool".
   Show them as a notice (tone info, a title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
-  instructions"), with rules: per tool, its over (or each figure's) and only
+  instructions"), with rules: per tool (by its name in the request), its over (or each figure's) and only
   the owner's figures, as on the Card; its text is the notice, always written out, never empty, never lines or lang, and states every limit the Card will hold, in digits ("10 a day", "1 per order"); then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
   first, and put the answer in the rules.

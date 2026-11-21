@@ -1,1 +1,2 @@
 - **Coach never writes a field or value of its tools to the owner:** "none_until_approved" reached the owner as a Coach line.
+- **Coach names each agreed rule's tool as the request names it** (draft-the-card@45): the desk's writes had no rule in the notice's data.
