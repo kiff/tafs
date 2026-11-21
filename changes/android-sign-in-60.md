@@ -1,0 +1,1 @@
+- **Android:** the app waits 60 minutes for an app's sign-in to finish, as long as the sign-in link works, rather than giving up after 15 ([android-app.md](docs/android-app.md)).

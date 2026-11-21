@@ -53560,6 +53560,65 @@
         }
       }
     },
+    "connect.status.signed_out_plain": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgemeldet · erneut anmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed out · sign in again"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión cerrada · vuelve a iniciar sesión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecté · reconnectez-vous"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnesso · accedi di nuovo"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그아웃됨 · 다시 로그인"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitgelogd · log opnieuw in"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wylogowano · zaloguj się ponownie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão terminada · inicie sessão novamente"
+          }
+        }
+      }
+    },
     "connect.status.waiting_sign_in": {
       "extractionState": "manual",
       "localizations": {
@@ -102631,6 +102690,124 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ recusou. Nenhum dinheiro foi movimentado, mas continua a contar para o total de hoje."
+          }
+        }
+      }
+    },
+    "record.tool_refused_not_counted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused it. Nothing was done, and it doesn't count toward today's limits"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ lo rechazó. No se hizo nada, y no cuenta para los límites de hoy"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ l'a refusé. Rien n'a été fait, et cela ne compte pas dans les limites du jour"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ l'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ recusou. Nada foi feito, e não conta para os limites de hoje"
+          }
+        }
+      }
+    },
+    "record.tool_refused_not_counted_why": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ hat es abgelehnt. Es wurde nichts ausgeführt, und es zählt nicht zu den heutigen Limits%2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused it. Nothing was done, and it doesn't count toward today's limits%2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ lo rechazó. No se hizo nada, y no cuenta para los límites de hoy%2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ l'a refusé. Rien n'a été fait, et cela ne compte pas dans les limites du jour%2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ l'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi%2$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다%2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ heeft het geweigerd. Er is niets gedaan, en het telt niet mee voor de limieten van vandaag%2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów%2$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ recusou. Nada foi feito, e não conta para os limites de hoje%2$@"
           }
         }
       }

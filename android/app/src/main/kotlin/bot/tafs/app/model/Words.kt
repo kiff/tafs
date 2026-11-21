@@ -1000,6 +1000,7 @@ object Words {
       val choosingTools: String get() = Res.s(R.string.connect_status_choosing_tools)
       val connected: String get() = Res.s(R.string.connect_status_connected)
       fun signedOut(vendor: String): String = Res.s(R.string.connect_status_signed_out, vendor)
+      val signedOutPlain: String get() = Res.s(R.string.connect_status_signed_out_plain)
       fun waitingSignIn(vendor: String): String = Res.s(R.string.connect_status_waiting_sign_in, vendor)
     }
     val tafNotTafsCloudApps: String get() = Res.s(R.string.connect_taf_not_tafs_cloud_apps)
@@ -1923,6 +1924,8 @@ object Words {
     fun toolRefusedCounts(who: String): String = Res.s(R.string.record_tool_refused_counts, who)
     fun toolRefusedCountsWhy(who: String, why: String): String = Res.s(R.string.record_tool_refused_counts_why, who, why)
     fun toolRefusedMoney(who: String): String = Res.s(R.string.record_tool_refused_money, who)
+    fun toolRefusedNotCounted(who: String): String = Res.s(R.string.record_tool_refused_not_counted, who)
+    fun toolRefusedNotCountedWhy(who: String, why: String): String = Res.s(R.string.record_tool_refused_not_counted_why, who, why)
     val waitingForYou: String get() = Res.s(R.string.record_waiting_for_you)
     fun withinCard(amount: String): String = Res.s(R.string.record_within_card, amount)
     val withinCardAlone: String get() = Res.s(R.string.record_within_card_alone)

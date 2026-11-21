@@ -555,6 +555,26 @@ class MappingTest {
     assertNotNull(KiffMapping.executed(null, approved = true))
   }
 
+  /**
+   * The fourth line (KIFF's `tool_outcome.counted: false`): the vendor refused, nothing was done, and no Card total kept it, so it
+   * doesn't count. Money and amounts keep their lines whatever KIFF says; an older KIFF (no field) keeps today's.
+   */
+  @Test fun aRefusalNoTotalKeptSaysItDoesntCount() {
+    val notCounted = ToolOutcome("refused_by_tool", counted = false)
+    assertEquals(bot.tafs.app.model.Words.Record.toolRefusedNotCounted(who = "Gmail"), KiffMapping.executed(notCounted, approved = false, vendor = "Gmail").second)
+    assertEquals(bot.tafs.app.model.Words.Record.toolRefusedNotCountedWhy(who = "Gmail", why = ": Quota exceeded."),
+      KiffMapping.executed(notCounted.copy(message = "Quota exceeded."), approved = false, vendor = "Gmail").second)
+    // An older KIFF, or a Card that counts attempts: today's line.
+    assertEquals(bot.tafs.app.model.Words.Record.toolRefusedCounts(who = "Gmail"), KiffMapping.executed(ToolOutcome("refused_by_tool"), approved = false, vendor = "Gmail").second)
+    assertEquals(bot.tafs.app.model.Words.Record.toolRefusedCounts(who = "Gmail"), KiffMapping.executed(notCounted.copy(counted = true), approved = false, vendor = "Gmail").second)
+    // Money keeps its own line.
+    assertEquals(bot.tafs.app.model.Words.Record.toolRefusedMoney(who = "Stripe"),
+      KiffMapping.executed(notCounted, approved = false, vendor = "Stripe", counts = KiffMapping.Counted.money).second)
+    // KIFF's field, read from the activity.
+    val read = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }.decodeFromString(ToolOutcome.serializer(), """{"status":"refused_by_tool","counted":false}""")
+    assertEquals(false, read.counted)
+  }
+
   // KIFF passes the app's answer through as tool_outcome.message. Only a short, plain, one-line reason is quoted: an app's JSON
   // body, a long one, one over several lines or one holding an address leaves the plain line, which already names the app.
   @Test fun theRecordQuotesOnlyAShortPlainReasonNeverTheAppsRawAnswer() {

@@ -4,6 +4,19 @@ The first run after one sign-in, on iPhone, iPad and Mac (Android follows the sa
 `Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **off**: while it's off, the welcome and the sign-in are as they
 ship. It goes on only after an end-to-end test on real devices with the owner present.
 
+**K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
+no other does. Two builds have it:
+- **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
+  Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue,
+  iOS's ask and KIFF's sign-in page, with a screenshot kept at each step (the `k5` artifact).
+- **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
+  testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
+  (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
+  When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
+  can't be installed or picked any more. The lane that ran the pass posts it on the thread.
+
+App Store builds never have `TAFS_K5`. The sign-up's email code and GitHub sign-in are left to the device pass.
+
 ## The steps
 
 1. **The welcome, with one tick.** Today's welcome (board 1, "tafs", the lead and the three points), with one tick

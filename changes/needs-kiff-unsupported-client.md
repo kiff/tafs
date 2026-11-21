@@ -1,0 +1,1 @@
+- **Docs:** what tafs needs from KIFF when its in-app sign-in is off: words for `unsupported_client` in the person's language ([needs-from-kiff.md](docs/needs-from-kiff.md)).

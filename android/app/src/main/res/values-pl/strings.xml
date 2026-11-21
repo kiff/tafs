@@ -1055,6 +1055,7 @@
     <string name="connect_status_choosing_tools">Zalogowano · Coach wybiera jej narzędzia</string>
     <string name="connect_status_connected">Połączono</string>
     <string name="connect_status_signed_out">Wylogowano przez %1$s · zaloguj się ponownie</string>
+    <string name="connect_status_signed_out_plain">Wylogowano · zaloguj się ponownie</string>
     <string name="connect_status_waiting_sign_in">Czeka na logowanie w %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Ten taf nie jest jeszcze w tafs cloud, więc nie można dla niego łączyć aplikacji.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud nie wskazał połączenia do zatwierdzenia</string>
@@ -1980,6 +1981,8 @@
     <string name="record_tool_refused_counts">%1$s to odrzucił i nadal liczy się to do dzisiejszych limitów</string>
     <string name="record_tool_refused_counts_why">%1$s to odrzucił i nadal liczy się to do dzisiejszych limitów%2$s</string>
     <string name="record_tool_refused_money">%1$s to odrzucił. Pieniądze nie zostały przelane, ale nadal liczy się to do dzisiejszej sumy.</string>
+    <string name="record_tool_refused_not_counted">%1$s to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów</string>
+    <string name="record_tool_refused_not_counted_why">%1$s to odrzucił. Nic nie zostało zrobione i nie liczy się to do dzisiejszych limitów%2$s</string>
     <string name="record_waiting_for_you">Czeka na Ciebie</string>
     <string name="record_within_card">%1$s, w ramach Card</string>
     <string name="record_within_card_alone">W ramach Card</string>

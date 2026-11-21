@@ -118,6 +118,8 @@
   "record.tool_refused_counts": "{who}이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다",
   "record.tool_refused_counts_why": "{who}이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다{why}",
   "record.tool_refused_money": "{who}이(가) 거절했습니다. 돈은 움직이지 않았지만 오늘 합계에는 여전히 포함됩니다.",
+  "record.tool_refused_not_counted": "{who}이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다",
+  "record.tool_refused_not_counted_why": "{who}이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다{why}",
   "record.waiting_for_you": "나를 기다리는 중",
   "record.within_card": "{amount}, Card 안에서",
   "record.within_card_alone": "Card 안에서"

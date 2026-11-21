@@ -761,9 +761,16 @@ class PlanqueTest {
     assertEquals(listOf("g1"), m.state.value.connections("refunds-1").map { it.id })
   }
 
+  /**
+   * With no words from planque yet, the app's own plain line, true whoever signed it out: never "by {vendor}", which isn't true
+   * when planque signed it out because the connection whose sign-in it used was removed. planque's `reason` is never read for it.
+   */
   @Test fun aSignedOutConnectionWithNoWordsYetSaysSoInTheAppsWords() {
-    val g = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant(status = "needs_reconnect"))
-    assertEquals("Signed out by mcp.stripe.com · sign in again", bot.tafs.app.model.ConnectionWords.signedOut(g))
+    fun signedOut(reason: String?) = bot.tafs.app.model.ConnectionWords.signedOut(
+      KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant(status = "needs_reconnect", extra = reason?.let { ""","reason":"$it"""" } ?: "")),
+    )
+    assertEquals("Signed out · sign in again", signedOut(null))
+    assertEquals("Signed out · sign in again", signedOut("the connection whose sign-in it used was disconnected"))
   }
 
   @Test fun anyLiveUpdateReadsPlanquesGrantsAgain() = runTest {

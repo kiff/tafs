@@ -169,6 +169,7 @@
   "connect.status.choosing_tools": "Zalogowano · Coach wybiera jej narzędzia",
   "connect.status.connected": "Połączono",
   "connect.status.signed_out": "Wylogowano przez {vendor} · zaloguj się ponownie",
+  "connect.status.signed_out_plain": "Wylogowano · zaloguj się ponownie",
   "connect.status.waiting_sign_in": "Czeka na logowanie w {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Ten taf nie jest jeszcze w tafs cloud, więc nie można dla niego łączyć aplikacji.",
   "connect.tafs_cloud_named_no_connection": "tafs cloud nie wskazał połączenia do zatwierdzenia",

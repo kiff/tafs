@@ -308,9 +308,10 @@ final class PlanqueClient {
         /// Ended with Cancel, not Remove access: a sign-in that never came back, or a request
         /// not answered yet.
         var cancellable: Bool { waitingSignIn || pendingRequest }
-        /// The signed-out connection in planque's words; before planque sends them, the app's.
+        /// The signed-out connection in planque's words, which name the cause; before planque sends them, the app's
+        /// plain "Signed out · sign in again", true whoever signed it out (not "by {vendor}": a sibling's removal does too).
         var signedOutWords: String {
-            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOut(vendor: "\(vendor)")
+            statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOutPlain
         }
         /// A sign-in planque holds that no taf uses yet: the owner can see and end it.
         var holdsSignIn: Bool { listed || (status == "pending" && signedIn == true) }
@@ -517,7 +518,7 @@ final class PlanqueClient {
     }
 
     /// Confirms the vendor sign-in with the code it handed back to the app. Only the phone
-    /// that approved can, within 15 minutes; then planque registers the tools in KIFF.
+    /// that approved can, within planque's sign-in window (60 minutes); then planque registers the tools in KIFF.
     func confirm(grantID: String, code: String) async throws -> Grant {
         try await send("POST", "grants/\(escaped(grantID))/confirm", body: ["confirm": code])
     }

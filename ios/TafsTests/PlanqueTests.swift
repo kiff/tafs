@@ -864,7 +864,7 @@ final class PlanqueTests: XCTestCase {
         XCTAssertFalse(g.connected)
         XCTAssertEqual(g.signedOutWords, "Signed out by Stripe · sign in again")
         let bare = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(Self.grantJSONFor(status: "needs_reconnect").utf8))
-        XCTAssertEqual(bare.signedOutWords, "Signed out by Stripe · sign in again", "the app's words until planque sends its own")
+        XCTAssertEqual(bare.signedOutWords, "Signed out · sign in again", "the app's plain words until planque sends its own")
     }
 
     /// A grant its vendor signed out is approved and signed in again, as a new one is: one

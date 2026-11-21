@@ -935,6 +935,7 @@
     <string name="connect_status_choosing_tools">로그인함 · Coach가 도구를 고르는 중</string>
     <string name="connect_status_connected">연결됨</string>
     <string name="connect_status_signed_out">%1$s에서 로그아웃됨 · 다시 로그인</string>
+    <string name="connect_status_signed_out_plain">로그아웃됨 · 다시 로그인</string>
     <string name="connect_status_waiting_sign_in">%1$s 로그인을 기다리는 중</string>
     <string name="connect_taf_not_tafs_cloud_apps">이 taf는 아직 tafs cloud에 없어 앱을 연결할 수 없습니다.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud가 승인할 연결을 지정하지 않았습니다</string>
@@ -1785,6 +1786,8 @@
     <string name="record_tool_refused_counts">%1$s이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다</string>
     <string name="record_tool_refused_counts_why">%1$s이(가) 거절했고, 오늘 한도에는 여전히 포함됩니다%2$s</string>
     <string name="record_tool_refused_money">%1$s이(가) 거절했습니다. 돈은 움직이지 않았지만 오늘 합계에는 여전히 포함됩니다.</string>
+    <string name="record_tool_refused_not_counted">%1$s이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다</string>
+    <string name="record_tool_refused_not_counted_why">%1$s이(가) 거절했습니다. 아무것도 하지 않았으며 오늘 한도에도 포함되지 않습니다%2$s</string>
     <string name="record_waiting_for_you">나를 기다리는 중</string>
     <string name="record_within_card">%1$s, Card 안에서</string>
     <string name="record_within_card_alone">Card 안에서</string>

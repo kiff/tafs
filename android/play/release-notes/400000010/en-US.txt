@@ -1,0 +1,1 @@
+Test build of tafs on Wear OS: one tap to talk, no cut-off when you pause, times in every chat, and it opens at once. It also shows how long the watch waits for your phone; those timings never include your messages.

@@ -155,6 +155,7 @@
   "connect.status.choosing_tools": "Angemeldet · Coach wählt die Tools",
   "connect.status.connected": "Verbunden",
   "connect.status.signed_out": "Von {vendor} abgemeldet · erneut anmelden",
+  "connect.status.signed_out_plain": "Abgemeldet · erneut anmelden",
   "connect.status.waiting_sign_in": "Wartet auf die Anmeldung bei {vendor}",
   "connect.taf_not_tafs_cloud_apps": "Dieser taf ist noch nicht auf tafs cloud, daher können keine Apps für ihn verbunden werden.",
   "connect.tafs_cloud_named_no_connection": "tafs cloud hat keine Verbindung zum Genehmigen genannt",

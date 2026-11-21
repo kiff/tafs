@@ -11,6 +11,7 @@
 #   BETA_CONTACT                              "First:Last:phone:email", for Beta App Review (secret)
 #   BETA_FEEDBACK_EMAIL                       where testers' feedback goes (secret)
 #   WHAT_TO_TEST                              this build's "What to Test" (ios/WhatToTest.txt)
+#   K5                                        "true": a K5 build. Only its What to Test is set, to "never submit"
 # This repository is public: no email or account detail is written here.
 #   ruby asc-beta.rb
 #
@@ -82,30 +83,11 @@ module AscBeta
 
     # The build, once App Store Connect has processed it (usually a few minutes).
     number = env.fetch("BUILD_NUMBER")
-    build = nil
-    60.times do
-      build = (api.("get", "/v1/builds?filter[app]=#{app_id}&filter[version]=#{number}")[1]["data"] || []).first
-      state = build && build.dig("attributes", "processingState")
-      break if state == "VALID"
-      raise Failure, "build #{number} is #{state}" if %w[FAILED INVALID].include?(state)
-      out.puts "build #{number}: #{state || "not there yet"}; waiting"
-      wait.(30)
-    end
-    raise Failure, "build #{number} wasn't processed in 30 minutes" unless build && build.dig("attributes", "processingState") == "VALID"
+    build = processed(api, app_id, number, out, wait)
 
     # What to test in this build, for testers and Beta App Review.
     what = env["WHAT_TO_TEST"].to_s.strip
-    unless what.empty?
-      locs = api.("get", "/v1/builds/#{build["id"]}/betaBuildLocalizations")[1]["data"]
-      loc = (locs.is_a?(Array) ? locs : []).find { |l| l.dig("attributes", "locale") == "en-US" }
-      if loc
-        api.("patch", "/v1/betaBuildLocalizations/#{loc["id"]}", { data: { type: "betaBuildLocalizations", id: loc["id"], attributes: { whatsNew: what } } })
-      else
-        api.("post", "/v1/betaBuildLocalizations", { data: { type: "betaBuildLocalizations", attributes: { locale: "en-US", whatsNew: what },
-          relationships: { build: { data: { type: "builds", id: build["id"] } } } } })
-      end
-      out.puts "build #{number}: what to test set"
-    end
+    what_to_test(api, build, number, what, out) unless what.empty?
 
     api.("post", "/v1/betaGroups/#{group["id"]}/relationships/builds", { data: [{ type: "builds", id: build["id"] }] })
     out.puts "build #{number} added to #{GROUP}"
@@ -157,6 +139,46 @@ module AscBeta
     end
   end
 
+  # A K5 build (ios.yml's k5 input: TAFS_K5, row 39 on) stays with Team and is never added to the Beta testers. Where
+  # a build is picked for App Store review, it says so in its What to Test, so it's never the one submitted.
+  K5_WHAT_TO_TEST = "K5 TEST BUILD: never submit for App Store review. The in-app sign-in and the illustrated onboarding are on in it (TAFS_K5). Team only."
+
+  def mark_k5(api, env, out: $stdout, wait: ->(s) { sleep s })
+    app = api.("get", "/v1/apps?filter[bundleId]=#{BUNDLE_ID}")[1]["data"].first or raise Failure, "no app #{BUNDLE_ID}"
+    number = env.fetch("BUILD_NUMBER")
+    build = processed(api, app["id"], number, out, wait)
+    what_to_test(api, build, number, K5_WHAT_TO_TEST, out)
+    out.puts "build #{number} is marked K5: never submit it for review"
+  end
+
+  # The build numbered `number`, once App Store Connect has processed it; a failure past 30 minutes or when it's refused.
+  def processed(api, app_id, number, out, wait)
+    build = nil
+    60.times do
+      build = (api.("get", "/v1/builds?filter[app]=#{app_id}&filter[version]=#{number}")[1]["data"] || []).first
+      state = build && build.dig("attributes", "processingState")
+      break if state == "VALID"
+      raise Failure, "build #{number} is #{state}" if %w[FAILED INVALID].include?(state)
+      out.puts "build #{number}: #{state || "not there yet"}; waiting"
+      wait.(30)
+    end
+    raise Failure, "build #{number} wasn't processed in 30 minutes" unless build && build.dig("attributes", "processingState") == "VALID"
+    build
+  end
+
+  # The build's "What to Test" in English, set in place when it's there already.
+  def what_to_test(api, build, number, what, out)
+    locs = api.("get", "/v1/builds/#{build["id"]}/betaBuildLocalizations")[1]["data"]
+    loc = (locs.is_a?(Array) ? locs : []).find { |l| l.dig("attributes", "locale") == "en-US" }
+    if loc
+      api.("patch", "/v1/betaBuildLocalizations/#{loc["id"]}", { data: { type: "betaBuildLocalizations", id: loc["id"], attributes: { whatsNew: what } } })
+    else
+      api.("post", "/v1/betaBuildLocalizations", { data: { type: "betaBuildLocalizations", attributes: { locale: "en-US", whatsNew: what },
+        relationships: { build: { data: { type: "builds", id: build["id"] } } } } })
+    end
+    out.puts "build #{number}: what to test set"
+  end
+
   # App Store Connect's error codes and details, without anything a caller sent.
   def errors(body)
     (body["errors"] || []).map { |e| "#{e["code"]}: #{e["detail"]}" }.join("; ")
@@ -198,7 +220,11 @@ if $PROGRAM_NAME == __FILE__
     [status, data]
   end
   begin
-    AscBeta.run(api, ENV)
+    if ENV["K5"] == "true"
+      AscBeta.mark_k5(api, ENV)
+    else
+      AscBeta.run(api, ENV)
+    end
   rescue AscBeta::Failure => e
     abort e.message
   end

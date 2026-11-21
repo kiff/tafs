@@ -139,3 +139,16 @@ never the app's message.
   a short, plain, one-line reason, and otherwise keeps its own line that names
   the app ([android-app.md](android-app.md#the-record)). With a typed reason,
   both apps show KIFF's words and never `message`. iPhone and iPad follow.
+
+## 11. Words for "signing in inside the app isn't on yet" — open
+
+While KIFF's in-app sign-in is off (`KIFF_APP_SIGNIN`), `GET /v1/auth/app/terms` and authorize answer
+`400 {"error":"unsupported_client","error_description":"signing in inside the app isn't on yet"}`. The
+description is English OAuth text, so the welcome shows its own "Signing in didn't work." in every
+language, and a tester can't tell why (K5 on Android, 21 Nov 2026). Only test builds reach it today
+(the onboarding is off), but a build with it on, or a client KIFF turns off later, would too.
+
+- **The need:** `words` beside `unsupported_client`, in the person's language (`ui_locales` or
+  `Accept-Language`), as `region_unsupported` carries.
+- **tafs's part — one line on each app:** add `unsupported_client` to the codes whose words are shown as
+  sent (`ErrorWords.KIFF_WORDED` on Android), so the welcome shows KIFF's words under Continue.

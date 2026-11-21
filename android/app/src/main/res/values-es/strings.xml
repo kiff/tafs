@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Sesión iniciada · Coach está eligiendo sus herramientas</string>
     <string name="connect_status_connected">Conectado</string>
     <string name="connect_status_signed_out">%1$s cerró la sesión · vuelve a iniciar sesión</string>
+    <string name="connect_status_signed_out_plain">Sesión cerrada · vuelve a iniciar sesión</string>
     <string name="connect_status_waiting_sign_in">Esperando el inicio de sesión en %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Este taf aún no está en tafs cloud, así que no se le pueden conectar apps.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud no indicó ninguna conexión que aprobar</string>
@@ -1850,6 +1851,8 @@
     <string name="record_tool_refused_counts">%1$s lo rechazó, y sigue contando para los límites de hoy</string>
     <string name="record_tool_refused_counts_why">%1$s lo rechazó, y sigue contando para los límites de hoy%2$s</string>
     <string name="record_tool_refused_money">%1$s lo rechazó. No se movió dinero, pero sigue contando para el total de hoy.</string>
+    <string name="record_tool_refused_not_counted">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy</string>
+    <string name="record_tool_refused_not_counted_why">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy%2$s</string>
     <string name="record_waiting_for_you">Te necesita</string>
     <string name="record_within_card">%1$s, dentro de la Card</string>
     <string name="record_within_card_alone">Dentro de la Card</string>

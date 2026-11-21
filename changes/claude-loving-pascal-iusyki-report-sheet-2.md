@@ -1,0 +1,1 @@
+- **Tests:** the iOS test that reports an answer twice waits for the first report's sheet to close before it opens the answer's menu again.
