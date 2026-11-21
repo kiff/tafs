@@ -29,7 +29,7 @@ it changes all three.
 | `chrome/src/dialogs.js` | In a run's tabs only: the page's dialogs stop blocking, and a confirm is never accepted. |
 | `chrome/src/store.js` | What's kept: the key pair and the pairing, nothing else. |
 | `chrome/sidepanel/` | Pairing, and while a taf works: what it's doing, Pause, Resume, Stop, and the sites to allow. |
-| `chrome/_locales/en/` | The words, in English for now. They move into `app/strings` with the other languages before the switch goes on. |
+| `chrome/_locales/` | The words: English, and de, es, fr, it, nl, pl, pt_PT, pt_BR, ko and ja, in the app's own terms. `core.test.js` checks every locale has English's keys and placeholders, and a description of at most 132 characters, Chrome's limit. |
 
 ## Crypto
 
@@ -346,4 +346,4 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
 - **The phones' pairing screens and the approval card** for browser steps (iPhone and iPad, then Android).
 - **Sealed values,** with their own security review.
-- **The words in every language,** and the release workflow (two approvals) that publishes to the Chrome Web Store.
+- **The release workflow** (two approvals) that publishes to the Chrome Web Store.

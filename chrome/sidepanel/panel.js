@@ -117,7 +117,7 @@ async function drawCoach() {
   const note = $("coachNote");
   note.textContent = "";
   if (r.error) {
-    note.textContent = t(r.error === "no_session" ? "coach_no_session" : "coach_error");
+    note.textContent = t(r.error === "no_session" ? "unpaired" : "coach_error");
     return;
   }
   if (!r.thread) {
@@ -126,6 +126,7 @@ async function drawCoach() {
   }
   const list = $("coachThread");
   list.textContent = "";
+  $("coachEmpty").hidden = r.thread.messages.length > 0;
   for (const m of r.thread.messages.slice(-20)) {
     const li = document.createElement("li");
     li.className = m.from;
@@ -139,21 +140,26 @@ async function drawCoach() {
 $("share").onclick = async () => {
   const target = await send({ type: "share_target" });
   if (target.error) {
-    $("coachNote").textContent = t("share_error_" + target.error) || t("share_error");
+    $("coachNote").textContent = chrome.i18n.getMessage("share_error_" + target.error) || t("share_unavailable");
     return;
   }
   // Chrome asks the owner once for this site: the extension reads nothing it wasn't let into.
   const ok = await chrome.permissions.request({ origins: [target.origin + "/*"] });
-  if (!ok) return;
+  if (!ok) {
+    $("coachNote").textContent = t("share_declined");
+    return;
+  }
   const read = await send({ type: "share_read", tabId: target.tabId });
   if (read.error) {
-    $("coachNote").textContent = t("share_error");
+    $("coachNote").textContent = t("share_unavailable");
     return;
   }
   shared = read.page;
   $("shareWhat").textContent = shared.title + " · " + new URL(shared.url).hostname + " · " + t("share_chars", String(shared.text.length));
   $("sharePreview").hidden = false;
 };
+
+$("share").title = t("share_permission");
 
 $("shareRemove").onclick = () => {
   shared = null;
