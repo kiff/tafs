@@ -4,7 +4,7 @@
   "chrome.code_title": "Typ deze code in Chrome",
   "chrome.confirm": "Koppelen",
   "chrome.expired": "De code is verlopen, dus er is niets gekoppeld. Begin opnieuw.",
-  "chrome.footer": "Je tafs kunnen een gekoppelde Chrome alleen gebruiken op de sites die een verbinding noemt, en riskante stappen keur je hier goed.",
+  "chrome.footer": "Je tafs kunnen een gekoppelde Chrome alleen gebruiken op de sites die een koppeling noemt, en riskante stappen keur je hier goed.",
   "chrome.held_basket": "In het winkelmandje",
   "chrome.held_in": "In {name}",
   "chrome.held_page": "Op de pagina",

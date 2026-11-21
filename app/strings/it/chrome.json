@@ -4,7 +4,7 @@
   "chrome.code_title": "Inserisci questo codice in Chrome",
   "chrome.confirm": "Associa",
   "chrome.expired": "Il codice è scaduto, quindi non è stato associato nulla. Ricomincia.",
-  "chrome.footer": "I tuoi tafs possono usare un Chrome associato solo sui siti indicati da una connessione, e i passaggi rischiosi li approvi qui.",
+  "chrome.footer": "I tuoi tafs possono usare un Chrome associato solo sui siti indicati da un collegamento, e i passaggi rischiosi li approvi qui.",
   "chrome.held_basket": "Nel carrello",
   "chrome.held_in": "In {name}",
   "chrome.held_page": "Sulla pagina",

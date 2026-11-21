@@ -35005,7 +35005,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I tuoi tafs possono usare un Chrome associato solo sui siti indicati da una connessione, e i passaggi rischiosi li approvi qui."
+            "value": "I tuoi tafs possono usare un Chrome associato solo sui siti indicati da un collegamento, e i passaggi rischiosi li approvi qui."
           }
         },
         "ko": {
@@ -35017,7 +35017,7 @@
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je tafs kunnen een gekoppelde Chrome alleen gebruiken op de sites die een verbinding noemt, en riskante stappen keur je hier goed."
+            "value": "Je tafs kunnen een gekoppelde Chrome alleen gebruiken op de sites die een koppeling noemt, en riskante stappen keur je hier goed."
           }
         },
         "pl": {
