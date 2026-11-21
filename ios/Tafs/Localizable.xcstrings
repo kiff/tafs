@@ -128335,10 +128335,58 @@
     "sign_in.in_app_not_on": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung in der App ist noch nicht eingeschaltet."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Signing in inside the app isn't on yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión dentro de la app aún no está activado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion dans l'app n'est pas encore activée."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accesso dall'app non è ancora attivo."
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "앱 안에서 로그인하는 기능은 아직 켜져 있지 않습니다."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen in de app staat nog niet aan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie w aplikacji nie jest jeszcze włączone."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O início de sessão dentro da app ainda não está ativado."
           }
         }
       }

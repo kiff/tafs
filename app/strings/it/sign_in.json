@@ -12,6 +12,7 @@
   "sign_in.every_action_taf_takes_goes": "Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un'app. Le tue risposte vengono firmate su questo {device}.",
   "sign_in.every_action_taf_takes_goes_view": "Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un'app. Le tue approvazioni vengono firmate sul telefono.",
   "sign_in.how_works": "Come funziona",
+  "sign_in.in_app_not_on": "L'accesso dall'app non è ancora attivo.",
   "sign_in.ios_did_not_open_sign": "iOS non ha aperto la pagina di accesso (errore {code}; {context}). Riprova con tafs aperta.",
   "sign_in.lead": "I tuoi tafs agiscono con le Card di KIFF. Approva questo {device} in KIFF, e le Card che hai emesso compaiono qui.",
   "sign_in.lets_go": "Andiamo",

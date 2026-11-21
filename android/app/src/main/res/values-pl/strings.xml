@@ -2423,6 +2423,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje odpowiedzi są podpisywane na tym urządzeniu (%1$s).</string>
     <string name="sign_in_every_action_taf_takes_goes_view">Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje zatwierdzenia są podpisywane na telefonie.</string>
     <string name="sign_in_how_works">Jak to działa</string>
+    <string name="sign_in_in_app_not_on">Logowanie w aplikacji nie jest jeszcze włączone.</string>
     <string name="sign_in_ios_did_not_open_sign">iOS nie otworzył strony logowania (błąd %1$s; %2$s). Spróbuj ponownie przy otwartym tafs.</string>
     <string name="sign_in_lead">Twoje tafs działają w ramach Card KIFF. Zatwierdź to urządzenie (%1$s) w KIFF, a wydane przez Ciebie Card pojawią się tutaj.</string>
     <string name="sign_in_lets_go">Zaczynamy</string>

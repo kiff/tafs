@@ -2289,6 +2289,7 @@
     <string name="sign_in_every_action_taf_takes_goes">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos réponses sont signées sur %2$s.</string>
     <string name="sign_in_every_action_taf_takes_goes_view">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos approbations sont signées sur votre téléphone.</string>
     <string name="sign_in_how_works">Comment ça marche</string>
+    <string name="sign_in_in_app_not_on">La connexion dans l\'app n\'est pas encore activée.</string>
     <string name="sign_in_ios_did_not_open_sign">iOS n\'a pas ouvert la page de connexion (erreur %1$s ; %2$s). Réessayez avec tafs ouvert.</string>
     <string name="sign_in_lead">Vos tafs agissent sous des Cards KIFF. Approuvez %2$s dans KIFF, et les Cards que vous avez émises s\'affichent ici.</string>
     <string name="sign_in_lets_go">C\'est parti</string>

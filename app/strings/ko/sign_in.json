@@ -12,6 +12,7 @@
   "sign_in.every_action_taf_takes_goes": "taf의 모든 행동은 KIFF를 거치며, KIFF는 앱에 무엇이든 전달하기 전에 Card를 확인합니다. 답변은 이 {device}에서 서명됩니다.",
   "sign_in.every_action_taf_takes_goes_view": "taf의 모든 행동은 KIFF를 거치며, KIFF는 앱에 무엇이든 전달하기 전에 Card를 확인합니다. 승인은 휴대폰에서 서명됩니다.",
   "sign_in.how_works": "사용 방법",
+  "sign_in.in_app_not_on": "앱 안에서 로그인하는 기능은 아직 켜져 있지 않습니다.",
   "sign_in.ios_did_not_open_sign": "iOS에서 로그인 페이지를 열지 못했습니다(오류 {code}; {context}). tafs를 연 상태에서 다시 시도하세요.",
   "sign_in.lead": "tafs는 KIFF Card에 따라 일합니다. KIFF에서 이 {device}을(를) 승인하면 발급한 Card가 여기에 표시됩니다.",
   "sign_in.lets_go": "시작하기",
