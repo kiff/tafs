@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "zero": "{count} faili · glabā 30 dienas",
+    "one": "{count} fails · glabā 30 dienas",
+    "other": "{count} faili · glabā 30 dienas"
+  },
+  "files.all": "Visi",
+  "files.all_tafs": "Visi taf",
+  "files.by_run": "Pēc palaišanas",
+  "files.by_taf": "Pēc taf",
+  "files.delete_body": "Tas nekavējoties pazūd no sadaļas “Faili” visiem šajā kontā. To vairs nevarēs atjaunot.",
+  "files.delete_now": "Dzēst tūlīt",
+  "files.delete_question": "Dzēst “{name}” tūlīt?",
+  "files.deleted": "Dzēsts visiem",
+  "files.download": "Lejupielādēt",
+  "files.empty": "Pagaidām nekā. Kad taf palaišanā izveido pārskatu, tabulu vai dokumentu, tas šeit tiek glabāts 30 dienas, lai ikviens šajā kontā to varētu atvērt, saglabāt vai kopīgot.",
+  "files.everyone": "Ikviens šajā kontā",
+  "files.goes_away": "Pazūd",
+  "files.goes_in_days": {
+    "zero": "pazudīs pēc {count} dienām",
+    "one": "pazudīs pēc {count} dienas",
+    "other": "pazudīs pēc {count} dienām"
+  },
+  "files.goes_on": "{date} (30 dienas pēc tā palaišanas)",
+  "files.goes_today": "pazudīs šodien",
+  "files.goes_tomorrow": "pazudīs rīt",
+  "files.in_run": "Palaišanā",
+  "files.kept_line": "Katrs fails tiek glabāts 30 dienas no tā palaišanas, pēc tam pazūd pats. Šos failus redz ikviens šajā kontā. Tavu sarunu pielikumi paliek kopā ar savām ziņām.",
+  "files.kept_until": "Tā faili tiek glabāti līdz {date}",
+  "files.made_by": "Izveidoja",
+  "files.none_yet": "Vēl nav · glabā 30 dienas",
+  "files.pick_one": "Izvēlies failu, lai to redzētu šeit.",
+  "files.preview_start": "Rādīts tikai sākums. Lejupielādē failu, lai izlasītu visu.",
+  "files.saved": "Saglabāts šajā ierīcē",
+  "files.see_in_chat": "Skatīt sarunā",
+  "files.share": "Kopīgot",
+  "files.size": "Izmērs",
+  "files.taf_row": {
+    "zero": "{count} faili no tā palaišanām",
+    "one": "{count} fails no tā palaišanām",
+    "other": "{count} faili no tā palaišanām"
+  },
+  "files.title": "Faili",
+  "files.type": "Veids",
+  "files.who_sees": "Kas to redz"
+}

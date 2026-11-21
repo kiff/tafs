@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Atbildēt laikā",
+  "work.answer_within_days": {
+    "zero": "{count} dienas",
+    "one": "{count} diena",
+    "other": "{count} dienas"
+  },
+  "work.answer_within_hours": {
+    "zero": "{count} stundas",
+    "one": "{count} stunda",
+    "other": "{count} stundas"
+  },
+  "work.answer_within_line": "Tev paziņo, kad lieta gaida ilgāk.",
+  "work.answer_within_none": "Nav iestatīts",
+  "work.answer_within_not_set": "To nevarēja iestatīt. {why}",
+  "work.asking_kiff_run": "Lūdz KIFF palaist {tool}…",
+  "work.did_not_stop": "Tas neapstājās: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Tā palaišanas",
+  "work.not_read": "Tā darbu nevarēja nolasīt. {why}",
+  "work.not_sent_again": "Tas netika nosūtīts vēlreiz. {why}",
+  "work.request.try_reply_now": "Mēģināt atbildi tagad",
+  "work.requests_need_you": {
+    "zero": "{count} pieprasījumi gaida tevi",
+    "one": "{count} pieprasījums gaida tevi",
+    "other": "{count} pieprasījumi gaida tevi"
+  },
+  "work.send_again": "Sūtīt vēlreiz",
+  "work.sending_again": "Sūta vēlreiz…",
+  "work.stop_run": "Pārtraukt palaišanu",
+  "work.stopped_part_way_before_finished": "{taf} apstājās pusceļā, pirms bija pabeidzis."
+}
