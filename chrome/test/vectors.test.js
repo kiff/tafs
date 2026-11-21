@@ -19,3 +19,20 @@ test("the extension's proof, the phone's proof and the signed bytes are the vect
   const body = { pairing: v.pairing, chrome_key_sha256: v.chrome_key_sha256, name: v.name, phone_key: v.phone_key, phone_proof: v.phone_proof };
   assert.equal(b64u(signingBytes(LABEL.pair, body)), v.signed_bytes);
 });
+
+// vectors/chrome-grant.json and chrome-sensitive.json: what the phones sign when they approve a browser grant, and the
+// sensitive list they mark on the approval card. ios/TafsTests/ChromePairingTests.swift reads the same files.
+const g = JSON.parse(readFileSync(new URL("../../vectors/chrome-grant.json", import.meta.url), "utf8"));
+const s = JSON.parse(readFileSync(new URL("../../vectors/chrome-sensitive.json", import.meta.url), "utf8"));
+
+test("a grant's sites and a sensitive allowance sign the vectors' bytes", () => {
+  assert.equal(b64u(signingBytes(LABEL.sites, { chrome_id: g.chrome_id, grant: g.grant, sites: g.sites })), g.sites_signed_bytes);
+  assert.equal(b64u(signingBytes(LABEL.sensitive, { chrome_id: g.chrome_id, grant: g.grant, site: g.site })), g.sensitive_signed_bytes);
+});
+
+test("the sensitive list is the vectors' list, and reads each sample host the same", async () => {
+  const { SENSITIVE, sensitive } = await import("../src/sites.js");
+  assert.deepEqual(SENSITIVE.sites, s.sites);
+  assert.equal(SENSITIVE.labels.source, s.labels);
+  for (const [host, want] of Object.entries(s.hosts)) assert.equal(sensitive(host), want, host);
+});

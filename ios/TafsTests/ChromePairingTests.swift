@@ -66,4 +66,43 @@ final class ChromePairingTests: XCTestCase {
         XCTAssertEqual(ChromePairing.name("", browser: "Chrome 131 on macOS"), "Chrome 131 on macOS")
         XCTAssertEqual(ChromePairing.name(String(repeating: "x", count: 60), browser: "").count, 40)
     }
+
+    private struct GrantVectors: Decodable {
+        let chromeId, grant, site, sitesSignedBytes, sensitiveSignedBytes: String
+        let sites: [String]
+    }
+
+    private struct SensitiveVectors: Decodable {
+        let sites: [String]
+        let labels: String
+        let hosts: [String: Bool]
+    }
+
+    private func repoFile<T: Decodable>(_ path: String) throws -> T {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent(path)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(T.self, from: Data(contentsOf: url))
+    }
+
+    /// Approving a browser grant: the bytes for its sites and for one sensitive site are the extension's
+    /// (vectors/chrome-grant.json), so what the phone signs is what `checkSites` and `checkAllowances` verify.
+    func testAGrantsSitesAndASensitiveAllowanceSignTheExtensionsBytes() throws {
+        let g: GrantVectors = try repoFile("vectors/chrome-grant.json")
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.sitesBytes(chromeID: g.chromeId, grant: g.grant, sites: g.sites)), g.sitesSignedBytes)
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.sensitiveBytes(chromeID: g.chromeId, grant: g.grant, site: g.site)), g.sensitiveSignedBytes)
+        XCTAssertNotEqual(try ChromePairing.sitesBytes(chromeID: g.chromeId, grant: g.grant, sites: g.sites + ["evil.example"]),
+                          try ChromePairing.sitesBytes(chromeID: g.chromeId, grant: g.grant, sites: g.sites), "another site list is other bytes")
+    }
+
+    /// The sensitive list is the extension's (vectors/chrome-sensitive.json), and reads each sample host as it does.
+    func testTheSensitiveListIsTheExtensions() throws {
+        let s: SensitiveVectors = try repoFile("vectors/chrome-sensitive.json")
+        XCTAssertEqual(ChromePairing.sensitiveSites, s.sites)
+        XCTAssertEqual(ChromePairing.sensitiveLabels.pattern, s.labels)
+        for (host, want) in s.hosts {
+            XCTAssertEqual(ChromePairing.isSensitive(host), want, host)
+        }
+    }
 }
