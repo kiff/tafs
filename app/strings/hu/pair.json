@@ -1,6 +1,6 @@
 {
   "pair.added": "Ez az eszköz ({device}) hozzáadva.",
-  "pair.added_passkey": "Ez az eszköz ({device}) maga nem tud jóváhagyásokat aláírni. Hagyd jóvá a telefonodon vagy azonosítókulccsal.",
+  "pair.added_passkey": "Ez az eszköz ({device}) maga nem tud jóváhagyásokat aláírni. Hagyd jóvá a telefonodon vagy jelkulccsal.",
   "pair.check_code_lead": "A telefonod megkérdezi, hogy az eszközöd ({device}) ezt a kódot mutatja-e:",
   "pair.code_expired": "Ez a kód lejárt.",
   "pair.device_name": "tafs ezen az eszközön ({device})",
@@ -10,8 +10,8 @@
   "pair.keyring_refused": "Ez a számítógép nem tudta menteni a bejelentkezést, ezért nem lett hozzáadva: futó és feloldott kulcstartóra van szükség, például GNOME Keyring, KWallet vagy KeePassXC. Állíts be egyet vagy oldd fel, majd jeleníts meg új kódot, és próbáld újra.",
   "pair.new_code": "Új kód megjelenítése",
   "pair.passkey_why_body": "Ezen az eszközön ({device}) marad, ezzel védve: {biometry}. Vele ez az eszköz jóváhagyja a tafjaid műveleteit, és nélküled semmi sem lesz jóváhagyva. A Windows ezután az arcodat, ujjlenyomatodat vagy PIN-kódodat kéri.",
-  "pair.passkey_why_go": "Azonosítókulcs létrehozása",
-  "pair.passkey_why_title": "Azonosítókulcs létrehozása ehhez az eszközhöz ({device})",
+  "pair.passkey_why_go": "Jelkulcs létrehozása",
+  "pair.passkey_why_title": "Jelkulcs létrehozása ehhez az eszközhöz ({device})",
   "pair.refused_key_registered": "A telefonod szerint ez az eszköz ({device}) már párosítva van a fiókoddal. Jeleníts meg új kódot, és olvasd be újra.",
   "pair.refused_other": "A telefonod nem tudta hozzáadni ezt az eszközt ({device}). Jeleníts meg új kódot, és olvasd be újra.",
   "pair.refused_title": "A telefonod nem adta hozzá ezt az eszközt ({device})",

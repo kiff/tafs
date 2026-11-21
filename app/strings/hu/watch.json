@@ -35,8 +35,8 @@
   },
   "watch.inbox_empty": "Nincs semmi új. A Coach válaszai és a tafjaid riasztásai ide érkeznek.",
   "watch.inbox_unread": {
-    "one": "{count} olvasatlan a Beérkezettben",
-    "other": "{count} olvasatlan a Beérkezettben"
+    "one": "{count} olvasatlan a Bejövőben",
+    "other": "{count} olvasatlan a Bejövőben"
   },
   "watch.its_settings": "A beállításai",
   "watch.keep_for_later": "Megtartás későbbre",
@@ -57,7 +57,7 @@
   "watch.nothing_waits": "Semmi sem vár rád.",
   "watch.open_on_phone": "Megnyitás a telefonon",
   "watch.page.brief": "Összefoglaló",
-  "watch.page.inbox": "Beérkezett",
+  "watch.page.inbox": "Bejövő",
   "watch.paused_still_answers": "Szüneteltetve: az ütemezése ki van kapcsolva. Arra, amit küldesz, továbbra is válaszol.",
   "watch.phone_link_failed": "Nem sikerült kapcsolódni a telefonodhoz. Próbáld újra.",
   "watch.phone_no_answer": "A telefonod nem válaszolt időben. Próbáld újra.",
@@ -91,7 +91,7 @@
   "watch.settings_of": "{taf} · beállítások",
   "watch.sign_in_on_phone": "Előbb jelentkezz be a tafsbe a telefonodon.",
   "watch.sign_out_q": "Kijelentkezel ezen az órán?",
-  "watch.sign_out_sub": "A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a beérkezett üzeneteidet.",
+  "watch.sign_out_sub": "A telefonod bejelentkezve marad. Ez az óra elfelejti a tafjaidat, csevegéseidet és a Bejövőt.",
   "watch.signed_in": "Bejelentkezve",
   "watch.signed_out_here": "Kijelentkeztél ezen az órán. A telefonod bejelentkezve marad.",
   "watch.swipe_settings": "Húzd balra a beállításaiért",

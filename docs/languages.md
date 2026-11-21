@@ -457,9 +457,9 @@ singular ("3 hívás"), so both plural forms read the same. Apple and Windows me
 | Account | Fiók |
 | limit / spend limit | limit / költési limit |
 | credits / credit pack | kreditek / kreditcsomag |
-| passkey | azonosítókulcs |
+| passkey | jelkulcs |
 | Sign in / Sign out | Bejelentkezés / Kijelentkezés |
-| Inbox | Beérkezett |
+| Inbox | Bejövő |
 | Overview | Áttekintés |
 | Calendar | Naptár |
 | Usage | Használat |
@@ -494,7 +494,7 @@ other (20 and up).
 | credits / credit pack | credite / pachet de credite |
 | passkey | cheie de acces |
 | Sign in / Sign out | Conectați-vă / Deconectați-vă |
-| Inbox | Inbox |
+| Inbox | Mesajele primite |
 | Overview | Prezentare generală |
 | Calendar | Calendar |
 | Usage | Utilizare |

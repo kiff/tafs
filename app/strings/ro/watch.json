@@ -37,9 +37,9 @@
   },
   "watch.inbox_empty": "Nimic nou. Răspunsurile lui Coach și alertele tafurilor ajung aici.",
   "watch.inbox_unread": {
-    "one": "{count} necitit în Inbox",
-    "few": "{count} necitite în Inbox",
-    "other": "{count} de necitite în Inbox"
+    "one": "{count} necitit în Mesajele primite",
+    "few": "{count} necitite în Mesajele primite",
+    "other": "{count} de necitite în Mesajele primite"
   },
   "watch.its_settings": "Setările sale",
   "watch.keep_for_later": "Păstrați pentru mai târziu",
@@ -61,7 +61,7 @@
   "watch.nothing_waits": "Nimic nu vă așteaptă.",
   "watch.open_on_phone": "Deschideți pe telefon",
   "watch.page.brief": "Rezumat",
-  "watch.page.inbox": "Inbox",
+  "watch.page.inbox": "Mesajele primite",
   "watch.paused_still_answers": "Întrerupt: programul său este dezactivat. Totuși răspunde la ce îi trimiteți.",
   "watch.phone_link_failed": "Nu s-a putut comunica cu telefonul. Încercați din nou.",
   "watch.phone_no_answer": "Telefonul nu a răspuns la timp. Încercați din nou.",
@@ -96,7 +96,7 @@
   "watch.settings_of": "{taf} · setări",
   "watch.sign_in_on_phone": "Mai întâi conectați-vă la tafs pe telefon.",
   "watch.sign_out_q": "Vă deconectați pe acest ceas?",
-  "watch.sign_out_sub": "Telefonul rămâne conectat. Acest ceas uită tafurile, conversațiile și inboxul dvs.",
+  "watch.sign_out_sub": "Telefonul rămâne conectat. Acest ceas uită tafurile, conversațiile și mesajele primite",
   "watch.signed_in": "Conectat",
   "watch.signed_out_here": "Deconectat pe acest ceas. Telefonul rămâne conectat.",
   "watch.swipe_settings": "Glisați la stânga pentru setările sale",
