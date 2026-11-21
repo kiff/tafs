@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Sinu vestlusi ei eksporditud. {why}",
+  "export.not_offered": "Faile ei õnnestunud selles telefonis salvestada. Vabasta ruumi ja proovi uuesti.",
+  "export.own_chats_each_taf_coach": "Sinu enda vestlused iga tafiga, ka Coachiga, sinu lisatud failide nimed ja sinu märkmed, loetava failina ja JSON-ina. Eksportida saad neid ainult sina.",
+  "export.preparing": "Vestluste ettevalmistamine…",
+  "export.ready_share_again": "Valmis: {files}. Jaga uuesti",
+  "export.row": "Ekspordi minu vestlused",
+  "export.sign_in_first": "Vestluste eksportimiseks logi sisse KIFFiga."
+}
