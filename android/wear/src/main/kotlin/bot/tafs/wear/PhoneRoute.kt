@@ -23,6 +23,9 @@ internal class PhoneRoute(
 ) {
   @Volatile private var known: String? = null
 
+  /** The phone to send a recording to: the one reached last, or one found now. */
+  suspend fun node(): String? = known ?: lookup()?.also { known = it }
+
   sealed interface Tried {
     data class Reply(val bytes: ByteArray, val looked: Boolean, val retried: Boolean) : Tried
     data class NoPhone(val retried: Boolean) : Tried
@@ -68,7 +71,8 @@ internal class PhoneRoute(
      * named, with no default: a new request won't compile until someone decides whether it reads or acts.
      */
     fun isRead(request: WatchRequest): Boolean = when (request) {
-      is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach -> false
+      // Transcribe too: the phone deletes the recording once it's read, so a second send finds none.
+      is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach, is WatchRequest.Transcribe -> false
       is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Asks, is WatchRequest.Brief, is WatchRequest.Taf,
       is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.Calendar, is WatchRequest.Account -> true
     }

@@ -101,6 +101,7 @@
         <item quantity="one">%1$s precisa de si</item>
         <item quantity="other">%1$s precisam de si</item>
     </plurals>
+    <string name="watch_no_offline_speech">O telemóvel não consegue converter sozinho a voz em texto neste idioma. Escreva em vez disso.</string>
     <string name="watch_not_sure">Não se sabe se chegou</string>
     <string name="watch_nothing_sent_until">Nada é enviado até aprovar.</string>
     <string name="watch_nothing_waits">Nada espera por si.</string>
@@ -142,6 +143,7 @@
     <string name="watch_swipe_settings">Deslize para a esquerda para as definições</string>
     <string name="watch_tap_start">Toque em Começar e fale. As suas palavras aparecem aqui enquanto fala.</string>
     <string name="watch_timing">Escuta %1$s ms · receção %2$s ms · resultado %3$s ms</string>
+    <string name="watch_transcribing">O telemóvel está a convertê-lo em texto…</string>
     <string name="watch_trust">Este relógio não guarda palavras-passe nem chaves e não aprova nada: o que precisa do seu sim espera pelo telemóvel. Os seus tafs só fazem o que os seus Cards permitem.</string>
     <string name="watch_type">Escrever</string>
     <string name="watch_type_hint">Escrever ao Coach…</string>

@@ -33,7 +33,10 @@ class WearRelayService : WearableListenerService() {
       // Not connected now is answered as a path this phone doesn't serve: the watch's words are the same (Open on phone), and
       // a new reason would be one an older watch can't read. In logs, UNKNOWN_PATH from here means "not a connected node".
       val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
-      else runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor).answer(path, request) }
+      else runCatching {
+        WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor, voice = voice(), transcriber = OnDeviceTranscriber(applicationContext))
+          .answer(path, request)
+      }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
       answer.trySetResult(WatchLink.encodeReply(reply))
     }.invokeOnCompletion {
@@ -44,6 +47,35 @@ class WearRelayService : WearableListenerService() {
     return answer.task
   }
 
+  /**
+   * A recording from the watch (row 44, A): the only audio that comes over the Data Layer, from a connected watch running this
+   * app, on its own channel path. Kept in the app's private cache until the watch asks for its text ([VoiceInbox]).
+   */
+  override fun onChannelOpened(channel: com.google.android.gms.wearable.ChannelClient.Channel) {
+    val path = channel.path
+    if (!path.startsWith(WatchLink.VOICE)) return
+    val client = Wearable.getChannelClient(this)
+    val id = path.removePrefix(WatchLink.VOICE)
+    scope.launch(Dispatchers.IO) {
+      try {
+        val connected = runCatching { Wearable.getNodeClient(this@WearRelayService).connectedNodes.await().any { it.id == channel.nodeId } }.getOrDefault(false)
+        if (connected && WatchLink.isVoiceId(id)) client.getInputStream(channel).await().use { voice().receive(id, it) }
+      } finally {
+        runCatching { client.close(channel) }
+      }
+    }
+  }
+
+  override fun onCreate() {
+    super.onCreate()
+    // Recordings a killed process left behind: older than 2 minutes, they go now.
+    runCatching { voice().sweep() }
+  }
+
+  private fun voice(): VoiceInbox = inbox ?: synchronized(WearRelayService::class.java) {
+    inbox ?: VoiceInbox(java.io.File(cacheDir, "watch-voice")).also { inbox = it }
+  }
+
   override fun onDestroy() {
     scope.cancel()
     super.onDestroy()
@@ -52,5 +84,8 @@ class WearRelayService : WearableListenerService() {
   private companion object {
     /** One for the process, across the service's restarts: the watch's reads of tafs cloud and KIFF are at least 10 s apart. */
     val floor = RefreshFloor()
+
+    /** The watch's recordings waiting for their text, for the process: a channel and its request may reach two service instances. */
+    @Volatile var inbox: VoiceInbox? = null
   }
 }

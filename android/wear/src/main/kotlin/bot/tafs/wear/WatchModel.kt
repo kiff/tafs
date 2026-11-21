@@ -26,7 +26,16 @@ internal const val UNREACHABLE_AFTER_MS = 30_000L
 fun interface PhoneLink {
   /** The phone's reply; [Asked.Unreachable] when no phone with tafs answered in time. */
   suspend fun ask(request: WatchRequest): Asked
+
+  /**
+   * A recording the watch's recognizer gave up on, to the phone over its own channel (row 44, A): the only audio that leaves the
+   * watch, and only to the paired phone, which turns it into text there ([WatchRequest.Transcribe]). Whether it all went.
+   */
+  suspend fun sendVoice(id: String, file: java.io.File): Boolean = false
 }
+
+/** The longest a recording for the phone is kept on the watch, whatever happens: 2 minutes (row 44, A). */
+internal const val VOICE_KEEP_MS = 2 * 60 * 1000L
 
 sealed interface Asked {
   data class Answered(val reply: WatchReply) : Asked
@@ -451,6 +460,9 @@ class WatchModel(
     /** Nothing heard, or the speech input failed: tap to try again. */
     data object HeardNothing : Voice
 
+    /** The watch's recognizer gave up: the phone is turning the recording into text, on the phone itself (row 44, A). */
+    data class Transcribing(val before: String, val replyTo: String?) : Voice
+
     /** Not sent: this watch has no screen lock, or is locked. */
     data object NeedsLock : Voice
   }
@@ -690,7 +702,43 @@ class WatchModel(
 
   /** Done with the microphone's screen: back to the microphone. Nothing heard is kept. */
   fun closeVoice() {
+    // Cancel while the phone transcribes: the recording goes now, and the text that comes after is dropped.
+    phoneVoice?.delete()
+    phoneVoice = null
     voiceNow = null
+  }
+
+  /** The recording on its way to the phone, deleted on Cancel. */
+  private var phoneVoice: VoiceAudio? = null
+
+  /**
+   * The watch's recognizer gave up partway and the watch recorded the rest ([audio]); [before] is what it heard first (row 44, A).
+   * The recording goes to the phone, which turns it into text on the phone itself; the text joins [before] and goes to the review,
+   * as words heard do. The recording is deleted once the text is back, on Cancel, and after [VOICE_KEEP_MS] at most. With no
+   * on-device recognizer on the phone, what was heard before stands, or the watch says so: nothing goes to a server.
+   */
+  suspend fun transcribeOnPhone(audio: KeptAudio, before: String, language: String) {
+    val listening = _voice.value as? Voice.Listening ?: return audio.delete()
+    phoneVoice = audio
+    voiceNow = Voice.Transcribing(before, listening.replyTo)
+    val id = newClientId()
+    val reply = try {
+      kotlinx.coroutines.withTimeoutOrNull(VOICE_KEEP_MS) {
+        if (!phone.sendVoice(id, audio.file)) null
+        else (phone.ask(WatchRequest.Transcribe(now(), id, language)) as? Asked.Answered)?.reply
+      }
+    } finally {
+      audio.delete()
+      if (phoneVoice === audio) phoneVoice = null
+    }
+    // Cancelled, or another start, meanwhile: nothing more.
+    val transcribing = _voice.value as? Voice.Transcribing ?: return
+    voiceNow = Voice.Listening(before, transcribing.replyTo)
+    when (reply) {
+      is WatchReply.Transcribed -> heard(listOf(before, reply.text).filter { it.isNotBlank() }.joinToString(" "))
+      WatchReply.NoOfflineSpeech -> if (before.isNotBlank()) heard(before) else voiceNow = Voice.NotSent(Words.Watch.noOfflineSpeech)
+      else -> if (before.isNotBlank()) heard(before) else heardNothing()
+    }
   }
 
   /**

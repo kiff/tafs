@@ -17,6 +17,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : PhoneLink {
   private val capabilities = Wearable.getCapabilityClient(context)
   private val messages = Wearable.getMessageClient(context)
+  private val channels = Wearable.getChannelClient(context)
   private val route = PhoneRoute(
     lookup = {
       capabilities.getCapability(WatchLink.PHONE_CAPABILITY, CapabilityClient.FILTER_REACHABLE).await()
@@ -42,7 +43,8 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
       }
     }
     return try {
-      withTimeoutOrNull(timeoutMs) {
+      // Turning a recording into text takes the phone longer than a read.
+      withTimeoutOrNull(if (request is WatchRequest.Transcribe) TRANSCRIBE_MS else timeoutMs) {
         // The phone reached last first, a second look when none is found, a read sent once more (PhoneRoute).
         when (val tried = route.ask(request, path, data) { lookupMs = android.os.SystemClock.elapsedRealtime() - started }) {
           is PhoneRoute.Tried.NoPhone -> {
@@ -74,5 +76,21 @@ class DataLayerPhone(context: Context, private val timeoutMs: Long = 10_000) : P
     } finally {
       trace()
     }
+  }
+
+  /** A recording to the phone over its own channel (row 44, A); the phone closes it once it has read the whole. */
+  override suspend fun sendVoice(id: String, file: java.io.File): Boolean = runCatching {
+    kotlinx.coroutines.withTimeout(TRANSCRIBE_MS) {
+      val node = route.node() ?: return@withTimeout false
+      val channel = channels.openChannel(node, WatchLink.VOICE + id).await()
+      kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        channels.getOutputStream(channel).await().use { out -> file.inputStream().use { it.copyTo(out) } }
+      }
+      true
+    }
+  }.getOrDefault(false)
+
+  private companion object {
+    const val TRANSCRIBE_MS = 30_000L
   }
 }

@@ -47,6 +47,7 @@
   "watch.needs_you_count": {
     "other": "要確認{count}件"
   },
+  "watch.no_offline_speech": "この言語では、スマートフォンだけで音声をテキストに変換できません。代わりに入力してください。",
   "watch.not_sure": "届いたか不明",
   "watch.nothing_sent_until": "承認するまで何も送信されません。",
   "watch.nothing_waits": "待機中の項目はありません。",
@@ -87,6 +88,7 @@
   "watch.swipe_settings": "左にスワイプして設定を表示",
   "watch.tap_start": "「開始」をタップしてから話してください。話している間、言葉がここに表示されます。",
   "watch.timing": "聞き取り {listen}ms・領収書 {receipt}ms・結果 {result}ms",
+  "watch.transcribing": "スマートフォンでテキストに変換しています…",
   "watch.trust": "このウォッチはパスワードやキーを保持せず、何も承認しません。あなたの承認が必要なものはスマートフォンで待ちます。tafsはCardが許可することだけを行います。",
   "watch.type": "入力",
   "watch.type_hint": "Coachに書く…",
