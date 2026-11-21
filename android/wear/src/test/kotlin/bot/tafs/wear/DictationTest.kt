@@ -48,6 +48,15 @@ class DictationTest {
     assertEquals(Dictation.Next.Done(""), d.ended(null))
   }
 
+  /** Cancel sends nothing, even when the recognizer answers late: a result, or its error on a cancel. */
+  @Test fun afterCancelALateResultOrErrorSendsNothing() {
+    d.ended("Move my call")
+    d.cancel()
+    assertEquals(Dictation.Next.Cancelled, d.ended("to Thursday"))
+    assertEquals(Dictation.Next.Cancelled, d.failed())
+    assertEquals(Dictation.Next.Cancelled, d.ended(null))
+  }
+
   @Test fun aFailureEndsItWithWhatWasHeardSoFar() {
     d.ended("Move my call")
     assertEquals(Dictation.Next.Done("Move my call"), d.failed())

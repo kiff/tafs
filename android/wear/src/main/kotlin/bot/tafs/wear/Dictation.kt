@@ -10,8 +10,11 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
   private val parts = mutableListOf<String>()
   private var lastWordsAt = 0L
 
-  /** ✓, the 30 s limit or Cancel: the next end is the last. */
+  /** ✓ or the 30 s limit: the next end is the last. */
   var stopping = false
+
+  /** Cancel: nothing heard is sent, even if the recognizer answers late (a result, or its error on a cancel). */
+  private var cancelled = false
 
   sealed interface Next {
     /** Listen again: the person is still talking, or paused for less than [quietMs]. */
@@ -19,12 +22,21 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
 
     /** Done, with everything heard (blank: nothing was). */
     data class Done(val text: String) : Next
+
+    /** Cancelled: nothing goes anywhere. */
+    data object Cancelled : Next
   }
 
   fun begin() {
     parts.clear()
     lastWordsAt = now()
     stopping = false
+    cancelled = false
+  }
+
+  fun cancel() {
+    cancelled = true
+    stopping = true
   }
 
   /** The words as they come: what earlier stretches heard, then this one's so far. */
@@ -35,6 +47,7 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
 
   /** A stretch ended with [words] (none on "no match" or the recognizer's own silence timeout). */
   fun ended(words: String?): Next {
+    if (cancelled) return Next.Cancelled
     if (!words.isNullOrBlank()) {
       parts += words.trim()
       lastWordsAt = now()
@@ -43,7 +56,7 @@ internal class Dictation(private val now: () -> Long, private val quietMs: Long 
   }
 
   /** The recognizer failed outright: done, with what was heard so far. */
-  fun failed(): Next.Done = Next.Done(shown(null))
+  fun failed(): Next = if (cancelled) Next.Cancelled else Next.Done(shown(null))
 
   private fun shown(current: String?): String = (parts + listOfNotNull(current?.trim())).filter { it.isNotBlank() }.joinToString(" ")
 

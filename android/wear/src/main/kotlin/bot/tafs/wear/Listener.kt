@@ -120,9 +120,10 @@ internal class Listener(
         val r = recognizer
         val i = intent
         hearing = r != null && i != null && runCatching { r.startListening(i) }.isSuccess
-        if (!hearing) finish(dictation.failed().text)
+        if (!hearing) next(dictation.failed())
       }
       is Dictation.Next.Done -> finish(next.text)
+      Dictation.Next.Cancelled -> Unit
     }
   }
 
@@ -145,7 +146,7 @@ internal class Listener(
 
   /** Stops listening; nothing heard is sent, and nothing recorded is kept. */
   fun cancel() {
-    dictation.stopping = true
+    dictation.cancel()
     hearing = false
     runCatching { recognizer?.cancel() }
     endTap(keep = false)
