@@ -49,7 +49,7 @@ release.
   keywords up to 100, description up to 4,000.
 - **Play lengths:** title up to 30 characters, short description up to 80, full description up to
   4,000.
-- **App Store keywords** are separated by commas with no spaces, and fit 100 characters. Each
+- **App Store keywords** are separated by commas with no spaces, and fit 100 bytes, which Apple counts in UTF-8: 100 characters in the Latin languages, but a Hangul, kana or kanji character is 3 bytes, so Korean and Japanese write their count in bytes. Each
   language picks the terms people search for in that language, not a word-for-word translation of the
   English list, and doesn't repeat words already in the name or subtitle.
 - **Search.** Play ranks on the title, the short description and the full description. The short
@@ -1006,10 +1006,10 @@ as in English until the Korean pages are served, then move to `kiff.dev/ko/tafs/
 고객 문의, 새 잠재 고객, 늦어진 택배: taf에게 맡기고 아침 시간을 되찾으세요. 내가 정한 한도 안에서 일하고, 중요한 일은 내 승인을 기다립니다.
 ```
 
-**Keywords** (45/100):
+**Keywords** (97/100 bytes):
 
 ```
-자동화,어시스턴트,고객지원,문의,잠재고객,택배,고객,승인,워크플로,업무,팀원,비서
+자동화,고객지원,문의,잠재고객,택배,고객,승인,워크플로,업무,비서,팀원
 ```
 
 **Description** (1682/4000):
@@ -1111,10 +1111,10 @@ tafs#1668. The legal lines link kiff.dev's Japanese pages, so each listing is pa
 サポートの問い合わせ、新しい見込み客、遅れている荷物。tafにまかせて、朝の時間を取り戻しましょう。決めた範囲の中で動き、大事なことは承認を待ちます。
 ```
 
-**Keywords** (53/100):
+**Keywords** (99/100 bytes):
 
 ```
-自動化,アシスタント,サポート,問い合わせ,見込み客,荷物,顧客,承認,ワークフロー,業務,チーム,効率化
+自動化,サポート,問い合わせ,見込み客,荷物,顧客,承認,業務,効率化,チーム
 ```
 
 **Description** (1582/4000):
