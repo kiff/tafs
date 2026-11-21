@@ -19,7 +19,7 @@ object Bidi {
    * values are exactly as passed.
    */
   fun isolated(args: Array<out Any?>, language: String): Array<out Any?> =
-    if (!rightToLeft(language)) args else Array(args.size) { i -> (args[i] as? CharSequence)?.let { "⁨${withoutDirection(it.toString())}⁩" } ?: args[i] }
+    if (!rightToLeft(language)) args else Array(args.size) { i -> (args[i] as? CharSequence)?.let { "\u2068${withoutDirection(it.toString())}\u2069" } ?: args[i] }
 
   /** The text with U+202A–U+202E, U+2066–U+2069, U+200E, U+200F and U+061C taken out, and nothing else changed. */
   fun withoutDirection(text: String): String {
