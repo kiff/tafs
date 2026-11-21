@@ -1,0 +1,1 @@
+- **iPhone and iPad: a refused approval shows tafs cloud's line for the owner again**, with the owner's own note, in the owner's language (tafs#1640); never the reason written for Coach.
