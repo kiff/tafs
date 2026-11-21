@@ -151,7 +151,11 @@ below does, refuses a second `api` door, and keeps it 7 days (`door-api-draft`),
 `next: show {type: "door", taf_id, draft_id}`. Nothing is made: Coach's Card for it (`coach-taf-door`, 20 a day) asks
 nothing, since the door is the owner's to make. The apps draw the card from tafs cloud's own copy,
 `GET /v1/tafs/{id}/doors/drafts/{draft}` (`{draft_id, draft, made_at, expires_at, body}`, for the people who manage the
-taf; 404 once lapsed, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`.
+taf, `contracts/doors-api-draft.json`), and on the owner's yes sign and send `body` to `POST …/doors`. Once a door
+is made from it, the draft keeps only which door and when, until it would have lapsed: read again (the card, when the
+chat is opened again), it answers **410** `{code: "draft_used", words, door_id}`, "Door made from this draft." in
+the person's language; once lapsed, **404** `{code: "draft_lapsed", words}`, "This draft lapsed: ask Coach again." The
+apps show `words` as sent. A used draft makes nothing if sent again (404).
 
 **Making one and its keys** (`TAFS_API_DOORS` on: `on` for every account, or a comma-separated list of the accounts it's on for, a test account first; off for the account, `POST …/doors` with `kind: "api"` is 400, Coach's `taf_door_api` drafts nothing, and the caller's routes answer 404): each step is checked
 with KIFF as a taf's removal is (`POST /v1/me/device-signature`, the approval key behind the fingerprint, each signature

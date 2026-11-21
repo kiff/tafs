@@ -42,8 +42,8 @@ describe("Coach's skills, as files", () => {
     expect(Object.keys(next).sort()).toEqual([`${one.name}@${one.version}`, `${one.name}@${bumped}`]);
   });
 
-  it("are thirteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["ask-a-taf@1", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+  it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@1", "ask-a-taf@1", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -78,7 +78,8 @@ describe("Coach's core", () => {
     // 44204192951: the same line names an app's data left unchanged (an option "the sheet isn't changed" on a wide
     // sign-in), and says a Card's never-lines stay its rules, so they're still proposed (draft-the-card@39). 2,570 since
     // 21 Nov: the id rule names a tool's fields and values too ("Use none_until_approved for the draft." reached the owner).
-    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2570);
+    // 2,605 since 21 Nov: the map's line for a-browser-taf@1 (the owner's Chrome, read only when the connections offer it).
+    expect(approxTokens(SETUP_CORE)).toBeLessThanOrEqual(2605);
     expect(SETUP_CORE).toContain(SKILLS_MAP);
     for (const s of COACH_SKILLS) expect(SETUP_CORE.includes(`  - ${s.name}: ${s.description}`), s.name).toBe(!NAMED_ONLY.includes(s.name));
     // The watch's skill is named-only: Coach's map never names it, so no phone conversation reads it (docs/watch-ask.md).

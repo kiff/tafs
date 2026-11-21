@@ -928,7 +928,11 @@ the tool, when it is used, for tafs cloud's own tools: a tool whose procedure is
 (`taf_dial`, `taf_results` → `the-dial`; `tafs_state`, `taf_task`, `version_install`… → `the-tafs`;
 `taf_pause` → `halting`) adds it to the session in kiff/agents, read at the next turn, never in the
 tool's answer, which stays as the tool wrote it; it is marked loaded only once kiff/agents has it.
-`read_skill` stays as Coach's own fallback, by the names in the map. A request from the watch
+`read_skill` stays as Coach's own fallback, by the names in the map. `a-browser-taf` is read that
+way, only when the start's `[tafs connections]` has a Chrome line ("- Chrome: paired: Work Mac", or
+"offered, none paired yet"). tafs cloud writes that line only while planque lists the account's
+paired Chromes (`chromes` in its connections answer, while the owner's own Chrome is offered), so
+Coach never offers a taf in Chrome while it's off. A request from the watch
 opens a conversation of its own with one skill, `ask-a-taf`, named-only: only tafs cloud's signed
 watch route loads it, never a message's text, Coach's map doesn't list it, and that conversation reads
 no other skill and is offered only `tafs_state`, `taf_task` and `read_skill` ([watch-ask.md](watch-ask.md)).

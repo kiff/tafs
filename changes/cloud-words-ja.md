@@ -1,0 +1,1 @@
+- **tafs cloud speaks Japanese.** A phone set to Japanese gets tafs cloud's own lines, alerts, the AI consent and Coach's language in Japanese; a recipe's words stay in English until recipes carry Japanese ([languages.md](docs/languages.md)).

@@ -17,6 +17,7 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   `shipped` by its own PR.
 - **`et/`** (batch 1, with el, lv and lt to follow) has every key, in `all`, not `shipped`, until its review. It ships
   by its own PR.
+- **`el/`** (batch 1, with et, lv and lt) has every key, in `all`, not `shipped`, until its review. It ships by its own
 - **`lv/`** (batch 1, with el, et and lt) has every key, in `all`, not `shipped`, until its review. It ships by its own
   PR.
 - **A new feature** is a new file in each language's folder, named as its keys begin.

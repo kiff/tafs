@@ -481,6 +481,8 @@ export const pl: Words = {
   waited_follow_up: "Przypomnienie, które sobie ustawił, nie zostało wykonane: Twoje tafs czekały na kredyty. Nie będzie ponawiane. Otwórz je, aby zobaczyć więcej.",
   door_name: (id, label) => (id === "email" ? "e-mail" : label),
   door_a: "drzwi",
+  door_draft_used: "Drzwi zostały utworzone z tego szkicu.",
+  door_draft_lapsed: "Ten szkic wygasł: poproś Coach ponownie.",
   door_knock: (who, door, spoofed) => `${who}: wiadomość przez ${door}${spoofed ? " (weryfikacja nadawcy nie powiodła się)" : ""}. Nic nie zostało zrobione.`,
   door_full_keys: (door, n) => `Twoje drzwi ${door} przyjęły dziś limit ${n} wiadomości od Ciebie i powiązanych nadawców. Kolejne są odrzucane do jutra.`,
   door_full_others: (door, n) => `Twoje drzwi ${door} przyjęły dziś limit ${n} wiadomości od niepowiązanych osób. Kolejne są odrzucane do jutra.`,

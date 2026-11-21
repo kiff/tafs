@@ -481,6 +481,8 @@ export const es: Words = {
   waited_follow_up: "Un seguimiento que se programó no se ejecutó: tus tafs esperaban créditos. No se volverá a intentar. Ábrelo para ver más.",
   door_name: (id, label) => (id === "email" ? "correo" : label),
   door_a: "una puerta",
+  door_draft_used: "La puerta se creó a partir de este borrador.",
+  door_draft_lapsed: "Este borrador caducó: vuelve a pedírselo a Coach.",
   door_knock: (who, door, spoofed) => `${who} escribió por ${door}${spoofed ? " (la comprobación del remitente falló)" : ""}. No se hizo nada.`,
   door_full_keys: (door, n) => `Tu puerta de ${door} recibió hoy sus ${n} mensajes tuyos y de remitentes vinculados. Los siguientes se descartan hasta mañana.`,
   door_full_others: (door, n) => `Tu puerta de ${door} recibió hoy ${n} mensajes de personas no vinculadas. Los siguientes se descartan hasta mañana.`,
