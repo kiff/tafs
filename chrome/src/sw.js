@@ -106,7 +106,7 @@ async function pairWith(text) {
   // The secret waits in memory only, while the owner confirms on the phone.
   await chrome.storage.session.set({ pending: { lookup: code.lookup, secret: code.secret, key: body.key } });
   await indexedStore.set("pending_keys", keys);
-  await indexedStore.set("pending_kiff", { keys: kiffKeys, nonce: kiff.nonce, pub: kiff.pub, proof: await claimProof(kiffKeys.privateKey, kiff.claimMessage) });
+  await indexedStore.set("pending_kiff", { keys: kiffKeys, nonce: kiff.nonce, pub: kiff.pub, proof: await claimProof(kiffKeys.privateKey, kiff.claimMessage), until: Date.now() + CLAIM_FOR_MS });
   return { waiting: true };
 }
 
@@ -130,14 +130,26 @@ async function pollPairing() {
   return { paired: true, name: checked.name };
 }
 
+/** How long the KIFF offer is claimed for: 90 tries, 3 s apart, as an iPad polls. */
+const CLAIM_FOR_MS = 270_000;
+let claiming = null;
+
 /**
  * Collects the KIFF device's session once the phone approved it, polling as an iPad does: every 3 s while the offer
- * lives. Only a view-only session is kept (kiff.claim ends any other); it's wiped with the pairing.
+ * lives. Only a view-only session is kept (kiff.claim ends any other); it's wiped with the pairing. MV3 can stop the
+ * worker mid-wait, so the claim picks up again when the worker starts and when the panel reads Coach, until its time
+ * is up; one claim runs at a time.
  */
-async function claimKiff() {
+function claimKiff() {
+  if (!claiming) claiming = claimKiffNow().finally(() => (claiming = null));
+  return claiming;
+}
+
+async function claimKiffNow() {
   const pending = await indexedStore.get("pending_kiff");
   if (!pending) return;
-  for (let i = 0; i < 90; i++) {
+  const until = pending.until || Date.now() + CLAIM_FOR_MS;
+  while (Date.now() < until) {
     const r = await claim({ fetch, nonce: pending.nonce, pub: pending.pub, proof: pending.proof });
     if (r.token) {
       await indexedStore.set("kiff_session", { token: r.token, tenant: r.tenant, subject: r.subject, keys: pending.keys });
@@ -187,6 +199,9 @@ async function shareTarget() {
 async function shareRead(tabId) {
   const tab = await chrome.tabs.get(tabId);
   const origin = new URL(tab.url).origin;
+  // The tab may have moved since the owner's tap: the site rules are read again for where it is now.
+  const refused = refuseURL(tab.url, [hostOf(tab.url)], []);
+  if (refused) return { error: refused.code };
   if (!(await chrome.permissions.contains({ origins: [origin + "/*"] }))) return { error: "needs_site_permission" };
   await chrome.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
   const [res] = await chrome.scripting.executeScript({ target: { tabId }, func: () => globalThis.TafsPage.read() });
@@ -210,7 +225,10 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
     stop: async () => runner.stop(m.run),
-    coach_thread: async () => ({ thread: await (await coach()).thread() }),
+    coach_thread: async () => {
+      claimKiff().catch(() => {});
+      return { thread: await (await coach()).thread() };
+    },
     coach_send: async () => ({ sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID }) }),
     share_target: () => shareTarget(),
     share_read: () => shareRead(m.tabId),
@@ -225,3 +243,5 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
 });
 
 connect().catch(() => {});
+// A KIFF claim the worker was stopped in the middle of picks up again.
+claimKiff().catch(() => {});
