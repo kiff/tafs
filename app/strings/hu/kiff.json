@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF kérdezése: {title}…",
+  "kiff.did_not_reach_kiff_try": "Nem jutott el a KIFF-hez. Próbáld újra.",
+  "kiff.kiff_can_not_do_sign": "A KIFF ezt még nem tudja: jelentkezz be újra a Beállításokban, hogy erről az eszközről ({device}) jóváhagyhass.",
+  "kiff.kiff_did_not_answer_expected": "A KIFF nem a várt módon válaszolt. Próbáld újra.",
+  "kiff.kiff_words_do_not_match": "A KIFF szövege nem egyezik az ellenőrzésével. Semmit sem lehet jóváhagyni."
+}

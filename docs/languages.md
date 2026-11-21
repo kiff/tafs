@@ -431,6 +431,41 @@ the system shows them, in English; Windows' are in Slovenian. The plural forms a
 | plan (billing) | paket |
 | Cancel / Continue | Prekliči / Naprej |
 
+### Hungarian (hu)
+
+Addressed as **te**, the way Hungarian apps speak to people; buttons are nouns ("Jóváhagyás", "Elutasítás", "Mégse",
+"Tovább"). taf takes the suffixes a back-vowel word does (tafot, tafok, tafja); Card, Coach, KIFF and Setup stay as
+names. A value that would need a case ending stands apart, after a colon or in brackets ("ezen az eszközön
+({device})", "Megnyitja: {taf}"), and "a(z)" goes before a value that may start with a vowel. A noun after a number stays
+singular ("3 hívás"), so both plural forms read the same. Apple and Windows menu paths are the Hungarian ones
+("Beállítások → Face ID és jelkód", "Gépház → Fiókok → Bejelentkezési lehetőségek"). The plural forms are one and other.
+
+| English | Hungarian |
+|---|---|
+| Needs you | Rád vár |
+| Approve / Approve once | Jóváhagyás / Egyszeri jóváhagyás |
+| Refuse | Elutasítás |
+| held | visszatartva |
+| Halt / Halted | Leállítás / Leállítva |
+| Stopped | Leállt |
+| Pause / Paused | Szüneteltetés / Szüneteltetve |
+| Resume | Folytatás |
+| Revoke | Visszavonás |
+| Record | Napló |
+| Connect / connection | Csatlakoztatás / kapcsolat |
+| Pair / Unpair | Párosítás / Párosítás megszüntetése |
+| Account | Fiók |
+| limit / spend limit | limit / költési limit |
+| credits / credit pack | kreditek / kreditcsomag |
+| passkey | azonosítókulcs |
+| Sign in / Sign out | Bejelentkezés / Kijelentkezés |
+| Inbox | Beérkezett |
+| Overview | Áttekintés |
+| Calendar | Naptár |
+| Usage | Használat |
+| plan (billing) | csomag |
+| Cancel / Continue | Mégse / Tovább |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

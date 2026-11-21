@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Válaszadási idő",
+  "work.answer_within_days": {
+    "one": "{count} nap",
+    "other": "{count} nap"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} óra",
+    "other": "{count} óra"
+  },
+  "work.answer_within_line": "Szólunk, ha egy eset tovább vár.",
+  "work.answer_within_none": "Nincs beállítva",
+  "work.answer_within_not_set": "Nem sikerült beállítani. {why}",
+  "work.asking_kiff_run": "A KIFF megkérése a futtatásra: {tool}…",
+  "work.did_not_stop": "Nem állt le: {why}",
+  "work.duration.minutes": "{minutes} perc {seconds} mp",
+  "work.duration.seconds": "{seconds} mp",
+  "work.its_runs": "Futásai",
+  "work.not_read": "A munkáját nem sikerült beolvasni. {why}",
+  "work.not_sent_again": "Nem ment el újra. {why}",
+  "work.request.try_reply_now": "Válasz kipróbálása most",
+  "work.requests_need_you": {
+    "one": "{count} kérés rád vár",
+    "other": "{count} kérés rád vár"
+  },
+  "work.send_again": "Újraküldés",
+  "work.sending_again": "Újraküldés…",
+  "work.stop_run": "Futás leállítása",
+  "work.stopped_part_way_before_finished": "{taf} félúton leállt, mielőtt befejezte volna."
+}

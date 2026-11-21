@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "A teljes Card",
+    "other": "Az összes Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, utána téged kérdez",
+  "card.calls_left": {
+    "one": "{count} hívás maradt",
+    "other": "{count} hívás maradt"
+  },
+  "card.calls_left_line": {
+    "one": "{count} hívás maradt {window}, ennyiből: {limit}",
+    "other": "{count} hívás maradt {window}, ennyiből: {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} / {count} hívás {window}",
+    "other": "{used} / {count} hívás {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} hívás {window}",
+    "other": "{count} hívás {window}"
+  },
+  "card.card_confirmed_kiff": "Card · a KIFF megerősítette",
+  "card.card_draft_kiff": "Card · vázlat · KIFF",
+  "card.card_got_room_call_needed": "A Cardja megkapta a hívásnak szükséges keretet, amíg az összesítő le nem nullázódik",
+  "card.card_not_issued": "A Card nem lett kiadva. ",
+  "card.card_revoked": "Card visszavonva",
+  "card.check.always_asks": "{rule}: mindig téged kérdez",
+  "card.check.never_allowed": "{rule}: soha nem engedélyezett",
+  "card.check.not_on_card": "Nincs rajta ennek a tafnak a Cardján",
+  "card.check.over_count": {
+    "one": "Több mint {count} {window}",
+    "other": "Több mint {count} {window}"
+  },
+  "card.check.over_each": "Egyenként több mint {amount}",
+  "card.check.over_total": "Több mint {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Véget ért",
+  "card.ended_on": "Véget ért: {date}",
+  "card.ends": "Vége",
+  "card.extra_room": "+{extra} extra keret {window}",
+  "card.extra_room_prefix": "+{formatted} extra keret ",
+  "card.extra_room_until": "+{extra} extra keret eddig: {ends}",
+  "card.figure_left": "{figure} maradt",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cardok"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} hívás {window}{each}: ez lenne a(z) {nth}{item}",
+    "other": "{count} hívás {window}{each}: ez lenne a(z) {nth}{item}"
+  },
+  "card.held.each_call_asks": "Minden hívás előbb téged kérdez",
+  "card.held.for_each": " minden {name} esetén",
+  "card.held.for_each_join": " mindegyik esetén: ",
+  "card.held.for_item": " ehhez: {item}",
+  "card.held.over_count": {
+    "one": "Túllépi a(z) {count} hívásos limitjét: ez lenne a(z) {nth}",
+    "other": "Túllépi a(z) {count} hívásos limitjét: ez lenne a(z) {nth}"
+  },
+  "card.held.over_one_call": "{amount} túllépi az egy hívásra szóló {cap} limitet",
+  "card.held.over_total": "{amount} túllépné a(z) {cap} összesítőt",
+  "card.hero.calls_left_of": {
+    "one": "hívás maradt {window}, ennyiből: {limit}",
+    "other": "hívás maradt {window}, ennyiből: {limit}"
+  },
+  "card.hero.calls_use_unavailable": "hívás {window} · használat nem elérhető",
+  "card.hero.left_of": "maradt {window}, ennyiből: {limit}",
+  "card.hero.left_of_extra": "maradt {window}, ennyiből: {base} + {extra} extra keret",
+  "card.hero.left_of_extra_until": "maradt {window}, ennyiből: {base} + {extra} extra keret eddig: {ends}",
+  "card.hero.left_of_note": "maradt {window}, ennyiből: {limit}{note}",
+  "card.hero.no_currency": "nincs pénznem",
+  "card.hero.no_currency_suffix": " · nincs pénznem",
+  "card.hero.use_unavailable": "{window} · használat nem elérhető",
+  "card.hero.use_unavailable_note": "{label} · használat nem elérhető{note}",
+  "card.how_counted": "Hogyan számoljuk",
+  "card.issue_prompt": "Card kiadása ennek: {taf}",
+  "card.issued_by": "Kiadta",
+  "card.issued_by_account": "A fiók",
+  "card.issued_by_named": "Kiadta: {who}",
+  "card.its_card": "A Cardja",
+  "card.kiff_did_not_revoke_cards": "A KIFF nem vonta vissza a Cardjai közül ennyit: {cards_left}. Vond vissza őket a KIFF-ben.",
+  "card.left": "{amount} maradt {window}",
+  "card.left_extra_room": "maradt {current}, ennyiből: {own} + {extra} extra keret{until}{note}",
+  "card.limit_can_not_raised_right": "A limit most innen nem emelhető.",
+  "card.limit_raised_read_balance_again": "A limit meg lett emelve. Mielőtt újra emeled, olvasd be újra az egyenleget.",
+  "card.line.calls_in_window": {
+    "one": "{count} hívás {window}{then}",
+    "other": "{count} hívás {window}{then}"
+  },
+  "card.line.more_asks": "; a több előbb téged kérdez",
+  "card.line.then_asks": ", utána téged kérdez",
+  "card.line.total_in_window": "összesen {amount} {window}{then}",
+  "card.line.up_to_each": "egyenként legfeljebb {amount}",
+  "card.more": {
+    "one": "még {count}",
+    "other": "még {count}"
+  },
+  "card.no_actions": "Még nincsenek műveletek",
+  "card.no_actions_short": "még nincsenek műveletek",
+  "card.no_currency": "{amount} (nincs pénznem)",
+  "card.no_end_date": "Nincs záró dátum",
+  "card.outcome.not_a_resource": "Nem tartozik a Card erőforrásai közé",
+  "card.outcome.outside": "A Cardon kívül",
+  "card.outcome.over_one_action": "Túllépi a Card egy műveletre szóló limitjét",
+  "card.outcome.over_total": "Túllépi a Card összesítőjét",
+  "card.outside_held": "Kívül: visszatartva neked",
+  "card.outside_refused": "Kívül: elutasítva",
+  "card.over_limit_calls_would": "Túllépi a(z) {limit} hívásos limitjét: ez lenne a(z) {nth}",
+  "card.revoke_failed": "A KIFF nem vonta vissza a Cardot. {why}",
+  "card.revoked": "Visszavonva",
+  "card.rule.always_asks": "mindig téged kérdez",
+  "card.rule.at_most_each": "≤ {amount} egyenként",
+  "card.rule.at_most_each_refused_above": "≤ {amount} egyenként · felette elutasítva",
+  "card.rule.calls": {
+    "one": "{count} hívás {window}",
+    "other": "{count} hívás {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} hívás {window}, utána téged kérdez",
+    "other": "{count} hívás {window}, utána téged kérdez"
+  },
+  "card.rule.in_total": "összesen {amount} {window}",
+  "card.rule.never": "soha",
+  "card.rule.total_then_asks": "összesen {amount} {window}, utána téged kérdez",
+  "card.rule.up_to_each": "egyenként legfeljebb {amount}; a több előbb téged kérdez",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "A taf Cardja",
+  "card.tools": {
+    "one": "{count} eszköz",
+    "other": "{count} eszköz"
+  },
+  "card.until": "Eddig",
+  "card.until_date": "Eddig: {date}",
+  "card.until_ends": " eddig: {ends}",
+  "card.used_of": "{used} / {limit} {window}",
+  "card.window.a_day": "naponta",
+  "card.window.a_month": "havonta",
+  "card.window.a_week": "hetente",
+  "card.window.any_day": "bármely 24 órában",
+  "card.window.any_hour": "bármely órában",
+  "card.window.any_week": "bármely 7 napban",
+  "card.window.in_total": "összesen",
+  "card.window.in_total_window": "összesen {window}",
+  "card.window.last_day": "az elmúlt 24 órában",
+  "card.window.last_hour": "az elmúlt órában",
+  "card.window.last_week": "az elmúlt 7 napban",
+  "card.window.so_far": "eddig",
+  "card.window.this_month": "ebben a hónapban",
+  "card.window.this_week": "ezen a héten",
+  "card.window.today": "ma",
+  "card.within_card": "a Cardon belül"
+}
