@@ -56,9 +56,14 @@ export async function checkStep(message, { planqueKey, chromeId, nonces, now = D
   return { why: null, step };
 }
 
-/** The signed answer to step `id`. `page` is the page as read back, `error` `{code, detail?}`; never both. */
-export async function result(privateKey, id, { page = null, error = null } = {}) {
-  const body = { id, ok: !error, page, error };
+/**
+ * The signed answer to one step: `step` is `{id, nonce}` as planque sent it, `chromeId` this extension's. The step's nonce
+ * and the Chrome are inside what's signed, so planque files a result only against the pending step it sent to this Chrome,
+ * and a result can't be replayed for another step with the same id. `page` is the page as read back, `error`
+ * `{code, detail?}`; never both.
+ */
+export async function result(privateKey, step, chromeId, { page = null, error = null } = {}) {
+  const body = { id: step.id, nonce: typeof step.nonce === "string" ? step.nonce : null, chrome_id: chromeId, ok: !error, page, error };
   return { type: "result", ...body, sig: await sign(privateKey, LABEL.result, body) };
 }
 

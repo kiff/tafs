@@ -165,7 +165,9 @@ refused.
   names a sensitive site. It answers a refused step's `id` with `bad_step`, and gives an unsigned message no
 signed answer.
 
-**The extension answers** `{type: "result", id, ok, page, error, sig}`, signed with its key over `{id, ok, page, error}`:
+**The extension answers** `{type: "result", id, nonce, chrome_id, ok, page, error, sig}`, signed with its key over
+`{id, nonce, chrome_id, ok, page, error}`. The step's own `nonce` and this Chrome's `chrome_id` are inside what's signed, so
+planque files a result only against the pending step it sent to this Chrome, and one can't be replayed for another step:
 
 ```
 page = {read_id, url (no query or fragment), title, text (≤ 20 000 characters, masked),
