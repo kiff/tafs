@@ -83,7 +83,8 @@ final class VoiceModelTests: XCTestCase {
         XCTAssertFalse(rule.ends(level: -30, at: 6))
         XCTAssertFalse(rule.ends(level: -60, at: 13))
         XCTAssertTrue(rule.ends(level: -60, at: 14))
-        XCTAssertTrue(QuietRule().ends(level: -10, at: WatchVoice.limit))
+        var talking = QuietRule()
+        XCTAssertTrue(talking.ends(level: -10, at: WatchVoice.limit), "the limit ends it, even mid-word")
     }
 
     /// The microphone not allowed: nothing recorded or sent, and the watch says how.
