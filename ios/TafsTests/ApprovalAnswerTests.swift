@@ -44,7 +44,8 @@ final class ApprovalAnswerTests: XCTestCase {
             XCTAssertEqual(try text(w.declined, answer: "declined"), "declined", lang)
             let failed = SetupThread.answer(TafsCloud.CardAnswer(words: w.failed, answer: "failed: the grant expired"), to: try card())
             XCTAssertEqual(failed?.failed, true, lang)
-            XCTAssertEqual(failed?.why, "the grant expired", lang)
+            // tafs cloud's why is written for Coach: the card says only that it didn't go through.
+            XCTAssertNil(failed?.why, lang)
             XCTAssertFalse(readsApproved(failed?.text), lang)
         }
     }
@@ -93,5 +94,19 @@ final class ApprovalAnswerTests: XCTestCase {
         XCTAssertEqual(read.words, "Refusé")
         let older = try KIFFClient.decoder.decode(TafsCloud.CardAnswer.self, from: Data(#"{"state":"answered","words":"Approved"}"#.utf8))
         XCTAssertNil(older.answer)
+    }
+
+    /// A refused approval's or sign-in's line is never tafs cloud's text for Coach: the card says only that it didn't go
+    /// through (the owner's emulator pass, 21 Nov). A refusal this phone wrote itself, as a message, keeps its words.
+    func testARefusalsTextForCoachNeverReachesTheOwner() throws {
+        let forCoach = "Approve · it didn't go through: Show the rules again as a new notice, never end a turn saying you're waiting"
+        let approval = SetupThread.answer(TafsCloud.CardAnswer(words: forCoach, answer: "failed: Show the rules again as a new notice"), to: try card())
+        XCTAssertEqual(approval?.failed, true)
+        XCTAssertNil(approval?.why)
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"s1","grant":"g_01"}"#)
+        let refused = SetupThread.answer(TafsCloud.CardAnswer(words: "Sign in · it didn't go through: Ask the owner to sign in again", answer: nil), to: signIn)
+        XCTAssertEqual(refused?.failed, true)
+        XCTAssertNil(refused?.why)
+        XCTAssertEqual(SetupThread.Answer("[approval c1] failed: The approval window has ended.")?.why, "The approval window has ended.")
     }
 }

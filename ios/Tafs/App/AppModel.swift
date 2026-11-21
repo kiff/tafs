@@ -9249,8 +9249,10 @@ final class AppModel: ObservableObject {
                     }
                     // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one Face ID opens it,
                     // unless this phone holds one, and the call goes as a tap. The service decides; a KIFF without
-                    // windows leaves the step as it was. As Android's `holdWindow`.
-                    let takesWindow = ask.key == "window" && windowAvailable
+                    // windows leaves the step as it was. As Android's `holdWindow`. Only on a card that says Approve is
+                    // a tap (`signs.takes`): a card whose line says Face ID is asked always asks it, so Approve never
+                    // approves without the Face ID the card promised (the owner's emulator pass, 21 Nov).
+                    let takesWindow = ask.key == "window" && component.signs?.tap == true && windowAvailable
                     let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
                     var windowed = takesWindow && kiff.window != nil
                     do {

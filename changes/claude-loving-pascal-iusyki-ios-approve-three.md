@@ -1,0 +1,1 @@
+- **iPhone and iPad: Approve never approves without the Face ID its card promised, and a refused approval never shows text written for Coach** (the owner's emulator pass, 21 Nov, as on Android): an approval window is used only on a card that says Approve is a tap, and a refused approval or sign-in reads only "didn't go through".
