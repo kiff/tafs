@@ -5,20 +5,20 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * What the watch keeps so it opens at once (row 44, D; docs/watch-wear.md, "What the watch keeps"): the last Needs you count and
- * its line, and each taf's name and whether it's halted or paused. Never a held call's details, never a taf's state line (it can
+ * What the watch keeps so it opens at once (row 44, D; docs/watch-wear.md, "What the watch keeps"): the last Needs you count,
+ * and each taf's name and whether it's halted or paused. Not Needs you's line: it's tafs cloud's words, and nothing here can
+ * promise it never carries an amount. Never a held call's details, never a taf's state line (it can
  * name what a call wants, an amount included), never a taf's chat. Cleared on sign-out, whenever the watch is locked or has no
  * screen lock (Wear OS locks a watch taken off the wrist), and after [MAX_AGE_MS]. At rest it's encrypted ([KeystoreCacheStore]).
  */
 class WatchCache(private val store: CacheStore, private val now: () -> Long) {
-  /** What was kept: when, Needs you's count and line, and the tafs by name, with no state line. */
-  data class Snapshot(val savedAt: Long, val count: Int, val words: String, val tafs: List<TafLine>?, val allHalted: Boolean)
+  /** What was kept: when, Needs you's count, and the tafs by name, with no state line. */
+  data class Snapshot(val savedAt: Long, val count: Int, val tafs: List<TafLine>?, val allHalted: Boolean)
 
   fun save(needsYou: WatchModel.NeedsYouRead, tafs: WatchModel.TafsRead?) {
     val json = JSONObject()
       .put("saved_at", now())
       .put("count", needsYou.count)
-      .put("words", needsYou.words)
       .put("all_halted", tafs?.allHalted ?: false)
     if (tafs != null) {
       json.put("tafs", JSONArray(tafs.tafs.map { JSONObject().put("id", it.tafId).put("name", it.name).put("halted", it.halted).put("paused", it.paused) }))
@@ -37,7 +37,7 @@ class WatchCache(private val store: CacheStore, private val now: () -> Long) {
           TafLine(t.getString("id"), t.getString("name"), "", t.getBoolean("halted"), paused = t.optBoolean("paused"))
         }
       }
-      Snapshot(json.getLong("saved_at"), json.getInt("count"), json.getString("words"), tafs, json.optBoolean("all_halted"))
+      Snapshot(json.getLong("saved_at"), json.getInt("count"), tafs, json.optBoolean("all_halted"))
     }.getOrNull()
     if (snapshot == null || now() - snapshot.savedAt !in 0..MAX_AGE_MS) {
       clear()

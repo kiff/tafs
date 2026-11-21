@@ -16,7 +16,7 @@ import org.robolectric.annotation.Config
 
 /**
  * Row 44, D: the watch opens at once on what it kept, a short drop doesn't flash "phone not reachable", and what's kept is only
- * what the privacy text says: never a held call's details or a taf's state line, cleared on sign-out, when locked, and after 24 h.
+ * what the privacy text says: the count, never Needs you's line, a held call's details or a taf's state line, cleared on sign-out, when locked, and after 24 h.
  */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [35], application = WatchApplication::class)
@@ -45,10 +45,10 @@ class WatchCacheTest {
   @Test fun whatsKeptHasNoHeldCallDetailsAndNoStateLine() = runTest {
     model(Phone(reads)).refresh()
     val kept = store.text!!
-    for (secret in listOf("Refund order 1042", "€64.00", "Over €50 each", "hold_1", "Waiting for you")) assertFalse(secret, secret in kept)
+    // Not even Needs you's own line: tafs cloud's words, which nothing here can promise are amount-free.
+    for (secret in listOf("Refund order 1042", "€64.00", "Over €50 each", "hold_1", "Waiting for you", "1 held call needs you")) assertFalse(secret, secret in kept)
     val snapshot = cache.load()!!
     assertEquals(1, snapshot.count)
-    assertEquals("1 held call needs you", snapshot.words)
     assertEquals(listOf(TafLine("taf_1", "Refunds", "", halted = false)), snapshot.tafs)
   }
 

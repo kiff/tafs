@@ -871,7 +871,8 @@ class WatchModel(
     // Opens at once on what was kept, marked as updating, while the phone is asked (row 44, D).
     if (_shown.value !is Shown.Read) {
       _shown.value = cache?.takeIf { kept }?.load()?.let { c ->
-        Shown.Read(NeedsYouRead(c.count, c.words, emptyList()), c.tafs?.let { TafsRead(it, c.allHalted) }, updating = true)
+        // The count alone: Needs you's line comes with the phone's read.
+        Shown.Read(NeedsYouRead(c.count, "", emptyList()), c.tafs?.let { TafsRead(it, c.allHalted) }, updating = true)
       } ?: Shown.Asking
     } else _shown.value = (_shown.value as Shown.Read).copy(updating = true)
     val asked = phone.ask(WatchRequest.NeedsYou(now()))

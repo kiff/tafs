@@ -562,8 +562,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
     while locked or with no screen lock (a lock while the app is closed leaves them until the next open), and everything goes on
     either sign-out.
   - `tafs.sign_in`: one flag, signed out on this watch.
-  - `watch-cache.bin` (`WatchCache`, row 44, D), so the watch opens at once: Needs you's count and its line, and each taf's
-    name and whether it's halted or paused. Never a held call's details, never a taf's state line (it can name what a call wants),
+  - `watch-cache.bin` (`WatchCache`, row 44, D), so the watch opens at once: Needs you's count, and each taf's
+    name and whether it's halted or paused. Not Needs you's line, never a held call's details, never a taf's state line (it can name what a call wants),
     never a taf's chat. Encrypted with AES-GCM under a key in the watch's Android Keystore (`KeystoreCacheStore`). Cleared on
     either sign-out, whenever the app opens or refreshes while the watch is locked or has no screen lock (Wear OS locks a watch
     taken off the wrist), and after 24 hours. On start, the pages draw it at once with a small dot at the top ("Loading" for
