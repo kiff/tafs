@@ -37,6 +37,9 @@ const SHOP = `<!doctype html><html><head><title>Shop · checkout key sk_live_${"
 <button id="covered" style="position:relative">Delete account</button>
 <div style="position:absolute;inset:0;z-index:5;background:transparent" id="overlay-off" hidden></div>
 <button id="hidden" style="display:none">Hidden</button>
+<label><input type="radio" name="ship" value="std"> Standard</label>
+<form id="pay"><input autocomplete="cc-number" aria-label="Card number"><button type="submit">Continue</button></form>
+<div><button class="paypal-button">→</button></div>
 </body></html>`;
 
 let browser;
@@ -83,6 +86,12 @@ test("a read names fields, controls and links by ref, and masks every secret", {
   assert.ok(read.controls.some((c) => c.label === "Save" && c.submits));
   assert.ok(!read.controls.some((c) => c.label === "Hidden"), "an element nobody can see isn't offered");
   assert.equal(read.links[0].url, "https://shop.example/reset?token=%5Bmasked%5D&page=2");
+  // Kinds are planque's set, and a control that pays is said so by the page's semantics, whatever its words.
+  assert.equal(read.fields.find((f) => f.label === "Standard").kind, "checkbox");
+  assert.equal(read.fields.find((f) => f.label === "Card number").kind, "card");
+  assert.equal(read.controls.find((c) => c.label === "Continue").places_order, true, "the submit of a form with a card field");
+  assert.equal(read.controls.find((c) => c.label === "→").places_order, true, "a payment provider's button");
+  assert.equal(read.controls.find((c) => c.label === "Save").places_order, undefined);
   await page.close();
 });
 

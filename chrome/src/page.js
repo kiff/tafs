@@ -55,8 +55,8 @@
   const SECRET_NAMES = /(otp|one.?time|2fa|mfa|totp|verification.?code|security.?code|auth.?code|passcode|pin\b)/i;
   const CARD_NAMES = /(card.?number|cardnum|cc.?num|cc-?number|cvc|cvv|csc|card.?code|expir|exp.?date|cc-?exp)/i;
 
-  /** A field's kind as planque reads it: text, email, tel, number, search, select, checkbox, radio, textarea, password,
-   * card, code (a one-time code), username, or other. */
+  /** A field's kind, as the extension tells fields apart: planque's set (`wireKind`), plus `username` and `radio`, which a
+   * sealed value and a check need. */
   function kindOf(el) {
     const tag = el.tagName.toLowerCase();
     const type = (el.getAttribute("type") || "text").toLowerCase();
@@ -73,6 +73,15 @@
     return "other";
   }
 
+  /** A field's kind in planque's set: text, email, tel, number, search, select, checkbox, textarea, password, card, code
+   * (a one-time code), or other. */
+  function wireKind(kind) {
+    if (kind === "username") return "text";
+    if (kind === "radio") return "checkbox";
+    if (kind === "url" || kind === "date") return "other";
+    return kind;
+  }
+
   const FIELD_SKIP = new Set(["hidden", "submit", "button", "image", "reset", "file"]);
 
   function fieldsOf() {
@@ -85,7 +94,7 @@
       const kind = kindOf(el);
       const ref = "f" + (out.length + 1);
       refs.set(ref, el);
-      const field = { ref, label: labelOf(el), kind };
+      const field = { ref, label: labelOf(el), kind: wireKind(kind) };
       if (kind === "password" || kind === "card" || kind === "code") {
         field.masked = true;
       } else if (kind === "checkbox" || kind === "radio") {
@@ -104,6 +113,22 @@
 
   const CONTROLS = "button, input[type=submit], input[type=button], input[type=image], [role=button]";
 
+  // A payment provider's own button, by the marks providers put on it: a fact in no language, as planque's `places_order`.
+  const PROVIDER_BUTTON = /(paypal-button|apple-pay|applepay|gpay-button|google-pay|amazonpay|shop-pay|klarna-payment|stripe-payment|payment-request-button)/i;
+
+  /** Whether a control places an order or pays, from the page's semantics: a payment provider's button, the submit of a
+   * form with a card field, or a submit the page's structured data marks as an order's. The words are planque's fallback. */
+  function placesOrder(el, submits) {
+    const marks = (el.id || "") + " " + (typeof el.className === "string" ? el.className : "") + " " + (el.getAttribute("data-testid") || "");
+    if (PROVIDER_BUTTON.test(marks)) return true;
+    if (submits && el.form) {
+      const card = Array.from(el.form.querySelectorAll("input")).some((i) => /cc-number|cc-csc|cc-exp/.test((i.getAttribute("autocomplete") || "").toLowerCase()));
+      if (card) return true;
+      if (el.form.closest('[itemtype*="schema.org/Order"], [itemtype*="schema.org/BuyAction"]')) return true;
+    }
+    return false;
+  }
+
   function controlsOf() {
     const out = [];
     for (const el of document.querySelectorAll(CONTROLS)) {
@@ -113,7 +138,9 @@
       refs.set(ref, el);
       const label = clean(el.getAttribute("aria-label") || el.innerText || el.value || el.title || "");
       const submits = (el.tagName === "BUTTON" && (el.type || "submit") === "submit" && !!el.form) || (el.tagName === "INPUT" && el.type === "submit");
-      out.push({ ref, label: M.maskText(label), submits });
+      const control = { ref, label: M.maskText(label), submits };
+      if (placesOrder(el, submits)) control.places_order = true;
+      out.push(control);
     }
     return out;
   }

@@ -65,7 +65,7 @@ export function refuse(page, act) {
   if (!field) return { code: CODE.refUnknown, why: "the page has no field " + act.ref };
   if (field.kind === "card") return { code: CODE.paymentStep, why: "a taf never types card details" };
   if (secret(field) && !act.sealed) return { code: CODE.secretField, why: "a taf never types a password or a code" };
-  if (act.sealed && !(field.kind === "password" || field.kind === "code" || field.kind === "username")) {
+  if (act.sealed && !["password", "code", "text", "email"].includes(field.kind)) {
     return { code: CODE.secretField, why: "a sealed value goes only into a password, username or one-time-code field" };
   }
   if (act.kind === "fill" && !act.sealed && typeof act.value !== "string") return { code: CODE.badStep, why: "a fill has a value" };

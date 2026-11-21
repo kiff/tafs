@@ -5,6 +5,11 @@
 
 import { LABEL, b64u, fromB64u, concat, hmac, sha256, sameBytes, verify, publicSPKI } from "./crypto.js";
 
+/** Lowercase hex, as `chrome_key_sha256` is written. */
+export function hex(data) {
+  return Array.from(data, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 /** The code's characters: no 0, 1, I, L, O or U, so a code read aloud or by eye is typed right. */
 export const ALPHABET = "23456789ABCDEFGHJKMNPQRSTVWXYZ";
 
@@ -50,7 +55,7 @@ export async function checkConfirmation(secret, keyPair, answer) {
   } catch {
     return null;
   }
-  const body = { pairing, chrome_key_sha256: b64u(ours), name, phone_key: phoneKey, phone_proof: phoneProof };
+  const body = { pairing, chrome_key_sha256: hex(ours), name, phone_key: phoneKey, phone_proof: phoneProof };
   if (!(await verify(phoneKey, LABEL.pair, body, phoneSig))) return null;
   return { chromeId, name, phoneKey };
 }

@@ -36,8 +36,11 @@ it changes all three.
 - **Every key is ECDSA P-256 with SHA-256:** the extension's (WebCrypto, not extractable, kept in IndexedDB), the
   phones' (their device keys, as for every approval), and planque's step key.
 - **A signature is over a label, a zero byte, then the body's canonical JSON** (RFC 8785):
-  `sig = ECDSA(label ‖ 0x00 ‖ JCS(body))`, sent as base64url of the raw 64-byte `r‖s`. A DER signature from a phone's
-  keystore is read too.
+  `sig = ECDSA(label ‖ 0x00 ‖ JCS(body))`, sent as the raw 64-byte `r‖s` (IEEE P1363), base64url without padding.
+  planque converts its keystore's DER to `r‖s`, and the phones convert theirs. The extension also reads a DER signature,
+  but sends only `r‖s`.
+- **Keys are SPKI DER, base64url without padding.** `chrome_key_sha256` is the SHA-256 of the extension's SPKI DER, in
+  lowercase hex.
 - **Each direction and purpose has its own label,** so a signature made for one message is never valid as another:
 
 | Label | Signed by | Over |
@@ -77,7 +80,8 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    {pairing, chrome_key_sha256, name, phone_key, phone_proof}
    phone_proof = HMAC(secret, "tafs-chrome/phone/v1" ‖ phone_key ‖ sha256(chrome key))
    ```
-   It sends that with `POST …/pairings/{pairing}/confirm`, and planque binds `chrome_id` (`chr_…`) to the account.
+   (`sha256(chrome key)` is the raw 32 bytes here, and lowercase hex in the signed body.) It sends that with
+   `POST …/pairings/{pairing}/confirm`, and planque binds `chrome_id` (`chr_…`) to the account.
 4. **The extension polls** `GET /v1/extension/pairings/{lookup}?key=…`. It gets `202` while the phone hasn't confirmed,
    then `{pairing, chrome_id, name, phone_key, phone_proof, phone_sig}`. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
@@ -101,6 +105,9 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 - **Close codes:** `4401` (unknown Chrome), `4403` (build not allowed), `4410` (unpaired: the extension wipes itself).
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
   while messages flow.
+- **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
+  (`<manifest sha256> <version>`). The release workflow opens the planque PR that adds a line, and two people merge it.
+  Removing a line revokes that build at the next deploy.
 - **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step. The
   connection drops after a minute with no run.
 - **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it. The release
@@ -129,12 +136,24 @@ signed answer.
 ```
 page = {read_id, url (no query or fragment), title, text (≤ 20 000 characters, masked),
         fields: [{ref, label, kind, value?, options?, masked?, disabled?}],
-        controls: [{ref, label, submits}], links: [{ref, label, url}],
-        payment_frame?, dialog?: {kind, text}}
+        controls: [{ref, label, submits, places_order?}], links: [{ref, label, url}],
+        payment_frame?, dialog?: {kind, text}, checkout?}    // checkout: a later slice
 error = {code, detail?}      // detail never carries page text
 ```
 
 - **This is planque's `browser.Page`,** plus `read_id`.
+  - `fields[].kind` is planque's set: `text, email, tel, number, search, select, checkbox, textarea, password, card, code,
+    other`. Card and code come from `autocomplete` (`cc-*`, `one-time-code`) and the field's name.
+  - `controls[].places_order` comes from the page's semantics, in no language: a payment provider's button, the submit of
+    a form with a card field, or a submit inside an order's structured data. The words are planque's fallback.
+  - `payment_frame` is a payment provider's frame on the page.
+  - With these facts, planque refuses a payment step before it reaches the extension, whose own check stays as the second
+    guard.
+- **`read_id` is the extension's own binding to the tab.** planque keeps its own fingerprint of the page it sent the taf
+  (the URL, the title, and every ref with its kind and words, no values) and which `read_id` goes with it. Both are
+  checked: planque refuses `page_changed` before sending, and the extension refuses it again in the tab.
+- **`open.url` is never one the taf wrote:** the taf names a link ref or a start URL, and planque resolves and checks it.
+  The tab keeps the full URL. Only the query-less URL goes up.
 - **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
 - **Every act answers with the page read back:** a click is never proof of its effect (content-script events aren't
   trusted input, and a site can tell).
@@ -159,6 +178,9 @@ error = {code, detail?}      // detail never carries page text
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
+
+planque uses the same codes. It adds `chrome_offline` for a step no connection answered in time, and then nothing was
+done.
 
 ## Runs
 

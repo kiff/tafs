@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
 import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, MAX_AHEAD_MS } from "../src/protocol.js";
-import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET } from "../src/pairing.js";
+import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
 import { Relay } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
@@ -88,7 +88,7 @@ async function phoneConfirms(secret, offered, { phone, pairing = "pr_1", name = 
   const phoneKey = await pub(phone);
   const chromeHash = await sha256(spki);
   const phoneProof = b64u(await hmac(secret, LABEL.phoneProof, concat(Uint8Array.from(Buffer.from(phoneKey, "base64url")), chromeHash)));
-  const body = { pairing, chrome_key_sha256: b64u(chromeHash), name, phone_key: phoneKey, phone_proof: phoneProof };
+  const body = { pairing, chrome_key_sha256: hex(chromeHash), name, phone_key: phoneKey, phone_proof: phoneProof };
   return { pairing, chrome_id: chromeId, name, phone_key: phoneKey, phone_proof: phoneProof, phone_sig: await sign(phone.privateKey, LABEL.pair, body) };
 }
 
