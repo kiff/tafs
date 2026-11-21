@@ -2546,4 +2546,14 @@ class PlanqueTest {
       """"digest":"f1ca3ab371ecf97a82d134204e4931ef39ea474b7cd6a3e233b36f97499fbb32","request":$request,"audience":"https://planque.kiff.dev/mcp/t_01/g_02","events":[]}"""
     assertTrue(readGrant(grant).digestMatches)
   }
+
+  // planque#329 answers a failed connect with 409 connect_failed and a reason written for Coach ("connector_…'s resource must be
+  // a string in its schema"). The person reads that it isn't working on our side: never the reason, never "It changed in the
+  // meantime", which a bare 409 reads as. planque's own words for the person, when sent, still come first.
+  @Test fun aFailedConnectReadsAsOursNeverTheReasonForCoach() {
+    val failed = PlanqueError.Server(409, "connector_5f26's resource must be a string in its schema", code = "connect_failed")
+    assertEquals(bot.tafs.app.model.Words.Error.down, bot.tafs.app.model.ErrorWords.of(failed))
+    assertEquals(bot.tafs.app.model.Words.Error.changed, bot.tafs.app.model.ErrorWords.of(PlanqueError.Server(409, "x")))
+    assertEquals("Stripe said no.", bot.tafs.app.model.ErrorWords.of(PlanqueError.Server(409, "x", code = "connect_failed", words = "Stripe said no.")))
+  }
 }

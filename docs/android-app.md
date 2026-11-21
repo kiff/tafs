@@ -693,7 +693,9 @@ raw reason stays in the error for the code that acts on it (including an approva
 whose `detail` or `error` is the app's own line now). tafs cloud writes its `words`, else its `error`,
 for the person, so those are shown as sent; one that isn't is fixed in tafs cloud. The one planque line
 shown as planque says it is a vendor refusing planque's client (`vendor_refused_client`), since it says
-whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
+whose it is. iPhone and iPad do the same. A connect planque ended failed (409 `connect_failed`, planque#329) reads as
+not working on our side, never as its 409's "It changed in the meantime": its reason is for Coach
+(`ErrorWords.CONNECT_FAILED`; iOS follows). "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again. The person never reads it: a connection planque has
