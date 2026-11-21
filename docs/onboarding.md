@@ -16,7 +16,8 @@ no other does. Two builds have it:
   can't be installed or picked any more. The lane that ran the pass posts it on the thread.
 
 App Store builds never have `TAFS_K5`. While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
-the app's "Signing in inside the app isn't on yet." (`KIFFError.signInNotOn`). The sign-up's email code and GitHub sign-in are left to the device pass.
+the app's "Signing in inside the app isn't on yet." (`KIFFError.signInNotOn`), as when KIFF's authorize page sends it
+back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email code and GitHub sign-in are left to the device pass.
 
 ## The steps
 
