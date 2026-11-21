@@ -20,7 +20,13 @@ internal class Listener(
   private val scope: CoroutineScope,
   /** v2: the app records what it hears itself, kept for Play until Send or Delete, and hands the same audio to the recognizer. */
   private val keepAudio: Boolean = false,
+  /** v2: when the recognizer gives up, record the rest and have the phone turn it into text (row 44, A). */
+  private val phoneFallback: Boolean = false,
 ) {
+  /** The rest of what the person says, recorded after the recognizer gave up, for the phone. */
+  private var forPhone: AudioTap? = null
+  private var heardBefore = ""
+
   private var recognizer: SpeechRecognizer? = null
   @androidx.annotation.VisibleForTesting internal var tap: AudioTap? = null
   private var source: android.os.ParcelFileDescriptor? = null
@@ -78,6 +84,7 @@ internal class Listener(
       }
       override fun onError(error: Int) {
         hearing = false
+        if (continuous && phoneFallback && Dictation.fallsBackToPhone(error) && recordForPhone()) return
         if (continuous) return next(if (Dictation.isQuiet(error)) dictation.ended(null) else dictation.failed())
         endTap(keep = false)
         // Refused before it was ready to listen, with the app's audio: this recognizer doesn't take it. The next Start uses the
@@ -127,6 +134,19 @@ internal class Listener(
     }
   }
 
+  /**
+   * The recognizer gave up: the app records the rest itself, with the watch's microphone, until ✓ or the 30 s limit (row 44, A).
+   * False when the microphone won't open, and it ends as before.
+   */
+  private fun recordForPhone(): Boolean {
+    val tap = AudioTap(VoiceFiles.dir(context), feedOf = { object : java.io.OutputStream() { override fun write(b: Int) = Unit } })
+    val pipe = tap.start() ?: return false
+    runCatching { pipe.close() }
+    heardBefore = dictation.heardSoFar()
+    forPhone = tap
+    return true
+  }
+
   private fun finish(text: String) {
     scope.launch { if (text.isBlank()) model.heardNothing() else model.heard(text) }
   }
@@ -138,6 +158,14 @@ internal class Listener(
    */
   fun stop() {
     dictation.stopping = true
+    // Recording for the phone: ✓ ends it, and the recording goes to the phone with what was heard before.
+    forPhone?.let { t ->
+      forPhone = null
+      val audio = t.finish()
+      val before = heardBefore
+      scope.launch { if (audio != null) model.transcribeOnPhone(audio, before, Res.language) else finish(before) }
+      return
+    }
     tap?.endFeed()
     // Between two stretches there's nothing to stop: it ends now, with what was heard.
     if (!hearing && tap == null) return next(dictation.ended(null))
@@ -146,6 +174,8 @@ internal class Listener(
 
   /** Stops listening; nothing heard is sent, and nothing recorded is kept. */
   fun cancel() {
+    forPhone?.discard()
+    forPhone = null
     dictation.cancel()
     hearing = false
     runCatching { recognizer?.cancel() }

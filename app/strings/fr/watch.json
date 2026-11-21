@@ -51,6 +51,7 @@
     "one": "{count} vous attend",
     "other": "{count} vous attendent"
   },
+  "watch.no_offline_speech": "Votre téléphone ne peut pas transformer seul la parole en texte dans cette langue. Écrivez plutôt.",
   "watch.not_sure": "Envoi incertain",
   "watch.nothing_sent_until": "Rien n'est envoyé avant votre approbation.",
   "watch.nothing_waits": "Rien ne vous attend.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Balayez vers la gauche pour ses réglages",
   "watch.tap_start": "Touchez Démarrer, puis parlez. Vos mots s'affichent ici pendant que vous parlez.",
   "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",
+  "watch.transcribing": "Votre téléphone le transforme en texte…",
   "watch.trust": "Cette montre ne garde ni mot de passe ni clé, et n'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.",
   "watch.type": "Écrire",
   "watch.type_hint": "Écrire à Coach…",

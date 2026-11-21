@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s l\'a refusé, et cela compte quand même dans les limites du jour</string>
     <string name="record_tool_refused_counts_why">%1$s l\'a refusé, et cela compte quand même dans les limites du jour%2$s</string>
     <string name="record_tool_refused_money">%1$s l\'a refusé. Aucun argent n\'a été transféré, mais cela compte quand même dans le total du jour.</string>
+    <string name="record_tool_refused_not_counted">%1$s l\'a refusé. Rien n\'a été fait, et cela ne compte pas dans les limites du jour</string>
+    <string name="record_tool_refused_not_counted_why">%1$s l\'a refusé. Rien n\'a été fait, et cela ne compte pas dans les limites du jour%2$s</string>
     <string name="record_waiting_for_you">Vous attend</string>
     <string name="record_within_card">%1$s, dans la Card</string>
     <string name="record_within_card_alone">Dans la Card</string>
@@ -2719,6 +2721,7 @@
         <item quantity="one">%1$s vous attend</item>
         <item quantity="other">%1$s vous attendent</item>
     </plurals>
+    <string name="watch_no_offline_speech">Votre téléphone ne peut pas transformer seul la parole en texte dans cette langue. Écrivez plutôt.</string>
     <string name="watch_not_sure">Envoi incertain</string>
     <string name="watch_nothing_sent_until">Rien n\'est envoyé avant votre approbation.</string>
     <string name="watch_nothing_waits">Rien ne vous attend.</string>
@@ -2760,6 +2763,7 @@
     <string name="watch_swipe_settings">Balayez vers la gauche pour ses réglages</string>
     <string name="watch_tap_start">Touchez Démarrer, puis parlez. Vos mots s\'affichent ici pendant que vous parlez.</string>
     <string name="watch_timing">Écoute %1$s ms · accusé %2$s ms · résultat %3$s ms</string>
+    <string name="watch_transcribing">Votre téléphone le transforme en texte…</string>
     <string name="watch_trust">Cette montre ne garde ni mot de passe ni clé, et n\'approuve rien : ce qui demande votre accord attend votre téléphone. Vos tafs ne font que ce que leurs Cards permettent.</string>
     <string name="watch_type">Écrire</string>
     <string name="watch_type_hint">Écrire à Coach…</string>

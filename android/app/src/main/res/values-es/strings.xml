@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s lo rechazó, y sigue contando para los límites de hoy</string>
     <string name="record_tool_refused_counts_why">%1$s lo rechazó, y sigue contando para los límites de hoy%2$s</string>
     <string name="record_tool_refused_money">%1$s lo rechazó. No se movió dinero, pero sigue contando para el total de hoy.</string>
+    <string name="record_tool_refused_not_counted">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy</string>
+    <string name="record_tool_refused_not_counted_why">%1$s lo rechazó. No se hizo nada, y no cuenta para los límites de hoy%2$s</string>
     <string name="record_waiting_for_you">Te necesita</string>
     <string name="record_within_card">%1$s, dentro de la Card</string>
     <string name="record_within_card_alone">Dentro de la Card</string>
@@ -2719,6 +2721,7 @@
         <item quantity="one">%1$s te necesita</item>
         <item quantity="other">%1$s te necesitan</item>
     </plurals>
+    <string name="watch_no_offline_speech">Tu teléfono no puede pasar la voz a texto por sí solo en este idioma. Escribe en su lugar.</string>
     <string name="watch_not_sure">No se sabe si llegó</string>
     <string name="watch_nothing_sent_until">No se envía nada hasta que apruebes.</string>
     <string name="watch_nothing_waits">Nada te espera.</string>
@@ -2760,6 +2763,7 @@
     <string name="watch_swipe_settings">Desliza a la izquierda para sus ajustes</string>
     <string name="watch_tap_start">Toca Empezar y habla. Tus palabras aparecen aquí mientras hablas.</string>
     <string name="watch_timing">Escucha %1$s ms · acuse %2$s ms · resultado %3$s ms</string>
+    <string name="watch_transcribing">Tu teléfono lo está pasando a texto…</string>
     <string name="watch_trust">Este reloj no guarda contraseñas ni claves y no aprueba nada: lo que necesita tu sí espera a tu teléfono. Tus tafs solo hacen lo que permiten sus Cards.</string>
     <string name="watch_type">Escribir</string>
     <string name="watch_type_hint">Escribe a Coach…</string>

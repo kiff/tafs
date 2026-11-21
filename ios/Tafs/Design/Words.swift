@@ -3573,6 +3573,10 @@ enum Words {
         static func toolRefusedCountsWhy(who: String, why: String) -> String { Words.line("record.tool_refused_counts_why", who, why) }
         /// {who} refused it. No money moved, but it still counts against today's total.
         static func toolRefusedMoney(who: String) -> String { Words.line("record.tool_refused_money", who) }
+        /// {who} refused it. Nothing was done, and it doesn't count toward today's limits
+        static func toolRefusedNotCounted(who: String) -> String { Words.line("record.tool_refused_not_counted", who) }
+        /// {who} refused it. Nothing was done, and it doesn't count toward today's limits{why}
+        static func toolRefusedNotCountedWhy(who: String, why: String) -> String { Words.line("record.tool_refused_not_counted_why", who, why) }
         /// Waiting for you
         static var waitingForYou: String { Words.line("record.waiting_for_you") }
         /// {amount}, within the Card
@@ -5377,6 +5381,8 @@ enum Words {
         static var needsLock: String { Words.line("watch.needs_lock") }
         /// {count} need you
         static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
+        /// Your phone can't turn speech into text in this language by itself. Type instead.
+        static var noOfflineSpeech: String { Words.line("watch.no_offline_speech") }
         /// Not sure it arrived
         static var notSure: String { Words.line("watch.not_sure") }
         /// Nothing is sent until you approve.
@@ -5457,6 +5463,8 @@ enum Words {
         static var tapStart: String { Words.line("watch.tap_start") }
         /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
         static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// Turning it into text on your phone…
+        static var transcribing: String { Words.line("watch.transcribing") }
         /// This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.
         static var trust: String { Words.line("watch.trust") }
         /// Type

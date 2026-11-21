@@ -354,7 +354,7 @@ things (`runtime/src/cloud/approval.ts`):
   (`sum(…)`, `lifetime`) is answered `failed: …` too, naming the tool and the total: the owner
   agrees a limit for each call and a day's total, never a lifetime one. A sum per item and a
   lifetime count per item are signed.
-  A day's total of calls is drafted with `measure: effects` (`draft-the-card@42`, kiff/work#17, 21 Nov 2026): a call KIFF knows had no
+  A day's total of calls is drafted with `measure: effects` (`draft-the-card@43`, kiff/work#17, 21 Nov 2026): a call KIFF knows had no
   effect (the app refused it and did nothing, or it never left) gives its room back, which an attempts total never does.
   A money tool's amount limit stays a sum.
   A draft that limits one of the taf's write tools by its amount (a per-call cap or a total)

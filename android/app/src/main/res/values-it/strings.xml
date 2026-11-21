@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi</string>
     <string name="record_tool_refused_counts_why">%1$s l\'ha rifiutata, e conta comunque nei limiti di oggi%2$s</string>
     <string name="record_tool_refused_money">%1$s l\'ha rifiutata. Nessun denaro trasferito, ma conta comunque nel totale di oggi.</string>
+    <string name="record_tool_refused_not_counted">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi</string>
+    <string name="record_tool_refused_not_counted_why">%1$s l\'ha rifiutata. Non è stato fatto nulla, e non conta nei limiti di oggi%2$s</string>
     <string name="record_waiting_for_you">Ti aspetta</string>
     <string name="record_within_card">%1$s, entro la Card</string>
     <string name="record_within_card_alone">Entro la Card</string>
@@ -2719,6 +2721,7 @@
         <item quantity="one">%1$s ti aspetta</item>
         <item quantity="other">%1$s ti aspettano</item>
     </plurals>
+    <string name="watch_no_offline_speech">Il telefono non può trasformare da solo la voce in testo in questa lingua. Scrivi invece.</string>
     <string name="watch_not_sure">Arrivo non confermato</string>
     <string name="watch_nothing_sent_until">Non viene inviato nulla finché non approvi.</string>
     <string name="watch_nothing_waits">Niente ti aspetta.</string>
@@ -2760,6 +2763,7 @@
     <string name="watch_swipe_settings">Scorri a sinistra per le sue impostazioni</string>
     <string name="watch_tap_start">Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.</string>
     <string name="watch_timing">Ascolto %1$s ms · ricevuta %2$s ms · risultato %3$s ms</string>
+    <string name="watch_transcribing">Il telefono lo sta trasformando in testo…</string>
     <string name="watch_trust">Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.</string>
     <string name="watch_type">Scrivi</string>
     <string name="watch_type_hint">Scrivi a Coach…</string>

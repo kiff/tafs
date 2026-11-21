@@ -594,6 +594,11 @@ data class ToolOutcome(
   @SerialName("refused_by") val refusedBy: String? = null,
   /** The connection's machine code for why; the words come from [ActivityCall.detail]. */
   val code: String? = null,
+  /**
+   * Whether a Card total kept this call: `false` when none did (the vendor refused, nothing was done, and the Card's limit counts
+   * what's done, so the draw was given back). None from an older KIFF: the app keeps today's line.
+   */
+  val counted: Boolean? = null,
 )
 
 /** The money a call moves, as a decimal string and its unit ("150.00", "EUR"). A gateway call's integer amount has no unit. */

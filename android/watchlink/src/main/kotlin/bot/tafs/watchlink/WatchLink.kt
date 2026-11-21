@@ -73,6 +73,13 @@ sealed interface WatchRequest {
 
   /** Who is signed in, and the plan's line: the watch's Account page. */
   data class Account(override val madeAt: Long) : WatchRequest
+
+  /**
+   * The watch's recognizer gave up (row 44, A): turn the recording the watch just sent over the channel [WatchLink.VOICE] +
+   * [voiceId] into text with the phone's **on-device** recognizer, in [language] (the app's), and answer with the text only. The
+   * phone deletes the recording whatever the outcome, and never sends it anywhere: with no on-device model, it says so.
+   */
+  data class Transcribe(override val madeAt: Long, val voiceId: String, val language: String) : WatchRequest
 }
 
 /** Why the phone refused a message before reading or signing anything. */
@@ -203,6 +210,14 @@ sealed interface WatchReply {
     val events: List<EventLine> = emptyList(),
     val halted: Boolean = false,
   ) : WatchReply
+
+  /** The recording's words, from the phone's on-device recognizer ([WatchRequest.Transcribe]); blank when it heard none. */
+  @Serializable @SerialName("transcribed")
+  data class Transcribed(val text: String) : WatchReply
+
+  /** The phone has no on-device recognizer for the language: nothing was transcribed, and nothing went to a server. */
+  @Serializable @SerialName("no_offline_speech")
+  data object NoOfflineSpeech : WatchReply
 
   /** Who is signed in, the account's name, and the plan's line in tafs cloud's words, when the phone has read it. */
   @Serializable @SerialName("account")
@@ -346,6 +361,13 @@ object WatchLink {
   const val ASK_FULL = PREFIX + "ask-full"
   const val CALENDAR = PREFIX + "calendar"
   const val ACCOUNT = PREFIX + "account"
+  const val TRANSCRIBE = PREFIX + "transcribe"
+
+  /** A recording's channel (`ChannelClient`), by its id: the only audio that ever leaves the watch, and only to the phone. */
+  const val VOICE = PREFIX + "voice/"
+
+  /** The longest recording the phone takes: 31 s of 16 kHz mono 16-bit audio and its header. */
+  const val MAX_VOICE_BYTES = 16_000L * 2 * 31 + 44
 
   /** What the phone app declares (its `android_wear_capabilities`), so the watch finds the phone that can answer it. */
   const val PHONE_CAPABILITY = "tafs_phone_relay"
@@ -410,6 +432,15 @@ object WatchLink {
 
   @Serializable private data class CalendarBody(@SerialName("made_at") val madeAt: Long, val day: String? = null)
 
+  @Serializable
+  private data class TranscribeBody(@SerialName("made_at") val madeAt: Long, @SerialName("voice_id") val voiceId: String, val language: String)
+
+  /** An app language's tag: "en", "pt", "zh-Hant". */
+  private val LANGUAGE = Regex("^[a-z]{2,3}(-[A-Za-z0-9]{2,8}){0,2}$")
+
+  /** A recording's id, as the watch makes it: as an ask's own id. */
+  fun isVoiceId(id: String): Boolean = CLIENT_ID.matches(id)
+
   /** The watch's side: the path and body for [request]. */
   fun encode(request: WatchRequest): Pair<String, ByteArray> {
     val (path, body) = when (request) {
@@ -430,6 +461,7 @@ object WatchLink {
       is WatchRequest.AskFull -> ASK_FULL to json.encodeToString(AskFullBody.serializer(), AskFullBody(request.madeAt, request.askId))
       is WatchRequest.Calendar -> CALENDAR to json.encodeToString(CalendarBody.serializer(), CalendarBody(request.madeAt, request.day))
       is WatchRequest.Account -> ACCOUNT to json.encodeToString(Read.serializer(), Read(request.madeAt))
+      is WatchRequest.Transcribe -> TRANSCRIBE to json.encodeToString(TranscribeBody.serializer(), TranscribeBody(request.madeAt, request.voiceId, request.language))
     }
     return path to body.encodeToByteArray()
   }
@@ -467,6 +499,7 @@ object WatchLink {
         ASK_FULL -> json.decodeFromString(AskFullBody.serializer(), text).let { WatchRequest.AskFull(it.madeAt, it.askId) }
         CALENDAR -> json.decodeFromString(CalendarBody.serializer(), text).let { WatchRequest.Calendar(it.madeAt, it.day) }
         ACCOUNT -> WatchRequest.Account(json.decodeFromString(Read.serializer(), text).madeAt)
+        TRANSCRIBE -> json.decodeFromString(TranscribeBody.serializer(), text).let { WatchRequest.Transcribe(it.madeAt, it.voiceId, it.language) }
         else -> return Accepted.No(NotAccepted.UNKNOWN_PATH)
       }
     } catch (_: IllegalArgumentException) {
@@ -490,6 +523,7 @@ object WatchLink {
     is WatchRequest.TafChat -> request.tafId.isNotBlank() && request.tafId.length <= 128
     is WatchRequest.AskFull -> ID.matches(request.askId)
     is WatchRequest.Calendar -> request.day == null || DAY.matches(request.day)
+    is WatchRequest.Transcribe -> CLIENT_ID.matches(request.voiceId) && LANGUAGE.matches(request.language)
     is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief, is WatchRequest.Account -> true
   }
 

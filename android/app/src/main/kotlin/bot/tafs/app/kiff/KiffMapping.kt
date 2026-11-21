@@ -288,7 +288,8 @@ object KiffMapping {
   /**
    * What the tool did with an allowed call: its kind and the words for it. [approved]: the owner approved
    * it, held first. A call the vendor refused still counts against the Card's totals: it says so plainly,
-   * naming the vendor as connected.
+   * naming the vendor as connected. Unless KIFF says no total kept it (`counted: false`, a Card that counts what's done):
+   * then it says it doesn't count (the fourth line). Money and amounts keep their own lines whatever KIFF says.
    */
   fun executed(o: ToolOutcome?, approved: Boolean, vendor: String? = null, counts: Counted = Counted.nothing): Pair<RecordEntry.Kind, String> {
     val why = quotable(o?.message)?.let { ": $it" }
@@ -300,7 +301,11 @@ object KiffMapping {
         RecordEntry.Kind.notDone to when (counts) {
           Counted.money -> Words.Record.toolRefusedMoney(who = who)
           Counted.amount -> Words.Record.toolRefusedAmount(who = who)
-          Counted.nothing -> why?.let { Words.Record.toolRefusedCountsWhy(who = who, why = it) } ?: Words.Record.toolRefusedCounts(who = who)
+          Counted.nothing -> if (o.counted == false) {
+            why?.let { Words.Record.toolRefusedNotCountedWhy(who = who, why = it) } ?: Words.Record.toolRefusedNotCounted(who = who)
+          } else {
+            why?.let { Words.Record.toolRefusedCountsWhy(who = who, why = it) } ?: Words.Record.toolRefusedCounts(who = who)
+          }
         }
       }
       "not_sent" -> RecordEntry.Kind.notDone to (why?.let { Words.Record.notSentNothingReachedWhy(allowed = allowed, why = it) } ?: Words.Record.notSentNothingReached(allowed = allowed))

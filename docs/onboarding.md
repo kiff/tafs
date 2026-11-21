@@ -4,6 +4,19 @@ The first run after one sign-in, on iPhone, iPad and Mac (Android follows the sa
 `Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **off**: while it's off, the welcome and the sign-in are as they
 ship. It goes on only after an end-to-end test on real devices with the owner present.
 
+**K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
+no other does. Two builds have it:
+- **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
+  Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue,
+  iOS's ask and KIFF's sign-in page, with a screenshot kept at each step (the `k5` artifact).
+- **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
+  testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
+  (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
+  When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
+  can't be installed or picked any more. The lane that ran the pass posts it on the thread.
+
+App Store builds never have `TAFS_K5`. The sign-up's email code and GitHub sign-in are left to the device pass.
+
 ## The steps
 
 1. **The welcome, with one tick.** Today's welcome (board 1, "tafs", the lead and the three points), with one tick
@@ -37,6 +50,13 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 ## Android
 
 Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
+
+**K5, the end-to-end pass on a test device** (`BuildConfig.K5`, as iOS's `TAFS_K5`): `ONBOARDING_ON` is on only in a **debug**
+build made with `-Pk5` or `TAFS_K5=1` (`./gradlew :app:assembleDebug -Pk5`, or `android.yml` run by hand with `k5`, whose
+`k5` job leaves the APK as a run artifact for 7 days). That job builds without Firebase's settings (alerts off), since the
+repository is public, and a `k5` run never starts `release` or `wear-release`. A **release** build sets `K5` to `false` whatever is
+passed, so no build for Play has it, and CI checks it on every run ("A release build never has K5"; `K5SwitchTest`: off unless
+asked for).
 
 - **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
   law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`),

@@ -1,0 +1,1 @@
+- **Release builds:** a K5 test build (row 39 on, for the device pass) can be made from the iOS workflow. It stays with Team, and its What to Test says never to submit it for App Store review ([onboarding.md](docs/onboarding.md)).

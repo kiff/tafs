@@ -51,6 +51,7 @@
     "one": "{count} braucht dich",
     "other": "{count} brauchen dich"
   },
+  "watch.no_offline_speech": "Dein Handy kann Gesprochenes in dieser Sprache nicht selbst in Text umwandeln. Tipp stattdessen.",
   "watch.not_sure": "Unklar, ob es ankam",
   "watch.nothing_sent_until": "Nichts wird gesendet, bevor du genehmigst.",
   "watch.nothing_waits": "Nichts wartet auf dich.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Nach links wischen für seine Einstellungen",
   "watch.tap_start": "Tippe auf Starten und sprich. Deine Worte erscheinen hier, während du sprichst.",
   "watch.timing": "Zuhören {listen} ms · Bestätigung {receipt} ms · Ergebnis {result} ms",
+  "watch.transcribing": "Dein Handy macht Text daraus…",
   "watch.trust": "Diese Uhr speichert kein Passwort und keinen Schlüssel und genehmigt nichts: Was dein Ja braucht, wartet auf dein Handy. Deine tafs tun nur, was ihre Cards erlauben.",
   "watch.type": "Tippen",
   "watch.type_hint": "Schreib an Coach…",

@@ -1,0 +1,1 @@
+- **Android:** when an app refuses a call and it doesn't count toward the Card's limits, the Record says so: "Gmail refused it. Nothing was done, and it doesn't count toward today's limits" ([android-app.md](docs/android-app.md)).

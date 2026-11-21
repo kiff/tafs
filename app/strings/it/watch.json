@@ -51,6 +51,7 @@
     "one": "{count} ti aspetta",
     "other": "{count} ti aspettano"
   },
+  "watch.no_offline_speech": "Il telefono non può trasformare da solo la voce in testo in questa lingua. Scrivi invece.",
   "watch.not_sure": "Arrivo non confermato",
   "watch.nothing_sent_until": "Non viene inviato nulla finché non approvi.",
   "watch.nothing_waits": "Niente ti aspetta.",
@@ -92,6 +93,7 @@
   "watch.swipe_settings": "Scorri a sinistra per le sue impostazioni",
   "watch.tap_start": "Tocca Avvia, poi parla. Le tue parole compaiono qui mentre parli.",
   "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",
+  "watch.transcribing": "Il telefono lo sta trasformando in testo…",
   "watch.trust": "Questo orologio non conserva password né chiavi e non approva nulla: ciò che richiede il tuo sì aspetta il telefono. I tuoi tafs fanno solo ciò che le loro Card consentono.",
   "watch.type": "Scrivi",
   "watch.type_hint": "Scrivi a Coach…",

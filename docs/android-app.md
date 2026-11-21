@@ -480,7 +480,10 @@ searches across their tafs, opens one case, and exports receipts
   replaced at each export. `missing` shows as a line ("2 calls have no receipt yet.").
 - **What the app answered:** a call the app refused, or one that couldn't be sent, says so in the
   app's own line, which names the app ("Gmail refused it, and it still counts toward today's
-  limits"). KIFF's `tool_outcome.message` carries the app's answer through, so it's quoted after
+  limits"). When KIFF says no Card total kept it (`tool_outcome.counted: false`: the vendor refused, nothing was done, and the
+  Card counts what's done), the line says it doesn't count ("Gmail refused it. Nothing was done, and it doesn't count toward
+  today's limits", `record.tool_refused_not_counted`, as iOS). A call with money or an amount keeps its own line, and an older KIFF
+  that doesn't send the field keeps today's. KIFF's `tool_outcome.message` carries the app's answer through, so it's quoted after
   that line only when it's a short, plain, one-line reason (`KiffMapping.quotable`: 160 characters
   at most, no JSON, no address). An app's raw answer can hold the connected account's address, a
   file's name or a request id, and the Record, and the "Last failed" line Connect apps and a taf's

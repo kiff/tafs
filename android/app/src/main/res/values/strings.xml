@@ -1850,6 +1850,8 @@
     <string name="record_tool_refused_counts">%1$s refused it, and it still counts toward today\'s limits</string>
     <string name="record_tool_refused_counts_why">%1$s refused it, and it still counts toward today\'s limits%2$s</string>
     <string name="record_tool_refused_money">%1$s refused it. No money moved, but it still counts against today\'s total.</string>
+    <string name="record_tool_refused_not_counted">%1$s refused it. Nothing was done, and it doesn\'t count toward today\'s limits</string>
+    <string name="record_tool_refused_not_counted_why">%1$s refused it. Nothing was done, and it doesn\'t count toward today\'s limits%2$s</string>
     <string name="record_waiting_for_you">Waiting for you</string>
     <string name="record_within_card">%1$s, within the Card</string>
     <string name="record_within_card_alone">Within the Card</string>
@@ -2719,6 +2721,7 @@
         <item quantity="one">%1$s needs you</item>
         <item quantity="other">%1$s need you</item>
     </plurals>
+    <string name="watch_no_offline_speech">Your phone can\'t turn speech into text in this language by itself. Type instead.</string>
     <string name="watch_not_sure">Not sure it arrived</string>
     <string name="watch_nothing_sent_until">Nothing is sent until you approve.</string>
     <string name="watch_nothing_waits">Nothing waits for you.</string>
@@ -2760,6 +2763,7 @@
     <string name="watch_swipe_settings">Swipe left for its settings</string>
     <string name="watch_tap_start">Tap Start, then speak. Your words show here as you talk.</string>
     <string name="watch_timing">Listen %1$s ms · receipt %2$s ms · result %3$s ms</string>
+    <string name="watch_transcribing">Turning it into text on your phone…</string>
     <string name="watch_trust">This watch holds no password or key, and approves nothing: what needs your yes waits for your phone. Your tafs only do what their Cards allow.</string>
     <string name="watch_type">Type</string>
     <string name="watch_type_hint">Write to Coach…</string>
