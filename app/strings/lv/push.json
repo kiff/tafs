@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Kopsavilkumi",
+  "push.channel.briefs_description": "Tavs kopsavilkums noteiktajos laikos.",
+  "push.channel.holds_description": "Izsaukums ir aizturēts, gaidot tavu atbildi. Nekas netiek nosūtīts, kamēr tu to neapstiprini.",
+  "push.channel.other": "Citi paziņojumi",
+  "push.channel.other_description": "Uzdevumu pieprasījumi un atbildes uz tiem, bez skaņas.",
+  "push.channel.urgent_description": "Tas, kas nevar gaidīt līdz nākamajam kopsavilkumam, ar skaņu.",
+  "push.open_needs_you": "Atver “Gaida tevi”, lai atbildētu.",
+  "push.open_taf": "Atver taf, lai redzētu.",
+  "push.open_usage": "Atver “Plāns un lietojums”, lai redzētu."
+}
