@@ -1,0 +1,1 @@
+- **Korean and Japanese legal pages in the apps (iPhone, iPad, Android):** Terms and Privacy, KIFF's and tafs's, open in Korean and Japanese now that kiff.dev serves them, with no "in English" mark ([languages.md](docs/languages.md)).
