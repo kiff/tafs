@@ -653,6 +653,11 @@ data class AppState(
   val retryingRefresh: Boolean = false,
   /** This device's time zone, offered once when the account's differs; and why the account's didn't change, when it didn't. */
   val timeZoneOffer: String? = null,
+  /**
+   * This phone holds no approval key (no strong biometric enrolled), so KIFF made its session view-only: signing in again
+   * changes nothing until a fingerprint is added. The lines that would say "Sign in again" say that instead (K5, 21 Nov).
+   */
+  val noApprovalKeyHere: Boolean = false,
   val timeZoneError: String? = null,
   /** The account's groups (Everyone first) and its active people, as KIFF lists them; and why they couldn't be read or changed. */
   val groups: List<Group> = emptyList(),
@@ -8049,10 +8054,13 @@ class AppModel(
     // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
     // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
     val viewOnly = account.viewOnly
+    // Read once per account read: a fingerprint added since makes the phone hold one at its next sign-in.
+    val noApprovalKey = runCatching { signer.approvalPublicKeyDER.isEmpty() }.getOrDefault(false)
     _state.update {
       it.copy(
         kiffAccount = account, timeZoneOffer = offer,
         approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+        noApprovalKeyHere = noApprovalKey,
       )
     }
   }
