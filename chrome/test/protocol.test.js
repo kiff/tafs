@@ -1,9 +1,9 @@
-import { test } from "node:test";
+import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
 import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
-import { Relay } from "../src/relay.js";
+import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
 
@@ -196,6 +196,83 @@ test("a step before the welcome, or a forged welcome, ends the connection", asyn
   await forged.ws.deliver({ type: "welcome", sig: await sign(other.keys.privateKey, LABEL.welcome, { chrome_id: "chr_1", nonce_p: "np", nonce_e: forged.ws.sent[0].nonce_e }) });
   assert.equal(forged.relay.connected, false);
   assert.notEqual(forged.ws.closed, null);
+});
+
+test("the extension speaks first: open, then planque's challenge", async () => {
+  const p = await planque();
+  const { relay, ws } = await relayWith(p);
+  assert.deepEqual(ws.sent, [], "nothing before the connection is up");
+  ws.onopen();
+  assert.deepEqual(ws.sent, [{ type: "open" }]);
+  await ws.deliver({ type: "challenge", nonce_p: "np" });
+  assert.equal(ws.sent.at(-1).type, "hello");
+  relay.close();
+});
+
+test("planque's close message counts as its close code: 4410 wipes once, 4401 and 4403 only close", async () => {
+  const p = await planque();
+  const before = await relayWith(p);
+  await before.ws.deliver({ type: "close", code: 4410, reason: "unpaired" });
+  assert.equal(before.wiped(), true, "even before the proofs");
+  assert.notEqual(before.ws.closed, null);
+
+  const after = await relayWith(p);
+  let wipes = 0;
+  after.relay.onUnpaired = () => (wipes += 1);
+  await handshake(p, after.ws);
+  await after.ws.deliver({ type: "close", code: 4410 });
+  after.ws.onclose({ code: 4410 });
+  assert.equal(wipes, 1, "a close message and a close code wipe once");
+  assert.equal(after.relay.connected, false);
+
+  for (const code of [4401, 4403]) {
+    const r = await relayWith(p);
+    await handshake(p, r.ws);
+    await r.ws.deliver({ type: "close", code, reason: "no" });
+    assert.equal(r.wiped(), false, String(code));
+    assert.equal(r.relay.connected, false, String(code));
+    assert.notEqual(r.ws.closed, null, String(code));
+  }
+});
+
+test("an answer over the relay's limit is page_too_large, signed", async () => {
+  const p = await planque();
+  const big = { active: false, handle: async () => ({ page: { read_id: "rd_1", url: "https://shop.example/", text: "x".repeat(MAX_RESULT_BYTES) } }), stop: async () => {} };
+  const { relay, ext, ws } = await relayWith(p, { runner: big });
+  await handshake(p, ws);
+  const s = step();
+  await ws.deliver({ type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) });
+  const answer = ws.sent.at(-1);
+  assert.equal(answer.type, "result");
+  assert.equal(answer.error.code, "page_too_large");
+  assert.ok(JSON.stringify(answer).length < MAX_RESULT_BYTES);
+  const { sig, type, ...body } = answer;
+  assert.equal(await verify(await pub(ext), LABEL.result, body, sig), true);
+  relay.close();
+});
+
+test("a connection dropped during a run is opened again at once; idle, it waits for the alarm", async () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const p = await planque();
+    const running = { active: true, handle: async () => ({}), stop: async () => {} };
+    const { relay, ws } = await relayWith(p, { runner: running });
+    await handshake(p, ws);
+    ws.onclose({ code: 1001 });
+    assert.equal(FakeSocket.last, ws, "not before the first wait");
+    mock.timers.tick(1_000);
+    assert.notEqual(FakeSocket.last, ws, "opened again");
+    relay.close();
+
+    const idle = await relayWith(p);
+    await handshake(p, idle.ws);
+    idle.ws.onclose({ code: 1001 });
+    mock.timers.tick(60_000);
+    assert.equal(FakeSocket.last, idle.ws, "idle: the alarm reconnects");
+    idle.relay.close();
+  } finally {
+    mock.timers.reset();
+  }
 });
 
 test("planque closing with 4410 wipes the extension", async () => {

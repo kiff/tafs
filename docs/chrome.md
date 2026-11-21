@@ -104,15 +104,27 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 
 `wss://planque.kiff.dev/v1/extension?chrome=chr_…`, opened by the extension:
 
-1. **planque sends** `{type: "challenge", nonce_p}`.
-2. **The extension answers** `{type: "hello", chrome_id, nonce_p, nonce_e, version, manifest_hash, sig}`, signed with its
+1. **The extension sends** `{type: "open"}` once the connection is up. planque's relay can't post to a connection until
+   its connect has returned, so the extension speaks first.
+2. **planque answers** `{type: "challenge", nonce_p}`. The challenge is what makes a replayed hello useless, so it stays.
+3. **The extension answers** `{type: "hello", chrome_id, nonce_p, nonce_e, version, manifest_hash, sig}`, signed with its
    paired key. planque checks the key, and checks `manifest_hash` against its allowlist of released builds; anything else
    is closed with `4403`.
-3. **planque answers** `{type: "welcome", sig}`, its step key's signature over `{chrome_id, nonce_p, nonce_e}`. The
+4. **planque answers** `{type: "welcome", sig}`, its step key's signature over `{chrome_id, nonce_p, nonce_e}`. The
    extension checks it with the pinned key, or closes.
 
 **Before the welcome, anything else closes the connection.**
 - **Close codes:** `4401` (unknown Chrome), `4403` (build not allowed), `4410` (unpaired: the extension wipes itself).
+  - planque's relay can't choose a close code. So planque sends `{type: "close", code, reason}` and then drops the
+    connection, and the extension treats the message's `code` exactly as a close code, at any point, before the
+    welcome too.
+  - It needs no signature, as with `stop`: closing only takes power away. A forged `4410` could only wipe the
+    extension, and only planque can post to the connection.
+  - A real close code counts too, and a `4410` wipes once.
+- **The relay's limits:**
+  - A connection is dropped after 10 minutes idle and after 2 hours in all. One dropped during a run is opened again at
+    once, then after 2, 4, 8, 16 and 30 seconds. Idle, the next alarm opens it.
+  - A message carries at most 128 KB. A result over 120 KB is answered `page_too_large` instead, signed as any result.
 - **Keepalive:** `{type: "ping"}` / `{type: "pong"}` every 20 s while a run is on. MV3 keeps the service worker alive
   while messages flow.
 - **The allowlist of released builds** is planque's `deploy/chrome-builds.txt`, one released build per line
@@ -203,9 +215,10 @@ error = {code, detail?}      // detail never carries page text
 | `dialog_open` | the page raised a dialog since the read |
 | `paused_by_owner`, `paused_failures`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
+| `page_too_large` | the answer is over 120 KB, the relay's limit with room to spare |
 
-planque uses the same codes. It adds `chrome_offline` for a step no connection answered in time, and then nothing was
-done.
+planque uses the same codes. It adds `chrome_offline` for a step that found no connection within 60 s, and then nothing
+was done.
 
 ## Runs
 
@@ -272,7 +285,8 @@ only on the paired phone's own release, which planque relays and can't make:
   guard (mirroring planque's).
 - **`protocol.test.js`:** a step's signature, Chrome, expiry and nonce; answers, hello and welcome; a phone release that
   planque can't forge; the whole pairing, including a substituted key, a renamed pairing, another secret and another
-  extension; the relay taking nothing before both proofs; and `4410` wiping the extension.
+  extension; the relay taking nothing before both proofs; the extension speaking first; planque's `close` message and
+  `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
   Off-site opens, navigations and pop-ups are stopped. The guard runs before the page is touched. There are the pauses,
   Stop, and the site permission.
