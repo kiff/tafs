@@ -546,6 +546,8 @@ data class HeldCall(
   val kind: String? = null,
   /** Each breach's outcome, as KIFF names it (`per_action_exceeded`, `limit_reached`, `resource_not_on_card`). */
   val breachOutcomes: List<String> = emptyList(),
+  /** A held step in the owner's Chrome, as plain text: drawn on the card under KIFF's own amount and action, never in their place. */
+  val browser: BrowserStep? = null,
 )
 
 /** The taf and version a held version_install names, as Coach sent them: the taf's id in tafs cloud, or its name. */
@@ -770,3 +772,18 @@ object ListOrder {
     return newlyWaiting + kept + added
   }
 }
+
+/**
+ * A held browser step as the card draws it (docs/chrome.md, "The phone approval card"): each piece plain text, one paragraph, with
+ * no character that reorders a line. [lines] are the checkout's, one each ("2 × Blue pen · 3.00"); [chrome] the paired Chrome's name.
+ */
+@Serializable
+data class BrowserStep(
+  val site: String,
+  val origin: String,
+  val action: String,
+  val pageTitle: String? = null,
+  val excerpt: String? = null,
+  val lines: List<String> = emptyList(),
+  val chrome: String? = null,
+)

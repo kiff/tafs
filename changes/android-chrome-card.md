@@ -1,0 +1,1 @@
+- **Android: a held step in your Chrome** shows the site, the action, what the page showed, a checkout's lines and which Chrome, under KIFF's own amount and reason (behind the switch: it shows only once KIFF sends it).
