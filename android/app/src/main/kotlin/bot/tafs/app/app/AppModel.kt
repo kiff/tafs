@@ -5011,7 +5011,7 @@ class AppModel(
       return Connected.Failed(Words.Connect.notSetUpHereIphone, told = "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.")
     }
     if (_state.value.approvalKeyLost) return Connected.Failed(KiffClient.APPROVAL_KEY_LOST)
-    if (_state.value.connecting != null) {
+    if (_state.value.connecting != null && !giveWayToNewApproval()) {
       note(cardId, Words.Connect.anotherApproval)
       return Connected.Stopped
     }
@@ -5239,6 +5239,20 @@ class AppModel(
   }
 
   /**
+   * Another approval holds the one that runs at a time ([AppState.connecting]). A sign-in the owner came back from with no link
+   * (its vendor's page left, [AppState.vendorPageLeft]) gives way to a new approval, as Open again does: its wait ends quietly,
+   * its card shows Approve again, and the new one goes on once it has stopped. Before, it held every other card until the app
+   * was opened again, with no word why. One still on the vendor's page doesn't give way. True once nothing holds it.
+   */
+  private suspend fun giveWayToNewApproval(): Boolean {
+    if (_state.value.connecting == null) return true
+    if (!_state.value.vendorPageLeft) return false
+    signInRestart = null
+    vendorSignIn.replace()
+    return withTimeoutOrNull(REPLACE_WAIT_MS) { _state.first { it.connecting == null } } != null
+  }
+
+  /**
    * Coach's approval card for an app connected with a key (planque's `api_key`), not connected yet, given on the key sheet the card
    * opened ([openCardKeySheet]): planque approves such a grant only with its key. So the key goes first, as on the Connect sheet ([giveKey]: the shown digest checked, confirmed with
    * the approval key, sent signed by this device, kept nowhere here). Then the card is answered as any approval is: tafs cloud
@@ -5299,7 +5313,10 @@ class AppModel(
       return true
     }
     if (_state.value.approvalKeyLost) { note(c.id, KiffClient.APPROVAL_KEY_LOST); return true }
-    if (_state.value.connecting != null) { note(c.id, CoachWords.ANOTHER_APPROVAL); return true }
+    if (_state.value.connecting != null && !giveWayToNewApproval()) { note(c.id, CoachWords.ANOTHER_APPROVAL); return true }
+    // What the button said, as it was tapped: "Approve" rides on the approval window this phone holds; "Approve with your
+    // fingerprint" asks for it. So a held window is used only where the button said so, never under a fingerprint's words.
+    val shownAsTap = CoachWords.approvesAsTap(c, _state.value.windowWords)
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - c.id) }
     val generation = accountGeneration
     planque.tenant = tenant
@@ -5370,7 +5387,9 @@ class AppModel(
             kiff.setupSigner = sign
             var windowed = false
             try {
-              windowed = asked.key == "window" && holdWindow(asked.reason)
+              // A window this phone already holds is ridden only where the button said "Approve"; with none held, one is opened
+              // behind the fingerprint, as the button said.
+              windowed = asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason)
               // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
               if (!windowed) {
                 if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)

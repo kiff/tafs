@@ -1214,6 +1214,9 @@ class PlanqueTest {
 
   private fun approvalComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard)
 
+  /** The same card, marked by tafs cloud as a tap inside the approval window (`signs.takes`). */
+  private fun tapComponent() = KiffClient.json.decodeFromString<SetupComponent>(approvalCard.replace("}", ""","signs":{"card":false,"takes":"tap"}}"""))
+
   // MARK: Coach's card for an app connected with a key: the key goes in on the card, then the card is answered
 
   private val keyRequest = """{"kind":"api_key","server":"api.example-bank.test","agent":"invoicing-1","tools":[{"tool":"list_invoices","read_only":true}]}"""
@@ -2304,10 +2307,35 @@ class PlanqueTest {
     coachWithCard(m)
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
     m.approveCoach(approvalComponent(), digest, null)
-    m.approveCoach(approvalComponent(), digest, null)
+    // The second card is one tafs cloud marks a tap, so its button says "Approve" and it rides on the window.
+    m.approveCoach(tapComponent(), digest, null)
     assertEquals(1, auth.asked.size)
     assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
     assertEquals(2, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
+  }
+
+  // The owner, 21 Nov: what the button says is what happens. A card tafs cloud doesn't mark a tap says "Approve with your
+  // fingerprint", so it asks for the fingerprint even while this phone holds a window, and its call doesn't ride on it.
+  @Test fun aCardThatSaysFingerprintAsksForItEvenInsideAWindow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    repeat(2) {
+      transport.answer(askRoute, 200, signConnectInWindow())
+      transport.answer(approve, 200, """{"status":"connected"}""")
+      transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+      transport.answer("GET /v1/me/window", 200, windowOpened)
+    }
+    transport.answer("POST /v1/me/window", 201, windowOpened)
+    val m = model()
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("No fingerprint for the next 5 minutes", m.state.value.windowWords)
+    m.approveCoach(approvalComponent(), digest, null)
+    // Two fingerprints: the window's, then this card's own. One window opened, and only the first call rode on it.
+    assertEquals(2, auth.asked.size)
+    assertEquals(1, transport.requestsTo("POST /v1/me/window").size)
+    assertEquals(1, transport.requestsTo(approve).count { it.headers.getValue("Planque-Device-Signature").contains(",w=$win,") })
   }
 
   @Test fun planqueSayingTheWindowEndedOpensANewOneAndTriesOnceMore() = runTest {
