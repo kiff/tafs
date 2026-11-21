@@ -18,12 +18,12 @@ import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, T
 export const PLANQUE = "https://planque.kiff.dev";
 
 /**
- * Coach's model: Opus 5.5, which plans a taf and its Cards with the owner. A taf runs on Sonnet
- * (tafdef's MODEL). The owner's choice of 5 Nov 2026, measured through kiff/agents' Eval.
+ * Coach's model: Sonnet 5.5, as a taf's (tafdef's MODEL). The owner's choice of 21 Nov 2026, for cost:
+ * Coach planned on Opus 5.5 from 5 Nov, and its Eval runs at repeat 3 are the comparison.
  */
-export const SETUP_MODEL = "claude-opus-5-5";
-/** What SETUP_MODEL costs, in millionths of a US dollar per million tokens (as tafdef's PRICE). */
-export const SETUP_PRICE = { Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 } as const;
+export const SETUP_MODEL = "claude-sonnet-5-5";
+/** What SETUP_MODEL costs, in millionths of a US dollar per million tokens (tafdef's PRICE, the same model). */
+export const SETUP_PRICE = { Input: 2_000_000, Output: 10_000_000, CacheRead: 100_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 } as const;
 /** What SETUP_MODEL costs at its fast output (kiff/agents#197). */
 export const SETUP_PRICE_FAST = {
   Input: 2 * SETUP_PRICE.Input, Output: 2 * SETUP_PRICE.Output, CacheRead: 2 * SETUP_PRICE.CacheRead,
@@ -33,6 +33,7 @@ export const SETUP_PRICE_FAST = {
 /**
  * How hard Setup works on each turn: low. Measured through kiff/agents' Eval on 5 Nov 2026,
  * Opus 5.5 at low passed every Setup check, sooner than at high: the owner waits on each turn.
+ * Kept at low on Sonnet 5.5 (21 Nov), with the Eval's Coach suites to say whether it holds.
  */
 export const SETUP_EFFORT: Effort = "low";
 

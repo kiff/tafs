@@ -46,13 +46,15 @@ describe("Setup's definition on kiff/agents", () => {
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
-    // Coach plans with the owner on Opus 5.5, at low; a taf runs on Sonnet 5.5 (the owner's choice of 5 Nov 2026).
-    expect(d.model).toBe("claude-opus-5-5");
-    expect(SETUP_MODEL).toBe("claude-opus-5-5");
+    // Coach plans with the owner on Sonnet 5.5, at low, as a taf runs (the owner's choice of 21 Nov 2026).
+    expect(d.model).toBe("claude-sonnet-5-5");
+    expect(SETUP_MODEL).toBe("claude-sonnet-5-5");
     expect(taf.model).toBe(MODEL);
-    expect(d.model).not.toBe(taf.model);
+    expect(d.model).toBe(taf.model);
     expect(d.price).toEqual(SETUP_PRICE);
-    expect(d.price).toEqual({ Input: 4_000_000, Output: 20_000_000, CacheRead: 200_000, CacheWrite: 5_000_000, CacheWrite1h: 8_000_000 });
+    // The same model, the same price: what a turn of Coach costs is what a taf's turn costs.
+    expect(d.price).toEqual(taf.price);
+    expect(d.price).toEqual({ Input: 2_000_000, Output: 10_000_000, CacheRead: 100_000, CacheWrite: 2_500_000, CacheWrite1h: 4_000_000 });
     expect(d.effort).toBe(SETUP_EFFORT);
     expect(d.thinking).toBe("updates"); // the person waiting sees its progress notes, never its reasoning
     expect(SETUP_EFFORT).toBe("low");

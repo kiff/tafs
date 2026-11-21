@@ -13,7 +13,7 @@ import { type AgentDefinition, type Effort, EVENT_KINDS, type EventKind, KEEP, t
 
 /**
  * A taf's model: Sonnet 5.5, the owner's choice of 5 Nov 2026 after measuring it beside Opus 5.5
- * (the same work at about half the cost). Coach keeps Opus (setupdef's SETUP_MODEL).
+ * (the same work at about half the cost). Coach runs on it too since 21 Nov (setupdef's SETUP_MODEL).
  */
 export const MODEL = "claude-sonnet-5-5";
 /**
