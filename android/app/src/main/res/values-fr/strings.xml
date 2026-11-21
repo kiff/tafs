@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Associer</string>
     <string name="chrome_expired">Le code a expiré, rien n\'a donc été associé. Recommencez.</string>
     <string name="chrome_footer">Vos tafs ne peuvent utiliser un Chrome associé que sur les sites qu\'une connexion indique, et vous approuvez ici les étapes risquées.</string>
+    <string name="chrome_held_basket">Dans le panier</string>
+    <string name="chrome_held_in">Dans %1$s</string>
+    <string name="chrome_held_page">Sur la page</string>
     <string name="chrome_name_label">Nom</string>
     <string name="chrome_none">Aucun Chrome n\'est associé.</string>
     <string name="chrome_not_loaded">Vos Chrome n\'ont pas pu être lus : %1$s</string>

@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Koppelen</string>
     <string name="chrome_expired">De code is verlopen, dus er is niets gekoppeld. Begin opnieuw.</string>
     <string name="chrome_footer">Je tafs kunnen een gekoppelde Chrome alleen gebruiken op de sites die een koppeling noemt, en riskante stappen keur je hier goed.</string>
+    <string name="chrome_held_basket">In het winkelmandje</string>
+    <string name="chrome_held_in">In %1$s</string>
+    <string name="chrome_held_page">Op de pagina</string>
     <string name="chrome_name_label">Naam</string>
     <string name="chrome_none">Er is geen Chrome gekoppeld.</string>
     <string name="chrome_not_loaded">Je Chromes konden niet worden gelezen: %1$s</string>
