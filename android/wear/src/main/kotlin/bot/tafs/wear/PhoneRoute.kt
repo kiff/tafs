@@ -63,10 +63,14 @@ internal class PhoneRoute(
   }
 
   companion object {
-    /** Asks that only read: safe to send twice. Refuse, Halt, an ask and a Coach message act, so they're sent once. */
+    /**
+     * Asks that only read: safe to send twice. Refuse, Halt, an ask and a Coach message act, so they're sent once. Every type is
+     * named, with no default: a new request won't compile until someone decides whether it reads or acts.
+     */
     fun isRead(request: WatchRequest): Boolean = when (request) {
       is WatchRequest.Refuse, is WatchRequest.Halt, is WatchRequest.Ask, is WatchRequest.Coach -> false
-      else -> true
+      is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Asks, is WatchRequest.Brief, is WatchRequest.Taf,
+      is WatchRequest.TafChat, is WatchRequest.AskFull, is WatchRequest.Calendar, is WatchRequest.Account -> true
     }
   }
 }
