@@ -60,6 +60,9 @@ final class ReportAnswerUITests: TafsUITestCase {
             if springboard.alerts.firstMatch.exists { letTheMonitorRun(app) }
             var shown = false
             for _ in 0..<3 where !shown {
+                // The last report's sheet can still be sliding away after Done: the answer under it
+                // isn't hittable yet, and a press then fails the test (tafs#1611's run). Wait for it.
+                guard hittable(answer, within: 10) else { continue }
                 answer.press(forDuration: 1.2)
                 shown = item.waitForExistence(timeout: 5) && hittable(item, within: 5)
             }
