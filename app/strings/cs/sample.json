@@ -41,7 +41,7 @@
   "sample.brief.expires.answer": "Odeslat",
   "sample.brief.expires.cant_wait": "Tohle nepočká: vyprší ve 12:00, před dalším přehledem.",
   "sample.brief.expires.decline": "Neodesílat",
-  "sample.brief.expires.meanwhile": "nové odeslání zůstává pozdržené; nic se neodešle.",
+  "sample.brief.expires.meanwhile": "nové odeslání zůstává zadržené; nic se neodešle.",
   "sample.brief.expires.question": "Poslat novou zásilku k objednávce č. 5098, než ve 12:00 skončí lhůta na reklamaci u dopravce?",
   "sample.brief.expires.why": "Ztracena při přepravě, 10 dní bez skenu; {taf} dnes ráno ověřil stav u dopravce.",
   "sample.brief.label.clients": "Poptávky",
@@ -58,7 +58,7 @@
   "sample.brief.pay.question": "Poslat 3 zprávy o zpoždění u zásilek s doručením v pátek?",
   "sample.brief.pay.why": "Všechny tři dopravce potvrdil jako zpožděné a {taf} je ověřil.",
   "sample.brief.remind.decline": "Nenabízet",
-  "sample.brief.remind.meanwhile": "nabídka je pozdržená; nic se neodešle.",
+  "sample.brief.remind.meanwhile": "nabídka je zadržená; nic se neodešle.",
   "sample.brief.remind.question": "Nabídnout Lumen & Co slevu 15 % z jejich nabídky?",
   "sample.brief.remind.why": "Požádali o lepší cenu a nabídka je 9 dní stará.",
   "sample.brief.rest": {

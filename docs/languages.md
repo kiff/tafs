@@ -345,7 +345,7 @@ declines as the legal pages write it (taf, tafu, tafy, tafů); Card, Coach, KIFF
 | Needs you | Čeká na vás |
 | Approve / Approve once | Schválit / Schválit jednou |
 | Refuse | Odmítnout |
-| held | pozdrženo |
+| held | zadrženo |
 | Halt / Halted | Zastavit / Zastaveno |
 | Stopped | Ukončeno |
 | Pause / Paused | Pozastavit / Pozastaveno |
@@ -358,7 +358,7 @@ declines as the legal pages write it (taf, tafu, tafy, tafů); Card, Coach, KIFF
 | limit / spend limit | limit / limit útraty |
 | credits / credit pack | kredity / balíček kreditů |
 | Sign in / Sign out | Přihlásit se / Odhlásit se |
-| Inbox | Doručená pošta |
+| Inbox | Doručené (v Doručených) |
 | Overview | Přehled |
 | Calendar | Kalendář |
 | Usage | Využití |
@@ -390,7 +390,8 @@ only. The plural forms are one, few (2–4) and other.
 | limit / spend limit | limit / limit výdavkov |
 | credits / credit pack | kredity / balík kreditov |
 | Sign in / Sign out | Prihlásiť sa / Odhlásiť sa |
-| Inbox | Doručená pošta |
+| Inbox | Doručené (v Doručených) |
+| chat | chat (not "čet") |
 | Overview | Prehľad |
 | Calendar | Kalendár |
 | Usage | Využitie |
@@ -423,7 +424,7 @@ the system shows them, in English; Windows' are in Slovenian. The plural forms a
 | limit / spend limit | omejitev / omejitev porabe |
 | credits / credit pack | krediti / paket kreditov |
 | Sign in / Sign out | Prijava / Odjava |
-| Inbox | Prejeto |
+| Inbox | Nabiralnik |
 | Overview | Pregled |
 | Calendar | Koledar |
 | Usage | Poraba |

@@ -132,7 +132,7 @@
   "coach.prompt.start": "Spustiť Coacha",
   "coach.puts_words_message_box": "Vloží jeho slová do poľa správy",
   "coach.questions.answered_of": "Zodpovedané {answered} z {total}",
-  "coach.questions.chat_about": "Prebrať to v čete",
+  "coach.questions.chat_about": "Prebrať to v chate",
   "coach.questions.in_your_words": "Vašimi slovami",
   "coach.questions.own_answer_to": "Vaša vlastná odpoveď na: {text}",
   "coach.questions.send": "Odoslať odpovede",

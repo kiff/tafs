@@ -6,7 +6,7 @@
   "chrome.expired": "Platnosť kódu vypršala, takže sa nič nespárovalo. Začnite znova.",
   "chrome.footer": "Vaše tafy môžu spárovaný Chrome používať len na weboch, ktoré uvádza pripojenie, a riskantné kroky schvaľujete tu.",
   "chrome.held_basket": "V košíku",
-  "chrome.held_in": "V {name}",
+  "chrome.held_in": "V prehliadači {name}",
   "chrome.held_page": "Na stránke",
   "chrome.name_label": "Názov",
   "chrome.none": "Nie je spárovaný žiadny Chrome.",

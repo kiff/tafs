@@ -1,9 +1,9 @@
 {
-  "export.not_exported": "Vaše čety sa neexportovali. {why}",
+  "export.not_exported": "Vaše chaty sa neexportovali. {why}",
   "export.not_offered": "Súbory sa v tomto telefóne nepodarilo uložiť. Uvoľnite miesto a skúste to znova.",
-  "export.own_chats_each_taf_coach": "Vaše vlastné čety s každým tafom vrátane Coacha, názvy súborov, ktoré ste priložili, a vaše poznámky, ako čitateľný súbor a ako JSON. Exportovať ich môžete len vy.",
-  "export.preparing": "Pripravujem vaše čety…",
+  "export.own_chats_each_taf_coach": "Vaše vlastné chaty s každým tafom vrátane Coacha, názvy súborov, ktoré ste priložili, a vaše poznámky, ako čitateľný súbor a ako JSON. Exportovať ich môžete len vy.",
+  "export.preparing": "Pripravujem vaše chaty…",
   "export.ready_share_again": "Pripravené: {files}. Zdieľať znova",
-  "export.row": "Exportovať moje čety",
-  "export.sign_in_first": "Na export četov sa prihláste cez KIFF."
+  "export.row": "Exportovať moje chaty",
+  "export.sign_in_first": "Na export chatov sa prihláste cez KIFF."
 }

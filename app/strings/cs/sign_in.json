@@ -1,7 +1,7 @@
 {
   "sign_in.again_to_sign": "Přihlaste se znovu přes KIFF: toto přihlášení nemůže podepisovat za telefon.",
   "sign_in.again_to_sign_device": "Přihlaste se znovu přes KIFF: toto přihlášení nemůže podepisovat za toto zařízení ({device}).",
-  "sign_in.agree": "Přihlášením souhlasíte s dokumentem KIFF {terms}, který se vztahuje i na tafs, a s dokumentem {privacy}.",
+  "sign_in.agree": "Přihlášením souhlasíte s dokumentem {terms} KIFF, který se vztahuje i na tafs, a s dokumentem {privacy} KIFF.",
   "sign_in.check_code": "Než schválíte, zkontrolujte, že KIFF ukazuje stejný kód.",
   "sign_in.connected": "Jste připojeni.",
   "sign_in.connected_line": "Pojďme spolu vytvořit skvělé věci.",

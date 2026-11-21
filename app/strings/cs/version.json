@@ -83,9 +83,9 @@
   "version.tried.ended": "skončila",
   "version.tried.ended_unused": "skončila nepoužitá",
   "version.tried.held": {
-    "one": "{count} pozdrženo",
-    "few": "{count} pozdržena",
-    "other": "{count} pozdrženo"
+    "one": "{count} zadrženo",
+    "few": "{count} zadržena",
+    "other": "{count} zadrženo"
   },
   "version.tried.installed": "nainstalována",
   "version.tried.on": "Zkoušeno {date}",

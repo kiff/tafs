@@ -1,5 +1,5 @@
 {
-  "watch.all_chats": "Všetky čety",
+  "watch.all_chats": "Všetky chaty",
   "watch.all_your_tafs": "Všetky vaše tafy",
   "watch.already_answered": "Už zodpovedané, alebo to skončilo.",
   "watch.approve_on_phone": "Schváľte v telefóne",
@@ -37,9 +37,9 @@
   },
   "watch.inbox_empty": "Nič nové. Sem chodia odpovede Coacha a upozornenia vašich tafov.",
   "watch.inbox_unread": {
-    "one": "{count} neprečítaná v Doručenej pošte",
-    "few": "{count} neprečítané v Doručenej pošte",
-    "other": "{count} neprečítaných v Doručenej pošte"
+    "one": "{count} neprečítaná v Doručených",
+    "few": "{count} neprečítané v Doručených",
+    "other": "{count} neprečítaných v Doručených"
   },
   "watch.its_settings": "Jeho nastavenia",
   "watch.keep_for_later": "Nechať na neskôr",
@@ -61,7 +61,7 @@
   "watch.nothing_waits": "Nič na vás nečaká.",
   "watch.open_on_phone": "Otvoriť v telefóne",
   "watch.page.brief": "Prehľad",
-  "watch.page.inbox": "Doručená pošta",
+  "watch.page.inbox": "Doručené",
   "watch.paused_still_answers": "Pozastavené: jeho plán je vypnutý. Na to, čo pošlete, stále odpovedá.",
   "watch.phone_link_failed": "Nepodarilo sa spojiť s telefónom. Skúste to znova.",
   "watch.phone_no_answer": "Telefón neodpovedal včas. Skúste to znova.",
@@ -80,7 +80,7 @@
     "few": "{count} hotové",
     "other": "{count} hotových"
   },
-  "watch.recent_chats": "Nedávne čety",
+  "watch.recent_chats": "Nedávne chaty",
   "watch.recording": "Nahrávam",
   "watch.recording_not_received": "Nahrávka sa do telefónu nedostala. Skúste to znova, alebo to napíšte.",
   "watch.refused": "Odmietnuté. Nič sa neodoslalo.",
@@ -96,7 +96,7 @@
   "watch.settings_of": "{taf} · nastavenia",
   "watch.sign_in_on_phone": "Najprv sa v telefóne prihláste do tafs.",
   "watch.sign_out_q": "Odhlásiť sa na týchto hodinkách?",
-  "watch.sign_out_sub": "Telefón zostane prihlásený. Tieto hodinky zabudnú vaše tafy, čety a doručenú poštu.",
+  "watch.sign_out_sub": "Telefón zostane prihlásený. Tieto hodinky zabudnú vaše tafy, chaty a Doručené.",
   "watch.signed_in": "Prihlásené",
   "watch.signed_out_here": "Odhlásené na týchto hodinkách. Telefón zostáva prihlásený.",
   "watch.swipe_settings": "Potiahnite doľava pre jeho nastavenia",

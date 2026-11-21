@@ -9,7 +9,7 @@
   "settings.alerts_off.title_device": "Opozorila na tej napravi ({device}) so izklopljena",
   "settings.alerts_off.turn_on": "Vklopi",
   "settings.change_language": "Zamenjaj jezik",
-  "settings.chargebacks_needs_you": "Zamujene pošiljke čaka na vas",
+  "settings.chargebacks_needs_you": "Zamujene pošiljke: čaka na vas",
   "settings.choose_time_zone": "Izberi časovni pas…",
   "settings.clear_sample": "Počisti vzorec",
   "settings.delete_account.confirm_with": "Potrdite z {biometry}. Odjavijo se tudi druge naprave.",

@@ -9,7 +9,7 @@
   "settings.alerts_off.title_device": "Upozornenia sú na tomto zariadení ({device}) vypnuté",
   "settings.alerts_off.turn_on": "Zapnúť",
   "settings.change_language": "Zmeniť jazyk",
-  "settings.chargebacks_needs_you": "Oneskorené zásielky čaká na vás",
+  "settings.chargebacks_needs_you": "Oneskorené zásielky: čaká na vás",
   "settings.choose_time_zone": "Vybrať časové pásmo…",
   "settings.clear_sample": "Vymazať ukážku",
   "settings.delete_account.confirm_with": "Potvrdíte cez {biometry}. Odhlásia sa aj ostatné zariadenia.",
@@ -18,7 +18,7 @@
   "settings.delete_account.goes_cards": "Card a kľúče",
   "settings.delete_account.goes_records": "Záznamy KIFF, po 30 dňoch",
   "settings.delete_account.goes_sign_ins": "Prihlásenia do aplikácií",
-  "settings.delete_account.goes_tafs": "Tafy, behy, čety a poznámky",
+  "settings.delete_account.goes_tafs": "Tafy, behy, chaty a poznámky",
   "settings.delete_account.kiff_not_deleted": "Vaše tafy a pripojenia sú vymazané, ale KIFF účet neodstránil. {why}",
   "settings.delete_account.not_erased": "tafs nemohol vymazať vaše tafy. Váš účet KIFF nie je odstránený. {why}",
   "settings.delete_account.not_erased_yet": "tafs zatiaľ nemohol vymazať všetko. Váš účet KIFF nie je odstránený. Skúste to znova.",
@@ -132,5 +132,5 @@
   "settings.use_device_zone": "Použiť pásmo tohto zariadenia ({device}): {identifier}",
   "settings.version": "Verzia",
   "settings.your_account": "Váš účet",
-  "settings.your_chats": "Vaše čety"
+  "settings.your_chats": "Vaše chaty"
 }

@@ -31,15 +31,15 @@
   "watch.halting_all": "Zastavuji všechny vaše tafy…",
   "watch.hear": "Poslechnout",
   "watch.held_calls": {
-    "one": "{count} pozdržené volání čeká na vás",
-    "few": "{count} pozdržená volání čekají na vás",
-    "other": "{count} pozdržených volání čeká na vás"
+    "one": "{count} zadržené volání čeká na vás",
+    "few": "{count} zadržená volání čekají na vás",
+    "other": "{count} zadržených volání čeká na vás"
   },
   "watch.inbox_empty": "Nic nového. Sem chodí odpovědi Coache a upozornění vašich tafů.",
   "watch.inbox_unread": {
-    "one": "{count} nepřečtená v Doručené poště",
-    "few": "{count} nepřečtené v Doručené poště",
-    "other": "{count} nepřečtených v Doručené poště"
+    "one": "{count} nepřečtená v Doručených",
+    "few": "{count} nepřečtené v Doručených",
+    "other": "{count} nepřečtených v Doručených"
   },
   "watch.its_settings": "Jeho nastavení",
   "watch.keep_for_later": "Nechat na později",
@@ -61,7 +61,7 @@
   "watch.nothing_waits": "Nic na vás nečeká.",
   "watch.open_on_phone": "Otevřít v telefonu",
   "watch.page.brief": "Přehled",
-  "watch.page.inbox": "Doručená pošta",
+  "watch.page.inbox": "Doručené",
   "watch.paused_still_answers": "Pozastaveno: jeho plán je vypnutý. Na to, co pošlete, pořád odpovídá.",
   "watch.phone_link_failed": "Nepodařilo se spojit s telefonem. Zkuste to znovu.",
   "watch.phone_no_answer": "Telefon neodpověděl včas. Zkuste to znovu.",
@@ -96,7 +96,7 @@
   "watch.settings_of": "{taf} · nastavení",
   "watch.sign_in_on_phone": "Nejdřív se v telefonu přihlaste do tafs.",
   "watch.sign_out_q": "Odhlásit se na těchto hodinkách?",
-  "watch.sign_out_sub": "Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a doručenou poštu.",
+  "watch.sign_out_sub": "Telefon zůstane přihlášený. Tyto hodinky zapomenou vaše tafy, chaty a Doručené.",
   "watch.signed_in": "Přihlášeno",
   "watch.signed_out_here": "Odhlášeno na těchto hodinkách. Telefon zůstává přihlášený.",
   "watch.swipe_settings": "Přejeďte doleva pro jeho nastavení",

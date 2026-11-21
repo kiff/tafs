@@ -39,10 +39,10 @@
   },
   "watch.inbox_empty": "Nič novega. Sem pridejo odgovori Coacha in opozorila vaših tafov.",
   "watch.inbox_unread": {
-    "one": "{count} neprebrano v Prejetem",
-    "two": "{count} neprebrani v Prejetem",
-    "few": "{count} neprebrana v Prejetem",
-    "other": "{count} neprebranih v Prejetem"
+    "one": "{count} neprebrano v Nabiralniku",
+    "two": "{count} neprebrani v Nabiralniku",
+    "few": "{count} neprebrana v Nabiralniku",
+    "other": "{count} neprebranih v Nabiralniku"
   },
   "watch.its_settings": "Njegove nastavitve",
   "watch.keep_for_later": "Shrani za pozneje",
@@ -65,7 +65,7 @@
   "watch.nothing_waits": "Nič ne čaka na vas.",
   "watch.open_on_phone": "Odpri v telefonu",
   "watch.page.brief": "Pregled",
-  "watch.page.inbox": "Prejeto",
+  "watch.page.inbox": "Nabiralnik",
   "watch.paused_still_answers": "Začasno ustavljeno: njegov urnik je izklopljen. Še vedno odgovarja na to, kar pošljete.",
   "watch.phone_link_failed": "S telefonom ni bilo mogoče komunicirati. Poskusite znova.",
   "watch.phone_no_answer": "Telefon ni pravočasno odgovoril. Poskusite znova.",
@@ -101,7 +101,7 @@
   "watch.settings_of": "{taf} · nastavitve",
   "watch.sign_in_on_phone": "Najprej se v telefonu prijavite v tafs.",
   "watch.sign_out_q": "Se odjavim na tej uri?",
-  "watch.sign_out_sub": "Telefon ostane prijavljen. Ta ura pozabi vaše tafe, klepete in prejeto.",
+  "watch.sign_out_sub": "Telefon ostane prijavljen. Ta ura pozabi vaše tafe, klepete in Nabiralnik.",
   "watch.signed_in": "Prijavljeni",
   "watch.signed_out_here": "Odjavljeni na tej uri. Telefon ostane prijavljen.",
   "watch.swipe_settings": "Podrsajte levo za njegove nastavitve",

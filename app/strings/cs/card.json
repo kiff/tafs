@@ -121,7 +121,7 @@
   "card.outcome.outside": "Mimo Card",
   "card.outcome.over_one_action": "Přes limit Card na jednu akci",
   "card.outcome.over_total": "Přes celkový limit Card",
-  "card.outside_held": "Mimo: pozdrženo pro vás",
+  "card.outside_held": "Mimo: zadrženo pro vás",
   "card.outside_refused": "Mimo: odmítnuto",
   "card.over_limit_calls_would": "Přes jeho limit {limit} volání: tohle by bylo {nth}",
   "card.revoke_failed": "KIFF Card neodvolal. {why}",

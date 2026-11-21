@@ -1,7 +1,7 @@
 {
   "sign_in.again_to_sign": "Znova se prijavite s KIFF: ta prijava ne more podpisovati za telefon.",
   "sign_in.again_to_sign_device": "Znova se prijavite s KIFF: ta prijava ne more podpisovati za to napravo ({device}).",
-  "sign_in.agree": "S prijavo se strinjate z dokumentom KIFF {terms}, ki velja tudi za tafs, in z dokumentom {privacy}.",
+  "sign_in.agree": "S prijavo se strinjate z dokumentom {terms} KIFF, ki velja tudi za tafs, in z dokumentom {privacy} KIFF.",
   "sign_in.check_code": "Pred odobritvijo preverite, da KIFF prikazuje isto kodo.",
   "sign_in.connected": "Povezani ste.",
   "sign_in.connected_line": "Ustvarimo skupaj odlične stvari.",

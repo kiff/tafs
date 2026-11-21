@@ -159,7 +159,7 @@
   "door.reading_channels": "Načítavam jeho kanály…",
   "door.refund_request": "Žiadosť o vrátenie peňazí",
   "door.remove": "Odstrániť",
-  "door.remove_body": "Jeho adresa prestane patriť tafu {taf}. Správy, ktoré už sú v jeho čete, zostávajú.",
+  "door.remove_body": "Jeho adresa prestane patriť tafu {taf}. Správy, ktoré už sú v jeho chate, zostávajú.",
   "door.remove_door": "Odstrániť dvere",
   "door.remove_title": "Odstrániť dvere {door}?",
   "door.replies_only": "Odpovede idú len tomu, kto napísal. Čokoľvek ďalšie taf robí, ide stále cez KIFF.",
