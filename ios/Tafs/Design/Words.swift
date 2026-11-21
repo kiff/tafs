@@ -1081,6 +1081,12 @@ enum Words {
         static var expired: String { Words.line("chrome.expired") }
         /// Your tafs can use a paired Chrome only on the sites a connection lists, and you approve risky steps here.
         static var footer: String { Words.line("chrome.footer") }
+        /// In the basket
+        static var heldBasket: String { Words.line("chrome.held_basket") }
+        /// In {name}
+        static func heldIn(name: String) -> String { Words.line("chrome.held_in", name) }
+        /// On the page
+        static var heldPage: String { Words.line("chrome.held_page") }
         /// Name
         static var nameLabel: String { Words.line("chrome.name_label") }
         /// No Chrome is paired.
@@ -5600,7 +5606,7 @@ enum Words {
 
     /// The languages the app's screens are written in, as `languages.json` ships them: what it
     /// asks the servers for, never a language only Siri's phrases are in.
-    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "pt-BR"]
+    static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "pt-BR"]
 
     /// The catalog the lines are read from: the system's pick for the app, or the language picked
     /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.

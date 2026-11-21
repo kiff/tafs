@@ -20,18 +20,22 @@
 #                              And the chats each taf's owner archived
 #                              (archived#tenant#taf, ttl), kiff/tafs#82.
 #   tafs/apns-key              the "tafs push" APNs key (.p8), made in the Apple
-#                              Developer portal; a person puts it there.
+#                              Developer portal; a person puts it there. Only
+#                              without TAFS_SECRET_ID.
 #   tafs-github-deploy         the role GitHub Actions assumes, only from kiff/tafs
 #                              main: update both functions' code, nothing else.
 #   tafs-android-release       the role the Android release job assumes, only from
 #                              the android-release environment: read the upload key
 #                              (its secret id in UPLOAD_KEY_SECRET_ID).
 #   FCM_SECRET_ID              the secret holding the Firebase service account key for
-#                              Android alerts; a person puts it there.
+#                              Android alerts; a person puts it there. Only without
+#                              TAFS_SECRET_ID.
 #   TAFS_SECRET_ID             tafs cloud's one secret, JSON {apns, fcm, doors}, in
-#                              eu-west-1 (TAFS_SECRET_REGION for another). A part it
-#                              doesn't hold is still read from its old secret above, so
-#                              the old ones go only once this one is proven live.
+#                              eu-west-1 (TAFS_SECRET_REGION for another). With it set
+#                              (passed in, or kept from tafs-cloud), this script names
+#                              none of the old three: it makes, reads and grants none,
+#                              and the functions lose APNS_SECRET_ID, FCM_SECRET_ID and
+#                              DOORS_SECRET_ID, so they read only the one secret.
 #
 # Everything is named tafs-* and touches nothing of KIFF's own. The functions run in
 # eu-west-1 since 26 Oct 2026, with their data (the table and the push key), which
@@ -77,17 +81,36 @@ if ! aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_
   echo "created the GitHub OIDC provider"
 fi
 
-# The APNs key, as a placeholder until a person puts the .p8 in it.
-if ! APNS_SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text 2>/dev/null); then
-  APNS_SECRET_ARN=$(aws secretsmanager create-secret --name "$APNS_SECRET" --description "tafs push: APNs key $APNS_KEY_ID" \
-    --secret-string unset --tags Key=project,Value=tafs --query ARN --output text)
-  echo "created secret $APNS_SECRET"
-fi
+# tafs cloud's one secret (runtime/src/cloud/appsecret.ts), kept from tafs-cloud on a rerun like the settings below.
+# With it set, the old per-key secrets are neither made, read nor granted.
+TAFS_SECRET_ENV=""
+for v in TAFS_SECRET_ID TAFS_SECRET_REGION; do
+  if [ -z "${!v:-}" ]; then
+    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
+    [ "$kept" = None ] && kept=""
+    printf -v "$v" '%s' "$kept"
+  fi
+  [ -n "${!v}" ] && TAFS_SECRET_ENV="$TAFS_SECRET_ENV,$v=${!v}"
+done
 
-# The push key, replicated to DATA_REGION, where the functions read it.
-aws secretsmanager replicate-secret-to-regions --secret-id "$APNS_SECRET" \
-  --add-replica-regions Region="$DATA_REGION" >/dev/null 2>&1 || true
-APNS_SECRET_ARN=$(data secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text)
+APNS_READ=""
+APNS_ENV=""
+if [ -z "$TAFS_SECRET_ID" ]; then
+  # The APNs key, as a placeholder until a person puts the .p8 in it.
+  if ! APNS_SECRET_ARN=$(aws secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text 2>/dev/null); then
+    APNS_SECRET_ARN=$(aws secretsmanager create-secret --name "$APNS_SECRET" --description "tafs push: APNs key $APNS_KEY_ID" \
+      --secret-string unset --tags Key=project,Value=tafs --query ARN --output text)
+    echo "created secret $APNS_SECRET"
+  fi
+
+  # The push key, replicated to DATA_REGION, where the functions read it.
+  aws secretsmanager replicate-secret-to-regions --secret-id "$APNS_SECRET" \
+    --add-replica-regions Region="$DATA_REGION" >/dev/null 2>&1 || true
+  APNS_SECRET_ARN=$(data secretsmanager describe-secret --secret-id "$APNS_SECRET" --query ARN --output text)
+  APNS_READ="
+    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$APNS_SECRET_ARN\"]},"
+  APNS_ENV=",APNS_SECRET_ID=$APNS_SECRET"
+fi
 
 # Taf names, claimed with a conditional write so two requests can't both start one.
 if ! data dynamodb describe-table --table-name "$TABLE" >/dev/null 2>&1; then
@@ -125,6 +148,8 @@ AGENTS_SECRETS=arn:aws:secretsmanager:$AGENTS_REGION:$ACCOUNT:secret
 # a door off. Names only here; the values live on the function.
 DOORS_ENV=""
 for v in DOORS_PUBLIC_URL DOORS_EMAIL_DOMAIN DOORS_SECRET_ID DOORS_SECRETS_PREFIX DOORS_WHATSAPP_REGION; do
+  # With the one secret set, the doors' keys are in it: their old secret isn't named.
+  if [ "$v" = DOORS_SECRET_ID ] && [ -n "$TAFS_SECRET_ID" ]; then DOORS_SECRET_ID=""; continue; fi
   if [ -z "${!v:-}" ]; then
     kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
     [ "$kept" = None ] && kept=""
@@ -145,6 +170,8 @@ fi
 # from tafs-cloud on a rerun like the doors' settings.
 FCM_ENV=""
 for v in FCM_PROJECT_ID FCM_SECRET_ID; do
+  # With the one secret set, the Firebase key is in it: its old secret isn't named.
+  if [ "$v" = FCM_SECRET_ID ] && [ -n "$TAFS_SECRET_ID" ]; then FCM_SECRET_ID=""; continue; fi
   if [ -z "${!v:-}" ]; then
     kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
     [ "$kept" = None ] && kept=""
@@ -164,17 +191,7 @@ for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_ST
   fi
   [ -n "${!v}" ] && FLAGS_ENV="$FLAGS_ENV,$v=${!v}"
 done
-# tafs cloud's one secret (runtime/src/cloud/appsecret.ts), kept from tafs-cloud on a rerun like the others: tafs
-# cloud may read it, nothing more.
-TAFS_SECRET_ENV=""
-for v in TAFS_SECRET_ID TAFS_SECRET_REGION; do
-  if [ -z "${!v:-}" ]; then
-    kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
-    [ "$kept" = None ] && kept=""
-    printf -v "$v" '%s' "$kept"
-  fi
-  [ -n "${!v}" ] && TAFS_SECRET_ENV="$TAFS_SECRET_ENV,$v=${!v}"
-done
+# tafs cloud may read its one secret, nothing more.
 TAFS_SECRET_READ=""
 if [ -n "$TAFS_SECRET_ID" ]; then
   TAFS_SECRET_ARN=$(command aws --region "${TAFS_SECRET_REGION:-$AGENTS_REGION}" secretsmanager describe-secret --secret-id "$TAFS_SECRET_ID" --query ARN --output text)
@@ -190,8 +207,7 @@ if [ -n "$FCM_SECRET_ID" ]; then
 fi
 aws iam put-role-policy --role-name "$LAMBDA_ROLE" --policy-name tafs-cloud-access --policy-document "{
   \"Version\": \"2012-10-17\",
-  \"Statement\": [
-    {\"Effect\": \"Allow\", \"Action\": \"secretsmanager:GetSecretValue\", \"Resource\": [\"$APNS_SECRET_ARN\"]},
+  \"Statement\": [$APNS_READ
     {\"Effect\": \"Allow\", \"Action\": [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:UpdateItem\", \"dynamodb:DeleteItem\", \"dynamodb:Scan\"], \"Resource\": \"$TABLE_ARN\"},
     {\"Effect\": \"Allow\", \"Action\": \"lambda:InvokeFunctionUrl\", \"Resource\": \"$AGENTS_FN_ARN\",
      \"Condition\": {\"StringEquals\": {\"lambda:FunctionUrlAuthType\": \"AWS_IAM\"}}},
@@ -206,7 +222,7 @@ LAMBDA_ROLE_ARN=$(aws iam get-role --role-name "$LAMBDA_ROLE" --query Role.Arn -
 # The function.
 AGENTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents --query FunctionUrl --output text)
 AGENTS_ALERTS_URL=$(command aws --region "$AGENTS_REGION" lambda get-function-url-config --function-name agents-kiffalerts --query FunctionUrl --output text)kiff/alerts
-ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE,APNS_SECRET_ID=$APNS_SECRET,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$TAFS_SECRET_ENV$FLAGS_ENV}"
+ENV="Variables={DATA_REGION=$DATA_REGION,AGENTS_URL=$AGENTS_URL,AGENTS_ALERTS_URL=$AGENTS_ALERTS_URL,AGENTS_REGION=$AGENTS_REGION,NAMES_TABLE=$TABLE$APNS_ENV,APNS_KEY_ID=$APNS_KEY_ID,APNS_TEAM_ID=$APNS_TEAM_ID,APNS_TOPIC=$APNS_TOPIC,TAFS_PUBLIC_URL=$TAFS_PUBLIC_URL,NODE_OPTIONS=--enable-source-maps$DOORS_ENV$FCM_ENV$TAFS_SECRET_ENV$FLAGS_ENV}"
 if ! aws lambda get-function --function-name "$FN" >/dev/null 2>&1; then
   for i in 1 2 3 4 5 6; do  # a new role takes a few seconds to be assumable
     if aws lambda create-function --function-name "$FN" --runtime nodejs22.x --architectures arm64 \

@@ -1,0 +1,1 @@
+- **Japanese in the apps (iPhone, iPad, Apple Watch, Android and Wear OS):** every screen in Japanese, picked by the phone's language or in Account › Language. Terms and Privacy open in English, marked, until kiff.dev serves them in Japanese ([languages.md](docs/languages.md)).

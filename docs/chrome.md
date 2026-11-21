@@ -115,7 +115,8 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 - **One Face ID on the phone** signs the Chrome confirmation, then KIFF's `POST /v1/me/pairings` for that offer, as Add a
   device does, with the approval key and no second prompt (`AppModel.confirmChrome`). KIFF's pairing goes first, so a
   Chrome is never confirmed without its device. iOS reads the offer with `PairingRequest.read`, which takes `chrome` and
-  `extension` only together and only with `key_store: "software"`.
+  `extension` only together and only with `key_store: "software"`. Android reads it with `PairQr.readChromeExtension`, to
+  the same rule, and asks a second fingerprint for KIFF's pairing: its approval key unlocks for one signature.
 - **The extension claims its session** as an iPad does: `POST /v1/pair/claim` with the nonce, its KIFF key and the
   `kiff.pair.claim.v1` proof (a DER signature, standard base64), every 3 s while the offer lives. A session that isn't
   `approval_mode: "view"` is ended at once with `POST /v1/auth/device/logout` and never kept.
@@ -281,6 +282,37 @@ What a read sends never carries:
 
 planque masks again whatever the extension sends.
 
+## The approval card
+
+A step that waits for the owner is a hold like any other, and the phone reads it from the same held-call view. When the
+held call is a browser tool's, the view also carries a `browser` block, in planque's words, from the read the step was
+built on, masked. The apps only draw it:
+
+```
+browser: {
+  site: "shop.example",                     // the registrable domain, drawn large
+  origin: "https://checkout.shop.example",  // drawn small, punycode as sent
+  action_words: "Click “Place order”",      // the verb and the element's own visible label
+  context: {title, text},                   // the masked page's title and an excerpt around the element (≤ 600)
+  checkout: {lines: [{item, quantity, price}]},  // only on a checkout, as read: price as the page shows it
+  chrome: {id, name}                        // which paired Chrome
+}
+```
+
+- **The card's summary stays KIFF's.** `action_words` holds the element's own label, which the page wrote, so it's
+  drawn under "On the page" with the page's title and text, never as what the card asks. The total is the hold's own
+  amount, the taf's reason is its own `taf_reason`, and the rule and answers stay as they are for any held call.
+- **The words approved are the words shown.** The hold's signed answer covers the block's JCS SHA-256, so the phone signs
+  over what it drew. Until that's in the answer's signed message, the phone signs as for any hold.
+- **Without the block,** a held browser step shows the hold's summary, amount and reason, as any hold does.
+- **The page's words come from the site.** Each is drawn as one plain line, verbatim: no markup, no link, no control or
+  direction character, cut to its cap. The app never acts on them.
+- **A block that can't be read is left out, never the hold.** Without a `site` or `action_words`, the hold reads as
+  any other held call. A part with the wrong shape loses that part only.
+- **There's no screenshot.** It would need its own privacy words, so the card shows text only.
+- **On iOS:** `KIFFMapping.browserStep` and `BrowserStepBlock` (`ios/Tafs/Views/NeedsYouView.swift`), tested in
+  `ios/TafsTests/BrowserStepCardTests.swift`.
+
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
@@ -374,5 +406,5 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
-- **The phones' pairing screens and the approval card** for browser steps (iPhone and iPad, then Android).
+- **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is still to build.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.

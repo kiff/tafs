@@ -41,25 +41,26 @@ final class AppLanguageTests: XCTestCase {
         XCTAssertNil(AppLanguage.chosen(defaults))
         // The app's own entry is gone; reading the key would fall through to the device's languages.
         XCTAssertNil(defaults.persistentDomain(forName: suite)?["AppleLanguages"])
-        AppLanguage.choose("ja", defaults: defaults)
-        XCTAssertNil(AppLanguage.chosen(defaults), "not one of the 8: the device's language")
-        defaults.set("ja", forKey: AppLanguage.key)
+        AppLanguage.choose("tr", defaults: defaults)
+        XCTAssertNil(AppLanguage.chosen(defaults), "not one it ships: the device's language")
+        defaults.set("tr", forKey: AppLanguage.key)
         XCTAssertNil(AppLanguage.chosen(defaults))
-        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["ja-JP", "pt-BR"]), "pt-BR", "Brazil reads pt-BR")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["tr-TR", "pt-BR"]), "pt-BR", "Brazil reads pt-BR")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt-PT"]), "pt", "Portugal keeps pt")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt"]), "pt")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["es-419"]), "es", "a numeric region has no variant: its language")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["en-US"]), "en")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt_BR"]), "pt-BR")
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["pt-BR"], shipped: ["en", "pt"]), "pt", "no variant shipped: its language")
-        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["ja-JP"]), "en")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["tr-TR"]), "en")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["ja-JP"]), "ja", "Japanese ships")
     }
 
     /// The picker's rows: the device's language, by the device's name, then the 8, each named in itself.
     func testThePickerListsTheDeviceThenTheEight() throws {
         XCTAssertEqual(Words.Settings.languageDevice(device: "iPhone"), "This iPhone's language")
         XCTAssertEqual(Words.languages.map { AppLanguage.name(of: $0) },
-                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "Português (Brasil)"])
+                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Português (Brasil)"])
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
         XCTAssertTrue(account.contains("NavigationLink { LanguagePicker() }"), "Change language opens the app's own list")
