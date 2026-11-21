@@ -1,0 +1,17 @@
+{
+  "report.already": "Ați raportat deja acest răspuns.",
+  "report.cant_from_here": "Acest răspuns nu poate fi raportat de aici.",
+  "report.menu": "Raportați acest răspuns",
+  "report.not_sent": "Raportul dvs. nu a fost trimis. {why}",
+  "report.not_sent_why": "Netrimis: {failed}",
+  "report.note_hint": "Adăugați o notă (opțional)",
+  "report.note_most_characters": "O notă are cel mult 1.000 de caractere.",
+  "report.person_kiff_reads_your_report": "O persoană de la KIFF vă citește raportul, împreună cu răspunsul așa cum a fost scris.",
+  "report.reason.harmful": "Dăunător",
+  "report.reason.offensive": "Ofensator",
+  "report.reason.other": "Altceva",
+  "report.reason.wrong": "Greșit",
+  "report.runs_not_loaded": "Rulările sale nu au putut fi încărcate. {why}",
+  "report.thanks": "Mulțumim. Cineva de la KIFF vă va citi raportul.",
+  "report.what_wrong": "Ce nu este în regulă?"
+}

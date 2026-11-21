@@ -1,0 +1,13 @@
+{
+  "halt.again": "Opriți din nou",
+  "halt.all_now": "Opriți tot acum",
+  "halt.explain.halted": "Oprit. Reluarea pornește doar lucru nou.",
+  "halt.explain.halted_since": "Din {time}. Reluarea pornește doar lucru nou.",
+  "halt.explain.halting": "Nu pornește nimic nou. „Oprit” apare când KIFF și conexiunea confirmă amândouă.",
+  "halt.explain.running_all": "Oprirea vă oprește tafurile până le reluați. Un apel deja trimis poate totuși să ajungă.",
+  "halt.explain.running_one": "Oprirea îl oprește până îl reluați. Un apel deja trimis poate totuși să ajungă.",
+  "halt.halting_stops_no_run_starts": "Oprirea îl oprește ({who}) până îl reluați. Un apel deja trimis poate totuși să ajungă.",
+  "halt.now": "Opriți acum",
+  "halt.row_running": "Opriți-l până îl reluați",
+  "halt.your_tafs_lower": "tafurile dvs."
+}

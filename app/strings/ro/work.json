@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Răspuns în",
+  "work.answer_within_days": {
+    "one": "{count} zi",
+    "few": "{count} zile",
+    "other": "{count} de zile"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} oră",
+    "few": "{count} ore",
+    "other": "{count} de ore"
+  },
+  "work.answer_within_line": "Sunteți anunțat când un caz așteaptă mai mult.",
+  "work.answer_within_none": "Nesetat",
+  "work.answer_within_not_set": "Nu a putut fi setat. {why}",
+  "work.asking_kiff_run": "Se cere KIFF să ruleze {tool}…",
+  "work.did_not_stop": "Nu s-a oprit: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Rulările sale",
+  "work.not_read": "Lucrul său nu a putut fi citit. {why}",
+  "work.not_sent_again": "Nu a fost retrimis. {why}",
+  "work.request.try_reply_now": "Încercați răspunsul acum",
+  "work.requests_need_you": {
+    "one": "{count} solicitare vă așteaptă",
+    "few": "{count} solicitări vă așteaptă",
+    "other": "{count} de solicitări vă așteaptă"
+  },
+  "work.send_again": "Retrimiteți",
+  "work.sending_again": "Se retrimite…",
+  "work.stop_run": "Opriți rularea",
+  "work.stopped_part_way_before_finished": "{taf} s-a oprit la jumătatea drumului, înainte să termine."
+}

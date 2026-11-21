@@ -466,6 +466,41 @@ singular ("3 hívás"), so both plural forms read the same. Apple and Windows me
 | plan (billing) | csomag |
 | Cancel / Continue | Mégse / Tovább |
 
+### Romanian (ro)
+
+Addressed as **dumneavoastră** (dvs.), as Romanian software does; buttons are the polite imperative ("Aprobați",
+"Refuzați", "Anulați", "Continuați"). taf is neuter (taful, tafuri, tafurile); Card, Coach, KIFF and Setup stay as names
+and take the article directly (Cardul). A device word changes gender (telefon, tabletă), so a value stands
+in brackets ("pe acest dispozitiv ({device})"). Twenty and up take "de" ("20 de apeluri"). Apple's menu paths are the
+Romanian ones ("Configurări", "Configurări sistem"); Windows' are "Setări". The plural forms are one, few (0, 2–19) and
+other (20 and up).
+
+| English | Romanian |
+|---|---|
+| Needs you | Vă așteaptă |
+| Approve / Approve once | Aprobați / Aprobați o dată |
+| Refuse | Refuzați |
+| held | reținut |
+| Halt / Halted | Opriți / Oprit |
+| Stopped | Încheiat |
+| Pause / Paused | Întrerupeți / Întrerupt |
+| Resume | Reluați |
+| Revoke | Revocați |
+| Record | Jurnal |
+| Connect / connection | Conectați / conexiune |
+| Pair / Unpair | Asociați / Disociați |
+| Account | Cont |
+| limit / spend limit | limită / limită de cheltuieli |
+| credits / credit pack | credite / pachet de credite |
+| passkey | cheie de acces |
+| Sign in / Sign out | Conectați-vă / Deconectați-vă |
+| Inbox | Inbox |
+| Overview | Prezentare generală |
+| Calendar | Calendar |
+| Usage | Utilizare |
+| plan (billing) | plan |
+| Cancel / Continue | Anulați / Continuați |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
