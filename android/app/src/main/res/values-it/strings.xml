@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Associa</string>
     <string name="chrome_expired">Il codice è scaduto, quindi non è stato associato nulla. Ricomincia.</string>
     <string name="chrome_footer">I tuoi tafs possono usare un Chrome associato solo sui siti indicati da un collegamento, e i passaggi rischiosi li approvi qui.</string>
+    <string name="chrome_held_basket">Nel carrello</string>
+    <string name="chrome_held_in">In %1$s</string>
+    <string name="chrome_held_page">Sulla pagina</string>
     <string name="chrome_name_label">Nome</string>
     <string name="chrome_none">Nessun Chrome è associato.</string>
     <string name="chrome_not_loaded">Non è stato possibile leggere i tuoi Chrome: %1$s</string>

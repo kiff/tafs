@@ -661,6 +661,9 @@
     <string name="chrome_confirm">Powiąż</string>
     <string name="chrome_expired">Kod wygasł, więc nic nie zostało powiązane. Zacznij od nowa.</string>
     <string name="chrome_footer">Twoje tafs mogą używać powiązanego Chrome tylko na stronach, które wskazuje połączenie, a ryzykowne kroki zatwierdzasz tutaj.</string>
+    <string name="chrome_held_basket">W koszyku</string>
+    <string name="chrome_held_in">W %1$s</string>
+    <string name="chrome_held_page">Na stronie</string>
     <string name="chrome_name_label">Nazwa</string>
     <string name="chrome_none">Żaden Chrome nie jest powiązany.</string>
     <string name="chrome_not_loaded">Nie udało się odczytać Twoich Chrome: %1$s</string>
