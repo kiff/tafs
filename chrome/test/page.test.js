@@ -106,6 +106,21 @@ test("a read names fields, controls and links by ref, and masks every secret", {
   await page.close();
 });
 
+test("a field a sealed username went into reads as masked from then on, never its value", { skip: !playwright }, async () => {
+  const page = await open();
+  let read = await page.evaluate(() => TafsPage.read());
+  const email = read.fields.find((f) => f.label === "Email");
+  assert.equal(email.masked, undefined, "an ordinary text field reads its value");
+  const filled = await page.evaluate(([r, id]) => TafsPage.fillSealed(r, id, "https://shop.example", "sealed-user@shop.example", "username"), [email.ref, read.read_id]);
+  assert.deepEqual(filled, { ok: true });
+  read = await page.evaluate(() => TafsPage.read());
+  const after = read.fields.find((f) => f.label === "Email");
+  assert.equal(after.masked, true);
+  assert.equal(after.value, undefined);
+  assert.ok(!JSON.stringify(read).includes("sealed-user"), "the sealed value is nowhere in the read");
+  await page.close();
+});
+
 test("an act fills, selects and ticks; it refuses secret fields, stale reads and unknown refs", { skip: !playwright }, async () => {
   const page = await open();
   let read = await page.evaluate(() => TafsPage.read());

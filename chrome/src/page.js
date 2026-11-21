@@ -84,6 +84,10 @@
 
   const FIELD_SKIP = new Set(["hidden", "submit", "button", "image", "reset", "file"]);
 
+  // The fields a sealed value went into: read as masked from then on, whatever their kind, so a username filled into a
+  // text or email field never goes back up in a read (qa-kiff's gate on sealed sign-ins).
+  const sealedFilled = new WeakSet();
+
   function fieldsOf() {
     const out = [];
     for (const el of document.querySelectorAll("input, textarea, select")) {
@@ -95,7 +99,7 @@
       const ref = "f" + (out.length + 1);
       refs.set(ref, el);
       const field = { ref, label: labelOf(el), kind: wireKind(kind) };
-      if (kind === "password" || kind === "card" || kind === "code") {
+      if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el)) {
         field.masked = true;
       } else if (kind === "checkbox" || kind === "radio") {
         field.value = el.checked ? "checked" : "";
@@ -303,6 +307,7 @@
     const fits = part === "password" ? kind === "password" : part === "username" ? ["username", "text", "email"].includes(kind) : false;
     if (!fits) return { ok: false, code: "secret_field" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
+    sealedFilled.add(el);
     setValue(el, value);
     current = null;
     return { ok: true };
