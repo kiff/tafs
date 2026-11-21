@@ -49,6 +49,7 @@ class WatchActivity : ComponentActivity() {
       drafts = if (WATCH_V2) PreferencesDraftStore(this) else null,
       inboxStore = if (WATCH_V2) PreferencesInboxStore(this) else null,
       signIn = if (WATCH_V2) PreferencesWatchSignIn(this) else null,
+      cache = if (WATCH_V2) WatchCache(KeystoreCacheStore(this), System::currentTimeMillis) else null,
     )
   }
 
