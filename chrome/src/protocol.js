@@ -14,19 +14,30 @@ const OPS = new Set(["open", "read", "act", "close"]);
 
 /** Nonces of steps already taken, each kept until well past its step's expiry. */
 export class Nonces {
-  constructor(now = () => Date.now()) {
+  /**
+   * `kept` {get(), set(entries)} keeps the taken nonces where a stopped service worker finds them again
+   * (`chrome.storage.session`, in memory for the browser's session), so a step replayed after MV3 stops the worker is
+   * still refused. Without it, they're kept in this object only (tests).
+   */
+  constructor(now = () => Date.now(), kept = null) {
     this.now = now;
-    this.seen = new Map();
+    this.kept = kept;
+    this.seen = null;
   }
   /** Takes `nonce` once: false when it was taken before. */
-  take(nonce) {
+  async take(nonce) {
+    if (!this.seen) this.seen = new Map(this.kept ? (await this.kept.get()) || [] : []);
     const t = this.now();
     for (const [n, until] of this.seen) if (until < t) this.seen.delete(n);
     if (this.seen.has(nonce)) return false;
     this.seen.set(nonce, t + NONCE_MEMORY_MS);
+    if (this.kept) await this.kept.set([...this.seen]);
     return true;
   }
 }
+
+/** A release reaches at most this far ahead: it's for one fill, now. */
+export const RELEASE_MAX_AHEAD_MS = 120_000;
 
 /**
  * Why the signed step `message` may not run: a reason, or null with `step` set when it may. `planqueKey` is the pinned
@@ -41,7 +52,7 @@ export async function checkStep(message, { planqueKey, chromeId, nonces, now = D
   if (typeof step.exp !== "number" || step.exp < now) return { why: "expired" };
   if (step.exp > now + MAX_AHEAD_MS) return { why: "expiry too far ahead" };
   if (!Array.isArray(step.sites) || step.sites.length === 0) return { why: "no sites" };
-  if (!nonces.take(step.nonce)) return { why: "seen before" };
+  if (!(await nonces.take(step.nonce))) return { why: "seen before" };
   return { why: null, step };
 }
 
@@ -78,7 +89,22 @@ export async function checkRelease(release, { phoneKey, chromeId, step, origin, 
     nonce: release.nonce,
     exp: release.exp,
   };
-  if (typeof body.exp !== "number" || body.exp < now || typeof body.nonce !== "string") return false;
+  if (typeof body.exp !== "number" || body.exp < now || body.exp > now + RELEASE_MAX_AHEAD_MS || typeof body.nonce !== "string") return false;
   if (release.chrome_id !== chromeId || release.op !== step.id || release.origin !== origin) return false;
   return verify(phoneKey, LABEL.release, body, release.sig);
+}
+
+/**
+ * The sensitive sites the paired phone itself allowed for this grant: each `{site, sig}` whose `sig` is the phone's
+ * `tafs-chrome/sensitive/v1` signature over `{chrome_id, grant, site}`. An entry without a valid one is dropped, and its
+ * site stays blocked: planque relays the owner's yes and can't make one.
+ */
+export async function checkAllowances(entries, { phoneKey, chromeId, grant }) {
+  if (!Array.isArray(entries) || !phoneKey) return [];
+  const out = [];
+  for (const e of entries) {
+    if (!e || typeof e.site !== "string" || typeof e.sig !== "string") continue;
+    if (await verify(phoneKey, LABEL.sensitive, { chrome_id: chromeId, grant, site: e.site }, e.sig)) out.push(e.site);
+  }
+  return out;
 }

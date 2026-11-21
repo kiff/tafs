@@ -62,6 +62,22 @@ export function local(host) {
   return LOCAL_SUFFIXES.some((s) => host.endsWith(s));
 }
 
+/**
+ * Public suffixes a grant must never list as a site, since every site under them would be reached: any single label
+ * ("com"), and the common multi-part ones. planque refuses such a grant too; this holds without it.
+ */
+const PUBLIC_SUFFIXES = new Set([
+  "co.uk", "org.uk", "ac.uk", "gov.uk", "me.uk", "ltd.uk", "plc.uk", "com.au", "net.au", "org.au", "co.nz", "co.jp", "ne.jp",
+  "or.jp", "co.kr", "com.br", "com.mx", "com.ar", "com.co", "com.tr", "com.cn", "com.hk", "com.sg", "com.tw", "co.in",
+  "co.za", "co.il", "com.pl", "com.es", "com.pt", "co.it", "github.io", "herokuapp.com", "web.app", "pages.dev",
+  "vercel.app", "netlify.app", "blogspot.com", "appspot.com", "cloudfront.net", "azurewebsites.net",
+]);
+
+/** Whether `site` names one site, never a public suffix. */
+export function siteOK(site) {
+  return typeof site === "string" && site.includes(".") && !PUBLIC_SUFFIXES.has(site.toLowerCase().replace(/\.$/, ""));
+}
+
 function within(host, site) {
   return host === site || host.endsWith("." + site);
 }
@@ -90,7 +106,7 @@ export function refuseURL(raw, sites, allowed = []) {
   if ([...host].some((c) => c.charCodeAt(0) > 0x7f)) return { code: CODE.badURL, why: "the site's name must be in ASCII (its xn-- form)" };
   if (local(host)) return { code: CODE.addressPrivate, why: host + " is a local name, not a site" };
   if (ALWAYS_BLOCKED.some((s) => within(host, s))) return { code: CODE.siteBlocked, why: host + " is never opened by a taf" };
-  if (!Array.isArray(sites) || !sites.some((s) => within(host, s))) {
+  if (!Array.isArray(sites) || !sites.some((s) => siteOK(s) && within(host, s))) {
     return { code: CODE.siteNotListed, why: host + " isn't one of this run's sites" };
   }
   if (sensitive(host) && !allowed.some((s) => within(host, s))) {

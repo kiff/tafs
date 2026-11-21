@@ -7,6 +7,7 @@ import { refuseURL, bareURL } from "./sites.js";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
+import { checkAllowances } from "./protocol.js";
 
 const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
@@ -18,8 +19,9 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), paired = () => null }) {
     this.chrome = chrome;
+    this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
@@ -155,7 +157,8 @@ export class Runner {
         id: step.run,
         taf: String(step.taf || "").slice(0, 60),
         sites: step.sites,
-        allowed: Array.isArray(step.sensitive_allowed) ? step.sensitive_allowed : [],
+        // A sensitive site opens only on the paired phone's own signed allowance for this grant, never planque's word.
+        allowed: await checkAllowances(step.sensitive_allowed, { ...(this.paired() || {}), grant: step.grant }),
         windowId: null,
         groupId: null,
         tabs: new Set(),

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
-import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, MAX_AHEAD_MS } from "../src/protocol.js";
+import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
 import { Relay } from "../src/relay.js";
 
@@ -208,4 +208,36 @@ test("planque closing with 4410 wipes the extension", async () => {
   assert.equal(other.wiped(), false, "a dropped connection isn't an unpair");
   r.relay.close();
   other.relay.close();
+});
+
+test("a step's nonce is still refused after the service worker restarts", async () => {
+  const p = await planque();
+  const box = { entries: [] };
+  const kept = { get: async () => box.entries, set: async (e) => void (box.entries = e) };
+  const s = step({ nonce: "nr" });
+  const msg = { type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) };
+  const first = new Nonces(() => NOW, kept);
+  assert.equal((await checkStep(msg, { planqueKey: p.key, chromeId: "chr_1", nonces: first, now: NOW })).why, null);
+  const afterRestart = new Nonces(() => NOW, kept);
+  assert.equal((await checkStep(msg, { planqueKey: p.key, chromeId: "chr_1", nonces: afterRestart, now: NOW })).why, "seen before");
+});
+
+test("a release reaches at most two minutes ahead", async () => {
+  const phone = await newKeyPair();
+  const s = step({ op: "act", act: { kind: "fill", ref: "f2", sealed: "sec_1" } });
+  const body = { chrome_id: "chr_1", op: "op_1", sealed: "sec_1", origin: "https://shop.example", field_ref: "f2", nonce: "r1", exp: NOW + 10 * 60_000 };
+  const release = { ...body, sig: await sign(phone.privateKey, LABEL.release, body) };
+  assert.equal(await checkRelease(release, { phoneKey: await pub(phone), chromeId: "chr_1", step: s, origin: "https://shop.example", now: NOW }), false);
+});
+
+test("a sensitive site opens only on the paired phone's own allowance for that grant", async () => {
+  const phone = await newKeyPair();
+  const p = await planque();
+  const allow = async (k, grant, site) => ({ site, sig: await sign(k.privateKey, LABEL.sensitive, { chrome_id: "chr_1", grant, site }) });
+  const ctx = { phoneKey: await pub(phone), chromeId: "chr_1", grant: "g_1" };
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_1", "paypal.com")], ctx), ["paypal.com"]);
+  assert.deepEqual(await checkAllowances([await allow(p.keys, "g_1", "paypal.com")], ctx), [], "planque can't allow one");
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_2", "paypal.com")], ctx), [], "another grant's");
+  assert.deepEqual(await checkAllowances(["paypal.com"], ctx), [], "a bare name");
+  assert.deepEqual(await checkAllowances([await allow(phone, "g_1", "paypal.com")], { ...ctx, phoneKey: null }), [], "not paired");
 });

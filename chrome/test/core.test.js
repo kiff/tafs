@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
-import { refuseURL, bareURL, sensitive } from "../src/sites.js";
+import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
 import "../src/mask.js";
 
@@ -86,6 +86,14 @@ test("Chrome's own pages are never opened, and sensitive sites only when allowed
   assert.equal(sensitive("www.gov.uk"), true);
   assert.equal(sensitive("shop.example"), false);
   assert.equal(sensitive("bankside-coffee.example"), false, "a word that only starts with bank");
+});
+
+test("a grant's site is never a public suffix, which would reach every site under it", () => {
+  assert.equal(siteOK("shop.example"), true);
+  assert.equal(siteOK("shop.co.uk"), true);
+  for (const s of ["com", "co.uk", "com.au", "github.io", ""]) assert.equal(siteOK(s), false, s);
+  assert.equal(refuseURL("https://shop.example.co.uk/", ["co.uk"]).code, "site_not_listed");
+  assert.equal(refuseURL("https://shop.example/", ["example"]).code, "site_not_listed");
 });
 
 test("a URL as recorded has no query or fragment", () => {
