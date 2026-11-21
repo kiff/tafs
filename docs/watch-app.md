@@ -341,8 +341,8 @@ OS's `Look` value for value (#1451), so both watches read alike.
 - **Everything else** stays the system's grey. v1 is unchanged: it keeps the system's tint, and Needs you its own colours.
 
 **W11, "From your watch" on the iPhone and iPad** (`WatchDaysModel`, `WatchDaysSection`, `WatchDayView`; tafs cloud's reads
-in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved mockup, behind its own switch
-(`WatchDaysFeature.on`, on since 19 Nov, once tafs cloud's routes were live; tafs cloud's own switch still decides):
+in `TafsCloud+WatchDays.swift`; tested in `WatchDaysTests`), the owner-approved mockup, on since 19 Nov, once tafs cloud's routes were live,
+with no app switch since row 35 (tafs cloud's own switch still decides):
 - **In Coach's Previous conversations,** a section "From your watch": the days the person asked from a watch, newest first,
   each with how many (`GET /v1/watch/days`), apart from the chats started on the phone. One a day, as the owner chose.
   "Today" is the account's today as tafs cloud gives it (`today`), so someone on another time zone than the account's sees

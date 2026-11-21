@@ -337,8 +337,8 @@ struct SettingsView: View {
                         NavigationLink(PeopleGroupsView.title) { PeopleGroupsView() }
                         NavigationLink(DevicesView.title) { DevicesView() }
                         NavigationLink(ConnectAppsView.title) { ConnectAppsView() }
-                        // Files (docs/files.md): every file the account's tafs delivered, behind its switch.
-                        if FilesFeature.on { NavigationLink(FilesView.title) { FilesView(store: CloudFilesStore(cloud: model.cloud)) } }
+                        // Files (docs/files.md): every file the account's tafs delivered.
+                        NavigationLink(FilesView.title) { FilesView(store: CloudFilesStore(cloud: model.cloud)) }
                     }
                     Section(Words.Settings.plan) {
                         NavigationLink { UsageView() } label: { PlanRow(balance: model.balance) }.accessibilityIdentifier("plan-card")
