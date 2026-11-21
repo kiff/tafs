@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Signed in · Coach is choosing its tools</string>
     <string name="connect_status_connected">Connected</string>
     <string name="connect_status_signed_out">Signed out by %1$s · sign in again</string>
+    <string name="connect_status_signed_out_plain">Signed out · sign in again</string>
     <string name="connect_status_waiting_sign_in">Waiting for the sign-in at %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">This taf isn\'t on tafs cloud yet, so apps can\'t be connected for it.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud named no connection to approve</string>

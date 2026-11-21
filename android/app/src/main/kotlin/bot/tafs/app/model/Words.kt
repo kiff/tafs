@@ -1000,6 +1000,7 @@ object Words {
       val choosingTools: String get() = Res.s(R.string.connect_status_choosing_tools)
       val connected: String get() = Res.s(R.string.connect_status_connected)
       fun signedOut(vendor: String): String = Res.s(R.string.connect_status_signed_out, vendor)
+      val signedOutPlain: String get() = Res.s(R.string.connect_status_signed_out_plain)
       fun waitingSignIn(vendor: String): String = Res.s(R.string.connect_status_waiting_sign_in, vendor)
     }
     val tafNotTafsCloudApps: String get() = Res.s(R.string.connect_taf_not_tafs_cloud_apps)

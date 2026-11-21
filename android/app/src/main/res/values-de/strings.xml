@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Angemeldet · Coach wählt die Tools</string>
     <string name="connect_status_connected">Verbunden</string>
     <string name="connect_status_signed_out">Von %1$s abgemeldet · erneut anmelden</string>
+    <string name="connect_status_signed_out_plain">Abgemeldet · erneut anmelden</string>
     <string name="connect_status_waiting_sign_in">Wartet auf die Anmeldung bei %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Dieser taf ist noch nicht auf tafs cloud, daher können keine Apps für ihn verbunden werden.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud hat keine Verbindung zum Genehmigen genannt</string>

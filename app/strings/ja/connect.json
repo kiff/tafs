@@ -148,6 +148,7 @@
   "connect.status.choosing_tools": "サインイン済み・Coachがツールを選択中",
   "connect.status.connected": "接続済み",
   "connect.status.signed_out": "{vendor}によりサインアウト・もう一度サインインしてください",
+  "connect.status.signed_out_plain": "サインアウト・もう一度サインインしてください",
   "connect.status.waiting_sign_in": "{vendor}でのサインインを待っています",
   "connect.taf_not_tafs_cloud_apps": "このtafはまだtafsクラウドにないため、アプリを接続できません。",
   "connect.tafs_cloud_named_no_connection": "tafsクラウドが承認する接続を指定しませんでした",

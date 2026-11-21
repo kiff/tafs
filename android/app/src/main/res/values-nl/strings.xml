@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Ingelogd · Coach kiest de tools</string>
     <string name="connect_status_connected">Gekoppeld</string>
     <string name="connect_status_signed_out">Uitgelogd door %1$s · log opnieuw in</string>
+    <string name="connect_status_signed_out_plain">Uitgelogd · log opnieuw in</string>
     <string name="connect_status_waiting_sign_in">Wacht op de login bij %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Dit taf staat nog niet op tafs cloud, dus er kunnen geen apps voor worden gekoppeld.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud noemde geen koppeling om goed te keuren</string>

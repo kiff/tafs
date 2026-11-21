@@ -1850,6 +1850,8 @@ enum Words {
             static var connected: String { Words.line("connect.status.connected") }
             /// Signed out by {vendor} · sign in again
             static func signedOut(vendor: String) -> String { Words.line("connect.status.signed_out", vendor) }
+            /// Signed out · sign in again
+            static var signedOutPlain: String { Words.line("connect.status.signed_out_plain") }
             /// Waiting for the sign-in at {vendor}
             static func waitingSignIn(vendor: String) -> String { Words.line("connect.status.waiting_sign_in", vendor) }
         }

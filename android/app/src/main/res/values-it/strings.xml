@@ -975,6 +975,7 @@
     <string name="connect_status_choosing_tools">Accesso effettuato · Coach sta scegliendo i suoi strumenti</string>
     <string name="connect_status_connected">Collegato</string>
     <string name="connect_status_signed_out">Disconnesso da %1$s · accedi di nuovo</string>
+    <string name="connect_status_signed_out_plain">Disconnesso · accedi di nuovo</string>
     <string name="connect_status_waiting_sign_in">In attesa dell\'accesso su %1$s</string>
     <string name="connect_taf_not_tafs_cloud_apps">Questo taf non è ancora su tafs cloud, quindi non si possono collegare app per lui.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud non ha indicato nessun collegamento da approvare</string>
