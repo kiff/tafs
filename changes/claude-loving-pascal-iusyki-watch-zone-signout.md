@@ -1,0 +1,1 @@
+- **Apple Watch:** after signing out, a chat's times no longer read in the previous account's time zone. The watch uses its own zone until the next account's first reply ([chat.md](docs/chat.md)).
