@@ -4219,8 +4219,8 @@ class AppModel(
         val key = bot.tafs.app.kiff.ChromePairing.base64UrlDecoded(offer.key) ?: return ChromePairingStep.Refused
         if (bot.tafs.app.kiff.ChromePairing.extensionProofHolds(p.secret, key, offer.proof)) ChromePairingStep.Offered(offer) else ChromePairingStep.Refused
       }
-      // Confirmed already, and not by this sheet.
-      "confirmed" -> ChromePairingStep.Refused
+      // Confirmed already, and not by this sheet; or contested (planque#336): more than one Chrome tried the code, so it's spent.
+      "confirmed", "contested" -> ChromePairingStep.Refused
       else -> ChromePairingStep.Waiting
     }
   }

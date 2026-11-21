@@ -1483,7 +1483,8 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   `ChromePairingInProgress` leaves the secret out of its `toString`.
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
   constant time). The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the
-  lookup: nothing is paired, and the sheet says so (`chrome.refused`). An expired pairing says `chrome.expired`.
+  lookup: nothing is paired, and the sheet says so (`chrome.refused`). So does a pairing planque marks `contested` (more than
+  one Chrome tried the code, so it's spent). An expired pairing says `chrome.expired`.
 - **One fingerprint, naming the Chrome, signs the confirmation** with the **approval key** only (`signCritical`):
   `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's approval key and its proof under the
   secret. The Keystore's DER signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.

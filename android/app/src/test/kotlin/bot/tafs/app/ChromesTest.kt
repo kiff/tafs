@@ -87,6 +87,9 @@ class ChromesTest {
     val step = m.chromePairingStep(p)
     assertTrue(step is AppModel.ChromePairingStep.Offered)
     assertEquals("Chrome 131", (step as AppModel.ChromePairingStep.Offered).offer.browser)
+    // Another Chrome also tried the code: planque spent it, and the owner starts again.
+    transport.answer(read, 200, """{"pairing":"pr_1","status":"contested"}""")
+    assertEquals(AppModel.ChromePairingStep.Refused, m.chromePairingStep(p))
     transport.answer(read, 404, """{"error":"no such pairing, or it expired"}""")
     assertEquals(AppModel.ChromePairingStep.Expired, m.chromePairingStep(p))
     // The secret never left the phone.
