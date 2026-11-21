@@ -42,5 +42,15 @@
   "step_closed": { "message": "Finished" },
   "allow_site": { "message": "Allow $SITE$ in Chrome", "placeholders": { "site": { "content": "$1" } } },
   "step_ask": { "message": "Needs your yes in Chrome for $SITE$", "placeholders": { "site": { "content": "$1" } } },
-  "step_refused": { "message": "not done ($CODE$)", "placeholders": { "code": { "content": "$1" } } }
+  "step_refused": { "message": "not done ($CODE$)", "placeholders": { "code": { "content": "$1" } } },
+  "vault_title": { "message": "Saved sign-ins" },
+  "vault_body": { "message": "Saved here, sealed on this computer. A taf can ask to use one only on that exact site, and it's typed only after you approve that one fill on your phone. tafs and KIFF never see it." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Username or email (optional)" },
+  "vault_password": { "message": "Password" },
+  "vault_save": { "message": "Save sealed" },
+  "vault_saved": { "message": "Saved. It's sealed on this computer." },
+  "vault_error": { "message": "That wasn't saved: a site needs https, and a password." },
+  "vault_remove": { "message": "Remove" },
+  "vault_with_username": { "message": "with a username" }
 }

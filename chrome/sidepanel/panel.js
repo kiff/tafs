@@ -107,3 +107,34 @@ $("unpair").onclick = async () => {
 
 chrome.storage.session.get("state").then(({ state }) => state && draw(state));
 send({ type: "state" });
+
+// Saved sign-ins (sealed): the panel shows each site and whether a username is saved, never a value. A saved sign-in is
+// only ever typed into that exact site, and only after you approve that fill on your phone.
+async function drawVault() {
+  const { entries = [] } = await send({ type: "vault_list" });
+  const list = $("vaultList");
+  list.textContent = "";
+  for (const e of entries) {
+    const li = document.createElement("li");
+    li.textContent = new URL(e.origin).hostname + (e.hasUsername ? " · " + t("vault_with_username") : "");
+    const b = document.createElement("button");
+    b.className = "quiet";
+    b.textContent = t("vault_remove");
+    b.onclick = async () => {
+      await send({ type: "vault_remove", id: e.id });
+      drawVault();
+    };
+    li.append(" ", b);
+    list.append(li);
+  }
+}
+
+$("vaultForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const r = await send({ type: "vault_save", origin: $("vaultSite").value, username: $("vaultUser").value, password: $("vaultPass").value });
+  $("vaultPass").value = "";
+  $("vaultStatus").textContent = r.error ? t("vault_error") : t("vault_saved");
+  drawVault();
+};
+
+$("vault").addEventListener("toggle", () => $("vault").open && drawVault());

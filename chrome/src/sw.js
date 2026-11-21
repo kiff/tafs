@@ -7,6 +7,7 @@ import { newKeyPair, sha256, b64u, sign, LABEL } from "./crypto.js";
 import { parseCode, offer, checkConfirmation } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
+import { Vault } from "./vault.js";
 
 const WAKE = "tafs-wake";
 const IDLE_CLOSE_MS = 60_000;
@@ -14,7 +15,12 @@ const IDLE_CLOSE_MS = 60_000;
 let relay = null;
 let lastActive = 0;
 
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), paired: () => kept.pairing });
+const vault = new Vault(indexedStore);
+const releaseStore = {
+  get: async () => (await chrome.storage.session.get("releases")).releases || [],
+  set: (entries) => chrome.storage.session.set({ releases: entries }),
+};
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
@@ -144,6 +150,10 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
     stop: async () => runner.stop(m.run),
+    // Sealed sign-ins: the side panel lists them (never a value), saves one, and removes one.
+    vault_list: async () => ({ entries: await vault.list() }),
+    vault_save: async () => ({ id: await vault.save(m.origin, m.username, m.password) }),
+    vault_remove: async () => vault.remove(m.id),
     state: async () => {
       await load();
       publish();
