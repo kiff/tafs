@@ -109,6 +109,9 @@
     <string name="watch_page_brief">Resumo</string>
     <string name="watch_page_inbox">Caixa de entrada</string>
     <string name="watch_paused_still_answers">Em pausa: o agendamento está parado. Ainda assim responde ao que envia.</string>
+    <string name="watch_phone_link_failed">Não foi possível se comunicar com o celular. Tente novamente.</string>
+    <string name="watch_phone_no_answer">O celular não respondeu a tempo. Tente novamente.</string>
+    <string name="watch_phone_no_app">O app tafs não está no celular. Instale-o e tente novamente.</string>
     <string name="watch_phone_not_reachable">O celular não está ao alcance. Aproxime-o e tente novamente.</string>
     <string name="watch_play">Reproduzir</string>
     <string name="watch_qr_needs_me_today">O que precisa de mim hoje?</string>
