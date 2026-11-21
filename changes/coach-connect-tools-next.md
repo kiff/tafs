@@ -1,0 +1,1 @@
+- **After a connect, Coach adds the tools to that grant, never a new request (connect-an-app@33).** The rule now names `planque tools {grant}`: "the request's next step" read once as another request, which planque refused (setup report 44899380112, one run of three).
