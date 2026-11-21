@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Kogu Card",
+    "other": "Kõik Cardid"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, siis küsib see sinult",
+  "card.calls_left": {
+    "one": "{count} päring jäänud",
+    "other": "{count} päringut jäänud"
+  },
+  "card.calls_left_line": {
+    "one": "{count} päring jäänud {window}, limiit {limit}",
+    "other": "{count} päringut jäänud {window}, limiit {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used}/{count} päringut {window}",
+    "other": "{used}/{count} päringut {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} päring {window}",
+    "other": "{count} päringut {window}"
+  },
+  "card.card_confirmed_kiff": "Card · KIFFi kinnitatud",
+  "card.card_draft_kiff": "Card · mustand · KIFFilt",
+  "card.card_got_room_call_needed": "Selle Card sai ruumi, mida see päring vajas, kuni see kogusumma lähtestub",
+  "card.card_not_issued": "Cardi ei väljastatud. ",
+  "card.card_revoked": "Card tühistatud",
+  "card.check.always_asks": "{rule}: küsib alati sinult",
+  "card.check.never_allowed": "{rule}: pole kunagi lubatud",
+  "card.check.not_on_card": "Pole selle tafi Cardil",
+  "card.check.over_count": {
+    "one": "Üle {count} {window}",
+    "other": "Üle {count} {window}"
+  },
+  "card.check.over_each": "Üle {amount} korraga",
+  "card.check.over_total": "Üle {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cardi"
+  },
+  "card.ended": "Lõppenud",
+  "card.ended_on": "Lõppes {date}",
+  "card.ends": "Lõpeb",
+  "card.extra_room": "+{extra} lisaruumi {window}",
+  "card.extra_room_prefix": "+{formatted} lisaruumi ",
+  "card.extra_room_until": "+{extra} lisaruumi kuni {ends}",
+  "card.figure_left": "{figure} jäänud",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cardid"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} päring {window}{each}: see oleks {nth}{item}",
+    "other": "{count} päringut {window}{each}: see oleks {nth}{item}"
+  },
+  "card.held.each_call_asks": "Iga päring küsib kõigepealt sinult",
+  "card.held.for_each": " iga {name} kohta",
+  "card.held.for_each_join": " iga ",
+  "card.held.for_item": " ({item})",
+  "card.held.over_count": {
+    "one": "Üle {count} päringu limiidi: see oleks {nth}",
+    "other": "Üle {count} päringu limiidi: see oleks {nth}"
+  },
+  "card.held.over_one_call": "{amount} ületab ühe päringu limiidi {cap}",
+  "card.held.over_total": "{amount} ületaks kogusumma {cap}",
+  "card.hero.calls_left_of": {
+    "one": "päring jäänud {window}, limiit {limit}",
+    "other": "päringut jäänud {window}, limiit {limit}"
+  },
+  "card.hero.calls_use_unavailable": "päringut {window} · kasutus pole saadaval",
+  "card.hero.left_of": "jäänud {window}, limiit {limit}",
+  "card.hero.left_of_extra": "jäänud {window}, limiit {base} + {extra} lisaruumi",
+  "card.hero.left_of_extra_until": "jäänud {window}, limiit {base} + {extra} lisaruumi kuni {ends}",
+  "card.hero.left_of_note": "jäänud {window}, limiit {limit}{note}",
+  "card.hero.no_currency": "valuutata",
+  "card.hero.no_currency_suffix": " · valuutata",
+  "card.hero.use_unavailable": "{window} · kasutus pole saadaval",
+  "card.hero.use_unavailable_note": "{label} · kasutus pole saadaval{note}",
+  "card.how_counted": "Kuidas seda arvestatakse",
+  "card.issue_prompt": "Väljasta tafi {taf} Card",
+  "card.issued_by": "Väljastaja",
+  "card.issued_by_account": "Konto",
+  "card.issued_by_named": "Väljastaja: {who}",
+  "card.its_card": "Selle Card",
+  "card.kiff_did_not_revoke_cards": "KIFF ei tühistanud selle Cardidest {cards_left}: tühista need KIFFis.",
+  "card.left": "{amount} jäänud {window}",
+  "card.left_extra_room": "jäänud {current}, limiit {own} + {extra} lisaruumi{until}{note}",
+  "card.limit_can_not_raised_right": "Limiiti ei saa praegu siit suurendada.",
+  "card.limit_raised_read_balance_again": "Limiiti suurendati. Enne uuesti suurendamist loe saldo uuesti.",
+  "card.line.calls_in_window": {
+    "one": "{count} päring {window}{then}",
+    "other": "{count} päringut {window}{then}"
+  },
+  "card.line.more_asks": "; rohkema korral küsib see kõigepealt sinult",
+  "card.line.then_asks": ", siis küsib see sinult",
+  "card.line.total_in_window": "{amount} kokku {window}{then}",
+  "card.line.up_to_each": "kuni {amount} korraga",
+  "card.more": {
+    "one": "veel {count}",
+    "other": "veel {count}"
+  },
+  "card.no_actions": "Veel pole toiminguid",
+  "card.no_actions_short": "veel pole toiminguid",
+  "card.no_currency": "{amount} (valuutata)",
+  "card.no_end_date": "Lõppkuupäevata",
+  "card.outcome.not_a_resource": "Pole üks Cardi ressurssidest",
+  "card.outcome.outside": "Väljaspool Cardi",
+  "card.outcome.over_one_action": "Üle Cardi ühe toimingu limiidi",
+  "card.outcome.over_total": "Üle Cardi kogusumma",
+  "card.outside_held": "Väljaspool: sinu jaoks kinni peetud",
+  "card.outside_refused": "Väljaspool: keeldutud",
+  "card.over_limit_calls_would": "Üle limiidi {limit} päringut: see oleks {nth}",
+  "card.revoke_failed": "KIFF ei tühistanud Cardi. {why}",
+  "card.revoked": "Tühistatud",
+  "card.rule.always_asks": "küsib alati sinult",
+  "card.rule.at_most_each": "≤ {amount} korraga",
+  "card.rule.at_most_each_refused_above": "≤ {amount} korraga · rohkemast keeldutakse",
+  "card.rule.calls": {
+    "one": "{count} päring {window}",
+    "other": "{count} päringut {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} päring {window}, siis küsib see sinult",
+    "other": "{count} päringut {window}, siis küsib see sinult"
+  },
+  "card.rule.in_total": "{amount} kokku {window}",
+  "card.rule.never": "mitte kunagi",
+  "card.rule.total_then_asks": "{amount} kokku {window}, siis küsib see sinult",
+  "card.rule.up_to_each": "kuni {amount} korraga; rohkema korral küsib see kõigepealt sinult",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Tafi Card",
+  "card.tools": {
+    "one": "{count} tööriist",
+    "other": "{count} tööriista"
+  },
+  "card.until": "Kuni",
+  "card.until_date": "Kuni {date}",
+  "card.until_ends": " kuni {ends}",
+  "card.used_of": "{used}/{limit} {window}",
+  "card.window.a_day": "päevas",
+  "card.window.a_month": "kuus",
+  "card.window.a_week": "nädalas",
+  "card.window.any_day": "mis tahes 24 tunni jooksul",
+  "card.window.any_hour": "mis tahes tunni jooksul",
+  "card.window.any_week": "mis tahes 7 päeva jooksul",
+  "card.window.in_total": "kokku",
+  "card.window.in_total_window": "kokku {window}",
+  "card.window.last_day": "viimase 24 tunni jooksul",
+  "card.window.last_hour": "viimase tunni jooksul",
+  "card.window.last_week": "viimase 7 päeva jooksul",
+  "card.window.so_far": "seni",
+  "card.window.this_month": "sel kuul",
+  "card.window.this_week": "sel nädalal",
+  "card.window.today": "täna",
+  "card.within_card": "Cardi piires"
+}
