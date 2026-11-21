@@ -74,6 +74,7 @@
   },
   "watch.recent_chats": "Chats récents",
   "watch.recording": "Enregistrement",
+  "watch.recording_not_received": "L'enregistrement n'est pas arrivé sur votre téléphone. Réessayez, ou saisissez votre texte.",
   "watch.refused": "Refusé. Rien n'a été envoyé.",
   "watch.reply": "Répondre",
   "watch.rerecord": "Réenregistrer",

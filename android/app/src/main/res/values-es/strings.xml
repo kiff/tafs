@@ -2746,6 +2746,7 @@
     </plurals>
     <string name="watch_recent_chats">Chats recientes</string>
     <string name="watch_recording">Grabando</string>
+    <string name="watch_recording_not_received">La grabación no llegó a tu teléfono. Vuelve a intentarlo o escribe.</string>
     <string name="watch_refused">Rechazada. No se envió nada.</string>
     <string name="watch_reply">Responder</string>
     <string name="watch_rerecord">Volver a grabar</string>

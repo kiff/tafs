@@ -1,0 +1,1 @@
+- **Apple Watch: not cut off by a pause** (row 44, A; built, switched off): the watch can record itself until ✓, 30 s or about 8 s of quiet, and the iPhone turns the recording into text with its on-device recognizer only, deleting it once read; the text goes to Check before sending. It's switched on only with its privacy sentence live.
