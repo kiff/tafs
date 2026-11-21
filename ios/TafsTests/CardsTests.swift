@@ -73,6 +73,19 @@ final class CardsTests: XCTestCase {
         XCTAssertEqual(Money.usd(300).formatted, Money.usd(300).figure)
     }
 
+    /// A revoked Card (dev-android's K5 finding a): VoiceOver says "Revoked", never "No end date" or what's
+    /// "left today" on a Card nothing can use; a live one keeps both.
+    func testARevokedCardSaysRevokedAloneWithNoBalance() {
+        let card = TafCard(id: "c", title: "Replies", rules: [], calls: CardTotal(limit: 20, used: 0, window: .day))
+        let revoked = TafCardFace.spoken(card, issuedBy: "Ana", revoked: true)
+        XCTAssertTrue(revoked.contains(Words.Card.revoked), revoked)
+        XCTAssertFalse(revoked.contains(Words.Card.noEndDate), revoked)
+        if let line = card.heroLine { XCTAssertFalse(revoked.contains(line), revoked) }
+        let live = TafCardFace.spoken(card, issuedBy: "Ana", revoked: false)
+        XCTAssertTrue(live.contains(Words.Card.noEndDate), live)
+        if let line = card.heroLine { XCTAssertTrue(live.contains(line), live) }
+    }
+
     /// kiff/tafs#309, where else a Card shows: the Overview's Card line, and the edge of a Card
     /// behind the front one in the stack.
     func testAnAmountWithNoCurrencyReadsSoOnTheOverviewAndTheStack() {
