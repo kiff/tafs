@@ -24,6 +24,24 @@
     <section id="paired" hidden>
       <h1 id="pairedName"></h1>
       <p data-m="paired_body"></p>
+      <section id="coach">
+        <h2 data-m="coach_title"></h2>
+        <ol id="coachThread" class="thread"></ol>
+        <p id="coachPhone" class="note" data-m="coach_approve_on_phone" hidden></p>
+        <p id="coachNote" class="note"></p>
+        <form id="coachForm">
+          <textarea id="coachWords" rows="3" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
+          <div id="sharePreview" class="share" hidden>
+            <p class="note" data-m="share_preview"></p>
+            <p id="shareWhat"></p>
+            <button type="button" id="shareRemove" class="quiet" data-m="share_remove"></button>
+          </div>
+          <div class="buttons">
+            <button type="button" id="share" class="quiet" data-m="share"></button>
+            <button type="submit" data-m="coach_send"></button>
+          </div>
+        </form>
+      </section>
       <div id="runs"></div>
       <p id="idle" class="note" data-m="idle"></p>
       <button id="unpair" class="quiet" data-m="unpair"></button>

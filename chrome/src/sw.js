@@ -7,6 +7,8 @@ import { newKeyPair, sha256, b64u, sign, LABEL } from "./crypto.js";
 import { parseCode, offer, checkConfirmation } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
+import { Coach } from "./coach.js";
+import { refuseURL, hostOf } from "./sites.js";
 
 const WAKE = "tafs-wake";
 const IDLE_CLOSE_MS = 60_000;
@@ -129,6 +131,37 @@ async function unpairHere() {
   await wipe();
 }
 
+// Coach in the side panel (docs/chrome.md). The session is the view-only KIFF device's, kept with the pairing and wiped
+// with it; without one, the panel says Coach is on the phone.
+async function coach() {
+  const session = await indexedStore.get("kiff_session");
+  if (!session || !session.token) throw Object.assign(new Error("no session"), { code: "no_session" });
+  return new Coach({ token: session.token, lang: chrome.i18n.getUILanguage() });
+}
+
+/** The tab the owner is looking at, for "Share this page" only: one tab, on the owner's tap, never listed otherwise. */
+async function shareTarget() {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  if (!tab || !tab.url) return { error: "no_page" };
+  const host = hostOf(tab.url);
+  // The same rules as a run's: https, a site by name, never Chrome's own pages or a sensitive site.
+  const refused = refuseURL(tab.url, [host], []);
+  if (refused) return { error: refused.code };
+  return { tabId: tab.id, origin: new URL(tab.url).origin };
+}
+
+/** Reads the page in front, masked as a run's read is: only once Chrome let the extension into it for this share. */
+async function shareRead(tabId) {
+  const tab = await chrome.tabs.get(tabId);
+  const origin = new URL(tab.url).origin;
+  if (!(await chrome.permissions.contains({ origins: [origin + "/*"] }))) return { error: "needs_site_permission" };
+  await chrome.scripting.executeScript({ target: { tabId }, files: ["src/mask.js", "src/page.js"] });
+  const [res] = await chrome.scripting.executeScript({ target: { tabId }, func: () => globalThis.TafsPage.read() });
+  const page = res && res.result;
+  if (!page) return { error: "page_unresponsive" };
+  return { page: { url: page.url, title: page.title, text: page.text } };
+}
+
 chrome.runtime.onMessage.addListener((m, sender, reply) => {
   if (!m || typeof m.type !== "string") return;
   // Only the extension's own pages speak to it, apart from a content script's "owner_input".
@@ -144,13 +177,17 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     pause: async () => runner.pause(m.run),
     resume: async () => runner.resume(m.run),
     stop: async () => runner.stop(m.run),
+    coach_thread: async () => ({ thread: await (await coach()).thread() }),
+    coach_send: async () => ({ sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID }) }),
+    share_target: () => shareTarget(),
+    share_read: () => shareRead(m.tabId),
     state: async () => {
       await load();
       publish();
     },
   }[m.type];
   if (!handle) return;
-  handle().then((r) => reply(r || {}), (e) => reply({ error: "failed", detail: String(e && e.message || e) }));
+  handle().then((r) => reply(r || {}), (e) => reply({ error: (e && e.code) || "failed", detail: String(e && e.message || e) }));
   return true;
 });
 
