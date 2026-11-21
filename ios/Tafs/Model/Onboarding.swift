@@ -4,7 +4,14 @@ import Foundation
 /// system's own sheet, three cards on how tafs works, and the first Home. Off until the end-to-end test on real devices
 /// with the owner: while it's off, the welcome and the sign-in are as they ship.
 enum Onboarding {
+    /// On only in a build compiled with `TAFS_K5`: the K5 pass's simulator run (`.github/workflows/ios-k5.yml`) and a
+    /// TestFlight build kept to Team (the PM's 02:29 and 02:34). App Store and every other build never have it, so
+    /// shipping users keep today's welcome and sign-in.
+    #if TAFS_K5
+    static let on = true
+    #else
     static let on = false
+    #endif
 
     /// The three cards were seen on this device (Get started or Skip): they show once, after the first sign-in here,
     /// and How tafs works opens them again any time.
