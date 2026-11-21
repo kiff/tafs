@@ -73,9 +73,20 @@ export const apiKeys = {
   ref: (tenant: string, ref: string) => `${tenant}#door-api-ref#${ref}`,
 };
 
-/** The caller's routes. Off (404) unless `TAFS_API_DOORS=on`. */
+/**
+ * Whether doors from another application are on for the account: `TAFS_API_DOORS` is "on" for every account, or a
+ * comma-separated list of the accounts it's on for (a test account first); anything else is off.
+ */
+export function apiDoorsOn(tenant?: string): boolean {
+  const v = (process.env.TAFS_API_DOORS ?? "").trim();
+  if (v === "on") return true;
+  if (!v || v === "off" || !tenant) return false;
+  return v.split(",").map((t) => t.trim()).filter(Boolean).includes(tenant);
+}
+
+/** The caller's routes. Off (404) unless `TAFS_API_DOORS` is on for the door's account. */
 export async function apiDoorRequest(req: { method: string; path: string; query: URLSearchParams; header: (name: string) => string; body: string }, ctx: DoorsContext, publicURL: string): Promise<APIAnswer> {
-  if (process.env.TAFS_API_DOORS !== "on") return refused(404, "not_found", "not found");
+  if (!(process.env.TAFS_API_DOORS ?? "").trim() || process.env.TAFS_API_DOORS === "off") return refused(404, "not_found", "not found");
   const m = PATH.exec(req.path);
   if (!m) return refused(404, "not_found", "not found");
   const [, doorID, requestID] = m;
@@ -84,7 +95,8 @@ export async function apiDoorRequest(req: { method: string; path: string; query:
   const key = KEY_FORM.exec(req.header("authorization").trim())?.[1];
   if (!key) return refused(401, "unauthorized", "send the door's key as Authorization: Bearer tafs_api_…");
   const found = await keyedDoor(ctx, key, doorID!);
-  if (!found) return refused(404, "not_found", "not found");
+  // Off for the door's account answers as a door that isn't there.
+  if (!found || !apiDoorsOn(found.tenant)) return refused(404, "not_found", "not found");
   if (req.method === "GET" && requestID) {
     // A read also moves the door on: a request that waited (a paused door opened, credits back) starts from here too.
     await startNext(ctx, found.tenant, found.taf, found.door.id, publicURL).catch((err) => console.error("api door not started:", err instanceof Error ? err.message : "error"));
