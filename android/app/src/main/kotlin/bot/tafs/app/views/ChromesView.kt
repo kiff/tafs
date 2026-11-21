@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -119,7 +118,7 @@ fun ChromesSheet(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Text(Words.Chrome.offeredTitle, style = scaled(17, FontWeight.SemiBold, Theme.ink))
               Text(Words.Chrome.offeredSays(browser = offered.offer.browser, system = offered.offer.os), style = scaled(14, color = Theme.dim))
-              OutlinedTextField(name, { name = it.take(ChromePairing.NAME_MAX) }, label = { Text(Words.Chrome.nameLabel) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+              OutlinedTextField(name, bot.tafs.app.drive.driveTyped({ name = it.take(ChromePairing.NAME_MAX) }), label = { Text(Words.Chrome.nameLabel) }, singleLine = true, modifier = Modifier.fillMaxWidth())
               Text(
                 Words.Chrome.confirm,
                 style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
@@ -181,10 +180,10 @@ fun ChromesSheet(
     }
   }
   removing?.let { chrome ->
-    AlertDialog(
+    bot.tafs.app.drive.DriveAlert(
       onDismissRequest = { removing = null },
       title = { Text(Words.Chrome.removeNamed(name = chrome.name)) },
-      confirmButton = { TextButton({ removing = null; scope.launch { remove(chrome) } }) { Text(Words.Chrome.remove, color = Theme.no) } },
+      confirmButton = { TextButton(onClick = { removing = null; scope.launch { remove(chrome) } }, modifier = Modifier.confirms()) { Text(Words.Chrome.remove, color = Theme.no) } },
       dismissButton = { TextButton({ removing = null }) { Text(Words.Common.cancel) } },
     )
   }
