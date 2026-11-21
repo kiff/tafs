@@ -156,3 +156,17 @@ test("the page's dialogs don't block: a confirm is never accepted, and the next 
   assert.deepEqual(await page.evaluate((id) => TafsPage.act({ kind: "click", ref: "c1" }, id), read.read_id), { ok: false, code: "dialog_open" });
   await page.close();
 });
+
+test("a sealed value goes only into the field its part fits, on this exact origin, and is never read back", { skip: !playwright }, async () => {
+  const page = await open();
+  const read = await page.evaluate(() => TafsPage.read());
+  const pw = read.fields.find((f) => f.label === "Password").ref;
+  const email = read.fields.find((f) => f.label === "Email").ref;
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.fillSealed(r, id, "https://evil.example", "s3cret!", "password"), [pw, read.read_id]), { ok: false, code: "secret_field" });
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.fillSealed(r, id, "https://shop.example", "s3cret!", "password"), [email, read.read_id]), { ok: false, code: "secret_field" });
+  assert.deepEqual(await page.evaluate(([r, id]) => TafsPage.fillSealed(r, id, "https://shop.example", "s3cret!", "password"), [pw, read.read_id]), { ok: true });
+  assert.equal(await page.inputValue("#pw"), "s3cret!");
+  const after = await page.evaluate(() => TafsPage.read());
+  assert.ok(!JSON.stringify(after).includes("s3cret!"));
+  await page.close();
+});

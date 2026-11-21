@@ -266,13 +266,14 @@
   }
 
   /** Fills a sealed value into a password, username or code field on this exact origin (slice 5, after the phone's release). */
-  function fillSealed(ref, readId, origin, value) {
+  function fillSealed(ref, readId, origin, value, part) {
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (location.origin !== origin || window.top !== window) return { ok: false, code: "secret_field" };
     const el = refs.get(ref);
     if (!el || !el.isConnected || el.tagName !== "INPUT") return { ok: false, code: "ref_unknown" };
     const kind = kindOf(el);
-    if (kind !== "password" && kind !== "username" && kind !== "code") return { ok: false, code: "secret_field" };
+    const fits = part === "password" ? kind === "password" : part === "username" ? ["username", "text", "email"].includes(kind) : false;
+    if (!fits) return { ok: false, code: "secret_field" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
     setValue(el, value);
     current = null;
