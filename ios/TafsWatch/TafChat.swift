@@ -55,11 +55,14 @@ struct TafChatPage: View {
                     .frame(maxWidth: .infinity)
                     .listRowBackground(Color.clear)
             }
-            // The last turns from before this visit, as the phone shows them.
-            ForEach(chat.history) { line in
+            // The last turns from before this visit, as the phone shows them, with a header where a day starts (row 44, C).
+            let days = chat.history.map(\.at) + chat.turns.map(\.at)
+            ForEach(Array(chat.history.enumerated()), id: \.element.id) { i, line in
+                if ChatTime.startsDay(days, at: i, calendar: .current) { WatchChatDay(date: line.at) }
                 TafChatLineRow(line: line)
             }
-            ForEach(chat.turns) { turn in
+            ForEach(Array(chat.turns.enumerated()), id: \.element.id) { i, turn in
+                if ChatTime.startsDay(days, at: chat.history.count + i, calendar: .current) { WatchChatDay(date: turn.at) }
                 TafTurnRow(turn: turn, taf: taf.name, whole: chat.whole[turn.id]) {
                     Task { await chat.readMore(turn.id) }
                 }
@@ -92,6 +95,18 @@ struct TafChatPage: View {
     }
 }
 
+/// The header where a chat's day starts on the wrist: Today, Yesterday, then the date (`ChatTime.day`).
+struct WatchChatDay: View {
+    let date: Date
+    var body: some View {
+        Text(ChatTime.day(date, calendar: .current))
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity)
+            .listRowBackground(Color.clear)
+    }
+}
+
 /// A turn from before this visit: yours orange on the right, the taf's green on the left, the rest on the phone if cut.
 struct TafChatLineRow: View {
     let line: WatchChatLine
@@ -103,6 +118,8 @@ struct TafChatLineRow: View {
             if line.more {
                 Text(Words.Watch.moreOnPhone).font(.caption2).foregroundStyle(.secondary)
             }
+            // When it was sent (row 44, C), small, under its words.
+            Text(ChatTime.time(line.at, zone: .current)).font(.caption2).monospacedDigit().opacity(0.75)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
@@ -124,8 +141,9 @@ struct TafTurnRow: View {
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(turn.at, style: .time)
+            Text(ChatTime.time(turn.at, zone: .current))
                 .font(.caption2)
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
             Text(verbatim: turn.said)
                 .font(.footnote)
