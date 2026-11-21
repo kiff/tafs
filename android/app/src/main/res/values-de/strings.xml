@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Koppeln</string>
     <string name="chrome_expired">Der Code ist abgelaufen, also wurde nichts gekoppelt. Fang noch einmal an.</string>
     <string name="chrome_footer">Deine tafs können ein gekoppeltes Chrome nur auf den Websites nutzen, die eine Verbindung nennt, und riskante Schritte bestätigst du hier.</string>
+    <string name="chrome_held_basket">Im Warenkorb</string>
+    <string name="chrome_held_in">In %1$s</string>
+    <string name="chrome_held_page">Auf der Seite</string>
     <string name="chrome_name_label">Name</string>
     <string name="chrome_none">Kein Chrome ist gekoppelt.</string>
     <string name="chrome_not_loaded">Deine Chromes konnten nicht gelesen werden: %1$s</string>

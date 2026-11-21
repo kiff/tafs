@@ -495,6 +495,26 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// or one saved before them.
     var agent: String?
     var breachOutcomes: [String]?
+    /// A step a taf wants to take in a paired Chrome (docs/chrome.md, "The approval card"): which site, what
+    /// it does there in planque's words, and what the page showed. Nil for any other call.
+    var browser: BrowserStep?
+}
+
+/// A held browser step, as the card draws it: each line made safe to draw, and never read for anything.
+struct BrowserStep: Hashable, Codable {
+    /// The registrable domain, drawn large ("shop.example").
+    var site: String
+    /// The exact origin, drawn small ("https://checkout.shop.example"); punycode as sent.
+    var origin: String?
+    /// The act in planque's words: the verb and the element's own label ("Click “Place order”").
+    var actionWords: String
+    /// The masked page's title and a short excerpt around the element.
+    var pageTitle: String?
+    var pageText: String?
+    /// The basket's lines as read at that moment, when it's a checkout. Its total is KIFF's amount on the card.
+    var basket: [String] = []
+    /// The paired Chrome it would run in, by the name the owner gave it.
+    var chromeName: String?
 }
 
 /// The taf and version a held version_install names, as Coach sent them: the taf's id in
