@@ -482,6 +482,8 @@ export const ja: Words = {
   waited_follow_up: "自分で設定したフォローアップが実行されませんでした：tafsがクレジットを待っていました。再試行はされません。開いて詳細を確認してください。",
   door_name: (_id: string, label: string) => (_id === "email" ? "メール" : label),
   door_a: "窓口",
+  door_draft_used: "この下書きから窓口を作成しました。",
+  door_draft_lapsed: "この下書きは期限切れです。もう一度Coachに依頼してください。",
   door_knock: (who: string, door: string, spoofed: boolean) => `${who}が${door}経由で連絡しました${spoofed ? "（送信者の確認に失敗しました）" : ""}。何も実行されていません。`,
   door_full_keys: (door: string, n: number) => `今日、${door}窓口はあなたと登録済みの送信者からの上限${n}件のメッセージを受け取りました。明日まで、それ以上は破棄されます。`,
   door_full_others: (door: string, n: number) => `今日、${door}窓口は登録されていない人から${n}件のメッセージを受け取りました。明日まで、それ以上は破棄されます。`,

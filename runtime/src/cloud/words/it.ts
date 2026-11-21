@@ -481,6 +481,8 @@ export const it: Words = {
   waited_follow_up: "Un promemoria che si era impostato non è stato eseguito: i tuoi tafs aspettavano crediti. Non verrà riprovato. Aprilo per saperne di più.",
   door_name: (id, label) => (id === "email" ? "email" : label),
   door_a: "una porta",
+  door_draft_used: "La porta è stata creata da questa bozza.",
+  door_draft_lapsed: "Questa bozza è scaduta: chiedi di nuovo a Coach.",
   door_knock: (who, door, spoofed) => `${who} ha scritto via ${door}${spoofed ? " (il controllo del mittente non è riuscito)" : ""}. Non è stato fatto nulla.`,
   door_full_keys: (door, n) => `La tua porta ${door} ha ricevuto oggi i suoi ${n} messaggi da te e dai mittenti associati. I successivi vengono scartati fino a domani.`,
   door_full_others: (door, n) => `La tua porta ${door} ha ricevuto oggi ${n} messaggi da persone non associate. I successivi vengono scartati fino a domani.`,

@@ -48,6 +48,12 @@ import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorK
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
+
+/**
+ * A door draft as tafs cloud keeps it (`doorKeys.apiDraft`), until it lapses: Coach's draft while it waits for the
+ * owner, then, once a door was made from it, only which door and when (`used`), so the card can say so.
+ */
+type KeptAPIDraft = { draft?: APIDraft; made: string; expires: string; used?: { door: string; at: string } };
 import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
@@ -10582,8 +10588,12 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   // tafs cloud checked and keeps it, for the people who manage the taf. The apps sign and send exactly this draft.
   if (parts.length === 6 && method === "GET" && a === "drafts" && b) {
     if (!await managesTaf(event, me, taf, deps)) throw new HTTPError(404, "not found");
-    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as { draft: APIDraft; made: string; expires: string } | undefined;
-    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again");
+    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as KeptAPIDraft | undefined;
+    // A draft a door was made from says so, in the person's words, so Coach's card reads "Door made" when the chat is
+    // opened again; one that lapsed says to ask Coach again. The apps show `words` as sent.
+    const w = wordsIn(langOf(event));
+    if (kept?.used) throw new HTTPError(410, "a door was made from this draft", { code: "draft_used", words: w.door_draft_used, door_id: kept.used.door });
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again", { code: "draft_lapsed", words: w.door_draft_lapsed });
     return { draft_id: b, draft: kept.draft, made_at: kept.made, expires_at: kept.expires,
       body: { kind: "api", draft_id: b, draft: kept.draft } };
   }
@@ -10608,11 +10618,13 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
     const draft = apiDraftOf(body.draft);
     const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
     const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
-    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as { draft: APIDraft; expires: string } | undefined : undefined;
-    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as KeptAPIDraft | undefined : undefined;
+    if (!kept || kept.used || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
     if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
     const added = await addAPIDoor(ctx, owner, taf, body);
-    await ctx.doors.store.remove(draftKey).catch((err) => console.error("api door draft not removed:", err instanceof Error ? err.message : "error"));
+    // Used once: what's kept now says a door was made from it (no draft), until the draft would have lapsed.
+    const used: KeptAPIDraft = { made: kept.made, expires: kept.expires, used: { door: added.door.id, at: ctx.now.toISOString() } };
+    await ctx.doors.store.put(draftKey, used, new Date(kept.expires)).catch((err) => console.error("api door draft not marked used:", err instanceof Error ? err.message : "error"));
     return added;
   }
   if (kind === "api") {
