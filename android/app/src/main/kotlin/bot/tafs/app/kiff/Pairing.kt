@@ -84,6 +84,19 @@ data class PairQr(
       return qr.takeIf { it.checkCode != null }
     }
 
+    /**
+     * A Chrome extension's own KIFF device, from the offer it sends with its Chrome's (docs/chrome.md, "The extension's KIFF
+     * device"): KIFF's `kiff.pair.v1` for a `chrome` `extension` whose key is in software, with no approval key and no passkey,
+     * so KIFF pairs it view-only. Anything else is null, and the Chrome isn't paired. As iOS's `chromeKIFFDevice`.
+     */
+    fun readChromeExtension(text: String): PairQr? {
+      val qr = runCatching { KiffClient.json.decodeFromString(serializer(), text) }.getOrNull() ?: return null
+      if (qr.v != VERSION || qr.platform != "chrome" || qr.kind != "extension" || qr.keyStore != "software") return null
+      if (qr.pub.isBlank() || qr.name.isBlank() || qr.nonce.isBlank() || qr.exp.isBlank()) return null
+      if (qr.approvalPub != null || qr.credential != null || qr.deviceKind != null || decode(qr.pub) == null) return null
+      return qr
+    }
+
     /** base64url, with or without padding, as the QR carries keys. */
     internal fun decode(text: String): ByteArray? = runCatching { Base64.getUrlDecoder().decode(text.trim()) }.getOrNull()?.takeIf { it.isNotEmpty() }
 

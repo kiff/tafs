@@ -5,6 +5,7 @@ import bot.tafs.app.model.Card
 import bot.tafs.app.model.CardRule
 import bot.tafs.app.model.CardTotal
 import bot.tafs.app.model.HeldCall
+import bot.tafs.app.model.BrowserStep
 import bot.tafs.app.model.Money
 import bot.tafs.app.model.Outside
 import bot.tafs.app.model.ProposedAction
@@ -376,6 +377,36 @@ object KiffMapping {
       install = installs,
       kind = e.kind,
       breachOutcomes = e.breaches.map { it.outcome },
+      browser = e.browser?.let(::browserStep),
+    )
+  }
+
+  /** At most this many of a checkout's lines are drawn, as iOS draws them; the total is KIFF's amount either way. */
+  const val BROWSER_BASKET_MAX = 20
+
+  /** The longest page excerpt drawn on a held browser step's card, as planque cuts it. */
+  const val BROWSER_EXCERPT_MAX = 600
+
+  /**
+   * A held browser step's block as plain text (docs/chrome.md): every piece through [tafSays], so no line can reorder or hide
+   * words; a block with no site or no action draws nothing, never half a page.
+   */
+  fun browserStep(b: HeldBrowser): BrowserStep? {
+    val site = tafSays(b.site, 120)?.takeIf { it.isNotBlank() } ?: return null
+    val action = tafSays(b.actionWords, 200)?.takeIf { it.isNotBlank() } ?: return null
+    fun text(e: kotlinx.serialization.json.JsonElement?): String? = (e as? kotlinx.serialization.json.JsonPrimitive)?.content?.let { tafSays(it, 40) }?.takeIf { it.isNotBlank() }
+    val lines = b.checkout?.lines.orEmpty().mapNotNull { l ->
+      val item = tafSays(l.item, 120)?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+      listOfNotNull(text(l.quantity)?.let { "$it × $item" } ?: item, text(l.price)).joinToString(" · ")
+    }.take(BROWSER_BASKET_MAX)
+    return BrowserStep(
+      site = site,
+      origin = tafSays(b.origin, 200).orEmpty(),
+      action = action,
+      pageTitle = tafSays(b.context?.title, 200)?.takeIf { it.isNotBlank() },
+      excerpt = tafSays(b.context?.text, BROWSER_EXCERPT_MAX)?.takeIf { it.isNotBlank() },
+      lines = lines,
+      chrome = tafSays(b.chrome?.name, 40)?.takeIf { it.isNotBlank() },
     )
   }
 
