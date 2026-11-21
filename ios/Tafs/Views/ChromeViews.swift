@@ -28,6 +28,7 @@ struct ChromesView: View {
                         Spacer()
                         Button(Words.Chrome.remove) { removing = chrome }
                             .buttonStyle(.borderless)
+                            .confirming()
                             .foregroundColor(Theme.no)
                     }
                     .accessibilityElement(children: .combine)
@@ -37,6 +38,7 @@ struct ChromesView: View {
             }
             Section {
                 Button { pairing = true } label: { Label(Words.Chrome.pair, systemImage: "globe") }
+                    .confirming()
                     .accessibilityIdentifier("chrome.pair")
             } footer: {
                 Text(Words.Chrome.profileNote)
@@ -101,7 +103,7 @@ struct PairChromeView: View {
                 Text(Words.Chrome.offeredTitle).scaledFont(22, weight: .bold, design: .rounded).foregroundColor(Theme.ink)
                 Text(Words.Chrome.offeredSays(browser: offer.browser, system: offer.os)).scaledFont(15).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                TextField(Words.Chrome.nameLabel, text: $name)
+                DriveField(Words.Chrome.nameLabel, text: $name)
                     .textFieldStyle(.roundedBorder)
                     .accessibilityIdentifier("chrome.name")
                 Text(Words.Chrome.onlyYours).scaledFont(14).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
@@ -112,6 +114,7 @@ struct PairChromeView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .disabled(sending)
+                .confirming()
                 .accessibilityIdentifier("chrome.confirm")
             }
         } else if let pairing {
