@@ -797,6 +797,8 @@ answered:
 - **Card:** only what's on its Card: the clock its times are in, above it, then the Card, its limits and how they're counted, then, in the
   iPad's order, Halt, Changes to how it runs, Usage and, last, Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
   that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
+  A revoked Card's face says **Revoked** and nothing more in its corner, and shows no "left today", since nothing uses it
+  (`TafCardFace`, `RevokedCardFaceTest`); a Card in use keeps its end date or "No end date", and what's left.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
 `you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is
