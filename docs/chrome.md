@@ -243,6 +243,34 @@ What a read sends never carries:
 
 planque masks again whatever the extension sends.
 
+## The approval card
+
+A step that waits for the owner reaches the phone as any held operation does, with a `browser` block beside it. The
+phone signs it exactly as it signs any held operation, over the operation's digest, so the `browser` block it draws is
+inside what's signed. Every word comes from planque, and the apps only draw it:
+
+```
+browser: {
+  site: "shop.example",                     // the registrable domain, drawn large
+  origin: "https://checkout.shop.example",  // drawn small, punycode as sent
+  action_words: "Click “Place order”",      // the verb and the element's own visible label
+  reason: "…",                              // the taf's own words, under "The taf says"
+  context: {title, text},                   // the masked page's title and an excerpt around the element (≤ 600)
+  checkout: {lines, total, currency},       // only on a checkout, as read at that moment
+  chrome: {id, name}                        // which paired Chrome
+}
+```
+
+- **The act is what the card asks.** `action_words` takes the place of the tool's name, and KIFF's amount, rule and
+  answers stay as they are for any held call.
+- **The page's words come from the site.** Each is drawn as one plain line, verbatim: no markup, no link, no control or
+  direction character, cut to its cap. The app never acts on them.
+- **A block that can't be read is left out, never the hold.** Without a `site` or `action_words`, the hold reads as
+  any other held call. A part with the wrong shape loses that part only.
+- **There's no screenshot.** It would need its own privacy words, so the card shows text only.
+- **On iOS:** `KIFFMapping.browserStep` and `BrowserStepBlock` (`ios/Tafs/Views/NeedsYouView.swift`), tested in
+  `ios/TafsTests/BrowserStepCardTests.swift`.
+
 ## What's kept
 
 - **In IndexedDB:** the key pair, whose private key can't be exported, and the pairing (`chrome_id`, its name, the phone's
@@ -286,6 +314,7 @@ only on the paired phone's own release, which planque relays and can't make:
 ## Not done yet
 
 - **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
-- **The phones' pairing screens and the approval card** for browser steps (iPhone and iPad, then Android).
+- **Android's pairing screens and approval card** for browser steps.
+- **The sealed-value release on the card** (`tafs-chrome/release/v1`), with sealed values.
 - **Sealed values,** with their own security review.
 - **The words in every language,** and the release workflow (two approvals) that publishes to the Chrome Web Store.

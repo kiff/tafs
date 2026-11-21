@@ -710,10 +710,45 @@ final class KIFFClient {
         var tafReasonText: LenientItem<String>? = nil
         var tafAbout: String? { tafAboutText?.value }
         var tafReason: String? { tafReasonText?.value }
+        /// A held browser step's card (docs/chrome.md, "The approval card"): the site, planque's words for the act,
+        /// the masked page's context, the basket when it's a checkout, and which paired Chrome. Sent beside the
+        /// operation only for a browser step; one that can't be read is left out, never the hold.
+        var browserBlock: LenientItem<BrowserStep>? = nil
+        var browser: BrowserStep? { browserBlock?.value }
+
+        /// What a held browser step shows, as planque words it: the apps only draw it.
+        struct BrowserStep: Decodable, Equatable {
+            struct Context: Decodable, Equatable {
+                var title: String? = nil
+                var text: String? = nil
+            }
+            struct Checkout: Decodable, Equatable {
+                var lines: [LenientItem<String>]? = nil
+                var total: ArgumentText? = nil
+                var currency: String? = nil
+            }
+            struct Chrome: Decodable, Equatable {
+                var id: String? = nil
+                var name: String? = nil
+            }
+            let site: String
+            var origin: String? = nil
+            let actionWords: String
+            var reason: String? = nil
+            var context: LenientItem<Context>? = nil
+            var checkout: LenientItem<Checkout>? = nil
+            var chrome: LenientItem<Chrome>? = nil
+
+            enum CodingKeys: String, CodingKey {
+                case site, origin, reason, context, checkout, chrome
+                case actionWords = "action_words"
+            }
+        }
 
         enum CodingKeys: String, CodingKey {
             case proposalID = "proposal_id", canApproveOnce = "can_approve_once", reasonText = "reason_text"
             case tafAboutText = "taf_about", tafReasonText = "taf_reason"
+            case browserBlock = "browser"
             case id, subject, action, title, arguments, status, breaches, parameters, reason, kind, count
             case entityID = "entity_id", nextSteps = "next_steps", accountingVersion = "accounting_version"
             case parameterUnits = "parameter_units", unitsUnavailable = "units_unavailable"

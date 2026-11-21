@@ -1,0 +1,1 @@
+- **Approving a step in Chrome (iPhone and iPad, behind the Chrome switch):** a held browser step's card shows the site, its exact address, what the step does there, which Chrome it would run in, what the page showed, and the basket at a checkout ([chrome.md](docs/chrome.md#the-approval-card)).

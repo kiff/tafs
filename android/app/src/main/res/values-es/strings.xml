@@ -595,6 +595,9 @@
     <string name="chrome_confirm">Vincular</string>
     <string name="chrome_expired">El código caducó, así que no se vinculó nada. Empieza de nuevo.</string>
     <string name="chrome_footer">Tus tafs solo pueden usar un Chrome vinculado en los sitios que indica una conexión, y tú apruebas aquí los pasos arriesgados.</string>
+    <string name="chrome_held_basket">En la cesta</string>
+    <string name="chrome_held_in">En %1$s</string>
+    <string name="chrome_held_page">En la página</string>
     <string name="chrome_name_label">Nombre</string>
     <string name="chrome_none">No hay ningún Chrome vinculado.</string>
     <string name="chrome_not_loaded">No se pudieron leer tus Chrome: %1$s</string>

@@ -323,6 +323,8 @@ struct HeldCallCard: View {
                 .accessibilityIdentifier("held.taf-says")
             }
 
+            if let step = call.browser { BrowserStepBlock(step: step) }
+
             // What it's on, as KIFF keeps the call (kiff/tafs#102), under Details: ids and
             // a vendor's own values aren't words for the card's face (kiff/tafs#236, item 7).
             if let details = call.details, !details.isEmpty {
@@ -601,5 +603,61 @@ struct SetAllAsideButton: View {
             } message: {
                 if !clear.words.text.isEmpty { Text(clear.words.text) }
             }
+    }
+}
+
+/// A held browser step's place on the card (docs/chrome.md, "The approval card"): the site large and its exact origin
+/// small, the paired Chrome it would run in, what the page showed around the element, and the basket when it's a
+/// checkout. Every line is planque's or the page's, drawn verbatim: never markup, never a link.
+struct BrowserStepBlock: View {
+    let step: BrowserStep
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: step.site).scaledFont(20, weight: .bold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let origin = step.origin {
+                    Text(verbatim: origin).scaledFont(12, design: .monospaced).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                if let chrome = step.chromeName {
+                    Label(Words.Chrome.heldIn(name: chrome), systemImage: "globe")
+                        .scaledFont(13).foregroundColor(Theme.soft)
+                }
+            }
+            if step.pageTitle != nil || step.pageText != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Words.Chrome.heldPage)
+                        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
+                    if let title = step.pageTitle {
+                        Text(verbatim: title).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let text = step.pageText {
+                        Text(verbatim: text).scaledFont(13).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            if !step.basket.isEmpty || step.total != nil {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Words.Chrome.heldBasket)
+                        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.soft)
+                    ForEach(Array(step.basket.enumerated()), id: \.offset) { _, line in
+                        Text(verbatim: line).scaledFont(13).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let total = step.total {
+                        Text(verbatim: total).scaledFont(15, weight: .bold).foregroundColor(Theme.ink)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Theme.soft.opacity(0.08)))
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("held.browser")
     }
 }
