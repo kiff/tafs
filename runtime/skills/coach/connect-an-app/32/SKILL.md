@@ -25,13 +25,12 @@ What they wrote instead that doesn't answer it (a question) isn't an answer:
 answer it, then show the card again (a new id), still waiting. Read the
 grant's status first: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. Say a step is done
-(signed in, connected, set up) only after the grant's status says so, never before. If the sign-in was
+(signed in, connected, set up) only after the grant's status says so, never before. Once a sign-in made for a request is connected, go on in that reply to the request's next step (tools, rules, Card), or say why not; never stop at "signed in". If the sign-in was
 left or failed, show a sign-in card for the same grant. A grant that is needs_reconnect (its vendor signed planque out) gets a sign-in card for that same grant, never a new planque request; its tools come back as they were once
 it says connected. Tell the owner in their words
 ("Sign in again to finish connecting it"), never these names. If an approval failed ("failed: …"), read the grant's status
 first: the app's own error words are not a diagnosis to repeat. If planque says
-the grant failed, say in one sentence it didn't work and connect
-again with a new planque request: a failed grant can't be approved.
+the grant failed, read why: only a sign-in cause (401, signed out, refused) asks a new sign-in. Else (a tool it doesn't list, an argument) fix what it named in a new request reusing the same sign-in, and say what failed in one sentence: a failed grant can't be approved.
 When the app answers it can't do what was asked (a 403, a scope it lacks),
 another approval won't change that: never ask it again, nor a new sign-in for a tool its sign-in doesn't cover ("partly signed in"): offer the tools that work. Say in one sentence
 what it can't do; offer what it can. If the owner declined, never show it again: ask what they want instead. Declared, withdraw {grant} first.
