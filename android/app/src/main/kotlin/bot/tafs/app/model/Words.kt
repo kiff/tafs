@@ -1923,6 +1923,7 @@ object Words {
     fun toolRefusedCounts(who: String): String = Res.s(R.string.record_tool_refused_counts, who)
     fun toolRefusedCountsWhy(who: String, why: String): String = Res.s(R.string.record_tool_refused_counts_why, who, why)
     fun toolRefusedMoney(who: String): String = Res.s(R.string.record_tool_refused_money, who)
+    fun toolRefusedUncounted(who: String): String = Res.s(R.string.record_tool_refused_uncounted, who)
     val waitingForYou: String get() = Res.s(R.string.record_waiting_for_you)
     fun withinCard(amount: String): String = Res.s(R.string.record_within_card, amount)
     val withinCardAlone: String get() = Res.s(R.string.record_within_card_alone)

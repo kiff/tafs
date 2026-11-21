@@ -3573,6 +3573,8 @@ enum Words {
         static func toolRefusedCountsWhy(who: String, why: String) -> String { Words.line("record.tool_refused_counts_why", who, why) }
         /// {who} refused it. No money moved, but it still counts against today's total.
         static func toolRefusedMoney(who: String) -> String { Words.line("record.tool_refused_money", who) }
+        /// {who} refused it. Nothing was done, and it doesn't count toward today's limits.
+        static func toolRefusedUncounted(who: String) -> String { Words.line("record.tool_refused_uncounted", who) }
         /// Waiting for you
         static var waitingForYou: String { Words.line("record.waiting_for_you") }
         /// {amount}, within the Card

@@ -935,7 +935,10 @@ final class KIFFClient {
             var message: String?
             var refusedBy: String? = nil
             var code: String? = nil
-            enum CodingKeys: String, CodingKey { case status, message, code, refusedBy = "refused_by" }
+            /// false when no Card total kept the call: the tool did nothing (planque's `effect:none`) and the total
+            /// counts what's carried out, so the draw was given back. Absent from an older KIFF: today's lines.
+            var counted: Bool? = nil
+            enum CodingKeys: String, CodingKey { case status, message, code, counted, refusedBy = "refused_by" }
         }
         let proposalID: String
         let actionName: String

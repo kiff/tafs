@@ -102635,6 +102635,17 @@
         }
       }
     },
+    "record.tool_refused_uncounted": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ refused it. Nothing was done, and it doesn't count toward today's limits."
+          }
+        }
+      }
+    },
     "record.waiting_for_you": {
       "extractionState": "manual",
       "localizations": {

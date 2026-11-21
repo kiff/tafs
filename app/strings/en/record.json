@@ -122,6 +122,7 @@
   "record.tool_refused_counts": "{who} refused it, and it still counts toward today's limits",
   "record.tool_refused_counts_why": "{who} refused it, and it still counts toward today's limits{why}",
   "record.tool_refused_money": "{who} refused it. No money moved, but it still counts against today's total.",
+  "record.tool_refused_uncounted": "{who} refused it. Nothing was done, and it doesn't count toward today's limits.",
   "record.waiting_for_you": "Waiting for you",
   "record.within_card": "{amount}, within the Card",
   "record.within_card_alone": "Within the Card"
