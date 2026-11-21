@@ -50,8 +50,8 @@ object Res {
   val language: String get() = source.string(bot.tafs.app.R.string.words_language)
 
   /**
-   * [language] without its region ("pt" for "pt-BR"): the language KIFF's pages, kiff.dev's, tafs cloud and planque answer in.
-   * A regional variant is the app's own lines only; the services speak its language.
+   * [language] without its region ("pt" for "pt-BR"): the language KIFF's pages and kiff.dev's are opened in. A regional
+   * variant is the app's own lines; `Accept-Language` sends both (`KiffClient.screenLanguage`).
    */
   val pageLanguage: String get() = language.substringBefore('-')
 
