@@ -365,6 +365,38 @@ declines as the legal pages write it (taf, tafu, tafy, tafů); Card, Coach, KIFF
 | plan (billing) | tarif |
 | Cancel / Continue | Zrušit / Pokračovat |
 
+### Slovak (sk)
+
+Addressed as **vy**, as Czech is; buttons are infinitives ("Schváliť", "Skúsiť znova"). taf declines (taf, tafu, tafy,
+tafov); Card, Coach, KIFF and Setup stay as names. Every device word is masculine (telefón, tablet, počítač, Mac), so
+"tento {device}" agrees; elsewhere a value stands alone ("na tomto zariadení ({device})"). A door is "dvere", plural
+only. The plural forms are one, few (2–4) and other.
+
+| English | Slovak |
+|---|---|
+| Needs you | Čaká na vás |
+| Approve / Approve once | Schváliť / Schváliť raz |
+| Refuse | Odmietnuť |
+| held | pozdržané |
+| Halt / Halted | Zastaviť / Zastavené |
+| Stopped | Ukončené |
+| Pause / Paused | Pozastaviť / Pozastavené |
+| Resume | Obnoviť |
+| Revoke | Odvolať |
+| Record | Záznam |
+| Connect / connection | Pripojiť / pripojenie |
+| Pair / Unpair | Spárovať / Zrušiť spárovanie |
+| Account | Účet |
+| limit / spend limit | limit / limit výdavkov |
+| credits / credit pack | kredity / balík kreditov |
+| Sign in / Sign out | Prihlásiť sa / Odhlásiť sa |
+| Inbox | Doručená pošta |
+| Overview | Prehľad |
+| Calendar | Kalendár |
+| Usage | Využitie |
+| plan (billing) | tarif |
+| Cancel / Continue | Zrušiť / Pokračovať |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

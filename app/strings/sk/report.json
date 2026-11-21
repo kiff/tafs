@@ -1,0 +1,17 @@
+{
+  "report.already": "Túto odpoveď ste už nahlásili.",
+  "report.cant_from_here": "Túto odpoveď odtiaľto nemožno nahlásiť.",
+  "report.menu": "Nahlásiť túto odpoveď",
+  "report.not_sent": "Vaše hlásenie sa neodoslalo. {why}",
+  "report.not_sent_why": "Neodoslané: {failed}",
+  "report.note_hint": "Pridať poznámku (nepovinné)",
+  "report.note_most_characters": "Poznámka môže mať najviac 1 000 znakov.",
+  "report.person_kiff_reads_your_report": "Vaše hlásenie si v KIFF prečíta človek, spolu s odpoveďou tak, ako bola napísaná.",
+  "report.reason.harmful": "Škodlivé",
+  "report.reason.offensive": "Urážlivé",
+  "report.reason.other": "Iné",
+  "report.reason.wrong": "Nesprávne",
+  "report.runs_not_loaded": "Jeho behy sa nepodarilo načítať. {why}",
+  "report.thanks": "Ďakujeme. Vaše hlásenie si v KIFF niekto prečíta.",
+  "report.what_wrong": "Čo je na nej zlé?"
+}

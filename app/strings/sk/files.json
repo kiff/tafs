@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "{count} súbor · uchováva sa 30 dní",
+    "few": "{count} súbory · uchovávajú sa 30 dní",
+    "other": "{count} súborov · uchováva sa 30 dní"
+  },
+  "files.all": "Všetko",
+  "files.all_tafs": "Všetky tafy",
+  "files.by_run": "Podľa behu",
+  "files.by_taf": "Podľa tafu",
+  "files.delete_body": "Zmizne zo Súborov pre všetkých v tomto účte, hneď. Nedá sa to vrátiť.",
+  "files.delete_now": "Odstrániť hneď",
+  "files.delete_question": "Odstrániť „{name}“ hneď?",
+  "files.deleted": "Odstránené pre všetkých",
+  "files.download": "Stiahnuť",
+  "files.empty": "Zatiaľ nič. Keď taf počas behu vytvorí správu, tabuľku alebo dokument, uchová sa tu 30 dní a všetci v tomto účte ho môžu otvoriť, uložiť alebo zdieľať.",
+  "files.everyone": "Všetci v tomto účte",
+  "files.goes_away": "Zmizne",
+  "files.goes_in_days": {
+    "one": "zmizne o {count} deň",
+    "few": "zmizne o {count} dni",
+    "other": "zmizne o {count} dní"
+  },
+  "files.goes_on": "{date} (30 dní po svojom behu)",
+  "files.goes_today": "zmizne dnes",
+  "files.goes_tomorrow": "zmizne zajtra",
+  "files.in_run": "V behu",
+  "files.kept_line": "Každý súbor sa uchováva 30 dní od svojho behu a potom sám zmizne. Tieto súbory vidia všetci v tomto účte. Prílohy vašich četov zostávajú pri svojich správach.",
+  "files.kept_until": "Jeho súbory sa uchovávajú do {date}",
+  "files.made_by": "Vytvoril",
+  "files.none_yet": "Zatiaľ žiadne · uchovávajú sa 30 dní",
+  "files.pick_one": "Vyberte súbor, nech ho vidíte tu.",
+  "files.preview_start": "Zobrazuje sa len začiatok. Stiahnite si súbor a prečítajte si ho celý.",
+  "files.saved": "Uložené do tohto zariadenia",
+  "files.see_in_chat": "Zobraziť v čete",
+  "files.share": "Zdieľať",
+  "files.size": "Veľkosť",
+  "files.taf_row": {
+    "one": "{count} súbor z jeho behov",
+    "few": "{count} súbory z jeho behov",
+    "other": "{count} súborov z jeho behov"
+  },
+  "files.title": "Súbory",
+  "files.type": "Typ",
+  "files.who_sees": "Kto to vidí"
+}
