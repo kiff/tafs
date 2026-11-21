@@ -244,6 +244,13 @@ data class AppState(
    */
   val approvalKeyLost: Boolean = false,
   /**
+   * The Chromes paired to the account (docs/chrome.md), or null while planque doesn't offer them (its route answers 404): then
+   * Account shows no Chrome row. planque's own switch decides, never the app.
+   */
+  val chromes: List<bot.tafs.app.kiff.Chrome>? = null,
+  /** Why the Chromes couldn't be read, or a pairing or an unpair didn't go through, in the person's words. */
+  val chromesError: String? = null,
+  /**
    * KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the person has another
    * device that approves, so it gains none here. Approving takes a new sign-in on this phone, or the other phone.
    */
@@ -4125,6 +4132,146 @@ class AppModel(
     openCoachChat(sent.session)
     _state.update { it.copy(coachRequested = true) }
     return true
+  }
+
+  // Chrome (docs/chrome.md, docs/android-app.md "Pairing a Chrome"), as iOS's AppModel.
+
+  /** Runs [block] with planque signing as this phone (no prompt): reads, opening a pairing, and unpairing. Null when it can't. */
+  private suspend fun <T> chromeCall(block: suspend () -> T): T? {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || !_state.value.planqueReady) return null
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    planque.signer = { signer.signConfirmed(it) }
+    try {
+      return block()
+    } finally {
+      planque.signer = null
+    }
+  }
+
+  suspend fun refreshChromes() {
+    val generation = accountGeneration
+    try {
+      val list = chromeCall { planque.chromes() }
+      if (generation != accountGeneration) return
+      _state.update { it.copy(chromes = list, chromesError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: PlanqueError.Server) {
+      if (generation != accountGeneration) return
+      if (e.status == 404) _state.update { it.copy(chromes = null) }
+      else _state.update { it.copy(chromesError = Words.Chrome.notLoaded(why = ErrorWords.of(e))) }
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(chromesError = Words.Chrome.notLoaded(why = ErrorWords.of(e))) }
+    }
+  }
+
+  /** A pairing this phone opened, with the secret only it holds: the code typed into Chrome is `lookup-secret`. */
+  data class ChromePairingInProgress(val pairing: String, val lookup: String, val secret: String) {
+    val code: String get() = bot.tafs.app.kiff.ChromePairing.code(lookup, secret)
+    // The secret never goes in a log line.
+    override fun toString(): String = "ChromePairingInProgress($pairing)"
+  }
+
+  /**
+   * Opens a pairing, or says why it couldn't. A phone without an approval key can't pair: its other key signs with no prompt,
+   * so it could never be what opens a sealed value (the Keystore, not the app, would have to ask for the finger).
+   */
+  suspend fun openChromePairing(): ChromePairingInProgress? {
+    if (signer.approvalPublicKeyDER.isEmpty()) {
+      _state.update { it.copy(chromesError = Words.Chrome.pairNotStarted(why = Words.Approval.setAScreenLock)) }
+      return null
+    }
+    return try {
+      chromeCall { planque.openChromePairing() }?.let { ChromePairingInProgress(it.pairing, it.lookup, bot.tafs.app.kiff.ChromePairing.newSecret()) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(chromesError = Words.Chrome.pairNotStarted(why = ErrorWords.of(e))) }
+      null
+    }
+  }
+
+  /** What became of a pairing: waiting for the extension, an offer whose proof holds (only then shown), or over. */
+  sealed interface ChromePairingStep {
+    data object Waiting : ChromePairingStep
+    data class Offered(val offer: bot.tafs.app.kiff.ChromeOffer) : ChromePairingStep
+    data object Refused : ChromePairingStep
+    data object Expired : ChromePairingStep
+  }
+
+  suspend fun chromePairingStep(p: ChromePairingInProgress): ChromePairingStep {
+    val read = try {
+      chromeCall { planque.chromePairing(p.pairing) } ?: return ChromePairingStep.Expired
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: PlanqueError.Server) {
+      return if (e.status == 404) ChromePairingStep.Expired else ChromePairingStep.Waiting
+    } catch (e: Exception) {
+      return ChromePairingStep.Waiting
+    }
+    return when (read.status) {
+      // Another extension that used the lookup can't prove its key: it doesn't have the secret.
+      "waiting_for_phone" -> {
+        val offer = read.offer ?: return ChromePairingStep.Refused
+        val key = bot.tafs.app.kiff.ChromePairing.base64UrlDecoded(offer.key) ?: return ChromePairingStep.Refused
+        if (bot.tafs.app.kiff.ChromePairing.extensionProofHolds(p.secret, key, offer.proof)) ChromePairingStep.Offered(offer) else ChromePairingStep.Refused
+      }
+      // Confirmed already, and not by this sheet.
+      "confirmed" -> ChromePairingStep.Refused
+      else -> ChromePairingStep.Waiting
+    }
+  }
+
+  /**
+   * Confirms the pairing behind one fingerprint naming the Chrome: the approval key, and only it, signs this phone's proof and
+   * the extension's key under the secret; the extension checks that signature itself. False when it didn't go through.
+   */
+  suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String): Boolean {
+    val pairing = bot.tafs.app.kiff.ChromePairing
+    val chromeKey = pairing.base64UrlDecoded(offer.key) ?: return false
+    if (!pairing.extensionProofHolds(p.secret, chromeKey, offer.proof)) return false
+    val phoneKey = signer.approvalPublicKeyDER
+    if (phoneKey.isEmpty()) return false.also { _state.update { it.copy(chromesError = Words.Chrome.pairNotStarted(why = Words.Approval.setAScreenLock)) } }
+    val generation = accountGeneration
+    val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
+    val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey)
+    val reason = Words.Chrome.pairPrompt(name = name)
+    val sig = try {
+      val der = signer.signCritical(reason) { pairing.signedBytes(p.pairing, confirmation) }
+      pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = reason, why = ErrorWords.of(e))) }
+      return false
+    }
+    if (generation != accountGeneration) return false
+    try {
+      chromeCall { planque.confirmChromePairing(p.pairing, confirmation, sig) } ?: return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = reason, why = ErrorWords.of(e))) }
+      return false
+    }
+    refreshChromes()
+    return true
+  }
+
+  /** Unpairs a Chrome: planque deletes its key at once. It takes power away, so this phone's own signature is enough. */
+  suspend fun removeChrome(chrome: bot.tafs.app.kiff.Chrome) {
+    try {
+      chromeCall { planque.removeChrome(chrome.id) } ?: return
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = Words.Chrome.removeNamed(name = chrome.name), why = ErrorWords.of(e))) }
+      return
+    }
+    refreshChromes()
   }
 
   /** Opens [run] of [tafId], step by step (K5). Someone else's request is only for whoever manages the taf: tafs cloud says no. */
