@@ -73,12 +73,13 @@ async function setup() {
   const id = await vault.save("shop.example", "ana@shop.example", "hunter22");
   const c = fakeChrome("https://shop.example/login");
   const r = new Runner({ chrome: c, sleep: async () => {}, vault, paired: () => ({ chromeId: "chr_1", phoneKey }), now: () => NOW });
-  const opened = await r.handle({ id: "op_0", run: "run_1", sites: ["shop.example"], op: "open", url: "https://shop.example/login" });
+  const sites_signed = { sites: ["shop.example"], sig: await sign(phone.privateKey, LABEL.sites, { chrome_id: "chr_1", grant: "g_1", sites: ["shop.example"] }) };
+  const opened = await r.handle({ id: "op_0", run: "run_1", grant: "g_1", sites: ["shop.example"], sites_signed, op: "open", url: "https://shop.example/login" });
   return { phone, vault, id, c, r, opened };
 }
 
 function fill(id, extra = {}) {
-  return { id: "op_1", run: "run_1", sites: ["shop.example"], op: "act", read_id: "rd_1", act: { kind: "fill", ref: "f2", sealed: id + ":password" }, ...extra };
+  return { id: "op_1", run: "run_1", grant: "g_1", sites: ["shop.example"], op: "act", read_id: "rd_1", act: { kind: "fill", ref: "f2", sealed: id + ":password" }, ...extra };
 }
 
 async function release(phone, step, origin = "https://shop.example", extra = {}) {
