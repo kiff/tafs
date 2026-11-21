@@ -168692,6 +168692,12 @@
             "state": "translated",
             "value": "Não foi possível comunicar com o telemóvel. Tente novamente."
           }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível comunicar com o telemóvel. Tente novamente."
+          }
         }
       }
     },
@@ -168751,6 +168757,12 @@
             "state": "translated",
             "value": "O telemóvel não respondeu a tempo. Tente novamente."
           }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não respondeu a tempo. Tente novamente."
+          }
         }
       }
     },
@@ -168806,6 +168818,12 @@
           }
         },
         "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A app tafs não está no telemóvel. Instale-a e tente novamente."
+          }
+        },
+        "pt-BR": {
           "stringUnit": {
             "state": "translated",
             "value": "A app tafs não está no telemóvel. Instale-a e tente novamente."
