@@ -40,7 +40,7 @@ class ChromePairingTest {
     val chromeKey = bytes("chrome_key")
     // Someone else's extension used the lookup: its proof is over its own key, or under a secret it guessed.
     assertFalse(ChromePairing.extensionProofHolds(v("secret"), chromeKey.copyOf().also { it[0] = (it[0] + 1).toByte() }, v("extension_proof")))
-    assertFalse(ChromePairing.extensionProofHolds("29XMDQ", chromeKey, v("extension_proof")))
+    assertFalse(ChromePairing.extensionProofHolds(v("secret").dropLast(1) + "4", chromeKey, v("extension_proof")))
     // Not base64url, or padded: no proof at all.
     assertFalse(ChromePairing.extensionProofHolds(v("secret"), chromeKey, v("extension_proof") + "="))
     assertFalse(ChromePairing.extensionProofHolds(v("secret"), chromeKey, ""))
@@ -52,7 +52,7 @@ class ChromePairingTest {
       assertEquals(ChromePairing.SECRET_LENGTH, s.length)
       assertTrue(s.all { it in ChromePairing.ALPHABET })
     }
-    assertEquals("K7QF-29XMDP", ChromePairing.code("K7QF", "29XMDP"))
+    assertEquals("K7QF-29XM-DPQR-STVW-XYZ2-3", ChromePairing.code("K7QF", "29XMDPQRSTVWXYZ23"))
   }
 
   @Test fun theKeystoresDerSignatureIsSentAsRawRAndS() {
