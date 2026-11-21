@@ -1,0 +1,1 @@
+- **Android: pair a Chrome from Account** (behind planque's switch, off until a released extension build is listed): the code with a secret the phone never sends, an offer shown only on its proof, one fingerprint with the approval key, and Unpair.

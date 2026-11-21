@@ -4172,7 +4172,7 @@ class AppModel(
   data class ChromePairingInProgress(val pairing: String, val lookup: String, val secret: String) {
     val code: String get() = bot.tafs.app.kiff.ChromePairing.code(lookup, secret)
     // The secret never goes in a log line.
-    override fun toString(): String = "ChromePairingInProgress($pairing)"
+    override fun toString(): String = pairing
   }
 
   /**
