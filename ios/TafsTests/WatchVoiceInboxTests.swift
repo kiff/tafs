@@ -49,6 +49,7 @@ final class WatchVoiceInboxTests: XCTestCase {
     /// The request can come before the file: it waits for it.
     func testTheRequestWaitsForItsFile() async {
         let inbox = inbox()
+        let id = id
         let asked = Task { await inbox.transcribe(id) }
         try? await Task.sleep(nanoseconds: 50_000_000)
         _ = inbox.place(source, metadata: [WatchVoice.metadataKey: id])
