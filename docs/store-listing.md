@@ -905,11 +905,11 @@ tafs 서비스 약관(영어): https://kiff.dev/tafs/terms
 
 ## Spanish, Latin America (es-419)
 
-**Draft for Wave 1 (Latin America), Google Play only, repo only.** It starts as a copy of es (es-ES)'s Play fields, above, for legal-i18n to
-adapt to Latin American Spanish: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
-things in Latin American Spanish, and the Plans paragraph's price link, which opens the euro prices, while the Terms say the store's local
-price applies outside the euro area (kiff/cloud#50). Lengths are re-counted once the text is final. Applying it in Play Console
-waits for the owner's Wave 1 yes. The App Store's es-MX is mac12's (tafs#1625).
+**Draft, Google Play only, not yet in Play Console.** It starts as a copy of es (es-ES)'s Play fields, above, to be
+adapted to Latin American Spanish: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
+things in Latin American Spanish, and the Plans paragraph's price link, which opens the euro prices, while outside the euro area the store's
+local price applies. Lengths are re-counted once the text is final. It goes into Play Console when this market opens. The App
+Store's es-MX is drafted separately.
 
 ### Google Play
 
@@ -956,11 +956,11 @@ Privacidad (en inglés): https://kiff.dev/tafs/privacy
 
 ## Portuguese, Brazil (pt-BR)
 
-**Draft for Wave 1 (Brazil), Google Play only, repo only.** It starts as a copy of pt (pt-PT)'s Play fields, above, for legal-i18n to
-adapt to Brazilian Portuguese: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
-things in Brazilian Portuguese, and the Plans paragraph's price link, which opens the euro prices, while the Terms say the store's local
-price applies outside the euro area (kiff/cloud#50). Lengths are re-counted once the text is final. Applying it in Play Console
-waits for the owner's Wave 1 yes. The App Store's pt-BR is mac12's (tafs#1625).
+**Draft, Google Play only, not yet in Play Console.** It starts as a copy of pt (pt-PT)'s Play fields, above, to be
+adapted to Brazilian Portuguese: the same claims and limits, and the glossary's words. Two things to check while adapting: what Android calls
+things in Brazilian Portuguese, and the Plans paragraph's price link, which opens the euro prices, while outside the euro area the store's
+local price applies. Lengths are re-counted once the text is final. It goes into Play Console when this market opens. The App
+Store's pt-BR is drafted separately.
 
 ### Google Play
 
