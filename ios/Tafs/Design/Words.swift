@@ -1688,7 +1688,7 @@ enum Words {
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
             /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
-            /// Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.
+            /// Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor}; otherwise, when the last one is removed. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
             /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
@@ -1781,7 +1781,7 @@ enum Words {
         static var openingSignIn: String { Words.line("connect.opening_sign_in") }
         /// Other connections
         static var otherConnections: String { Words.line("connect.other_connections") }
-        ///  Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor_2}.
+        ///  Other tafs that use {vendor} keep their access. If no other taf uses the same account there, the sign-in is revoked at {vendor_2}; otherwise, when the last one is removed.
         static func otherConnectionsStayConnectedNo(vendor: String, vendor2: String) -> String { Words.line("connect.other_connections_stay_connected_no", vendor, vendor2) }
         /// KIFF's words for this connection couldn't be read. {why}
         static func profileWordsNotRead(why: String) -> String { Words.line("connect.profile_words_not_read", why) }

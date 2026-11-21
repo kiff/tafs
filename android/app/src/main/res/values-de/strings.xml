@@ -890,7 +890,7 @@
         <item quantity="other">%2$s stoppen ebenfalls.</item>
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Kein taf nutzt %1$s mehr.</string>
-    <string name="connect_disconnect_rest">Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %1$s widerrufen. Wenn du %1$s wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.</string>
+    <string name="connect_disconnect_rest">Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei %1$s widerrufen; sonst, wenn der letzte entfernt wird. Wenn du %1$s wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.</string>
     <string name="connect_disconnect_rest_key">Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht, sobald ihn kein taf mehr nutzt. Wenn du %1$s wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen.</string>
     <string name="connect_disconnect_title">Zugriff auf %1$s entfernen?</string>
     <string name="connect_disconnect_title_from">Zugriff auf %1$s für %2$s entfernen?</string>
@@ -943,7 +943,7 @@
     <string name="connect_open_browser_again">Browser erneut öffnen</string>
     <string name="connect_opening_sign_in">Anmeldung wird geöffnet…</string>
     <string name="connect_other_connections">Andere Verbindungen</string>
-    <string name="connect_other_connections_stay_connected_no">" Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %2$s widerrufen."</string>
+    <string name="connect_other_connections_stay_connected_no">" Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Nutzt kein anderer taf dasselbe Konto dort, wird die Anmeldung bei %2$s widerrufen; sonst, wenn der letzte entfernt wird."</string>
     <string name="connect_profile_words_not_read">KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. %1$s</string>
     <string name="connect_profile_words_unread">KIFFs Worte zu dieser Verbindung sind noch nicht gelesen. Es wurde nichts genehmigt.</string>
     <string name="connect_prompt_connect">%1$s mit %2$s verbinden</string>
