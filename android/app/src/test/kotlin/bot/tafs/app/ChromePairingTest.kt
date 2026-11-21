@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import bot.tafs.app.kiff.ChromePairing
 import bot.tafs.app.kiff.KiffClient
+import bot.tafs.app.kiff.PairQr
 import java.io.File
 import java.security.KeyPairGenerator
 import java.security.Signature
@@ -72,6 +73,35 @@ class ChromePairingTest {
     assertTrue(ChromePairing.isSensitive("www。paypal。com"))
     assertTrue(ChromePairing.isSensitive("impots．gouv．fr"))
     assertFalse(ChromePairing.isSensitive("notpaypal.com."))
+  }
+
+  @Test fun theProofCoversTheExtensionsKiffOfferAsTheVectorSays() {
+    val secret = v("secret")
+    val chromeKey = bytes("chrome_key")
+    val offer = v("kiff_offer")
+    assertTrue(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof_with_kiff_offer"), offer))
+    // planque can swap neither key: another KIFF offer, or none, and the proof no longer holds.
+    assertFalse(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof_with_kiff_offer")))
+    assertFalse(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof_with_kiff_offer"), offer.replace("tafs for Chrome", "tafs for Chrom")))
+    assertFalse(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof"), offer))
+  }
+
+  @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {
+    val offer = v("kiff_offer")
+    val device = PairQr.readChromeExtension(offer)!!
+    assertEquals("chrome", device.platform)
+    assertEquals("extension", device.kind)
+    assertEquals("software", device.keyStore)
+    assertEquals("tafs for Chrome", device.name)
+    assertNull("never a computer's QR", PairQr.read(offer))
+    // Anything that could approve, or isn't a Chrome extension, isn't paired.
+    assertNull(PairQr.readChromeExtension(offer.replace("\"key_store\":\"software\",", "")))
+    assertNull(PairQr.readChromeExtension(offer.replace("\"kind\":\"extension\"", "\"kind\":\"enclave\"")))
+    assertNull(PairQr.readChromeExtension(offer.replace("\"platform\":\"chrome\"", "\"platform\":\"macos\"")))
+    assertNull(PairQr.readChromeExtension(offer.replace("\"v\":\"kiff.pair.v1\"", "\"v\":\"kiff.pair.v2\"")))
+    assertNull(PairQr.readChromeExtension(offer.replace("{", "{\"approval_pub\":\"AAAA\",")))
+    assertNull(PairQr.readChromeExtension(offer.replace("{", "{\"device_kind\":\"android_phone\",")))
+    assertNull(PairQr.readChromeExtension("not json"))
   }
 
   @Test fun anotherExtensionsProofOrAnotherSecretIsRefused() {
