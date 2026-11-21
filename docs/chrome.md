@@ -75,7 +75,8 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    ```
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
    `waiting_for_phone` with the extension's `key`, `key_sha256`, `proof`, `version`, `browser` and `os`, then
-   `confirmed`; an expired pairing is 404) and checks `proof` with its secret. A wrong proof
+   `confirmed`; `contested` when a second Chrome posted on the code, which planque then spends; an expired pairing
+   is 404) and checks `proof` with its secret. A wrong proof
    means another extension used the lookup: it stops there. It shows the browser and OS, the owner names it
    ("Work Mac"), and Face ID or the fingerprint signs `tafs-chrome/pair/v1` over:
    ```

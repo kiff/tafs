@@ -1374,8 +1374,9 @@ final class AppModel: ObservableObject {
             guard let offer = state.offer, let key = ChromePairing.base64URLDecoded(offer.key),
                   ChromePairing.extensionProofHolds(secret: p.secret, key: key, proof: offer.proof) else { return .refused }
             return .offered(offer)
-        case "confirmed":
-            return .refused // confirmed already, and not by this sheet: nothing more to do here
+        case "contested", "confirmed":
+            // Another Chrome posted on this code (planque spends it), or it's confirmed already, not by this sheet.
+            return .refused
         default:
             return .waiting
         }
