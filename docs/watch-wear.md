@@ -399,6 +399,12 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
 
+**400,000,010 (0.4.5-timing)** replaces 0.4.4-timing, which never reached Play (its upload waited on 128's review): the same
+timing line, now with all of row 44, so the owner tries every change and measures the link with the fixes in one sitting. One
+tap to talk; no cut-off on a pause, and the phone transcribing when the watch's recognizer gives up; icons over words; times
+and day headers; the cache, so it opens at once; fewer false "phone not reachable". To `wear:internal` only, uploaded by hand
+once mac-local says 128 is published; never promoted to production.
+
 **400,000,009 (0.4.4-timing)** is the measuring build for row 44 (D0): its `-timing` name draws the link's line (lookup,
 reply, bytes, or why it failed; "Measuring the link", above), with no recording kept (`KEEP_AUDIO` off). For the owner's 10
 minutes on the Galaxy Watch, each screen opened twice near the phone. To `wear:internal` only; never promoted to production,
