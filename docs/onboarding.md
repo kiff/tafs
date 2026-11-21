@@ -12,6 +12,8 @@ no other does. Two builds have it:
 - **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
   testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
   (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
+  When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
+  can't be installed or picked any more. The lane that ran the pass posts it on the thread.
 
 App Store builds never have `TAFS_K5`. The sign-up's email code and GitHub sign-in are left to the device pass.
 
