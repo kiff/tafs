@@ -47,6 +47,8 @@ struct TafsWatchApp: App {
             // again when it's back.
             // v2's Inbox is kept only with a passcode: checked when the app is put away and opened again.
             if WatchV2.on, phase == .background || phase == .active { inbox.checkLock() }
+            // So it opens at once (row 44, D): kept only with a passcode.
+            if phase == .background || phase == .active { tafs.cache.checkLock() }
             if phase == .background {
                 needsYou.leave()
                 tafs.leave()
@@ -72,6 +74,7 @@ struct TafsWatchApp: App {
     /// Account's Sign out, once confirmed: the Inbox goes and the flag is kept, then each page forgets what it showed.
     private func signOut() {
         signIn.signOut(inbox: inbox)
+        tafs.cache.clear()
         needsYou.leave()
         tafs.leave()
         coach.leave()
