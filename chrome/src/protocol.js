@@ -108,3 +108,16 @@ export async function checkAllowances(entries, { phoneKey, chromeId, grant }) {
   }
   return out;
 }
+
+/**
+ * Whether a run's sites are the grant's, as the paired phone signed them when the owner approved it: `step.sites_sig`,
+ * the phone's `tafs-chrome/sites/v1` signature over `{chrome_id, grant, sites}`, and `step.sites` within those. planque
+ * relays it and can't widen it. Chrome's per-site permission stays the second gate.
+ */
+export async function checkSites(step, pairing) {
+  if (!pairing || !pairing.phoneKey || !step || !Array.isArray(step.sites) || !step.sites_signed) return false;
+  const signed = step.sites_signed;
+  if (!Array.isArray(signed.sites) || typeof signed.sig !== "string") return false;
+  if (!step.sites.every((s) => signed.sites.includes(s))) return false;
+  return verify(pairing.phoneKey, LABEL.sites, { chrome_id: pairing.chromeId, grant: step.grant, sites: signed.sites }, signed.sig);
+}
