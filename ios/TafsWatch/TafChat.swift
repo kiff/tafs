@@ -83,7 +83,14 @@ struct TafChatPage: View {
                         .foregroundStyle(WatchLook.held)
                         .listRowBackground(Color.clear)
                 }
-                Button { if WatchVoice.on, chat.listensFirst { recording = true } else { asking = true } } label: {
+                Button {
+                    // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
+                    if WatchVoice.on, chat.listensFirst {
+                        recording = true
+                    } else {
+                        Task { if await WatchDictation.talk(to: chat) { asking = true } }
+                    }
+                } label: {
                     Label(Words.Chat.messageTaf(taf: taf.name), systemImage: "mic.fill")
                         .font(.headline)
                 }

@@ -46,6 +46,8 @@ extension PhoneLink: PhoneAsking {
         }
         // Whatever was asked, a signed-out phone drops the account's zone (agentgabo on #1590).
         WatchAccountZone.heard(reply)
+        // And what the watch kept so it opens at once (row 44, D).
+        if reply?.outcome == .signedOut { WatchCache.shared.clear() }
         return reply
     }
 }

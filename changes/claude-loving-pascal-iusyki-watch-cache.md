@@ -1,0 +1,1 @@
+- **Apple Watch: Your tafs opens at once** (row 44, D; built, switched off): the last read's names and halted or paused, kept in a file that can't be read while the watch is locked, cleared on sign-out, without a passcode and after 24 hours, and switched on only with its privacy sentence live. A short drop now keeps the last read for 30 s before the phone is called unreachable.
