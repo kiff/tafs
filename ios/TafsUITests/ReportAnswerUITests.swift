@@ -76,13 +76,23 @@ final class ReportAnswerUITests: TafsUITestCase {
         XCTAssertTrue(menuShown, "Report this answer in the answer's menu")
         XCTAssertTrue(sheet, "the sheet")
         XCTAssertFalse(send.isEnabled, "Send waits for a reason")
-        app.buttons["report-reason-\(reason)"].tap()
+        // The tap on a reason lands before Send updates on a slow simulator: wait for it, as for the sheet.
+        // Springboard's "Sign in to Apple Account" can also take that tap: the monitor closes the alert and
+        // the reason stays unpicked (#1618's run). So an alert already up is closed first, and the reason is
+        // tapped again until Send takes it, three times at most, with the assertion after.
+        let pick = app.buttons["report-reason-\(reason)"]
+        var picked = false
+        for _ in 0..<3 where !picked {
+            if springboard.alerts.firstMatch.exists { letTheMonitorRun(app) }
+            pick.tap()
+            picked = waitUntilEnabled(send, timeout: 5)
+        }
+        XCTAssertTrue(picked, "a reason is enough to send")
         if let note {
             let field = app.descendants(matching: .any)["report-note"]
             typeInto(field, text: note)
         }
-        // The tap on a reason lands before Send updates on a slow simulator: wait for it, as for the sheet.
-        XCTAssertTrue(waitUntilEnabled(send, timeout: 5), "a reason is enough to send")
+        XCTAssertTrue(waitUntilEnabled(send, timeout: 5), "still enabled with the note")
         send.tap()
     }
 
