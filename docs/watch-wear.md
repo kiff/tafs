@@ -201,6 +201,13 @@ dismissed state, an ask to one taf, alerts per taf), flipped as each lands.
 
 **Step (iii), first half: record, check, send** (`ReviewScreens.kt`, `WatchModel(reviewFirst = true)`, `WatchModelTest`,
 `WatchPagesTest`). Nothing leaves the watch before Send:
+- **Not cut off by a pause** (`Dictation`, `Listener`, row 44, A; `DictationTest`): the system's recognizer ends a stretch on its
+  own silence rule, or answers "no match"; the watch listens on across those, joining what each stretch heard into one text on
+  the screen, and ends only on ✓ (Stop, or the 30 s limit) or after about 8 s with no new words. Nothing said in those 8 s is
+  "Didn't catch that". A recognizer that fails outright (no network, busy) ends it with what was heard so far. Only with the
+  watch's own microphone; a test build's app audio (`KEEP_AUDIO`) stays one stretch. A word said in the instant between two
+  stretches may be missed, which only a real watch shows. Handing the recording to the phone when the recognizer gives up is
+  not built.
 - **The microphone opens its screen already listening** (`WatchModel.talk`, row 44, the owner's Galaxy Watch review: one tap,
   not two): Ask Coach, a taf's microphone, Reply, the tile's Ask tafs and the watch-face complication all go straight to
   listening, with the words shown as they come. A watch without a screen lock, or locked, gets its line instead, and never

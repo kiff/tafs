@@ -26,6 +26,12 @@ internal class Listener(
   private var source: android.os.ParcelFileDescriptor? = null
   private var ready = false
 
+  /** Across the recognizer's own stretches, so a pause doesn't end it (row 44, A): with the watch's microphone, not the app's audio. */
+  private val dictation = Dictation(now = android.os.SystemClock::elapsedRealtime)
+  /** The recognizer is in a stretch now; between two, a Stop ends at once with what was heard. */
+  private var hearing = false
+  private var intent: Intent? = null
+
   /**
    * The probe, for the internal build's line on the review: what the watch's recognizer did with the app's own audio. Evidence
    * for the owner's choice if it won't take it (PM 19 Nov 01:19); never sent anywhere.
@@ -43,15 +49,21 @@ internal class Listener(
     source = pipe
     ready = false
     if (keepAudio && pipe == null) probe.value = if (refused) "audio: off (refused earlier)" else "audio: microphone not opened"
+    dictation.begin()
+    // Joined across stretches only with the watch's microphone: the app's own audio (a test build) is one stretch, as before.
+    val continuous = pipe == null
     r.setRecognitionListener(object : RecognitionListener {
       override fun onReadyForSpeech(params: Bundle?) {
         ready = true
         model.readyToHear()
       }
       override fun onPartialResults(partialResults: Bundle?) {
-        first(partialResults)?.let(model::partial)
+        val words = first(partialResults)
+        if (continuous) model.partial(dictation.partial(words)) else words?.let(model::partial)
       }
       override fun onResults(results: Bundle?) {
+        hearing = false
+        if (continuous) return next(dictation.ended(first(results)))
         val heard = first(results)
         val audio = endTap(keep = true)
         if (audio != null || pipe != null) probe.value = "audio: ${audio?.let { "kept ${it.durationMs} ms" } ?: "none"} · peak ${newTap?.peak ?: 0}"
@@ -65,6 +77,8 @@ internal class Listener(
         }
       }
       override fun onError(error: Int) {
+        hearing = false
+        if (continuous) return next(if (Dictation.isQuiet(error)) dictation.ended(null) else dictation.failed())
         endTap(keep = false)
         // Refused before it was ready to listen, with the app's audio: this recognizer doesn't take it. The next Start uses the
         // watch's microphone as v1 does, and the probe says why.
@@ -92,9 +106,29 @@ internal class Listener(
         .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
         .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, VoiceFormat.RATE)
     }
+    this.intent = intent
     val started = runCatching { r.startListening(intent) }.isSuccess
+    hearing = started
     if (!started) endTap(keep = false)
     return started
+  }
+
+  /** After a stretch: listen on, or hand over everything heard (to the review in v2, sent in v1), or that nothing was. */
+  private fun next(next: Dictation.Next) {
+    when (next) {
+      Dictation.Next.Listen -> {
+        val r = recognizer
+        val i = intent
+        hearing = r != null && i != null && runCatching { r.startListening(i) }.isSuccess
+        if (!hearing) next(dictation.failed())
+      }
+      is Dictation.Next.Done -> finish(next.text)
+      Dictation.Next.Cancelled -> Unit
+    }
+  }
+
+  private fun finish(text: String) {
+    scope.launch { if (text.isBlank()) model.heardNothing() else model.heard(text) }
   }
 
   /**
@@ -103,12 +137,17 @@ internal class Listener(
    * `stopListening`.
    */
   fun stop() {
+    dictation.stopping = true
     tap?.endFeed()
+    // Between two stretches there's nothing to stop: it ends now, with what was heard.
+    if (!hearing && tap == null) return next(dictation.ended(null))
     runCatching { recognizer?.stopListening() }
   }
 
   /** Stops listening; nothing heard is sent, and nothing recorded is kept. */
   fun cancel() {
+    dictation.cancel()
+    hearing = false
     runCatching { recognizer?.cancel() }
     endTap(keep = false)
   }
