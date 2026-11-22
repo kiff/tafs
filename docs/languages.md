@@ -916,6 +916,41 @@ Plural forms: one, other.
 | Usage | Користење |
 | Cancel / Continue | Откажи / Продолжи |
 
+### Mongolian (mn)
+
+Mongolian in Cyrillic, in the polite register (**та**). Buttons are the verbal noun, as Mongolian apps write them ("Зөвшөөрөх",
+"Татгалзах", "Үргэлжлүүлэх"). taf, Card, Coach and KIFF stay in Latin letters; Mongolian doesn't mark a plural after a number, so a
+count takes the bare noun ("3 taf", "2 дуудлага") and the plural of "taf" is the same word ("taf-ууд" only without a number).
+A suffix joins a Latin name with a hyphen ("KIFF-ийн", "Card-ын"). Months are numbered ("11-р сар") and weekdays are two letters
+("Да", "Мя"). A door is "хаалга", a knock "тогшилт", a call "дуудлага", a receipt "баримт", the dial "товчлуур". Quotes are “ ”.
+macOS has no Mongolian, so a `*_mac` line gives the path in Mongolian with macOS 12's names in brackets.
+There is one plural form in use (one and other read the same).
+
+| English | Mongolian |
+|---|---|
+| Needs you | Таныг хүлээж байна |
+| Approve / Approve once | Зөвшөөрөх / Нэг удаа зөвшөөрөх |
+| Refuse | Татгалзах |
+| held | түр барьсан |
+| Halt / Halted | Зогсоох / Зогссон |
+| Stopped | Зогссон |
+| Pause / Paused | Түр зогсоох / Түр зогссон |
+| Resume | Үргэлжлүүлэх |
+| Revoke | Хүчингүй болгох |
+| Record | Бүртгэл |
+| Connect / connection | Холбох / холболт |
+| Pair / Unpair | Хослуулах / Хослолыг салгах |
+| Account | Бүртгэл |
+| credits | кредит |
+| passkey | нэвтрэх түлхүүр |
+| security key | аюулгүй байдлын түлхүүр |
+| Sign in / Sign out | Нэвтрэх / Гарах |
+| Inbox | Ирсэн |
+| Overview | Тойм |
+| Calendar | Хуанли |
+| Usage | Хэрэглээ |
+| Cancel / Continue | Болих / Үргэлжлүүлэх |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
