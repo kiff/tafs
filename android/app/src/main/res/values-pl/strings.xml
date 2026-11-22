@@ -1479,6 +1479,12 @@
     <string name="halt_all_running">tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować.</string>
     <string name="halt_all_signed_out">Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs.</string>
     <string name="halt_all_title">Zablokuj wszystkie tafs</string>
+    <string name="help_chrome_lead">Powiąż rozszerzenie tafs z telefonem, a taf będzie mógł pracować w Twoim Chrome, tylko na stronach, które dopuścisz. Pracuje we własnych kartach, a wszystko, co ryzykowne, czeka na Ciebie w %1$s.</string>
+    <string name="help_chrome_manage">%1$s › %2$s pokazuje Twoje Chrome i do czego służy każdy z nich. Usunięcie powiązania Chrome kończy jego połączenia.</string>
+    <string name="help_chrome_title">tafs może pracować w Twoim Chrome</string>
+    <string name="help_code_lead">Włącz to w %1$s › %2$s. Potem, gdy o to poprosisz, KIFF wyśle e-mailem kod, który działa raz, przez 10 minut, w przeglądarce, która o niego poprosiła.</string>
+    <string name="help_code_safe">Nikomu nie podawaj tego kodu. KIFF nigdy Cię o niego nie poprosi.</string>
+    <string name="help_code_title">Logowanie kodem z e-maila</string>
     <string name="home_calendar_not_read">Nie udało się odczytać kalendarza. %1$s</string>
     <string name="home_cant_reach_kiff">Brak połączenia z KIFF</string>
     <string name="home_choose_taf">Wybierz tafa.</string>

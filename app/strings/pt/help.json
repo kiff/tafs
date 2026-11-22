@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Associe a extensão do tafs ao seu telemóvel e um taf pode trabalhar no seu Chrome, só nos sites que permitir. Trabalha em separadores próprios, e tudo o que tenha risco espera por si em {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} lista os seus Chrome e para que serve cada um. Desassociar um Chrome termina as suas ligações.",
+  "help.chrome_title": "O tafs pode trabalhar no seu Chrome",
+  "help.code_lead": "Ative-o em {account} › {sign_in}. Depois, quando o pedir, o KIFF envia-lhe por email um código que serve uma só vez, durante 10 minutos, no navegador que o pediu.",
+  "help.code_safe": "Nunca dê este código a ninguém. O KIFF nunca lho vai pedir.",
+  "help.code_title": "Iniciar sessão com um código por email"
+}

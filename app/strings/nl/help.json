@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Koppel de tafs-extensie aan je telefoon en een taf kan in je Chrome werken, alleen op de sites die je toestaat. Hij werkt in eigen tabbladen, en alles wat risico heeft wacht op je in {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} toont je Chromes en waarvoor elk wordt gebruikt. Een Chrome ontkoppelen beëindigt zijn koppelingen.",
+  "help.chrome_title": "tafs kan in je Chrome werken",
+  "help.code_lead": "Zet het aan in {account} › {sign_in}. Als je erom vraagt, mailt KIFF je daarna een code die één keer werkt, 10 minuten lang, in de browser die erom vroeg.",
+  "help.code_safe": "Geef deze code aan niemand. KIFF vraagt er nooit om.",
+  "help.code_title": "Inloggen met een code per e-mail"
+}

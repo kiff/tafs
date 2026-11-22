@@ -312727,10 +312727,244 @@
     "help.chrome_lead": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقرن إضافة tafs بهاتفك، فيستطيع taf العمل في Chrome الخاص بك، على المواقع التي تسمح بها فقط. يعمل في علامات تبويب خاصة به، وكل ما فيه مخاطرة ينتظرك في %1$@."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs genişlənməsini telefonunuzla cütləşdirin və taf sizin Chrome-da yalnız icazə verdiyiniz saytlarda işləyə bilər. O, öz sekmələrində işləyir, riskli hər şey isə sizi %1$@ bölməsində gözləyir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сдвоете разширението на tafs с телефона си и един taf може да работи във вашия Chrome, само в сайтовете, които разрешите. Работи в собствени раздели, а всичко рисково ви чака в %1$@."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs এক্সটেনশন আপনার ফোনের সঙ্গে জোড়া লাগান, তাহলে একটি taf আপনার Chrome-এ কাজ করতে পারবে, শুধু আপনার অনুমতি দেওয়া সাইটে। এটি নিজের ট্যাবে কাজ করে, আর ঝুঁকিপূর্ণ সবকিছু %1$@-এ আপনার জন্য অপেক্ষা করে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparella l'extensió de tafs amb el teu telèfon i un taf podrà treballar al teu Chrome, només als llocs que permetis. Treballa en pestanyes pròpies, i tot el que comporta risc t'espera a %1$@."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spárujte rozšíření tafs s telefonem a taf může pracovat ve vašem Chrome, jen na webech, které povolíte. Pracuje ve vlastních kartách a vše riskantní na vás čeká v části %1$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppele die tafs-Erweiterung mit deinem Telefon, dann kann ein taf in deinem Chrome arbeiten, nur auf den Seiten, die du erlaubst. Es arbeitet in eigenen Tabs, und alles Riskante wartet bei dir unter %1$@."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in %1$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincula la extensión de tafs con tu teléfono y un taf podrá trabajar en tu Chrome, solo en los sitios que permitas. Trabaja en sus propias pestañas, y todo lo que entrañe riesgo te espera en %1$@."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seo tafsi laiendus oma telefoniga ja taf saab töötada sinu Chrome'is, ainult nendel saitidel, mida lubad. See töötab oma kaartidel ja kõik riskantne ootab sind jaotises %1$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associez l'extension tafs à votre téléphone et un taf peut travailler dans votre Chrome, uniquement sur les sites que vous autorisez. Il travaille dans ses propres onglets, et tout ce qui est risqué vous attend dans %1$@."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "צמדו את התוסף של tafs לטלפון שלכם וה-taf יוכל לעבוד ב-Chrome שלכם, רק באתרים שתתירו. הוא עובד בלשוניות משלו, וכל דבר מסוכן ממתין לכם ב-%1$@."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uparite proširenje tafs s telefonom i taf može raditi u vašem Chromeu, samo na stranicama koje dopustite. Radi u vlastitim karticama, a sve rizično čeka vas u %1$@."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Párosítsd a tafs bővítményt a telefonoddal, és egy taf dolgozhat a Chrome-odban, csak az általad engedélyezett webhelyeken. Saját lapokon dolgozik, és minden kockázatos dolog itt vár rád: %1$@."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Զուգակցեք tafs-ի ընդլայնումը ձեր հեռախոսի հետ, և taf-ը կկարողանա աշխատել ձեր Chrome-ում՝ միայն թույլատրված կայքերում։ Այն աշխատում է իր սեփական ներդիրներում, իսկ ամեն վտանգավոր բան ձեզ սպասում է %1$@-ում։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasangkan ekstensi tafs dengan ponsel Anda dan sebuah taf bisa bekerja di Chrome Anda, hanya di situs yang Anda izinkan. Ia bekerja di tab-nya sendiri, dan semua yang berisiko menunggu Anda di %1$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associa l'estensione di tafs al tuo telefono e un taf potrà lavorare nel tuo Chrome, solo sui siti che consenti. Lavora in schede proprie, e tutto ciò che è rischioso ti aspetta in %1$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs の拡張機能をスマートフォンとペアリングすると、taf があなたの Chrome で作業できます。許可したサイトだけで、専用のタブで作業し、リスクのあることは %1$@ で確認を待ちます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დააწყვილეთ tafs-ის გაფართოება ტელეფონთან და taf იმუშავებს თქვენს Chrome-ში, მხოლოდ იმ საიტებზე, რომლებსაც დაუშვებთ. ის საკუთარ ჩანართებში მუშაობს, ხოლო ყველაფერი სარისკო გელოდებათ განყოფილებაში %1$@."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ផ្គូផ្គងផ្នែកបន្ថែម tafs ជាមួយទូរសព្ទរបស់អ្នក នោះ taf អាចធ្វើការក្នុង Chrome របស់អ្នកបាន តែលើគេហទំព័រដែលអ្នកអនុញ្ញាតប៉ុណ្ណោះ។ វាធ្វើការក្នុងផ្ទាំងផ្ទាល់ខ្លួន ហើយអ្វីគ្រប់យ៉ាងដែលមានហានិភ័យរង់ចាំអ្នកក្នុង %1$@។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 확장 프로그램을 휴대전화와 페어링하면, taf가 내 Chrome에서 일할 수 있습니다. 허용한 사이트에서만 일하고, 자체 탭에서 작업하며, 위험한 일은 %1$@에서 내 확인을 기다립니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຈັບຄູ່ສ່ວນຂະຫຍາຍ tafs ກັບໂທລະສັບຂອງທ່ານ ແລ້ວ taf ຈະເຮັດວຽກໃນ Chrome ຂອງທ່ານໄດ້ ສະເພາະເວັບໄຊທີ່ທ່ານອະນຸຍາດ. ມັນເຮັດວຽກໃນແທັບຂອງມັນເອງ ແລະ ທຸກຢ່າງທີ່ມີຄວາມສ່ຽງຈະລໍຖ້າທ່ານຢູ່ໃນ %1$@."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Susiekite tafs plėtinį su telefonu ir taf galės dirbti jūsų Chrome, tik jūsų leidžiamose svetainėse. Jis dirba savo skirtukuose, o viskas, kas rizikinga, laukia jūsų skiltyje %1$@."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Savieno tafs paplašinājumu pārī ar savu tālruni, un taf varēs strādāt tavā Chrome, tikai tajās vietnēs, ko atļauj. Tas strādā savās cilnēs, un viss riskantais gaida tevi sadaļā %1$@."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спарете го проширувањето на tafs со телефонот и еден taf може да работи во вашиот Chrome, само на страниците што ќе ги дозволите. Работи во свои јазичиња, а сè што е ризично ве чека во %1$@."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs өргөтгөлийг утастайгаа хослуул, тэгвэл taf таны зөвшөөрсөн сайтууд дээр л таны Chrome-д ажиллаж чадна. Тэр өөрийн табуудад ажилладаг бөгөөд эрсдэлтэй бүхэн %1$@-д таныг хүлээнэ."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs एक्सटेन्सनलाई आफ्नो फोनसँग जोड्नुहोस्, अनि taf ले तपाईंको Chrome मा, तपाईंले अनुमति दिएका साइटहरूमा मात्र, काम गर्न सक्छ। यसले आफ्नै ट्याबहरूमा काम गर्छ, र जोखिमयुक्त सबै कुरा %1$@ मा तपाईंको प्रतीक्षामा रहन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppel de tafs-extensie aan je telefoon en een taf kan in je Chrome werken, alleen op de sites die je toestaat. Hij werkt in eigen tabbladen, en alles wat risico heeft wacht op je in %1$@."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Powiąż rozszerzenie tafs z telefonem, a taf będzie mógł pracować w Twoim Chrome, tylko na stronach, które dopuścisz. Pracuje we własnych kartach, a wszystko, co ryzykowne, czeka na Ciebie w %1$@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associe a extensão do tafs ao seu telemóvel e um taf pode trabalhar no seu Chrome, só nos sites que permitir. Trabalha em separadores próprios, e tudo o que tenha risco espera por si em %1$@."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associe a extensão do tafs ao seu telemóvel e um taf pode trabalhar no seu Chrome, só nos sites que permitir. Trabalha em separadores próprios, e tudo o que tenha risco espera por si em %1$@."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asociază extensia tafs cu telefonul tău și un taf poate lucra în Chrome-ul tău, doar pe site-urile pe care le permiți. Lucrează în filele lui, iar tot ce e riscant te așteaptă în %1$@."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spárujte rozšírenie tafs s telefónom a taf môže pracovať vo vašom Chrome, len na weboch, ktoré povolíte. Pracuje vo vlastných kartách a všetko rizikové na vás čaká v časti %1$@."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seznanite razširitev tafs s telefonom in taf bo lahko delal v vašem Chromu, samo na straneh, ki jih dovolite. Dela v svojih zavihkih, vse tvegano pa vas čaka v razdelku %1$@."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çiftoni zgjerimin e tafs me telefonin tuaj dhe një taf mund të punojë në Chrome-in tuaj, vetëm në faqet që lejoni. Punon në skeda të veta, dhe çdo gjë e rrezikshme ju pret te %1$@."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uparite proširenje tafs s telefonom i taf može da radi u vašem Chromeu, samo na sajtovima koje dozvolite. Radi u sopstvenim karticama, a sve rizično čeka vas u %1$@."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "จับคู่ส่วนขยาย tafs กับโทรศัพท์ของคุณ แล้ว taf จะทำงานใน Chrome ของคุณได้ เฉพาะบนเว็บไซต์ที่คุณอนุญาต มันทำงานในแท็บของตัวเอง และทุกอย่างที่เสี่ยงจะรอคุณอยู่ใน %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs uzantısını telefonunla eşleştir; bir taf Chrome'unda, yalnızca izin verdiğin sitelerde çalışabilir. Kendi sekmelerinde çalışır ve riskli olan her şey seni %1$@ bölümünde bekler."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ghép đôi tiện ích tafs với điện thoại của bạn và một taf có thể làm việc trong Chrome của bạn, chỉ trên các trang bạn cho phép. Nó làm việc trong các tab riêng, và mọi việc rủi ro đều chờ bạn ở %1$@."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "將 tafs 擴充功能與您的手機配對，taf 就能在您的 Chrome 中工作，且僅限於您允許的網站。它在自己的分頁中工作，任何有風險的事都會在 %1$@ 等您處理。"
           }
         }
       }
@@ -312738,10 +312972,244 @@
     "help.chrome_manage": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض %1$@ › %2$@ متصفحات Chrome الخاصة بك وما يُستخدم له كل منها. إلغاء إقران Chrome ينهي اتصالاته."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ Chrome-larınızı və hər birinin nə üçün istifadə olunduğunu göstərir. Chrome-un cütləşməsini ləğv etmək onun bağlantılarını bitirir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ показва вашите Chrome и за какво се използва всеки. Премахването на сдвояването на Chrome прекратява връзките му."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ আপনার Chrome-গুলো এবং প্রতিটি কীসের জন্য ব্যবহৃত হয় তা দেখায়। কোনো Chrome-এর জোড়া ছাড়ালে তার সংযোগগুলো শেষ হয়ে যায়।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ llista els teus Chrome i per a què serveix cadascun. Desaparellar un Chrome en acaba les connexions."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ ukazuje vaše Chrome a k čemu který slouží. Zrušením spárování Chrome skončí jeho připojení."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unter %1$@ › %2$@ siehst du deine Chromes und wofür jeder genutzt wird. Beim Entkoppeln eines Chrome enden seine Verbindungen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ › %2$@ lists your Chromes and what each one is used for. Unpairing a Chrome ends its connections."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ muestra tus Chrome y para qué se usa cada uno. Al desvincular un Chrome terminan sus conexiones."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ loetleb sinu Chrome'id ja selle, milleks igaüht kasutatakse. Chrome'i sidumise tühistamine lõpetab selle ühendused."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ liste vos Chrome et à quoi sert chacun. Dissocier un Chrome met fin à ses connexions."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ מציג את ה-Chrome שלכם ולמה כל אחד משמש. ביטול צימוד של Chrome מסיים את החיבורים שלו."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ prikazuje vaše Chromeove i za što se koristi svaki. Prekidom uparivanja Chromea prestaju njegove veze."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ felsorolja a Chrome-jaidat és azt, hogy melyiket mire használod. A Chrome párosításának megszüntetése lezárja a kapcsolatait."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@-ը ցույց է տալիս ձեր Chrome-երը և թե յուրաքանչյուրն ինչի համար է օգտագործվում։ Chrome-ի զուգակցումը չեղարկելը ավարտում է նրա կապերը։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ menampilkan Chrome Anda dan untuk apa masing-masing dipakai. Melepas pasangan sebuah Chrome mengakhiri koneksinya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ elenca i tuoi Chrome e a cosa serve ciascuno. Dissociare un Chrome ne termina le connessioni."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ に、Chrome の一覧とそれぞれの用途が表示されます。Chrome のペアリングを解除すると、その接続も終了します。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ აჩვენებს თქვენს Chrome-ებს და თითოეულის დანიშნულებას. Chrome-ის დაწყვილების გაუქმება მის კავშირებს წყვეტს."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ រាយ Chrome របស់អ្នក និងអ្វីដែលនីមួយៗប្រើសម្រាប់។ ការឈប់ផ្គូផ្គង Chrome បញ្ចប់ការតភ្ជាប់របស់វា។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@에서 내 Chrome 목록과 각각의 용도를 볼 수 있습니다. Chrome의 페어링을 해제하면 그 연결도 끝납니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ ສະແດງ Chrome ຂອງທ່ານ ແລະ ແຕ່ລະອັນໃຊ້ເຮັດຫຍັງ. ການເຊົາຈັບຄູ່ Chrome ຈະສິ້ນສຸດການເຊື່ອມຕໍ່ຂອງມັນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ rodo jūsų Chrome ir kam kiekvienas naudojamas. Atsiejus Chrome, jo ryšiai baigiasi."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ parāda tavus Chrome un to, kam katrs tiek izmantots. Atvienojot Chrome, tā savienojumi beidzas."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ ги прикажува вашите Chrome и за што се користи секој. Раздвојувањето на Chrome ги завршува неговите врски."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ таны Chrome-уудыг болон тус бүрийг юунд ашигладгийг харуулна. Chrome-ийн хослолыг салгавал түүний холболтууд дуусна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ ले तपाईंका Chrome हरू र प्रत्येक के का लागि प्रयोग हुन्छ भनेर देखाउँछ। Chrome को जोडी हटाउँदा त्यसका जडानहरू समाप्त हुन्छन्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ toont je Chromes en waarvoor elk wordt gebruikt. Een Chrome ontkoppelen beëindigt zijn koppelingen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ pokazuje Twoje Chrome i do czego służy każdy z nich. Usunięcie powiązania Chrome kończy jego połączenia."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ lista os seus Chrome e para que serve cada um. Desassociar um Chrome termina as suas ligações."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ lista os seus Chrome e para que serve cada um. Desassociar um Chrome termina as suas ligações."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ listează Chrome-urile tale și la ce folosește fiecare. Disocierea unui Chrome îi încheie conexiunile."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ ukazuje vaše Chrome a na čo ktorý slúži. Zrušením spárovania Chrome sa jeho pripojenia skončia."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ prikaže vaše Chrome in za kaj se vsak uporablja. S prekinitvijo seznanitve Chroma se njegove povezave končajo."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ liston Chrome-et tuaj dhe për çfarë përdoret secili. Heqja e çiftimit të një Chrome-i i mbyll lidhjet."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ prikazuje vaše Chromeove i za šta se koristi svaki. Prekidom uparivanja Chromea prestaju njegove veze."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ แสดงรายการ Chrome ของคุณและสิ่งที่แต่ละตัวใช้ทำ การยกเลิกการจับคู่ Chrome จะสิ้นสุดการเชื่อมต่อของมัน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@, Chrome'larını ve her birinin ne için kullanıldığını listeler. Bir Chrome'un eşleştirmesini kaldırmak bağlantılarını sonlandırır."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ liệt kê các Chrome của bạn và mỗi Chrome dùng để làm gì. Hủy ghép đôi một Chrome sẽ chấm dứt các kết nối của nó."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ 會列出您的 Chrome 以及每個的用途。取消 Chrome 的配對會結束它的連線。"
           }
         }
       }
@@ -312749,10 +313217,244 @@
     "help.chrome_title": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكن لـ tafs العمل في Chrome الخاص بك"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs sizin Chrome-da işləyə bilər"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs може да работи във вашия Chrome"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs আপনার Chrome-এ কাজ করতে পারে"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs pot treballar al teu Chrome"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs může pracovat ve vašem Chrome"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs kann in deinem Chrome arbeiten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "tafs can work in your Chrome"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs puede trabajar en tu Chrome"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs saab töötada sinu Chrome'is"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs peut travailler dans votre Chrome"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs יכול לעבוד ב-Chrome שלך"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs može raditi u vašem Chromeu"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tafs dolgozhat a Chrome-odban"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ը կարող է աշխատել ձեր Chrome-ում"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs bisa bekerja di Chrome Anda"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs può lavorare nel tuo Chrome"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs はあなたの Chrome で作業できます"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs-ს შეუძლია იმუშაოს თქვენს Chrome-ში"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs អាចធ្វើការក្នុង Chrome របស់អ្នកបាន"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs는 내 Chrome에서 일할 수 있습니다"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ເຮັດວຽກໃນ Chrome ຂອງທ່ານໄດ້"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs gali dirbti jūsų Chrome"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs var strādāt tavā Chrome"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs може да работи во вашиот Chrome"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs таны Chrome-д ажиллаж чадна"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ले तपाईंको Chrome मा काम गर्न सक्छ"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs kan in je Chrome werken"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs może pracować w Twoim Chrome"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs pode trabalhar no seu Chrome"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O tafs pode trabalhar no seu Chrome"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs poate lucra în Chrome-ul tău"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs môže pracovať vo vašom Chrome"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs lahko dela v vašem Chromu"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs mund të punojë në Chrome-in tuaj"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs može da radi u vašem Chromeu"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs ทำงานใน Chrome ของคุณได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs Chrome'unda çalışabilir"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs có thể làm việc trong Chrome của bạn"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs 可以在您的 Chrome 中工作"
           }
         }
       }
@@ -312760,10 +313462,244 @@
     "help.code_lead": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعّله في %1$@ › %2$@. بعد ذلك، عندما تطلب، يرسل KIFF بالبريد الإلكتروني رمزًا يعمل مرة واحدة، لمدة 10 دقائق، في المتصفح الذي طلبه."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu %1$@ › %2$@ bölməsində aktiv edin. Sonra istədikdə KIFF bir dəfə, 10 dəqiqə ərzində, onu istəyən brauzerdə işləyən kodu e-poçtla göndərir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включете го в %1$@ › %2$@. След това, когато поискате, KIFF изпраща по имейл код, който важи веднъж, 10 минути, в браузъра, който го е поискал."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এটি %1$@ › %2$@-এ চালু করুন। এরপর আপনি চাইলে KIFF ইমেইলে এমন একটি কোড পাঠায় যা একবারই, ১০ মিনিট, যে ব্রাউজার চেয়েছে তাতে কাজ করে।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa-ho a %1$@ › %2$@. Després, quan ho demanis, KIFF t'envia per correu un codi que serveix una sola vegada, durant 10 minuts, al navegador que l'ha demanat."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapněte to v části %1$@ › %2$@. Pak vám KIFF na požádání pošle e-mailem kód, který platí jednou, 10 minut, v prohlížeči, který o něj požádal."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schalte es unter %1$@ › %2$@ ein. Dann schickt dir KIFF auf Wunsch einen Code per E-Mail, der einmal gilt, 10 Minuten lang, in dem Browser, der ihn angefordert hat."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Turn it on in %1$@ › %2$@. Then, when you ask, KIFF emails a code that works once, for 10 minutes, in the browser that asked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actívalo en %1$@ › %2$@. Después, cuando lo pidas, KIFF te envía por correo un código que sirve una sola vez, durante 10 minutos, en el navegador que lo pidió."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lülita see sisse jaotises %1$@ › %2$@. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activez-le dans %1$@ › %2$@. Ensuite, quand vous le demandez, KIFF envoie par e-mail un code valable une seule fois, pendant 10 minutes, dans le navigateur qui l'a demandé."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "הפעילו זאת ב-%1$@ › %2$@. אחר כך, כשתבקשו, KIFF שולח במייל קוד שפועל פעם אחת, 10 דקות, בדפדפן שביקש אותו."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite to u %1$@ › %2$@. Zatim vam KIFF na zahtjev e-poštom šalje kod koji vrijedi jednom, 10 minuta, u pregledniku koji ga je zatražio."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapcsold be itt: %1$@ › %2$@. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Միացրեք այն %1$@ › %2$@-ում։ Հետո, երբ խնդրեք, KIFF-ը էլ. փոստով կուղարկի կոդ, որը գործում է մեկ անգամ, 10 րոպե, այն դիտարկիչում, որը խնդրել է։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktifkan di %1$@ › %2$@. Setelah itu, saat Anda memintanya, KIFF mengirim kode lewat email yang berlaku sekali, selama 10 menit, di browser yang memintanya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attivalo in %1$@ › %2$@. Poi, quando lo chiedi, KIFF ti manda per email un codice valido una sola volta, per 10 minuti, nel browser che l'ha richiesto."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ でオンにします。その後、依頼すると、KIFF が一度だけ、10 分間、依頼したブラウザーで使えるコードをメールで送ります。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ჩართეთ %1$@ › %2$@-ში. შემდეგ, როცა მოითხოვთ, KIFF ელფოსტით გამოგიგზავნით კოდს, რომელიც მოქმედებს ერთხელ, 10 წუთის განმავლობაში, იმ ბრაუზერში, რომელმაც მოითხოვა."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើវានៅក្នុង %1$@ › %2$@។ បន្ទាប់មក នៅពេលអ្នកស្នើសុំ KIFF នឹងផ្ញើកូដតាមអ៊ីមែលដែលប្រើបានតែម្តង ក្នុងរយៈពេល 10 នាទី នៅក្នុងកម្មវិធីរុករកដែលបានស្នើសុំ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@에서 켜세요. 그다음 요청하면 KIFF가 한 번만, 10분 동안, 요청한 브라우저에서 쓸 수 있는 코드를 이메일로 보냅니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດມັນໃນ %1$@ › %2$@. ຈາກນັ້ນ ເມື່ອທ່ານຂໍ KIFF ຈະສົ່ງລະຫັດທາງອີເມວທີ່ໃຊ້ໄດ້ຄັ້ງດຽວ ພາຍໃນ 10 ນາທີ ໃນບຣາວເຊີທີ່ຂໍ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įjunkite tai skiltyje %1$@ › %2$@. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieslēdz to sadaļā %1$@ › %2$@. Tad, kad pieprasīsi, KIFF nosūtīs e-pastā kodu, kas darbojas vienu reizi, 10 minūtes, pārlūkā, kas to pieprasīja."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вклучете го во %1$@ › %2$@. Потоа, кога ќе побарате, KIFF праќа по е-пошта код што важи еднаш, 10 минути, во прелистувачот што го побарал."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Үүнийг %1$@ › %2$@-д асаа. Дараа нь чи хүсвэл KIFF нэг удаа, 10 минутын турш, хүссэн хөтөч дээр ажиллах кодыг и-мэйлээр илгээнэ."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यसलाई %1$@ › %2$@ मा खोल्नुहोस्। त्यसपछि तपाईंले अनुरोध गर्दा KIFF ले एक पटक मात्र काम गर्ने, १० मिनेटसम्म, अनुरोध गरेको ब्राउजरमा चल्ने कोड इमेलमा पठाउँछ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zet het aan in %1$@ › %2$@. Als je erom vraagt, mailt KIFF je daarna een code die één keer werkt, 10 minuten lang, in de browser die erom vroeg."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz to w %1$@ › %2$@. Potem, gdy o to poprosisz, KIFF wyśle e-mailem kod, który działa raz, przez 10 minut, w przeglądarce, która o niego poprosiła."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative-o em %1$@ › %2$@. Depois, quando o pedir, o KIFF envia-lhe por email um código que serve uma só vez, durante 10 minutos, no navegador que o pediu."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ative-o em %1$@ › %2$@. Depois, quando o pedir, o KIFF envia-lhe por email um código que serve uma só vez, durante 10 minutos, no navegador que o pediu."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează-l în %1$@ › %2$@. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnite to v časti %1$@ › %2$@. Potom vám KIFF na požiadanie pošle e-mailom kód, ktorý platí raz, 10 minút, v prehliadači, ktorý oň požiadal."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vklopite to v razdelku %1$@ › %2$@. Nato vam KIFF na zahtevo pošlje kodo, ki velja enkrat, 10 minut, v brskalniku, ki jo je zahteval."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivizojeni te %1$@ › %2$@. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite to u %1$@ › %2$@. Zatim vam KIFF na zahtev šalje e-poštom kod koji važi jednom, 10 minuta, u pregledaču koji ga je zatražio."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้ที่ %1$@ › %2$@ จากนั้นเมื่อคุณขอ KIFF จะส่งรหัสทางอีเมลที่ใช้ได้ครั้งเดียว ภายใน 10 นาที ในเบราว์เซอร์ที่ขอ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunu %1$@ › %2$@ bölümünden aç. Sonra istediğinde KIFF, bir kez geçerli olan, 10 dakika boyunca, isteyen tarayıcıda çalışan bir kodu e-postayla gönderir."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bật tính năng này ở %1$@ › %2$@. Sau đó, khi bạn yêu cầu, KIFF gửi qua email một mã dùng được một lần, trong 10 phút, trên trình duyệt đã yêu cầu."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 %1$@ › %2$@ 開啟。之後您提出要求時，KIFF 會以電子郵件寄出一組代碼，僅能使用一次、10 分鐘內有效，且只能在提出要求的瀏覽器中使用。"
           }
         }
       }
@@ -312771,10 +313707,244 @@
     "help.code_safe": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تعطِ هذا الرمز لأحد أبدًا. لن يطلبه منك KIFF أبدًا."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kodu heç kimə verməyin. KIFF onu sizdən heç vaxt istəməyəcək."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Никога не давайте този код на никого. KIFF никога няма да ви го поиска."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই কোড কাউকে দেবেন না। KIFF কখনও আপনার কাছে এটি চাইবে না।"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No donis mai aquest codi a ningú. KIFF no te'l demanarà mai."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nikdy tento kód nikomu nesdělujte. KIFF vás o něj nikdy nepožádá."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib diesen Code niemandem weiter. KIFF fragt dich nie danach."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Never give this code to anyone. KIFF will never ask you for it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No le des este código a nadie. KIFF nunca te lo pedirá."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne donnez ce code à personne. KIFF ne vous le demandera jamais."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לעולם אל תיתן את הקוד הזה לאף אחד. KIFF לעולם לא יבקש אותו ממך."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ezt a kódot soha ne add át senkinek. A KIFF soha nem fogja kérni."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Երբեք այս կոդը ոչ մեկին մի տվեք։ KIFF-ը երբեք այն ձեզնից չի խնդրի։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jangan berikan kode ini kepada siapa pun. KIFF tidak akan pernah memintanya dari Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non dare questo codice a nessuno. KIFF non te lo chiederà mai."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このコードは誰にも教えないでください。KIFFがあなたに尋ねることは決してありません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ეს კოდი არავის მისცეთ. KIFF მას არასოდეს მოგთხოვთ."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កុំឱ្យកូដនេះទៅអ្នកណាឡើយ។ KIFF នឹងមិនសុំវាពីអ្នកទេ។"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 코드를 누구에게도 알려 주지 마세요. KIFF는 절대 묻지 않습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຢ່າໃຫ້ລະຫັດນີ້ແກ່ໃຜ. KIFF ຈະບໍ່ເຄີຍຂໍມັນຈາກທ່ານ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niekada neduokite šio kodo niekam. KIFF jo niekada neprašys."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nekad nedod šo kodu nevienam. KIFF to no tevis nekad neprasīs."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Никогаш не го давај овој код никому. KIFF никогаш нема да го побара од тебе."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ кодыг хэнд ч бүү өг. KIFF үүнийг танаас хэзээ ч асуухгүй."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो कोड कसैलाई नदिनुहोस्। KIFF ले तपाईंसँग यो कहिल्यै माग्दैन।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geef deze code aan niemand. KIFF vraagt er nooit om."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nikomu nie podawaj tego kodu. KIFF nigdy Cię o niego nie poprosi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nunca dê este código a ninguém. O KIFF nunca lho vai pedir."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nunca dê este código a ninguém. O KIFF nunca lho vai pedir."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu dați acest cod nimănui. KIFF nu vi-l va cere niciodată."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nikdy tento kód nikomu nedávajte. KIFF vás oň nikdy nepožiada."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te kode nikoli nikomur ne dajte. KIFF je od vas nikoli ne bo zahteval."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t'jua kërkojë kurrë."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อย่าให้รหัสนี้แก่ใคร KIFF จะไม่ขอรหัสนี้จากคุณเลย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kodu kimseye vermeyin. KIFF sizden bunu asla istemez."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đừng đưa mã này cho bất kỳ ai. KIFF sẽ không bao giờ hỏi bạn mã này."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請勿將此代碼給任何人。KIFF 絕不會向您索取。"
           }
         }
       }
@@ -312782,10 +313952,244 @@
     "help.code_title": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول برمز يصل بالبريد الإلكتروني"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-poçtla gələn kodla daxil olun"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход с код по имейл"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ইমেইলে পাওয়া কোড দিয়ে সাইন ইন"
+          }
+        },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia la sessió amb un codi per correu"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přihlášení kódem z e-mailu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem per E-Mail gesendeten Code anmelden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sign in with an emailed code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con un código por correo"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sisselogimine e-kirjaga saadetud koodiga"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter avec un code reçu par e-mail"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כניסה עם קוד שמגיע במייל"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom iz e-pošte"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezés e-mailben kapott kóddal"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Մուտք էլ. փոստով ստացված կոդով"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masuk dengan kode lewat email"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi con un codice via email"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールで届くコードでサインイン"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "შესვლა ელფოსტით მიღებული კოდით"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ចូលដោយកូដដែលផ្ញើតាមអ៊ីមែល"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이메일로 받은 코드로 로그인"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທາງອີເມວ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prisijungimas el. paštu gautu kodu"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pieslēgšanās ar e-pastā saņemtu kodu"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Најава со код по е-пошта"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "И-мэйлээр ирсэн кодоор нэвтрэх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इमेलमा आएको कोडले साइन इन"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met een code per e-mail"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie kodem z e-maila"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com um código por email"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com um código por email"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectare cu un cod primit pe e-mail"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prihlásenie kódom z e-mailu"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava s kodo po e-pošti"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyni me një kod me email"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom iz e-pošte"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-postayla gelen kodla giriş yap"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đăng nhập bằng mã gửi qua email"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用電子郵件寄來的代碼登入"
           }
         }
       }

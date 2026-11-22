@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Çiftoni zgjerimin e tafs me telefonin tuaj dhe një taf mund të punojë në Chrome-in tuaj, vetëm në faqet që lejoni. Punon në skeda të veta, dhe çdo gjë e rrezikshme ju pret te {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} liston Chrome-et tuaj dhe për çfarë përdoret secili. Heqja e çiftimit të një Chrome-i i mbyll lidhjet.",
+  "help.chrome_title": "tafs mund të punojë në Chrome-in tuaj",
+  "help.code_lead": "Aktivizojeni te {account} › {sign_in}. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi.",
+  "help.code_safe": "Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t'jua kërkojë kurrë.",
+  "help.code_title": "Hyni me një kod me email"
+}
