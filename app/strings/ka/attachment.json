@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} ვერ მიმაგრდება.",
+  "attachment.kilobytes": "{size} კბ",
+  "attachment.megabytes": "{size} მბ",
+  "attachment.not_taken": "tafs ვერ მიამაგრებს ამ ფაილს: ის არ არის სახეობა ან ზომა, რომელსაც იღებს. აირჩიეთ სხვა.",
+  "attachment.photo": "ფოტო",
+  "attachment.photo_could_not_read": "ის ფოტო ვერ წაიკითხა.",
+  "attachment.photo_numbered": "ფოტო {n}",
+  "attachment.too_large": "{name} არის {size}; მაქსიმუმია {limit}.",
+  "attachment.wrong_kind": "{name} ვერ მიმაგრდება. შეიძლება ფოტოების, PDF-ების, ტექსტის, CSV-ის, Markdown-ის, Word-ისა და Excel-ის ფაილების მიმაგრება."
+}
