@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Kur një taf kërkon diçka jashtë Card-it të vet, shfaqet këtu dhe në ekranin tuaj të kyçur.",
   "needs_you.expired": "skaduar",
   "needs_you.expired_line": "Skadoi. Askush nuk u përgjigj në kohë, ndaj KIFF e refuzoi dhe asgjë nuk u dërgua.",
+  "needs_you.extra_room": "Hapësirë shtesë",
   "needs_you.extra_room_with": "Hapësirë shtesë me: {biometry}",
   "needs_you.get_alert_when_call_waits": "Merrni një njoftim kur një thirrje pret përgjigjen tuaj, edhe kur tafs është mbyllur.",
   "needs_you.install_from_card": "Instalojeni nga karta e tij: versioni bëhet aktiv, pastaj Coach e merr vesh.",

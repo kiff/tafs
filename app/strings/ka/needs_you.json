@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "როცა taf თავისი Card-ის გარეთ რამეს ითხოვს, ის აქ და თქვენს ჩაკეტილ ეკრანზე გამოჩნდება.",
   "needs_you.expired": "ვადა გაუვიდა",
   "needs_you.expired_line": "ვადა გაუვიდა. ვერავინ უპასუხა დროზე, ამიტომ KIFF-მა უარი თქვა და არაფერი გაიგზავნა.",
+  "needs_you.extra_room": "დამატებითი სივრცე",
   "needs_you.extra_room_with": "დამატებითი სივრცე: {biometry}",
   "needs_you.get_alert_when_call_waits": "მიიღეთ შეტყობინება, როცა ზარი თქვენს პასუხს ელოდება, tafs დახურულიც რომ იყოს.",
   "needs_you.install_from_card": "დააყენეთ მისი ბარათიდან: ვერსია აქტიური ხდება, შემდეგ Coach იგებს.",

@@ -1511,6 +1511,7 @@
     <string name="needs_you_empty_hint">Quando um taf pede algo fora do seu Card, aparece aqui e no seu ecrã bloqueado.</string>
     <string name="needs_you_expired">expirado</string>
     <string name="needs_you_expired_line">Expirado. Ninguém respondeu a tempo, por isso o KIFF recusou e nada foi enviado.</string>
+    <string name="needs_you_extra_room">Margem extra</string>
     <string name="needs_you_extra_room_with">Margem extra com %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Receba um alerta quando uma chamada aguardar a sua resposta, mesmo com o tafs fechado.</string>
     <string name="needs_you_install_from_card">Instale-a a partir do seu cartão: a versão entra em produção e depois o Coach é informado.</string>

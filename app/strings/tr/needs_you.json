@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Bir taf Card'ının dışında bir şey istediğinde burada ve kilit ekranınızda görünür.",
   "needs_you.expired": "süresi doldu",
   "needs_you.expired_line": "Süresi doldu. Kimse zamanında yanıtlamadı, bu yüzden KIFF reddetti ve hiçbir şey gönderilmedi.",
+  "needs_you.extra_room": "Ek pay",
   "needs_you.extra_room_with": "Ek pay: {biometry}",
   "needs_you.get_alert_when_call_waits": "Bir çağrı yanıtınızı beklediğinde, tafs kapalı olsa bile uyarı alın.",
   "needs_you.install_from_card": "Kartından kurun: sürüm yayına girer, sonra Coach haber alır.",

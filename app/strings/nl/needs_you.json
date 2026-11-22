@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Als een taf om iets buiten zijn Card vraagt, verschijnt het hier en op je toegangsscherm.",
   "needs_you.expired": "verlopen",
   "needs_you.expired_line": "Verlopen. Niemand antwoordde op tijd, dus KIFF heeft het geweigerd en is er niets verzonden.",
+  "needs_you.extra_room": "Extra ruimte",
   "needs_you.extra_room_with": "Extra ruimte met {biometry}",
   "needs_you.get_alert_when_call_waits": "Krijg een melding als een aanroep op je antwoord wacht, ook als tafs gesloten is.",
   "needs_you.install_from_card": "Installeer het vanaf de kaart: de versie gaat live, daarna hoort Coach het.",

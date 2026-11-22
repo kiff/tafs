@@ -1452,6 +1452,7 @@
     <string name="needs_you_empty_hint">taf가 Card 밖의 일을 요청하면 여기와 잠금 화면에 표시됩니다.</string>
     <string name="needs_you_expired">만료됨</string>
     <string name="needs_you_expired_line">만료되었습니다. 제때 답변한 사람이 없어 KIFF가 거절했고, 아무것도 보내지 않았습니다.</string>
+    <string name="needs_you_extra_room">추가 허용</string>
     <string name="needs_you_extra_room_with">%1$s(으)로 추가 허용</string>
     <string name="needs_you_get_alert_when_call_waits">호출이 내 답변을 기다리면, tafs를 닫아 두어도 알림을 받습니다.</string>
     <string name="needs_you_install_from_card">카드에서 설치하세요. 버전이 적용된 뒤 Coach에게 전달됩니다.</string>

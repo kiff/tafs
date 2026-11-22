@@ -1452,6 +1452,7 @@
     <string name="needs_you_empty_hint">Khi một taf yêu cầu điều gì ngoài Card của nó, yêu cầu hiện ở đây và trên màn hình khóa của bạn.</string>
     <string name="needs_you_expired">đã hết hạn</string>
     <string name="needs_you_expired_line">Đã hết hạn. Không ai trả lời kịp thời nên KIFF đã từ chối và không có gì được gửi.</string>
+    <string name="needs_you_extra_room">Thêm hạn mức</string>
     <string name="needs_you_extra_room_with">Thêm hạn mức bằng %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Nhận cảnh báo khi một lệnh gọi chờ bạn trả lời, kể cả khi tafs đã đóng.</string>
     <string name="needs_you_install_from_card">Cài đặt từ thẻ của nó: phiên bản bắt đầu hoạt động, rồi Coach được biết.</string>

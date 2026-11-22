@@ -1570,6 +1570,7 @@
     <string name="needs_you_empty_hint">Când un taf cere ceva în afara Cardului său, apare aici și pe ecranul de blocare.</string>
     <string name="needs_you_expired">expirat</string>
     <string name="needs_you_expired_line">Expirat. Nimeni nu a răspuns la timp, așa că KIFF l-a refuzat și nu s-a trimis nimic.</string>
+    <string name="needs_you_extra_room">Spațiu suplimentar</string>
     <string name="needs_you_extra_room_with">Spațiu suplimentar cu %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Primiți o alertă când un apel așteaptă răspunsul dvs., chiar și cu tafs închis.</string>
     <string name="needs_you_install_from_card">Instalați-o din cardul ei: versiunea devine activă, apoi Coach află.</string>

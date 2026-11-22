@@ -1511,6 +1511,7 @@
     <string name="needs_you_empty_hint">Kur një taf kërkon diçka jashtë Card-it të vet, shfaqet këtu dhe në ekranin tuaj të kyçur.</string>
     <string name="needs_you_expired">skaduar</string>
     <string name="needs_you_expired_line">Skadoi. Askush nuk u përgjigj në kohë, ndaj KIFF e refuzoi dhe asgjë nuk u dërgua.</string>
+    <string name="needs_you_extra_room">Hapësirë shtesë</string>
     <string name="needs_you_extra_room_with">Hapësirë shtesë me: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Merrni një njoftim kur një thirrje pret përgjigjen tuaj, edhe kur tafs është mbyllur.</string>
     <string name="needs_you_install_from_card">Instalojeni nga karta e tij: versioni bëhet aktiv, pastaj Coach e merr vesh.</string>

@@ -1511,6 +1511,7 @@
     <string name="needs_you_empty_hint">როცა taf თავისი Card-ის გარეთ რამეს ითხოვს, ის აქ და თქვენს ჩაკეტილ ეკრანზე გამოჩნდება.</string>
     <string name="needs_you_expired">ვადა გაუვიდა</string>
     <string name="needs_you_expired_line">ვადა გაუვიდა. ვერავინ უპასუხა დროზე, ამიტომ KIFF-მა უარი თქვა და არაფერი გაიგზავნა.</string>
+    <string name="needs_you_extra_room">დამატებითი სივრცე</string>
     <string name="needs_you_extra_room_with">დამატებითი სივრცე: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">მიიღეთ შეტყობინება, როცა ზარი თქვენს პასუხს ელოდება, tafs დახურულიც რომ იყოს.</string>
     <string name="needs_you_install_from_card">დააყენეთ მისი ბარათიდან: ვერსია აქტიური ხდება, შემდეგ Coach იგებს.</string>

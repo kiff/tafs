@@ -1452,6 +1452,7 @@
     <string name="needs_you_empty_hint">tafがCardの範囲外のことを求めると、こことロック画面に表示されます。</string>
     <string name="needs_you_expired">期限切れ</string>
     <string name="needs_you_expired_line">期限切れです。時間内に誰も回答しなかったため、KIFFが拒否し、何も送信されませんでした。</string>
+    <string name="needs_you_extra_room">枠を追加</string>
     <string name="needs_you_extra_room_with">%1$sで枠を追加</string>
     <string name="needs_you_get_alert_when_call_waits">tafsを閉じていても、呼び出しが回答を待っているときに通知を受け取ります。</string>
     <string name="needs_you_install_from_card">カードからインストールしてください。バージョンが適用された後、Coachに伝わります。</string>

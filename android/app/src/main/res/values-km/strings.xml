@@ -1452,6 +1452,7 @@
     <string name="needs_you_empty_hint">នៅពេល taf សុំអ្វីក្រៅពី Card របស់វា វាបង្ហាញនៅទីនេះ និងលើអេក្រង់ចាក់សោរបស់អ្នក។</string>
     <string name="needs_you_expired">ផុតកំណត់</string>
     <string name="needs_you_expired_line">ផុតកំណត់។ គ្មាននរណាឆ្លើយទាន់ពេលទេ ដូច្នេះ KIFF បានបដិសេធ ហើយគ្មានអ្វីត្រូវបានផ្ញើទេ។</string>
+    <string name="needs_you_extra_room">កន្លែងបន្ថែម</string>
     <string name="needs_you_extra_room_with">កន្លែងបន្ថែមដោយ %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">ទទួលការជូនដំណឹងនៅពេលការហៅមួយរង់ចាំចម្លើយរបស់អ្នក ទោះ tafs បិទក៏ដោយ។</string>
     <string name="needs_you_install_from_card">ដំឡើងវាពីកាតរបស់វា៖ កំណែចាប់ផ្តើមដំណើរការ បន្ទាប់មក Coach ដឹង។</string>

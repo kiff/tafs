@@ -1511,6 +1511,7 @@
     <string name="needs_you_empty_hint">Kui taf küsib midagi väljaspool oma Cardi, ilmub see siia ja sinu lukustuskuvale.</string>
     <string name="needs_you_expired">aegunud</string>
     <string name="needs_you_expired_line">Aegunud. Keegi ei vastanud õigel ajal, seega KIFF keeldus ja midagi ei saadetud.</string>
+    <string name="needs_you_extra_room">Lisaruum</string>
     <string name="needs_you_extra_room_with">Lisaruum %1$s abil</string>
     <string name="needs_you_get_alert_when_call_waits">Saa teavitus, kui päring ootab sinu vastust, isegi kui tafs on suletud.</string>
     <string name="needs_you_install_from_card">Paigalda see selle kaardilt: versioon võetakse kasutusele, siis saab Coach teada.</string>

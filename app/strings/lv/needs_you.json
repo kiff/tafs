@@ -34,6 +34,7 @@
   "needs_you.empty_hint": "Kad taf lūdz kaut ko ārpus savas Card, tas parādās šeit un tavā bloķēšanas ekrānā.",
   "needs_you.expired": "beidzies",
   "needs_you.expired_line": "Beidzies. Neviens laikus neatbildēja, tāpēc KIFF to atteica un nekas netika nosūtīts.",
+  "needs_you.extra_room": "Papildu rezerve",
   "needs_you.extra_room_with": "Papildu rezerve ar {biometry}",
   "needs_you.get_alert_when_call_waits": "Saņem paziņojumu, kad izsaukums gaida tavu atbildi, pat ja tafs ir aizvērts.",
   "needs_you.install_from_card": "Instalē to no tās kartītes: versija tiek laista darbā, tad Coach par to uzzina.",

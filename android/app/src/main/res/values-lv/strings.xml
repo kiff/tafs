@@ -1570,6 +1570,7 @@
     <string name="needs_you_empty_hint">Kad taf lūdz kaut ko ārpus savas Card, tas parādās šeit un tavā bloķēšanas ekrānā.</string>
     <string name="needs_you_expired">beidzies</string>
     <string name="needs_you_expired_line">Beidzies. Neviens laikus neatbildēja, tāpēc KIFF to atteica un nekas netika nosūtīts.</string>
+    <string name="needs_you_extra_room">Papildu rezerve</string>
     <string name="needs_you_extra_room_with">Papildu rezerve ar %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Saņem paziņojumu, kad izsaukums gaida tavu atbildi, pat ja tafs ir aizvērts.</string>
     <string name="needs_you_install_from_card">Instalē to no tās kartītes: versija tiek laista darbā, tad Coach par to uzzina.</string>

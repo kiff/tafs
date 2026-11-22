@@ -37,6 +37,7 @@
   "needs_you.empty_hint": "عندما يطلب taf شيئًا خارج Card الخاصة به، يظهر هنا وعلى شاشة القفل لديك.",
   "needs_you.expired": "انتهت مهلته",
   "needs_you.expired_line": "انتهت المهلة. لم يرد أحد في الوقت المناسب فرفضه KIFF ولم يُرسل شيء.",
+  "needs_you.extra_room": "مساحة إضافية",
   "needs_you.extra_room_with": "مساحة إضافية بـ {biometry}",
   "needs_you.get_alert_when_call_waits": "احصل على تنبيه عندما ينتظر طلب استدعاء ردك، حتى مع إغلاق tafs.",
   "needs_you.install_from_card": "ثبّته من بطاقته: تصبح النسخة فعّالة ثم يعلم Coach.",

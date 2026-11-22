@@ -1747,6 +1747,7 @@
     <string name="needs_you_empty_hint">عندما يطلب taf شيئًا خارج Card الخاصة به، يظهر هنا وعلى شاشة القفل لديك.</string>
     <string name="needs_you_expired">انتهت مهلته</string>
     <string name="needs_you_expired_line">انتهت المهلة. لم يرد أحد في الوقت المناسب فرفضه KIFF ولم يُرسل شيء.</string>
+    <string name="needs_you_extra_room">مساحة إضافية</string>
     <string name="needs_you_extra_room_with">مساحة إضافية بـ %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">احصل على تنبيه عندما ينتظر طلب استدعاء ردك، حتى مع إغلاق tafs.</string>
     <string name="needs_you_install_from_card">ثبّته من بطاقته: تصبح النسخة فعّالة ثم يعلم Coach.</string>

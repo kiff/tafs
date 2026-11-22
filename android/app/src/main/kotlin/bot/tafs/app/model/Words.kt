@@ -1546,6 +1546,7 @@ object Words {
     val emptyHint: String get() = Res.s(R.string.needs_you_empty_hint)
     val expired: String get() = Res.s(R.string.needs_you_expired)
     val expiredLine: String get() = Res.s(R.string.needs_you_expired_line)
+    val extraRoom: String get() = Res.s(R.string.needs_you_extra_room)
     fun extraRoomWith(biometry: String): String = Res.s(R.string.needs_you_extra_room_with, biometry)
     val getAlertWhenCallWaits: String get() = Res.s(R.string.needs_you_get_alert_when_call_waits)
     val installFromCard: String get() = Res.s(R.string.needs_you_install_from_card)

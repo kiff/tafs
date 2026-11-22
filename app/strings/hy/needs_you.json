@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Երբ taf-ը իր Card-ից դուրս որևէ բան է խնդրում, այն երևում է այստեղ և ձեր կողպված էկրանին։",
   "needs_you.expired": "ժամկետը լրացել է",
   "needs_you.expired_line": "Ժամկետը լրացավ։ Ոչ ոք ժամանակին չպատասխանեց, ուստի KIFF-ը մերժեց, և ոչինչ չուղարկվեց։",
+  "needs_you.extra_room": "Լրացուցիչ տարածք",
   "needs_you.extra_room_with": "Լրացուցիչ տարածք՝ {biometry}",
   "needs_you.get_alert_when_call_waits": "Ստացեք ծանուցում, երբ զանգը սպասում է ձեր պատասխանին, նույնիսկ երբ tafs-ը փակ է։",
   "needs_you.install_from_card": "Տեղադրեք այն իր քարտից․ տարբերակը դառնում է ակտիվ, ապա Coach-ը իմանում է։",

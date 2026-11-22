@@ -1511,6 +1511,7 @@
     <string name="needs_you_empty_hint">When a taf asks for something outside its Card, it shows up here and on your lock screen.</string>
     <string name="needs_you_expired">expired</string>
     <string name="needs_you_expired_line">Expired. Nobody answered in time, so KIFF refused it and nothing was sent.</string>
+    <string name="needs_you_extra_room">Extra room</string>
     <string name="needs_you_extra_room_with">Extra room with %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Get an alert when a call waits for your answer, even with tafs closed.</string>
     <string name="needs_you_install_from_card">Install it from its card: the version goes live, then Coach hears.</string>
