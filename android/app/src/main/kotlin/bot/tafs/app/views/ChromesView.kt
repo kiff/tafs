@@ -194,6 +194,8 @@ fun ChromesSheet(
                   Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(chrome.name, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                     if (!chrome.browser.isNullOrBlank()) Text(Words.Chrome.browserOn(browser = chrome.browser, system = chrome.os.orEmpty()), style = scaled(13, color = Theme.dim))
+                    // What it's used for ("Your Chrome" 4): the sites of the connections planque lists on it.
+                    bot.tafs.app.kiff.chromeSites(chrome.connections).takeIf { it.isNotEmpty() }?.let { Text(Words.Chrome.usedFor(sites = it), style = scaled(13, color = Theme.soft)) }
                   }
                   Text(Words.Chrome.remove, style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { removing = chrome }.padding(top = 8.dp))
                 }
@@ -221,6 +223,8 @@ fun ChromesSheet(
     bot.tafs.app.drive.DriveAlert(
       onDismissRequest = { removing = null },
       title = { Text(Words.Chrome.removeNamed(name = chrome.name)) },
+      // What unpairing ends ("Your Chrome" 3): the connections planque lists on it, which come back only by connecting again.
+      text = bot.tafs.app.kiff.chromeSites(chrome.connections).takeIf { it.isNotEmpty() }?.let { ends -> { Text(Words.Chrome.unpairEnds(sites = ends)) } },
       confirmButton = { TextButton(onClick = { removing = null; scope.launch { remove(chrome) } }, modifier = Modifier.confirms()) { Text(Words.Chrome.remove, color = Theme.no) } },
       dismissButton = { TextButton({ removing = null }) { Text(Words.Common.cancel) } },
     )

@@ -247,25 +247,26 @@ object ChromePairing {
   }.getOrDefault(false)
 
   /**
-   * What a re-pairing carries from [oldChrome] (docs/chrome.md "Your Chrome" 1): each connection on it whose sites this phone
-   * signed for it, read from the phone's own signature (`chrome_sites_sig`), checked here with [approvalKeyDER], never from
-   * planque's list as given. A connection whose signature doesn't hold, or that has none (one carried before), isn't carried:
-   * it ends with the old Chrome. Ended or failed connections aren't carried either; planque refuses them. That status rule is
-   * the app's until planque lists each Chrome's live connections ("Your Chrome" 4), as iOS's `ChromeConnections.on`.
+   * What a re-pairing carries from [old] (docs/chrome.md "Your Chrome" 1): of the live connections planque lists on it
+   * (`connections`, planque's rule, never the app's), each whose sites this phone signed for it, read from the phone's own
+   * signature (`chrome_sites_sig`) and checked here with [approvalKeyDER], never from planque's word. One whose signature doesn't
+   * hold, or that has none (one carried before), isn't carried: it ends with the old Chrome. At most the extension's limits
+   * (50 connections, 100 sites each).
    */
-  fun carriedFrom(oldChrome: String, grants: List<Grant>, approvalKeyDER: ByteArray): List<Carried> =
-    grants.mapNotNull { g ->
+  fun carriedFrom(old: Chrome, grants: List<Grant>, approvalKeyDER: ByteArray): List<Carried> {
+    val live = old.connections.orEmpty().map { it.grant }.toSet()
+    return grants.mapNotNull { g ->
       val b = g.request.browser
       val sites = b?.sites.orEmpty()
       val sig = g.chromeSitesSig
       when {
-        b?.driver != GrantBrowser.EXTENSION || b.chrome != oldChrome -> null
-        g.status == "disconnected" || g.status == "failed" -> null
-        sites.isEmpty() || sig.isNullOrEmpty() -> null
-        !verifiesRaw(approvalKeyDER, sitesBytes(oldChrome, g.id, sites), sig) -> null
+        g.id !in live || b?.driver != GrantBrowser.EXTENSION || b.chrome != old.id -> null
+        sites.isEmpty() || sites.size > 100 || sig.isNullOrEmpty() -> null
+        !verifiesRaw(approvalKeyDER, sitesBytes(old.id, g.id, sites), sig) -> null
         else -> Carried(g.id, sites)
       }
-    }
+    }.take(50)
+  }
 
   /**
    * What the pick starts on, as iOS's `ChromeReplace.preselect`: the paired Chrome whose profile id is the offer's; else, when one

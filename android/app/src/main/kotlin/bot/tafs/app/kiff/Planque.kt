@@ -794,7 +794,20 @@ data class Chrome(
   @SerialName("paired_at") val pairedAt: String? = null,
   /** The id the extension keeps for its Chrome profile, a hint only: a new pairing with the same one is that Chrome again. */
   @SerialName("profile_id") val profileId: String? = null,
+  /**
+   * Its live connections, as planque decides them ("Your Chrome" 3 and 4): asked for or approved, not ended or failed. What
+   * unpairing it ends, and the only connections a re-pairing can carry. Null from a planque that doesn't list them yet.
+   */
+  val connections: List<ChromeConnection>? = null,
 )
+
+/** A connection a Chrome runs, as planque lists it: its grant, the taf's name, and its sites. */
+@Serializable
+data class ChromeConnection(val grant: String, val name: String = "", val sites: List<String>? = null)
+
+/** The sites of [connections], each once, in planque's order, as the owner reads them: "wikipedia.org, shop.example". */
+fun chromeSites(connections: List<ChromeConnection>?): String =
+  connections.orEmpty().flatMap { it.sites.orEmpty() }.distinct().joinToString(", ")
 
 @Serializable
 private data class ChromeList(val chromes: List<Chrome> = emptyList())

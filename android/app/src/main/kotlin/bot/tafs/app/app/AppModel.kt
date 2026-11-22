@@ -4340,7 +4340,7 @@ class AppModel(
    * for [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]), the same list [confirmChrome] signs.
    */
   fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<String> =
-    bot.tafs.app.kiff.ChromePairing.carriedFrom(old.id, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
+    bot.tafs.app.kiff.ChromePairing.carriedFrom(old, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
 
   suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String, replaces: bot.tafs.app.kiff.Chrome? = null): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
@@ -4357,7 +4357,7 @@ class AppModel(
     val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
     // A re-pairing (docs/chrome.md "Your Chrome" 1): the connections that move are those this phone signed for the replaced
     // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them.
-    val carried = replaces?.let { pairing.carriedFrom(it.id, _state.value.grants, phoneKey) }.orEmpty()
+    val carried = replaces?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
     val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey).copy(carried = carried)
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and

@@ -173,9 +173,31 @@ class ChromePairingTest {
       grant("g_ended", "chr_old", wiki, sig(phone.private, "chr_old", "g_ended", wiki), status = "disconnected"),
       grant("g_carried_before", "chr_old", wiki, null),
     )
-    val carried = ChromePairing.carriedFrom("chr_old", grants, phone.public.encoded)
-    assertEquals("only a connection on the old Chrome whose sites this phone's own key signed, as listed",
+    // planque's live list for the old Chrome: the ended one isn't on it. A grant it doesn't list moves nothing, even signed.
+    val live = listOf("g_ok", "g_other_key", "g_wider", "g_carried_before").map { bot.tafs.app.kiff.ChromeConnection(it, "Rae", wiki) }
+    val old = bot.tafs.app.kiff.Chrome("chr_old", "Work", connections = live)
+    val carried = ChromePairing.carriedFrom(old, grants, phone.public.encoded)
+    assertEquals("only a connection planque lists live on the old Chrome whose sites this phone's own key signed",
       listOf(ChromePairing.Carried("g_ok", wiki)), carried)
+    assertEquals("not listed live: not carried", emptyList<ChromePairing.Carried>(),
+      ChromePairing.carriedFrom(old.copy(connections = live.drop(1)), grants, phone.public.encoded))
+    assertEquals("a planque that lists no connections: nothing moves", emptyList<ChromePairing.Carried>(),
+      ChromePairing.carriedFrom(old.copy(connections = null), grants, phone.public.encoded))
+    assertEquals("no key to verify with: nothing moves", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(old, grants, ByteArray(0)))
+    val many = (0 until 60).map { grant("m$it", "chr_old", listOf("s$it.example"), sig(phone.private, "chr_old", "m$it", listOf("s$it.example"))) }
+    val manyOld = old.copy(connections = many.map { bot.tafs.app.kiff.ChromeConnection(it.id) })
+    assertEquals("the extension keeps at most 50", 50, ChromePairing.carriedFrom(manyOld, many, phone.public.encoded).size)
+  }
+
+  @Test fun aChromesConnectionsAreReadAsPlanqueListsThem() {
+    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+    val c = json.decodeFromString(bot.tafs.app.kiff.Chrome.serializer(),
+      """{"chrome_id":"chr_1","name":"Work","connections":[{"grant":"g1","name":"Rae","sites":["wikipedia.org","shop.example"]},{"grant":"g2","name":"Bo","sites":["wikipedia.org"]},{"grant":"g3","name":"Al","sites":null}]}""")
+    assertEquals(listOf("g1", "g2", "g3"), c.connections!!.map { it.grant })
+    assertEquals("each site once, in planque's order", "wikipedia.org, shop.example", bot.tafs.app.kiff.chromeSites(c.connections))
+    val older = json.decodeFromString(bot.tafs.app.kiff.Chrome.serializer(), """{"chrome_id":"chr_1","name":"Work"}""")
+    assertNull(older.connections)
+    assertEquals("", bot.tafs.app.kiff.chromeSites(older.connections))
   }
 
   @Test fun theReplacedChromeIsTheOneWithTheOffersProfileIdElseNone() {

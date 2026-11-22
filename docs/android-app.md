@@ -1518,14 +1518,19 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   **Replaces** (`chrome.replace_title`): each paired Chrome, and "A new Chrome (replaces none)". The pick starts on the Chrome
   with the offer's `profile_id`; else, when one side has no id, the one paired Chrome on the same browser and system; else
   none, never a guess between two (`ChromePairing.replacedBy`, as iOS's `ChromeReplace.preselect`). With a Chrome picked:
-  - "Moves to this Chrome: {sites}" lists what moves. That is only each connection whose `chrome_sites_sig` (this phone's own
-    signature at approval) verifies with this phone's approval key for the old Chrome (`ChromePairing.carriedFrom`,
-    `AppModel.chromeMoves`). Never planque's list as given. Another key's, another Chrome's, wider sites, an ended
-    connection, one carried before (no signature of its own): none move.
+  - "Moves to this Chrome: {sites}" lists what moves. That is only each connection planque lists live on the old Chrome whose
+    `chrome_sites_sig` (this phone's own signature at approval) verifies with this phone's approval key for that Chrome
+    (`ChromePairing.carriedFrom`, `AppModel.chromeMoves`), at most 50. Never planque's sites as given. Another key's, another
+    Chrome's, wider sites, one not listed live, one carried before (no signature of its own): none move.
   - "{name} is unpaired once this one is paired." The connections that don't move end with it, as Unpair does.
   - The confirm sends `replaces` to planque, and `carried: [{grant, sites}]` goes inside the signed pairing body the extension
     checks, so planque can't change it. With "A new Chrome" picked, it's a first pairing, as before.
-- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- **Each Chrome says what it's used for** ("Your Chrome" 4): "Used for {sites}" (`chrome.used_for`), the sites of the
+  `connections` planque lists on it (`Chrome.connections`, `chromeSites`). planque decides which are live (asked for or
+  approved, not ended or failed), so the app keeps no status rule of its own. A planque that doesn't list them shows nothing.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. Its question says what it ends, from the same
+  list: "Unpairing ends the connections that use it: {sites}…" (`chrome.unpair_ends`). The extension wipes itself at its next
+  connect.
 - **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
   `GrantRequest.browser`) sends `chrome_sites_sig` with the approve body: the approval key's signature over
   `tafs-chrome/sites/v1` of `{chrome_id, grant, sites}` (`ChromePairing.sitesSignature`), raw `r‖s`, signed behind that
