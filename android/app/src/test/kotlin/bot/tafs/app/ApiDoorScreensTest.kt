@@ -172,6 +172,26 @@ class ApiDoorScreensTest {
     assertEquals("order · string", draftField(bot.tafs.app.kiff.DoorDraft.Field("order", "string")))
   }
 
+  /**
+   * The Chrome pairing code's Copy (the owner's ask, 22 Nov): copied as a key is, under its own label, marked sensitive and off
+   * the clipboard after its time, never the person's next copy.
+   */
+  @Test fun aCopiedChromePairingCodeIsSensitiveAndGoneAfterItsMinute() {
+    val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)
+    val code = "DK8M-QYKG-4MEK-4QRV-FC9X-6"
+    copyKeyForAMinute(context, code, after = 10, label = bot.tafs.app.views.CHROME_CODE_CLIP)
+    assertEquals(code, clipboard.primaryClip?.getItemAt(0)?.text)
+    assertEquals(bot.tafs.app.views.CHROME_CODE_CLIP, clipboard.primaryClipDescription?.label)
+    assertTrue(clipboard.primaryClipDescription!!.extras!!.getBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE))
+    ShadowLooper.idleMainLooper(1, java.util.concurrent.TimeUnit.SECONDS)
+    assertFalse("the code is off the clipboard after its time", clipboard.hasPrimaryClip() && clipboard.primaryClip?.getItemAt(0)?.text == code)
+    copyKeyForAMinute(context, code, after = 10, label = bot.tafs.app.views.CHROME_CODE_CLIP)
+    clipboard.setPrimaryClip(android.content.ClipData.newPlainText("note", "mine"))
+    ShadowLooper.idleMainLooper(1, java.util.concurrent.TimeUnit.SECONDS)
+    assertEquals("mine", clipboard.primaryClip?.getItemAt(0)?.text)
+  }
+
   @Test fun aCopiedKeyIsSensitiveAndGoneAfterAMinuteButNeverThePersonsNextCopy() {
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val clipboard = context.getSystemService(android.content.ClipboardManager::class.java)

@@ -251,6 +251,14 @@ data class AppState(
   /** Why the Chromes couldn't be read, or a pairing or an unpair didn't go through, in the person's words. */
   val chromesError: String? = null,
   /**
+   * The person's code sign-in setting (Account › Sign-in, kiff/cloud `GET /v1/me/sign-in`), or null until read, and while KIFF
+   * has no such route (404): then Account shows no Sign-in section. KIFF decides, never the app.
+   */
+  val codeSignIn: bot.tafs.app.kiff.CodeSignIn? = null,
+  /** Why the setting couldn't be read, or didn't change, in the person's words. */
+  val codeSignInError: String? = null,
+  val codeSignInBusy: Boolean = false,
+  /**
    * KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the person has another
    * device that approves, so it gains none here. Approving takes a new sign-in on this phone, or the other phone.
    */
@@ -3953,7 +3961,12 @@ class AppModel(
       if (generation == accountGeneration) _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
+    if (generation != accountGeneration) return
+    val wasReady = _state.value.planqueReady
+    _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
+    // Account reads the Chromes when it opens, and a read before planque is ready gets nothing: opened in the first seconds after
+    // launch, its Chrome row stayed hidden (the owner's pairing run, 22 Nov). So the first time planque is ready, they're read.
+    if (!wasReady && _state.value.chromes == null) refreshChromes()
   }
 
   /** What an approval needs to be shown: planque's grant and KIFF's draft, read when Coach's thread is. */
@@ -4168,6 +4181,47 @@ class AppModel(
       planque.signer = null
     }
   }
+
+  /** Reads the person's code sign-in setting (Account › Sign-in). A KIFF without the route (404) leaves the section out. */
+  suspend fun loadCodeSignIn() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    try {
+      val setting = kiff.codeSignIn()
+      if (generation == accountGeneration) _state.update { it.copy(codeSignIn = setting, codeSignInError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: KiffError.Server) {
+      if (generation != accountGeneration) return
+      if (e.status == 404) _state.update { it.copy(codeSignIn = null, codeSignInError = null) }
+      else _state.update { it.copy(codeSignInError = Words.Settings.SignInCode.notLoaded(why = ErrorWords.of(e))) }
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(codeSignInError = Words.Settings.SignInCode.notLoaded(why = ErrorWords.of(e))) }
+    }
+  }
+
+  /**
+   * Turns code sign-in off, straight from the app: it needs no recent sign-in, and KIFF emails the person about the change.
+   * Turning it on opens KIFF's own page instead (`KiffClient.codeSignInPage`), and the setting is read again on return.
+   */
+  suspend fun turnCodeSignInOff() {
+    if (_state.value.mode != Mode.kiff || _state.value.codeSignInBusy) return
+    val generation = accountGeneration
+    _state.update { it.copy(codeSignInBusy = true) }
+    try {
+      val setting = kiff.turnCodeSignInOff()
+      if (generation == accountGeneration) _state.update { it.copy(codeSignIn = setting, codeSignInError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(codeSignInError = Words.Settings.SignInCode.notChanged(why = ErrorWords.of(e))) }
+    } finally {
+      _state.update { it.copy(codeSignInBusy = false) }
+    }
+  }
+
+  /** KIFF's page where the person turns code sign-in on. */
+  val codeSignInPage: String get() = kiff.codeSignInPage
 
   suspend fun refreshChromes() {
     val generation = accountGeneration

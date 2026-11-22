@@ -4411,6 +4411,32 @@ enum Words {
         }
         /// Sign in again to register this phone's approval key.
         static var signInAgainWhy: String { Words.line("settings.sign_in_again_why") }
+        enum SignInCode {
+            /// When it's on, you can sign in with a code sent to your email instead of Apple, Google or GitHub. It's off unless you turn it on, and turning it on needs a recent sign-in.
+            static var help: String { Words.line("settings.sign_in_code.help") }
+            /// Sign in with a code sent by email
+            static var label: String { Words.line("settings.sign_in_code.label") }
+            /// Signing in with a code isn't available yet.
+            static var notAvailable: String { Words.line("settings.sign_in_code.not_available") }
+            /// It didn't change. {why}
+            static func notChanged(why: String) -> String { Words.line("settings.sign_in_code.not_changed", why) }
+            /// Couldn't load this setting. {why}
+            static func notLoaded(why: String) -> String { Words.line("settings.sign_in_code.not_loaded", why) }
+            /// Off
+            static var off: String { Words.line("settings.sign_in_code.off") }
+            /// On
+            static var on: String { Words.line("settings.sign_in_code.on") }
+            /// Saved. We emailed you about the change.
+            static var saved: String { Words.line("settings.sign_in_code.saved") }
+            /// Sign-in
+            static var title: String { Words.line("settings.sign_in_code.title") }
+            /// Turn off
+            static var turnOff: String { Words.line("settings.sign_in_code.turn_off") }
+            /// Turn on
+            static var turnOn: String { Words.line("settings.sign_in_code.turn_on") }
+            /// Turning it on opens KIFF's sign-in page, where you confirm it's you.
+            static var turnOnInBrowser: String { Words.line("settings.sign_in_code.turn_on_in_browser") }
+        }
         /// Sign out
         static var signOut: String { Words.line("settings.sign_out") }
         enum SignOutOfKiff {

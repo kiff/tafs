@@ -4,6 +4,9 @@ import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { parseCode } from "../src/pairing.js";
 import "../src/mask.js";
 
 const { maskText, maskURL } = globalThis.TafsMask;
@@ -186,4 +189,45 @@ test("every locale has English's keys and placeholders, and a description Chrome
     }
     assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
   }
+});
+
+test("the side panel's code field holds a whole pasted code, dashes and spaces included, and the extension reads it", () => {
+  const shown = "K7QF-29XM-DPQR-STVW-XYZ2-3";
+  const html = readFileSync(new URL("../sidepanel/index.html", import.meta.url), "utf8");
+  const max = Number(/<input id="code"[^>]*maxlength="(\d+)"/.exec(html)[1]);
+  assert.ok(max >= shown.length, "a code with its dashes fits");
+  assert.ok(max >= shown.replace(/-/g, " ").length + 4, "room for a stray space or two");
+  const want = parseCode(shown);
+  assert.ok(want, "the code the phone shows parses");
+  for (const typed of [shown.replace(/-/g, ""), shown.replace(/-/g, " "), " " + shown.toLowerCase() + " ", shown.replace(/-/g, " - ")]) {
+    assert.deepEqual(parseCode(typed), want, typed);
+  }
+});
+
+test("the pinned planque step key is a P-256 public key in SPKI form, 91 bytes, and parses", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const spki = fromB64u(ENVIRONMENTS.production.planqueKey);
+  assert.equal(spki.length, 91);
+  // SEQUENCE { SEQUENCE { id-ecPublicKey, prime256v1 }, BIT STRING 04 || X || Y }
+  assert.deepEqual([...spki.slice(0, 27)], [0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04]);
+  const key = await crypto.subtle.importKey("spki", spki, { name: "ECDSA", namedCurve: "P-256" }, true, ["verify"]);
+  assert.equal(key.type, "public");
+});
+
+test("the pinned relay is the WebSocket API's own domain, over wss, with no path", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const url = new URL(ENVIRONMENTS.production.relay);
+  assert.equal(url.protocol, "wss:");
+  assert.equal(url.hostname, "relay.planque.kiff.dev");
+  assert.equal(url.pathname, "/");
+  assert.equal(url.search, "", "the extension adds ?chrome=… itself");
+});
+
+test("a build's manifest hash is 64 lower-case hex characters, the form planque's allowlist keeps", async () => {
+  const { manifestHashOf } = await import("../src/crypto.js");
+  const bytes = readFileSync(new URL("../manifest.json", import.meta.url));
+  const hash = await manifestHashOf(new Uint8Array(bytes));
+  assert.match(hash, /^[0-9a-f]{64}$/);
+  assert.equal(hash, createHash("sha256").update(bytes).digest("hex"));
+  assert.equal(await manifestHashOf(new Uint8Array(0)), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "SHA-256 of nothing");
 });

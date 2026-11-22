@@ -1365,6 +1365,15 @@ KIFF opens. `{taf}` is the sample's first taf.
 - **In CI** it runs with the iPhone's UI tests, and beside the unit tests, in the same run,
   when what it reads changes (`ios/Tafs/App/`, the walk, `app/routes.json`, `app/map/`).
 
+## Account › Sign-in: the email-code setting
+
+Account › Sign-in shows `GET /v1/me/sign-in`: whether the person signs in with a code sent by email, and whether KIFF can send
+codes (`available`). It is off for everyone until they turn it on, and there is no code screen in the app: the code is typed
+on KIFF's page. **Turn off** goes straight from the app (`PUT /v1/me/sign-in {"email_code": false}`); KIFF emails the person
+about the change. **Turn on** opens KIFF's own `/dashboard/sign-in` in the private sheet, because turning it on needs a recent
+sign-in, which a device session never passes; the setting is read again when the sheet closes. When KIFF can't send codes
+(`available` false) the row says so and offers nothing.
+
 ## Store status: a read-only look at App Store Connect
 
 `.github/workflows/store-status.yml` (by hand, and twice a day at 06:17 and 17:17 UTC) says where the App Store stands without

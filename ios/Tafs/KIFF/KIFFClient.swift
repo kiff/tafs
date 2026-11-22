@@ -981,6 +981,24 @@ final class KIFFClient {
         return saved.timeZone
     }
 
+    /// The person's own sign-in setting (kiff/cloud `GET`/`PUT /v1/me/sign-in`): whether they sign in with a code sent by
+    /// email. Off for everyone until they turn it on; `available` is false when KIFF can't send codes.
+    struct CodeSignIn: Decodable, Equatable {
+        let emailCode: Bool
+        let available: Bool
+        enum CodingKeys: String, CodingKey { case emailCode = "email_code", available }
+    }
+
+    func codeSignIn() async throws -> CodeSignIn {
+        try await send("GET", "/v1/me/sign-in")
+    }
+
+    /// Turns code sign-in off, straight from the app. Turning it on needs a recent sign-in, which a device session never
+    /// passes, so the app opens KIFF's own page for that (`AppModel.turnCodeSignInOn`).
+    func turnCodeSignInOff() async throws -> CodeSignIn {
+        try await send("PUT", "/v1/me/sign-in", body: ["email_code": false])
+    }
+
     /// One call of the account's, as KIFF's activity records it: what a
     /// taf did, newest first, with the tool's title for people.
     struct ActivityCall: Decodable, Equatable {

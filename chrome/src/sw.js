@@ -3,7 +3,7 @@
 
 import { config } from "./config.js";
 import { indexedStore } from "./store.js";
-import { newKeyPair, sha256, b64u, sign, LABEL } from "./crypto.js";
+import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
 import { parseCode, offer, checkConfirmation } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
@@ -42,7 +42,7 @@ async function load() {
 
 async function manifestHash() {
   const raw = await (await fetch(chrome.runtime.getURL("manifest.json"))).arrayBuffer();
-  return b64u(await sha256(new Uint8Array(raw)));
+  return manifestHashOf(new Uint8Array(raw));
 }
 
 /** Unpaired, from the phone (planque closes with 4410) or here: everything kept is wiped and every run closed. */

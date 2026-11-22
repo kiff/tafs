@@ -385,6 +385,59 @@ final class AppModel: ObservableObject {
             if let id = tafOnScreen { await loadTafSetup(id); await loadKnob(id) }
         }
     }
+    /// The person's code sign-in setting (Account › Sign-in): nil until read.
+    @Published private(set) var codeSignIn: KIFFClient.CodeSignIn?
+    @Published private(set) var codeSignInError: String?
+    @Published private(set) var codeSignInBusy = false
+
+    func loadCodeSignIn() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        do {
+            let setting = try await kiff.codeSignIn()
+            guard gen == accountGeneration else { return }
+            codeSignIn = setting
+            codeSignInError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            codeSignInError = Words.Settings.SignInCode.notLoaded(why: "\(error.localizedDescription)")
+        }
+    }
+
+    /// Off goes straight from the app. KIFF emails the person about the change.
+    func turnCodeSignInOff() async {
+        guard mode == .kiff, !codeSignInBusy else { return }
+        let gen = accountGeneration
+        codeSignInBusy = true
+        defer { codeSignInBusy = false }
+        do {
+            let setting = try await kiff.turnCodeSignInOff()
+            guard gen == accountGeneration else { return }
+            codeSignIn = setting
+            codeSignInError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            codeSignInError = Words.Settings.SignInCode.notChanged(why: "\(error.localizedDescription)")
+        }
+    }
+
+    /// On opens KIFF's own Settings › Sign-in page in the sheet: turning it on needs a recent sign-in, which a device session
+    /// never passes. The setting is read again when the sheet closes, whichever way it closed.
+    func turnCodeSignInOn() async {
+        guard mode == .kiff, !codeSignInBusy else { return }
+        codeSignInBusy = true
+        defer { codeSignInBusy = false }
+        let page = kiff.webURL.appendingPathComponent("dashboard").appendingPathComponent("sign-in")
+        do {
+            _ = try await VendorSignIn.kiffSheet().signIn(at: page)
+        } catch VendorSignIn.SignInError.cancelled {
+        } catch {
+            codeSignInError = Words.Settings.SignInCode.notChanged(why: "\(error.localizedDescription)")
+            return
+        }
+        await loadCodeSignIn()
+    }
+
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
