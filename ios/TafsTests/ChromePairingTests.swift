@@ -242,6 +242,33 @@ final class ChromeConnectionsTests: XCTestCase {
         XCTAssertEqual(ChromeConnections.sites(of: []), "")
     }
 
+    /// A connection moves to another paired Chrome only if it runs in the owner's own Chrome, has sites (the phone signs them again for
+    /// the new Chrome), and planque would move it: approved and not ended or failed. The choices are the other Chromes, never its own.
+    func testAConnectionMovesOnlyWhenItCanAndOnlyToAnotherChrome() throws {
+        for status in ["approved", "signed_in", "connected", "listed", "needs_reconnect"] {
+            XCTAssertTrue(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: status, sites: ["wikipedia.org"])), status)
+        }
+        for status in ["pending", "failed", "disconnected"] {
+            XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: status, sites: ["wikipedia.org"])), status)
+        }
+        XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: "chr_a", status: "connected", sites: [])), "no sites, nothing to sign")
+        XCTAssertFalse(ChromeSwitch.canSwitch(try grant("g", chrome: nil, status: "connected", sites: ["wikipedia.org"], driver: nil)), "planque's hosted browser")
+        let g = try grant("g", chrome: "chr_a", status: "connected", sites: ["wikipedia.org"])
+        let chromes = [try chrome("chr_a"), try chrome("chr_b"), try chrome("chr_c")]
+        XCTAssertEqual(ChromeSwitch.others(for: g, in: chromes).map(\.id), ["chr_b", "chr_c"])
+        XCTAssertEqual(ChromeSwitch.others(for: g, in: [try chrome("chr_a")]).map(\.id), [], "one Chrome: nothing to move to")
+    }
+
+    /// What the phone signs to move a connection is its sites for the Chrome it moves to, the same bytes the extension and planque check
+    /// at approval (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), never an open list.
+    func testMovingSignsTheSitesForTheNewChrome() throws {
+        let bytes = try ChromePairing.switchBytes(to: "chr_b", grant: "g1", sites: ["wikipedia.org"])
+        XCTAssertEqual(bytes, try ChromePairing.sitesBytes(chromeID: "chr_b", grant: "g1", sites: ["wikipedia.org"]))
+        XCTAssertNotEqual(bytes, try ChromePairing.sitesBytes(chromeID: "chr_a", grant: "g1", sites: ["wikipedia.org"]), "for the new Chrome, not the old")
+        XCTAssertThrowsError(try ChromePairing.switchBytes(to: "chr_b", grant: "g1", sites: []))
+        XCTAssertThrowsError(try ChromePairing.switchBytes(to: "", grant: "g1", sites: ["wikipedia.org"]))
+    }
+
     /// Re-pairing replaces, never adds: the pick starts on the Chrome with the offer's profile id; failing that, on the one Chrome
     /// of the same browser and system; otherwise on none, and nothing moves.
     func testThePickStartsOnTheChromeItMostLikelyReplaces() throws {

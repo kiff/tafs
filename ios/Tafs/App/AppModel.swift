@@ -1556,6 +1556,41 @@ final class AppModel: ObservableObject {
         await refreshChromes()
     }
 
+    /// Moves a browser connection to another paired Chrome ("Your Chrome" 2): the phone signs the connection's sites for that
+    /// Chrome under one Face ID (`ChromePairing.switchBytes`), then planque's `PUT …/grants/{grant}/chrome` moves it. Its sites
+    /// and Card stay. Says why when it didn't go through (`chromesError`); true when planque moved it.
+    func switchChrome(_ grant: PlanqueClient.Grant, to chrome: PlanqueClient.Chrome) async -> Bool {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant, ChromeSwitch.canSwitch(grant),
+              let sites = grant.request.browser?.sites else { return false }
+        if approvalViewOnly { chromesError = approvalKeyLostWords; return false }
+        chromesError = nil
+        let gen = accountGeneration
+        let signer = self.signer
+        let reason = Words.Chrome.switchPrompt(name: chrome.name)
+        let signature: String
+        do {
+            let der = try await signer.signApproval(try ChromePairing.switchBytes(to: chrome.id, grant: grant.id, sites: sites), reason: reason)
+            signature = try ChromePairing.rawSignature(fromDER: der)
+        } catch {
+            if gen == accountGeneration { chromesError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        do {
+            try await planque.switchChrome(grant: grant.id, to: chrome.id, sitesSignature: signature)
+        } catch {
+            chromesError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        chromesError = nil
+        await refreshChromes()
+        await refreshConnections()
+        return true
+    }
+
     // MARK: Passkeys
 
     /// The account's passkeys, as KIFF lists them, and why they couldn't be read.

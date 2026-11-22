@@ -821,6 +821,17 @@ final class PlanqueClient {
         _ = try await raw("DELETE", "chromes/\(escaped(id))", body: nil)
     }
 
+    /// Moves one browser connection to another paired Chrome (`PUT …/grants/{grant}/chrome`, "Your Chrome" 2): its sites and Card stay,
+    /// and `sitesSignature` is this phone's signature over those sites for the new Chrome (`ChromePairing.switchBytes`).
+    func switchChrome(grant: String, to chromeID: String, sitesSignature: String) async throws {
+        struct Body: Encodable {
+            let chromeID: String
+            let sitesSignature: String
+            enum CodingKeys: String, CodingKey { case chromeID = "chrome_id", sitesSignature = "chrome_sites_sig" }
+        }
+        _ = try await raw("PUT", "grants/\(escaped(grant))/chrome", body: try JSONEncoder().encode(Body(chromeID: chromeID, sitesSignature: sitesSignature)))
+    }
+
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }

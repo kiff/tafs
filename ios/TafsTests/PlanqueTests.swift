@@ -334,6 +334,19 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(StubProtocol.sent.filter { $0.value(forHTTPHeaderField: "Planque-Device-Signature") == nil }.count, 0)
     }
 
+    /// Moving a connection to another Chrome is one signed PUT with the new Chrome and the phone's signature over its sites for it.
+    func testSwitchingAChromeIsOneSignedPutWithTheSitesSignature() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        StubProtocol.responses["PUT /v1/accounts/t_01/grants/g_01/chrome"] = (200, grantJSON(status: "connected"))
+        try await planque.switchChrome(grant: "g_01", to: "chr_b", sitesSignature: "c2ln")
+        XCTAssertEqual(body(StubProtocol.sent.last) as? [String: String], ["chrome_id": "chr_b", "chrome_sites_sig": "c2ln"])
+        XCTAssertEqual(StubProtocol.sent.last?.httpMethod, "PUT")
+        XCTAssertNotNil(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"))
+    }
+
     /// A device KIFF knows names itself in each signature (kiff/planque#10), and still sends
     /// its key at enrolment for a planque from before that.
     func testADeviceKIFFKnowsSignsWithItsID() async throws {

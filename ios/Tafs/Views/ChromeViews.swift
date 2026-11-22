@@ -15,6 +15,24 @@ enum ChromeConnections {
 /// Re-pairing replaces, never adds ("Your Chrome" 1, docs/chrome.md): which paired Chrome a new one replaces, and the connections
 /// that move to it. The pick is the owner's; only a connection that is live on the Chrome replaced moves, with the sites planque
 /// holds for it, which the phone's fingerprint then signs for the new Chrome (`ChromePairing.Carried`).
+/// Which Chrome a browser connection runs in, and where it may move ("Your Chrome" 2 and 4).
+enum ChromeSwitch {
+    /// The statuses planque moves a connection in: one the owner approved and that hasn't ended or failed.
+    static let movable: Set<String> = ["approved", "signed_in", "connected", "listed", "needs_reconnect"]
+
+    /// Whether this connection can move to another Chrome: one that runs in the owner's own Chrome, has sites (what the phone signs
+    /// again) and is in a status planque moves.
+    static func canSwitch(_ grant: PlanqueClient.Grant) -> Bool {
+        guard let browser = grant.request.browser, browser.driver == "extension", !(browser.sites ?? []).isEmpty else { return false }
+        return movable.contains(grant.status)
+    }
+
+    /// The paired Chromes it could move to: every one but the one it uses.
+    static func others(for grant: PlanqueClient.Grant, in chromes: [PlanqueClient.Chrome]) -> [PlanqueClient.Chrome] {
+        chromes.filter { $0.id != grant.request.browser?.chrome }
+    }
+}
+
 enum ChromeReplace {
     /// What the pick starts on: the Chrome with the offer's profile id; else, when the extension was reinstalled and its id is new,
     /// the one paired Chrome on the same browser and system. Nothing otherwise ("a new Chrome").

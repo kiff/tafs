@@ -1205,6 +1205,9 @@ struct ConnectionDetailView: View {
                         Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                if g.request.browser?.driver == "extension" {
+                    chromeSection(g)
+                }
                 let actions = (g.actions ?? []).filter(\.known)
                 if model.canManageCards, !actions.isEmpty {
                     Section {
@@ -1231,6 +1234,7 @@ struct ConnectionDetailView: View {
         .screenBackground()
         .navigationTitle(g?.name ?? appTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .task { if g?.request.browser?.driver == "extension" { await model.refreshChromes() } }
         .sheet(item: $replacing) { g in
             ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
         }
@@ -1241,6 +1245,43 @@ struct ConnectionDetailView: View {
             Button(Words.Common.cancel, role: .cancel) { asking = nil }
         } message: { action in
             if let stops = action.stops { Text(stops) }
+        }
+    }
+
+    /// The Chrome this connection runs in, and the choice of another one ("Your Chrome" 2 and 4): moving signs its sites for that Chrome
+    /// under one Face ID; its sites and Card stay.
+    @ViewBuilder private func chromeSection(_ g: PlanqueClient.Grant) -> some View {
+        let name = g.request.browser?.chromeName ?? ""
+        let others = ChromeSwitch.others(for: g, in: model.chromes ?? [])
+        if !name.isEmpty || (model.canManageCards && ChromeSwitch.canSwitch(g) && !others.isEmpty) {
+            Section {
+                if !name.isEmpty {
+                    Text(Words.Chrome.heldIn(name: name)).scaledFont(14).foregroundColor(Theme.soft)
+                        .accessibilityIdentifier("connect.chrome")
+                }
+                if model.canManageCards, ChromeSwitch.canSwitch(g), !others.isEmpty {
+                    Menu {
+                        ForEach(others) { chrome in
+                            Button(chrome.name) { moveTo(chrome, g) }
+                        }
+                    } label: {
+                        Text(Words.Chrome.switch)
+                    }
+                    .disabled(model.connecting != nil || busy)
+                    .accessibilityIdentifier("connect.chrome.switch")
+                }
+                if let why = model.chromesError {
+                    Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private func moveTo(_ chrome: PlanqueClient.Chrome, _ g: PlanqueClient.Grant) {
+        busy = true
+        Task {
+            _ = await model.switchChrome(g, to: chrome)
+            busy = false
         }
     }
 

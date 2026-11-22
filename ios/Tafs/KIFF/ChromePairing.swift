@@ -140,6 +140,14 @@ enum ChromePairing {
         return try rawSignature(fromDER: try sign(try sitesBytes(chromeID: chrome, grant: grant, sites: sites)))
     }
 
+    /// The bytes the phone signs for `PUT …/grants/{grant}/chrome`: `{chrome_id, grant, sites}` for the Chrome the connection moves
+    /// **to**, over the sites it already has (the ones the owner approved), signed with the approval key under a Face ID and sent
+    /// as raw r‖s (`rawSignature(fromDER:)`). Refused when there is no Chrome or no sites: nothing is signed over an open list.
+    static func switchBytes(to chromeID: String, grant: String, sites: [String]) throws -> Data {
+        guard !chromeID.isEmpty, !sites.isEmpty else { throw PlanqueClient.PlanqueError.digestMismatch }
+        return try sitesBytes(chromeID: chromeID, grant: grant, sites: sites)
+    }
+
     /// Whether `signature` (raw r‖s, base64url) is this phone's own signature, by `publicKeyDER` (its approval key), over `sites` for
     /// `grant` on the Chrome `chromeID`: what the phone signed at approval, and the only copy of a connection's sites it carries
     /// to a new Chrome ("Your Chrome" 1). False for anything else, never an error.
