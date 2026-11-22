@@ -79,31 +79,14 @@ object Res {
   /** A plural's form for [count], with its arguments: [count] itself is the first unless the words say otherwise. */
   fun p(id: Int, count: Int, vararg args: Any?): String = source.let { String.format(it.locale, it.plural(id, count), *isolated(args, it.locale.language)) }
 
-  /** The languages written right to left (their codes as `languages.json` and Android name them). */
-  private val RIGHT_TO_LEFT = setOf("ar", "he", "iw", "fa", "ur", "yi", "ji", "ps", "sd", "ug", "dv", "ckb")
+  /** Whether [language] is written right to left. The rule is the watch's too: `watchlink`'s [bot.tafs.watchlink.Bidi]. */
+  fun rightToLeft(language: String): Boolean = bot.tafs.watchlink.Bidi.rightToLeft(language)
 
-  fun rightToLeft(language: String): Boolean = language.substringBefore('-').substringBefore('_').lowercase() in RIGHT_TO_LEFT
+  /** Each text value set apart in a right-to-left language, as on the watch ([bot.tafs.watchlink.Bidi.isolated], iOS's #1557). */
+  fun isolated(args: Array<out Any?>, language: String): Array<out Any?> = bot.tafs.watchlink.Bidi.isolated(args, language)
 
-  /**
-   * In a right-to-left language each text value is set apart (U+2068 FIRST STRONG ISOLATE … U+2069 POP DIRECTIONAL ISOLATE),
-   * so a taf's or person's name in Latin letters takes its own direction without turning the sentence around it, as iOS's
-   * `Words.isolated` (#1557). Inside, the value carries no direction character of its own, so none can close it early, whoever
-   * calls. Left to right, and for numbers, values are exactly as passed.
-   */
-  fun isolated(args: Array<out Any?>, language: String): Array<out Any?> =
-    if (!rightToLeft(language)) args else Array(args.size) { i -> (args[i] as? CharSequence)?.let { "\u2068${withoutDirection(it.toString())}\u2069" } ?: args[i] }
-
-  /** The text with U+202A–U+202E, U+2066–U+2069, U+200E, U+200F and U+061C taken out, and nothing else changed. */
-  fun withoutDirection(text: String): String {
-    val out = StringBuilder(text.length)
-    var i = 0
-    while (i < text.length) {
-      val c = text.codePointAt(i)
-      if (!(c in 0x202A..0x202E || c in 0x2066..0x2069 || c == 0x200E || c == 0x200F || c == 0x061C)) out.appendCodePoint(c)
-      i += Character.charCount(c)
-    }
-    return out.toString()
-  }
+  /** The text with its direction characters taken out ([bot.tafs.watchlink.Bidi.withoutDirection]). */
+  fun withoutDirection(text: String): String = bot.tafs.watchlink.Bidi.withoutDirection(text)
 
   /**
    * What the app copies: the text alone, with no direction character, so a code, a key or an address copied from a right-to-left

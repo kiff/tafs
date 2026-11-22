@@ -30,13 +30,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import bot.tafs.app.design.Directions
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
@@ -57,6 +60,8 @@ internal fun CoachPanel(open: Boolean, onClose: () -> Unit, content: @Composable
   var full by remember { mutableStateOf(prefs.getBoolean("full", false)) }
   var drag by remember { mutableFloatStateOf(0f) }
   val density = LocalDensity.current
+  // The trailing edge is the left in right to left: the slide and the drag follow it (a slide's and a drag's pixels don't mirror).
+  val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
   BoxWithConstraints(Modifier.fillMaxSize()) {
     val screen = with(density) { maxWidth.toPx() }
     val chosen = if (full) screen else screen * share
@@ -71,8 +76,8 @@ internal fun CoachPanel(open: Boolean, onClose: () -> Unit, content: @Composable
     AnimatedVisibility(
       open,
       modifier = Modifier.align(Alignment.CenterEnd),
-      enter = slideInHorizontally(tween(220)) { it },
-      exit = slideOutHorizontally(tween(220)) { it },
+      enter = slideInHorizontally(tween(220)) { Directions.offEndX(it, rtl) },
+      exit = slideOutHorizontally(tween(220)) { Directions.offEndX(it, rtl) },
     ) {
       Row(
         Modifier.width(with(density) { width.toDp() }).fillMaxHeight()
@@ -93,7 +98,7 @@ internal fun CoachPanel(open: Boolean, onClose: () -> Unit, content: @Composable
                   prefs.edit().putFloat("width", share).putBoolean("full", full).apply()
                 },
                 onDragCancel = { drag = 0f },
-              ) { _, amount -> drag += amount }
+              ) { _, amount -> drag += Directions.towardsEnd(amount, rtl) }
             }
             .semantics {
               contentDescription = Words.Coach.coachModeWidth

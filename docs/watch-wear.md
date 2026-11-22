@@ -579,6 +579,10 @@ watch doesn't know is shown as Open on phone, never guessed at.
   notification's Refuse on iPhone: they only take authority away. The phone acts only on a message from the paired watch
   running this app, and the watch sends one only while it has a screen lock and is unlocked; otherwise it says to set one
   (`watch.needs_lock`) and offers Open on phone. The approval key is never used on this path.
+- **Right to left, as the phone:** the watch declares `supportsRtl`, so its pages mirror in Arabic or Hebrew, and its
+  `Res.s` and `Res.p` set each text value apart in a right-to-left language (U+2068 … U+2069, `watchlink`'s `Bidi`, the
+  one rule both apps fill their lines through), so a Latin taf name or an amount keeps its own direction in the sentence
+  (`RtlWordsTest`). A count is written in the language's own digits, as on the phone.
 - **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (`tafs.tile`), cleared on
   sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
   `WATCH_V2`) keeps more, all in the app's private storage:

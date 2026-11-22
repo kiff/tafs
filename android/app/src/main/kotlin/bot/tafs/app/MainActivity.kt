@@ -948,10 +948,12 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
             openTaf != null || (!wide && (coachOpen || coachVisibility.currentState || !coachVisibility.isIdle)) -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
+                // From the end edge, as a pushed screen comes: the left, in right to left.
+                val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
                 if (!wide) androidx.compose.animation.AnimatedVisibility(
                   visibleState = coachVisibility,
-                  enter = androidx.compose.animation.slideInHorizontally { it },
-                  exit = androidx.compose.animation.slideOutHorizontally { it },
+                  enter = androidx.compose.animation.slideInHorizontally { bot.tafs.app.design.Directions.offEndX(it, rtl) },
+                  exit = androidx.compose.animation.slideOutHorizontally { bot.tafs.app.design.Directions.offEndX(it, rtl) },
                 ) {
                   Box(Modifier.fillMaxSize().background(Theme.background)) {
                     CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats)
