@@ -1,7 +1,9 @@
 /**
- * tafs cloud's words in the eight languages, and Brazilian Portuguese over Portuguese (docs/languages.md): English
- * is the source, and every other language has every key, so a line can't ship untranslated (the type says so, and a
- * test pins it). pt-BR is pt's words with Brazil's own on top (pt-BR.ts).
+ * tafs cloud's words in every language the apps ship (docs/languages.md, "tafs cloud's words"): English is the source.
+ * The full languages (FULL_LANGUAGES) have every key, so none of their lines ships untranslated (the type says so, and a
+ * test pins it). pt-BR is pt's words with Brazil's own on top (pt-BR.ts). The languages added since (PARTIAL_LANGUAGES)
+ * may be partial: each line written replaces English's, every other reads English, the most-seen lines go first
+ * (PRIORITY_PREFIXES), and a test prints each one's coverage until it reaches 100%.
  * The language is the app's own, sent as `Accept-Language`; anything else reads English. A language only
  * changes words: never what a Card allows, nor how an amount or a date is formatted beyond the locale.
  */
@@ -16,37 +18,104 @@ import { nl } from "./nl.js";
 import { pl } from "./pl.js";
 import { pt } from "./pt.js";
 import { ptBR } from "./pt-BR.js";
+import { bg } from "./bg.js";
+import { cs } from "./cs.js";
+import { et } from "./et.js";
+import { hr } from "./hr.js";
+import { hu } from "./hu.js";
+import { id } from "./id.js";
+import { lt } from "./lt.js";
+import { lv } from "./lv.js";
+import { ro } from "./ro.js";
+import { sk } from "./sk.js";
+import { sl } from "./sl.js";
+import { th } from "./th.js";
+import { tr } from "./tr.js";
+import { vi } from "./vi.js";
+import { zhHant } from "./zh-Hant.js";
 
 export type { ConnectRoute, When, Words };
 
-export const LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko", "ja"] as const;
+/** The languages whose every line is written. */
+export const FULL_LANGUAGES = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "pt-BR", "ko", "ja"] as const;
+/** The languages the apps ship whose lines are being written: what isn't yet reads English (PM, 22 Nov). */
+export const PARTIAL_LANGUAGES = ["et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"] as const;
+export const LANGUAGES = [...FULL_LANGUAGES, ...PARTIAL_LANGUAGES] as const;
 export type Lang = (typeof LANGUAGES)[number];
+type PartialLang = (typeof PARTIAL_LANGUAGES)[number];
 
-const CATALOGS: Record<Lang, Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR, ko, ja };
+/** The lines a partial language writes first, by key prefix: Home's, push titles, Activity's details, the approval card's. */
+export const PRIORITY_PREFIXES = ["home_", "push_", "act_", "approval_"] as const;
+
+const CATALOGS: Record<(typeof FULL_LANGUAGES)[number], Words> = { en, de, fr, es, it, pt, nl, pl, "pt-BR": ptBR, ko, ja };
+const PARTIAL: Record<PartialLang, Partial<Words>> = { et, lt, lv, cs, sk, sl, hu, ro, bg, hr, tr, id, vi, th, "zh-Hant": zhHant };
+const filled = new Map<PartialLang, Words>();
+
+function isPartial(lang: Lang): lang is PartialLang {
+  return (PARTIAL_LANGUAGES as readonly string[]).includes(lang);
+}
+
+/** The share of English's lines a language has written, 0 to 1: 1 for a full language. */
+export function coverage(lang: Lang): number {
+  if (!isPartial(lang)) return 1;
+  const all = Object.keys(en);
+  const own = PARTIAL[lang] as Record<string, unknown>;
+  return all.filter((k) => own[k] !== undefined).length / all.length;
+}
+
+/** A partial language's own lines, as written (the coverage test reads them). */
+export function writtenIn(lang: Lang): Partial<Words> {
+  return isPartial(lang) ? PARTIAL[lang] : CATALOGS[lang];
+}
 
 /** A regional variant's base language ("pt" for "pt-BR"), for what's kept per base language only (a recipe's words, kiff.dev's pages). */
 export function baseLanguage(lang: Lang): Exclude<Lang, "pt-BR"> {
   return lang === "pt-BR" ? "pt" : lang;
 }
 
-/** The words of a language. */
+/** The words of a language: a partial one's own lines over English's. */
 export function wordsIn(lang: Lang): Words {
-  return CATALOGS[lang];
+  if (!isPartial(lang)) return CATALOGS[lang];
+  let words = filled.get(lang);
+  if (!words) {
+    words = { ...en, ...Object.fromEntries(Object.entries(PARTIAL[lang]).filter(([, v]) => v !== undefined)) } as Words;
+    filled.set(lang, words);
+  }
+  return words;
 }
 
 /**
+ * The path of kiff.dev's pages in a language ("" for English): Traditional Chinese's are under `/zh`, every other
+ * language's under its base language, pt-BR's under `/pt`.
+ */
+export function pagePath(lang: Lang): string {
+  if (lang === "en") return "";
+  return lang === "zh-Hant" ? "zh" : baseLanguage(lang);
+}
+
+/** Chinese where it's written in Traditional characters, when a tag gives its region and no script. */
+const HANT_REGIONS = new Set(["TW", "HK", "MO"]);
+/** Codes Java and Android once used for a language: an Android 11 to 13 phone may still send "in" for Indonesian. */
+const OLD_CODES: Record<string, string> = { in: "id", iw: "he", ji: "yi" };
+
+/**
  * The best of the languages for an `Accept-Language` header: the highest `q` whose tag is one of them as it is
- * (`pt-BR`), else whose base language is (`de-AT` reads `de`, `pt-PT` reads `pt`), in the order given among equals;
- * English when none is, or there's no header.
+ * (`pt-BR`, `zh-Hant`), else whose base language is (`de-AT` reads `de`, `pt-PT` reads `pt`), in the order given among
+ * equals; English when none is, or there's no header. Chinese is Traditional by its script or by its region (`zh-TW`,
+ * `zh-HK`, `zh-MO`); Simplified Chinese isn't one of them. An old code reads as the new one (`in` is `id`).
  */
 export function languageFrom(header: string | undefined): Lang {
   if (!header) return "en";
   let best: { lang: Lang; q: number; at: number } | undefined;
   header.split(",").slice(0, 20).forEach((part, at) => {
     const [tag, ...params] = part.trim().split(";");
-    const [base = "", region = ""] = (tag ?? "").trim().replace(/_/g, "-").split("-");
-    const regional = `${base.toLowerCase()}-${region.toUpperCase()}`;
-    const lang = (LANGUAGES as readonly string[]).includes(regional) ? regional : base.toLowerCase();
+    const parts = (tag ?? "").trim().replace(/_/g, "-").split("-");
+    const base = OLD_CODES[(parts[0] ?? "").toLowerCase()] ?? (parts[0] ?? "").toLowerCase();
+    const script = parts.slice(1).find((p) => /^[A-Za-z]{4}$/.test(p));
+    const region = (parts.slice(1).find((p) => /^([A-Za-z]{2}|\d{3})$/.test(p)) ?? "").toUpperCase();
+    const hant = base === "zh" && (script?.toLowerCase() === "hant" || (!script && HANT_REGIONS.has(region)));
+    const regional = hant ? "zh-Hant" : `${base}-${region}`;
+    const lang = (LANGUAGES as readonly string[]).includes(regional) ? regional : base;
     if (!(LANGUAGES as readonly string[]).includes(lang)) return;
     const qp = params.map((p) => p.trim()).find((p) => p.startsWith("q="));
     const q = qp ? Number(qp.slice(2)) : 1;
@@ -82,6 +151,8 @@ export function midLine(phrase: string): string {
 export const LANGUAGE_NAMES: Record<Lang, string> = {
   en: "English", de: "German", fr: "French", es: "Spanish", it: "Italian", pt: "European Portuguese", nl: "Dutch", pl: "Polish",
   "pt-BR": "Brazilian Portuguese", ko: "Korean", ja: "Japanese",
+  et: "Estonian", lt: "Lithuanian", lv: "Latvian", cs: "Czech", sk: "Slovak", sl: "Slovenian", hu: "Hungarian", ro: "Romanian",
+  bg: "Bulgarian", hr: "Croatian", tr: "Turkish", id: "Indonesian", vi: "Vietnamese", th: "Thai", "zh-Hant": "Traditional Chinese",
 };
 
 /** The line tafs cloud opens a Coach message with for a person whose app is in another language than English. */
