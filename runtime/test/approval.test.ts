@@ -2609,6 +2609,41 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed say "Refund a charge" refuses past its limit/);
   });
 
+  // 22 Nov, the emulator: the Card's approval was drawn with Approve while its rules notice waited for Agree (KIFF's read of
+  // the draft didn't come back in time, so nothing was checked on the read), and the tap was refused, with no reason shown.
+  it("never offers a Card while the chat's rules notice isn't agreed, even when the draft's read doesn't come back", async () => {
+    const { s, w, rules } = await setUp("refuse");
+    rules("rules-1", RULES, false);
+    const drafts = s.drafts.drf_1;
+    delete s.drafts.drf_1;
+    const read = await w.call("GET", CHAT, undefined);
+    const card = (r: { body: Record<string, unknown> }) =>
+      (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string } }>).find((c) => c.component.id === "a1");
+    expect(card(read)?.answer?.state).toBe("answered");
+    expect(card(read)?.component.signs).toBeUndefined();
+    // The person reads why, in their words; Coach hears Approve's own refusal, and shows the rules' confirm now.
+    expect(card(read)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(String(w.told()?.answer)).toMatch(/^failed: the rules notice "rules-1" isn't agreed yet/);
+    expect(String(w.told()?.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
+    // Once, across reads: the next read draws it answered and tells Coach nothing more, with the draft back too.
+    s.drafts.drf_1 = drafts;
+    const told = w.told();
+    const again = await w.call("GET", CHAT, undefined);
+    expect(card(again)?.answer?.words).toBe(`Approve · it didn't go through: ${WORDS.rulesUnagreed}`);
+    expect(w.told()).toEqual(told);
+    expect(s.checks).toEqual([]);
+  });
+
+  it("offers the Card once the rules are agreed", async () => {
+    const { w, rules } = await setUp("refuse");
+    rules("rules-1", RULES);
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: unknown }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer).toBeUndefined();
+    expect(a1?.component.signs).toMatchObject({ card: true });
+    expect(w.told()).toBeUndefined();
+  });
+
   it("a write the agreed rules say nothing of isn't signed", async () => {
     const { rules, tap } = await setUp("refuse");
     rules("rules-1", [{ tool: "list_charges", over: "refuse" }]);
