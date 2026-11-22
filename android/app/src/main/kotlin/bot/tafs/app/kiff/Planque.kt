@@ -588,12 +588,22 @@ class PlanqueClient(
   /** A pairing as planque has it: `waiting_for_chrome`, `waiting_for_phone` with the extension's offer, or `confirmed`. 404 once expired. */
   suspend fun chromePairing(id: String): ChromePairingState = ChromePairingState.read(raw("GET", "chromes/pairings/${escaped(id)}", null))
 
-  /** Confirms the pairing: the confirmation the approval key signed, with that signature as raw r‖s. */
-  suspend fun confirmChromePairing(id: String, c: ChromePairing.Confirmation, phoneSig: String) {
-    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(mapOf(
+  /**
+   * Confirms the pairing: the confirmation the approval key signed, with that signature as raw r‖s. With [together], `phone_sig`
+   * is the one `kiff.requests.v1` signature over the pairing and KIFF's device, and the confirm carries what the extension
+   * rebuilds it from (`tenant`, `signed_at`, `kiff_request_sha256`), which planque relays beside it.
+   */
+  suspend fun confirmChromePairing(id: String, c: ChromePairing.Confirmation, phoneSig: String, together: ChromeTogether? = null) {
+    val fields = linkedMapOf<String, JsonElement>(
       "chrome_key_sha256" to JsonPrimitive(c.chromeKeySha256), "name" to JsonPrimitive(c.name), "phone_key" to JsonPrimitive(c.phoneKey),
       "phone_proof" to JsonPrimitive(c.phoneProof), "phone_sig" to JsonPrimitive(phoneSig),
-    ))).toByteArray()
+    )
+    together?.let {
+      fields["tenant"] = JsonPrimitive(it.tenant)
+      fields["signed_at"] = JsonPrimitive(it.signedAt)
+      fields["kiff_request_sha256"] = JsonPrimitive(it.kiffRequestSha256)
+    }
+    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
     raw("POST", "chromes/pairings/${escaped(id)}/confirm", body)
   }
 
@@ -761,7 +771,16 @@ data class ChromeOffer(
   val os: String = "",
   val proof: String,
   val kiffOffer: String = "",
+  /**
+   * The extension checks one fingerprint's signature over the pairing and its KIFF device together (`one_touch`, docs/chrome.md
+   * "Your Chrome" 5). Not in its proof, and it needs none: the one signature names exactly those two requests, so a false
+   * flag can only make the pairing fail, never sign more. Without it, the phone asks twice, as an older extension expects.
+   */
+  val oneTouch: Boolean = false,
 )
+
+/** The one-touch fields planque's confirm carries and relays to the extension (all three or none): docs/chrome.md "Your Chrome" 5. */
+data class ChromeTogether(val tenant: String, val signedAt: String, val kiffRequestSha256: String)
 
 /** A pairing's state, with the extension's offer once it sent one. */
 data class ChromePairingState(val status: String, val offer: ChromeOffer? = null) {
@@ -772,7 +791,8 @@ data class ChromePairingState(val status: String, val offer: ChromeOffer? = null
       val key = field("key")
       val proof = field("proof")
       val offer = if (key != null && proof != null) {
-        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty())
+        val oneTouch = (o["one_touch"] as? JsonPrimitive)?.takeIf { !it.isString }?.content == "true"
+        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty(), oneTouch)
       } else {
         null
       }

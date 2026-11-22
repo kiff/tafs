@@ -55,8 +55,8 @@ class ChromesTest {
 
   /** An extension's key pair, and what it posts for [secret]: its SPKI and its proof under the secret. */
   private val extension = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
-  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer) =
-    """{"pairing":"pr_1","status":"waiting_for_phone",${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
+  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer, oneTouch: Boolean = false) =
+    """{"pairing":"pr_1","status":"waiting_for_phone",${if (oneTouch) "\"one_touch\":true," else ""}${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
 
   /**
    * Account opened before planque was ready (the first seconds after launch) read no Chromes, and its row stayed hidden: the
@@ -197,6 +197,60 @@ class ChromesTest {
     val approval = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
     assertTrue(Signature.getInstance("SHA256withECDSA").run { initVerify(approval); update(message); verify(java.util.Base64.getDecoder().decode(sig)) })
     assertNull(m.state.value.chromesError)
+  }
+
+  @Test fun anExtensionThatChecksOneTouchGetsOneFingerprintOverThePairingAndItsKiffDevice() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer(), oneTouch = true))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    assertTrue(offered.oneTouch)
+    transport.answer(kiffPair, 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-21T12:05:00Z"}}""")
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac"))
+    assertEquals("one prompt for both", listOf("Pair Work Mac with your tafs"), auth.fingerprints)
+    val sent = transport.requests.map { "${it.method} ${java.net.URI(it.url).path}" }
+    assertTrue("KIFF's device first", sent.indexOf(kiffPair) in 0 until sent.indexOf(confirm))
+
+    // planque's confirm: the pairing the extension checks, and what it rebuilds the one signature from.
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    fun field(k: String) = body[k]!!.jsonPrimitive.content
+    val pairHash = KiffClient.messageHash(ChromePairing.signedBytes("pr_1", ChromePairing.Confirmation(field("chrome_key_sha256"), "Work Mac", field("phone_key"), field("phone_proof"))))
+    // KIFF's request: v3 with the pairing's hash, at the same time.
+    val pairing = transport.requestsTo(kiffPair).single()
+    val header = pairing.headers.getValue("KIFF-Device-Signature").split(",").associate { it.substringBefore("=") to it.substringAfter("=") }
+    assertEquals("sha256:$pairHash", header["with"])
+    val at = header.getValue("t")
+    val kiffHash = KiffClient.messageHash(KiffClient.requestMessage("t_01", "POST", "/v1/me/pairings", pairing.body!!, at))
+    assertEquals("t_01", field("tenant"))
+    assertEquals(at, field("signed_at"))
+    assertEquals(kiffHash, field("kiff_request_sha256"))
+    // One signature over both, as KIFF checks it (DER) and as the extension checks it (raw r‖s).
+    val both = KiffClient.requestsMessage("t_01", at, pairHash, kiffHash)
+    val approval = KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue(Signature.getInstance("SHA256withECDSA").run { initVerify(approval); update(both); verify(java.util.Base64.getDecoder().decode(header.getValue("v3"))) })
+    val raw = ChromePairing.base64UrlDecoded(field("phone_sig"))!!
+    assertTrue(Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(approval); update(both); verify(raw) })
+    assertFalse("never the pairing's bytes alone: an extension that checks one-touch rebuilds both",
+      Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(approval); update(ChromePairing.signedBytes("pr_1", ChromePairing.Confirmation(field("chrome_key_sha256"), "Work Mac", field("phone_key"), field("phone_proof")))); verify(raw) })
+    assertNull(m.state.value.chromesError)
+  }
+
+  @Test fun withoutOneTouchTheConfirmCarriesNoneOfItsFields() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer()))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    transport.answer(kiffPair, 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-21T12:05:00Z"}}""")
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac"))
+    assertEquals(2, auth.fingerprints.size)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    assertTrue(listOf("tenant", "signed_at", "kiff_request_sha256").none { it in body })
   }
 
   @Test fun aKiffRefusalOfTheExtensionsDeviceConfirmsNoChrome() = runTest {
