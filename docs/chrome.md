@@ -419,7 +419,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 
 ## Screenshots of a run's acts
 
-A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads, opens and sealed fills take none.
+A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide and 8000 px high, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads, opens and sealed fills take none.
 
 - **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
 - **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window. A picture that can't be taken never holds the act.
