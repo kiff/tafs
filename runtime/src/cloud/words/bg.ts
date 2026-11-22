@@ -367,6 +367,7 @@ export const bg: Partial<Words> = {
   cr_runs: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "изпълнение" : "изпълнения"}`,
   cr_actions: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "действие" : "действия"}`,
   cr_seats: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "място" : "места"}`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `използвани ${credits}`,
   cr_none_yet: "още няма използвани кредити",
   cr_none: "няма използвани кредити",

@@ -367,6 +367,7 @@ export const vi: Partial<Words> = {
   cr_runs: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} lượt chạy`,
   cr_actions: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} hành động`,
   cr_seats: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} chỗ`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `đã dùng ${credits}`,
   cr_none_yet: "chưa dùng tín dụng nào",
   cr_none: "không dùng tín dụng nào",

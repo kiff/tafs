@@ -125,6 +125,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
     ko: ["cr_pct"], // "80%" is written alike
+    hu: ["cr_pct"], ro: ["cr_pct"], bg: ["cr_pct"], id: ["cr_pct"], vi: ["cr_pct"], th: ["cr_pct"], "zh-Hant": ["cr_pct"], // "80%" is written alike
     ja: ["cr_pct"],
     nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details", "brief_later"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App", "Details" and "Later" are Dutch too
   };

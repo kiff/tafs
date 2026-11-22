@@ -367,6 +367,7 @@ export const zhHant: Partial<Words> = {
   cr_runs: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} 次執行`,
   cr_actions: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} 個動作`,
   cr_seats: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} 個席位`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `已使用 ${credits}`,
   cr_none_yet: "尚未使用點數",
   cr_none: "未使用點數",

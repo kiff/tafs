@@ -367,6 +367,7 @@ export const ro: Partial<Words> = {
   cr_runs: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "rulare" : form === "other" ? "de rulări" : "rulări"}`,
   cr_actions: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "acțiune" : form === "other" ? "de acțiuni" : "acțiuni"}`,
   cr_seats: (nf: string, form: Intl.LDMLPluralRule) => `${nf} ${form === "one" ? "loc" : form === "other" ? "de locuri" : "locuri"}`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `${credits} folosite`,
   cr_none_yet: "încă nu s-au folosit credite",
   cr_none: "nu s-au folosit credite",

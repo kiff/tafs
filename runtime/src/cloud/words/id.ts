@@ -367,6 +367,7 @@ export const id: Partial<Words> = {
   cr_runs: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} proses`,
   cr_actions: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} tindakan`,
   cr_seats: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} kursi`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `${credits} terpakai`,
   cr_none_yet: "belum ada kredit terpakai",
   cr_none: "tidak ada kredit terpakai",

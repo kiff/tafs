@@ -367,6 +367,7 @@ export const th: Partial<Words> = {
   cr_runs: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} การรัน`,
   cr_actions: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} การดำเนินการ`,
   cr_seats: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} ที่นั่ง`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `ใช้ไป ${credits}`,
   cr_none_yet: "ยังไม่ได้ใช้เครดิต",
   cr_none: "ไม่ได้ใช้เครดิต",

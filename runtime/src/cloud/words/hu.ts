@@ -367,6 +367,7 @@ export const hu: Partial<Words> = {
   cr_runs: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} futás`,
   cr_actions: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} művelet`,
   cr_seats: (nf: string, _form: Intl.LDMLPluralRule) => `${nf} hely`,
+  cr_pct: (pct: number) => `${pct}%`,
   cr_used: (credits: string) => `${credits} felhasználva`,
   cr_none_yet: "még nincs felhasznált kredit",
   cr_none: "nincs felhasznált kredit",
