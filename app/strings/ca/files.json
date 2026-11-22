@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} fitxer · es conserva 30 dies",
+    "other": "{count} fitxers · es conserven 30 dies"
+  },
+  "files.all": "Tots",
+  "files.all_tafs": "Tots els taf",
+  "files.by_run": "Per execució",
+  "files.by_taf": "Per taf",
+  "files.delete_body": "Desapareix de Fitxers per a tothom en aquest compte, a l'instant. Això no es pot desfer.",
+  "files.delete_now": "Elimina ara",
+  "files.delete_question": "Eliminar «{name}» ara?",
+  "files.deleted": "Eliminat per a tothom",
+  "files.download": "Baixa",
+  "files.empty": "Encara no hi ha res. Quan un taf fa un informe, un full o un document en una execució, es conserva aquí 30 dies, perquè tothom en aquest compte el pugui obrir, desar o compartir.",
+  "files.everyone": "Tothom en aquest compte",
+  "files.goes_away": "Desapareix",
+  "files.goes_in_days": {
+    "one": "desapareix d'aquí a {count} dia",
+    "other": "desapareix d'aquí a {count} dies"
+  },
+  "files.goes_on": "{date} (30 dies després de la seva execució)",
+  "files.goes_today": "desapareix avui",
+  "files.goes_tomorrow": "desapareix demà",
+  "files.in_run": "A l'execució",
+  "files.kept_line": "Cada fitxer es conserva 30 dies des de la seva execució i després desapareix tot sol. Tothom en aquest compte veu aquests fitxers. Els teus propis adjunts dels xats es queden amb els seus missatges.",
+  "files.kept_until": "Els seus fitxers es conserven fins al {date}",
+  "files.made_by": "Fet per",
+  "files.none_yet": "Encara cap · es conserven 30 dies",
+  "files.pick_one": "Tria un fitxer per veure'l aquí.",
+  "files.preview_start": "Només es mostra el principi. Baixa el fitxer per llegir-lo tot.",
+  "files.saved": "Desat en aquest dispositiu",
+  "files.see_in_chat": "Mira'l al xat",
+  "files.share": "Comparteix",
+  "files.size": "Mida",
+  "files.taf_row": {
+    "one": "{count} fitxer de les seves execucions",
+    "other": "{count} fitxers de les seves execucions"
+  },
+  "files.title": "Fitxers",
+  "files.type": "Tipus",
+  "files.who_sees": "Qui el veu"
+}

@@ -1,0 +1,17 @@
+{
+  "report.already": "ທ່ານໄດ້ລາຍງານຄຳຕອບນີ້ແລ້ວ.",
+  "report.cant_from_here": "ລາຍງານຄຳຕອບນີ້ຈາກບ່ອນນີ້ບໍ່ໄດ້.",
+  "report.menu": "ລາຍງານຄຳຕອບນີ້",
+  "report.not_sent": "ລາຍງານຂອງທ່ານບໍ່ໄດ້ຖືກສົ່ງ. {why}",
+  "report.not_sent_why": "ບໍ່ໄດ້ສົ່ງ: {failed}",
+  "report.note_hint": "ເພີ່ມບັນທຶກ (ບໍ່ບັງຄັບ)",
+  "report.note_most_characters": "ບັນທຶກມີໄດ້ສູງສຸດ 1,000 ຕົວອັກສອນ.",
+  "report.person_kiff_reads_your_report": "ຄົນຂອງ KIFF ອ່ານລາຍງານຂອງທ່ານ ພ້ອມຄຳຕອບຕາມທີ່ຖືກຂຽນ.",
+  "report.reason.harmful": "ເປັນອັນຕະລາຍ",
+  "report.reason.offensive": "ລ່ວງລະເມີດ",
+  "report.reason.other": "ອື່ນໆ",
+  "report.reason.wrong": "ຜິດ",
+  "report.runs_not_loaded": "ໂຫຼດການເຮັດວຽກຂອງມັນບໍ່ໄດ້. {why}",
+  "report.thanks": "ຂອບໃຈ. ມີຄົນຂອງ KIFF ຈະອ່ານລາຍງານຂອງທ່ານ.",
+  "report.what_wrong": "ມັນຜິດຢູ່ບ່ອນໃດ?"
+}

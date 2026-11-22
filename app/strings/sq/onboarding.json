@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Pajtohem me {kiff_terms} dhe {tafs_terms}.",
   "onboarding.control_lead": "Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me Face ID ose Touch ID, ose refuzoni.",
   "onboarding.control_lead_android": "Kur një taf ka nevojë për ju, pret te Ju pret, dhe në orën tuaj nëse keni një. Miratoni me kyçjen e ekranit, ose refuzoni.",
+  "onboarding.control_lead_desktop": "Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose refuzoni.",
   "onboarding.control_lead_mac": "Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni me Touch ID ose në telefonin tuaj, ose refuzoni.",
   "onboarding.control_title": "Mbetesh ju në kontroll",
   "onboarding.get_started": "Filloni",

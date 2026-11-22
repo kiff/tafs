@@ -1,0 +1,1 @@
+- **Six more languages in the apps: Catalan, Macedonian, Mongolian, Nepali, Khmer and Lao.** Every screen, message and sample on iPhone, iPad, Mac and Android reads in each, with the legal pages in each language. Zh-Hant's Home headlines end in a full stop, and the Bulgarian, Vietnamese and Hungarian "Your brief" tab words are shorter.

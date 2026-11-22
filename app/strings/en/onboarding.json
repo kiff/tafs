@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "I agree to {kiff_terms} and {tafs_terms}.",
   "onboarding.control_lead": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.",
   "onboarding.control_lead_android": "When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.",
+  "onboarding.control_lead_desktop": "When a taf needs you, it waits in Needs you. You approve on your phone, or refuse.",
   "onboarding.control_lead_mac": "When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.",
   "onboarding.control_title": "You stay in control",
   "onboarding.get_started": "Get started",

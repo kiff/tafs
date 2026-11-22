@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "សេចក្តីសង្ខេប",
+  "push.channel.briefs_description": "សេចក្តីសង្ខេបរបស់អ្នកតាមម៉ោងដែលបានកំណត់។",
+  "push.channel.holds_description": "ការហៅមួយត្រូវបានផ្អាកទុករង់ចាំចម្លើយរបស់អ្នក។ គ្មានអ្វីត្រូវបានផ្ញើទេ រហូតដល់អ្នកអនុម័ត។",
+  "push.channel.other": "ការជូនដំណឹងផ្សេងៗ",
+  "push.channel.other_description": "សំណើសម្រាប់ការងារ និងចម្លើយរបស់វា ដោយគ្មានសំឡេង។",
+  "push.channel.urgent_description": "អ្វីដែលមិនអាចរង់ចាំសេចក្តីសង្ខេបបន្ទាប់ មានសំឡេង។",
+  "push.open_needs_you": "បើក «ត្រូវការអ្នក» ដើម្បីឆ្លើយ។",
+  "push.open_taf": "បើក taf ដើម្បីមើល។",
+  "push.open_usage": "បើក «គម្រោង និងការប្រើប្រាស់» ដើម្បីមើល។"
+}

@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "No es pot adjuntar {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs no pot adjuntar aquest fitxer: no és d'un tipus o d'una mida que accepti. Tria'n un altre.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "No s'ha pogut llegir aquesta foto.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} fa {size}; el màxim és {limit}.",
+  "attachment.wrong_kind": "No es pot adjuntar {name}. Es poden adjuntar fotos, PDF, text, CSV, Markdown i fitxers de Word i d'Excel."
+}

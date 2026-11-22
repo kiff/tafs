@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} संलग्न गर्न सकिँदैन।",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs ले यो फाइल संलग्न गर्न सक्दैन: यो यसले लिने किसिम वा आकारको होइन। अर्को छान्नुहोस्।",
+  "attachment.photo": "फोटो",
+  "attachment.photo_could_not_read": "त्यो फोटो पढ्न सकिएन।",
+  "attachment.photo_numbered": "फोटो {n}",
+  "attachment.too_large": "{name} {size} को छ; अधिकतम {limit} हो।",
+  "attachment.wrong_kind": "{name} संलग्न गर्न सकिँदैन। फोटो, PDF, पाठ, CSV, Markdown, Word र Excel फाइल गर्न सकिन्छ।"
+}

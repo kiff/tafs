@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Preguntant a KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "No ha arribat a KIFF. Torna-ho a provar.",
+  "kiff.kiff_can_not_do_sign": "KIFF encara no ho pot fer: torna a iniciar la sessió des dels Ajustos per aprovar des d'aquest dispositiu ({device}).",
+  "kiff.kiff_did_not_answer_expected": "KIFF no ha respost com s'esperava. Torna-ho a provar.",
+  "kiff.kiff_words_do_not_match": "Les paraules de KIFF no coincideixen amb la seva comprovació. No es pot aprovar res."
+}
