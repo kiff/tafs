@@ -425,7 +425,11 @@ things (`runtime/src/cloud/approval.ts`):
   or `.`), and `window` any of an aggregate's (`calendar_day`, `rolling_1h`, `rolling_24h`,
   `rolling_7d`, `lifetime`), never `call`. A rule's figures are read whole or not at
   all: an empty list, a fifth figure, the same quantity, window and per twice, or a limit that isn't
-  such a number leaves the notice with no rules. The same notice shown again with another figure
+  such a number leaves the notice with no rules. KIFF's own count (`count`, `calendar_day`, 10,000,
+  no `per`), which a notice may list as "KIFF adds it", is never the owner's figure: it is dropped
+  from the agreed rules as they're read, so it's neither held to the notice's words nor required on a
+  Card (Eval 45062249364: read as agreed, it made Setup agree to it, then require it on the refund's
+  Card, until Coach changed the owner's rule). The same notice shown again with another figure
   is other rules, and blocks the draft until agreed. At the check, each agreed figure is on a
   Card covering the tool with exactly that figure: `call` as a `per_action_max` of that quantity
   on the tool's grant, `calendar_day` as an aggregate of that quantity with `window:

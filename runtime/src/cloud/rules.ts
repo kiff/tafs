@@ -101,9 +101,22 @@ function rulesOf(c: Record<string, unknown>): AgreedRule[] | undefined {
     }
     const limits = limitsOf(given);
     if (!limits) return undefined;
-    out.push({ tool: tool.trim(), over, limits });
+    // KIFF's own count is never the owner's: a notice may show it ("KIFF adds it"), but it isn't a figure they agreed,
+    // so it is neither held to the notice's words nor required on a Card.
+    const owners = limits.filter((l) => !kiffsCountAgreed(l));
+    out.push(owners.length ? { tool: tool.trim(), over, limits: owners } : { tool: tool.trim(), over });
   }
   return out;
+}
+
+/**
+ * Whether an agreed figure is KIFF's own count (KIFF_COUNT_A_DAY a calendar day, for no item), which Coach's rules may
+ * list beside the owner's figures as the notice shows it. Read as the owner's, it made Setup agree to it, then require
+ * it on the refund's Card, and the checks pulled against each other until Coach changed the owner's rule (Eval
+ * 45062249364, Setup run 1); on reads it cost an extra agree and a refused approval.
+ */
+function kiffsCountAgreed(l: AgreedLimit): boolean {
+  return l.quantity === "count" && l.window === "calendar_day" && l.per === undefined && l.limit === KIFF_COUNT_A_DAY;
 }
 
 /**

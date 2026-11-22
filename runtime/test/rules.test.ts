@@ -179,6 +179,24 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesAgreement([...agreed, notice("n1", rule([DAY, EACH]))]).state).toBe("agreed");
   });
 
+  it("KIFF's own count, listed as a rule's figure, is never the owner's: not held to the notice's words, not required on a Card (Eval 45062249364)", () => {
+    const KIFFS = { quantity: "count", window: "calendar_day" as const, limit: 10_000 };
+    const listed = [...rule([EACH, DAY, KIFFS]), { tool: "list_charges", over: "ask" as const, limits: [KIFFS] }];
+    const agreement = rulesAgreement([notice("n1", listed), confirm("c1", "n1"), answered("c1", "agree")]);
+    // The refund keeps the owner's two figures; the reads' rule, with only KIFF's count, has none.
+    expect(agreement).toEqual({ state: "agreed", notice: "n1", rules: [...rule(), { tool: "list_charges", over: "ask" }], text: "The rules", connection: [] });
+    const rules = agreement.state === "agreed" ? agreement.rules : [];
+    // A notice that never writes 10,000 says every figure agreed.
+    expect(rulesUnsaid(rules, "Refunds up to €5 each and €50 a day. Charges listed freely.")).toEqual([]);
+    // The refund's Cards with the owner's figures and no 10,000 count match.
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rules)).toBeUndefined();
+    // Only exactly KIFF's count goes: 9,999, a per total, or another window is the owner's figure as before.
+    for (const other of [{ ...KIFFS, limit: 9_999 }, { ...KIFFS, window: "lifetime", per: "charge" }, { ...KIFFS, quantity: "sum(amount)" }]) {
+      const kept = rulesAgreement([notice("n1", rule([EACH, other])), confirm("c1", "n1"), answered("c1", "agree")]);
+      expect(kept.state === "agreed" && kept.rules[0]!.limits, JSON.stringify(other)).toEqual([EACH, other]);
+    }
+  });
+
   // kiff-qa's 3 to 6: a rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
   it("figures that can't be read whole leave the notice with no rules", () => {
     const bad: unknown[] = [
