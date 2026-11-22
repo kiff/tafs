@@ -87,7 +87,7 @@
   "connect.give_key_on_sheet": "Zadať kľúč na zabezpečenom hárku",
   "connect.give_key_with": "Zadať kľúč cez {biometry}",
   "connect.how.key": "Kľúčom",
-  "connect.how.sign_in": "Prihlásením",
+  "connect.how.sign_in": "Prihlásiť sa",
   "connect.kept.another_taf": "iný taf",
   "connect.kept.for_card": {
     "one": "Ponechané {count} pre {who}, ktorého Card ho používa.",

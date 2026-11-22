@@ -69,7 +69,7 @@
   "record.filter.held": "Visszatartva",
   "record.filter.money_moved": "Pénzmozgás",
   "record.filter.refused": "Elutasítva",
-  "record.filter.stopped": "Leállítva",
+  "record.filter.stopped": "Leállt",
   "record.filter.waiting": "Várakozik",
   "record.held": "Visszatartva: {summary}",
   "record.hide": "Elrejtés",

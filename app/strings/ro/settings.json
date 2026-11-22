@@ -74,7 +74,7 @@
   "settings.devices.passkey_with_computer": "Merge cu computerul său",
   "settings.devices.passkeys_not_loaded": "Cheile de acces nu au putut fi încărcate. {why}",
   "settings.devices.passkeys_title": "Chei de acces",
-  "settings.devices.sign_out": "Deconectați",
+  "settings.devices.sign_out": "Deconectați-vă",
   "settings.devices.sign_out_named": "Deconectați {device}?",
   "settings.devices.sign_out_prompt": "Deconectați {device} de la cont",
   "settings.devices.sign_out_prompt_mac": "deconectați {device} de la cont",

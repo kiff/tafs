@@ -71,7 +71,7 @@
   "record.filter.held": "Reținute",
   "record.filter.money_moved": "Bani transferați",
   "record.filter.refused": "Refuzate",
-  "record.filter.stopped": "Oprite",
+  "record.filter.stopped": "Încheiat",
   "record.filter.waiting": "În așteptare",
   "record.held": "Reținut: {summary}",
   "record.hide": "Ascundeți",

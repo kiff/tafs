@@ -87,7 +87,7 @@
   "connect.give_key_on_sheet": "Dați cheia într-o fereastră securizată",
   "connect.give_key_with": "Dați cheia cu {biometry}",
   "connect.how.key": "Cu o cheie",
-  "connect.how.sign_in": "Conectare",
+  "connect.how.sign_in": "Conectați-vă",
   "connect.kept.another_taf": "alt taf",
   "connect.kept.for_card": {
     "one": "{count} păstrată pentru {who}, al cărui Card o folosește.",

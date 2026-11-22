@@ -69,7 +69,7 @@
   "record.filter.held": "Задържани",
   "record.filter.money_moved": "Преведени пари",
   "record.filter.refused": "Отказани",
-  "record.filter.stopped": "Спрени",
+  "record.filter.stopped": "Приключил",
   "record.filter.waiting": "Чакащи",
   "record.held": "Задържано: {summary}",
   "record.hide": "Скриване",
