@@ -270,7 +270,7 @@ export const sl: Partial<Words> = {
   health_too_large: (n: number) => `Njegovih zadnjih ${n} preverjanj je našlo delo, preveliko za eno izvajanje, zato se ni zagnalo nič`,
   health_too_large_one: "Njegovo zadnje preverjanje je našlo delo, preveliko za eno izvajanje, zato se ni zagnalo nič",
   health_credits: (since: string) => `Čaka na kredite od: ${since}`,
-  health_do_narrow: "Prosi Coacha, naj zoži, kaj bere, da bo vsak del ststal v enem izvajanju.",
+  health_do_narrow: "Prosi Coacha, naj zoži, kaj bere, da bo vsak del stal v enem izvajanju.",
   health_fix_narrow: "Zoži s Coachem",
   health_fix_narrow_say: "Njegovo zadnje preverjanje je našlo delo, preveliko za eno izvajanje. Zoži, kaj bere, da bo vsak del stal v enem izvajanju.",
   health_fix_credits: "Dodaj kredite",
