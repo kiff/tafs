@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "無法附加 {name}。",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs 無法附加此檔案：其種類或大小不被接受。請選擇其他檔案。",
+  "attachment.photo": "照片",
+  "attachment.photo_could_not_read": "無法讀取該照片。",
+  "attachment.photo_numbered": "照片 {n}",
+  "attachment.too_large": "{name} 大小為 {size}；上限為 {limit}。",
+  "attachment.wrong_kind": "無法附加 {name}。可附加照片、PDF、文字、CSV、Markdown、Word 和 Excel 檔案。"
+}

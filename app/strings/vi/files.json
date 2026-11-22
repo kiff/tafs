@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "{count} tệp · giữ 30 ngày"
+  },
+  "files.all": "Tất cả",
+  "files.all_tafs": "Mọi taf",
+  "files.by_run": "Theo lượt chạy",
+  "files.by_taf": "Theo taf",
+  "files.delete_body": "Nó biến mất khỏi Tệp với mọi người trong tài khoản này, ngay lập tức. Không thể hoàn tác.",
+  "files.delete_now": "Xóa ngay",
+  "files.delete_question": "Xóa “{name}” ngay?",
+  "files.deleted": "Đã xóa với mọi người",
+  "files.download": "Tải xuống",
+  "files.empty": "Chưa có gì. Khi một taf tạo báo cáo, bảng tính hoặc tài liệu trong một lượt chạy, nó được giữ ở đây 30 ngày để mọi người trong tài khoản này mở, lưu hoặc chia sẻ.",
+  "files.everyone": "Mọi người trong tài khoản này",
+  "files.goes_away": "Biến mất",
+  "files.goes_in_days": {
+    "other": "biến mất sau {count} ngày"
+  },
+  "files.goes_on": "{date} (30 ngày sau lượt chạy)",
+  "files.goes_today": "biến mất hôm nay",
+  "files.goes_tomorrow": "biến mất ngày mai",
+  "files.in_run": "Trong lượt chạy",
+  "files.kept_line": "Mỗi tệp được giữ 30 ngày kể từ lượt chạy của nó, rồi tự biến mất. Mọi người trong tài khoản này đều thấy các tệp này. Tệp đính kèm trong cuộc trò chuyện của riêng bạn vẫn ở cùng tin nhắn của chúng.",
+  "files.kept_until": "Các tệp của nó được giữ đến {date}",
+  "files.made_by": "Tạo bởi",
+  "files.none_yet": "Chưa có · giữ 30 ngày",
+  "files.pick_one": "Chọn một tệp để xem ở đây.",
+  "files.preview_start": "Chỉ hiện phần đầu. Hãy tải tệp xuống để đọc toàn bộ.",
+  "files.saved": "Đã lưu vào thiết bị này",
+  "files.see_in_chat": "Xem trong cuộc trò chuyện",
+  "files.share": "Chia sẻ",
+  "files.size": "Dung lượng",
+  "files.taf_row": {
+    "other": "{count} tệp từ các lượt chạy của nó"
+  },
+  "files.title": "Tệp",
+  "files.type": "Loại",
+  "files.who_sees": "Ai thấy"
+}

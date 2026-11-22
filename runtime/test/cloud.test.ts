@@ -6105,6 +6105,45 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await req("POST", "/v1/home/setting-up/refunds-x/discard", "owner")).statusCode).toBe(404);
   });
 
+  // A Card approved after the setup's chat stopped showing its result (it ended, or its result was answered "never approved"):
+  // no result names the agent, but kiff/agents still holds the setup's unclaimed draft. It's listed as being set up, by its
+  // name, and its starter can discard it, never left acting where no screen shows it.
+  it("lists a setup's unclaimed draft with a Card as being set up even when no chat shows its result, and lets its starter discard it", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "day-summary-x", name: "Day summary", requester: { kind: "member", id: "u_ana" } });
+    // An unnamed draft is never listed by its agent's id; a claimed one is a taf already made.
+    w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "unnamed-x", requester: { kind: "member", id: "u_ana" } });
+    w.agents.setupDrafts.set("drf_s3", { tenant: "t_acme", agent: "made-x", name: "Made", keyRef: "kiff/taf-made", requester: { kind: "member", id: "u_ana" } });
+    // A named draft whose agent has no Card in force acts on nothing: it isn't listed as being set up either.
+    w.agents.setupDrafts.set("drf_s4", { tenant: "t_acme", agent: "cardless-x", name: "Cardless", requester: { kind: "member", id: "u_ana" } });
+    w.account.mandates = ["day-summary-x", "unnamed-x", "made-x", "ops-bot"].map((a) => ({ id: `card_${a}`, subject: a, active: true, grants: [{ action: "lookup" }], aggregates: [] }));
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const req = (method: string, path: string, token = "ana") => handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: `Bearer ${token}`, "accept-language": "en" } }, deps);
+    const home = async (token = "ana") => JSON.parse((await req("GET", "/v1/home", token)).body) as { setting_up: Array<Record<string, unknown>> };
+    const r = await home();
+    expect(r.setting_up.map((t) => t.kiff_agent)).toEqual(["day-summary-x"]);
+    // No chat to finish it in: Discard only, with its Card for the phone to revoke first.
+    expect(r.setting_up[0]).toMatchObject({ name: "Day summary", discard: { cards: ["card_day-summary-x"] } });
+    expect(r.setting_up[0]).not.toHaveProperty("finish");
+    // Someone else sees its name, with no Discard, and can't discard it.
+    expect((await home("owner")).setting_up[0]).toMatchObject({ name: "Day summary" });
+    expect((await home("owner")).setting_up[0]).not.toHaveProperty("discard");
+    expect((await req("POST", "/v1/home/setting-up/day-summary-x/discard", "owner")).statusCode).toBe(404);
+    // While its Card is in force nothing ends; once the phone revoked it, its starter discards it and Home drops it.
+    expect((await req("POST", "/v1/home/setting-up/day-summary-x/discard")).statusCode).toBe(409);
+    w.account.mandates = w.account.mandates.map((m) => m.subject === "day-summary-x" ? { ...m, revoked_at: "2026-11-21T12:00:00Z" } : m);
+    const done = await req("POST", "/v1/home/setting-up/day-summary-x/discard");
+    expect(done.statusCode).toBe(200);
+    expect(JSON.parse(done.body)).toEqual({ discarded: true, kiff_agent: "day-summary-x" });
+    expect(w.agents.calls.some((c) => c.startsWith("cancelRun"))).toBe(false);
+    // kiff/agents can't list its drafts: nothing is listed from them, never a guess.
+    w.agents.api.unclaimedDrafts = async () => { throw new Error("down"); };
+    w.account.mandates = w.account.mandates.map((m) => m.subject === "day-summary-x" ? { ...m, revoked_at: undefined } : m);
+    expect((await home()).setting_up).toEqual([]);
+  });
+
   // A Discard from a computer is signed by its passkey (KIFF-Passkey-Assertion), as a removal is: KIFF checks it in place of a signature.
   it("takes a computer's passkey on a discard, checked by KIFF in place of a signature", async () => {
     const w = world();

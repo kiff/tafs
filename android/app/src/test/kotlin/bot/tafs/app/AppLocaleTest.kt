@@ -35,7 +35,7 @@ class AppLocaleTest {
 
   @Test fun aLanguageTafsDoesntShipIsIgnored() {
     val kept = Kept("it")
-    assertFalse(AppLocale.keep(kept, "tr"))
+    assertFalse(AppLocale.keep(kept, "sw"))
     assertFalse(AppLocale.keep(kept, ""))
     assertEquals("it", kept.tag)
     // One kept somehow reads as the phone's language.
@@ -45,6 +45,31 @@ class AppLocaleTest {
     assertEquals("de", AppLocale.known("de-DE"))
     assertEquals("de", AppLocale.fromLocales("de-DE,fr"))
     assertNull(AppLocale.fromLocales(""))
+  }
+
+  // zh-Hant, once it ships: a script, not a region. The phone may name it "zh-Hant", "zh-Hant-TW" or only by its region
+  // ("zh-TW", "zh-HK", "zh-MO"); Simplified Chinese ("zh-CN", "zh-Hans", "zh") isn't Traditional, and isn't shipped.
+  @Test fun traditionalChineseIsReadByItsScriptOrItsRegion() {
+    val shipped = AppLocale.TAGS + "zh-Hant"
+    for (tag in listOf("zh-Hant", "zh-Hant-TW", "zh-TW", "zh_TW", "zh-HK", "zh-MO")) assertEquals(tag, "zh-Hant", AppLocale.known(tag, shipped))
+    for (tag in listOf("zh", "zh-CN", "zh-Hans", "zh-Hans-CN", "zh-SG")) assertNull(tag, AppLocale.known(tag, shipped))
+    // It ships: a phone in Taiwan reads as Traditional Chinese, as tafs ships it.
+    assertEquals("zh-Hant", AppLocale.known("zh-TW"))
+    assertNull(AppLocale.known("zh-CN"))
+    // The other languages read as before.
+    assertEquals("pt-BR", AppLocale.known("pt-BR", shipped))
+    assertEquals("de", AppLocale.known("de-DE", shipped))
+  }
+
+  // Android 11 to 13 name Indonesian "in", its old code, even when the phone's tag is "id"; a kept tag may be either.
+  @Test fun anOldLanguageCodeIsReadAsTheNewOne() {
+    for (tag in listOf("id", "in", "in-ID", "in_ID", "id-ID")) assertEquals(tag, "id", AppLocale.known(tag))
+    assertEquals("id", AppLocale.fromLocales("in-ID,en-US"))
+    // Hebrew and Yiddish too, once they ship.
+    val shipped = AppLocale.TAGS + "he" + "yi"
+    assertEquals("he", AppLocale.known("iw-IL", shipped))
+    assertEquals("yi", AppLocale.known("ji", shipped))
+    assertNull(AppLocale.known("iw"))
   }
 
   // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
@@ -64,12 +89,15 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(22, rows.size)
+    assertEquals(27, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "pt-BR" to "Português (Brasil)"),
-      rows.drop(1).map { it.tag to it.title },
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "pt-BR" to "Português (Brasil)"),
+      rows.drop(1).filter { it.tag != "zh-Hant" }.map { it.tag to it.title },
     )
+    // Traditional Chinese is named with its script, so it doesn't read as Simplified: "中文 (繁體)", whichever brackets the system uses.
+    val hant = rows.single { it.tag == "zh-Hant" }.title
+    assertTrue(hant, hant.startsWith("中文") && "繁體" in hant)
     assertEquals("This tablet's language", AppLocale.choices(device = "tablet").first().title)
   }
 

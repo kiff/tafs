@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} dosya · 30 gün saklanır",
+    "other": "{count} dosya · 30 gün saklanır"
+  },
+  "files.all": "Tümü",
+  "files.all_tafs": "Tüm tafs",
+  "files.by_run": "Çalıştırmaya göre",
+  "files.by_taf": "Taf'a göre",
+  "files.delete_body": "Bu hesaptaki herkes için hemen Dosyalar'dan kaldırılır. Geri alınamaz.",
+  "files.delete_now": "Şimdi sil",
+  "files.delete_question": "“{name}” şimdi silinsin mi?",
+  "files.deleted": "Herkes için silindi",
+  "files.download": "İndir",
+  "files.empty": "Henüz bir şey yok. Bir taf bir çalıştırmada rapor, tablo veya belge hazırladığında, bu hesaptaki herkesin açıp kaydedebilmesi veya paylaşabilmesi için 30 gün burada saklanır.",
+  "files.everyone": "Bu hesaptaki herkes",
+  "files.goes_away": "Kalkar",
+  "files.goes_in_days": {
+    "one": "{count} gün sonra kalkar",
+    "other": "{count} gün sonra kalkar"
+  },
+  "files.goes_on": "{date} (çalıştırmasından 30 gün sonra)",
+  "files.goes_today": "bugün kalkar",
+  "files.goes_tomorrow": "yarın kalkar",
+  "files.in_run": "Çalıştırmada",
+  "files.kept_line": "Her dosya çalıştırmasından itibaren 30 gün saklanır, sonra kendiliğinden kalkar. Bu dosyaları bu hesaptaki herkes görür. Kendi sohbet eklerinizi mesajlarıyla birlikte kalır.",
+  "files.kept_until": "Dosyaları şu tarihe kadar saklanır: {date}",
+  "files.made_by": "Hazırlayan",
+  "files.none_yet": "Henüz yok · 30 gün saklanır",
+  "files.pick_one": "Burada görmek için bir dosya seçin.",
+  "files.preview_start": "Yalnızca başı gösteriliyor. Tamamını okumak için dosyayı indirin.",
+  "files.saved": "Bu cihaza kaydedildi",
+  "files.see_in_chat": "Sohbette gör",
+  "files.share": "Paylaş",
+  "files.size": "Boyut",
+  "files.taf_row": {
+    "one": "Çalıştırmalarından {count} dosya",
+    "other": "Çalıştırmalarından {count} dosya"
+  },
+  "files.title": "Dosyalar",
+  "files.type": "Tür",
+  "files.who_sees": "Kim görür"
+}

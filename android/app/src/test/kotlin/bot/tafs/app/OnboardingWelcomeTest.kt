@@ -289,6 +289,6 @@ class OnboardingWelcomeTest {
     assertEquals("https://kiff.dev/de/terms", Legal.kiffTerms("de"))
     assertEquals("https://kiff.dev/pl/privacy", Legal.kiffPrivacy("pl"))
     assertEquals("https://kiff.dev/privacy", Legal.kiffPrivacy("en"))
-    assertEquals("https://kiff.dev/terms", Legal.kiffTerms("tr"))
+    assertEquals("https://kiff.dev/terms", Legal.kiffTerms("sw"))
   }
 }

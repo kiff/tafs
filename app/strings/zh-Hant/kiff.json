@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "正在詢問 KIFF：{title}…",
+  "kiff.did_not_reach_kiff_try": "未傳達至 KIFF。請再試一次。",
+  "kiff.kiff_can_not_do_sign": "KIFF 目前還無法執行此操作：請從「設定」重新登入，以便在這部{device}上核准。",
+  "kiff.kiff_did_not_answer_expected": "KIFF 的回應不如預期。請再試一次。",
+  "kiff.kiff_words_do_not_match": "KIFF 的文字與其檢查碼不符。無法核准任何項目。"
+}

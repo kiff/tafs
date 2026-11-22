@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "{count} 個檔案 · 保留 30 天"
+  },
+  "files.all": "全部",
+  "files.all_tafs": "所有 taf",
+  "files.by_run": "依執行",
+  "files.by_taf": "依 taf",
+  "files.delete_body": "它會立即從此帳號所有人的「檔案」中消失。此操作無法復原。",
+  "files.delete_now": "立即刪除",
+  "files.delete_question": "要立即刪除「{name}」嗎？",
+  "files.deleted": "已為所有人刪除",
+  "files.download": "下載",
+  "files.empty": "目前沒有內容。當 taf 在執行中製作報告、試算表或文件時，會在這裡保留 30 天，供此帳號的所有人開啟、儲存或分享。",
+  "files.everyone": "此帳號的所有人",
+  "files.goes_away": "移除時間",
+  "files.goes_in_days": {
+    "other": "{count} 天後移除"
+  },
+  "files.goes_on": "{date}（執行後 30 天）",
+  "files.goes_today": "今天移除",
+  "files.goes_tomorrow": "明天移除",
+  "files.in_run": "在這次執行中",
+  "files.kept_line": "每個檔案自執行起保留 30 天，之後會自動移除。此帳號的所有人都看得到這些檔案。您自己在對話中的附件仍保留在各自的訊息中。",
+  "files.kept_until": "它的檔案保留至 {date}",
+  "files.made_by": "製作者",
+  "files.none_yet": "目前沒有 · 保留 30 天",
+  "files.pick_one": "選擇一個檔案即可在此查看。",
+  "files.preview_start": "僅顯示開頭部分。請下載檔案以閱讀全部內容。",
+  "files.saved": "已儲存到這部裝置",
+  "files.see_in_chat": "在對話中查看",
+  "files.share": "分享",
+  "files.size": "大小",
+  "files.taf_row": {
+    "other": "來自它的執行的 {count} 個檔案"
+  },
+  "files.title": "檔案",
+  "files.type": "類型",
+  "files.who_sees": "誰看得到"
+}

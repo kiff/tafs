@@ -1,0 +1,13 @@
+{
+  "halt.again": "Bekukan lagi",
+  "halt.all_now": "Bekukan semua sekarang",
+  "halt.explain.halted": "Dibekukan. Melanjutkan hanya memulai pekerjaan baru.",
+  "halt.explain.halted_since": "Sejak {time}. Melanjutkan hanya memulai pekerjaan baru.",
+  "halt.explain.halting": "Tidak ada yang baru dimulai. Status Dibekukan muncul setelah KIFF dan koneksi sama-sama mengonfirmasi.",
+  "halt.explain.running_all": "Pembekuan menghentikan semua tafs Anda sampai Anda melanjutkan. Panggilan yang sudah terkirim mungkin masih tiba.",
+  "halt.explain.running_one": "Pembekuan menghentikannya sampai Anda melanjutkan. Panggilan yang sudah terkirim mungkin masih tiba.",
+  "halt.halting_stops_no_run_starts": "Pembekuan menghentikan {who} sampai Anda melanjutkan. Panggilan yang sudah terkirim mungkin masih tiba.",
+  "halt.now": "Bekukan sekarang",
+  "halt.row_running": "Hentikan sampai Anda melanjutkan",
+  "halt.your_tafs_lower": "semua tafs Anda"
+}

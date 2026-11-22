@@ -31,6 +31,23 @@ function server(answer: (s: Sent) => Response = () => new Response("{}", { statu
   return { agents, sent };
 }
 
+// tafs#1652: a setup's unclaimed draft with a Card is listed as being set up; a claimed one is a taf already made.
+describe("the setup's unclaimed drafts", () => {
+  it("asks kiff/agents for the unclaimed ones only, and drops any the answer marks claimed", async () => {
+    const drafts = [{ draft_id: "d1", agent_id: "a-one", name: "One" }, { draft_id: "d2", agent_id: "a-two", name: "Two", claimed: true }];
+    const { agents, sent } = server(() => new Response(JSON.stringify({ drafts }), { status: 200 }));
+    expect(await agents.unclaimedDrafts("t_acme")).toEqual([{ draft_id: "d1", agent_id: "a-one", name: "One" }]);
+    expect(sent[0]!.method).toBe("GET");
+    expect(sent[0]!.url.pathname).toMatch(/\/drafts$/);
+    expect(sent[0]!.url.searchParams.get("claimed")).toBe("false");
+  });
+
+  it("answers none from a kiff/agents without the route", async () => {
+    const { agents } = server(() => new Response(JSON.stringify({ error: "not found" }), { status: 404 }));
+    expect(await agents.unclaimedDrafts("t_acme")).toEqual([]);
+  });
+});
+
 const hex = (d: string) => createHash("sha256").update(d).digest("hex");
 const hmac = (k: string | Buffer, d: string) => createHmac("sha256", k).update(d).digest();
 /** RFC 3986 escaping, as SigV4 wants it. */

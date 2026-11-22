@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} eklenemiyor.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs bu dosyayı ekleyemez: kabul ettiği bir tür veya boyutta değil. Başka bir dosya seçin.",
+  "attachment.photo": "Fotoğraf",
+  "attachment.photo_could_not_read": "O fotoğraf okunamadı.",
+  "attachment.photo_numbered": "Fotoğraf {n}",
+  "attachment.too_large": "{name} dosyası {size}; en fazla {limit} olabilir.",
+  "attachment.wrong_kind": "{name} eklenemiyor. Fotoğraflar, PDF'ler, metin, CSV, Markdown, Word ve Excel dosyaları eklenebilir."
+}

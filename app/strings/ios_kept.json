@@ -115,5 +115,8 @@
     "New leads this week.xlsx": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
     "Call notes.docx": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown",
     "Access review.csv": "the stub store's sample until tafs cloud's Files store lands; behind FilesFeature.on, never shown"
+  },
+  "Services/AppLanguage.swift": {
+    "zh-Hant": "a language tag (Traditional Chinese), data"
   }
 }
