@@ -30,14 +30,16 @@ import org.robolectric.annotation.GraphicsMode
 class IconsTest(private val language: String) {
   companion object {
     @JvmStatic @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
-    fun languages() = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr")
+    fun languages() = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant")
   }
 
   @get:Rule val compose = createComposeRule()
 
   @Before fun words() {
     // The 40 mm face's width, tall so the whole page is drawn.
-    RuntimeEnvironment.setQualifiers("$language-w192dp-h2400dp-round-watch-xhdpi")
+    // A script (zh-Hant) is a BCP 47 qualifier, as its resource folder is (`values-b+zh+Hant`).
+    val qualifier = if ('-' in language) "b+" + language.replace('-', '+') else language
+    RuntimeEnvironment.setQualifiers("$qualifier-w192dp-h2400dp-round-watch-xhdpi")
     Res.install(ApplicationProvider.getApplicationContext())
   }
 

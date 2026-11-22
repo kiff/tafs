@@ -576,10 +576,13 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
-## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese (being written)
+## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese
 
-For the countries whose language the apps don't have yet. Each catalog is in `all`, not `shipped`, until its review: no app
-shows it yet. Arabic is its own piece (tafs#1697), with the right-to-left rules.
+For the countries whose language the apps didn't have (TR, ID, VN, TH, TW). All five ship, and kiff.dev serves their legal
+pages (kiff/cloud#80; Traditional Chinese's are under `/zh/`). `test_strings` holds each to its own table below until its
+column joins the Terms table. They are first drafts: no native speaker has read them, and the Indonesian word for the
+keyboard setting ("Papan Ketik") in the dictation paths is not confirmed from Apple's own pages. Arabic is its own piece
+(tafs#1697), with the right-to-left rules.
 
 ### Turkish (tr)
 

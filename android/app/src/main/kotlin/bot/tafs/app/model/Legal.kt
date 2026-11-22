@@ -8,8 +8,11 @@ package bot.tafs.app.model
 object Legal {
   private const val SITE = "https://kiff.dev"
 
-  /** The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds). */
-  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr")
+  /**
+   * The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds).
+   * Traditional Chinese (zh-Hant) is served at `/zh/`: its tag's language.
+   */
+  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh")
 
   /** [language] as kiff.dev serves it: a regional variant's pages are its language's ("pt-BR" opens `/pt/`). */
   private fun served(language: String): String = language.substringBefore('-')

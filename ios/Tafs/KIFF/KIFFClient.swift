@@ -1675,7 +1675,7 @@ final class KIFFClient {
     /// `acceptLanguage` adds English last.
     nonisolated static var screenLanguages: [String] {
         // The lines' own language first: the one picked in the app, else the system's pick for it.
-        screenLanguages(resolved: Words.locale.language.languageCode?.identifier, preferred: Locale.preferredLanguages, shipped: Words.languages)
+        screenLanguages(resolved: Words.locale.identifier, preferred: Locale.preferredLanguages, shipped: Words.languages)
     }
 
     /// The one language the app's own screens resolved to: what KIFF's pages and kiff.dev's are
@@ -1687,8 +1687,11 @@ final class KIFFClient {
     nonisolated static func screenLanguages(resolved: String?, preferred: [String], shipped: [String]) -> [String] {
         var out: [String] = []
         for tag in [resolved].compactMap({ $0 }) + preferred {
-            let code = tag.lowercased().split(whereSeparator: { $0 == "-" || $0 == "_" }).first.map(String.init) ?? ""
-            if shipped.contains(code), !out.contains(code) { out.append(code) }
+            let parts = tag.split(whereSeparator: { $0 == "-" || $0 == "_" }).map(String.init)
+            let code = parts.first?.lowercased() ?? ""
+            // Traditional Chinese ships as "zh-Hant" and is served under its language ("zh"), as pt-BR's pages are pt's.
+            let shippedCode = shipped.contains(code) ? code : (code == "zh" && shipped.contains("zh-Hant") && AppLanguage.isTraditionalChinese(parts) ? code : "")
+            if !shippedCode.isEmpty, !out.contains(shippedCode) { out.append(shippedCode) }
             if out.count == 4 { break }
         }
         return out.isEmpty ? ["en"] : out

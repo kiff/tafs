@@ -35,7 +35,7 @@ class AppLocaleTest {
 
   @Test fun aLanguageTafsDoesntShipIsIgnored() {
     val kept = Kept("it")
-    assertFalse(AppLocale.keep(kept, "tr"))
+    assertFalse(AppLocale.keep(kept, "sw"))
     assertFalse(AppLocale.keep(kept, ""))
     assertEquals("it", kept.tag)
     // One kept somehow reads as the phone's language.
@@ -53,8 +53,9 @@ class AppLocaleTest {
     val shipped = AppLocale.TAGS + "zh-Hant"
     for (tag in listOf("zh-Hant", "zh-Hant-TW", "zh-TW", "zh_TW", "zh-HK", "zh-MO")) assertEquals(tag, "zh-Hant", AppLocale.known(tag, shipped))
     for (tag in listOf("zh", "zh-CN", "zh-Hans", "zh-Hans-CN", "zh-SG")) assertNull(tag, AppLocale.known(tag, shipped))
-    // Before it ships, none of them is one tafs has.
-    assertNull(AppLocale.known("zh-TW"))
+    // It ships: a phone in Taiwan reads as Traditional Chinese, as tafs ships it.
+    assertEquals("zh-Hant", AppLocale.known("zh-TW"))
+    assertNull(AppLocale.known("zh-CN"))
     // The other languages read as before.
     assertEquals("pt-BR", AppLocale.known("pt-BR", shipped))
     assertEquals("de", AppLocale.known("de-DE", shipped))
@@ -77,12 +78,15 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(22, rows.size)
+    assertEquals(27, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "pt-BR" to "Português (Brasil)"),
-      rows.drop(1).map { it.tag to it.title },
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "pt-BR" to "Português (Brasil)"),
+      rows.drop(1).filter { it.tag != "zh-Hant" }.map { it.tag to it.title },
     )
+    // Traditional Chinese is named with its script, so it doesn't read as Simplified: "中文 (繁體)", whichever brackets the system uses.
+    val hant = rows.single { it.tag == "zh-Hant" }.title
+    assertTrue(hant, hant.startsWith("中文") && "繁體" in hant)
     assertEquals("This tablet's language", AppLocale.choices(device = "tablet").first().title)
   }
 

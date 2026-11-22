@@ -127,11 +127,11 @@ final class SignInTests: XCTestCase {
     func testTheLegalLinksOpenTafssOwnPagesInTheAppsLanguage() {
         XCTAssertEqual(Legal.page("terms", language: "en").absoluteString, "https://kiff.dev/tafs/terms")
         XCTAssertEqual(Legal.page("privacy", language: "en").absoluteString, "https://kiff.dev/tafs/privacy", "English has no /en/")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh"] {
             XCTAssertEqual(Legal.page("terms", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/terms")
             XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
         }
-        XCTAssertEqual(Legal.page("terms", language: "tr").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
+        XCTAssertEqual(Legal.page("terms", language: "sw").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
         XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
         XCTAssertTrue(Legal.translated.isSubset(of: Set(Words.languages)), "kiff.dev serves pages only in languages the app ships")
@@ -143,11 +143,11 @@ final class SignInTests: XCTestCase {
     func testKiffsOwnLegalPagesOpenInTheAppsLanguage() {
         XCTAssertEqual(Legal.kiffPage("terms", language: "en").absoluteString, "https://kiff.dev/terms")
         XCTAssertEqual(Legal.kiffPage("privacy", language: "en").absoluteString, "https://kiff.dev/privacy")
-        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"] {
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh"] {
             XCTAssertEqual(Legal.kiffPage("terms", language: language).absoluteString, "https://kiff.dev/\(language)/terms")
             XCTAssertEqual(Legal.kiffPage("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/privacy")
         }
-        XCTAssertEqual(Legal.kiffPage("terms", language: "tr").absoluteString, "https://kiff.dev/terms")
+        XCTAssertEqual(Legal.kiffPage("terms", language: "sw").absoluteString, "https://kiff.dev/terms")
         XCTAssertEqual(Legal.kiffTerms, Legal.kiffPage("terms", language: Legal.language))
         XCTAssertNotEqual(Legal.kiffTerms, Legal.terms, "KIFF's Terms and tafs's are two pages")
     }
@@ -183,7 +183,7 @@ final class SignInTests: XCTestCase {
         for language in Legal.translated {
             XCTAssertEqual(Legal.label("Conditions", language: language), "Conditions", "\(language) has its own page: no suffix")
         }
-        for language in ["tr"] {
+        for language in ["sw"] {
             let label = Legal.label("Terms", language: language)
             XCTAssertEqual(label, Words.Settings.legalInEnglish(label: "Terms"))
             XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")

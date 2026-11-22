@@ -21,5 +21,10 @@
     <locale android:name="ro" />
     <locale android:name="bg" />
     <locale android:name="hr" />
+    <locale android:name="tr" />
+    <locale android:name="id" />
+    <locale android:name="vi" />
+    <locale android:name="th" />
+    <locale android:name="zh-Hant" />
     <locale android:name="pt-BR" />
 </locale-config>
