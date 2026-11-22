@@ -115,14 +115,37 @@ export const COUNT_NEVER_A_RULE = "A count of calls on a tool with an amount lim
 async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
   const checked = await cardsChecked(ask, draftID, grant, vendor, ctx, others, combined);
   if ("outcome" in checked && checked.outcome === "answered" && checked.code && REDRAFT_CODES.has(checked.code)) {
-    const carried = grant.status === "connected" ? ""
-      : takesKey(grant) ? " Its key wasn't approved either: the new approval carries it with the Card."
-      : " Its tools weren't approved either: the new approval carries them with the Card.";
-    const count = checked.code === "count_on_amount" ? ` ${COUNT_NEVER_A_RULE}` : "";
-    const next = AGREE_FIRST_CODES.has(checked.code) ? `${AGREE_FIRST} ${SHOW_NOW}` : DRAW_AGAIN;
-    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${next} ${KEEP_THE_REST}` };
+    return { ...checked, answer: closedRefusal(checked.answer, checked.code, grant) };
   }
   return checked;
+}
+
+/**
+ * A refusal a new draft mends, as Coach hears it: what it said, then that the approval is closed, what it would also have
+ * carried (its tools or its key, on a grant not yet connected), and what Coach does next. `failed: …` stays first, as the
+ * apps and the e2e read it.
+ */
+function closedRefusal(answer: string, code: string, grant: ApprovalGrant): string {
+  const carried = grant.status === "connected" ? ""
+    : takesKey(grant) ? " Its key wasn't approved either: the new approval carries it with the Card."
+    : " Its tools weren't approved either: the new approval carries them with the Card.";
+  const count = code === "count_on_amount" ? ` ${COUNT_NEVER_A_RULE}` : "";
+  const next = AGREE_FIRST_CODES.has(code) ? `${AGREE_FIRST} ${SHOW_NOW}` : DRAW_AGAIN;
+  return `${answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${next} ${KEEP_THE_REST}`;
+}
+
+function unagreedAnswer(notice: string): string {
+  return `failed: the rules notice "${notice}" isn't agreed yet, so the owner is looking at rules they haven't agreed to. Show its confirm with agrees "${notice}", and draft once the owner tapped agree.`;
+}
+
+/**
+ * The refusal an approval over a Card draft gets while its chat's newest rules notice isn't agreed, word for word what
+ * Approve answers at the tap (rules_unagreed): the chat's read gives it before the card is drawn, from the chat it already
+ * has, with no read of the draft (handler.ts, rulesFirst). 22 Nov, the emulator: the draft's read didn't finish in time, the
+ * card was drawn with Approve, and the tap was refused with a line that gave no reason.
+ */
+export function unagreedRefusal(notice: string, grant: ApprovalGrant, lang: Lang): { answer: string; note: string; code: "rules_unagreed" } {
+  return { answer: closedRefusal(unagreedAnswer(notice), "rules_unagreed", grant), note: approvalWords(lang).rulesUnagreed, code: "rules_unagreed" };
 }
 
 async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
@@ -873,7 +896,7 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
     return undefined;
   }
   if (agreement.state === "unagreed") {
-    return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" isn't agreed yet, so the owner is looking at rules they haven't agreed to. Show its confirm with agrees "${agreement.notice}", and draft once the owner tapped agree.`, note: W.rulesUnagreed, code: "rules_unagreed" };
+    return { outcome: "answered", answer: unagreedAnswer(agreement.notice), note: W.rulesUnagreed, code: "rules_unagreed" };
   }
   // A line the owner agreed as kept by the connection must be: each tool it names is pinned in its grant, or nothing is
   // signed, and Coach hears which tool, before any signing request reaches the owner.

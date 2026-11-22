@@ -139,6 +139,14 @@ when the draft it names is one the setup submitted (kiff/agents' `GET /drafts/{i
 the hand-over claims), names that agent, and isn't claimed yet. A KIFF agent tafs didn't draft
 is never listed, and nothing is when kiff/agents can't be asked.
 
+A Card can also be approved after the chat stopped showing its result: the chat ended first, or
+its result was answered "never approved" 15 minutes in, and the Card went through later. No result
+names that agent then, but kiff/agents still holds the setup's draft for it, unclaimed
+(`GET /drafts?claimed=false`, each with its agent, Coach's name for it and who the setup ran
+for). That is proof too: the agent is listed in `setting_up` by that name, with no `finish`, and
+with `discard` for the person the setup ran for. Without a name it isn't listed, and a kiff/agents
+without that route lists none from it. So a Card that acts is never left where no screen shows it.
+
 A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
 the most of its limit first (its money total or its calls, whichever is further along), then
 KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while
