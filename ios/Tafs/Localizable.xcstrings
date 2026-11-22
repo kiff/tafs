@@ -285409,10 +285409,28 @@
     "onboarding.control_lead_desktop": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си или отказвате."
+          }
+        },
         "ca": {
           "stringUnit": {
             "state": "translated",
             "value": "Quan un taf et necessita, espera a «Et necessita». Aproves al telèfon, o rebutges."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo odmítnete."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braucht dich ein taf, wartet er in „Braucht dich“. Du genehmigst auf deinem Handy oder lehnst ab."
           }
         },
         "en": {
@@ -285421,16 +285439,82 @@
             "value": "When a taf needs you, it waits in Needs you. You approve on your phone, or refuse."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando un taf te necesita, espera en «Te necesita». Apruebas en tu teléfono, o rechazas."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või keeldud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou vous refusez."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy elutasítod."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saat sebuah taf membutuhkan Anda, taf menunggu di Menunggu Anda. Anda menyetujui di ponsel, atau menolak."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, oppure rifiuti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、拒否してください。"
+          }
+        },
         "km": {
           "stringUnit": {
             "state": "translated",
             "value": "នៅពេល taf ត្រូវការអ្នក វារង់ចាំក្នុង «ត្រូវការអ្នក»។ អ្នកអនុម័តនៅលើទូរសព្ទរបស់អ្នក ឬបដិសេធ។"
           }
         },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나 거절하세요."
+          }
+        },
         "lo": {
           "stringUnit": {
             "state": "translated",
             "value": "ເມື່ອ taf ຕ້ອງການທ່ານ ມັນລໍຖ້າໃນ «ຕ້ອງການທ່ານ». ທ່ານອະນຸມັດໃນໂທລະສັບຂອງທ່ານ ຫຼື ປະຕິເສດ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone arba atmetate."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī vai atsaki."
           }
         },
         "mk": {
@@ -285449,6 +285533,72 @@
           "stringUnit": {
             "state": "translated",
             "value": "कुनै taf लाई तपाईं चाहिँदा यो तपाईंको प्रतीक्षामा पर्खन्छ। तपाईं फोनमा स्वीकृत गर्नुहुन्छ, वा अस्वीकार गर्नुहुन्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of weigert."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie albo odrzucasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou recusa."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando um taf precisa de você, espera em «Precisa de você». Aprova no celular, ou recusa."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, ori refuzați."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keď vás taf potrebuje, čaká v Čaká na vás. Schválite v telefóne, alebo odmietnete."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เมื่อ taf ต้องการคุณ มันจะรออยู่ในรอคุณอยู่ คุณอนุมัติบนโทรศัพท์ หรือปฏิเสธ."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir taf'ın size ihtiyacı olduğunda Sizi bekliyor'da bekler. Telefonunuzdan onaylar ya da reddedersiniz."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc từ chối."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "當 taf 需要您時，它會在「等您處理」中等候。您可在手機上核准，或拒絕。"
           }
         }
       }
