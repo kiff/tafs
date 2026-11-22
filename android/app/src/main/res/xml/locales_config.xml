@@ -29,5 +29,6 @@
     <locale android:name="sr-Latn" />
     <locale android:name="sq" />
     <locale android:name="ka" />
+    <locale android:name="hy" />
     <locale android:name="pt-BR" />
 </locale-config>

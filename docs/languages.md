@@ -951,6 +951,43 @@ Georgian has one plural form (one and other say the same): a number takes the si
 | receipt | ქვითარი |
 | Cancel / Continue | გაუქმება / გააგრძელეთ |
 
+### Armenian (hy)
+
+Eastern Armenian, addressed as **դուք** (the polite plural); buttons are polite imperatives ("Հաստատեք", "Մերժեք", "Շարունակել").
+taf, Card, Coach, KIFF and Setup are names and stay as they are in Latin letters; Armenian's case endings join them with a
+hyphen ("taf-ը", "Card-ի", "KIFF-ում"), and a value is a name that takes none, so a line that would need one words around
+it: "{name}-ը", "այս սարքում ({device})". A door is "դուռ", a call "զանգ", a request "հարցում", a held call "պահված զանգ", a
+receipt "անդորրագիր", a brief "ամփոփում". Apple's menu paths are the Armenian ones ("Կարգավորումներ", "Համակարգի կարգավորումներ",
+"Գաղտնիություն և անվտանգություն"). Armenian's "one" covers 0 and 1; a number takes the singular noun ("5 առաջադրանք").
+
+| English | Armenian |
+|---|---|
+| Needs you | Սպասում է ձեզ |
+| Approve / Approve once | Հաստատեք / Հաստատեք մեկ անգամ |
+| Refuse | Մերժեք |
+| held | պահված |
+| Halt / Halted | Կանգնեցրեք / Կանգնեցված է |
+| Stopped | Դադարեցված է |
+| Pause / Paused | Դադարեցրեք / Դադարեցված է |
+| Resume | Վերսկսեք |
+| Revoke | Չեղարկեք |
+| Record | Գրանցամատյան |
+| Connect / connection | Միացրեք / կապ |
+| Pair / Unpair | Զուգակցեք / Չեղարկեք զուգակցումը |
+| Account | Հաշիվ |
+| limit / spend limit | սահմանաչափ / ծախսի սահմանաչափ |
+| credits / credit pack | կրեդիտներ / կրեդիտների փաթեթ |
+| passkey | մուտքի բանալի |
+| security key | անվտանգության բանալի |
+| Sign in / Sign out | Մուտք / Ելք |
+| Inbox | Մուտքային |
+| Overview | Ակնարկ |
+| Calendar | Օրացույց |
+| Usage | Օգտագործում |
+| brief | ամփոփում |
+| receipt | անդորրագիր |
+| Cancel / Continue | Հրաժարվել / Շարունակել |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
