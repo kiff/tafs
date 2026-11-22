@@ -22,6 +22,11 @@
   "chrome.refused": "別のChromeがこのコードを使ったため、何もペアリングされませんでした。もう一度やり直してください。",
   "chrome.remove": "ペアリングを解除",
   "chrome.remove_named": "{name}のペアリングを解除",
+  "chrome.shot_failed": "画像を読み込めませんでした。",
+  "chrome.shot_kept": "30日間保存され、その後削除されます。",
+  "chrome.shot_none": "このステップの画像は保存されていません。",
+  "chrome.shot_open": "このステップの前のページを見る",
+  "chrome.shot_title": "このステップの前",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chromeを待っています…"
 }

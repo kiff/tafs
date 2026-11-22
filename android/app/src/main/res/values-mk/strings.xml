@@ -616,6 +616,11 @@
     <string name="chrome_refused">Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.</string>
     <string name="chrome_remove">Раздвои</string>
     <string name="chrome_remove_named">Раздвои го %1$s</string>
+    <string name="chrome_shot_failed">Сликата не можеше да се вчита.</string>
+    <string name="chrome_shot_kept">Се чува 30 дена, потоа се брише.</string>
+    <string name="chrome_shot_none">За овој чекор нема зачувана слика.</string>
+    <string name="chrome_shot_open">Види ја страницата пред овој чекор</string>
+    <string name="chrome_shot_title">Пред овој чекор</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Се чека Chrome…</string>
     <string name="coach_activity_card">Го подготвувам Card…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Кога некој taf бара нешто надвор од својот Card, се појавува тука и на твојот заклучен екран.</string>
     <string name="needs_you_expired">истечено</string>
     <string name="needs_you_expired_line">Истечено. Никој не одговори навреме, па KIFF го одби и ништо не е испратено.</string>
+    <string name="needs_you_extra_room">Дополнителен простор</string>
     <string name="needs_you_extra_room_with">Дополнителен простор со %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Добиј известување кога некое барање чека на твојот одговор, дури и кога tafs е затворен.</string>
     <string name="needs_you_install_from_card">Инсталирај ја од нејзината картичка: верзијата станува активна, па Coach слуша.</string>

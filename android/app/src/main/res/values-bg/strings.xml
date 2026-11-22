@@ -616,6 +616,11 @@
     <string name="chrome_refused">Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.</string>
     <string name="chrome_remove">Премахване на сдвояването</string>
     <string name="chrome_remove_named">Премахване на сдвояването с %1$s</string>
+    <string name="chrome_shot_failed">Картината не можа да се зареди.</string>
+    <string name="chrome_shot_kept">Пази се 30 дни, после се изтрива.</string>
+    <string name="chrome_shot_none">За тази стъпка не е запазена картина.</string>
+    <string name="chrome_shot_open">Виж страницата преди тази стъпка</string>
+    <string name="chrome_shot_title">Преди тази стъпка</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Изчакване на Chrome…</string>
     <string name="coach_activity_card">Подготвяне на Card…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Когато taf поиска нещо извън своята Card, то се показва тук и на заключения ви екран.</string>
     <string name="needs_you_expired">изтекло</string>
     <string name="needs_you_expired_line">Изтекло. Никой не отговори навреме, затова KIFF го отказа и нищо не беше изпратено.</string>
+    <string name="needs_you_extra_room">Допълнителен лимит</string>
     <string name="needs_you_extra_room_with">Допълнителен лимит с %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Получавайте известие, когато заявка чака вашия отговор, дори когато tafs е затворен.</string>
     <string name="needs_you_install_from_card">Инсталирайте я от картата ѝ: версията става активна, после Coach разбира.</string>

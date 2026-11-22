@@ -22,6 +22,11 @@
   "chrome.refused": "另一個 Chrome 使用了此代碼，因此未配對任何項目。請重新開始。",
   "chrome.remove": "取消配對",
   "chrome.remove_named": "取消配對 {name}",
+  "chrome.shot_failed": "無法載入圖片。",
+  "chrome.shot_kept": "保存 30 天，之後刪除。",
+  "chrome.shot_none": "此步驟沒有保存圖片。",
+  "chrome.shot_open": "查看此步驟之前的頁面",
+  "chrome.shot_title": "此步驟之前",
   "chrome.title": "Chrome",
   "chrome.waiting": "正在等待 Chrome…"
 }

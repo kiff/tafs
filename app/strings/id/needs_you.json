@@ -32,6 +32,7 @@
   "needs_you.empty_hint": "Saat sebuah taf meminta sesuatu di luar Card-nya, permintaan itu muncul di sini dan di layar kunci Anda.",
   "needs_you.expired": "kedaluwarsa",
   "needs_you.expired_line": "Kedaluwarsa. Tidak ada yang menjawab tepat waktu, jadi KIFF menolaknya dan tidak ada yang dikirim.",
+  "needs_you.extra_room": "Ruang tambahan",
   "needs_you.extra_room_with": "Ruang tambahan dengan {biometry}",
   "needs_you.get_alert_when_call_waits": "Dapatkan peringatan saat sebuah panggilan menunggu jawaban Anda, bahkan saat tafs ditutup.",
   "needs_you.install_from_card": "Pasang dari kartunya: versi mulai aktif, lalu Coach tahu.",

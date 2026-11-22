@@ -35,6 +35,7 @@
   "needs_you.empty_hint": "Ko taf prosi za nekaj zunaj svoje Card, se to prikaže tukaj in na zaklenjenem zaslonu.",
   "needs_you.expired": "poteklo",
   "needs_you.expired_line": "Poteklo. Nihče ni pravočasno odgovoril, zato je KIFF to zavrnil in nič ni bilo poslano.",
+  "needs_you.extra_room": "Dodaten prostor",
   "needs_you.extra_room_with": "Dodaten prostor z {biometry}",
   "needs_you.get_alert_when_call_waits": "Prejmite opozorilo, ko klic čaka na vaš odgovor, tudi ko je tafs zaprt.",
   "needs_you.install_from_card": "Namestite ga s njegove kartice: različica postane aktivna, nato izve Coach.",

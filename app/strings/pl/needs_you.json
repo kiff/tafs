@@ -35,6 +35,7 @@
   "needs_you.empty_hint": "Gdy taf poprosi o coś poza swoją Card, pojawi się to tutaj i na ekranie blokady.",
   "needs_you.expired": "wygasło",
   "needs_you.expired_line": "Wygasło. Nikt nie odpowiedział na czas, więc KIFF to odrzucił i nic nie zostało wysłane.",
+  "needs_you.extra_room": "Dodatkowy zapas",
   "needs_you.extra_room_with": "Dodatkowy zapas przez {biometry}",
   "needs_you.get_alert_when_call_waits": "Otrzymuj alert, gdy wywołanie czeka na Twoją odpowiedź, nawet gdy tafs jest zamknięte.",
   "needs_you.install_from_card": "Zainstaluj ją z jej karty: wersja zacznie działać na żywo, a potem Coach się o tym dowie.",

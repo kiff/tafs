@@ -22,6 +22,11 @@
   "chrome.refused": "Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.",
   "chrome.remove": "Prekinite uparivanje",
   "chrome.remove_named": "Prekinite uparivanje: {name}",
+  "chrome.shot_failed": "Sliku nije bilo moguće učitati.",
+  "chrome.shot_kept": "Čuva se 30 dana, zatim se briše.",
+  "chrome.shot_none": "Za ovaj korak nije sačuvana nijedna slika.",
+  "chrome.shot_open": "Pogledaj stranicu pre ovog koraka",
+  "chrome.shot_title": "Pre ovog koraka",
   "chrome.title": "Chrome",
   "chrome.waiting": "Čeka se Chrome…"
 }

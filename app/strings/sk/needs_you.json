@@ -34,6 +34,7 @@
   "needs_you.empty_hint": "Keď taf žiada o niečo mimo svojej Card, objaví sa to tu a na zamknutej obrazovke.",
   "needs_you.expired": "vypršalo",
   "needs_you.expired_line": "Vypršalo. Nikto neodpovedal včas, takže to KIFF odmietol a nič sa neodoslalo.",
+  "needs_you.extra_room": "Viac priestoru",
   "needs_you.extra_room_with": "Viac priestoru cez {biometry}",
   "needs_you.get_alert_when_call_waits": "Dostávajte upozornenie, keď volanie čaká na vašu odpoveď, aj keď je tafs zatvorený.",
   "needs_you.install_from_card": "Nainštalujte ho z jeho karty: verzia sa aktivuje a potom sa to Coach dozvie.",

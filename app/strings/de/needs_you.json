@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Wenn ein taf um etwas außerhalb seiner Card bittet, erscheint es hier und auf deinem Sperrbildschirm.",
   "needs_you.expired": "abgelaufen",
   "needs_you.expired_line": "Abgelaufen. Niemand hat rechtzeitig geantwortet, daher hat KIFF es abgelehnt, und es wurde nichts gesendet.",
+  "needs_you.extra_room": "Zusatzspielraum",
   "needs_you.extra_room_with": "Zusatzspielraum mit {biometry}",
   "needs_you.get_alert_when_call_waits": "Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.",
   "needs_you.install_from_card": "Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.",

@@ -616,6 +616,11 @@
     <string name="chrome_refused">Seda koodi kasutas teine Chrome, seega midagi ei seotud. Alusta uuesti.</string>
     <string name="chrome_remove">Tühista sidumine</string>
     <string name="chrome_remove_named">Tühista sidumine: %1$s</string>
+    <string name="chrome_shot_failed">Pilti ei õnnestunud laadida.</string>
+    <string name="chrome_shot_kept">Säilitatakse 30 päeva, seejärel kustutatakse.</string>
+    <string name="chrome_shot_none">Selle sammu kohta pole pilti salvestatud.</string>
+    <string name="chrome_shot_open">Vaata lehte enne seda sammu</string>
+    <string name="chrome_shot_title">Enne seda sammu</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Chrome\'i ootamine…</string>
     <string name="coach_activity_card">Cardi ettevalmistamine…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Kui taf küsib midagi väljaspool oma Cardi, ilmub see siia ja sinu lukustuskuvale.</string>
     <string name="needs_you_expired">aegunud</string>
     <string name="needs_you_expired_line">Aegunud. Keegi ei vastanud õigel ajal, seega KIFF keeldus ja midagi ei saadetud.</string>
+    <string name="needs_you_extra_room">Lisaruum</string>
     <string name="needs_you_extra_room_with">Lisaruum %1$s abil</string>
     <string name="needs_you_get_alert_when_call_waits">Saa teavitus, kui päring ootab sinu vastust, isegi kui tafs on suletud.</string>
     <string name="needs_you_install_from_card">Paigalda see selle kaardilt: versioon võetakse kasutusele, siis saab Coach teada.</string>

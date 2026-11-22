@@ -185,6 +185,7 @@ enum KIFFMapping {
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool", c.toolOutcome?.refusedBy == "connection", c.toolOutcome?.code != nil {
                 entry.detail = c.detail.map(visible) ?? Words.Record.connectionRefusedBeforeSending
             }
+            entry.proposalID = c.proposalID
             if c.outcome == "allowed", c.held { entry.ownerApproved = true }
             if c.outcome == "allowed", c.toolOutcome?.status == "refused_by_tool" {
                 entry.refusedByTool = true

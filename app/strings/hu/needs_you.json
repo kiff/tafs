@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Ha egy taf a Cardján kívül eső dolgot kér, az itt és a zárolási képernyődön jelenik meg.",
   "needs_you.expired": "lejárt",
   "needs_you.expired_line": "Lejárt. Senki sem válaszolt időben, ezért a KIFF elutasította, és semmi sem ment el.",
+  "needs_you.extra_room": "Extra keret",
   "needs_you.extra_room_with": "Extra keret ezzel: {biometry}",
   "needs_you.get_alert_when_call_waits": "Kapj riasztást, ha egy hívás a válaszodra vár, akkor is, ha a tafs be van zárva.",
   "needs_you.install_from_card": "Telepítsd a kártyájáról: a verzió élesedik, aztán a Coach értesül.",

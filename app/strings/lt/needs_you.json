@@ -34,6 +34,7 @@
   "needs_you.empty_hint": "Kai taf prašo ko nors už savo Card ribų, tai rodoma čia ir jūsų užrakinimo ekrane.",
   "needs_you.expired": "nebegalioja",
   "needs_you.expired_line": "Nebegalioja. Niekas neatsakė laiku, todėl KIFF ją atmetė ir niekas neišsiųsta.",
+  "needs_you.extra_room": "Papildomas rezervas",
   "needs_you.extra_room_with": "Papildomas rezervas: {biometry}",
   "needs_you.get_alert_when_call_waits": "Gaukite pranešimą, kai užklausa laukia jūsų atsakymo, net kai tafs uždaryta.",
   "needs_you.install_from_card": "Įdiekite ją iš jos kortelės: versija aktyvuojama, tada apie tai sužino Coach.",

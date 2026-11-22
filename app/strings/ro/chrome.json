@@ -22,6 +22,11 @@
   "chrome.refused": "Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.",
   "chrome.remove": "Disociați",
   "chrome.remove_named": "Disociați {name}",
+  "chrome.shot_failed": "Imaginea nu a putut fi încărcată.",
+  "chrome.shot_kept": "Păstrată 30 de zile, apoi ștearsă.",
+  "chrome.shot_none": "Pentru acest pas nu este păstrată nicio imagine.",
+  "chrome.shot_open": "Vezi pagina de dinainte de acest pas",
+  "chrome.shot_title": "Înainte de acest pas",
   "chrome.title": "Chrome",
   "chrome.waiting": "Se așteaptă Chrome…"
 }

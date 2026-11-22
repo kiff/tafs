@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Taf өөрийн Card-аас гадуур зүйл хүсэхэд энд болон таны түгжээтэй дэлгэц дээр гарч ирнэ.",
   "needs_you.expired": "хугацаа дууссан",
   "needs_you.expired_line": "Хугацаа дууссан. Хэн ч цагтаа хариулаагүй тул KIFF татгалзсан бөгөөд юу ч илгээгдээгүй.",
+  "needs_you.extra_room": "Нэмэлт зай",
   "needs_you.extra_room_with": "{biometry}-ээр нэмэлт зай",
   "needs_you.get_alert_when_call_waits": "Дуудлага таны хариуг хүлээх үед tafs хаалттай байсан ч мэдэгдэл аваарай.",
   "needs_you.install_from_card": "Түүний картаас суулгана уу: хувилбар идэвхжиж, дараа нь Coach мэднэ.",

@@ -583,6 +583,11 @@
     <string name="chrome_refused">Chrome lain memakai kode ini, jadi tidak ada yang dipasangkan. Mulai lagi.</string>
     <string name="chrome_remove">Lepas pasangan</string>
     <string name="chrome_remove_named">Lepas pasangan %1$s</string>
+    <string name="chrome_shot_failed">Gambar tidak dapat dimuat.</string>
+    <string name="chrome_shot_kept">Disimpan 30 hari, lalu dihapus.</string>
+    <string name="chrome_shot_none">Tidak ada gambar yang disimpan untuk langkah ini.</string>
+    <string name="chrome_shot_open">Lihat halaman sebelum langkah ini</string>
+    <string name="chrome_shot_title">Sebelum langkah ini</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Menunggu Chrome…</string>
     <string name="coach_activity_card">Menyiapkan Card…</string>
@@ -1447,6 +1452,7 @@
     <string name="needs_you_empty_hint">Saat sebuah taf meminta sesuatu di luar Card-nya, permintaan itu muncul di sini dan di layar kunci Anda.</string>
     <string name="needs_you_expired">kedaluwarsa</string>
     <string name="needs_you_expired_line">Kedaluwarsa. Tidak ada yang menjawab tepat waktu, jadi KIFF menolaknya dan tidak ada yang dikirim.</string>
+    <string name="needs_you_extra_room">Ruang tambahan</string>
     <string name="needs_you_extra_room_with">Ruang tambahan dengan %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Dapatkan peringatan saat sebuah panggilan menunggu jawaban Anda, bahkan saat tafs ditutup.</string>
     <string name="needs_you_install_from_card">Pasang dari kartunya: versi mulai aktif, lalu Coach tahu.</string>

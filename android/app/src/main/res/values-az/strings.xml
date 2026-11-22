@@ -616,6 +616,11 @@
     <string name="chrome_refused">Başqa bir Chrome bu kodu istifadə etdi, ona görə heç nə cütləşmədi. Yenidən başlayın.</string>
     <string name="chrome_remove">Cütləşməni ləğv edin</string>
     <string name="chrome_remove_named">Cütləşməni ləğv edin: %1$s</string>
+    <string name="chrome_shot_failed">Şəkil yüklənmədi.</string>
+    <string name="chrome_shot_kept">30 gün saxlanılır, sonra silinir.</string>
+    <string name="chrome_shot_none">Bu addım üçün saxlanmış şəkil yoxdur.</string>
+    <string name="chrome_shot_open">Bu addımdan əvvəlki səhifəyə bax</string>
+    <string name="chrome_shot_title">Bu addımdan əvvəl</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Chrome gözlənilir…</string>
     <string name="coach_activity_card">Card hazırlanır…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Taf Card-ından kənar bir şey istəyəndə, o, burada və kilid ekranınızda görünür.</string>
     <string name="needs_you_expired">vaxtı bitib</string>
     <string name="needs_you_expired_line">Vaxtı bitdi. Heç kim vaxtında cavab vermədi, ona görə KIFF onu rədd etdi və heç nə göndərilmədi.</string>
+    <string name="needs_you_extra_room">Əlavə yer</string>
     <string name="needs_you_extra_room_with">Əlavə yer: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Çağırış cavabınızı gözləyəndə, tafs bağlı olsa belə, bildiriş alın.</string>
     <string name="needs_you_install_from_card">Onu kartından quraşdırın: versiya işə düşür, sonra Coach xəbər tutur.</string>

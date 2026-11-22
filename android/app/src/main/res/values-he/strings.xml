@@ -649,6 +649,11 @@
     <string name="chrome_refused">Chrome אחר השתמש בקוד הזה, ולכן שום דבר לא הוצמד. יש להתחיל מחדש.</string>
     <string name="chrome_remove">ביטול צימוד</string>
     <string name="chrome_remove_named">ביטול צימוד של %1$s</string>
+    <string name="chrome_shot_failed">לא הצלחנו לטעון את התמונה.</string>
+    <string name="chrome_shot_kept">נשמרת 30 יום ואז נמחקת.</string>
+    <string name="chrome_shot_none">לא נשמרה תמונה עבור השלב הזה.</string>
+    <string name="chrome_shot_open">הצגת הדף לפני השלב הזה</string>
+    <string name="chrome_shot_title">לפני השלב הזה</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">ממתין ל-Chrome…</string>
     <string name="coach_activity_card">מכין את ה-Card…</string>
@@ -1565,6 +1570,7 @@
     <string name="needs_you_empty_hint">כש-taf מבקש משהו מחוץ ל-Card שלו, זה מופיע כאן ובמסך הנעילה שלך.</string>
     <string name="needs_you_expired">פג תוקף</string>
     <string name="needs_you_expired_line">פג תוקף. אף אחד לא השיב בזמן, ולכן KIFF דחה והבקשה לא נשלחה.</string>
+    <string name="needs_you_extra_room">מקום נוסף</string>
     <string name="needs_you_extra_room_with">מקום נוסף באמצעות %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">קבלת התראה כשקריאה ממתינה לתשובה שלך, גם כש-tafs סגור.</string>
     <string name="needs_you_install_from_card">יש להתקין אותה מהכרטיס שלה: הגרסה נהיית פעילה, ואז Coach מקבל הודעה.</string>

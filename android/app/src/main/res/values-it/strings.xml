@@ -616,6 +616,11 @@
     <string name="chrome_refused">Un altro Chrome ha usato questo codice, quindi non è stato associato nulla. Ricomincia.</string>
     <string name="chrome_remove">Dissocia</string>
     <string name="chrome_remove_named">Dissocia %1$s</string>
+    <string name="chrome_shot_failed">Non è stato possibile caricare l\'immagine.</string>
+    <string name="chrome_shot_kept">Conservata per 30 giorni, poi eliminata.</string>
+    <string name="chrome_shot_none">Per questo passaggio non è conservata nessuna immagine.</string>
+    <string name="chrome_shot_open">Vedi la pagina prima di questo passaggio</string>
+    <string name="chrome_shot_title">Prima di questo passaggio</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">In attesa di Chrome…</string>
     <string name="coach_activity_card">Preparazione della Card…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Quando un taf chiede qualcosa fuori dalla sua Card, compare qui e sulla schermata di blocco.</string>
     <string name="needs_you_expired">scaduta</string>
     <string name="needs_you_expired_line">Scaduta. Nessuno ha risposto in tempo, quindi KIFF l\'ha rifiutata e non è stato inviato nulla.</string>
+    <string name="needs_you_extra_room">Margine extra</string>
     <string name="needs_you_extra_room_with">Margine extra con %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Ricevi un avviso quando una chiamata aspetta la tua risposta, anche con tafs chiusa.</string>
     <string name="needs_you_install_from_card">Installala dalla sua scheda: la versione diventa attiva, poi Coach viene informato.</string>

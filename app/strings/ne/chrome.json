@@ -22,6 +22,11 @@
   "chrome.refused": "अर्को Chrome ले यो कोड प्रयोग गर्‍यो, त्यसैले केही जोडिएन। फेरि सुरु गर्नुहोस्।",
   "chrome.remove": "जोडी हटाउनुहोस्",
   "chrome.remove_named": "{name} को जोडी हटाउनुहोस्",
+  "chrome.shot_failed": "तस्बिर लोड गर्न सकिएन।",
+  "chrome.shot_kept": "३० दिन राखिन्छ, त्यसपछि मेटिन्छ।",
+  "chrome.shot_none": "यो चरणको कुनै तस्बिर राखिएको छैन।",
+  "chrome.shot_open": "यो चरणअघिको पृष्ठ हेर्नुहोस्",
+  "chrome.shot_title": "यो चरणअघि",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chrome को प्रतीक्षा हुँदैछ…"
 }

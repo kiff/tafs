@@ -649,6 +649,11 @@
     <string name="chrome_refused">Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo.</string>
     <string name="chrome_remove">Atsieti</string>
     <string name="chrome_remove_named">Atsieti %1$s</string>
+    <string name="chrome_shot_failed">Nepavyko įkelti paveikslėlio.</string>
+    <string name="chrome_shot_kept">Saugoma 30 dienų, tada ištrinama.</string>
+    <string name="chrome_shot_none">Šiam žingsniui paveikslėlis nesaugomas.</string>
+    <string name="chrome_shot_open">Žiūrėti puslapį prieš šį žingsnį</string>
+    <string name="chrome_shot_title">Prieš šį žingsnį</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Laukiama Chrome…</string>
     <string name="coach_activity_card">Ruošiama Card…</string>
@@ -1565,6 +1570,7 @@
     <string name="needs_you_empty_hint">Kai taf prašo ko nors už savo Card ribų, tai rodoma čia ir jūsų užrakinimo ekrane.</string>
     <string name="needs_you_expired">nebegalioja</string>
     <string name="needs_you_expired_line">Nebegalioja. Niekas neatsakė laiku, todėl KIFF ją atmetė ir niekas neišsiųsta.</string>
+    <string name="needs_you_extra_room">Papildomas rezervas</string>
     <string name="needs_you_extra_room_with">Papildomas rezervas: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Gaukite pranešimą, kai užklausa laukia jūsų atsakymo, net kai tafs uždaryta.</string>
     <string name="needs_you_install_from_card">Įdiekite ją iš jos kortelės: versija aktyvuojama, tada apie tai sužino Coach.</string>

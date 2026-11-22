@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Taf Card-ından kənar bir şey istəyəndə, o, burada və kilid ekranınızda görünür.",
   "needs_you.expired": "vaxtı bitib",
   "needs_you.expired_line": "Vaxtı bitdi. Heç kim vaxtında cavab vermədi, ona görə KIFF onu rədd etdi və heç nə göndərilmədi.",
+  "needs_you.extra_room": "Əlavə yer",
   "needs_you.extra_room_with": "Əlavə yer: {biometry}",
   "needs_you.get_alert_when_call_waits": "Çağırış cavabınızı gözləyəndə, tafs bağlı olsa belə, bildiriş alın.",
   "needs_you.install_from_card": "Onu kartından quraşdırın: versiya işə düşür, sonra Coach xəbər tutur.",

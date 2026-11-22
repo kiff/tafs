@@ -649,6 +649,11 @@
     <string name="chrome_refused">Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.</string>
     <string name="chrome_remove">Prekinite uparivanje</string>
     <string name="chrome_remove_named">Prekinite uparivanje: %1$s</string>
+    <string name="chrome_shot_failed">Sliku nije bilo moguće učitati.</string>
+    <string name="chrome_shot_kept">Čuva se 30 dana, zatim se briše.</string>
+    <string name="chrome_shot_none">Za ovaj korak nije sačuvana nijedna slika.</string>
+    <string name="chrome_shot_open">Pogledaj stranicu pre ovog koraka</string>
+    <string name="chrome_shot_title">Pre ovog koraka</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čeka se Chrome…</string>
     <string name="coach_activity_card">Priprema Carda…</string>
@@ -1565,6 +1570,7 @@
     <string name="needs_you_empty_hint">Kad taf traži nešto izvan svog Carda, to se pojavi ovdje i na vašem zaključanom ekranu.</string>
     <string name="needs_you_expired">isteklo</string>
     <string name="needs_you_expired_line">Isteklo. Nitko nije odgovorio na vreme pa je KIFF to odbio i ništa nije poslano.</string>
+    <string name="needs_you_extra_room">Dodatni prostor</string>
     <string name="needs_you_extra_room_with">Dodatni prostor: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Primite obaveštenje kad poziv čeka vaš odgovor, čak i kad je tafs zatvoren.</string>
     <string name="needs_you_install_from_card">Instalirajte ga iz njegova okvira: verzija ide uživo, a zatim Coach to čuje.</string>

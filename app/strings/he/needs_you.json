@@ -34,6 +34,7 @@
   "needs_you.empty_hint": "כש-taf מבקש משהו מחוץ ל-Card שלו, זה מופיע כאן ובמסך הנעילה שלך.",
   "needs_you.expired": "פג תוקף",
   "needs_you.expired_line": "פג תוקף. אף אחד לא השיב בזמן, ולכן KIFF דחה והבקשה לא נשלחה.",
+  "needs_you.extra_room": "מקום נוסף",
   "needs_you.extra_room_with": "מקום נוסף באמצעות {biometry}",
   "needs_you.get_alert_when_call_waits": "קבלת התראה כשקריאה ממתינה לתשובה שלך, גם כש-tafs סגור.",
   "needs_you.install_from_card": "יש להתקין אותה מהכרטיס שלה: הגרסה נהיית פעילה, ואז Coach מקבל הודעה.",

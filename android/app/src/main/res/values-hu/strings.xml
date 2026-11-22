@@ -616,6 +616,11 @@
     <string name="chrome_refused">Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.</string>
     <string name="chrome_remove">Párosítás megszüntetése</string>
     <string name="chrome_remove_named">Párosítás megszüntetése: %1$s</string>
+    <string name="chrome_shot_failed">A képet nem sikerült betölteni.</string>
+    <string name="chrome_shot_kept">30 napig megőrizzük, utána töröljük.</string>
+    <string name="chrome_shot_none">Ehhez a lépéshez nincs elmentett kép.</string>
+    <string name="chrome_shot_open">A lap megtekintése e lépés előtt</string>
+    <string name="chrome_shot_title">E lépés előtt</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Várakozás a Chrome-ra…</string>
     <string name="coach_activity_card">A Card előkészítése…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Ha egy taf a Cardján kívül eső dolgot kér, az itt és a zárolási képernyődön jelenik meg.</string>
     <string name="needs_you_expired">lejárt</string>
     <string name="needs_you_expired_line">Lejárt. Senki sem válaszolt időben, ezért a KIFF elutasította, és semmi sem ment el.</string>
+    <string name="needs_you_extra_room">Extra keret</string>
     <string name="needs_you_extra_room_with">Extra keret ezzel: %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Kapj riasztást, ha egy hívás a válaszodra vár, akkor is, ha a tafs be van zárva.</string>
     <string name="needs_you_install_from_card">Telepítsd a kártyájáról: a verzió élesedik, aztán a Coach értesül.</string>

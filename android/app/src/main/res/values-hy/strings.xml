@@ -616,6 +616,11 @@
     <string name="chrome_refused">Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։</string>
     <string name="chrome_remove">Չեղարկեք զուգակցումը</string>
     <string name="chrome_remove_named">Չեղարկեք զուգակցումը՝ %1$s</string>
+    <string name="chrome_shot_failed">Պատկերը չհաջողվեց բեռնել։</string>
+    <string name="chrome_shot_kept">Պահվում է 30 օր, ապա ջնջվում է։</string>
+    <string name="chrome_shot_none">Այս քայլի համար պատկեր չի պահվել։</string>
+    <string name="chrome_shot_open">Տեսնել էջը այս քայլից առաջ</string>
+    <string name="chrome_shot_title">Այս քայլից առաջ</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Սպասում ենք Chrome-ին…</string>
     <string name="coach_activity_card">Card-ը պատրաստվում է…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Երբ taf-ը իր Card-ից դուրս որևէ բան է խնդրում, այն երևում է այստեղ և ձեր կողպված էկրանին։</string>
     <string name="needs_you_expired">ժամկետը լրացել է</string>
     <string name="needs_you_expired_line">Ժամկետը լրացավ։ Ոչ ոք ժամանակին չպատասխանեց, ուստի KIFF-ը մերժեց, և ոչինչ չուղարկվեց։</string>
+    <string name="needs_you_extra_room">Լրացուցիչ տարածք</string>
     <string name="needs_you_extra_room_with">Լրացուցիչ տարածք՝ %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Ստացեք ծանուցում, երբ զանգը սպասում է ձեր պատասխանին, նույնիսկ երբ tafs-ը փակ է։</string>
     <string name="needs_you_install_from_card">Տեղադրեք այն իր քարտից․ տարբերակը դառնում է ակտիվ, ապա Coach-ը իմանում է։</string>

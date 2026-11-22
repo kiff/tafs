@@ -583,6 +583,11 @@
     <string name="chrome_refused">Chrome ផ្សេងបានប្រើលេខកូដនេះ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមចាប់ផ្តើមឡើងវិញ។</string>
     <string name="chrome_remove">ឈប់ផ្គូផ្គង</string>
     <string name="chrome_remove_named">ឈប់ផ្គូផ្គង %1$s</string>
+    <string name="chrome_shot_failed">មិនអាចផ្ទុករូបភាពបានទេ។</string>
+    <string name="chrome_shot_kept">រក្សាទុក ៣០ ថ្ងៃ រួចលុប។</string>
+    <string name="chrome_shot_none">មិនមានរូបភាពដែលបានរក្សាទុកសម្រាប់ជំហាននេះទេ។</string>
+    <string name="chrome_shot_open">មើលទំព័រមុនជំហាននេះ</string>
+    <string name="chrome_shot_title">មុនជំហាននេះ</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">កំពុងរង់ចាំ Chrome…</string>
     <string name="coach_activity_card">កំពុងរៀបចំ Card…</string>
@@ -1447,6 +1452,7 @@
     <string name="needs_you_empty_hint">នៅពេល taf សុំអ្វីក្រៅពី Card របស់វា វាបង្ហាញនៅទីនេះ និងលើអេក្រង់ចាក់សោរបស់អ្នក។</string>
     <string name="needs_you_expired">ផុតកំណត់</string>
     <string name="needs_you_expired_line">ផុតកំណត់។ គ្មាននរណាឆ្លើយទាន់ពេលទេ ដូច្នេះ KIFF បានបដិសេធ ហើយគ្មានអ្វីត្រូវបានផ្ញើទេ។</string>
+    <string name="needs_you_extra_room">កន្លែងបន្ថែម</string>
     <string name="needs_you_extra_room_with">កន្លែងបន្ថែមដោយ %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">ទទួលការជូនដំណឹងនៅពេលការហៅមួយរង់ចាំចម្លើយរបស់អ្នក ទោះ tafs បិទក៏ដោយ។</string>
     <string name="needs_you_install_from_card">ដំឡើងវាពីកាតរបស់វា៖ កំណែចាប់ផ្តើមដំណើរការ បន្ទាប់មក Coach ដឹង។</string>

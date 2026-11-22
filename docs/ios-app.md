@@ -1365,6 +1365,10 @@ KIFF opens. `{taf}` is the sample's first taf.
 - **In CI** it runs with the iPhone's UI tests, and beside the unit tests, in the same run,
   when what it reads changes (`ios/Tafs/App/`, the walk, `app/routes.json`, `app/map/`).
 
+## Chrome step pictures
+
+`ChromeShotView` shows the picture a paired Chrome kept just before a taf's step acted (kept 30 days by planque, which keeps none while its switch is off). It reads `GET /v1/accounts/{tenant}/chromes/screenshots/{step}` through `PlanqueClient.chromeScreenshot(step:)`, signed by the device as the Chromes list is, and shows the bytes only if they are WebP, at most 120 KB, and hash to the `sha256` planque sent (`ChromeScreenshot.read`). A 404 reads "No picture is kept for this step"; anything else that goes wrong reads "The picture couldn't be loaded". A call's receipt (`ReceiptView`, from the Record) lists the pictures kept for it: `PlanqueClient.chromeShots(op:)` asks `GET /v1/accounts/{tenant}/chromes/screenshots?op=<proposal_id>` (device-signed, the query covered), which answers the step ids and times (oldest first, the newest 20, none past 30 days, no bytes). Each picture is a "See the page before this step" button that opens the viewer, which then reads that step's bytes. A call that was not a Chrome step, a failed list, or planque keeping none shows nothing: `AppModel.chromeShots` answers `[]` on any failure.
+
 ## Account › Sign-in: the email-code setting
 
 Account › Sign-in shows `GET /v1/me/sign-in`: whether the person signs in with a code sent by email, and whether KIFF can send

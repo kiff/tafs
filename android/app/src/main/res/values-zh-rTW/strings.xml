@@ -583,6 +583,11 @@
     <string name="chrome_refused">另一個 Chrome 使用了此代碼，因此未配對任何項目。請重新開始。</string>
     <string name="chrome_remove">取消配對</string>
     <string name="chrome_remove_named">取消配對 %1$s</string>
+    <string name="chrome_shot_failed">無法載入圖片。</string>
+    <string name="chrome_shot_kept">保存 30 天，之後刪除。</string>
+    <string name="chrome_shot_none">此步驟沒有保存圖片。</string>
+    <string name="chrome_shot_open">查看此步驟之前的頁面</string>
+    <string name="chrome_shot_title">此步驟之前</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">正在等待 Chrome…</string>
     <string name="coach_activity_card">正在準備 Card…</string>
@@ -1447,6 +1452,7 @@
     <string name="needs_you_empty_hint">當 taf 要求超出其 Card 範圍的事項時，會顯示在這裡以及您的鎖定畫面上。</string>
     <string name="needs_you_expired">已過期</string>
     <string name="needs_you_expired_line">已過期。沒有人及時回覆，因此 KIFF 已拒絕，也沒有傳送任何內容。</string>
+    <string name="needs_you_extra_room">增加額度</string>
     <string name="needs_you_extra_room_with">用%1$s增加額度</string>
     <string name="needs_you_get_alert_when_call_waits">當有呼叫等待您回覆時收到通知，即使 tafs 已關閉。</string>
     <string name="needs_you_install_from_card">從它的卡片安裝：該版本會上線，然後 Coach 會收到通知。</string>

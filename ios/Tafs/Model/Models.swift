@@ -556,6 +556,8 @@ struct RecordEntry: Identifiable, Hashable, Codable {
     }
 
     var id = UUID()
+    /// KIFF's id for the call (its operation): what a Chrome step's pictures are listed by.
+    var proposalID: String? = nil
     var tafID: UUID
     var kind: Kind
     var title: String

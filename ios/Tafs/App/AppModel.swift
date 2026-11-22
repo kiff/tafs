@@ -1355,6 +1355,30 @@ final class AppModel: ObservableObject {
     @Published private(set) var chromes: [PlanqueClient.Chrome]?
     @Published private(set) var chromesError: String?
 
+    /// The pictures kept for a taf Activity row's Chrome steps, by its operation (`RecordEntry.proposalID`): none on any failure,
+    /// so a row that is not a Chrome step, or a planque that keeps none, shows nothing.
+    func chromeShots(op: String) async -> [PlanqueClient.ChromeShotRef] {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return [] }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        let shots = (try? await planque.chromeShots(op: op)) ?? []
+        return gen == accountGeneration ? shots : []
+    }
+
+    /// The picture kept before one Chrome step: nil when none is kept; an error when planque can't be reached or the
+    /// picture doesn't check out.
+    func chromeScreenshot(step: String) async throws -> PlanqueClient.ChromeScreenshot? {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        return try await planque.chromeScreenshot(step: step)
+    }
+
     func refreshChromes() async {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { chromes = nil; return }
         let gen = accountGeneration

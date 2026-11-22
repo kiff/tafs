@@ -616,6 +616,11 @@
     <string name="chrome_refused">Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.</string>
     <string name="chrome_remove">Ontkoppelen</string>
     <string name="chrome_remove_named">%1$s ontkoppelen</string>
+    <string name="chrome_shot_failed">De afbeelding kon niet worden geladen.</string>
+    <string name="chrome_shot_kept">30 dagen bewaard, daarna verwijderd.</string>
+    <string name="chrome_shot_none">Voor deze stap is geen afbeelding bewaard.</string>
+    <string name="chrome_shot_open">Bekijk de pagina vóór deze stap</string>
+    <string name="chrome_shot_title">Vóór deze stap</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Wachten op Chrome…</string>
     <string name="coach_activity_card">De Card voorbereiden…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Als een taf om iets buiten zijn Card vraagt, verschijnt het hier en op je toegangsscherm.</string>
     <string name="needs_you_expired">verlopen</string>
     <string name="needs_you_expired_line">Verlopen. Niemand antwoordde op tijd, dus KIFF heeft het geweigerd en is er niets verzonden.</string>
+    <string name="needs_you_extra_room">Extra ruimte</string>
     <string name="needs_you_extra_room_with">Extra ruimte met %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Krijg een melding als een aanroep op je antwoord wacht, ook als tafs gesloten is.</string>
     <string name="needs_you_install_from_card">Installeer het vanaf de kaart: de versie gaat live, daarna hoort Coach het.</string>

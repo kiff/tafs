@@ -22,6 +22,11 @@
   "chrome.refused": "Ein anderes Chrome hat diesen Code benutzt, also wurde nichts gekoppelt. Fang noch einmal an.",
   "chrome.remove": "Entkoppeln",
   "chrome.remove_named": "{name} entkoppeln",
+  "chrome.shot_failed": "Das Bild konnte nicht geladen werden.",
+  "chrome.shot_kept": "30 Tage aufbewahrt, dann gelöscht.",
+  "chrome.shot_none": "Für diesen Schritt ist kein Bild gespeichert.",
+  "chrome.shot_open": "Die Seite vor diesem Schritt ansehen",
+  "chrome.shot_title": "Vor diesem Schritt",
   "chrome.title": "Chrome",
   "chrome.waiting": "Warten auf Chrome…"
 }

@@ -17,6 +17,7 @@ export const LABEL = Object.freeze({
   sites: "tafs-chrome/sites/v1", // the phone signs a grant's sites when the owner approves it
   screenshot: "tafs-chrome/screenshot/v1", // the extension signs the picture it keeps of an act, for planque to store against that step
   extProof: "tafs-chrome/ext/v1", // HMAC: the extension's key, under the pairing code's secret
+  extOneTouch: "tafs-chrome/ext-one-touch/v1", // HMAC: the same, under another label: this extension checks one fingerprint for the pairing and KIFF's request
   phoneProof: "tafs-chrome/phone/v1", // HMAC: the phone's key and the extension's, under the same secret
 });
 
@@ -86,10 +87,24 @@ export async function sign(privateKey, label, body) {
 
 /** Whether `sig` is `publicKey`'s signature of `body` under `label`. Anything malformed is false, never an error. */
 export async function verify(publicKey, label, body, sig) {
+  return verifyBytes(publicKey, signingBytes(label, body), sig);
+}
+
+/**
+ * What the phone's approval key signs, once, to confirm two requests under one fingerprint (`kiff.requests.v1`, the same
+ * lines KIFF and planque build): the tenant, `signed_at`, and the SHA-256 of each request's message as lower-case hex, in
+ * sorted order, so either service builds the same bytes.
+ */
+export function requestsMessage(tenant, signedAt, oneSHA256, otherSHA256) {
+  const [a, b] = oneSHA256 <= otherSHA256 ? [oneSHA256, otherSHA256] : [otherSHA256, oneSHA256];
+  return bytes(["kiff.requests.v1", tenant, signedAt, a, b].join("\n"));
+}
+
+/** Whether `sig` is `publicKey`'s signature of exactly `data`. Anything malformed is false, never an error. */
+export async function verifyBytes(publicKey, data, sig) {
   try {
     const key = typeof publicKey === "string" ? await importPublic(publicKey) : publicKey;
     const given = fromB64u(sig);
-    const data = signingBytes(label, body);
     // r‖s first, as the contract sends it; a DER signature (a phone's keystore) after, which can also be 64 bytes long.
     if (given.length === 64 && (await crypto.subtle.verify(SIGN, key, given, data))) return true;
     const raw = derToRaw(given);

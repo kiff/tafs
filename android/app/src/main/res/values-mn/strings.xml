@@ -616,6 +616,11 @@
     <string name="chrome_refused">Өөр Chrome энэ кодыг ашигласан тул юу ч хослуулаагүй. Дахин эхлүүлнэ үү.</string>
     <string name="chrome_remove">Хослолыг салгах</string>
     <string name="chrome_remove_named">%1$s-ийн хослолыг салгах</string>
+    <string name="chrome_shot_failed">Зургийг ачаалж чадсангүй.</string>
+    <string name="chrome_shot_kept">30 хоног хадгалагдаад дараа нь устгагдана.</string>
+    <string name="chrome_shot_none">Энэ алхамд зориулж хадгалсан зураг алга.</string>
+    <string name="chrome_shot_open">Энэ алхмын өмнөх хуудсыг харах</string>
+    <string name="chrome_shot_title">Энэ алхмын өмнө</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Chrome-ыг хүлээж байна…</string>
     <string name="coach_activity_card">Card-ыг бэлтгэж байна…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Taf өөрийн Card-аас гадуур зүйл хүсэхэд энд болон таны түгжээтэй дэлгэц дээр гарч ирнэ.</string>
     <string name="needs_you_expired">хугацаа дууссан</string>
     <string name="needs_you_expired_line">Хугацаа дууссан. Хэн ч цагтаа хариулаагүй тул KIFF татгалзсан бөгөөд юу ч илгээгдээгүй.</string>
+    <string name="needs_you_extra_room">Нэмэлт зай</string>
     <string name="needs_you_extra_room_with">%1$s-ээр нэмэлт зай</string>
     <string name="needs_you_get_alert_when_call_waits">Дуудлага таны хариуг хүлээх үед tafs хаалттай байсан ч мэдэгдэл аваарай.</string>
     <string name="needs_you_install_from_card">Түүний картаас суулгана уу: хувилбар идэвхжиж, дараа нь Coach мэднэ.</string>

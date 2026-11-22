@@ -259,7 +259,7 @@ object KiffMapping {
       val byConnection = refusedByTool && c.toolOutcome.refusedBy == "connection"
       val shown = if (byConnection && c.toolOutcome.code != null) c.detail?.let(::visible) ?: Words.Record.connectionRefusedBeforeSending else detail
       RecordEntry(
-        id = recordId(c.proposalId), tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
+        id = recordId(c.proposalId), proposalId = c.proposalId, tafId = actor, kind = kind, title = visible(name(c.actionName, c.title)), detail = shown, at = c.createdAt,
         ownerApproved = if (c.outcome == "allowed" && c.held) true else null,
         readOnly = c.readOnly, amountText = c.amount?.let(::amountText), amountValue = c.amount?.value, amountUnit = c.amount?.unit,
         entityId = c.entityId?.let(::visible), action = c.actionName, onHash = c.onHash, onArg = c.onArg, answer = c.answer, receipt = c.receipt,

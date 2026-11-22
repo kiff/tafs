@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Quando um taf pede algo fora do seu Card, aparece aqui e no seu ecrã bloqueado.",
   "needs_you.expired": "expirado",
   "needs_you.expired_line": "Expirado. Ninguém respondeu a tempo, por isso o KIFF recusou e nada foi enviado.",
+  "needs_you.extra_room": "Margem extra",
   "needs_you.extra_room_with": "Margem extra com {biometry}",
   "needs_you.get_alert_when_call_waits": "Receba um alerta quando uma chamada aguardar a sua resposta, mesmo com o tafs fechado.",
   "needs_you.install_from_card": "Instale-a a partir do seu cartão: a versão entra em produção e depois o Coach é informado.",

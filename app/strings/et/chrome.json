@@ -22,6 +22,11 @@
   "chrome.refused": "Seda koodi kasutas teine Chrome, seega midagi ei seotud. Alusta uuesti.",
   "chrome.remove": "Tühista sidumine",
   "chrome.remove_named": "Tühista sidumine: {name}",
+  "chrome.shot_failed": "Pilti ei õnnestunud laadida.",
+  "chrome.shot_kept": "Säilitatakse 30 päeva, seejärel kustutatakse.",
+  "chrome.shot_none": "Selle sammu kohta pole pilti salvestatud.",
+  "chrome.shot_open": "Vaata lehte enne seda sammu",
+  "chrome.shot_title": "Enne seda sammu",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chrome'i ootamine…"
 }

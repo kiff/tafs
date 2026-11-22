@@ -22,6 +22,11 @@
   "chrome.refused": "Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.",
   "chrome.remove": "Párosítás megszüntetése",
   "chrome.remove_named": "Párosítás megszüntetése: {name}",
+  "chrome.shot_failed": "A képet nem sikerült betölteni.",
+  "chrome.shot_kept": "30 napig megőrizzük, utána töröljük.",
+  "chrome.shot_none": "Ehhez a lépéshez nincs elmentett kép.",
+  "chrome.shot_open": "A lap megtekintése e lépés előtt",
+  "chrome.shot_title": "E lépés előtt",
   "chrome.title": "Chrome",
   "chrome.waiting": "Várakozás a Chrome-ra…"
 }

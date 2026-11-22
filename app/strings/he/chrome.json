@@ -22,6 +22,11 @@
   "chrome.refused": "Chrome אחר השתמש בקוד הזה, ולכן שום דבר לא הוצמד. יש להתחיל מחדש.",
   "chrome.remove": "ביטול צימוד",
   "chrome.remove_named": "ביטול צימוד של {name}",
+  "chrome.shot_failed": "לא הצלחנו לטעון את התמונה.",
+  "chrome.shot_kept": "נשמרת 30 יום ואז נמחקת.",
+  "chrome.shot_none": "לא נשמרה תמונה עבור השלב הזה.",
+  "chrome.shot_open": "הצגת הדף לפני השלב הזה",
+  "chrome.shot_title": "לפני השלב הזה",
   "chrome.title": "Chrome",
   "chrome.waiting": "ממתין ל-Chrome…"
 }

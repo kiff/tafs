@@ -616,6 +616,11 @@
     <string name="chrome_refused">Ein anderes Chrome hat diesen Code benutzt, also wurde nichts gekoppelt. Fang noch einmal an.</string>
     <string name="chrome_remove">Entkoppeln</string>
     <string name="chrome_remove_named">%1$s entkoppeln</string>
+    <string name="chrome_shot_failed">Das Bild konnte nicht geladen werden.</string>
+    <string name="chrome_shot_kept">30 Tage aufbewahrt, dann gelöscht.</string>
+    <string name="chrome_shot_none">Für diesen Schritt ist kein Bild gespeichert.</string>
+    <string name="chrome_shot_open">Die Seite vor diesem Schritt ansehen</string>
+    <string name="chrome_shot_title">Vor diesem Schritt</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Warten auf Chrome…</string>
     <string name="coach_activity_card">Card wird vorbereitet…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Wenn ein taf um etwas außerhalb seiner Card bittet, erscheint es hier und auf deinem Sperrbildschirm.</string>
     <string name="needs_you_expired">abgelaufen</string>
     <string name="needs_you_expired_line">Abgelaufen. Niemand hat rechtzeitig geantwortet, daher hat KIFF es abgelehnt, und es wurde nichts gesendet.</string>
+    <string name="needs_you_extra_room">Zusatzspielraum</string>
     <string name="needs_you_extra_room_with">Zusatzspielraum mit %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.</string>
     <string name="needs_you_install_from_card">Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.</string>

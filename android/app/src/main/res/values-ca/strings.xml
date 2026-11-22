@@ -616,6 +616,11 @@
     <string name="chrome_refused">Un altre Chrome ha utilitzat aquest codi, així que no s\'ha aparellat res. Torna a començar.</string>
     <string name="chrome_remove">Desaparella</string>
     <string name="chrome_remove_named">Desaparella %1$s</string>
+    <string name="chrome_shot_failed">No s\'ha pogut carregar la imatge.</string>
+    <string name="chrome_shot_kept">Es conserva 30 dies i després s\'esborra.</string>
+    <string name="chrome_shot_none">No hi ha cap imatge guardada d\'aquest pas.</string>
+    <string name="chrome_shot_open">Mostra la pàgina abans d\'aquest pas</string>
+    <string name="chrome_shot_title">Abans d\'aquest pas</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Esperant Chrome…</string>
     <string name="coach_activity_card">Preparant el Card…</string>
@@ -1506,6 +1511,7 @@
     <string name="needs_you_empty_hint">Quan un taf demana alguna cosa fora del seu Card, apareix aquí i a la teva pantalla de bloqueig.</string>
     <string name="needs_you_expired">caducat</string>
     <string name="needs_you_expired_line">Caducat. Ningú no ha respost a temps, així que KIFF ho ha rebutjat i no s\'ha enviat res.</string>
+    <string name="needs_you_extra_room">Marge addicional</string>
     <string name="needs_you_extra_room_with">Marge addicional amb %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Rep una alerta quan una crida espera la teva resposta, fins i tot amb tafs tancat.</string>
     <string name="needs_you_install_from_card">Instal·la-la des de la seva targeta: la versió entra en producció i després Coach ho sap.</string>

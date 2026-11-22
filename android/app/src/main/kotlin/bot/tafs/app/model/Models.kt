@@ -637,6 +637,8 @@ data class RecordEntry(
   val amountUnit: String? = null,
   /** KIFF's key for the call (the gateway's "tc-…"), what the taf's call_ref names it by. */
   val entityId: String? = null,
+  /** KIFF's proposal for the call, the operation: what planque files a Chrome step's pictures under (`?op=`). */
+  val proposalId: String? = null,
   /** The tool as KIFF names it ("list_inboxes_k3f9"): which connection it went through. */
   val action: String? = null,
   /**

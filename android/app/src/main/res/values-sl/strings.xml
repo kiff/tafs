@@ -682,6 +682,11 @@
     <string name="chrome_refused">To kodo je uporabil drug Chrome, zato ni bilo nič seznanjeno. Začnite znova.</string>
     <string name="chrome_remove">Prekini seznanitev</string>
     <string name="chrome_remove_named">Prekini seznanitev: %1$s</string>
+    <string name="chrome_shot_failed">Slike ni bilo mogoče naložiti.</string>
+    <string name="chrome_shot_kept">Hranjeno 30 dni, nato izbrisano.</string>
+    <string name="chrome_shot_none">Za ta korak ni shranjene nobene slike.</string>
+    <string name="chrome_shot_open">Poglej stran pred tem korakom</string>
+    <string name="chrome_shot_title">Pred tem korakom</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čakam na Chrome…</string>
     <string name="coach_activity_card">Pripravljam Card…</string>
@@ -1624,6 +1629,7 @@
     <string name="needs_you_empty_hint">Ko taf prosi za nekaj zunaj svoje Card, se to prikaže tukaj in na zaklenjenem zaslonu.</string>
     <string name="needs_you_expired">poteklo</string>
     <string name="needs_you_expired_line">Poteklo. Nihče ni pravočasno odgovoril, zato je KIFF to zavrnil in nič ni bilo poslano.</string>
+    <string name="needs_you_extra_room">Dodaten prostor</string>
     <string name="needs_you_extra_room_with">Dodaten prostor z %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Prejmite opozorilo, ko klic čaka na vaš odgovor, tudi ko je tafs zaprt.</string>
     <string name="needs_you_install_from_card">Namestite ga s njegove kartice: različica postane aktivna, nato izve Coach.</string>

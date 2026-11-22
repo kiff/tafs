@@ -22,6 +22,11 @@
   "chrome.refused": "Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։",
   "chrome.remove": "Չեղարկեք զուգակցումը",
   "chrome.remove_named": "Չեղարկեք զուգակցումը՝ {name}",
+  "chrome.shot_failed": "Պատկերը չհաջողվեց բեռնել։",
+  "chrome.shot_kept": "Պահվում է 30 օր, ապա ջնջվում է։",
+  "chrome.shot_none": "Այս քայլի համար պատկեր չի պահվել։",
+  "chrome.shot_open": "Տեսնել էջը այս քայլից առաջ",
+  "chrome.shot_title": "Այս քայլից առաջ",
   "chrome.title": "Chrome",
   "chrome.waiting": "Սպասում ենք Chrome-ին…"
 }

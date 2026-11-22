@@ -2,9 +2,9 @@
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
 import { config } from "./config.js";
-import { indexedStore } from "./store.js";
+import { indexedStore, profileId } from "./store.js";
 import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
-import { parseCode, offer, checkConfirmation } from "./pairing.js";
+import { parseCode, offer, checkConfirmation, postOffer } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
@@ -108,12 +108,13 @@ async function pairWith(text) {
   const ua = navigator.userAgentData;
   const body = await offer(code.secret, keys, {
     kiffOffer: kiff.text,
+    profileId: await profileId(chrome.storage.local),
     version: cfg.version,
     manifestHash: await manifestHash(),
     browser: "Chrome " + (ua && ua.brands ? (ua.brands.find((b) => b.brand === "Google Chrome") || {}).version || "" : ""),
     os: ua ? ua.platform : "",
   });
-  const sent = await fetch(cfg.api + "/v1/extension/pairings/" + code.lookup, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const sent = await postOffer(fetch, cfg.api + "/v1/extension/pairings/" + code.lookup, body);
   // 404: no pairing has that code, or it expired; 409: another Chrome used it; 403: not a released build.
   if (!sent.ok) return { error: sent.status === 404 || sent.status === 409 ? "code" : sent.status === 403 ? "not_released" : "planque" };
   // The secret waits in memory only, while the owner confirms on the phone.

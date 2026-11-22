@@ -74,8 +74,12 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
    {key: <SPKI, base64url>, version, manifest_hash (64 lower-case hex), browser, os, kiff_offer,
-    proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer)}
+    proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer),
+    profile_id, one_touch: true,
+    one_touch_proof: HMAC(secret, "tafs-chrome/ext-one-touch/v1" ‖ key ‖ kiff_offer)}
    ```
+   `profile_id`, `one_touch` and `one_touch_proof` are the newer fields (below). A planque that predates them refuses the
+   body (`400`, "unknown field"), so the extension sends the offer once more without them: it then pairs the old way.
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
    `waiting_for_phone` with the extension's `key`, `key_sha256`, `proof`, `version`, `browser` and `os`, then
    `confirmed`; `contested` when a second Chrome posted on the code, which planque then spends; an expired pairing
@@ -95,6 +99,19 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    Its `POST` answers 403 for a build that isn't released, and 404 for an unknown or expired code and for one another
    Chrome used (planque spends it, and the phone reads `contested`), so a sweep can't tell them apart. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
+   - **With one fingerprint** (`kiff.requests.v1`) the answer carries `tenant`, `signed_at` and `kiff_request_sha256` beside
+     `phone_sig`, all three or none, and `phone_sig` is then the approval key's signature over `kiff.requests.v1`, the
+     tenant, `signed_at` and the sorted SHA-256 (lower-case hex) of this pairing's message (`tafs-chrome/pair/v1`, a zero
+     byte and the body's canonical JSON) and of KIFF's request for the extension's view-only device. The extension
+     rebuilds its own message and takes KIFF's hash as given; a request paired with itself, a newline in a field or a part
+     of the three is refused. Without them `phone_sig` is checked over the pairing alone, as before.
+   - **The offer carries `profile_id`**, an id the extension keeps for its Chrome profile (see "What's kept"). The phone
+     uses it only to pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing.
+   - **`one_touch: true` says this extension checks the combined signature**, and `one_touch_proof` is what makes the flag
+     the extension's: the key's proof under its own label, so it is made only with the code's secret, which planque never
+     sees. The phone sends the combined signature only when `one_touch_proof` verifies, else the two signatures of today,
+     so a phone that doesn't know the flag, and an extension that predates it, pair as before. The key's `proof` is
+     unchanged, as the phones verify it today.
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
 - **Several Chromes:** each paired Chrome has its name, and a grant names the one it uses.
@@ -122,6 +139,59 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
   `approval_mode: "view"` is ended at once with `POST /v1/auth/device/logout` and never kept.
 - **The session reads and chats only.** KIFF refuses it every approval route (`403 view_only`). It's kept in IndexedDB
   with the pairing, and unpairing ends it with its own bearer (`/v1/auth/device/logout`).
+
+## Your Chrome (design, for the owner's read; not built yet)
+
+What the owner lives with: a browser connection is on one of their Chromes, they can see which, and pairing again, unpairing
+or switching never leaves a connection pointing at a Chrome that's gone. Nothing moves without the owner's approval.
+
+1. **Re-pairing replaces, never adds.** The pairing confirm names the Chrome the new one replaces (`replaces: "chr_…"`,
+   planque's field, on the confirm's own signature) and the connections that move (`carried`). The phone **pre-selects**
+   what it replaces: the Chrome with the same `profile_id` (an id the extension keeps for its Chrome profile, kept across
+   key changes and updates); else, when the extension was reinstalled and its id is new, the one Chrome on the same
+   browser and system that hasn't connected since the new one arrived. The owner can pick none ("a new Chrome") or
+   another. With nothing chosen, nothing moves.
+   - **What the fingerprint binds is `carried`.** Each connection's sites are signed for one Chrome
+     (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), so the pairing body the phone signs for the extension
+     (`tafs-chrome/pair`, inside the one `phone_sig`) carries `carried: [{grant, sites}]`, one entry per connection that
+     moves. The phone reads each from the old Chrome's verified signed copy, never from what planque says, and shows them
+     on the replace's approval ("moves Wiki lookup: wikipedia.org"). planque moves exactly the grants it sent, each only
+     if it's on the Chrome replaced with exactly those sites; if planque relayed another list, the extension's check of
+     `phone_sig` fails and nothing is paired. Ending the old Chrome's other connections is taking power away, as unpair is.
+   - **The extension's rule for `carried`:** read only from the confirmed pairing body; at most 50 connections and 100
+     sites each, no grant twice, each site passing the same check as a grant's sites, in the order sent. A step for a
+     carried grant is accepted when its sites are within the carried sites for that grant (the same "within" as a fresh
+     `sites_sig`), else by a fresh `sites_sig` for this Chrome as today; planque marks such a step `carried: true` with no
+     `sig`. The entries live with the pairing and go with unpairing. Like any `sites_sig` today they don't expire, so a
+     later narrowing of a grant's sites relies on the fresh signature being sent.
+   - **What doesn't move:** the owner's yes for a sensitive site (`tafs-chrome/sensitive/v1` is over the old Chrome's id;
+     they allow it again, and the replace's approval never promises it), the saved sign-ins (sealed in the old Chrome,
+     wiped with it; the owner saves them again), and the pictures kept of the old Chrome's acts (they go with it).
+2. **"Your Chrome" is a choice per connection.** Each browser connection names one Chrome. A new connection takes the most
+   recently approved Chrome by default; Coach says which and the owner can pick another. Switching an existing
+   connection to another Chrome is one signed planque call (`PUT /v1/accounts/{t}/grants/{grant}/chrome {chrome_id}`,
+   routine: a tap inside an open approval window, else the fingerprint). Its sites and Card stay; it goes to the new
+   Chrome's key.
+3. **Unpairing a Chrome ends its connections.** The unpair confirm lists them ("ends Wiki lookup's wikipedia.org"); once
+   unpaired, planque revokes each, so nothing dangles. They come back only by connecting again, or by a replace (1).
+4. **Every browser connection names its Chrome**, its name and browser ("Work Mac · Chrome 131"), wherever a
+   connection is listed: the taf's page, Coach, Account › Chrome (each Chrome with the connections on it). Coach can
+   propose removing a connection whose Chrome is gone; removing is a safe route (the device key, no fingerprint).
+5. **One fingerprint per act.** Pairing is one prompt on every phone. The two approval-key signatures it needs today, the
+   extension's `phone_sig` over the pairing (`tafs-chrome/pair`) and KIFF's view-only device for the extension
+   (`POST /v1/me/pairings`), become one `kiff.requests.v1` signature: `kiff.requests.v1`, the tenant, `signed_at`, then the
+   SHA-256 (hex, sorted) of the pairing message the extension checks and of KIFF's `kiff.request.v1` message. The phone
+   sends planque's confirm `tenant`, `signed_at` and `kiff_request_sha256` (all three or none), which the extension
+   collects beside `phone_sig`; the extension rebuilds its own pairing
+   message, hashes it, and checks the one signature over both, as KIFF checks its half. planque's confirm stays on the
+   device key, and the replace (1) is in it.
+6. **Isolation is unchanged.** Each Chrome keeps its own key; each connection keeps its own signed sites and its own tab
+   group; a step still goes only to the Chrome its connection names. A replace or a switch changes the Chrome a
+   connection uses, never its sites or Card.
+
+Who builds what, once the owner agrees: planque (`replaces` on the confirm, the switch route, revoke on unpair, the Chrome
+on each connection's read), the extension (`profile_id` in the pairing post), Coach (the default and the choice, removing
+a dead connection), and the apps (the replace choice at pairing, the Chrome on each connection, Account › Chrome).
 
 ## Connect: both ends prove themselves
 
@@ -360,6 +430,9 @@ browser: {
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
   key), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
+- **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
+  phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
+  `chrome.storage.sync`, which would copy it to every computer on the Google account; a reinstall makes a new one.
 - **Unpairing wipes it all** and closes every run's window. It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.

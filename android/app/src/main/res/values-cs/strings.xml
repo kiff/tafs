@@ -649,6 +649,11 @@
     <string name="chrome_refused">Tento kód použil jiný Chrome, takže se nic nespárovalo. Začněte znovu.</string>
     <string name="chrome_remove">Zrušit spárování</string>
     <string name="chrome_remove_named">Zrušit spárování %1$s</string>
+    <string name="chrome_shot_failed">Obrázek se nepodařilo načíst.</string>
+    <string name="chrome_shot_kept">Uchováno 30 dní, poté smazáno.</string>
+    <string name="chrome_shot_none">K tomuto kroku není uložen žádný obrázek.</string>
+    <string name="chrome_shot_open">Zobrazit stránku před tímto krokem</string>
+    <string name="chrome_shot_title">Před tímto krokem</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čekám na Chrome…</string>
     <string name="coach_activity_card">Připravuji Card…</string>
@@ -1565,6 +1570,7 @@
     <string name="needs_you_empty_hint">Když taf žádá o něco mimo svou Card, objeví se to tady a na zamčené obrazovce.</string>
     <string name="needs_you_expired">vypršelo</string>
     <string name="needs_you_expired_line">Vypršelo. Nikdo neodpověděl včas, takže to KIFF odmítl a nic se neodeslalo.</string>
+    <string name="needs_you_extra_room">Více prostoru</string>
     <string name="needs_you_extra_room_with">Více prostoru přes %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Dostávejte upozornění, když volání čeká na vaši odpověď, i když je tafs zavřený.</string>
     <string name="needs_you_install_from_card">Nainstalujte ho z jeho karty: verze se aktivuje a pak se to Coach dozví.</string>

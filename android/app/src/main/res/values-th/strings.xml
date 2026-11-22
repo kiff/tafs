@@ -583,6 +583,11 @@
     <string name="chrome_refused">มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง</string>
     <string name="chrome_remove">ยกเลิกการจับคู่</string>
     <string name="chrome_remove_named">ยกเลิกการจับคู่ %1$s</string>
+    <string name="chrome_shot_failed">โหลดภาพไม่ได้</string>
+    <string name="chrome_shot_kept">เก็บไว้ 30 วัน แล้วลบ</string>
+    <string name="chrome_shot_none">ไม่มีภาพที่เก็บไว้สำหรับขั้นตอนนี้</string>
+    <string name="chrome_shot_open">ดูหน้าก่อนขั้นตอนนี้</string>
+    <string name="chrome_shot_title">ก่อนขั้นตอนนี้</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">กำลังรอ Chrome…</string>
     <string name="coach_activity_card">กำลังเตรียม Card…</string>
@@ -1447,6 +1452,7 @@
     <string name="needs_you_empty_hint">เมื่อ taf ขอสิ่งที่อยู่นอก Card ของมัน จะปรากฏที่นี่และบนหน้าจอล็อกของคุณ</string>
     <string name="needs_you_expired">หมดอายุ</string>
     <string name="needs_you_expired_line">หมดอายุแล้ว ไม่มีใครตอบทันเวลา KIFF จึงปฏิเสธและไม่มีอะไรถูกส่ง</string>
+    <string name="needs_you_extra_room">เพิ่มพื้นที่</string>
     <string name="needs_you_extra_room_with">เพิ่มพื้นที่ด้วย %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">รับการแจ้งเตือนเมื่อมีการเรียกรอคำตอบของคุณ แม้ปิด tafs อยู่</string>
     <string name="needs_you_install_from_card">ติดตั้งจากการ์ดของมัน: เวอร์ชันจะเริ่มใช้งาน แล้ว Coach จะรับรู้</string>
