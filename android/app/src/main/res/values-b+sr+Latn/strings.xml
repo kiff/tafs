@@ -1915,6 +1915,12 @@
     <string name="record_refused_next_step_detail">Odbijeno, sa sledećim korakom za taf: %1$s</string>
     <string name="record_removed_detail">Raspored, memorija i ključ izbrisani; naziv slobodan</string>
     <string name="record_removed_title">Uklonili ste taf %1$s</string>
+    <string name="record_report_button">Prijavite ovo plaćanje</string>
+    <string name="record_report_done">Prijavljeno. %1$s je blokiran, a potvrda je sačuvana. Ako je novac napustio vaš nalog, obratite se i izdavaocu svoje kartice.</string>
+    <string name="record_report_failed">Prijava nije poslata. Ništa se nije promenilo. Pokušajte ponovo.</string>
+    <string name="record_report_intro">Prijavite plaćanje koje niste očekivali: %1$s je platio %2$s dana %3$s. Blokiramo %1$s dok ne pogledate.</string>
+    <string name="record_report_submit">Prijavite i blokirajte %1$s</string>
+    <string name="record_report_title">Prijavite ovo plaćanje</string>
     <string name="record_result_done">učinjeno</string>
     <string name="record_result_no_answer_yet">poslano, još nema odgovora</string>
     <string name="record_result_not_done">nije učinjeno</string>

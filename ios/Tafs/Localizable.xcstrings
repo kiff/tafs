@@ -301781,6 +301781,18 @@
             "value": "Prijavi to plačilo"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportoni këtë pagesë"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite ovo plaćanje"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -301940,6 +301952,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prijavljeno. %1$@ je ustavljen, potrdilo pa se hrani. Če je z vašega računa odšel denar, se obrnite tudi na izdajatelja svoje kartice."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "U raportua. %1$@ është i bllokuar dhe dëftesa ruhet. Nëse para dolën nga llogaria juaj, kontaktoni edhe lëshuesin e kartës suaj."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavljeno. %1$@ je blokiran, a potvrda je sačuvana. Ako je novac napustio vaš nalog, obratite se i izdavaocu svoje kartice."
           }
         },
         "th": {
@@ -302103,6 +302127,18 @@
             "value": "Prijave ni bilo mogoče poslati. Nič se ni spremenilo. Poskusite znova."
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raporti nuk u dërgua. Asgjë nuk ndryshoi. Provoni sërish."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava nije poslata. Ništa se nije promenilo. Pokušajte ponovo."
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -302262,6 +302298,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prijavite plačilo, ki ga niste pričakovali: %1$@ je dne %3$@ plačal %2$@. %1$@ bomo ustavili, dokler ne preverite."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportoni një pagesë që nuk e prisnit: %1$@ pagoi %2$@ më %3$@. E bllokojmë %1$@ derisa ta shihni."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite plaćanje koje niste očekivali: %1$@ je platio %2$@ dana %3$@. Blokiramo %1$@ dok ne pogledate."
           }
         },
         "th": {
@@ -302425,6 +302473,18 @@
             "value": "Prijavi in ustavi %1$@"
           }
         },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportoni dhe bllokoni %1$@"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite i blokirajte %1$@"
+          }
+        },
         "th": {
           "stringUnit": {
             "state": "translated",
@@ -302584,6 +302644,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Prijavi to plačilo"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportoni këtë pagesë"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite ovo plaćanje"
           }
         },
         "th": {

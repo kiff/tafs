@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Refuzuar, me një hap të radhës për taf-in: %1$s</string>
     <string name="record_removed_detail">Orari, kujtesa dhe çelësi u fshinë; emri është i lirë</string>
     <string name="record_removed_title">Ju e hoqët: %1$s</string>
+    <string name="record_report_button">Raportoni këtë pagesë</string>
+    <string name="record_report_done">U raportua. %1$s është i bllokuar dhe dëftesa ruhet. Nëse para dolën nga llogaria juaj, kontaktoni edhe lëshuesin e kartës suaj.</string>
+    <string name="record_report_failed">Raporti nuk u dërgua. Asgjë nuk ndryshoi. Provoni sërish.</string>
+    <string name="record_report_intro">Raportoni një pagesë që nuk e prisnit: %1$s pagoi %2$s më %3$s. E bllokojmë %1$s derisa ta shihni.</string>
+    <string name="record_report_submit">Raportoni dhe bllokoni %1$s</string>
+    <string name="record_report_title">Raportoni këtë pagesë</string>
     <string name="record_result_done">u krye</string>
     <string name="record_result_no_answer_yet">dërguar, ende pa përgjigje</string>
     <string name="record_result_not_done">nuk u krye</string>
