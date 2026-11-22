@@ -616,6 +616,10 @@
     <string name="chrome_refused">অন্য একটি Chrome এই কোড ব্যবহার করেছে, তাই কিছু জোড়া লাগেনি। আবার শুরু করুন।</string>
     <string name="chrome_remove">জোড়া ছাড়ান</string>
     <string name="chrome_remove_named">%1$s-এর জোড়া ছাড়ান</string>
+    <string name="chrome_replace_moves">এই Chrome-এ সরে যায়: %1$s</string>
+    <string name="chrome_replace_none">নতুন Chrome (কোনোটি প্রতিস্থাপন করে না)</string>
+    <string name="chrome_replace_title">প্রতিস্থাপন করে</string>
+    <string name="chrome_replace_unpairs">এটি জোড়া হলে %1$s-এর জোড়া ভেঙে যাবে।</string>
     <string name="chrome_shot_failed">ছবিটি লোড করা যায়নি।</string>
     <string name="chrome_shot_kept">৩০ দিন রাখা হয়, তারপর মুছে ফেলা হয়।</string>
     <string name="chrome_shot_none">এই ধাপের কোনো ছবি রাখা নেই।</string>

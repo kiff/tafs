@@ -1125,6 +1125,14 @@ enum Words {
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}
         static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// Moves to this Chrome: {sites}
+        static func replaceMoves(sites: String) -> String { Words.line("chrome.replace_moves", sites) }
+        /// A new Chrome (replaces none)
+        static var replaceNone: String { Words.line("chrome.replace_none") }
+        /// Replaces
+        static var replaceTitle: String { Words.line("chrome.replace_title") }
+        /// {name} is unpaired once this one is paired.
+        static func replaceUnpairs(name: String) -> String { Words.line("chrome.replace_unpairs", name) }
         /// The picture couldn't be loaded.
         static var shotFailed: String { Words.line("chrome.shot_failed") }
         /// Kept for 30 days, then deleted.

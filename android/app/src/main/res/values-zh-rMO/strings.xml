@@ -583,6 +583,10 @@
     <string name="chrome_refused">另一個 Chrome 使用了此代碼，因此未配對任何項目。請重新開始。</string>
     <string name="chrome_remove">取消配對</string>
     <string name="chrome_remove_named">取消配對 %1$s</string>
+    <string name="chrome_replace_moves">轉移到這個 Chrome：%1$s</string>
+    <string name="chrome_replace_none">新的 Chrome（不取代任何一個）</string>
+    <string name="chrome_replace_title">取代</string>
+    <string name="chrome_replace_unpairs">這個 Chrome 配對後，會解除 %1$s 的配對。</string>
     <string name="chrome_shot_failed">無法載入圖片。</string>
     <string name="chrome_shot_kept">保存 30 天，之後刪除。</string>
     <string name="chrome_shot_none">此步驟沒有保存圖片。</string>

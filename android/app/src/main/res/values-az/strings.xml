@@ -616,6 +616,10 @@
     <string name="chrome_refused">Başqa bir Chrome bu kodu istifadə etdi, ona görə heç nə cütləşmədi. Yenidən başlayın.</string>
     <string name="chrome_remove">Cütləşməni ləğv edin</string>
     <string name="chrome_remove_named">Cütləşməni ləğv edin: %1$s</string>
+    <string name="chrome_replace_moves">Bu Chrome-a keçir: %1$s</string>
+    <string name="chrome_replace_none">Yeni Chrome (heç birini əvəz etmir)</string>
+    <string name="chrome_replace_title">Əvəz edir</string>
+    <string name="chrome_replace_unpairs">Bu cütləşən kimi %1$s cütləşməsi ləğv olunur.</string>
     <string name="chrome_shot_failed">Şəkil yüklənmədi.</string>
     <string name="chrome_shot_kept">30 gün saxlanılır, sonra silinir.</string>
     <string name="chrome_shot_none">Bu addım üçün saxlanmış şəkil yoxdur.</string>

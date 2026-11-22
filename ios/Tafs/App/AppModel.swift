@@ -1469,7 +1469,8 @@ final class AppModel: ObservableObject {
     /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key, and only it, signs this phone's proof and
     /// the extension's key under the secret, and the extension later checks that signature itself. False when it didn't
     /// go through.
-    func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String) async -> Bool {
+    func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String,
+                       replacing old: PlanqueClient.Chrome? = nil) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
               let chromeKey = ChromePairing.base64URLDecoded(offer.key),
               ChromePairing.extensionProofHolds(secret: p.secret, key: chromeKey, proof: offer.proof, kiffOffer: offer.kiffOffer),
@@ -1479,6 +1480,14 @@ final class AppModel: ObservableObject {
         let phoneKey = signer.approvalPublicKeyDER
         guard !phoneKey.isEmpty else { return false }
         var confirmation = ChromePairing.confirmation(secret: p.secret, chromeKey: chromeKey, name: name, phoneKey: phoneKey)
+        // Replacing a Chrome ("Your Chrome" 1): the connections on it move, read again just now so the owner signs what is live,
+        // and the fingerprint signs them inside the pairing the extension checks. With nothing chosen, nothing moves.
+        if let old {
+            await refreshConnections()
+            confirmation.replaces = old.id
+            let carried = ChromeReplace.carried(from: old, in: grants)
+            if !carried.isEmpty { confirmation.carried = carried }
+        }
         let reason = Words.Chrome.pairPrompt(name: name)
         do {
             let bytes = try ChromePairing.signedBytes(pairing: p.pairing, confirmation)

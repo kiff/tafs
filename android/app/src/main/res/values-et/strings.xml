@@ -616,6 +616,10 @@
     <string name="chrome_refused">Seda koodi kasutas teine Chrome, seega midagi ei seotud. Alusta uuesti.</string>
     <string name="chrome_remove">Tühista sidumine</string>
     <string name="chrome_remove_named">Tühista sidumine: %1$s</string>
+    <string name="chrome_replace_moves">Läheb sellesse Chrome\'i: %1$s</string>
+    <string name="chrome_replace_none">Uus Chrome (ei asenda ühtegi)</string>
+    <string name="chrome_replace_title">Asendab</string>
+    <string name="chrome_replace_unpairs">%1$s eraldatakse, kui see on seotud.</string>
     <string name="chrome_shot_failed">Pilti ei õnnestunud laadida.</string>
     <string name="chrome_shot_kept">Säilitatakse 30 päeva, seejärel kustutatakse.</string>
     <string name="chrome_shot_none">Selle sammu kohta pole pilti salvestatud.</string>

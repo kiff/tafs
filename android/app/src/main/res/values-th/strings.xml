@@ -583,6 +583,10 @@
     <string name="chrome_refused">มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง</string>
     <string name="chrome_remove">ยกเลิกการจับคู่</string>
     <string name="chrome_remove_named">ยกเลิกการจับคู่ %1$s</string>
+    <string name="chrome_replace_moves">ย้ายมายัง Chrome นี้: %1$s</string>
+    <string name="chrome_replace_none">Chrome ใหม่ (ไม่แทนที่ตัวใด)</string>
+    <string name="chrome_replace_title">แทนที่</string>
+    <string name="chrome_replace_unpairs">%1$s จะถูกเลิกจับคู่เมื่อ Chrome นี้จับคู่แล้ว</string>
     <string name="chrome_shot_failed">โหลดภาพไม่ได้</string>
     <string name="chrome_shot_kept">เก็บไว้ 30 วัน แล้วลบ</string>
     <string name="chrome_shot_none">ไม่มีภาพที่เก็บไว้สำหรับขั้นตอนนี้</string>

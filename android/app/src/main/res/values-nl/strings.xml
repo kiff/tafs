@@ -616,6 +616,10 @@
     <string name="chrome_refused">Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.</string>
     <string name="chrome_remove">Ontkoppelen</string>
     <string name="chrome_remove_named">%1$s ontkoppelen</string>
+    <string name="chrome_replace_moves">Gaat naar deze Chrome: %1$s</string>
+    <string name="chrome_replace_none">Een nieuwe Chrome (vervangt geen)</string>
+    <string name="chrome_replace_title">Vervangt</string>
+    <string name="chrome_replace_unpairs">%1$s wordt ontkoppeld zodra deze gekoppeld is.</string>
     <string name="chrome_shot_failed">De afbeelding kon niet worden geladen.</string>
     <string name="chrome_shot_kept">30 dagen bewaard, daarna verwijderd.</string>
     <string name="chrome_shot_none">Voor deze stap is geen afbeelding bewaard.</string>

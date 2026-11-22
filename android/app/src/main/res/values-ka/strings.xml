@@ -616,6 +616,10 @@
     <string name="chrome_refused">სხვა Chrome-მა გამოიყენა ეს კოდი, ამიტომ არაფერი დაწყვილდა. დაიწყეთ თავიდან.</string>
     <string name="chrome_remove">გააუქმეთ დაწყვილება</string>
     <string name="chrome_remove_named">გააუქმეთ დაწყვილება: %1$s</string>
+    <string name="chrome_replace_moves">გადადის ამ Chrome-ზე: %1$s</string>
+    <string name="chrome_replace_none">ახალი Chrome (არცერთს არ ანაცვლებს)</string>
+    <string name="chrome_replace_title">ანაცვლებს</string>
+    <string name="chrome_replace_unpairs">ამის დაწყვილებისთანავე %1$s გაუქმდება.</string>
     <string name="chrome_shot_failed">სურათის ჩატვირთვა ვერ მოხერხდა.</string>
     <string name="chrome_shot_kept">ინახება 30 დღე, შემდეგ წაიშლება.</string>
     <string name="chrome_shot_none">ამ ნაბიჯისთვის სურათი არ არის შენახული.</string>

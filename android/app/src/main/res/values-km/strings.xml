@@ -583,6 +583,10 @@
     <string name="chrome_refused">Chrome ផ្សេងបានប្រើលេខកូដនេះ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមចាប់ផ្តើមឡើងវិញ។</string>
     <string name="chrome_remove">ឈប់ផ្គូផ្គង</string>
     <string name="chrome_remove_named">ឈប់ផ្គូផ្គង %1$s</string>
+    <string name="chrome_replace_moves">ផ្លាស់ទៅ Chrome នេះ៖ %1$s</string>
+    <string name="chrome_replace_none">Chrome ថ្មី (មិនជំនួសអ្វីទេ)</string>
+    <string name="chrome_replace_title">ជំនួស</string>
+    <string name="chrome_replace_unpairs">%1$s នឹងត្រូវលុបការផ្គូផ្គង ពេល Chrome នេះផ្គូផ្គងរួច។</string>
     <string name="chrome_shot_failed">មិនអាចផ្ទុករូបភាពបានទេ។</string>
     <string name="chrome_shot_kept">រក្សាទុក ៣០ ថ្ងៃ រួចលុប។</string>
     <string name="chrome_shot_none">មិនមានរូបភាពដែលបានរក្សាទុកសម្រាប់ជំហាននេះទេ។</string>

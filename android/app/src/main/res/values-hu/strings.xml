@@ -616,6 +616,10 @@
     <string name="chrome_refused">Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.</string>
     <string name="chrome_remove">Párosítás megszüntetése</string>
     <string name="chrome_remove_named">Párosítás megszüntetése: %1$s</string>
+    <string name="chrome_replace_moves">Átkerül ebbe a Chrome-ba: %1$s</string>
+    <string name="chrome_replace_none">Új Chrome (nem cserél le egyet sem)</string>
+    <string name="chrome_replace_title">Lecseréli</string>
+    <string name="chrome_replace_unpairs">%1$s párosítása megszűnik, amint ez párosítva van.</string>
     <string name="chrome_shot_failed">A képet nem sikerült betölteni.</string>
     <string name="chrome_shot_kept">30 napig megőrizzük, utána töröljük.</string>
     <string name="chrome_shot_none">Ehhez a lépéshez nincs elmentett kép.</string>

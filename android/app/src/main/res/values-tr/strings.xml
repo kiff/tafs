@@ -616,6 +616,10 @@
     <string name="chrome_refused">Bu kodu başka bir Chrome kullandı, bu yüzden hiçbir şey eşleştirilmedi. Baştan başlayın.</string>
     <string name="chrome_remove">Eşleştirmeyi kaldır</string>
     <string name="chrome_remove_named">Eşleştirmeyi kaldır: %1$s</string>
+    <string name="chrome_replace_moves">Bu Chrome\'a geçer: %1$s</string>
+    <string name="chrome_replace_none">Yeni bir Chrome (hiçbirini değiştirmez)</string>
+    <string name="chrome_replace_title">Değiştirir</string>
+    <string name="chrome_replace_unpairs">Bu eşleşir eşleşmez %1$s eşleşmesi kaldırılır.</string>
     <string name="chrome_shot_failed">Görüntü yüklenemedi.</string>
     <string name="chrome_shot_kept">30 gün saklanır, sonra silinir.</string>
     <string name="chrome_shot_none">Bu adım için saklanmış bir görüntü yok.</string>

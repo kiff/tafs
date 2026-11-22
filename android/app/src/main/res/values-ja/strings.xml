@@ -583,6 +583,10 @@
     <string name="chrome_refused">別のChromeがこのコードを使ったため、何もペアリングされませんでした。もう一度やり直してください。</string>
     <string name="chrome_remove">ペアリングを解除</string>
     <string name="chrome_remove_named">%1$sのペアリングを解除</string>
+    <string name="chrome_replace_moves">このChromeに移る：%1$s</string>
+    <string name="chrome_replace_none">新しいChrome（置き換えなし）</string>
+    <string name="chrome_replace_title">置き換え先</string>
+    <string name="chrome_replace_unpairs">このChromeがペアリングされると、%1$sのペアリングは解除されます。</string>
     <string name="chrome_shot_failed">画像を読み込めませんでした。</string>
     <string name="chrome_shot_kept">30日間保存され、その後削除されます。</string>
     <string name="chrome_shot_none">このステップの画像は保存されていません。</string>

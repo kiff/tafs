@@ -649,6 +649,10 @@
     <string name="chrome_refused">Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.</string>
     <string name="chrome_remove">Disociați</string>
     <string name="chrome_remove_named">Disociați %1$s</string>
+    <string name="chrome_replace_moves">Trece la acest Chrome: %1$s</string>
+    <string name="chrome_replace_none">Un Chrome nou (nu înlocuiește niciunul)</string>
+    <string name="chrome_replace_title">Înlocuiește</string>
+    <string name="chrome_replace_unpairs">%1$s este dezasociat de îndată ce acesta este asociat.</string>
     <string name="chrome_shot_failed">Imaginea nu a putut fi încărcată.</string>
     <string name="chrome_shot_kept">Păstrată 30 de zile, apoi ștearsă.</string>
     <string name="chrome_shot_none">Pentru acest pas nu este păstrată nicio imagine.</string>

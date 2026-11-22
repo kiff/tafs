@@ -201,4 +201,49 @@ final class ChromePairingTests: XCTestCase {
         let elsewhere = v.kiffOffer.replacingOccurrences(of: #""platform":"chrome""#, with: #""platform":"macos""#)
         guard case .failure = PairingRequest.read(elsewhere, now: now) else { return XCTFail("an extension that says it's a Mac") }
     }
+
+    private func chromeRow(_ id: String, profile: String? = nil, browser: String? = "Chrome 131", os: String? = "macOS") throws -> PlanqueClient.Chrome {
+        var fields = ["\"chrome_id\":\"\(id)\"", "\"name\":\"Mac \(id)\""]
+        if let profile { fields.append("\"profile_id\":\"\(profile)\"") }
+        if let browser { fields.append("\"browser\":\"\(browser)\"") }
+        if let os { fields.append("\"os\":\"\(os)\"") }
+        return try JSONDecoder().decode(PlanqueClient.Chrome.self, from: Data(("{" + fields.joined(separator: ",") + "}").utf8))
+    }
+
+    private func offer(profile: String = "", browser: String = "Chrome 131", os: String = "macOS") -> PlanqueClient.ChromeOffer {
+        PlanqueClient.ChromeOffer(key: "k", browser: browser, os: os, proof: "p", profileID: profile)
+    }
+
+    /// Re-pairing replaces, never adds: the pick starts on the Chrome with the offer's profile id; failing that, on the one Chrome
+    /// of the same browser and system; otherwise on none, and nothing moves.
+    func testThePickStartsOnTheChromeItMostLikelyReplaces() throws {
+        let a = try chromeRow("chr_a", profile: String(repeating: "a", count: 32))
+        let b = try chromeRow("chr_b", profile: String(repeating: "b", count: 32), os: "Windows")
+        XCTAssertEqual(ChromeReplace.preselect(offer: offer(profile: String(repeating: "b", count: 32)), chromes: [a, b])?.id, "chr_b", "the same profile")
+        XCTAssertEqual(ChromeReplace.preselect(offer: offer(profile: String(repeating: "c", count: 32)), chromes: [a, b])?.id, "chr_a",
+                       "a reinstalled extension (a new profile id): the one Chrome of the same browser and system")
+        XCTAssertNil(ChromeReplace.preselect(offer: offer(profile: String(repeating: "c", count: 32), os: "Linux"), chromes: [a, b]), "none alike: a new Chrome")
+        let twin = try chromeRow("chr_c", profile: String(repeating: "d", count: 32))
+        XCTAssertNil(ChromeReplace.preselect(offer: offer(profile: String(repeating: "c", count: 32)), chromes: [a, twin, b]), "two alike: never a guess")
+        XCTAssertNil(ChromeReplace.preselect(offer: offer(), chromes: []))
+        XCTAssertNil(ChromeReplace.preselect(offer: offer(browser: "", os: ""), chromes: [try chromeRow("chr_x", browser: nil, os: nil)]), "nothing known: a new Chrome")
+    }
+
+    /// Only a connection live on the Chrome replaced moves, with its sites, in planque's order; the rest end with the old Chrome.
+    func testOnlyLiveConnectionsOnTheOldChromeAreCarried() throws {
+        let old = try chromeRow("chr_1")
+        let grants = [
+            try grant("g1", chrome: "chr_1", status: "connected", sites: ["wikipedia.org", "wikimedia.org"]),
+            try grant("g2", chrome: "chr_1", status: "pending", sites: ["pending.example"]),
+            try grant("g3", chrome: "chr_2", status: "connected", sites: ["other.example"]),
+            try grant("g4", chrome: "chr_1", status: "connected", sites: []),
+            try grant("g5", chrome: "chr_1", status: "connected", sites: ["shop.example"]),
+            try grant("g6", chrome: "chr_1", status: "disconnected", sites: ["ended.example"]),
+        ]
+        let carried = ChromeReplace.carried(from: old, in: grants)
+        XCTAssertEqual(carried, [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org", "wikimedia.org"]), ChromePairing.Carried(grant: "g5", sites: ["shop.example"])])
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: []), [])
+        let many = try (0..<60).map { try grant("m\($0)", chrome: "chr_1", status: "connected", sites: ["s\($0).example"]) }
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: many).count, 50, "the extension keeps at most 50 connections")
+    }
 }

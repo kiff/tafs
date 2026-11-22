@@ -616,6 +616,10 @@
     <string name="chrome_refused">Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.</string>
     <string name="chrome_remove">Премахване на сдвояването</string>
     <string name="chrome_remove_named">Премахване на сдвояването с %1$s</string>
+    <string name="chrome_replace_moves">Преминава към този Chrome: %1$s</string>
+    <string name="chrome_replace_none">Нов Chrome (не замества никой)</string>
+    <string name="chrome_replace_title">Замества</string>
+    <string name="chrome_replace_unpairs">%1$s се разкача, щом този бъде свързан.</string>
     <string name="chrome_shot_failed">Картината не можа да се зареди.</string>
     <string name="chrome_shot_kept">Пази се 30 дни, после се изтрива.</string>
     <string name="chrome_shot_none">За тази стъпка не е запазена картина.</string>

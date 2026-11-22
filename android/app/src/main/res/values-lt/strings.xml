@@ -649,6 +649,10 @@
     <string name="chrome_refused">Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo.</string>
     <string name="chrome_remove">Atsieti</string>
     <string name="chrome_remove_named">Atsieti %1$s</string>
+    <string name="chrome_replace_moves">Persikelia į šį Chrome: %1$s</string>
+    <string name="chrome_replace_none">Naujas Chrome (nieko nepakeičia)</string>
+    <string name="chrome_replace_title">Pakeičia</string>
+    <string name="chrome_replace_unpairs">%1$s atsiejamas, kai šis susiejamas.</string>
     <string name="chrome_shot_failed">Nepavyko įkelti paveikslėlio.</string>
     <string name="chrome_shot_kept">Saugoma 30 dienų, tada ištrinama.</string>
     <string name="chrome_shot_none">Šiam žingsniui paveikslėlis nesaugomas.</string>

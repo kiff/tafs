@@ -649,6 +649,10 @@
     <string name="chrome_refused">Chrome אחר השתמש בקוד הזה, ולכן שום דבר לא הוצמד. יש להתחיל מחדש.</string>
     <string name="chrome_remove">ביטול צימוד</string>
     <string name="chrome_remove_named">ביטול צימוד של %1$s</string>
+    <string name="chrome_replace_moves">עובר ל-Chrome הזה: %1$s</string>
+    <string name="chrome_replace_none">Chrome חדש (לא מחליף אף אחד)</string>
+    <string name="chrome_replace_title">מחליף</string>
+    <string name="chrome_replace_unpairs">התאמת %1$s תבוטל ברגע שזה יותאם.</string>
     <string name="chrome_shot_failed">לא הצלחנו לטעון את התמונה.</string>
     <string name="chrome_shot_kept">נשמרת 30 יום ואז נמחקת.</string>
     <string name="chrome_shot_none">לא נשמרה תמונה עבור השלב הזה.</string>

@@ -583,6 +583,10 @@
     <string name="chrome_refused">Chrome ອື່ນໃຊ້ລະຫັດນີ້ ສະນັ້ນບໍ່ມີຫຍັງຖືກຈັບຄູ່. ເລີ່ມໃໝ່.</string>
     <string name="chrome_remove">ເຊົາຈັບຄູ່</string>
     <string name="chrome_remove_named">ເຊົາຈັບຄູ່ %1$s</string>
+    <string name="chrome_replace_moves">ຍ້າຍໄປ Chrome ນີ້: %1$s</string>
+    <string name="chrome_replace_none">Chrome ໃໝ່ (ບໍ່ແທນທີ່ອັນໃດ)</string>
+    <string name="chrome_replace_title">ແທນທີ່</string>
+    <string name="chrome_replace_unpairs">%1$s ຈະຖືກຍົກເລີກການຈັບຄູ່ເມື່ອອັນນີ້ຈັບຄູ່ແລ້ວ.</string>
     <string name="chrome_shot_failed">ໂຫຼດຮູບບໍ່ໄດ້.</string>
     <string name="chrome_shot_kept">ເກັບໄວ້ 30 ວັນ ແລ້ວລຶບ.</string>
     <string name="chrome_shot_none">ບໍ່ມີຮູບທີ່ເກັບໄວ້ສຳລັບຂັ້ນຕອນນີ້.</string>

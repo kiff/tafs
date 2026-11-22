@@ -649,6 +649,10 @@
     <string name="chrome_refused">Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna.</string>
     <string name="chrome_remove">Atvienot</string>
     <string name="chrome_remove_named">Atvienot %1$s</string>
+    <string name="chrome_replace_moves">Pāriet uz šo Chrome: %1$s</string>
+    <string name="chrome_replace_none">Jauns Chrome (neko neaizstāj)</string>
+    <string name="chrome_replace_title">Aizstāj</string>
+    <string name="chrome_replace_unpairs">%1$s tiek atvienots, kad šis ir savienots pārī.</string>
     <string name="chrome_shot_failed">Attēlu neizdevās ielādēt.</string>
     <string name="chrome_shot_kept">Glabā 30 dienas, pēc tam izdzēš.</string>
     <string name="chrome_shot_none">Šim solim attēls netiek glabāts.</string>

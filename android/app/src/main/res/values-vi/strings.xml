@@ -583,6 +583,10 @@
     <string name="chrome_refused">Một Chrome khác đã dùng mã này nên chưa có gì được ghép đôi. Hãy bắt đầu lại.</string>
     <string name="chrome_remove">Hủy ghép đôi</string>
     <string name="chrome_remove_named">Hủy ghép đôi %1$s</string>
+    <string name="chrome_replace_moves">Chuyển sang Chrome này: %1$s</string>
+    <string name="chrome_replace_none">Một Chrome mới (không thay thế cái nào)</string>
+    <string name="chrome_replace_title">Thay thế</string>
+    <string name="chrome_replace_unpairs">%1$s sẽ được hủy ghép đôi khi Chrome này được ghép đôi.</string>
     <string name="chrome_shot_failed">Không tải được ảnh.</string>
     <string name="chrome_shot_kept">Được lưu 30 ngày rồi xóa.</string>
     <string name="chrome_shot_none">Không có ảnh nào được lưu cho bước này.</string>

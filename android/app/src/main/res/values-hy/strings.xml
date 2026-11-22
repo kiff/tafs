@@ -616,6 +616,10 @@
     <string name="chrome_refused">Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։</string>
     <string name="chrome_remove">Չեղարկեք զուգակցումը</string>
     <string name="chrome_remove_named">Չեղարկեք զուգակցումը՝ %1$s</string>
+    <string name="chrome_replace_moves">Տեղափոխվում է այս Chrome՝ %1$s</string>
+    <string name="chrome_replace_none">Նոր Chrome (ոչ մեկին չի փոխարինում)</string>
+    <string name="chrome_replace_title">Փոխարինում է</string>
+    <string name="chrome_replace_unpairs">Սա զույգավորվելուն պես %1$s-ի զույգավորումը կչեղարկվի։</string>
     <string name="chrome_shot_failed">Պատկերը չհաջողվեց բեռնել։</string>
     <string name="chrome_shot_kept">Պահվում է 30 օր, ապա ջնջվում է։</string>
     <string name="chrome_shot_none">Այս քայլի համար պատկեր չի պահվել։</string>
