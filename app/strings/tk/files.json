@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} faýl · 30 gün saklanýar",
+    "other": "{count} faýl · 30 gün saklanýar"
+  },
+  "files.all": "Hemmesi",
+  "files.all_tafs": "Ähli taf-lar",
+  "files.by_run": "Işleme boýunça",
+  "files.by_taf": "taf boýunça",
+  "files.delete_body": "Ol bu hasapdaky hemmeler üçin Faýllardan derrew aýrylýar. Muny yzyna gaýtaryp bolmaýar.",
+  "files.delete_now": "Indi poz",
+  "files.delete_question": "“{name}” indi pozulsunmy?",
+  "files.deleted": "Hemmeler üçin pozuldy",
+  "files.download": "Ýükläp alyň",
+  "files.empty": "Heniz hiç zat ýok. Bir taf işlemede hasabat, jedwel ýa-da resminama düzende, ol şu ýerde 30 gün saklanýar, bu hasapdaky hemmeler açyp, saklap ýa-da paýlaşyp biler.",
+  "files.everyone": "Bu hasapdaky hemmeler",
+  "files.goes_away": "Ýok bolýar",
+  "files.goes_in_days": {
+    "one": "{count} günden ýok bolýar",
+    "other": "{count} günden ýok bolýar"
+  },
+  "files.goes_on": "{date} (işlemesinden 30 gün soň)",
+  "files.goes_today": "şu gün ýok bolýar",
+  "files.goes_tomorrow": "ertir ýok bolýar",
+  "files.in_run": "Işlemede",
+  "files.kept_line": "Her faýl işlemesinden 30 gün saklanýar, soňra özbaşdak ýok bolýar. Bu hasapdaky hemmeler bu faýllary görýär. Öz söhbetdeşlik goşundylaryňyz öz habarlary bilen galýar.",
+  "files.kept_until": "Onuň faýllary {date} çenli saklanýar",
+  "files.made_by": "Döreden",
+  "files.none_yet": "Heniz ýok · 30 gün saklanýar",
+  "files.pick_one": "Bu ýerde görmek üçin faýl saýlaň.",
+  "files.preview_start": "Diňe başlangyjy görkezilýär. Hemmesini okamak üçin faýly ýükläp alyň.",
+  "files.saved": "Bu enjamda saklandy",
+  "files.see_in_chat": "Ony söhbetdeşlikde görüň",
+  "files.share": "Paýlaşyň",
+  "files.size": "Ölçegi",
+  "files.taf_row": {
+    "one": "onuň işlemelerinden {count} faýl",
+    "other": "onuň işlemelerinden {count} faýl"
+  },
+  "files.title": "Faýllar",
+  "files.type": "Görnüşi",
+  "files.who_sees": "Kim görýär"
+}

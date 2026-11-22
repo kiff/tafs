@@ -1,0 +1,17 @@
+{
+  "report.already": "Siz bu jogap barada eýýäm habar berdiňiz.",
+  "report.cant_from_here": "Bu jogap barada bu ýerden habar berip bolmaýar.",
+  "report.menu": "Bu jogap barada habar beriň",
+  "report.not_sent": "Habaryňyz iberilmedi. {why}",
+  "report.not_sent_why": "Iberilmedi: {failed}",
+  "report.note_hint": "Bellik goşuň (hökman däl)",
+  "report.note_most_characters": "Bellik iň köp 1,000 simwol.",
+  "report.person_kiff_reads_your_report": "KIFF-iň bir adamy habaryňyzy, jogabyň ýazylyşy ýaly, okaýar.",
+  "report.reason.harmful": "Zyýanly",
+  "report.reason.offensive": "Kemsidiji",
+  "report.reason.other": "Başga",
+  "report.reason.wrong": "Ýalňyş",
+  "report.runs_not_loaded": "Onuň işlemeleri ýüklenip bilinmedi. {why}",
+  "report.thanks": "Sag boluň. KIFF-den kimdir biri habaryňyzy okar.",
+  "report.what_wrong": "Onda näme ýalňyş?"
+}

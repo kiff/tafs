@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Her tafs-y birden durzýar. Siz tafs-da dowam etdirýänçäňiz hiç zat täze iberilmeýär.",
+  "halt_all.failed": "tafs tafs-laryňyzy togtadyp bilmedi. {why} Olary togtatmak üçin tafs-y açyň.",
+  "halt_all.halted": {
+    "one": "{count} taf togtadyldy. Siz dowam etdirýänçäňiz hiç zat täze iberilmeýär.",
+    "other": "{count} taf togtadyldy. Siz dowam etdirýänçäňiz hiç zat täze iberilmeýär."
+  },
+  "halt_all.halted_all": "Tafs-laryňyz togtadyldy. Siz dowam etdirýänçäňiz hiç zat täze iberilmeýär.",
+  "halt_all.halting": {
+    "one": "{count} taf togtadylýar: hiç bir işleme başlamaýar. KIFF her bölegi heniz tassyklamady; tassyklanda tafs görkezýär.",
+    "other": "{count} taf togtadylýar: hiç bir işleme başlamaýar. KIFF her bölegi heniz tassyklamady; tassyklanda tafs görkezýär."
+  },
+  "halt_all.halting_all": "Tafs-laryňyz togtadylýar: hiç bir işleme başlamaýar. KIFF her bölegi heniz tassyklamady; tassyklanda tafs görkezýär.",
+  "halt_all.running": "tafs tafs-laryňyzy togtadyp bilmedi. Olary togtatmak üçin tafs-y açyň.",
+  "halt_all.signed_out": "Siz tafs-dan çykdyňyz. Tafs-laryňyzy togtatmak üçin giriň.",
+  "halt_all.title": "Ähli tafs-lary togtadyň"
+}

@@ -234,6 +234,8 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
            # Batch 5. Catalan's "many" is only for the compact form ("1 M"), never a whole count; Khmer and Lao have no plural.
            # Russian, Malay and Uzbek are ready for when they come.
            "ca": ["one"], "mk": ["one"], "mn": ["one"], "ne": ["one"], "km": [], "lo": [],
+           # Batch 6. Turkmen has one and other.
+           "tk": ["one"],
            "ru": ["one", "few", "many"], "ms": [], "uz": ["one"]}
 
 
