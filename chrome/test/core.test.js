@@ -202,3 +202,13 @@ test("the side panel's code field holds a whole pasted code, dashes and spaces i
     assert.deepEqual(parseCode(typed), want, typed);
   }
 });
+
+test("the pinned planque step key is a P-256 public key in SPKI form, 91 bytes, and parses", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const spki = fromB64u(ENVIRONMENTS.production.planqueKey);
+  assert.equal(spki.length, 91);
+  // SEQUENCE { SEQUENCE { id-ecPublicKey, prime256v1 }, BIT STRING 04 || X || Y }
+  assert.deepEqual([...spki.slice(0, 27)], [0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04]);
+  const key = await crypto.subtle.importKey("spki", spki, { name: "ECDSA", namedCurve: "P-256" }, true, ["verify"]);
+  assert.equal(key.type, "public");
+});
