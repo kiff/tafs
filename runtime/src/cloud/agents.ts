@@ -992,8 +992,10 @@ export class Agents {
    */
   async unclaimedDrafts(tenant: string): Promise<UnclaimedDraft[]> {
     try {
-      const out = await this.call<{ drafts?: UnclaimedDraft[] }>("GET", tenant, ["drafts"], undefined, { claimed: "false" });
-      return (out.drafts ?? []).filter((d) => typeof d?.draft_id === "string" && typeof d?.agent_id === "string");
+      const out = await this.call<{ drafts?: Array<UnclaimedDraft & { claimed?: unknown }> }>("GET", tenant, ["drafts"], undefined, { claimed: "false" });
+      // A draft the answer marks claimed is a taf already made, whatever kiff/agents did with the query: never listed.
+      return (out.drafts ?? []).filter((d) => typeof d?.draft_id === "string" && typeof d?.agent_id === "string" && d.claimed !== true)
+        .map(({ claimed: _claimed, ...d }) => d);
     } catch (err) {
       if (err instanceof AgentsError && err.status === 404) return [];
       throw err;

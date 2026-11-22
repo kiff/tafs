@@ -6116,6 +6116,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // An unnamed draft is never listed by its agent's id; a claimed one is a taf already made.
     w.agents.setupDrafts.set("drf_s2", { tenant: "t_acme", agent: "unnamed-x", requester: { kind: "member", id: "u_ana" } });
     w.agents.setupDrafts.set("drf_s3", { tenant: "t_acme", agent: "made-x", name: "Made", keyRef: "kiff/taf-made", requester: { kind: "member", id: "u_ana" } });
+    // A named draft whose agent has no Card in force acts on nothing: it isn't listed as being set up either.
+    w.agents.setupDrafts.set("drf_s4", { tenant: "t_acme", agent: "cardless-x", name: "Cardless", requester: { kind: "member", id: "u_ana" } });
     w.account.mandates = ["day-summary-x", "unnamed-x", "made-x", "ops-bot"].map((a) => ({ id: `card_${a}`, subject: a, active: true, grants: [{ action: "lookup" }], aggregates: [] }));
     const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
     const req = (method: string, path: string, token = "ana") => handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: `Bearer ${token}`, "accept-language": "en" } }, deps);
