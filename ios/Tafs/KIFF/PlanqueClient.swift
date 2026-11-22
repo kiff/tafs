@@ -720,11 +720,12 @@ final class PlanqueClient {
         /// The most a picture may weigh: planque keeps none over 120 KB.
         static let largest = 120 * 1024
 
-        /// planque's answer, or nil when it isn't a picture to show: not the shape, not base64url, too big, not WebP, or
-        /// bytes whose SHA-256 isn't the one planque kept.
-        static func read(_ data: Data) -> ChromeScreenshot? {
+        /// planque's answer for `step`, or nil when it isn't a picture to show: not the shape, not the step asked for (a misrouted
+        /// answer is never shown under another step), not base64url, too big, not WebP, or bytes whose SHA-256 isn't the one
+        /// planque kept.
+        static func read(_ data: Data, step asked: String) -> ChromeScreenshot? {
             struct Raw: Decodable { let step: String; let taken_at: String; let sha256: String; let image: String }
-            guard let raw = try? JSONDecoder().decode(Raw.self, from: data),
+            guard let raw = try? JSONDecoder().decode(Raw.self, from: data), raw.step == asked,
                   let bytes = ChromePairing.base64URLDecoded(raw.image), !bytes.isEmpty, bytes.count <= largest,
                   bytes.count >= 12, bytes.prefix(4) == Data("RIFF".utf8), bytes[8..<12] == Data("WEBP".utf8),
                   SHA256.hash(data: bytes).map({ String(format: "%02x", $0) }).joined() == raw.sha256.lowercased(),
@@ -739,7 +740,7 @@ final class PlanqueClient {
     func chromeScreenshot(step: String) async throws -> ChromeScreenshot? {
         do {
             let data = try await raw("GET", "chromes/screenshots/\(escaped(step))", body: nil)
-            guard let shot = ChromeScreenshot.read(data) else { throw PlanqueError.server(status: 0, message: "bad_picture") }
+            guard let shot = ChromeScreenshot.read(data, step: step) else { throw PlanqueError.server(status: 0, message: "bad_picture") }
             return shot
         } catch PlanqueError.server(let status, _, _) where status == 404 {
             return nil
