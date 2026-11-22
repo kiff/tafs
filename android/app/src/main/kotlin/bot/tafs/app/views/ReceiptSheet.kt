@@ -196,18 +196,20 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReportPayment(entry: RecordEntry, state: AppState) {
-  val offer = entry.report ?: return
-  val send = LocalReportPayment.current ?: return
-  val scope = rememberCoroutineScope()
-  var asking by remember { mutableStateOf(false) }
-  var sending by remember { mutableStateOf(false) }
-  var failed by remember { mutableStateOf(false) }
-  var done by remember { mutableStateOf(false) }
+  // Kept by the entry's id, before reading the offer: the list read again after a report brings the entry back without one, and
+  // the done line stays while this sheet is open.
+  var done by remember(entry.id) { mutableStateOf(false) }
   val taf = state.taf(entry.tafId)?.name ?: "–"
   if (done) {
     Panel(stroke = Theme.amber.copy(alpha = 0.5f)) { Text(Words.Record.Report.done(taf), style = scaled(14, color = Theme.ink)) }
     return
   }
+  val offer = entry.report?.takeIf { entry.reportedAt == null } ?: return
+  val send = LocalReportPayment.current ?: return
+  val scope = rememberCoroutineScope()
+  var asking by remember { mutableStateOf(false) }
+  var sending by remember { mutableStateOf(false) }
+  var failed by remember { mutableStateOf(false) }
   OutlineButton(Words.Record.Report.button, { failed = false; asking = true }, color = Theme.amberText)
   if (!asking) return
   val made = runCatching { Instant.parse(offer.at) }.getOrNull() ?: entry.madeAt ?: entry.at

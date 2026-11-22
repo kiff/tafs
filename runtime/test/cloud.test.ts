@@ -7049,6 +7049,10 @@ describe("reporting a payment the owner didn't expect (Q26)", () => {
     expect(Object.values(await entries(w, "viewer")).every((e) => e.report === undefined)).toBe(true);
     const record = await call(w, "GET", "/v1/record", { token: "ana", query: "q=checkout" });
     expect(record.body.entries.map((e: { report?: unknown }) => e.report)).toEqual([{ trace_id: "tr-pay", at: at(1) }, undefined]);
+    // The Record too: no offer for someone who can't manage the account's Cards, though they see the payment.
+    const theirs = await call(w, "GET", "/v1/record", { token: "viewer", query: "q=checkout" });
+    expect(theirs.body.entries.map((e: { call: ActivityCall }) => e.call.proposal_id)).toContain("p-pay");
+    expect(theirs.body.entries.every((e: { report?: unknown }) => e.report === undefined)).toBe(true);
   });
 
   it("reports it in KIFF and halts its taf in kiff/agents too, once, and the row then says when", async () => {
