@@ -1787,6 +1787,12 @@
     <string name="record_refused_next_step_detail">ปฏิเสธ พร้อมขั้นตอนถัดไปสำหรับ taf: %1$s</string>
     <string name="record_removed_detail">ลบกำหนดการ ความจำ และกุญแจแล้ว ชื่อว่าง</string>
     <string name="record_removed_title">คุณนำ %1$s ออก</string>
+    <string name="record_report_button">รายงานการชำระเงินนี้</string>
+    <string name="record_report_done">รายงานแล้ว %1$s ถูกระงับ และเก็บใบเสร็จไว้ หากเงินออกจากบัญชีของคุณแล้ว โปรดติดต่อผู้ออกบัตรของคุณด้วย</string>
+    <string name="record_report_failed">ส่งรายงานไม่ได้ ไม่มีอะไรเปลี่ยนแปลง ลองอีกครั้ง</string>
+    <string name="record_report_intro">รายงานการชำระเงินที่คุณไม่คาดคิด: %1$s ชำระ %2$s เมื่อ %3$s เราจะระงับ %1$s จนกว่าคุณจะตรวจสอบ</string>
+    <string name="record_report_submit">รายงานและระงับ %1$s</string>
+    <string name="record_report_title">รายงานการชำระเงินนี้</string>
     <string name="record_result_done">เสร็จแล้ว</string>
     <string name="record_result_no_answer_yet">ส่งแล้ว ยังไม่มีคำตอบ</string>
     <string name="record_result_not_done">ยังไม่ได้ทำ</string>

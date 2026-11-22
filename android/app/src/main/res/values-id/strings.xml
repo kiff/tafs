@@ -1787,6 +1787,12 @@
     <string name="record_refused_next_step_detail">Ditolak, dengan langkah berikutnya untuk taf: %1$s</string>
     <string name="record_removed_detail">Jadwal, memori, dan kunci dihapus; nama bebas</string>
     <string name="record_removed_title">Anda menghapus %1$s</string>
+    <string name="record_report_button">Laporkan pembayaran ini</string>
+    <string name="record_report_done">Dilaporkan. %1$s dibekukan dan tanda terima disimpan. Jika uang keluar dari rekening Anda, hubungi juga penerbit kartu Anda.</string>
+    <string name="record_report_failed">Laporan tidak dapat dikirim. Tidak ada yang berubah. Coba lagi.</string>
+    <string name="record_report_intro">Laporkan pembayaran yang tidak Anda duga: %1$s membayar %2$s pada %3$s. Kami membekukan %1$s sampai Anda memeriksanya.</string>
+    <string name="record_report_submit">Laporkan dan bekukan %1$s</string>
+    <string name="record_report_title">Laporkan pembayaran ini</string>
     <string name="record_result_done">selesai</string>
     <string name="record_result_no_answer_yet">terkirim, belum ada jawaban</string>
     <string name="record_result_not_done">belum dilakukan</string>

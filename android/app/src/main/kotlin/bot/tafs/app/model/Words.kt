@@ -1925,6 +1925,14 @@ object Words {
       val detail: String get() = Res.s(R.string.record_removed_detail)
       fun title(taf: String): String = Res.s(R.string.record_removed_title, taf)
     }
+    object Report {
+      val button: String get() = Res.s(R.string.record_report_button)
+      fun done(taf: String): String = Res.s(R.string.record_report_done, taf)
+      val failed: String get() = Res.s(R.string.record_report_failed)
+      fun intro(taf: String, amount: String, date: String): String = Res.s(R.string.record_report_intro, taf, amount, date)
+      fun submit(taf: String): String = Res.s(R.string.record_report_submit, taf)
+      val title: String get() = Res.s(R.string.record_report_title)
+    }
     object Result {
       val done: String get() = Res.s(R.string.record_result_done)
       val noAnswerYet: String get() = Res.s(R.string.record_result_no_answer_yet)

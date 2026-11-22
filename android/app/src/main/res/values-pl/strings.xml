@@ -1979,6 +1979,12 @@
     <string name="record_refused_next_step_detail">Odrzucone, z kolejnym krokiem dla tafa: %1$s</string>
     <string name="record_removed_detail">Harmonogram, pamięć i klucz usunięte; nazwa wolna</string>
     <string name="record_removed_title">Usunięto %1$s</string>
+    <string name="record_report_button">Zgłoś tę płatność</string>
+    <string name="record_report_done">Zgłoszono. %1$s jest zablokowany, a potwierdzenie zostaje zachowane. Jeśli pieniądze opuściły Twoje konto, skontaktuj się też z wystawcą swojej karty.</string>
+    <string name="record_report_failed">Nie udało się wysłać zgłoszenia. Nic się nie zmieniło. Spróbuj ponownie.</string>
+    <string name="record_report_intro">Zgłoś nieoczekiwaną płatność: %1$s zapłacił %2$s dnia %3$s. Blokujemy %1$s, dopóki jej nie sprawdzisz.</string>
+    <string name="record_report_submit">Zgłoś i zablokuj %1$s</string>
+    <string name="record_report_title">Zgłoś tę płatność</string>
     <string name="record_result_done">gotowe</string>
     <string name="record_result_no_answer_yet">wysłano, jeszcze bez odpowiedzi</string>
     <string name="record_result_not_done">nie wykonano</string>

@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Reddedildi, taf için bir sonraki adımla: %1$s</string>
     <string name="record_removed_detail">Zamanlama, bellek ve anahtar silindi; ad serbest</string>
     <string name="record_removed_title">%1$s taf\'ını kaldırdınız</string>
+    <string name="record_report_button">Bu ödemeyi bildirin</string>
+    <string name="record_report_done">Bildirildi. %1$s taf\'ı donduruldu ve makbuz saklanıyor. Hesabınızdan para çıktıysa kart veren kuruluşla da iletişime geçin.</string>
+    <string name="record_report_failed">Bildirim gönderilemedi. Hiçbir şey değişmedi. Tekrar deneyin.</string>
+    <string name="record_report_intro">Beklemediğiniz bir ödemeyi bildirin: %1$s, %3$s tarihinde %2$s ödedi. Siz bakana kadar %1$s taf\'ını donduruyoruz.</string>
+    <string name="record_report_submit">Bildir ve %1$s taf\'ını dondur</string>
+    <string name="record_report_title">Bu ödemeyi bildirin</string>
     <string name="record_result_done">yapıldı</string>
     <string name="record_result_no_answer_yet">gönderildi, henüz yanıt yok</string>
     <string name="record_result_not_done">yapılmadı</string>
