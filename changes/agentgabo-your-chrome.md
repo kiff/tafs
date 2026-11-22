@@ -1,0 +1,1 @@
+- **Your Chrome:** the design for browser connections that follow the owner's Chrome (re-pair replaces, a choice per connection, unpair ends its connections, each names its Chrome, one fingerprint per act), docs only ([chrome.md](docs/chrome.md)).
