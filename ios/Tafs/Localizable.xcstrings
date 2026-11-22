@@ -356683,10 +356683,22 @@
             "value": "عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو ترفض."
           }
         },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taf-a sizin lazım olduğunuz zaman, o, «Sizi gözləyir» bölməsində gözləyir. Telefonunuzda təsdiq edirsiniz, ya da rədd edirsiniz."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
             "value": "Когато taf има нужда от вас, той чака в „Чака ви“. Одобрявате от телефона си или отказвате."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "কোনো taf-এর আপনাকে দরকার হলে সে «আপনার অপেক্ষায়» অপেক্ষা করে। আপনি আপনার ফোনে অনুমোদন করেন, অথবা প্রত্যাখ্যান করেন।"
           }
         },
         "ca": {
@@ -356731,6 +356743,12 @@
             "value": "Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou vous refusez."
           }
         },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או דוחה."
+          }
+        },
         "hr": {
           "stringUnit": {
             "state": "translated",
@@ -356741,6 +356759,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy elutasítod."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Երբ taf-ին ձեր օգնությունն է պետք, նա սպասում է «Սպասում է ձեզ» բաժնում։ Դուք հաստատում եք հեռախոսով, կամ մերժում եք։"
           }
         },
         "id": {
@@ -356759,6 +356783,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、拒否してください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "როცა taf-ს თქვენი დახმარება სჭირდება, ის ელოდება განყოფილებაში „გელოდებათ“. ამტკიცებთ ტელეფონზე, ან უარს ამბობთ."
           }
         },
         "km": {
@@ -356849,6 +356879,18 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kur një taf ka nevojë për ju, pret te Ju pret. Miratoni në telefonin tuaj, ose refuzoni."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate."
           }
         },
         "th": {

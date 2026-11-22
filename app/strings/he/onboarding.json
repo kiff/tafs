@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "אני מסכים ל{kiff_terms} ול{tafs_terms}.",
   "onboarding.control_lead": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם Face ID או Touch ID, או דוחה.",
   "onboarding.control_lead_android": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך», ובשעון שלך אם יש לך. אתה מאשר עם נעילת המסך, או דוחה.",
+  "onboarding.control_lead_desktop": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר בטלפון, או דוחה.",
   "onboarding.control_lead_mac": "כש-taf זקוק לך, הוא ממתין ב«זקוק לך». אתה מאשר עם Touch ID או בטלפון, או דוחה.",
   "onboarding.control_title": "השליטה נשארת בידיים שלך",
   "onboarding.get_started": "להתחיל",
