@@ -421,6 +421,17 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   - Nothing is sent by itself: no background read, no other tab, no history.
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
 
+## Screenshots of a run's acts
+
+A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads, opens and sealed fills take none.
+
+- **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
+- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its window. A picture that can't be taken never holds the act.
+- **Sent over HTTPS, not the relay** (the relay's message limits are too small for a picture): `POST /v1/extension/steps/<step>/screenshot?chrome=<id>&sha256=<hex>&sig=<b64url>` with `content-type: image/webp`. `sig` is the extension's key over `tafs-chrome/screenshot/v1` and `{chrome_id, step, sha256}`, so planque can tell the picture is this extension's, for this step, unaltered.
+- **Off until planque keeps them.** The build ships with `screenshots: false` (`src/config.js`); it is switched on in a release only once planque stores the pictures behind its own flag and the privacy wording is live.
+
+Limits: a step held for the owner and then refused is not pictured; a card number written as ordinary page text is not blacked out in the picture (the read's text masking does not apply to pixels).
+
 ## Tests
 
 - `cd chrome && node --test test/*.test.js` runs every test. CI's `chrome.yml` runs them on every change to `chrome/`

@@ -365,3 +365,23 @@ test("a checkout's lines are masked like the page's text, and a total in two cur
   assert.equal((await mixed.evaluate(() => TafsPage.read())).checkout, undefined);
   await mixed.close();
 });
+
+test("the picture's covers sit over the password, code and saved-fill fields, and come off again", { skip: !playwright }, async () => {
+  const page = await openHTML(SHOP);
+  const got = await page.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(got.ok, true, "every secret field is covered");
+  assert.ok(got.masked >= 3, "password, one-time code and the card field at least");
+  const email = await page.evaluate(() => {
+    const r = document.getElementById("email").getBoundingClientRect();
+    return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).id;
+  });
+  assert.equal(email, "email", "an ordinary field is left as it is");
+  const covered = await page.evaluate(() => {
+    const r = document.getElementById("pw").getBoundingClientRect();
+    return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).hasAttribute("data-tafs-shot-mask");
+  });
+  assert.equal(covered, true);
+  await page.evaluate(() => globalThis.TafsPage.unmaskShot());
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0, "nothing is left behind");
+  await page.close();
+});
