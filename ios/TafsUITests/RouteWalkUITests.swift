@@ -138,7 +138,7 @@ final class RouteWalkUITests: TafsUITestCase {
     private func enter(_ path: String, into field: XCUIElement) -> Bool {
         for _ in 0..<3 {
             let left = Self.typed(field)
-            typeInto(field, text: String(repeating: XCUIKeyboardKey.delete.rawValue, count: left.count) + path)
+            typeInto(field, text: String(repeating: XCUIKeyboardKey.delete.rawValue, count: left.count) + path, tolerateLostKeyboard: true)
             if within(2, { Self.typed(field) == path }) {
                 field.typeText("\n")
                 return true

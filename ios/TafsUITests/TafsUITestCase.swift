@@ -56,8 +56,13 @@ class TafsUITestCase: XCTestCase {
     /// focus and the test failed after minutes of waiting (ReportAnswerUITests, ChatPinUITests in CI).
     /// So an alert already up is closed first, and the field is tapped again until it has the keyboard
     /// with none up, three times at most.
+    ///
+    /// `tolerateLostKeyboard`: the alert can also come in the last instant, inside `typeText`'s own check for interruptions:
+    /// XCTest closes it, its Cancel takes the keyboard, and the event fails with "Neither element nor any descendant has keyboard
+    /// focus" (main's route walk, 22 Nov, at a different route each run). A caller that reads back what was typed, and types
+    /// again when it isn't whole, passes true: that one failure is then expected, and a persistent one still fails the caller.
     @MainActor
-    func typeInto(_ field: XCUIElement, text: String) {
+    func typeInto(_ field: XCUIElement, text: String, tolerateLostKeyboard: Bool = false) {
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         for _ in 0..<3 {
             if springboard.alerts.firstMatch.exists { letTheMonitorRun(XCUIApplication()) }
@@ -65,7 +70,15 @@ class TafsUITestCase: XCTestCase {
             if hasFocus(field), !springboard.alerts.firstMatch.exists { break }
         }
         XCTAssertTrue(hasFocus(field), "the field has the keyboard")
-        field.typeText(text)
+        guard tolerateLostKeyboard else {
+            field.typeText(text)
+            return
+        }
+        let options = XCTExpectedFailure.Options()
+        options.isStrict = false
+        XCTExpectFailure("a system alert took the keyboard; the caller reads back what was typed and tries again", options: options) {
+            field.typeText(text)
+        }
     }
 
     /// Whether `field` takes the keyboard within five seconds of a tap (a slow simulator's
