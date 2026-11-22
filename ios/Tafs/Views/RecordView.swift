@@ -558,7 +558,8 @@ struct ReceiptView: View {
                     ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                         HStack(alignment: .top, spacing: 6) {
                             Text("\(i + 1)").frame(width: 18, alignment: .leading)
-                            Text("\(step.words) · \(step.at.map { $0.zonedShown(date: .omitted, time: .standard) } ?? "")\nhash \(step.hash)")
+                            // KIFF's signed message, as it signed it: the full receipt is the receipt, not its words.
+                            Text("\(step.message) · \(step.at.map { $0.zonedShown(date: .omitted, time: .standard) } ?? "")\nhash \(step.hash)")
                         }
                     }
                     if let sig = receiptAttestation("signature") {
@@ -588,7 +589,10 @@ struct ReceiptView: View {
     // MARK: The signed steps
 
     private struct Step {
+        /// What "What happened" shows: KIFF's `step_words` for this step when it sent some, else `message`.
         let words: String
+        /// KIFF's signed message for it, in KIFF's English, else its kind in words: what the full receipt shows.
+        let message: String
         let at: Date?
         let hash: String
         let kind: String
@@ -604,16 +608,19 @@ struct ReceiptView: View {
     private var steps: [Step] {
         guard let raw, let chain = RawJSON.value(of: "causal_chain", in: raw),
               let list = try? JSONSerialization.jsonObject(with: chain) as? [[String: Any]] else { return [] }
+        let stepWords = ReceiptStepWords.read(from: raw)
         return list.map { s in
             let kind = s["kind"] as? String ?? ""
-            let message = (s["message"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            let signed = (s["message"] as? String).flatMap { $0.isEmpty ? nil : $0 }
             let at = (s["occurred_at"] as? String).flatMap { ISO8601DateFormatter.precise.date(from: $0) ?? ISO8601DateFormatter().date(from: $0) }
             let hash = s["data_hash"] as? String ?? ""
             let data = s["data"] as? [String: Any]
             let amount = (data?["amount"] as? [String: Any]).flatMap { a in
                 (a["value"] as? String).map { KIFFClient.ActivityCall.Amount(value: $0, unit: a["unit"] as? String) }
             }
-            return Step(words: message ?? kind.replacingOccurrences(of: "_", with: " "), at: at,
+            let message = signed ?? kind.replacingOccurrences(of: "_", with: " ")
+            let sequence = (s["sequence"] as? NSNumber).flatMap { CFGetTypeID($0) == CFBooleanGetTypeID() ? nil : $0.intValue }
+            return Step(words: sequence.flatMap { stepWords[$0] } ?? message, message: message, at: at,
                         hash: hash.count > 8 ? "\(hash.prefix(4))…\(hash.suffix(4))" : hash, kind: kind,
                         onHash: data?["on_hash"] as? String, amount: amount, answer: data?["answer"] as? String)
         }

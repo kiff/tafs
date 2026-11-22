@@ -76,6 +76,7 @@
     <string name="approval_first_taf">Postavljanje tafa traži odobrenja: Coach traži da odobrite njegove alate i Card tafa.</string>
     <string name="approval_has_no_face_id_touch">Ovaj %1$s nema Face ID ni Touch ID pa ne može odobravati. Odobrite na drugom iPhoneu, iPadu ili Android telefonu prijavljenom na vaš račun.</string>
     <string name="approval_has_no_passcode_needs_one">Ovaj %1$s nema šifru, a za sljedeće je potrebna: %2$s. Postavite šifru u: %3$s, zatim dodajte: %4$s i vratite se.</string>
+    <string name="approval_hello_before">Odobravanje: %1$s. Windows Hello traži vaš PIN, lice ili otisak prsta.</string>
     <string name="approval_kept">Sačuvano je u Čeka vas.</string>
     <string name="approval_key_could_not_sign">Ključ nije mogao potpisati</string>
     <string name="approval_key_gone_approve_again">Vaši su se otisci prstiju promijenili ili nijedan nije prepoznat pa ovaj telefon ne može odobravati dok ga ponovno ne odobrite u pregledniku.</string>
@@ -100,14 +101,17 @@
     <string name="approval_security_key_add">Dodajte ključ</string>
     <string name="approval_security_key_add_enter_pin">Unesite PIN svojeg sigurnosnog ključa da ga dodate. tafs ga traži svaki put i nikad ga ne sprema.</string>
     <string name="approval_security_key_add_title">Dodajte svoj sigurnosni ključ ovom računalu</string>
+    <string name="approval_security_key_before">Za to je potreban vaš sigurnosni ključ: %1$s. Priključite ga, dodirnite ga i unesite njegov PIN.</string>
     <string name="approval_security_key_enter_pin">Unesite PIN svojeg sigurnosnog ključa. tafs ga traži svaki put i nikad ga ne sprema.</string>
     <string name="approval_security_key_failed">Sigurnosni ključ nije mogao potpisati pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.</string>
     <string name="approval_security_key_locked">Ovaj je sigurnosni ključ zaključan zbog previše pogrešnih PIN-ova pa ne može odobravati. Odobrite na telefonu. Resetiranje ključa briše ga, pa da biste ponovno odobravali ključem, ponovno uparite ovo računalo.</string>
     <string name="approval_security_key_no_key">Priključite svoj sigurnosni ključ, pa pokušajte ponovno.</string>
     <string name="approval_security_key_no_pin_set">Ovaj sigurnosni ključ nema PIN pa ne može odobravati. Priključite onaj koji pripada ovom računalu. Ako je resetiran, odobrite na telefonu i ponovno uparite ovo računalo da biste odobravali ključem.</string>
+    <string name="approval_security_key_none_paired">Ovo računalo još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete za odobrenje; obični USB stick ne radi.</string>
     <string name="approval_security_key_not_allowed">Sigurnosni ključ to nije dopustio pa ništa nije odobreno. Zahtjev je sačuvan: odobrite ponovno kad budete spremni.</string>
     <string name="approval_security_key_not_fido2">Ovaj sigurnosni ključ ne može provjeriti PIN pa ne može odobravati. Priključite onaj koji pripada ovom računalu.</string>
     <string name="approval_security_key_not_this_key">Ovo nije sigurnosni ključ koji pripada ovom računalu. Priključite pravi i pokušajte ponovno ili odobrite na telefonu.</string>
+    <string name="approval_security_key_on_phone">Umjesto toga odobrite na telefonu</string>
     <string name="approval_security_key_pair_without">Uparite bez ključa</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">To su tri pogrešna PIN-a zaredom. Iskopčajte ključ, ponovno ga priključite, pa pokušajte ponovno.</string>

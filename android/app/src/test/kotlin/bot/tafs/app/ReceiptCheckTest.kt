@@ -115,6 +115,23 @@ class ReceiptCheckTest {
     assertEquals("bb", steps[1].hash)
   }
 
+  /**
+   * KIFF's `step_words` (beside the receipt, outside the signature, in the reader's language) are what "What happened" reads;
+   * the signed message stays for the full receipt, and a step with no words, or words that are blank, reads as it did.
+   */
+  @Test fun aStepReadsInKiffsStepWordsAndKeepsItsSignedMessage() {
+    val withWords = signed.dropLast(1) +
+      ""","step_words":[{"sequence":1,"code":"decision.held","words":"Angehalten: über 100 €"},{"sequence":2,"code":"x","words":"  "},{"sequence":"3","words":"no"}]}"""
+    val steps = bot.tafs.app.kiff.ReceiptSteps.of(withWords.toByteArray())
+    assertEquals(listOf("Angehalten: über 100 €", "settled"), steps.map { it.words })
+    assertEquals(listOf("held: over <€100> & more", "settled"), steps.map { it.message })
+    // The words are outside what KIFF signed: the receipt still checks out as before.
+    assertEquals(ReceiptCheck.Verified(testSigner), check(withWords))
+    // None sent: the signed message, as before.
+    val plain = bot.tafs.app.kiff.ReceiptSteps.of(signed.toByteArray())
+    assertEquals(plain.map { it.message }, plain.map { it.words })
+  }
+
   private val chain = """{"causal_chain":[{"sequence":1,"kind":"decision","data_hash":"0123456789abcdef","data":{"on_hash":"sha256:${
     java.security.MessageDigest.getInstance("SHA-256").digest("pi_3Q".toByteArray()).joinToString("") { "%02x".format(it) }
   }","amount":{"value":"150.00","unit":"EUR"}}},{"sequence":2,"kind":"hold_settled","data":{"answer":"approve_once"}}]}"""

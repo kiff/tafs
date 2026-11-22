@@ -15,7 +15,8 @@ Sets up a taf on websites in the owner's Chrome, only when the connections offer
 4. **No Chrome paired** ("offered, none paired yet"): say how, in two steps: on the phone, Account › Chrome › Pair a Chrome; in Chrome on the computer, add the tafs extension from the Chrome Web Store, open it and type the code the phone shows. Then wait for the owner. Never ask for the code, and never go on as if a Chrome were paired.
 5. **Request it:** planque request {entry: "browser@1", name, taf_name, browser: {sites, currency?}, tools}, each tool {tool, title}. The owner picks which paired Chrome runs it, on the phone. You never pick or pair a Chrome, and never change which one a taf uses.
 6. **The Card:** draft it as for any app. Its rules name the sites and what the taf does there. A taf that pays is held for every pay.
-7. **Tell the owner what they'll see:** the taf opens its own tabs in a group they can see, pause or stop, and stops when they touch one. It reads pages as text, never their passwords, card or code fields.
+7. **Where the taf starts:** its instructions open a site at the exact start page it was granted, https://<site>/ (https://shop.example/), never a name you put in front (en., m.) or a path you wrote. From there it opens only pages and links its last read gave: planque refuses any other address.
+8. **Tell the owner what they'll see:** the taf opens its own tabs in a group they can see, pause or stop, and stops when they touch one. It reads pages as text, never their passwords, card or code fields.
 
 ## Verification
 

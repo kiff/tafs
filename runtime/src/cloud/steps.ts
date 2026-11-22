@@ -271,6 +271,8 @@ export function whyOf(text: unknown): string | undefined {
     // A code, with its label; and the service that relayed the call, which the owner never sees.
     .replace(/\b(?:code|error|status|reason)\s+[a-z]+(?:_[a-z]+)+\b/g, "")
     .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, "")
+    // "planque's" reads as KIFF's to the person (the owner's Chrome refusing a step "as not planque's"), never a bare "'s".
+    .replace(/\bplanque['’]s\b/gi, "KIFF's")
     .replace(/\bplanque\b/gi, "")
     // What's left of a bracket that held only ids and codes, and doubled "it"s.
     .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "").replace(/\(\s*\)/g, "")

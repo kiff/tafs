@@ -158,7 +158,9 @@ outcome, and a failed step is left out once something worked (`WorkLog.rows`).
 the first line of what the tool answered, in the owner's words, with a service's "answered
 403:" prefix, ids, codes and hashes left out, at most 160 characters (`whyOf`, `steps.ts`).
 The name of the thing a left-out id was stays, in words: Stripe's "No such payment_intent:
-'pi_…'" reads "No such payment intent", never "No such: 'it'".
+'pi_…'" reads "No such payment intent", never "No such: 'it'". The connection service's
+name is left out, and its possessive reads as KIFF's: the owner's Chrome refusing a step "as
+not planque's, expired or malformed" reads "as not KIFF's, expired or malformed", never "as not 's".
 The live `step` event has it, and the thread's step has the same line: tafs cloud keeps a
 run's reasons while the run streams (by run and call, for as long as the run is kept), since
 kiff/agents keeps a result only until its run ends and its usage record says only that the
