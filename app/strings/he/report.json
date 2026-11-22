@@ -1,0 +1,17 @@
+{
+  "report.already": "כבר דיווחת על התשובה הזו.",
+  "report.cant_from_here": "אי אפשר לדווח על התשובה הזו מכאן.",
+  "report.menu": "דיווח על התשובה הזו",
+  "report.not_sent": "הדיווח שלך לא נשלח. {why}",
+  "report.not_sent_why": "לא נשלח: {failed}",
+  "report.note_hint": "הוספת הערה (לא חובה)",
+  "report.note_most_characters": "הערה היא לכל היותר 1,000 תווים.",
+  "report.person_kiff_reads_your_report": "אדם ב-KIFF קורא את הדיווח שלך, עם התשובה כפי שנכתבה.",
+  "report.reason.harmful": "מזיק",
+  "report.reason.offensive": "פוגעני",
+  "report.reason.other": "אחר",
+  "report.reason.wrong": "שגוי",
+  "report.runs_not_loaded": "לא ניתן היה לטעון את הריצות שלו. {why}",
+  "report.thanks": "תודה. מישהו ב-KIFF יקרא את הדיווח שלך.",
+  "report.what_wrong": "מה לא בסדר בה?"
+}

@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} nuk mund të bashkëngjitet.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs nuk mund ta bashkëngjitë këtë skedar: nuk është lloj ose madhësi që pranon. Zgjidhni një tjetër.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Ajo foto nuk u lexua dot.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} është {size}; maksimumi është {limit}.",
+  "attachment.wrong_kind": "{name} nuk mund të bashkëngjitet. Mund të bashkëngjiten foto, PDF, tekst, CSV, Markdown, skedarë Word dhe Excel."
+}

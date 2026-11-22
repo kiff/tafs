@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Bisedat tuaja nuk u eksportuan. {why}",
+  "export.not_offered": "Skedarët nuk u ruajtën dot në këtë telefon. Lironi pak hapësirë, pastaj provoni sërish.",
+  "export.own_chats_each_taf_coach": "Bisedat tuaja me secilin taf, përfshirë ato të Coach, emrat e skedarëve që keni bashkëngjitur dhe shënimet tuaja, si skedar i lexueshëm dhe si JSON. Vetëm ju mund t'i eksportoni.",
+  "export.preparing": "Po përgatiten bisedat tuaja…",
+  "export.ready_share_again": "Gati: {files}. Ndajeni sërish",
+  "export.row": "Eksportoni bisedat e mia",
+  "export.sign_in_first": "Hyni me KIFF për të eksportuar bisedat tuaja."
+}

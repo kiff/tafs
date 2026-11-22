@@ -578,8 +578,8 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 
 ## Batch 3: Arabic (being written)
 
-Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its catalog is in `all`, not `shipped`,
-until its review and the right-to-left PR that carries it ships.
+Arabic is the first right-to-left language the apps ship (the owner said yes, 21 Nov). Its right-to-left code shipped with
+tafs#1697; the owner's rule of 22 Nov (native reads gate nothing) puts its catalog in `shipped`, with tafs#1704.
 
 ### Arabic (ar)
 
@@ -610,6 +610,10 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 - **Captions** that the app sets in a monospaced face with letter-spacing (the Needs you "time left", the section eyebrows)
   are set in the plain face with no spacing in Arabic, as in Korean, Japanese and Chinese: spacing cuts Arabic's joined
   letters apart (`Eyebrow.ideographic`, `ScaledFont.design`).
+- **Android is ready for it, before it ships there:** `Res.figures` writes Arabic's figures in Western digits
+  (`ar-u-nu-latn`) for counts, money, a line's numbers and ordinals. Dates are `java.time`'s, already 0–9 and Gregorian.
+  The eyebrows keep the plain face, untracked (`ideographic` covers the Arabic blocks), and no line takes the monospaced
+  face in Arabic (`JOINED_SCRIPTS`). Hebrew isn't in either: its letters don't join, and its digits are 0–9.
 
 | English | Arabic |
 |---|---|
@@ -634,6 +638,7 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 | Inbox | الوارد |
 | Overview | نظرة عامة |
 | Calendar | التقويم |
+| Setup (a screen title; the agent's name stays Setup in Latin letters) | الإعداد |
 | Usage | الاستخدام |
 | brief | الملخص |
 | receipt | الإيصال |
@@ -829,6 +834,286 @@ the app builds with ships `zh-rTW` and `zh-rHK`, and Android took those over our
 | Calendar | 行事曆 |
 | Usage | 用量 |
 | Cancel / Continue | 取消 / 繼續 |
+
+## Batch 4: Serbian (Latin), Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
+
+For the countries whose language the apps didn't have (RS, IL, AL, GE, AM, AZ, BD), whose legal pages kiff.dev serves
+(kiff/cloud#85). They ship one language at a time, each in its own commit. First drafts: no native speaker has read them.
+Android's side is under "Batch 4 on Android" below.
+
+### Serbian (sr-Latn)
+
+Serbian in the Latin script, ekavian, as the legal pages write it; Cyrillic is not written yet. Addressed as **vi** (plural
+verb forms); buttons are polite imperatives ("Odobrite", "Odbijte", "Nastavite"). Written from Croatian's lines
+(`app/strings/hr/`) with Serbian's words and sound changes: "nalog" for an account, "zahtev", "obaveštenje", "sistem",
+"podešavanja" for settings, "nedelja" for a week, "porudžbina" for an order. taf and Card decline as in Croatian (taf,
+tafa, tafovi, tafova; Card, Carda, Cardovi, Cardova); Coach, KIFF and Setup are names and stay as they are. A value is a
+name and doesn't decline, so a line that would need a case words around it. A door is "vrata", a call "poziv", a held
+call "zadržan poziv". Apple's menu paths are the Serbian (Latin) ones ("Podešavanja", "Sistemska podešavanja", "Privatnost
+i bezbednost"). The plural forms are one, few (2–4) and other.
+
+| English | Serbian |
+|---|---|
+| Needs you | Čeka vas |
+| Approve / Approve once | Odobrite / Odobrite jednom |
+| Refuse | Odbijte |
+| held | zadržan |
+| Halt / Halted | Blokirajte / Blokirano |
+| Stopped | Zaustavljeno |
+| Pause / Paused | Pauzirajte / Pauzirano |
+| Resume | Nastavite |
+| Revoke | Opozovite |
+| Record | Zapisnik |
+| Connect / connection | Povežite / veza |
+| Pair / Unpair | Uparite / Prekinite uparivanje |
+| Account | Nalog |
+| limit / spend limit | ograničenje / ograničenje potrošnje |
+| credits / credit pack | krediti / paket kredita |
+| passkey | pristupni ključ |
+| security key | sigurnosni ključ |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Pristigle |
+| Overview | Pregled |
+| Calendar | Kalendar |
+| Usage | Potrošnja |
+| brief | sažetak |
+| receipt | potvrda |
+| Cancel / Continue | Odustanite / Nastavite |
+
+### Albanian (sq)
+
+Addressed as **ju** (the polite plural); buttons are polite imperatives ("Miratoni", "Refuzoni", "Vazhdoni"). taf, Card, Coach,
+KIFF and Setup are names and stay as they are; taf and Card take Albanian's endings with a hyphen as a loanword ("taf-i",
+"Card-i", "Card-et", "tafs-et"), and a value is a name that takes none, so a line that would need one words around it:
+"taf-i {taf}", "Card-i i: {owner}", "kjo pajisje ({device})". A door is "portë", a call "thirrje", a request "kërkesë", a
+held call "thirrje e mbajtur", a receipt "dëftesë", a brief "përmbledhje". Apple's menu paths are the Albanian ones
+("Cilësimet", "Cilësimet e Sistemit", "Privatësia dhe Siguria"). The plural forms are one and other; a number takes the
+plural noun from 2 ("5 detyra").
+
+| English | Albanian |
+|---|---|
+| Needs you | Ju pret |
+| Approve / Approve once | Miratoni / Miratoni një herë |
+| Refuse | Refuzoni |
+| held | e mbajtur |
+| Halt / Halted | Bllokoni / Bllokuar |
+| Stopped | Ndalur |
+| Pause / Paused | Pezulloni / Pezulluar |
+| Resume | Vazhdoni |
+| Revoke | Revokoni |
+| Record | Regjistri |
+| Connect / connection | Lidhni / lidhje |
+| Pair / Unpair | Çiftoni / Hiqni çiftimin |
+| Account | Llogaria |
+| limit / spend limit | kufi / kufi shpenzimesh |
+| credits / credit pack | kreditet / paketë kreditesh |
+| passkey | çelës kalimi |
+| security key | çelës sigurie |
+| Sign in / Sign out | Hyrje / Dalje |
+| Inbox | Kutia hyrëse |
+| Overview | Përmbledhje |
+| Calendar | Kalendari |
+| Usage | Përdorimi |
+| brief | përmbledhje |
+| receipt | dëftesë |
+| Cancel / Continue | Anuloni / Vazhdoni |
+
+### Georgian (ka)
+
+Addressed as **თქვენ** (the polite plural); buttons are polite imperatives ("დაამტკიცეთ", "უარყავით", "გააგრძელეთ"). taf, Card, Coach,
+KIFF and Setup are names and stay as they are in Latin letters; Georgian's case endings join them with a hyphen ("taf-ს", "Card-ის",
+"KIFF-ში"), and a value is a name that takes none, so a line that would need one words around it: "{name}-ს", "ამ მოწყობილობაზე
+({device})". A door is "კარი", a call "ზარი", a request "მოთხოვნა", a held call "დაკავებული ზარი", a receipt "ქვითარი", a brief
+"მიმოხილვა". Apple's menu paths are the Georgian ones ("პარამეტრები", "სისტემის პარამეტრები", "კონფიდენციალურობა და უსაფრთხოება").
+Georgian has one plural form (one and other say the same): a number takes the singular noun ("5 ამოცანა").
+
+| English | Georgian |
+|---|---|
+| Needs you | გელოდებათ |
+| Approve / Approve once | დაამტკიცეთ / დაამტკიცეთ ერთხელ |
+| Refuse | უარყავით |
+| held | დაკავებული |
+| Halt / Halted | გააჩერეთ / გაჩერებულია |
+| Stopped | შეწყვეტილია |
+| Pause / Paused | დააპაუზეთ / დაპაუზებულია |
+| Resume | განაახლეთ |
+| Revoke | გააუქმეთ |
+| Record | ჩანაწერი |
+| Connect / connection | დააკავშირეთ / კავშირი |
+| Pair / Unpair | დააწყვილეთ / გააუქმეთ დაწყვილება |
+| Account | ანგარიში |
+| limit / spend limit | ლიმიტი / ხარჯვის ლიმიტი |
+| credits / credit pack | კრედიტები / კრედიტების პაკეტი |
+| passkey | პასკი |
+| security key | უსაფრთხოების გასაღები |
+| Sign in / Sign out | შესვლა / გასვლა |
+| Inbox | შემოსულები |
+| Overview | მიმოხილვა |
+| Calendar | კალენდარი |
+| Usage | გამოყენება |
+| brief | მიმოხილვა |
+| receipt | ქვითარი |
+| Cancel / Continue | გაუქმება / გააგრძელეთ |
+
+### Armenian (hy)
+
+Eastern Armenian, addressed as **դուք** (the polite plural); buttons are polite imperatives ("Հաստատեք", "Մերժեք", "Շարունակել").
+taf, Card, Coach, KIFF and Setup are names and stay as they are in Latin letters; Armenian's case endings join them with a
+hyphen ("taf-ը", "Card-ի", "KIFF-ում"), and a value is a name that takes none, so a line that would need one words around
+it: "{name}-ը", "այս սարքում ({device})". A door is "դուռ", a call "զանգ", a request "հարցում", a held call "պահված զանգ", a
+receipt "անդորրագիր", a brief "ամփոփում". Apple's menu paths are the Armenian ones ("Կարգավորումներ", "Համակարգի կարգավորումներ",
+"Գաղտնիություն և անվտանգություն"). Armenian's "one" covers 0 and 1; a number takes the singular noun ("5 առաջադրանք").
+
+| English | Armenian |
+|---|---|
+| Needs you | Սպասում է ձեզ |
+| Approve / Approve once | Հաստատեք / Հաստատեք մեկ անգամ |
+| Refuse | Մերժեք |
+| held | պահված |
+| Halt / Halted | Կանգնեցրեք / Կանգնեցված է |
+| Stopped | Դադարեցված է |
+| Pause / Paused | Դադարեցրեք / Դադարեցված է |
+| Resume | Վերսկսեք |
+| Revoke | Չեղարկեք |
+| Record | Գրանցամատյան |
+| Connect / connection | Միացրեք / կապ |
+| Pair / Unpair | Զուգակցեք / Չեղարկեք զուգակցումը |
+| Account | Հաշիվ |
+| limit / spend limit | սահմանաչափ / ծախսի սահմանաչափ |
+| credits / credit pack | կրեդիտներ / կրեդիտների փաթեթ |
+| passkey | մուտքի բանալի |
+| security key | անվտանգության բանալի |
+| Sign in / Sign out | Մուտք / Ելք |
+| Inbox | Մուտքային |
+| Overview | Ակնարկ |
+| Calendar | Օրացույց |
+| Usage | Օգտագործում |
+| brief | ամփոփում |
+| receipt | անդորրագիր |
+| Cancel / Continue | Հրաժարվել / Շարունակել |
+
+### Azerbaijani (az)
+
+Latin script, addressed as **siz**; buttons are polite imperatives ("Təsdiq edin", "Rədd edin", "Davam edin").
+taf, Card, Coach, KIFF and Setup stay as they are in Latin letters; Azerbaijani's suffixes join them with a hyphen
+("taf-ın", "Card-ı", "Coach-a"), and a value is a name that takes none, so a line that would need one words around it:
+"{taf} taf-ını", "{name} üçün". A door is "qapı", a call "çağırış", a request "sorğu", a held call "saxlanılan çağırış", a
+receipt "qəbz", a brief "xülasə". Apple's menu paths are the Azerbaijani ones ("Parametrlər", "Sistem parametrləri",
+"Məxfilik və təhlükəsizlik"). Azerbaijani's "one" covers 1 only, and a number takes the singular noun ("5 tapşırıq").
+
+| English | Azerbaijani |
+|---|---|
+| Needs you | Sizi gözləyir |
+| Approve / Approve once | Təsdiq edin / Bir dəfə təsdiq edin |
+| Refuse | Rədd edin |
+| held | saxlanılıb |
+| Halt / Halted | Dondurun / Donduruldu |
+| Stopped | Dayandırıldı |
+| Pause / Paused | Fasilə verin / Fasilədədir |
+| Resume | Davam etdirin |
+| Revoke | Ləğv edin |
+| Record | Qeydlər |
+| Connect / connection | Qoşun / qoşulma |
+| Pair / Unpair | Cütləşdirin / Cütləşməni ləğv edin |
+| Account | Hesab |
+| limit / spend limit | limit / xərc limiti |
+| credits / credit pack | kreditlər / kredit paketi |
+| passkey | giriş açarı |
+| security key | təhlükəsizlik açarı |
+| Sign in / Sign out | Giriş / Çıxış |
+| Inbox | Gələnlər |
+| Overview | İcmal |
+| Calendar | Təqvim |
+| Usage | İstifadə |
+| brief | xülasə |
+| receipt | qəbz |
+| Cancel / Continue | Vaz keçin / Davam edin |
+
+### Bengali (bn)
+
+Standard Bengali, addressed as **আপনি**; buttons are polite imperatives ("অনুমোদন করুন", "প্রত্যাখ্যান করুন", "চালিয়ে যান").
+taf, Card, Coach, KIFF and Setup are names and stay in Latin letters; Bengali's suffixes join them with a hyphen
+("taf-এর", "Card-এ", "Coach-কে"), and a value is a name that takes the suffix the same way ("{taf}-এর", "{name}-এ"). A door is
+"দরজা", a call "কল", a request "অনুরোধ", a held call "ধরে রাখা কল", a receipt "রসিদ", a brief "সারসংক্ষেপ". A sentence ends
+with "।" (the danda). Apple's menu paths are the Bengali ones ("সেটিংস", "সিস্টেম সেটিংস", "গোপনীয়তা ও নিরাপত্তা"). Figures
+that a line writes itself are Bengali digits (০–৯), as the locale's own numbers are; a reference number ("#5098") stays in
+Latin digits, isolated as in the other languages. Bengali's "one" covers 0 and 1; a number takes the singular noun ("৫টি টাস্ক").
+
+| English | Bengali |
+|---|---|
+| Needs you | আপনার অপেক্ষায় |
+| Approve / Approve once | অনুমোদন করুন / একবার অনুমোদন করুন |
+| Refuse | প্রত্যাখ্যান করুন |
+| held | ধরে রাখা |
+| Halt / Halted | থামান / থামানো হয়েছে |
+| Stopped | বন্ধ করা হয়েছে |
+| Pause / Paused | বিরতি দিন / বিরতিতে আছে |
+| Resume | আবার চালু করুন |
+| Revoke | প্রত্যাহার করুন |
+| Record | রেকর্ড |
+| Connect / connection | সংযুক্ত করুন / সংযোগ |
+| Pair / Unpair | জোড়া লাগান / জোড়া ছাড়ান |
+| Account | অ্যাকাউন্ট |
+| limit / spend limit | সীমা / খরচের সীমা |
+| credits / credit pack | ক্রেডিট / ক্রেডিট প্যাক |
+| passkey | পাসকি |
+| security key | সিকিউরিটি কী |
+| Sign in / Sign out | সাইন ইন / সাইন আউট |
+| Inbox | ইনবক্স |
+| Overview | সংক্ষিপ্ত বিবরণ |
+| Calendar | ক্যালেন্ডার |
+| Usage | ব্যবহার |
+| brief | সারসংক্ষেপ |
+| receipt | রসিদ |
+| Cancel / Continue | বাতিল করুন / চালিয়ে যান |
+
+### Hebrew (he)
+
+Modern Hebrew, written right to left. Addressed to one reader; Hebrew is gendered, so buttons and titles are verbal nouns
+("אישור", "דחייה", "המשך", "ביטול"), as Apple's Hebrew writes them, and a sentence that must address the reader uses the
+masculine as Hebrew software does ("אתה", "שלך") or an impersonal "יש ל…". taf, Card, Coach, KIFF and Setup stay in Latin
+letters, and a Hebrew prefix joins one with a hyphen ("ה-taf", "ל-Coach", "ב-KIFF"); a value is a name that takes no
+prefix, so a line that would need one words around it ("ההתקן הזה ({device})", "{name} שלו"). A door is "דלת", a call "קריאה", a
+request "בקשה", a held call "קריאה מוחזקת", a receipt "קבלה", a brief "סיכום". Figures are Western digits (0–9), as the
+locale writes them, and dates are Gregorian. Quotes are « » for a line's own, and a name a taf carries is isolated
+(`Words.isolated`).
+
+**Plurals have three forms:** one (1), two (2) and other (everything else; `many` left CLDR in 42, so an older phone that asks
+for it reads `other`). A line may leave the number out in `one` and `two` ("יום אחד", "יומיים"), as the words say it.
+
+**Direction** is Arabic's rule (see Arabic above): a menu path in a line that English writes with "→" writes "←" ("‹" and "›"
+mirror with the text direction and are written as English writes them); the two dials turn the same way as in English; a
+reference number ("#5098") is wrapped in U+2066 … U+2069. `test_strings` checks all three for Hebrew as for Arabic. No joined
+script, so the monospaced face and the spacing of captions stay as they are.
+
+| English | Hebrew |
+|---|---|
+| Needs you | זקוק לך |
+| Approve / Approve once | אישור / אישור חד-פעמי |
+| Refuse | דחייה |
+| held | מוחזק |
+| Halt / Halted | עצירה / נעצר |
+| Stopped | הופסק |
+| Pause / Paused | השהיה / מושהה |
+| Resume | חידוש |
+| Revoke | הפקעה |
+| Record | תיעוד |
+| Connect / connection | חיבור / חיבור |
+| Pair / Unpair | צימוד / ביטול צימוד |
+| Account | חשבון |
+| limit / spend limit | מגבלה / מגבלת הוצאה |
+| credits / credit pack | קרדיטים / חבילת קרדיטים |
+| passkey | מפתח גישה |
+| security key | מפתח אבטחה |
+| Sign in / Sign out | כניסה / יציאה |
+| Inbox | דואר נכנס |
+| Overview | סקירה |
+| Calendar | לוח שנה |
+| Setup (a screen title; the agent's name stays Setup in Latin letters) | הגדרה |
+| Usage | שימוש |
+| brief | סיכום |
+| receipt | קבלה |
+| Cancel / Continue | ביטול / המשך |
 
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 

@@ -23,7 +23,7 @@ import java.util.Locale
  */
 object AppLocale {
   /** The languages tafs ships (app/strings/languages.json's `shipped`), in its order, as `locales_config` lists them. */
-  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ca", "mk", "mn", "ne", "km", "lo", "pt-BR")
+  val TAGS: List<String> = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "pt-BR")
 
   /** Where the choice is kept on Android 11 and 12: a tag, or none for the phone's language. */
   interface Store {

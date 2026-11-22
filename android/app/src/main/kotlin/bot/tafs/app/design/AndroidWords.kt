@@ -16,7 +16,7 @@ class AndroidWords(private val context: Context) : Res.Source {
     android.icu.text.ListFormatter.getInstance(Locale.forLanguageTag(language)).format(items)
 
   override fun ordinal(n: Long, language: String): String =
-    android.icu.text.MessageFormat("{0,ordinal}", Locale.forLanguageTag(language)).format(arrayOf<Any>(n))
+    android.icu.text.MessageFormat("{0,ordinal}", Res.figures(Locale.forLanguageTag(language))).format(arrayOf<Any>(n))
 
   companion object {
     /**

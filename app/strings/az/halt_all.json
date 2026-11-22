@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Bütün taf-ları bir anda dayandırır. Siz tafs-da onları davam etdirənə qədər heç nə göndərilmir.",
+  "halt_all.failed": "tafs taf-larınızı dondura bilmədi. {why} Onları dondurmaq üçün tafs-ı açın.",
+  "halt_all.halted": {
+    "one": "{count} taf donduruldu. Siz davam etdirənə qədər heç nə göndərilmir.",
+    "other": "{count} taf donduruldu. Siz davam etdirənə qədər heç nə göndərilmir."
+  },
+  "halt_all.halted_all": "Taf-larınız donduruldu. Siz davam etdirənə qədər heç nə göndərilmir.",
+  "halt_all.halting": {
+    "one": "{count} taf dondurulur: heç bir icra başlamır. KIFF hələ bütün hissələri təsdiq etməyib; təsdiq edəndə tafs göstərəcək.",
+    "other": "{count} taf dondurulur: heç bir icra başlamır. KIFF hələ bütün hissələri təsdiq etməyib; təsdiq edəndə tafs göstərəcək."
+  },
+  "halt_all.halting_all": "Taf-larınız dondurulur: heç bir icra başlamır. KIFF hələ bütün hissələri təsdiq etməyib; təsdiq edəndə tafs göstərəcək.",
+  "halt_all.running": "tafs taf-larınızı dondura bilmədi. Onları dondurmaq üçün tafs-ı açın.",
+  "halt_all.signed_out": "tafs-dan çıxış etmisiniz. Taf-larınızı dondurmaq üçün daxil olun.",
+  "halt_all.title": "Bütün taf-ları dondurun"
+}

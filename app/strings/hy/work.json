@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Պատասխանեք մինչև",
+  "work.answer_within_days": {
+    "one": "{count} օր",
+    "other": "{count} օր"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} ժամ",
+    "other": "{count} ժամ"
+  },
+  "work.answer_within_line": "Ձեզ կտեղեկացնեն, երբ դեպքը ավելի երկար է սպասում։",
+  "work.answer_within_none": "Սահմանված չէ",
+  "work.answer_within_not_set": "Չկարողացավ սահմանվել։ {why}",
+  "work.asking_kiff_run": "Խնդրում ենք KIFF-ին գործարկել {tool}-ը…",
+  "work.did_not_stop": "Չկանգնեց՝ {why}",
+  "work.duration.minutes": "{minutes} ր {seconds} վ",
+  "work.duration.seconds": "{seconds} վ",
+  "work.its_runs": "Նրա գործարկումները",
+  "work.not_read": "Նրա աշխատանքը չկարողացավ կարդացվել։ {why}",
+  "work.not_sent_again": "Նորից չուղարկվեց։ {why}",
+  "work.request.try_reply_now": "Փորձեք պատասխանը հիմա",
+  "work.requests_need_you": {
+    "one": "{count} հարցում սպասում է ձեզ",
+    "other": "{count} հարցում սպասում է ձեզ"
+  },
+  "work.send_again": "Ուղարկեք նորից",
+  "work.sending_again": "Նորից ուղարկվում է…",
+  "work.stop_run": "Կանգնեցրեք գործարկումը",
+  "work.stopped_part_way_before_finished": "{taf}-ը կանգ առավ կիսատ, ավարտելուց առաջ։"
+}

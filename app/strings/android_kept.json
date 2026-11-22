@@ -168,6 +168,7 @@
   },
   "design/AppLocale.kt": {
     "Hant": "a script subtag (zh-Hant, a phone in Taiwan, Hong Kong or Macau), data",
-    "zh-Hant": "a language tag (Traditional Chinese), data"
+    "zh-Hant": "a language tag (Traditional Chinese), data",
+    "sr-Latn": "a language tag (Serbian in Latin script), data"
   }
 }
