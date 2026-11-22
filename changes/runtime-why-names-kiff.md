@@ -1,0 +1,1 @@
+- **Steps:** a failed step's reason that named the connection service's possessive now reads "KIFF's" instead of a broken "'s" ("the owner's Chrome refused the step as not KIFF's, expired or malformed"). Every app shows it as sent ([chat.md](docs/chat.md)).
