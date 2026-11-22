@@ -369,7 +369,10 @@ class Generator(unittest.TestCase):
         self.assertEqual(android.folders("sr-Latn"), ["values-b+sr+Latn"])
         self.assertEqual(android.folders("az-Latn"), ["values-b+az+Latn", "values-az"])
         self.assertEqual(android.folders("az"), ["values-az"])
-        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn"):
+        # Batch 5: plain folders, as the libraries ship them (Uzbek is Latin by default on Android).
+        for lang in ("ru", "mk", "ca", "ms", "uz"):
+            self.assertEqual(android.folders(lang), [f"values-{lang}"])
+        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn", "ru", "mk", "ca", "ms", "uz"):
             self.assertIn(lang, generate.PLURALS, f"{lang} has its plural forms")
         # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
         self.assertEqual(android.folders("id"), ["values-id", "values-in"])

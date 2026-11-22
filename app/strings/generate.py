@@ -227,7 +227,9 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
            "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": [],
            # Batch 4. Hebrew's "many" left CLDR in 42: an older phone that still asks for it reads "other". Armenian and Bengali's
            # "one" is 0 and 1.
-           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"]}
+           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"],
+           # Batch 5. Malay has no plural; Catalan's "many" is only for the compact form ("1 M"), never a whole count.
+           "ru": ["one", "few", "many"], "mk": ["one"], "ca": ["one"], "ms": [], "uz": ["one"]}
 
 
 def ios_text(text, key, source, owned=()):

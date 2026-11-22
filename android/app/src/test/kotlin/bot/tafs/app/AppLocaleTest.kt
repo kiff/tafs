@@ -74,6 +74,15 @@ class AppLocaleTest {
     for (tag in listOf("sq-AL", "ka-GE", "hy-AM", "bn-BD")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
   }
 
+  // Batch 5, read as each would ship: plain codes, as the libraries' folders are. Uzbek is Latin by default; a phone that names
+  // Cyrillic reads the Latin lines too, as Uzbekistan's official script is Latin. Russian serves Kazakhstan and Kyrgyzstan.
+  @Test fun batchFiveIsReadByItsPlainCodes() {
+    val shipped = AppLocale.TAGS + listOf("ru", "mk", "ca", "ms", "uz")
+    for (tag in listOf("ru", "ru-RU", "ru-KZ", "ru-KG")) assertEquals(tag, "ru", AppLocale.known(tag, shipped))
+    for (tag in listOf("uz", "uz-UZ", "uz-Latn-UZ", "uz-Cyrl-UZ")) assertEquals(tag, "uz", AppLocale.known(tag, shipped))
+    for (tag in listOf("mk-MK", "ca-ES", "ca-AD", "ms-MY", "ms-BN")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
+  }
+
   @Test fun anOldLanguageCodeIsReadAsTheNewOne() {
     for (tag in listOf("id", "in", "in-ID", "in_ID", "id-ID")) assertEquals(tag, "id", AppLocale.known(tag))
     assertEquals("id", AppLocale.fromLocales("in-ID,en-US"))
