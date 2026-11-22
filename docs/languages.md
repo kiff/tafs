@@ -576,10 +576,13 @@ menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i 
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
-## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese (being written)
+## Batch 3: Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese
 
-For the countries whose language the apps don't have yet. Each catalog is in `all`, not `shipped`, until its review: no app
-shows it yet. Arabic is its own piece (tafs#1697), with the right-to-left rules.
+For the countries whose language the apps didn't have (TR, ID, VN, TH, TW). All five ship, and kiff.dev serves their legal
+pages (kiff/cloud#80; Traditional Chinese's are under `/zh/`). `test_strings` holds each to its own table below until its
+column joins the Terms table. They are first drafts: no native speaker has read them, and the Indonesian word for the
+keyboard setting ("Papan Ketik") in the dictation paths is not confirmed from Apple's own pages. Arabic is its own piece
+(tafs#1697), with the right-to-left rules.
 
 ### Turkish (tr)
 
@@ -623,7 +626,9 @@ Addressed as **Anda**; buttons are plain imperatives ("Setujui", "Tolak", "Lanju
 names and stay as they are. Indonesian doesn't decline or conjugate for a name, so "{taf}" stands where English has it.
 A door is "pintu", a call "panggilan", a request "permintaan", a held call "panggilan yang ditahan", a receipt "tanda
 terima", a brief "ringkasan". Apple's menu paths are the Indonesian ones ("Pengaturan", "Pengaturan Sistem", "Privasi &
-Keamanan"). There is one plural form (other): a number takes the same noun ("5 tugas").
+Keamanan"). There is one plural form (other): a number takes the same noun ("5 tugas"). On Android the lines are in
+`values-id` and again in `values-in`, Indonesian's old code: a library the app builds with ships `values-in`, and Android
+took it over ours (`android.py`'s `ALSO`). `AppLocale` reads "in" as "id", as Android 11 to 13 name it.
 
 | English | Indonesian |
 |---|---|
@@ -733,7 +738,8 @@ measure word ("5 個 taf", "3 次呼叫") and a possessive is "的" ("{owner}的
 inside placeholders and menu paths ("›"). A `*_mac` sentence ends with "。" and names macOS 12's path as the test needs.
 A door is "門", a call "呼叫", a request "請求", a held call "已保留的呼叫", a receipt "收據", a brief "摘要", the dial "旋鈕".
 There is one plural form (other). The code is `zh-Hant`: the plural table keys on `zh`, and the Android resource folder
-for it is `values-b+zh+Hant`, which `android.py`'s `folder()` writes as `values-zh-rHant` until the language ships.
+for it is `values-b+zh+Hant`, and the same lines again in `values-zh-rTW`, `values-zh-rHK` and `values-zh-rMO`: a library
+the app builds with ships `zh-rTW` and `zh-rHK`, and Android took those over ours (`android.py`'s `ALSO`).
 
 | English | Traditional Chinese |
 |---|---|

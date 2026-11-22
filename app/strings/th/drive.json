@@ -34,7 +34,7 @@
   "drive.not_on_screen": "ตอนนี้ไม่มีสิ่งนั้นบนหน้าจอ",
   "drive.nothing_back": "ไม่มีอะไรให้กลับไป",
   "drive.nothing_there": "ที่นั่นไม่มีอะไรที่ Coach ใช้ได้",
-  "drive.paused": "หยุดชั่วคราว",
+  "drive.paused": "หยุดชั่วคราวแล้ว",
   "drive.scrolled": "เลื่อน{direction}แล้ว",
   "drive.step_failed": "ขั้นตอนนั้นไม่สำเร็จ",
   "drive.stop": "หยุด Coach",

@@ -12,8 +12,9 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   `<lang>/drive.json`. So two PRs on different features never touch the same file.
 - **`en/`** is the source and the list of keys.
 - **`de/`, `fr/`, `es/`, `it/`, `pt/`, `nl/`, `pl/`, `ko/`, `ja/`, `et/`, `lt/`, `lv/`, `cs/`, `sk/`, `sl/`, `hu/`,
-  `ro/`, `bg/`, `hr/`** hold the same keys in each language (Korean shipped 20 Nov, tafs#1572; Japanese 21 Nov; Estonian,
-  Lithuanian and Latvian with batch 1; Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian and Croatian with batch 2).
+  `ro/`, `bg/`, `hr/`, `tr/`, `id/`, `vi/`, `th/`, `zh-Hant/`** hold the same keys in each language (Korean shipped 20 Nov,
+  tafs#1572; Japanese 21 Nov; Estonian, Lithuanian and Latvian with batch 1; Czech, Slovak, Slovenian, Hungarian, Romanian,
+  Bulgarian and Croatian with batch 2; Turkish, Indonesian, Vietnamese, Thai and Traditional Chinese with batch 3).
 - **`el/`** (batch 1, with et, lv and lt) has every key, in `all`, not `shipped`, until its review. It ships by its own
   PR.
 - **A new feature** is a new file in each language's folder, named as its keys begin.
