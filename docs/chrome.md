@@ -123,6 +123,37 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 - **The session reads and chats only.** KIFF refuses it every approval route (`403 view_only`). It's kept in IndexedDB
   with the pairing, and unpairing ends it with its own bearer (`/v1/auth/device/logout`).
 
+## Your Chrome (design, for the owner's read; not built yet)
+
+What the owner lives with: a browser connection is on one of their Chromes, they can see which, and pairing again, unpairing
+or switching never leaves a connection pointing at a Chrome that's gone. Nothing moves without the owner's approval.
+
+1. **Re-pairing replaces, never adds.** The pairing confirm says which Chrome the new one replaces, as a signed field
+   (`replaces: "chr_…"`, under the same fingerprint). planque then moves every connection on the old Chrome to the new one
+   and removes the old entry, in that one approval. The phone **pre-selects** what it replaces: the Chrome with the
+   same `profile_id` (an id the extension keeps for its Chrome profile, kept across key changes and updates); else, when
+   the extension was reinstalled and its id is new, the one Chrome on the same browser and system that hasn't connected
+   since the new one arrived. The owner can pick none ("a new Chrome") or another. With nothing chosen, nothing moves.
+2. **"Your Chrome" is a choice per connection.** Each browser connection names one Chrome. A new connection takes the most
+   recently approved Chrome by default; Coach says which and the owner can pick another. Switching an existing
+   connection to another Chrome is one signed planque call (`PUT /v1/accounts/{t}/grants/{grant}/chrome {chrome_id}`,
+   routine: a tap inside an open approval window, else the fingerprint). Its sites and Card stay; it goes to the new
+   Chrome's key.
+3. **Unpairing a Chrome ends its connections.** The unpair confirm lists them ("ends Wiki lookup's wikipedia.org"); once
+   unpaired, planque revokes each, so nothing dangles. They come back only by connecting again, or by a replace (1).
+4. **Every browser connection names its Chrome**, its name and browser ("Work Mac · Chrome 131"), wherever a
+   connection is listed: the taf's page, Coach, Account › Chrome (each Chrome with the connections on it). Coach can
+   propose removing a connection whose Chrome is gone; removing is a safe route (the device key, no fingerprint).
+5. **One fingerprint per act.** Pairing is one prompt on every phone: the confirm here and KIFF's view-only device for the
+   extension are signed together (`kiff.requests.v1`), and the replace is inside that confirm.
+6. **Isolation is unchanged.** Each Chrome keeps its own key; each connection keeps its own signed sites and its own tab
+   group; a step still goes only to the Chrome its connection names. A replace or a switch changes the Chrome a
+   connection uses, never its sites or Card.
+
+Who builds what, once the owner agrees: planque (`replaces` on the confirm, the switch route, revoke on unpair, the Chrome
+on each connection's read), the extension (`profile_id` in the pairing post), Coach (the default and the choice, removing
+a dead connection), and the apps (the replace choice at pairing, the Chrome on each connection, Account › Chrome).
+
 ## Connect: both ends prove themselves
 
 `wss://relay.planque.kiff.dev?chrome=chr_…` (the WebSocket API's own domain, mapped onto its stage, so no path), opened by the extension:
