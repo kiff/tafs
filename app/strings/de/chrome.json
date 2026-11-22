@@ -22,11 +22,17 @@
   "chrome.refused": "Ein anderes Chrome hat diesen Code benutzt, also wurde nichts gekoppelt. Fang noch einmal an.",
   "chrome.remove": "Entkoppeln",
   "chrome.remove_named": "{name} entkoppeln",
+  "chrome.replace_moves": "Wechselt zu diesem Chrome: {sites}",
+  "chrome.replace_none": "Ein neues Chrome (ersetzt keins)",
+  "chrome.replace_title": "Ersetzt",
+  "chrome.replace_unpairs": "{name} wird entkoppelt, sobald dieses gekoppelt ist.",
   "chrome.shot_failed": "Das Bild konnte nicht geladen werden.",
   "chrome.shot_kept": "30 Tage aufbewahrt, dann gelöscht.",
   "chrome.shot_none": "Für diesen Schritt ist kein Bild gespeichert.",
   "chrome.shot_open": "Die Seite vor diesem Schritt ansehen",
   "chrome.shot_title": "Vor diesem Schritt",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Beim Entkoppeln enden die Verbindungen, die es nutzen: {sites}. Sie kommen nur zurück, wenn du sie neu verbindest.",
+  "chrome.used_for": "Genutzt für {sites}",
   "chrome.waiting": "Warten auf Chrome…"
 }

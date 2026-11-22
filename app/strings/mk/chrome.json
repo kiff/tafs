@@ -22,11 +22,17 @@
   "chrome.refused": "Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.",
   "chrome.remove": "Раздвои",
   "chrome.remove_named": "Раздвои го {name}",
+  "chrome.replace_moves": "Преминува на овој Chrome: {sites}",
+  "chrome.replace_none": "Нов Chrome (не заменува ниеден)",
+  "chrome.replace_title": "Заменува",
+  "chrome.replace_unpairs": "{name} се раздвојува штом овој ќе се спари.",
   "chrome.shot_failed": "Сликата не можеше да се вчита.",
   "chrome.shot_kept": "Се чува 30 дена, потоа се брише.",
   "chrome.shot_none": "За овој чекор нема зачувана слика.",
   "chrome.shot_open": "Види ја страницата пред овој чекор",
   "chrome.shot_title": "Пред овој чекор",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Прекинувањето на спарувањето ги завршува врските што го користат: {sites}. Се враќаат само ако повторно ги поврзеш.",
+  "chrome.used_for": "Се користи за {sites}",
   "chrome.waiting": "Се чека Chrome…"
 }

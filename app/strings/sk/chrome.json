@@ -22,11 +22,17 @@
   "chrome.refused": "Tento kód použil iný Chrome, takže sa nič nespárovalo. Začnite znova.",
   "chrome.remove": "Zrušiť spárovanie",
   "chrome.remove_named": "Zrušiť spárovanie {name}",
+  "chrome.replace_moves": "Prejde do tohto Chrome: {sites}",
+  "chrome.replace_none": "Nový Chrome (nič nenahrádza)",
+  "chrome.replace_title": "Nahrádza",
+  "chrome.replace_unpairs": "{name} sa odpáruje, keď sa spáruje tento.",
   "chrome.shot_failed": "Obrázok sa nepodarilo načítať.",
   "chrome.shot_kept": "Uchovaný 30 dní, potom odstránený.",
   "chrome.shot_none": "K tomuto kroku nie je uložený žiadny obrázok.",
   "chrome.shot_open": "Zobraziť stránku pred týmto krokom",
   "chrome.shot_title": "Pred týmto krokom",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Zrušením spárovania skončia pripojenia, ktoré ho používajú: {sites}. Vrátia sa, až keď ich znova pripojíš.",
+  "chrome.used_for": "Používa sa na {sites}",
   "chrome.waiting": "Čakám na Chrome…"
 }

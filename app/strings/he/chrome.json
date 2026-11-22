@@ -22,11 +22,17 @@
   "chrome.refused": "Chrome אחר השתמש בקוד הזה, ולכן שום דבר לא הוצמד. יש להתחיל מחדש.",
   "chrome.remove": "ביטול צימוד",
   "chrome.remove_named": "ביטול צימוד של {name}",
+  "chrome.replace_moves": "עובר ל-Chrome הזה: {sites}",
+  "chrome.replace_none": "Chrome חדש (לא מחליף אף אחד)",
+  "chrome.replace_title": "מחליף",
+  "chrome.replace_unpairs": "התאמת {name} תבוטל ברגע שזה יותאם.",
   "chrome.shot_failed": "לא הצלחנו לטעון את התמונה.",
   "chrome.shot_kept": "נשמרת 30 יום ואז נמחקת.",
   "chrome.shot_none": "לא נשמרה תמונה עבור השלב הזה.",
   "chrome.shot_open": "הצגת הדף לפני השלב הזה",
   "chrome.shot_title": "לפני השלב הזה",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "ביטול ההתאמה מסיים את החיבורים שמשתמשים בו: {sites}. הם חוזרים רק אם תחבר אותם מחדש.",
+  "chrome.used_for": "בשימוש עבור {sites}",
   "chrome.waiting": "ממתין ל-Chrome…"
 }

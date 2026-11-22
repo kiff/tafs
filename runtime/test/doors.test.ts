@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { runInNewContext } from "node:vm";
 import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it } from "vitest";
 import { AgentsError, type Run } from "../src/cloud/agents.js";
@@ -953,6 +954,42 @@ describe("the WhatsApp door", () => {
     expect([...w.secrets.held.keys()]).toEqual(["tafs-doors/t_acme/whatsapp/1098765432"]);
     const bad = await send(w, "POST", `/v1/tafs/${MAXTAF}/doors`, { token: "max", body: { app: "whatsapp", code: "good-code", phone_number_id: "1098765432", waba_id: "2" + "098765432" } });
     expect(bad.status).toBe(409);
+  });
+
+  it("the signup page gives back the app's one-use state on its return, and only a well-formed one", async () => {
+    const w = world();
+    /** Where the page sends the browser once WhatsApp's signup ends with a code, run as a browser would. */
+    function returnOf(html: string): URL {
+      const script = /<script>([\s\S]*?)<\/script>/.exec(html)![1]!;
+      const page: { href?: string; go?: () => void } = {};
+      const sandbox = {
+        URL, URLSearchParams, JSON,
+        window: { addEventListener: () => undefined },
+        document: { getElementById: (id: string) => (id === "go" ? { set onclick(f: () => void) { page.go = f; } } : { textContent: "" }) },
+        FB: { login: (done: (r: unknown) => void) => done({ authResponse: { code: "the-code" } }) },
+        location: { set href(v: string) { page.href = v; } },
+      };
+      runInNewContext(script, sandbox);
+      page.go!();
+      return new URL(page.href!);
+    }
+    const state = "s7Kx_2-9QwErTyUiOp";
+    const page = await send(w, "GET", "/doors/whatsapp/connect", { query: `taf=${REFUNDS}&state=${state}` });
+    expect(page.status).toBe(200);
+    const back = returnOf(page.body as unknown as string);
+    expect(back.protocol + back.host + back.pathname).toBe("tafs:doors/whatsapp");
+    expect(back.searchParams.get("state")).toBe(state);
+    expect(back.searchParams.get("taf")).toBe(REFUNDS);
+    expect(back.searchParams.get("code")).toBe("the-code");
+
+    // Without one (the iPad's, bound by its own session), the return carries none.
+    const plain = await send(w, "GET", "/doors/whatsapp/connect", { query: `taf=${REFUNDS}` });
+    expect(returnOf(plain.body as unknown as string).searchParams.has("state")).toBe(false);
+
+    // A state too short, too long, or with anything but letters, digits, - and _, opens no page.
+    for (const bad of ["short", "x".repeat(65), "s7Kx%222-9QwErTyUiOp", "s7Kx<2-9QwErTyUiOp", ""]) {
+      expect((await send(w, "GET", "/doors/whatsapp/connect", { query: `taf=${REFUNDS}&state=${bad}` })).status, bad).toBe(404);
+    }
   });
 
   it("answers WhatsApp's check with the challenge, only for its token", async () => {

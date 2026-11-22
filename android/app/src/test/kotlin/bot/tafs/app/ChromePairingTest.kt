@@ -129,6 +129,19 @@ class ChromePairingTest {
     assertFalse(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof"), offer))
   }
 
+  @Test fun aRePairingsCarriedConnectionsSignTheExtensionsBytes() {
+    val carried = vector["carried"]!!.jsonArray.map { e ->
+      val o = e.jsonObject
+      ChromePairing.Carried(o["grant"]!!.jsonPrimitive.content, o["sites"]!!.jsonArray.map { it.jsonPrimitive.content })
+    }
+    val c = ChromePairing.confirmation(v("secret"), bytes("chrome_key"), v("name"), bytes("phone_key")).copy(carried = carried)
+    assertEquals(v("signed_bytes_with_carried"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c)))
+    // A first pairing carries nothing, and its bytes are as they always were.
+    assertEquals(v("signed_bytes"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c.copy(carried = emptyList()))))
+    // Another order is other bytes: the extension checks the list as the phone wrote it.
+    assertFalse(ChromePairing.signedBytes(v("pairing"), c.copy(carried = carried.reversed())).contentEquals(ChromePairing.signedBytes(v("pairing"), c)))
+  }
+
   @Test fun theOneTouchProofIsTheExtensionsAsTheVectorSays() {
     val secret = v("secret")
     val chromeKey = bytes("chrome_key")
@@ -140,6 +153,67 @@ class ChromePairingTest {
     assertFalse(ChromePairing.oneTouchProofHolds(secret, chromeKey, proof))
     assertFalse(ChromePairing.oneTouchProofHolds(secret, bytes("phone_key"), proof, offer))
     assertFalse(ChromePairing.oneTouchProofHolds("another secret", chromeKey, proof, offer))
+  }
+
+  @Test fun aRePairingCarriesOnlyWhatThisPhoneSignedForTheOldChrome() {
+    val phone = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    val other = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    fun sig(key: java.security.PrivateKey, chrome: String, grant: String, sites: List<String>) = ChromePairing.rawSignature(
+      Signature.getInstance("SHA256withECDSA").run { initSign(key); update(ChromePairing.sitesBytes(chrome, grant, sites)); sign() },
+    )!!
+    fun grant(id: String, chrome: String, sites: List<String>, sig: String?, status: String = "connected") = bot.tafs.app.kiff.Grant(
+      id = id, status = status, request = bot.tafs.app.kiff.GrantRequest(browser = GrantBrowser(GrantBrowser.EXTENSION, chrome, sites)), chromeSitesSig = sig,
+    )
+    val wiki = listOf("wikipedia.org")
+    val grants = listOf(
+      grant("g_ok", "chr_old", wiki, sig(phone.private, "chr_old", "g_ok", wiki)),
+      grant("g_other_key", "chr_old", wiki, sig(other.private, "chr_old", "g_other_key", wiki)),
+      grant("g_other_chrome", "chr_new", wiki, sig(phone.private, "chr_new", "g_other_chrome", wiki)),
+      grant("g_wider", "chr_old", wiki + "shop.example", sig(phone.private, "chr_old", "g_wider", wiki)),
+      grant("g_ended", "chr_old", wiki, sig(phone.private, "chr_old", "g_ended", wiki), status = "disconnected"),
+      grant("g_carried_before", "chr_old", wiki, null),
+    )
+    // planque's live list for the old Chrome: the ended one isn't on it. A grant it doesn't list moves nothing, even signed.
+    val live = listOf("g_ok", "g_other_key", "g_wider", "g_carried_before").map { bot.tafs.app.kiff.ChromeConnection(it, "Rae", wiki) }
+    val old = bot.tafs.app.kiff.Chrome("chr_old", "Work", connections = live)
+    val carried = ChromePairing.carriedFrom(old, grants, phone.public.encoded)
+    assertEquals("only a connection planque lists live on the old Chrome whose sites this phone's own key signed",
+      listOf(ChromePairing.Carried("g_ok", wiki)), carried)
+    assertEquals("not listed live: not carried", emptyList<ChromePairing.Carried>(),
+      ChromePairing.carriedFrom(old.copy(connections = live.drop(1)), grants, phone.public.encoded))
+    assertEquals("a planque that lists no connections: nothing moves", emptyList<ChromePairing.Carried>(),
+      ChromePairing.carriedFrom(old.copy(connections = null), grants, phone.public.encoded))
+    assertEquals("no key to verify with: nothing moves", emptyList<ChromePairing.Carried>(), ChromePairing.carriedFrom(old, grants, ByteArray(0)))
+    val many = (0 until 60).map { grant("m$it", "chr_old", listOf("s$it.example"), sig(phone.private, "chr_old", "m$it", listOf("s$it.example"))) }
+    val manyOld = old.copy(connections = many.map { bot.tafs.app.kiff.ChromeConnection(it.id) })
+    assertEquals("the extension keeps at most 50", 50, ChromePairing.carriedFrom(manyOld, many, phone.public.encoded).size)
+  }
+
+  @Test fun aChromesConnectionsAreReadAsPlanqueListsThem() {
+    val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+    val c = json.decodeFromString(bot.tafs.app.kiff.Chrome.serializer(),
+      """{"chrome_id":"chr_1","name":"Work","connections":[{"grant":"g1","name":"Rae","sites":["wikipedia.org","shop.example"]},{"grant":"g2","name":"Bo","sites":["wikipedia.org"]},{"grant":"g3","name":"Al","sites":null}]}""")
+    assertEquals(listOf("g1", "g2", "g3"), c.connections!!.map { it.grant })
+    assertEquals("each site once, in planque's order", "wikipedia.org, shop.example", bot.tafs.app.kiff.chromeSites(c.connections))
+    val older = json.decodeFromString(bot.tafs.app.kiff.Chrome.serializer(), """{"chrome_id":"chr_1","name":"Work"}""")
+    assertNull(older.connections)
+    assertEquals("", bot.tafs.app.kiff.chromeSites(older.connections))
+  }
+
+  @Test fun theReplacedChromeIsTheOneWithTheOffersProfileIdElseNone() {
+    val chromes = listOf(bot.tafs.app.kiff.Chrome("chr_a", "Work", profileId = "a".repeat(32)), bot.tafs.app.kiff.Chrome("chr_b", "Home"))
+    fun offer(id: String) = bot.tafs.app.kiff.ChromeOffer(key = "k", proof = "p", profileId = id)
+    assertEquals("chr_a", ChromePairing.replacedBy(offer("a".repeat(32)), chromes)?.id)
+    assertNull(ChromePairing.replacedBy(offer("b".repeat(32)), chromes))
+    assertNull("no id, no guess", ChromePairing.replacedBy(offer(""), chromes))
+    // One side without an id: the one paired Chrome on the same browser and system, never a guess between two.
+    val alike = listOf(bot.tafs.app.kiff.Chrome("chr_c", "Laptop", browser = "Chrome 131", os = "macOS"), bot.tafs.app.kiff.Chrome("chr_d", "PC", browser = "Chrome 131", os = "Windows"))
+    fun on(os: String, id: String = "") = bot.tafs.app.kiff.ChromeOffer(key = "k", proof = "p", browser = "Chrome 131", os = os, profileId = id)
+    assertEquals("chr_c", ChromePairing.replacedBy(on("macOS"), alike)?.id)
+    assertEquals("chr_c", ChromePairing.replacedBy(on("macOS", "e".repeat(32)), alike)?.id)
+    assertNull("two alike", ChromePairing.replacedBy(on("macOS"), alike + alike[0].copy(id = "chr_e")))
+    assertNull("another system", ChromePairing.replacedBy(on("Linux"), alike))
+    assertNull("both have ids that differ", ChromePairing.replacedBy(on("macOS", "e".repeat(32)), listOf(alike[0].copy(profileId = "f".repeat(32)))))
   }
 
   @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {

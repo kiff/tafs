@@ -1397,3 +1397,16 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 ## Help: Chrome and the emailed code, in How tafs works
 
 Two short sections in How tafs works (the screen Account and Home open, `HowTafsWorksView`), words in `help.json` in every language (legal-i18n's drafts, pinned by key): **Chrome** ("tafs can work in your Chrome": what it does, only on the sites you allow, in its own tabs; where Account › Chrome lists each Chrome and what it is used for; unpairing ends its connections), shown only where planque offers Chrome (`model.chromes != nil`); and **Sign in with an emailed code** (turn it on in Account › Sign-in; KIFF emails a code that works once for 10 minutes; never give it to anyone), shown only where KIFF can send codes (`codeSignIn.available`). The screens are named with the app's own titles (`{account}`, `{chrome}`, `{sign_in}`, `{needs_you}`), so each language writes them as the app does. The app says nothing about what the person can't use.
+
+## Account › Chrome: what each Chrome is used for
+
+"Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
+("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
+come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
+`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
+failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+planque#365's route and the extension's own pairing bytes.
+
+## Pairing a Chrome that replaces one
+
+"Your Chrome" 1 ([chrome.md](chrome.md)): on the offered Chrome's screen a pick says which paired Chrome this one replaces, or "A new Chrome (replaces none)". It starts on the Chrome with the offer's `profile_id` (an id the extension keeps for its Chrome profile and planque relays as a hint), else on the one paired Chrome of the same browser and system, else on none (`ChromeReplace.preselect`; two alike is never a guess). Choosing one shows what moves ("Moves to this Chrome: wikipedia.org"), the connections that end with the old Chrome, and that the old Chrome is unpaired once this one is paired. The confirm sends `replaces` and `carried` (`[{grant, sites}]`, at most 50), and the same fingerprint signs `carried` inside the pairing the extension checks (`ChromePairing.signedBytes`, tafs#1754), so planque can't change the list; with nothing chosen, nothing moves and the pairing is as before. **A connection moves only if the phone's own key verifies its sites:** planque's grant read gives each extension connection's `chrome_sites_sig` (the phone's signature over `{chrome_id, grant, sites}` made at approval) and `chrome_sites_carried` (planque#369), and `ChromeReplace.carried` carries a connection only when `ChromePairing.sitesSignatureHolds` accepts the signature for the Chrome being replaced (never what planque says of the sites). A connection with no verifying signature, or one carried here from an earlier Chrome (empty signature), ends with the old Chrome, as unpairing does, and the screen says so. The connections are read again just before the confirm.

@@ -22,11 +22,17 @@
   "chrome.refused": "Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.",
   "chrome.remove": "Prekinite uparivanje",
   "chrome.remove_named": "Prekinite uparivanje: {name}",
+  "chrome.replace_moves": "Prelazi na ovaj Chrome: {sites}",
+  "chrome.replace_none": "Novi Chrome (ne zamenjuje nijedan)",
+  "chrome.replace_title": "Zamenjuje",
+  "chrome.replace_unpairs": "{name} se razdvaja čim se ovaj upari.",
   "chrome.shot_failed": "Sliku nije bilo moguće učitati.",
   "chrome.shot_kept": "Čuva se 30 dana, zatim se briše.",
   "chrome.shot_none": "Za ovaj korak nije sačuvana nijedna slika.",
   "chrome.shot_open": "Pogledaj stranicu pre ovog koraka",
   "chrome.shot_title": "Pre ovog koraka",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Prekid uparivanja završava veze koje ga koriste: {sites}. Vraćaju se tek kad ih ponovo povežeš.",
+  "chrome.used_for": "Koristi se za {sites}",
   "chrome.waiting": "Čeka se Chrome…"
 }

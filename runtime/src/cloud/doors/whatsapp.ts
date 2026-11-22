@@ -125,9 +125,12 @@ export function whatsappArrivals(raw: unknown): Arrival[] {
  * The page that runs WhatsApp's signup for a taf, served by tafs cloud and
  * opened by the app. It hands the result back to the app, which finishes the
  * connection with the owner's own session; the page itself can do nothing.
+ * `state` is the app's one-use value for this signup, given back unchanged
+ * on the return, so an app whose `tafs://` link anyone can open takes only
+ * the return of the signup it started (none: none is given back).
  */
-export function signupPage(opts: { appID: string; configID: string; taf: string; back: string }): string {
-  const cfg = JSON.stringify({ appID: opts.appID, configID: opts.configID, taf: opts.taf, back: opts.back }).replace(/</g, "\\u003c");
+export function signupPage(opts: { appID: string; configID: string; taf: string; back: string; state?: string }): string {
+  const cfg = JSON.stringify({ appID: opts.appID, configID: opts.configID, taf: opts.taf, back: opts.back, state: opts.state ?? "" }).replace(/</g, "\\u003c");
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Connect WhatsApp</title>
 <style>body{font:17px -apple-system,system-ui,sans-serif;background:#FBF7EE;color:#1B1726;margin:0;padding:48px 24px;text-align:center}
@@ -142,7 +145,7 @@ window.addEventListener("message",e=>{if(!/(^|\\.)facebook\\.com$/.test(new URL(
 window.fbAsyncInit=()=>FB.init({appId:C.appID,autoLogAppEvents:true,xfbml:false,version:"v21.0"});
 document.getElementById("go").onclick=()=>FB.login(r=>{const code=r&&r.authResponse&&r.authResponse.code;
 if(!code){document.getElementById("note").textContent="Not connected. You can try again.";return}
-const q=new URLSearchParams({taf:C.taf,code,phone_number_id:ids.phone_number_id||"",waba_id:ids.waba_id||""});location.href=C.back+"?"+q},
+const q=new URLSearchParams({taf:C.taf,code,phone_number_id:ids.phone_number_id||"",waba_id:ids.waba_id||""});if(C.state)q.set("state",C.state);location.href=C.back+"?"+q},
 {config_id:C.configID,response_type:"code",override_default_response_type:true,extras:{setup:{},sessionInfoVersion:"3"}});
 </script><script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script></body></html>`;
 }
