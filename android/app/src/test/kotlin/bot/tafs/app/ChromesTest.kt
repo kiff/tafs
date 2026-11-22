@@ -55,8 +55,8 @@ class ChromesTest {
 
   /** An extension's key pair, and what it posts for [secret]: its SPKI and its proof under the secret. */
   private val extension = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
-  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer, oneTouch: Boolean = false) =
-    """{"pairing":"pr_1","status":"waiting_for_phone",${if (oneTouch) "\"one_touch\":true," else ""}${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
+  private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer, oneTouch: Boolean = false, oneTouchProof: String? = null) =
+    """{"pairing":"pr_1","status":"waiting_for_phone",${if (oneTouch) "\"one_touch\":true,\"one_touch_proof\":\"" + (oneTouchProof ?: ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.ONE_TOUCH_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))) + "\"," else ""}${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
 
   /**
    * Account opened before planque was ready (the first seconds after launch) read no Chromes, and its row stayed hidden: the
@@ -236,6 +236,22 @@ class ChromesTest {
     assertFalse("never the pairing's bytes alone: an extension that checks one-touch rebuilds both",
       Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(approval); update(ChromePairing.signedBytes("pr_1", ChromePairing.Confirmation(field("chrome_key_sha256"), "Work Mac", field("phone_key"), field("phone_proof")))); verify(raw) })
     assertNull(m.state.value.chromesError)
+  }
+
+  @Test fun aOneTouchFlagWithoutItsProofGetsTheTwoPrompts() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    // planque (or anyone without the code's secret) added the flag: its proof doesn't hold, so the phone signs as before.
+    transport.answer(read, 200, offer(p.secret, kiffOffer = kiffOffer(), oneTouch = true, oneTouchProof = ChromePairing.base64Url(ByteArray(32))))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    transport.answer(kiffPair, 201, """{"pairing":{"id":"pair_1","code":"K7Q2MX","expires":"2026-11-21T12:05:00Z"}}""")
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_1","name":"Work Mac"}]}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac"))
+    assertEquals(2, auth.fingerprints.size)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    assertTrue(listOf("tenant", "signed_at", "kiff_request_sha256").none { it in body })
   }
 
   @Test fun withoutOneTouchTheConfirmCarriesNoneOfItsFields() = runTest {

@@ -27,6 +27,9 @@ object ChromePairing {
 
   const val PAIR_LABEL = "tafs-chrome/pair/v1"
   const val EXTENSION_PROOF_LABEL = "tafs-chrome/ext/v1"
+
+  /** The extension's proof that it checks one fingerprint for the pairing and its KIFF device (`one_touch`). */
+  const val ONE_TOUCH_PROOF_LABEL = "tafs-chrome/ext-one-touch/v1"
   const val PHONE_PROOF_LABEL = "tafs-chrome/phone/v1"
 
   /** What the phone signs when the owner approves a browser grant: its sites, and each sensitive site allowed by name. */
@@ -64,6 +67,15 @@ object ChromePairing {
   fun extensionProofHolds(secret: String, key: ByteArray, proof: String, kiffOffer: String = ""): Boolean {
     val given = base64UrlDecoded(proof) ?: return false
     return MessageDigest.isEqual(given, hmac(secret, EXTENSION_PROOF_LABEL, key + kiffOffer.toByteArray(Charsets.UTF_8)))
+  }
+
+  /**
+   * Whether the extension's `one_touch` flag is its own: the same HMAC as [extensionProofHolds], under its own label, so only
+   * someone with the code's secret could add it. Only then does the phone sign the pairing and its KIFF device as one.
+   */
+  fun oneTouchProofHolds(secret: String, key: ByteArray, proof: String, kiffOffer: String = ""): Boolean {
+    val given = base64UrlDecoded(proof) ?: return false
+    return MessageDigest.isEqual(given, hmac(secret, ONE_TOUCH_PROOF_LABEL, key + kiffOffer.toByteArray(Charsets.UTF_8)))
   }
 
   /** The SHA-256 of the extension's SPKI DER, in lowercase hex, as the signed body names it. */

@@ -773,10 +773,11 @@ data class ChromeOffer(
   val kiffOffer: String = "",
   /**
    * The extension checks one fingerprint's signature over the pairing and its KIFF device together (`one_touch`, docs/chrome.md
-   * "Your Chrome" 5). Not in its proof, and it needs none: the one signature names exactly those two requests, so a false
-   * flag can only make the pairing fail, never sign more. Without it, the phone asks twice, as an older extension expects.
+   * "Your Chrome" 5), with its proof of that under the code's secret ([oneTouchProof]). The phone uses it only when the proof
+   * holds; without it, it asks twice, as an older extension expects.
    */
   val oneTouch: Boolean = false,
+  val oneTouchProof: String = "",
 )
 
 /** The one-touch fields planque's confirm carries and relays to the extension (all three or none): docs/chrome.md "Your Chrome" 5. */
@@ -792,7 +793,7 @@ data class ChromePairingState(val status: String, val offer: ChromeOffer? = null
       val proof = field("proof")
       val offer = if (key != null && proof != null) {
         val oneTouch = (o["one_touch"] as? JsonPrimitive)?.takeIf { !it.isString }?.content == "true"
-        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty(), oneTouch)
+        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty(), oneTouch, field("one_touch_proof").orEmpty())
       } else {
         null
       }

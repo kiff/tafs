@@ -4334,7 +4334,8 @@ class AppModel(
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and
     // its KIFF device, under one `kiff.requests.v1` signature. Else the two prompts an older extension expects.
-    if (offer.oneTouch && kiffDevice is ChromeKiffDevice.Offered) return confirmChromeOneTouch(p, confirmation, kiffDevice.device, reason, generation)
+    val oneTouch = offer.oneTouch && pairing.oneTouchProofHolds(p.secret, chromeKey, offer.oneTouchProof, offer.kiffOffer)
+    if (oneTouch && kiffDevice is ChromeKiffDevice.Offered) return confirmChromeOneTouch(p, confirmation, kiffDevice.device, reason, generation)
     val sig = try {
       val der = signer.signCritical(reason) { pairing.signedBytes(p.pairing, confirmation) }
       pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
