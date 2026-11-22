@@ -390,7 +390,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 (`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone, and back.
 
 - **Chrome sends those calls as CORS requests,** as the extension has no host permission for tafs cloud. tafs cloud
-  answers Chrome's preflight on those three routes alone, before anything is read, and lets only an extension's own
+  answers Chrome's preflight on those routes alone (and on one chat's conversation and the list of chats, for Previous conversations), before anything is read, and lets only an extension's own
   origin (`chrome-extension://` and a 32-letter id) read the answers (`runtime/src/cloud/extension-cors.ts`). It never
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
