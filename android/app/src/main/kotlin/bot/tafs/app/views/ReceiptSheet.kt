@@ -274,7 +274,8 @@ private fun FullReceipt(entry: RecordEntry, raw: ByteArray?, steps: List<bot.taf
   Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Text(listOfNotNull("receipt ${entry.receipt?.traceId.orEmpty()}", signer?.let { "signer ${it.take(6)}…${it.takeLast(4)}" }).joinToString(" · "), style = style)
     steps.forEachIndexed { i, step ->
-      Text("${i + 1}  ${step.words} · ${step.at?.let(::seconds).orEmpty()}\n   hash ${step.hash}", style = style)
+      // KIFF's signed message, as it signed it: the full receipt is the receipt, not its words.
+      Text("${i + 1}  ${step.message} · ${step.at?.let(::seconds).orEmpty()}\n   hash ${step.hash}", style = style)
     }
     raw?.let { attestation(it, "signature") }?.let { sig ->
       Text("✎  trace ${entry.receipt?.traceId.orEmpty()} · secp256k1 + keccak256\n   sig 0x${sig.take(4)}…${sig.takeLast(4)}", style = style)

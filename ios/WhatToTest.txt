@@ -1,13 +1,13 @@
 What to test in this build:
 
-1. Needs you. When Coach is waiting on you, Needs you lists it in plain words. Swipe a waiting chat away, or tap Set aside, to put it off; with two or more, Set all aside asks once. Nothing is approved or sent when you set one aside.
+1. Languages. tafs now speaks 40 languages. Set your phone to one (Settings, General, Language & Region), open tafs, and tell us any line that is still English or reads oddly. Arabic and Hebrew read right to left.
 
-2. Home's first line. It now says how many tafs are working or ready, as tafs cloud counts them, in your language.
+2. Signing in. The welcome's tick and Continue open KIFF's sign-in in a sheet inside tafs, with Apple, Google, GitHub and email with a password. It should never leave tafs for Safari.
 
-3. Connect apps. Each app is listed once, by its own name, with a short line under it saying what it can do. On iPad the App column keeps its room, so names no longer break mid-word.
+3. Sign in with a code sent by email. Account, Sign-in: it is Off unless you turn it on. Turning it on opens KIFF's sign-in page, where you confirm it's you; turning it off happens in the app.
 
-4. Signing in to an app. An app's first sign-in says its Card comes next. A sign-in that didn't connect says so in plain words, never as a status code.
+4. Chrome. Account, Chrome: Pair a Chrome shows a code with a Copy button, to type into the tafs extension in Chrome on your computer. Only if you see Chrome in Account.
 
-5. Your devices. The list of devices you are signed in on names each one in the app's language.
+5. Needs you and Home, as in the last build: nothing is approved or sent when you set a waiting chat aside.
 
 Tell us anything that reads oddly, or any screen where you weren't sure what to do next.
