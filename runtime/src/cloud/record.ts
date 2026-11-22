@@ -16,6 +16,8 @@ export interface RecordTaf {
   id: string; name: string; kiffAgent: string;
   /** The reader manages it, so its rows may quote an app's short plain reason (activity.ts quotable). */
   manages?: boolean;
+  /** The reader may report its payments (activity.ts reportOf). */
+  reports?: boolean;
 }
 
 /**
@@ -104,7 +106,7 @@ function dateOf(raw: string | null): string | undefined {
 }
 
 function entryOf(c: ActivityCall, taf: RecordTaf, zone: string, now: Date, lang: Lang): RecordEntry {
-  return { ...activityEntry(c, zone, now, taf.name, lang, taf.manages === true), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
+  return { ...activityEntry(c, zone, now, taf.name, lang, taf.manages === true, taf.reports === true), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
 }
 
 /**

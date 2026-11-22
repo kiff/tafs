@@ -463,6 +463,12 @@ class TafsCloud(
   suspend fun halted(id: String?): Halt = get<HaltResponse>(haltPath(id)).halt
 
   /**
+   * "Report this payment" (docs/record.md): KIFF marks the receipt reported and halts its taf, and tafs cloud halts it in kiff/agents
+   * too. No signature, since it only takes authority away. Again, the same answer.
+   */
+  suspend fun reportPayment(traceId: String): PaymentReport = post("/v1/record/${escaped(traceId)}/report", emptyMap())
+
+  /**
    * Lets kiff/agents run it again, once KIFF has resumed it: the phone resumes it in KIFF first, signed
    * behind the owner's confirmation ([KiffClient.resume]), and tafs cloud checks that.
    */

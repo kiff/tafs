@@ -335,6 +335,8 @@ struct SourceActivityRow: View {
         guard let actor = entry.call.actorID, var result = KIFFMapping.record([entry.call], ids: [actor: tafID]).first else { return nil }
         result.kind = RecordEntry.Kind(rawValue: entry.kind) ?? .unknown
         result.title = entry.title; result.detail = entry.detail
+        if let offer = entry.report { result.reportTraceID = offer.trace_id; result.reportMadeAt = TafsCloud.isoDate(offer.at) }
+        result.reportedAt = entry.reported_at.flatMap(TafsCloud.isoDate)
         return result
     }
     var body: some View {

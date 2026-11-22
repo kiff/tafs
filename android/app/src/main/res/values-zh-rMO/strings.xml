@@ -1787,6 +1787,12 @@
     <string name="record_refused_next_step_detail">已拒絕，並為 taf 指示下一步：%1$s</string>
     <string name="record_removed_detail">排程、記憶和金鑰已刪除；名稱已釋出</string>
     <string name="record_removed_title">您移除了 %1$s</string>
+    <string name="record_report_button">回報此筆付款</string>
+    <string name="record_report_done">已回報。%1$s 已凍結，收據會保留。若款項已從您的帳戶轉出，也請聯絡您的發卡機構。</string>
+    <string name="record_report_failed">無法傳送回報。沒有任何變更。請再試一次。</string>
+    <string name="record_report_intro">回報您未預期的付款：%1$s 於 %3$s 支付了 %2$s。在您查看之前，我們會凍結 %1$s。</string>
+    <string name="record_report_submit">回報並凍結 %1$s</string>
+    <string name="record_report_title">回報此筆付款</string>
     <string name="record_result_done">已完成</string>
     <string name="record_result_no_answer_yet">已傳送，尚無回覆</string>
     <string name="record_result_not_done">未完成</string>

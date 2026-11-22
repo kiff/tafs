@@ -925,7 +925,7 @@ screen is **"Conta"**.
 ## How it's built
 
 - **tafs cloud:** a catalog per language in `runtime/src/cloud/words/`, English the source (`en.ts`),
-  each language typed against it, and a test that fails on a key missing from any language, an empty
+  each full language typed against it, and a test that fails on a key missing from any of them, an empty
   line, or a line left in English. It holds every line tafs cloud writes for people: a taf's work lines,
   the home list's line, the balance and credits words, refusal words, push titles and bodies, door
   alerts and a door's page, where a result went, a request's steps, a taf's Activity, the dial, the
@@ -934,6 +934,21 @@ screen is **"Conta"**.
   worded from the catalog; one it doesn't know passes kiff/agents' words through. `error` fields stay
   English, for developers; the `words` beside them are the person's. A vendor's or provider's own words
   (why a reply wasn't sent, KIFF's tool titles) pass as they came.
+- **The languages added since in tafs cloud, partial until written** (PM, 22 Nov): the full languages (`FULL_LANGUAGES`:
+  the eight, pt-BR, ko, ja) have every key. Batch 2's ten and batch 3's five (`PARTIAL_LANGUAGES`) may be partial: each line
+  written replaces English's, every other reads English, key by key. Three guards:
+  - **The most-seen lines first** (`PRIORITY_PREFIXES`): Home's (`home_`), push titles (`push_`), Activity's details
+    (`act_`) and the approval card's (`approval_`). A language with any other line has all of those (a test checks it).
+  - **The target is 100%.** `words.test.ts` prints each language's coverage (`npx vitest run test/words.test.ts --silent=false`;
+    vitest hides a passing test's output otherwise); the gap closes batch by batch, and no
+    language stays partial for good.
+  - **The tracker** marks a country's app screens as translated for the apps' own words only, with tafs cloud's lines
+    noted apart until they reach 100% (for the "b or c" countries: EE, LV, LT, SK, SI).
+
+  Before a line is written, a partial language is still the person's language for everything else tafs cloud does:
+  Coach and the tafs are told it ("reads Turkish (tr)"), dates follow it, and the legal links open its pages (`pagePath`:
+  Traditional Chinese's are under `/zh`). `languageFrom` reads Traditional Chinese by its script or region (`zh-Hant`,
+  `zh-TW`, `zh-HK`, `zh-MO`, never Simplified) and Indonesian's old code `in` as `id`.
 - **Brazilian Portuguese in tafs cloud:** `pt-BR.ts` is `pt`'s catalog with the lines that read differently in
   Brazil on top, and only those: "você" throughout ("Precisa de você", "Seu resumo"), "conexão" and "Conectar",
   "Entrar" and "login" for signing in, "celular", "tela", "registro", and the gerund for "está a fazer"

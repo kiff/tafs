@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alertChoices, defaultKinds, parseKinds } from "../src/cloud/alert-preferences.js";
-import { LANGUAGES } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, LANGUAGES } from "../src/cloud/words/index.js";
 import { registration, sendNotification, type Device, type Notification } from "../src/cloud/push.js";
 
 const device: Device = { token: "a".repeat(64), subject: "person-example", answers: true, environment: "sandbox", at: "2026-11-01T12:00:00Z" };
@@ -18,7 +18,8 @@ describe("each phone's alert choices", () => {
     expect(fr.find((x) => x.id === "answered")?.enabled).toBe(false);
     for (const lang of LANGUAGES) {
       for (const x of alertChoices(undefined, lang)) expect(x.title && x.words, `${lang} ${x.id}`).toBeTruthy();
-      if (lang !== "en") expect(alertChoices(undefined, lang).map((x) => x.title)).not.toEqual(alertChoices(undefined).map((x) => x.title));
+      // A language whose lines are still being written reads English for those it hasn't (docs/languages.md).
+      if (lang !== "en" && (FULL_LANGUAGES as readonly string[]).includes(lang)) expect(alertChoices(undefined, lang).map((x) => x.title)).not.toEqual(alertChoices(undefined).map((x) => x.title));
     }
   });
   it("rejects unknown keys and nonboolean choices", () => {

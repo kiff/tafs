@@ -301646,6 +301646,972 @@
         }
       }
     },
+    "record.report.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подайте сигнал за това плащане"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásit tuto platbu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Zahlung melden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this payment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar de este pago"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teata sellest maksest"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler ce paiement"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite ovo plaćanje"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fizetés jelentése"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laporkan pembayaran ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala questo pagamento"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この支払いを報告"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 결제 신고"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešti apie šį mokėjimą"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziņot par šo maksājumu"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze betaling melden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś tę płatność"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar este pagamento"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar este pagamento"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportați această plată"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásiť túto platbu"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavi to plačilo"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานการชำระเงินนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ödemeyi bildirin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Báo cáo khoản thanh toán này"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報此筆付款"
+          }
+        }
+      }
+    },
+    "record.report.done": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигналът е изпратен. %1$@ е спрян, а разписката се пази. Ако са излезли пари от сметката ви, свържете се и с издателя на картата си."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlášeno. %1$@ je zastaven a potvrzení zůstává uloženo. Pokud z vašeho účtu odešly peníze, obraťte se také na vydavatele své karty."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemeldet. %1$@ ist angehalten, und der Beleg bleibt gespeichert. Wenn Geld von deinem Konto abgegangen ist, wende dich auch an deinen Kartenaussteller."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reported. %1$@ is halted and the receipt is kept. If money left your account, contact your card issuer too."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informado. %1$@ está bloqueado y se conserva el recibo. Si salió dinero de tu cuenta, contacta también con el emisor de tu tarjeta."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teatatud. Taf %1$@ on peatatud ja kviitung säilitatakse. Kui sinu kontolt lahkus raha, võta ühendust ka oma kaardi väljaandjaga."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signalé. %1$@ est bloqué et le reçu est conservé. Si de l'argent a quitté votre compte, contactez aussi l'émetteur de votre carte."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavljeno. Taf %1$@ je blokiran, a potvrda se čuva. Ako je novac otišao s vašeg računa, obratite se i izdavatelju svoje kartice."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelentve. A(z) %1$@ le van állítva, a nyugtát pedig megőrizzük. Ha pénz hagyta el a számládat, fordulj a kártyakibocsátódhoz is."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dilaporkan. %1$@ dibekukan dan tanda terima disimpan. Jika uang keluar dari rekening Anda, hubungi juga penerbit kartu Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnalato. %1$@ è bloccato e la ricevuta viene conservata. Se dei soldi sono usciti dal tuo conto, contatta anche l'emittente della tua carta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "報告しました。%1$@は遮断済みで、領収書は保管されます。口座からお金が出ている場合は、カード発行会社にも連絡してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신고했습니다. %1$@이(가) 차단되었으며 영수증은 보관됩니다. 계좌에서 돈이 빠져나갔다면 카드 발급사에도 문의하세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešta. %1$@ sustabdytas, o kvitas išsaugotas. Jei pinigai išėjo iš Jūsų sąskaitos, susisiekite ir su kortelės išdavėju."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paziņots. %1$@ ir apturēts, un kvīts tiek saglabāta. Ja nauda izgājusi no tava konta, sazinies arī ar savas kartes izdevēju."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemeld. %1$@ is stilgezet en het ontvangstbewijs blijft bewaard. Als er geld van je rekening is gegaan, neem dan ook contact op met de uitgever van je kaart."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoszono. %1$@ jest zablokowany, a potwierdzenie zostaje zachowane. Jeśli pieniądze opuściły Twoje konto, skontaktuj się też z wystawcą swojej karty."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicado. %1$@ está bloqueado e o recibo é mantido. Se saiu dinheiro da sua conta, fale também com o emissor do seu cartão."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicado. %1$@ está bloqueado e o recibo é mantido. Se saiu dinheiro da sua conta, fale também com o emissor do seu cartão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportat. %1$@ este oprit, iar chitanța se păstrează. Dacă au ieșit bani din contul dumneavoastră, contactați și emitentul cardului."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásené. %1$@ je zastavený a potvrdenie sa uchováva. Ak z vášho účtu odišli peniaze, obráťte sa aj na vydavateľa svojej karty."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavljeno. %1$@ je ustavljen, potrdilo pa se hrani. Če je z vašega računa odšel denar, se obrnite tudi na izdajatelja svoje kartice."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานแล้ว %1$@ ถูกระงับ และเก็บใบเสร็จไว้ หากเงินออกจากบัญชีของคุณแล้ว โปรดติดต่อผู้ออกบัตรของคุณด้วย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirildi. %1$@ taf'ı donduruldu ve makbuz saklanıyor. Hesabınızdan para çıktıysa kart veren kuruluşla da iletişime geçin."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã báo cáo. %1$@ đã bị đóng băng và biên nhận được giữ lại. Nếu tiền đã rời khỏi tài khoản của bạn, hãy liên hệ cả đơn vị phát hành thẻ."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已回報。%1$@ 已凍結，收據會保留。若款項已從您的帳戶轉出，也請聯絡您的發卡機構。"
+          }
+        }
+      }
+    },
+    "record.report.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигналът не можа да бъде изпратен. Нищо не се промени. Опитайте отново."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hlášení se nepodařilo odeslat. Nic se nezměnilo. Zkuste to znovu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Meldung konnte nicht gesendet werden. Nichts wurde geändert. Versuche es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't send the report. Nothing changed. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo enviar el informe. No ha cambiado nada. Inténtalo de nuevo."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teadet ei õnnestunud saata. Midagi ei muutunud. Proovi uuesti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d'envoyer le signalement. Rien n'a changé. Réessayez."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava nije poslana. Ništa se nije promijenilo. Pokušajte ponovno."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A jelentést nem sikerült elküldeni. Semmi sem változott. Próbáld újra."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laporan tidak dapat dikirim. Tidak ada yang berubah. Coba lagi."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile inviare la segnalazione. Non è cambiato nulla. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "報告を送信できませんでした。何も変更されていません。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신고를 보내지 못했습니다. 변경된 내용은 없습니다. 다시 시도해 주세요."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nepavyko išsiųsti pranešimo. Niekas nepasikeitė. Bandykite dar kartą."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neizdevās nosūtīt ziņojumu. Nekas nemainījās. Mēģini vēlreiz."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het rapport kon niet worden verzonden. Er is niets veranderd. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wysłać zgłoszenia. Nic się nie zmieniło. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível enviar a comunicação. Nada mudou. Tente novamente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível enviar a comunicação. Nada mudou. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportul nu a putut fi trimis. Nimic nu s-a schimbat. Încercați din nou."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hlásenie sa nepodarilo odoslať. Nič sa nezmenilo. Skúste to znova."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijave ni bilo mogoče poslati. Nič se ni spremenilo. Poskusite znova."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ส่งรายงานไม่ได้ ไม่มีอะไรเปลี่ยนแปลง ลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirim gönderilemedi. Hiçbir şey değişmedi. Tekrar deneyin."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không gửi được báo cáo. Không có gì thay đổi. Hãy thử lại."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法傳送回報。沒有任何變更。請再試一次。"
+          }
+        }
+      }
+    },
+    "record.report.intro": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подайте сигнал за плащане, което не сте очаквали: %1$@ плати %2$@ на %3$@. Спираме %1$@, докато проверите."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlaste platbu, kterou jste nečekali: %1$@ zaplatil %2$@ dne %3$@. %1$@ zastavíme, dokud se nepodíváte."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melde eine Zahlung, die du nicht erwartet hast: %1$@ hat am %3$@ %2$@ gezahlt. Wir halten %1$@ an, bis du nachgesehen hast."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report a payment you didn't expect: %1$@ paid %2$@ on %3$@. We halt %1$@ until you've looked."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informa de un pago que no esperabas: %1$@ pagó %2$@ el %3$@. Bloquearemos %1$@ hasta que lo hayas revisado."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teata maksest, mida sa ei oodanud: %1$@ maksis %3$@ summa %2$@. Peatame tafi %1$@, kuni oled järele vaadanud."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signalez un paiement que vous n'attendiez pas : %1$@ a payé %2$@ le %3$@. Nous bloquons %1$@ jusqu'à ce que vous ayez vérifié."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite plaćanje koje niste očekivali: taf %1$@ platio je %2$@ dana %3$@. Blokiramo taf %1$@ dok ne provjerite."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelents egy fizetést, amire nem számítottál: a(z) %1$@ %3$@ napján %2$@ összeget fizetett. Leállítjuk a(z) %1$@ tafot, amíg át nem nézed."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laporkan pembayaran yang tidak Anda duga: %1$@ membayar %2$@ pada %3$@. Kami membekukan %1$@ sampai Anda memeriksanya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala un pagamento che non ti aspettavi: %1$@ ha pagato %2$@ il %3$@. Blocchiamo %1$@ finché non hai controllato."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "予期しない支払いを報告：%1$@が%3$@に%2$@を支払いました。確認いただくまで%1$@を遮断します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "예상하지 못한 결제를 신고하세요: %1$@이(가) %3$@에 %2$@을(를) 결제했습니다. 확인하실 때까지 %1$@을(를) 차단합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešite apie mokėjimą, kurio nesitikėjote: %1$@ sumokėjo %2$@ %3$@. Sustabdysime %1$@, kol patikrinsite."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziņo par maksājumu, ko negaidīji: %1$@ %3$@ samaksāja %2$@. Mēs apturēsim %1$@, līdz tu to apskatīsi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meld een betaling die je niet verwachtte: %1$@ betaalde %2$@ op %3$@. We zetten %1$@ stil totdat je hebt gekeken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś nieoczekiwaną płatność: %1$@ zapłacił %2$@ dnia %3$@. Blokujemy %1$@, dopóki jej nie sprawdzisz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunique um pagamento que não esperava: %1$@ pagou %2$@ em %3$@. Bloqueamos %1$@ até que verifique."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunique um pagamento que não esperava: %1$@ pagou %2$@ em %3$@. Bloqueamos %1$@ até que verifique."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportați o plată la care nu vă așteptați: %1$@ a plătit %2$@ pe %3$@. Oprim %1$@ până când verificați."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahláste platbu, ktorú ste nečakali: %1$@ zaplatil %2$@ dňa %3$@. %1$@ zastavíme, kým sa nepozriete."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite plačilo, ki ga niste pričakovali: %1$@ je dne %3$@ plačal %2$@. %1$@ bomo ustavili, dokler ne preverite."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานการชำระเงินที่คุณไม่คาดคิด: %1$@ ชำระ %2$@ เมื่อ %3$@ เราจะระงับ %1$@ จนกว่าคุณจะตรวจสอบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beklemediğiniz bir ödemeyi bildirin: %1$@, %3$@ tarihinde %2$@ ödedi. Siz bakana kadar %1$@ taf'ını donduruyoruz."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Báo cáo khoản thanh toán bạn không ngờ tới: %1$@ đã thanh toán %2$@ vào %3$@. Chúng tôi đóng băng %1$@ cho đến khi bạn xem xét."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報您未預期的付款：%1$@ 於 %3$@ 支付了 %2$@。在您查看之前，我們會凍結 %1$@。"
+          }
+        }
+      }
+    },
+    "record.report.submit": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигнал и спиране на %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásit a zastavit %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melden und %1$@ anhalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report and halt %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar y bloquear %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teata ja peata taf %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler et bloquer %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite i blokirajte taf %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jelentés és a(z) %1$@ leállítása"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laporkan dan bekukan %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala e blocca %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "報告して%1$@を遮断"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신고하고 %1$@ 차단"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešti ir sustabdyti %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziņot un apturēt %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melden en %1$@ stilzetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś i zablokuj %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar e bloquear %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar e bloquear %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportați și opriți %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásiť a zastaviť %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavi in ustavi %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานและระงับ %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildir ve %1$@ taf'ını dondur"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Báo cáo và đóng băng %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報並凍結 %1$@"
+          }
+        }
+      }
+    },
+    "record.report.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подайте сигнал за това плащане"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásit tuto platbu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Zahlung melden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report this payment"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar de este pago"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teata sellest maksest"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler ce paiement"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavite ovo plaćanje"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fizetés jelentése"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laporkan pembayaran ini"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala questo pagamento"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この支払いを報告"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 결제 신고"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pranešti apie šį mokėjimą"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziņot par šo maksājumu"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze betaling melden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś tę płatność"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar este pagamento"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar este pagamento"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportați această plată"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nahlásiť túto platbu"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijavi to plačilo"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานการชำระเงินนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ödemeyi bildirin"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Báo cáo khoản thanh toán này"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報此筆付款"
+          }
+        }
+      }
+    },
     "record.result.done": {
       "extractionState": "manual",
       "localizations": {
