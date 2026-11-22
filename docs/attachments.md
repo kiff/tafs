@@ -72,7 +72,8 @@ folder (`tmp/attachments`) and is removed on sign-out and on an account switch.
 
 On Android a sent file opens in the phone's own app for its kind (Photos, a PDF viewer),
 handed over read-only through the app's FileProvider. The copy goes into the app's cache
-(`cache/attachments`, under its own name only) and is removed on sign-out. The
+(`cache/attachments/<id>`, under its own name only) and is removed on sign-out. The id keeps only its letters,
+digits, `_` and `-`, and a name that is only a path step (`.`, `..`) is `file`, so neither reaches outside that folder. The
 paperclip's photos come from the system photo picker, which gives the app only the
 photos the person picks, so the app asks for no photo permission; a chosen photo is
 named "Photo 1", as on iOS. A photo from the camera is written to the app's cache, and

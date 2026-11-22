@@ -6864,8 +6864,11 @@ class AppModel(
     val target = filesTarget(tafId) ?: return null
     return try {
       val data = cloud.attachment(target, ref.id)
-      val dir = java.io.File(openedFiles, ref.id).apply { mkdirs() }
-      java.io.File(dir, java.io.File(ref.name).name.ifBlank { "file" }).apply { writeBytes(data) }
+      // tafs cloud's id and the person's name, each kept to one plain path part: neither can reach outside the folder.
+      val folder = ref.id.filter { it.isLetterOrDigit() || it == '_' || it == '-' }.ifBlank { "file" }
+      val dir = java.io.File(openedFiles, folder).apply { mkdirs() }
+      val name = java.io.File(ref.name).name.takeUnless { it.isBlank() || it == "." || it == ".." } ?: "file"
+      java.io.File(dir, name).apply { writeBytes(data) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
