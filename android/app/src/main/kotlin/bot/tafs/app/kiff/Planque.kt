@@ -597,6 +597,21 @@ class PlanqueClient(
     raw("POST", "chromes/pairings/${escaped(id)}/confirm", body)
   }
 
+  /**
+   * The picture kept for a Chrome step, signed by this device as the Chromes list is, as iOS's `chromeScreenshot(step:)`. null
+   * when none is kept: planque answers 404 for a step with none, one past its 30 days, and while it keeps none. A picture that
+   * doesn't check out ([ChromeScreenshot.read]) is an error, never shown.
+   */
+  suspend fun chromeScreenshot(step: String): ChromeScreenshot? {
+    val bytes = try {
+      raw("GET", "chromes/screenshots/${escaped(step)}", null)
+    } catch (e: PlanqueError.Server) {
+      if (e.status == 404) return null
+      throw e
+    }
+    return ChromeScreenshot.read(bytes) ?: throw PlanqueError.Server(0, "bad_picture")
+  }
+
   /** Unpairs a Chrome: planque deletes its key at once. */
   suspend fun removeChrome(id: String) {
     raw("DELETE", "chromes/${escaped(id)}", null)
@@ -745,6 +760,36 @@ data class Chrome(
 
 @Serializable
 private data class ChromeList(val chromes: List<Chrome> = emptyList())
+
+/**
+ * The picture a Chrome kept just before a taf's step acted (docs/chrome.md, "Screenshots of a run's acts"), as iOS's
+ * `ChromeScreenshot`: the step's id at the Chrome, when it was taken, and the WebP bytes, whose hash is checked against
+ * planque's before they're shown.
+ */
+class ChromeScreenshot(val step: String, val takenAt: java.time.Instant, val image: ByteArray) {
+  companion object {
+    /** The most a picture may weigh: planque keeps none over 120 KB. */
+    const val LARGEST = 120 * 1024
+
+    /**
+     * planque's answer, or null when it isn't a picture to show: not the shape, not base64url, too big, not WebP, or bytes
+     * whose SHA-256 isn't the one planque kept.
+     */
+    fun read(body: ByteArray): ChromeScreenshot? {
+      val o = runCatching { KiffClient.json.parseToJsonElement(String(body)).jsonObject }.getOrNull() ?: return null
+      fun text(key: String): String? = (o[key] as? JsonPrimitive)?.takeIf { it.isString }?.content
+      val step = text("step") ?: return null
+      val sha = text("sha256")?.lowercase() ?: return null
+      val bytes = text("image")?.let { ChromePairing.base64UrlDecoded(it) } ?: return null
+      if (bytes.size < 12 || bytes.size > LARGEST) return null
+      if (String(bytes, 0, 4, Charsets.US_ASCII) != "RIFF" || String(bytes, 8, 4, Charsets.US_ASCII) != "WEBP") return null
+      val hash = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+      if (hash != sha) return null
+      val at = text("taken_at")?.let { runCatching { java.time.OffsetDateTime.parse(it).toInstant() }.getOrNull() } ?: return null
+      return ChromeScreenshot(step, at, bytes)
+    }
+  }
+}
 
 /** A pairing this phone opened. */
 @Serializable

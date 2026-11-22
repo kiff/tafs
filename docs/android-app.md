@@ -1546,6 +1546,15 @@ taf's own line). A block with no site or no action draws nothing. With no block 
 the card is as it was. KIFF adds the block's digest to what the phone signs for the hold, so the words approved are the words
 shown. Tests: `BrowserStepCardTest`.
 
+**The picture before a step** (`ChromeShotSheet`, as iOS's `ChromeShotView`; docs/chrome.md, "Screenshots of a run's acts").
+The page as the Chrome showed it just before a taf's step acted, read from planque's owner route (`GET
+/v1/accounts/{tenant}/chromes/screenshots/{step}`, signed by this device as the Chromes list is; `AppModel.chromeScreenshot`).
+The bytes are shown only when they're WebP, at most 120 KB, and hash to the `sha256` planque sent
+(`ChromeScreenshot.read`). Under the picture: when it was taken, and "Kept for 30 days, then deleted." A 404 reads "No
+picture is kept for this step" (none taken, past its 30 days, or planque's switch off). Anything else, including a picture
+that doesn't check out or planque not ready to be asked, reads "The picture couldn't be loaded", never as a picture. Nothing
+opens it yet: a taf's Activity row opens it once tafs cloud names the row's Chrome step. Tests: `ChromeScreenshotTest`.
+
 ## Signing in with your other phone
 
 A new tablet can be added from a phone that's already signed in, with no browser:

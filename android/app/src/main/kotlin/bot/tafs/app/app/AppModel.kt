@@ -4169,6 +4169,18 @@ class AppModel(
     }
   }
 
+  /**
+   * The picture kept just before a Chrome step acted, for [bot.tafs.app.views.ChromeShotSheet]: planque's checked picture, or
+   * null when none is kept. Throws when planque can't be asked yet (signed out, no key, planque not ready), so the sheet says
+   * the picture couldn't be loaded, never that none is kept.
+   */
+  suspend fun chromeScreenshot(step: String): bot.tafs.app.kiff.ChromeScreenshot? {
+    var asked = false
+    val shot = chromeCall { asked = true; planque.chromeScreenshot(step) }
+    if (!asked) throw PlanqueError.NotSigning
+    return shot
+  }
+
   suspend fun refreshChromes() {
     val generation = accountGeneration
     try {
