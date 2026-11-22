@@ -546,6 +546,5 @@ Limits: a step held for the owner and then refused is not pictured; a secret wri
 
 ## Not done yet
 
-- **planque's `extension` driver,** the relay and the release-build allowlist (kiff/planque).
 - **The sealed-value release on the phone's card** (`tafs-chrome/release/v1`): the extension already checks it; the card that signs it is still to build.
 - **The release workflow** (two approvals) that publishes to the Chrome Web Store.
