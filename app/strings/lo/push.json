@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "ບົດສະຫຼຸບ",
+  "push.channel.briefs_description": "ບົດສະຫຼຸບຂອງທ່ານຕາມເວລາທີ່ກຳນົດ.",
+  "push.channel.holds_description": "ການໂທຖືກພັກໄວ້ລໍຖ້າຄຳຕອບຂອງທ່ານ. ບໍ່ມີຫຍັງຖືກສົ່ງຈົນກວ່າທ່ານຈະອະນຸມັດ.",
+  "push.channel.other": "ການແຈ້ງເຕືອນອື່ນ",
+  "push.channel.other_description": "ຄຳຂໍສຳລັບວຽກ ແລະ ຄຳຕອບຂອງມັນ, ບໍ່ມີສຽງ.",
+  "push.channel.urgent_description": "ສິ່ງທີ່ລໍຖ້າບົດສະຫຼຸບຕໍ່ໄປບໍ່ໄດ້, ມີສຽງ.",
+  "push.open_needs_you": "ເປີດ «ຕ້ອງການທ່ານ» ເພື່ອຕອບ.",
+  "push.open_taf": "ເປີດ taf ເພື່ອເບິ່ງ.",
+  "push.open_usage": "ເປີດ «ແຜນ ແລະ ການໃຊ້ງານ» ເພື່ອເບິ່ງ."
+}

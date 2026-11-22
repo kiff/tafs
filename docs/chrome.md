@@ -389,6 +389,12 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 `GET /v1/tafs/{coach}/conversation`, `POST /v1/tafs/{coach}/messages`), as the extension's view-only KIFF device
 (`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone, and back.
 
+- **Chrome sends those calls as CORS requests,** as the extension has no host permission for tafs cloud. tafs cloud
+  answers Chrome's preflight on those three routes alone, before anything is read, and lets only an extension's own
+  origin (`chrome-extension://` and a 32-letter id) read the answers (`runtime/src/cloud/extension-cors.ts`). It never
+  answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
+  the check.
+
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
 - **The page is sent only on the owner's tap,** with "Share this page":

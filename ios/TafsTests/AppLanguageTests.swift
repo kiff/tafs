@@ -93,7 +93,7 @@ final class AppLanguageTests: XCTestCase {
         // Traditional Chinese is named with its script, so it doesn't read as Simplified ("繁體中文", or "中文 (繁體)").
         let hant = try XCTUnwrap(Words.languages.firstIndex(of: "zh-Hant"))
         XCTAssertTrue(names[hant].contains("繁體"), names[hant])
-        let pinned = ["en": "English", "de": "Deutsch", "fr": "Français", "es": "Español", "it": "Italiano", "pt": "Português", "nl": "Nederlands", "pl": "Polski", "ko": "한국어", "ja": "日本語", "et": "Eesti", "lt": "Lietuvių", "lv": "Latviešu", "cs": "Čeština", "sk": "Slovenčina", "sl": "Slovenščina", "hu": "Magyar", "ro": "Română", "bg": "Български", "hr": "Hrvatski", "tr": "Türkçe", "id": "Indonesia", "vi": "Tiếng Việt", "th": "ไทย", "pt-BR": "Português (Brasil)"]
+        let pinned = ["en": "English", "de": "Deutsch", "fr": "Français", "es": "Español", "it": "Italiano", "pt": "Português", "nl": "Nederlands", "pl": "Polski", "ko": "한국어", "ja": "日本語", "et": "Eesti", "lt": "Lietuvių", "lv": "Latviešu", "cs": "Čeština", "sk": "Slovenčina", "sl": "Slovenščina", "hu": "Magyar", "ro": "Română", "bg": "Български", "hr": "Hrvatski", "tr": "Türkçe", "id": "Indonesia", "vi": "Tiếng Việt", "th": "ไทย", "ca": "Català", "mk": "Македонски", "mn": "Монгол", "ne": "नेपाली", "km": "ខ្មែរ", "lo": "ລາວ", "pt-BR": "Português (Brasil)"]
         // Batch 4's languages are each named in its own script; ICU spells a few of the names differently by OS version, so each is read by a part of it.
         let parts = ["ar": "العربية", "sr-Latn": "rpski", "sq": "hqip", "ka": "ქართული", "hy": "երեն", "az": "zərbaycan", "bn": "বাংলা", "he": "עברית"]
         XCTAssertEqual(Set(pinned.keys).union(parts.keys).union(["zh-Hant"]), Set(Words.languages), "every shipped language is checked")

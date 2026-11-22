@@ -1,0 +1,17 @@
+{
+  "report.already": "तपाईंले यो जवाफ पहिल्यै रिपोर्ट गरिसक्नुभएको छ।",
+  "report.cant_from_here": "यो जवाफ यहाँबाट रिपोर्ट गर्न सकिँदैन।",
+  "report.menu": "यो जवाफ रिपोर्ट गर्नुहोस्",
+  "report.not_sent": "तपाईंको रिपोर्ट पठाइएन। {why}",
+  "report.not_sent_why": "पठाइएन: {failed}",
+  "report.note_hint": "टिपोट थप्नुहोस् (ऐच्छिक)",
+  "report.note_most_characters": "टिपोट बढीमा १,००० अक्षरको हुन सक्छ।",
+  "report.person_kiff_reads_your_report": "KIFF का एक व्यक्तिले तपाईंको रिपोर्ट जवाफ लेखिएकै रूपमा पढ्छन्।",
+  "report.reason.harmful": "हानिकारक",
+  "report.reason.offensive": "आपत्तिजनक",
+  "report.reason.other": "अन्य",
+  "report.reason.wrong": "गलत",
+  "report.runs_not_loaded": "यसका चलाइहरू लोड गर्न सकिएन। {why}",
+  "report.thanks": "धन्यवाद। KIFF का कसैले तपाईंको रिपोर्ट पढ्नेछन्।",
+  "report.what_wrong": "यसमा के गलत छ?"
+}

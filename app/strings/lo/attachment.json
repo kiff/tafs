@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "ແນບ {name} ບໍ່ໄດ້.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs ແນບໄຟລ໌ນີ້ບໍ່ໄດ້: ມັນບໍ່ແມ່ນປະເພດ ຫຼື ຂະໜາດທີ່ຮັບ. ກະລຸນາເລືອກໄຟລ໌ອື່ນ.",
+  "attachment.photo": "ຮູບ",
+  "attachment.photo_could_not_read": "ອ່ານຮູບນັ້ນບໍ່ໄດ້.",
+  "attachment.photo_numbered": "ຮູບ {n}",
+  "attachment.too_large": "{name} ມີຂະໜາດ {size}; ສູງສຸດແມ່ນ {limit}.",
+  "attachment.wrong_kind": "ແນບ {name} ບໍ່ໄດ້. ແນບໄດ້ຮູບ, PDF, ຂໍ້ຄວາມ, CSV, Markdown, ໄຟລ໌ Word ແລະ Excel."
+}

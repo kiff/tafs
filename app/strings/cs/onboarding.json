@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Souhlasím s {kiff_terms} a {tafs_terms}.",
   "onboarding.control_lead": "Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte přes Face ID nebo Touch ID, nebo odmítnete.",
   "onboarding.control_lead_android": "Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte zámkem obrazovky, nebo odmítnete.",
+  "onboarding.control_lead_desktop": "Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo odmítnete.",
   "onboarding.control_lead_mac": "Když vás taf potřebuje, čeká v Čeká na vás. Schválíte přes Touch ID nebo v telefonu, nebo odmítnete.",
   "onboarding.control_title": "Kontrolu máte vy",
   "onboarding.get_started": "Začít",

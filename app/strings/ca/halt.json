@@ -1,0 +1,13 @@
+{
+  "halt.again": "Bloqueja de nou",
+  "halt.all_now": "Bloqueja-ho tot ara",
+  "halt.explain.halted": "Bloquejat. Reprendre només inicia feina nova.",
+  "halt.explain.halted_since": "Des de {time}. Reprendre només inicia feina nova.",
+  "halt.explain.halting": "No s'inicia res de nou. «Bloquejat» es mostra quan KIFF i la connexió ho confirmen tots dos.",
+  "halt.explain.running_all": "Bloquejar atura els teus taf fins que els reprenguis. Una crida ja enviada encara pot arribar.",
+  "halt.explain.running_one": "Bloquejar l'atura fins que el reprenguis. Una crida ja enviada encara pot arribar.",
+  "halt.halting_stops_no_run_starts": "Bloquejar atura {who} fins que ho reprenguis. Una crida ja enviada encara pot arribar.",
+  "halt.now": "Bloqueja ara",
+  "halt.row_running": "Atura'l fins que el reprenguis",
+  "halt.your_tafs_lower": "els teus taf"
+}
