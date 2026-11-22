@@ -1,0 +1,1 @@
+- **iPhone and iPad:** an answered approval that signed a Card opens again to that Card as it was signed, with nothing to answer, as on Android ([docs/coach.md](../docs/coach.md)).
