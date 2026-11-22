@@ -28,6 +28,7 @@
   "approval.first_taf": "Поставувањето на taf бара одобрувања: Coach те моли да ги одобриш неговите алатки и Card на tafот.",
   "approval.has_no_face_id_touch": "Овој {device} нема Face ID или Touch ID, па не може да одобрува. Одобри на друг iPhone, iPad или Android телефон најавен на твојата сметка.",
   "approval.has_no_passcode_needs_one": "Овој {device} нема лозинка за уредот, а {either} бара една. Постави лозинка во {kind}, па додај {either_2}, па врати се.",
+  "approval.hello.before": "Одобрување: {act}. Windows Hello бара твој PIN, лице или отпечаток.",
   "approval.kept": "Се чува во Те чека.",
   "approval.key_could_not_sign": "Клучот не можеше да потпише",
   "approval.key_gone_approve_again": "Твоите отисоци се променија, или ниту еден не беше препознаен, па овој телефон не може да одобрува додека не го одобриш повторно во прелистувачот.",

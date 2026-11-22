@@ -18482,6 +18482,53 @@
         }
       }
     },
+    "approval.hello.before": {
+      "extractionState": "manual",
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovant: %1$@. Windows Hello et demana el PIN, la cara o l'empremta."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approving: %1$@. Windows Hello asks for your PIN, face or fingerprint."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កំពុងអនុម័ត៖ %1$@។ Windows Hello នឹងស្នើ PIN មុខ ឬស្នាមម្រាមដៃរបស់អ្នក។"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ກຳລັງອະນຸມັດ: %1$@. Windows Hello ຈະຖາມ PIN, ໃບໜ້າ ຫຼື ລາຍນິ້ວມືຂອງທ່ານ."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одобрување: %1$@. Windows Hello бара твој PIN, лице или отпечаток."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Батлах: %1$@. Windows Hello таны PIN, царай эсвэл хурууны хээг асууна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "स्वीकृत गर्दै: %1$@। Windows Hello ले तपाईंको PIN, अनुहार वा औंलाको छाप माग्छ।"
+          }
+        }
+      }
+    },
     "approval.kept": {
       "extractionState": "manual",
       "localizations": {

@@ -90,6 +90,9 @@ object Words {
     val firstTaf: String get() = Res.s(R.string.approval_first_taf)
     fun hasNoFaceIdTouch(device: String): String = Res.s(R.string.approval_has_no_face_id_touch, device, Words.demonstrative(device, capital = true))
     fun hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String): String = Res.s(R.string.approval_has_no_passcode_needs_one, device, either, kind, either2, Words.demonstrative(device, capital = true))
+    object Hello {
+      fun before(act: String): String = Res.s(R.string.approval_hello_before, act)
+    }
     val kept: String get() = Res.s(R.string.approval_kept)
     val keyCouldNotSign: String get() = Res.s(R.string.approval_key_could_not_sign)
     val keyGoneApproveAgain: String get() = Res.s(R.string.approval_key_gone_approve_again)

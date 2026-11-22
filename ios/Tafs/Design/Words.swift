@@ -157,6 +157,10 @@ enum Words {
         static func hasNoFaceIdTouch(device: String) -> String { Words.line("approval.has_no_face_id_touch", device, Words.demonstrative(device, capital: true)) }
         /// This {device} has no passcode, and {either} needs one. Set a passcode in {kind}, then add {either_2}, then come back.
         static func hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String) -> String { Words.line("approval.has_no_passcode_needs_one", device, either, kind, either2, Words.demonstrative(device, capital: true)) }
+        enum Hello {
+            /// Approving: {act}. Windows Hello asks for your PIN, face or fingerprint.
+            static func before(act: String) -> String { Words.line("approval.hello.before", act) }
+        }
         /// It's kept in Needs you.
         static var kept: String { Words.line("approval.kept") }
         /// The key could not sign

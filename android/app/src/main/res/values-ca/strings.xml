@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Configurar un taf necessita aprovacions: Coach et demana que n\'aprovis les eines i el Card del taf.</string>
     <string name="approval_has_no_face_id_touch">Aquest dispositiu (%1$s) no té Face ID ni Touch ID, així que no pot aprovar. Aprova en un altre iPhone, iPad o telèfon Android amb la sessió iniciada al teu compte.</string>
     <string name="approval_has_no_passcode_needs_one">Aquest dispositiu (%1$s) no té codi d\'accés, i %2$s en necessita un. Configura un codi d\'accés a %3$s, afegeix %4$s i torna.</string>
+    <string name="approval_hello_before">Aprovant: %1$s. Windows Hello et demana el PIN, la cara o l\'empremta.</string>
     <string name="approval_kept">Es conserva a «Et necessita».</string>
     <string name="approval_key_could_not_sign">La clau no ha pogut signar</string>
     <string name="approval_key_gone_approve_again">Les teves empremtes han canviat o cap no s\'ha reconegut, així que aquest telèfon no pot aprovar fins que el tornis a aprovar al navegador.</string>

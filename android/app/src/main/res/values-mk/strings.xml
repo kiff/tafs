@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Поставувањето на taf бара одобрувања: Coach те моли да ги одобриш неговите алатки и Card на tafот.</string>
     <string name="approval_has_no_face_id_touch">Овој %1$s нема Face ID или Touch ID, па не може да одобрува. Одобри на друг iPhone, iPad или Android телефон најавен на твојата сметка.</string>
     <string name="approval_has_no_passcode_needs_one">Овој %1$s нема лозинка за уредот, а %2$s бара една. Постави лозинка во %3$s, па додај %4$s, па врати се.</string>
+    <string name="approval_hello_before">Одобрување: %1$s. Windows Hello бара твој PIN, лице или отпечаток.</string>
     <string name="approval_kept">Се чува во Те чека.</string>
     <string name="approval_key_could_not_sign">Клучот не можеше да потпише</string>
     <string name="approval_key_gone_approve_again">Твоите отисоци се променија, или ниту еден не беше препознаен, па овој телефон не може да одобрува додека не го одобриш повторно во прелистувачот.</string>

@@ -74,6 +74,7 @@
     <string name="approval_first_taf">ការរៀបចំ taf ត្រូវការការអនុម័ត៖ Coach សុំអ្នកអនុម័តឧបករណ៍របស់វា និង Card របស់ taf។</string>
     <string name="approval_has_no_face_id_touch">%1$s នេះគ្មាន Face ID ឬ Touch ID ទេ ដូច្នេះវាមិនអាចអនុម័តបានទេ។ អនុម័តនៅលើ iPhone, iPad ឬទូរសព្ទ Android ផ្សេងដែលបានចូលគណនីរបស់អ្នក។</string>
     <string name="approval_has_no_passcode_needs_one">%1$s នេះគ្មានលេខសម្ងាត់ទេ ហើយ %2$s ត្រូវការមួយ។ កំណត់លេខសម្ងាត់ក្នុង %3$s បន្ទាប់មកបន្ថែម %4$s រួចត្រឡប់មកវិញ។</string>
+    <string name="approval_hello_before">កំពុងអនុម័ត៖ %1$s។ Windows Hello នឹងស្នើ PIN មុខ ឬស្នាមម្រាមដៃរបស់អ្នក។</string>
     <string name="approval_kept">វាត្រូវបានរក្សាទុកក្នុង «ត្រូវការអ្នក»។</string>
     <string name="approval_key_could_not_sign">កូនសោមិនអាចចុះហត្ថលេខាបានទេ</string>
     <string name="approval_key_gone_approve_again">ស្នាមម្រាមដៃរបស់អ្នកបានផ្លាស់ប្តូរ ឬគ្មានអ្វីត្រូវបានស្គាល់ ដូច្នេះទូរសព្ទនេះមិនអាចអនុម័តបានទេ រហូតដល់អ្នកអនុម័តវាម្តងទៀតក្នុងកម្មវិធីរុករករបស់អ្នក។</string>

@@ -28,6 +28,7 @@
   "approval.first_taf": "Setting up a taf needs approvals: Coach asks you to approve its tools and the taf's Card.",
   "approval.has_no_face_id_touch": "This {device} has no Face ID or Touch ID, so it can't approve. Approve on another iPhone, iPad or Android phone signed in to your account.",
   "approval.has_no_passcode_needs_one": "This {device} has no passcode, and {either} needs one. Set a passcode in {kind}, then add {either_2}, then come back.",
+  "approval.hello.before": "Approving: {act}. Windows Hello asks for your PIN, face or fingerprint.",
   "approval.kept": "It's kept in Needs you.",
   "approval.key_could_not_sign": "The key could not sign",
   "approval.key_gone_approve_again": "Your fingerprints changed, or none was recognized, so this phone can't approve until you approve it again in your browser.",

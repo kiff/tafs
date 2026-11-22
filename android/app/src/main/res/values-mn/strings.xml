@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Taf тохируулахад зөвшөөрөл шаардлагатай: Coach таныг түүний хэрэгслүүд болон taf-ын Card-ыг зөвшөөрөхийг хүснэ.</string>
     <string name="approval_has_no_face_id_touch">Энэ %1$s-д Face ID эсвэл Touch ID байхгүй тул зөвшөөрч чадахгүй. Таны бүртгэлд нэвтэрсэн өөр iPhone, iPad эсвэл Android утсан дээр зөвшөөрнө үү.</string>
     <string name="approval_has_no_passcode_needs_one">Энэ %1$s-д нууц код байхгүй бөгөөд %2$s түүнийг шаарддаг. %3$s хэсэгт нууц код тохируулж, дараа нь %4$s-ийг нэмээд буцаж ирнэ үү.</string>
+    <string name="approval_hello_before">Батлах: %1$s. Windows Hello таны PIN, царай эсвэл хурууны хээг асууна.</string>
     <string name="approval_kept">Таныг хүлээж байна хэсэгт хадгалагдсан.</string>
     <string name="approval_key_could_not_sign">Түлхүүр гарын үсэг зурж чадсангүй</string>
     <string name="approval_key_gone_approve_again">Таны хурууны хээ өөрчлөгдсөн, эсвэл ямар нь ч танигдаагүй тул та хөтөч дээрээ дахин зөвшөөрөх хүртэл энэ утас зөвшөөрч чадахгүй.</string>

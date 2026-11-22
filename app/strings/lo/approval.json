@@ -28,6 +28,7 @@
   "approval.first_taf": "ການຕັ້ງ taf ຕ້ອງການການອະນຸມັດ: Coach ຂໍໃຫ້ທ່ານອະນຸມັດເຄື່ອງມືຂອງມັນ ແລະ Card ຂອງ taf.",
   "approval.has_no_face_id_touch": "{device} ນີ້ບໍ່ມີ Face ID ຫຼື Touch ID ສະນັ້ນມັນອະນຸມັດບໍ່ໄດ້. ອະນຸມັດໃນ iPhone, iPad ຫຼື ໂທລະສັບ Android ເຄື່ອງອື່ນທີ່ເຂົ້າສູ່ລະບົບບັນຊີຂອງທ່ານ.",
   "approval.has_no_passcode_needs_one": "{device} ນີ້ບໍ່ມີລະຫັດຜ່ານ ແລະ {either} ຕ້ອງການມັນ. ຕັ້ງລະຫັດຜ່ານໃນ {kind} ແລ້ວເພີ່ມ {either_2} ແລ້ວກັບມາ.",
+  "approval.hello.before": "ກຳລັງອະນຸມັດ: {act}. Windows Hello ຈະຖາມ PIN, ໃບໜ້າ ຫຼື ລາຍນິ້ວມືຂອງທ່ານ.",
   "approval.kept": "ມັນຖືກເກັບໄວ້ໃນ ຕ້ອງການທ່ານ.",
   "approval.key_could_not_sign": "ກຸນແຈລົງລາຍເຊັນບໍ່ໄດ້",
   "approval.key_gone_approve_again": "ລາຍນິ້ວມືຂອງທ່ານປ່ຽນ ຫຼື ບໍ່ໄດ້ຮັບການຈື່ ສະນັ້ນໂທລະສັບນີ້ອະນຸມັດບໍ່ໄດ້ຈົນກວ່າທ່ານຈະອະນຸມັດມັນອີກໃນເບົາເຊີ.",

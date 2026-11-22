@@ -75,6 +75,7 @@
     <string name="approval_first_taf">taf सेट गर्न स्वीकृति चाहिन्छ: Coach ले तपाईंलाई यसका उपकरण र taf को Card स्वीकृत गर्न भन्छ।</string>
     <string name="approval_has_no_face_id_touch">यो %1$s मा Face ID वा Touch ID छैन, त्यसैले यसले स्वीकृत गर्न सक्दैन। तपाईंको खातामा साइन इन भएको अर्को iPhone, iPad वा Android फोनमा स्वीकृत गर्नुहोस्।</string>
     <string name="approval_has_no_passcode_needs_one">यो %1$s मा पासकोड छैन, र %2$s लाई एउटा चाहिन्छ। %3$s मा पासकोड सेट गर्नुहोस्, त्यसपछि %4$s थपेर फर्कनुहोस्।</string>
+    <string name="approval_hello_before">स्वीकृत गर्दै: %1$s। Windows Hello ले तपाईंको PIN, अनुहार वा औंलाको छाप माग्छ।</string>
     <string name="approval_kept">यो तपाईंको प्रतीक्षामा राखिएको छ।</string>
     <string name="approval_key_could_not_sign">कुञ्जीले हस्ताक्षर गर्न सकेन</string>
     <string name="approval_key_gone_approve_again">तपाईंका फिंगरप्रिन्ट परिवर्तन भए, वा कुनै पहिचान भएन, त्यसैले तपाईंले ब्राउजरमा फेरि स्वीकृत नगरेसम्म यो फोनले स्वीकृत गर्न सक्दैन।</string>

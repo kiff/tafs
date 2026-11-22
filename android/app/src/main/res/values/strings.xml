@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Setting up a taf needs approvals: Coach asks you to approve its tools and the taf\'s Card.</string>
     <string name="approval_has_no_face_id_touch">This %1$s has no Face ID or Touch ID, so it can\'t approve. Approve on another iPhone, iPad or Android phone signed in to your account.</string>
     <string name="approval_has_no_passcode_needs_one">This %1$s has no passcode, and %2$s needs one. Set a passcode in %3$s, then add %4$s, then come back.</string>
+    <string name="approval_hello_before">Approving: %1$s. Windows Hello asks for your PIN, face or fingerprint.</string>
     <string name="approval_kept">It\'s kept in Needs you.</string>
     <string name="approval_key_could_not_sign">The key could not sign</string>
     <string name="approval_key_gone_approve_again">Your fingerprints changed, or none was recognized, so this phone can\'t approve until you approve it again in your browser.</string>
