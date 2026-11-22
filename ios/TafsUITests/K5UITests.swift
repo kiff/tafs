@@ -78,10 +78,12 @@ final class K5UITests: TafsUITestCase {
         // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email (its password follows on the next step). Email-code sign-in
         // stays off, so a way to sign in with a code sent by email is a finding, never a pass. (A new sign-up's one-time
         // check of the address isn't a sign-in, and isn't on this page.)
+        // KIFF's own "Email me a code" link (id `email-code-link`, kiff/cloud) is always shown and is KIFF's own, per person; what must stay off is
+        // the provider's email-code strategy, so that link is left out of the check.
         func control(_ words: String) -> XCUIElement {
-            page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@",
+            page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@ AND identifier != %@",
                                                                   XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.link.rawValue,
-                                                                  ".*(\(words)).*")).firstMatch
+                                                                  ".*(\(words)).*", Self.kiffsEmailCodeLink)).firstMatch
         }
         let drawn = control("google").waitForExistence(timeout: 30)
         keep("kiff-sign-in")
@@ -98,6 +100,8 @@ final class K5UITests: TafsUITestCase {
 
     /// The four ways the owner keeps on (21 Nov), by the words on their controls.
     static let ways: [(String, String)] = [("Apple", "apple"), ("Google", "google"), ("GitHub", "github")]
+    /// KIFF's own link to its email-code sign-in (kiff/cloud): not the provider's strategy, which must stay off.
+    static let kiffsEmailCodeLink = "email-code-link"
     /// A control that signs in with a code sent by email instead of a password.
     static let emailCodeWords = "email me a code|send me a code|sign in with a code|use a code|code by email|magic link"
 

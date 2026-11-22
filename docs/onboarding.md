@@ -10,7 +10,7 @@ the owner (K5).
   and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
   KIFF's sheet is private (ephemeral), so iOS shows no "Wants to Use kiff.dev to Sign In" ask for it; one that comes is
   taken. **The page passes only when it draws the four ways the owner keeps on** within 30 s: Apple, Google, GitHub, and
-  email, whose password the provider's form asks for on its next step (the device pass takes it). It fails on any way to sign in with a code sent by email (email-code sign-in stays off). A page
+  email, whose password the provider's form asks for on its next step (the device pass takes it). It fails on the provider's own way to sign in with a code sent by email (that strategy stays off); KIFF's own "Email me a code" link, whose id is `email-code-link`, is not counted. A page
   with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
 - **A device pass** on a TestFlight build, with the owner in person at the sign-in step.
 
