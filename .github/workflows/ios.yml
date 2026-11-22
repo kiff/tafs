@@ -1000,6 +1000,16 @@ jobs:
 
       # External testers get a build only once it is added to their group and
       # Apple has reviewed it; Team gets it without either.
+      - name: Say what to test, for the Team
+        # A build for the Team only (a manual run with external off) still tells its internal testers what to test:
+        # only that text is set; no group, review information or submission is touched.
+        if: github.event_name == 'workflow_dispatch' && !inputs.external
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+          BUILD_NUMBER: ${{ github.run_number }}
+          WHAT_TO_TEST_ONLY: "1"
+        run: WHAT_TO_TEST="$(cat ios/WhatToTest.txt)" ruby ios/scripts/asc-beta.rb
+
       - name: Give the build to Beta testers
         # A tag always goes to them; a manual run unless it says not to.
         if: github.event_name != 'workflow_dispatch' || inputs.external

@@ -140,4 +140,23 @@ class AscBetaTest < Minitest::Test
     AscBeta.run(api, ENV_OK, out: StringIO.new, wait: ->(_) { waited += 1 })
     assert_equal 2, waited
   end
+
+  # A Team-only build still says what to test, and nothing else is touched: no group, no review details, no submission.
+  def test_what_to_test_only_sets_the_text_and_touches_nothing_else
+    asc = FakeASC.new
+    asc.on("get", "/v1/builds/b7/betaBuildLocalizations", 200, { "data" => [] })
+    out = run_with(asc, { "BUILD_NUMBER" => "7", "WHAT_TO_TEST_ONLY" => "1", "WHAT_TO_TEST" => "Try the languages." })
+    assert_includes out, "build 7: what to test set"
+    created = asc.calls.find { |m, p, _| m == "post" && p == "/v1/betaBuildLocalizations" }
+    refute_nil created
+    assert_equal "Try the languages.", created[2][:data][:attributes][:whatsNew]
+    refute asc.calls.any? { |m, p, _| p.include?("betaGroups") && m != "get" }, "no group is touched"
+    refute asc.calls.any? { |_, p, _| p.include?("betaAppReview") }, "no review details or submission"
+    refute asc.calls.any? { |_, p, _| p.include?("betaTesters") }, "no tester is invited"
+  end
+
+  def test_what_to_test_only_without_text_fails
+    err = assert_raises(AscBeta::Failure) { run_with(FakeASC.new, { "BUILD_NUMBER" => "7", "WHAT_TO_TEST_ONLY" => "1", "WHAT_TO_TEST" => "  " }) }
+    assert_includes err.message, "WHAT_TO_TEST is empty"
+  end
 end

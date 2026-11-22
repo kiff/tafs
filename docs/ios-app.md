@@ -1195,7 +1195,8 @@ word stays the screen's own shared key. Every drawing is hidden from VoiceOver (
   only when the iPad's layout changes. When a pull request touches the screens,
   it takes a key set of screenshots, uploaded as the `screenshots` artifact. A `v*` tag or a
   manual run also uploads to TestFlight: Team at once, and the external Beta testers after
-  Apple's review unless the run turns that off. A manual run skips each kind of test main
+  Apple's review unless the run turns that off; a run that turns it off still sets the build's "What to Test"
+  (`ios/WhatToTest.txt`) for the Team, with nothing else touched (`WHAT_TO_TEST_ONLY` in `asc-beta.rb`). A manual run skips each kind of test main
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
