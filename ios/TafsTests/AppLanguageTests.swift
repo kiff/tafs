@@ -78,7 +78,7 @@ final class AppLanguageTests: XCTestCase {
         let hant = try XCTUnwrap(Words.languages.firstIndex(of: "zh-Hant"))
         XCTAssertTrue(names[hant].contains("繁體"), names[hant])
         XCTAssertEqual(names.enumerated().filter { $0.offset != hant }.map(\.element),
-                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Eesti", "Lietuvių", "Latviešu", "Čeština", "Slovenčina", "Slovenščina", "Magyar", "Română", "Български", "Hrvatski", "Türkçe", "Indonesia", "Tiếng Việt", "ไทย", "Português (Brasil)"])
+                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Eesti", "Lietuvių", "Latviešu", "Čeština", "Slovenčina", "Slovenščina", "Magyar", "Română", "Български", "Hrvatski", "Türkçe", "Indonesia", "Tiếng Việt", "ไทย", "Català", "Македонски", "Монгол", "नेपाली", "ខ្មែរ", "ລາວ", "Português (Brasil)"])
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
         XCTAssertTrue(account.contains("NavigationLink { LanguagePicker() }"), "Change language opens the app's own list")
