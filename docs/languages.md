@@ -881,6 +881,41 @@ Plural forms: one, other.
 | Usage | Ús |
 | Cancel / Continue | Cancel·la / Continua |
 
+### Macedonian (mk)
+
+Standard Macedonian in Cyrillic, addressed as **ти**, the informal form. Buttons are verbs in the imperative ("Одобри", "Одбиј",
+"Продолжи"). taf, Card, Coach, KIFF and Setup are names. Setup is "Конфигурација" in its own screen's title and taf, Card, Coach and
+KIFF stay in Latin letters. A taf takes the plural "tafови" (a Cyrillic ending on the Latin name); Card doesn't change. The possessive
+is "на": "Card на {owner}". A door is "врата" (a plural noun, so "Врата {door}" and "овие врата"), a knock "тропање", a call "барање", a
+receipt "признаница", the dial "селектор". Months and weekdays are lower case in a sentence ("јануари", "пон"). Quotes are „ “.
+macOS has no Macedonian, so a `*_mac` line names the English-named paths in Macedonian with macOS 12's names in brackets.
+Plural forms: one, other.
+
+| English | Macedonian |
+|---|---|
+| Needs you | Те чека |
+| Approve / Approve once | Одобри / Одобри еднаш |
+| Refuse | Одбиј |
+| held | задржано |
+| Halt / Halted | Запри / Запрен |
+| Stopped | Стопиран |
+| Pause / Paused | Паузирај / Паузиран |
+| Resume | Продолжи |
+| Revoke | Отповикај |
+| Record | Запис |
+| Connect / connection | Поврзи / врска |
+| Pair / Unpair | Спари / Раздвои |
+| Account | Сметка |
+| credits | кредити |
+| passkey | клуч за пристап |
+| security key | безбедносен клуч |
+| Sign in / Sign out | Најави се / Одјави се |
+| Inbox | Приемно сандаче |
+| Overview | Преглед |
+| Calendar | Календар |
+| Usage | Користење |
+| Cancel / Continue | Откажи / Продолжи |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

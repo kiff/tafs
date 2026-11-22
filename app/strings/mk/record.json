@@ -34,7 +34,7 @@
   "record.event.a_door": "врата",
   "record.event.door_removed": "Ја отстрани неговата врата {door}",
   "record.event.door_removed_detail": "Неговата адреса повеќе не стигнува до него",
-  "record.event.halted": "Запрено",
+  "record.event.halted": "Запрен",
   "record.event.halted_all": "Запрено со сите твои tafови",
   "record.event.halted_detail": "Ништо од него не работи додека не го продолжиш",
   "record.event.knock_done": "Го натера да дејствува според пораката на {who}",
