@@ -33,5 +33,6 @@
     <locale android:name="hy" />
     <locale android:name="az" />
     <locale android:name="bn" />
+    <locale android:name="he" />
     <locale android:name="pt-BR" />
 </locale-config>

@@ -51,7 +51,7 @@ def glossary_being_written():
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "Georgian": "ka", "Armenian": "hy", "Azerbaijani": "az", "Bengali": "bn", "Arabic": "ar", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "Georgian": "ka", "Armenian": "hy", "Azerbaijani": "az", "Bengali": "bn", "Hebrew": "he", "Arabic": "ar", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
@@ -105,9 +105,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -212,9 +212,9 @@ class SharedWords(unittest.TestCase):
                         self.assertNotRegex(text, r"\|[Tt]his\}", f"{lang} {key}: {lang} has no rule for \"this\"; write the word in the line")
 
     def test_a_right_to_left_language_writes_its_menu_arrows_pointing_left(self):
-        # "→" doesn't mirror with the text direction, so an Arabic line writes "←" where English writes "→".
+        # "→" doesn't mirror with the text direction, so an Arabic or Hebrew line writes "←" where English writes "→".
         # "‹" and "›" do mirror, and stay as English writes them.
-        for lang in ("ar",):
+        for lang in ("ar", "he"):
             for key, line in self.lines[lang].items():
                 for text in generate.forms_of(line):
                     self.assertNotIn("→", text, f"{lang} {key}: write ← in a right-to-left language")
@@ -224,7 +224,7 @@ class SharedWords(unittest.TestCase):
     def test_a_right_to_left_language_keeps_a_reference_number_in_its_own_left_to_right_run(self):
         # After an Arabic letter the digits of "#5098" become Arabic-script digits (bidi rule W2), which leaves the "#" outside
         # their run: "7802#". A reference written in a line is wrapped in U+2066 … U+2069 so it reads "#7802".
-        for lang in ("ar",):
+        for lang in ("ar", "he"):
             for key, line in self.lines[lang].items():
                 for text in generate.forms_of(line):
                     for found in re.finditer(r"#\d+", text):

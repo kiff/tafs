@@ -1067,6 +1067,54 @@ Latin digits, isolated as in the other languages. Bengali's "one" covers 0 and 1
 | receipt | রসিদ |
 | Cancel / Continue | বাতিল করুন / চালিয়ে যান |
 
+### Hebrew (he)
+
+Modern Hebrew, written right to left. Addressed to one reader; Hebrew is gendered, so buttons and titles are verbal nouns
+("אישור", "דחייה", "המשך", "ביטול"), as Apple's Hebrew writes them, and a sentence that must address the reader uses the
+masculine as Hebrew software does ("אתה", "שלך") or an impersonal "יש ל…". taf, Card, Coach, KIFF and Setup stay in Latin
+letters, and a Hebrew prefix joins one with a hyphen ("ה-taf", "ל-Coach", "ב-KIFF"); a value is a name that takes no
+prefix, so a line that would need one words around it ("ההתקן הזה ({device})", "{name} שלו"). A door is "דלת", a call "קריאה", a
+request "בקשה", a held call "קריאה מוחזקת", a receipt "קבלה", a brief "סיכום". Figures are Western digits (0–9), as the
+locale writes them, and dates are Gregorian. Quotes are « » for a line's own, and a name a taf carries is isolated
+(`Words.isolated`).
+
+**Plurals have three forms:** one (1), two (2) and other (everything else; `many` left CLDR in 42, so an older phone that asks
+for it reads `other`). A line may leave the number out in `one` and `two` ("יום אחד", "יומיים"), as the words say it.
+
+**Direction** is Arabic's rule (see Arabic above): a menu path in a line that English writes with "→" writes "←" ("‹" and "›"
+mirror with the text direction and are written as English writes them); the two dials turn the same way as in English; a
+reference number ("#5098") is wrapped in U+2066 … U+2069. `test_strings` checks all three for Hebrew as for Arabic. No joined
+script, so the monospaced face and the spacing of captions stay as they are.
+
+| English | Hebrew |
+|---|---|
+| Needs you | זקוק לך |
+| Approve / Approve once | אישור / אישור חד-פעמי |
+| Refuse | דחייה |
+| held | מוחזק |
+| Halt / Halted | עצירה / נעצר |
+| Stopped | הופסק |
+| Pause / Paused | השהיה / מושהה |
+| Resume | חידוש |
+| Revoke | הפקעה |
+| Record | תיעוד |
+| Connect / connection | חיבור / חיבור |
+| Pair / Unpair | צימוד / ביטול צימוד |
+| Account | חשבון |
+| limit / spend limit | מגבלה / מגבלת הוצאה |
+| credits / credit pack | קרדיטים / חבילת קרדיטים |
+| passkey | מפתח גישה |
+| security key | מפתח אבטחה |
+| Sign in / Sign out | כניסה / יציאה |
+| Inbox | דואר נכנס |
+| Overview | סקירה |
+| Calendar | לוח שנה |
+| Setup (a screen title; the agent's name stays Setup in Latin letters) | הגדרה |
+| Usage | שימוש |
+| brief | סיכום |
+| receipt | קבלה |
+| Cancel / Continue | ביטול / המשך |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
