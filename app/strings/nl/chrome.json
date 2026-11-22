@@ -22,11 +22,17 @@
   "chrome.refused": "Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.",
   "chrome.remove": "Ontkoppelen",
   "chrome.remove_named": "{name} ontkoppelen",
+  "chrome.replace_moves": "Gaat naar deze Chrome: {sites}",
+  "chrome.replace_none": "Een nieuwe Chrome (vervangt geen)",
+  "chrome.replace_title": "Vervangt",
+  "chrome.replace_unpairs": "{name} wordt ontkoppeld zodra deze gekoppeld is.",
   "chrome.shot_failed": "De afbeelding kon niet worden geladen.",
   "chrome.shot_kept": "30 dagen bewaard, daarna verwijderd.",
   "chrome.shot_none": "Voor deze stap is geen afbeelding bewaard.",
   "chrome.shot_open": "Bekijk de pagina vóór deze stap",
   "chrome.shot_title": "Vóór deze stap",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Ontkoppelen beëindigt de verbindingen die het gebruiken: {sites}. Ze komen pas terug als je ze opnieuw verbindt.",
+  "chrome.used_for": "Gebruikt voor {sites}",
   "chrome.waiting": "Wachten op Chrome…"
 }

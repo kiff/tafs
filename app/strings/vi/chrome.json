@@ -22,11 +22,17 @@
   "chrome.refused": "Một Chrome khác đã dùng mã này nên chưa có gì được ghép đôi. Hãy bắt đầu lại.",
   "chrome.remove": "Hủy ghép đôi",
   "chrome.remove_named": "Hủy ghép đôi {name}",
+  "chrome.replace_moves": "Chuyển sang Chrome này: {sites}",
+  "chrome.replace_none": "Một Chrome mới (không thay thế cái nào)",
+  "chrome.replace_title": "Thay thế",
+  "chrome.replace_unpairs": "{name} sẽ được hủy ghép đôi khi Chrome này được ghép đôi.",
   "chrome.shot_failed": "Không tải được ảnh.",
   "chrome.shot_kept": "Được lưu 30 ngày rồi xóa.",
   "chrome.shot_none": "Không có ảnh nào được lưu cho bước này.",
   "chrome.shot_open": "Xem trang trước bước này",
   "chrome.shot_title": "Trước bước này",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Hủy ghép đôi sẽ kết thúc các kết nối dùng nó: {sites}. Chúng chỉ trở lại khi bạn kết nối lại.",
+  "chrome.used_for": "Dùng cho {sites}",
   "chrome.waiting": "Đang chờ Chrome…"
 }

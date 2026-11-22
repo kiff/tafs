@@ -613,12 +613,18 @@ object Words {
     val refused: String get() = Res.s(R.string.chrome_refused)
     val remove: String get() = Res.s(R.string.chrome_remove)
     fun removeNamed(name: String): String = Res.s(R.string.chrome_remove_named, name)
+    fun replaceMoves(sites: String): String = Res.s(R.string.chrome_replace_moves, sites)
+    val replaceNone: String get() = Res.s(R.string.chrome_replace_none)
+    val replaceTitle: String get() = Res.s(R.string.chrome_replace_title)
+    fun replaceUnpairs(name: String): String = Res.s(R.string.chrome_replace_unpairs, name)
     val shotFailed: String get() = Res.s(R.string.chrome_shot_failed)
     val shotKept: String get() = Res.s(R.string.chrome_shot_kept)
     val shotNone: String get() = Res.s(R.string.chrome_shot_none)
     val shotOpen: String get() = Res.s(R.string.chrome_shot_open)
     val shotTitle: String get() = Res.s(R.string.chrome_shot_title)
     val title: String get() = Res.s(R.string.chrome_title)
+    fun unpairEnds(sites: String): String = Res.s(R.string.chrome_unpair_ends, sites)
+    fun usedFor(sites: String): String = Res.s(R.string.chrome_used_for, sites)
     val waiting: String get() = Res.s(R.string.chrome_waiting)
   }
   object Coach {

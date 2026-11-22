@@ -22,11 +22,17 @@
   "chrome.refused": "Un autre Chrome a utilisé ce code, rien n'a donc été associé. Recommencez.",
   "chrome.remove": "Dissocier",
   "chrome.remove_named": "Dissocier {name}",
+  "chrome.replace_moves": "Passe à ce Chrome : {sites}",
+  "chrome.replace_none": "Un nouveau Chrome (n'en remplace aucun)",
+  "chrome.replace_title": "Remplace",
+  "chrome.replace_unpairs": "{name} est dissocié dès que celui-ci est associé.",
   "chrome.shot_failed": "L'image n'a pas pu être chargée.",
   "chrome.shot_kept": "Conservée 30 jours, puis supprimée.",
   "chrome.shot_none": "Aucune image n'est conservée pour cette étape.",
   "chrome.shot_open": "Voir la page avant cette étape",
   "chrome.shot_title": "Avant cette étape",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Dissocier met fin aux connexions qui l'utilisent : {sites}. Elles ne reviennent que si vous les reconnectez.",
+  "chrome.used_for": "Utilisé pour {sites}",
   "chrome.waiting": "En attente de Chrome…"
 }

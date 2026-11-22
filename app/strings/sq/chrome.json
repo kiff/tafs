@@ -22,11 +22,17 @@
   "chrome.refused": "Një Chrome tjetër e përdori këtë kod, ndaj asgjë nuk u çiftua. Filloni sërish.",
   "chrome.remove": "Hiqni çiftimin",
   "chrome.remove_named": "Hiqni çiftimin: {name}",
+  "chrome.replace_moves": "Kalon te ky Chrome: {sites}",
+  "chrome.replace_none": "Një Chrome i ri (nuk zëvendëson asnjë)",
+  "chrome.replace_title": "Zëvendëson",
+  "chrome.replace_unpairs": "{name} çiftohet përsëri vetëm kur ky të çiftohet.",
   "chrome.shot_failed": "Imazhi nuk u ngarkua dot.",
   "chrome.shot_kept": "Ruhet 30 ditë, pastaj fshihet.",
   "chrome.shot_none": "Për këtë hap nuk është ruajtur asnjë imazh.",
   "chrome.shot_open": "Shiko faqen para këtij hapi",
   "chrome.shot_title": "Para këtij hapi",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Heqja e çiftimit i përfundon lidhjet që e përdorin: {sites}. Kthehen vetëm kur t'i lidhësh përsëri.",
+  "chrome.used_for": "Përdoret për {sites}",
   "chrome.waiting": "Po pritet Chrome…"
 }

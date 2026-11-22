@@ -150,6 +150,9 @@ final class PlanqueClient {
                 var chrome: String?
                 /// All the sites it may reach.
                 var sites: [String]?
+                /// That Chrome's name as it was paired, as planque sets it.
+                var chromeName: String?
+                enum CodingKeys: String, CodingKey { case driver, chrome, sites, chromeName = "chrome_name" }
             }
             var browser: Browser? = nil
         }
@@ -219,7 +222,12 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", reconnect }
+        /// For an extension grant, the phone's own signature over its sites for the Chrome it was approved for (raw r‖s,
+        /// `tafs-chrome/sites/v1`), and the Chrome whose pairing carried those sites when a re-pairing replaced the one they
+        /// were signed for. planque's list gives them ("Your Chrome" 1); the phone verifies the first before it carries anything.
+        var chromeSitesSig: String?
+        var chromeSitesCarried: String?
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", reconnect, chromeSitesSig = "chrome_sites_sig", chromeSitesCarried = "chrome_sites_carried" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
@@ -663,7 +671,9 @@ final class PlanqueClient {
         var browser: String?
         var os: String?
         var pairedAt: Date?
-        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at" }
+        /// The extension's id for its Chrome profile, kept across key changes: how a re-pairing finds the Chrome it replaces.
+        var profileID: String?
+        enum CodingKeys: String, CodingKey { case id = "chrome_id", name, browser, os, pairedAt = "paired_at", profileID = "profile_id" }
     }
 
     /// A pairing this phone opened: its id, and the four characters of the code planque looks it up by.
@@ -682,6 +692,9 @@ final class PlanqueClient {
         let proof: String
         /// The extension's KIFF device offer (`kiff.pair.v1`, view-only), as its text: the proof covers it.
         var kiffOffer = ""
+        /// The id the extension keeps for its Chrome profile, as planque relays it: a hint for which Chrome this one replaces
+        /// ("Your Chrome" 1), never trusted for more.
+        var profileID = ""
     }
 
     /// A pairing as planque has it: `waiting_for_chrome`, then `waiting_for_phone` once an extension sent its key (the
@@ -689,7 +702,7 @@ final class PlanqueClient {
     struct ChromePairingState: Decodable, Equatable {
         let status: String
         var offer: ChromeOffer?
-        enum CodingKeys: String, CodingKey { case status, key, proof, version, browser, os, kiffOffer = "kiff_offer" }
+        enum CodingKeys: String, CodingKey { case status, key, proof, version, browser, os, kiffOffer = "kiff_offer", profileID = "profile_id" }
         init(status: String, offer: ChromeOffer? = nil) { self.status = status; self.offer = offer }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -698,7 +711,8 @@ final class PlanqueClient {
                 offer = ChromeOffer(key: key, version: (try? c.decodeIfPresent(String.self, forKey: .version)) ?? "",
                                     browser: (try? c.decodeIfPresent(String.self, forKey: .browser)) ?? "",
                                     os: (try? c.decodeIfPresent(String.self, forKey: .os)) ?? "", proof: proof,
-                                    kiffOffer: (try? c.decodeIfPresent(String.self, forKey: .kiffOffer)) ?? "")
+                                    kiffOffer: (try? c.decodeIfPresent(String.self, forKey: .kiffOffer)) ?? "",
+                                    profileID: (try? c.decodeIfPresent(String.self, forKey: .profileID)) ?? "")
             }
         }
     }

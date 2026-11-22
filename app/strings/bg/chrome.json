@@ -22,11 +22,17 @@
   "chrome.refused": "Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.",
   "chrome.remove": "Премахване на сдвояването",
   "chrome.remove_named": "Премахване на сдвояването с {name}",
+  "chrome.replace_moves": "Преминава към този Chrome: {sites}",
+  "chrome.replace_none": "Нов Chrome (не замества никой)",
+  "chrome.replace_title": "Замества",
+  "chrome.replace_unpairs": "{name} се разкача, щом този бъде свързан.",
   "chrome.shot_failed": "Картината не можа да се зареди.",
   "chrome.shot_kept": "Пази се 30 дни, после се изтрива.",
   "chrome.shot_none": "За тази стъпка не е запазена картина.",
   "chrome.shot_open": "Виж страницата преди тази стъпка",
   "chrome.shot_title": "Преди тази стъпка",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Прекратяването на връзката със Chrome слага край на свързванията, които го ползват: {sites}. Връщат се само ако ги свържеш отново.",
+  "chrome.used_for": "Използва се за {sites}",
   "chrome.waiting": "Изчакване на Chrome…"
 }
