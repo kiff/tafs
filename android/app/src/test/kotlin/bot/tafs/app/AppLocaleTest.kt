@@ -81,7 +81,8 @@ class AppLocaleTest {
     val shipped = AppLocale.TAGS + "he" + "yi"
     assertEquals("he", AppLocale.known("iw-IL", shipped))
     assertEquals("yi", AppLocale.known("ji", shipped))
-    assertNull(AppLocale.known("iw"))
+    // Hebrew ships: a phone that still names it by its old code reads it.
+    assertEquals("he", AppLocale.known("iw"))
   }
 
   // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
@@ -101,10 +102,10 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(34, rows.size)
+    assertEquals(35, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "ar" to "العربية", "sr-Latn" to "Srpski (latinica)", "sq" to "Shqip", "ka" to "ქართული", "hy" to "Հայերեն", "az" to "Azərbaycan", "bn" to "বাংলা", "pt-BR" to "Português (Brasil)"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "ar" to "العربية", "sr-Latn" to "Srpski (latinica)", "sq" to "Shqip", "ka" to "ქართული", "hy" to "Հայերեն", "az" to "Azərbaycan", "bn" to "বাংলা", "he" to "עברית", "pt-BR" to "Português (Brasil)"),
       rows.drop(1).filter { it.tag != "zh-Hant" }.map { it.tag to it.title },
     )
     // Traditional Chinese is named with its script, so it doesn't read as Simplified: "中文 (繁體)", whichever brackets the system uses.
