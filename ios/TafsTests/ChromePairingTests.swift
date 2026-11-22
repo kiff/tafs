@@ -9,6 +9,10 @@ final class ChromePairingTests: XCTestCase {
     private struct Vectors: Decodable {
         let secret, chromeKey, phoneKey, pairing, name, extensionProof, chromeKeySha256, phoneProof, signedBytes: String
         let kiffOffer, extensionProofWithKiffOffer: String
+        /// The connections a re-pairing carries, and the bytes the phone signs with them in the body.
+        struct Entry: Decodable { let grant: String; let sites: [String] }
+        let carried: [Entry]
+        let signedBytesWithCarried: String
     }
 
     private func vectors() throws -> Vectors {
@@ -17,6 +21,24 @@ final class ChromePairingTests: XCTestCase {
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode(Vectors.self, from: Data(contentsOf: url))
+    }
+
+    /// "Your Chrome" 1: a re-pairing's carried connections are in the body the phone signs for the extension, in the order sent,
+    /// the same bytes as the extension's (vectors/chrome-pairing.json); with none, the body is today's.
+    func testCarriedConnectionsAreInTheSignedBytes() throws {
+        let v = try vectors()
+        let chromeKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.chromeKey))
+        let phoneKey = try XCTUnwrap(ChromePairing.base64URLDecoded(v.phoneKey))
+        var c = ChromePairing.confirmation(secret: v.secret, chromeKey: chromeKey, name: v.name, phoneKey: phoneKey)
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytes, "no list: today's bytes")
+        c.carried = v.carried.map { ChromePairing.Carried(grant: $0.grant, sites: $0.sites) }
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytesWithCarried)
+        c.carried = []
+        XCTAssertEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytes, "an empty list is no list")
+        c.carried = v.carried.reversed().map { ChromePairing.Carried(grant: $0.grant, sites: $0.sites) }
+        XCTAssertNotEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytesWithCarried, "the order sent is signed")
+        c.carried = [ChromePairing.Carried(grant: v.carried[0].grant, sites: v.carried[0].sites + ["extra.example"])] + v.carried.dropFirst().map { ChromePairing.Carried(grant: $0.grant, sites: $0.sites) }
+        XCTAssertNotEqual(ChromePairing.base64URL(try ChromePairing.signedBytes(pairing: v.pairing, c)), v.signedBytesWithCarried, "a site added changes the bytes")
     }
 
     func testTheProofsAndSignedBytesAreTheExtensions() throws {
