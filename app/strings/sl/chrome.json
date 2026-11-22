@@ -22,6 +22,11 @@
   "chrome.refused": "To kodo je uporabil drug Chrome, zato ni bilo nič seznanjeno. Začnite znova.",
   "chrome.remove": "Prekini seznanitev",
   "chrome.remove_named": "Prekini seznanitev: {name}",
+  "chrome.shot_failed": "Slike ni bilo mogoče naložiti.",
+  "chrome.shot_kept": "Hranjeno 30 dni, nato izbrisano.",
+  "chrome.shot_none": "Za ta korak ni shranjene nobene slike.",
+  "chrome.shot_open": "Poglej stran pred tem korakom",
+  "chrome.shot_title": "Pred tem korakom",
   "chrome.title": "Chrome",
   "chrome.waiting": "Čakam na Chrome…"
 }

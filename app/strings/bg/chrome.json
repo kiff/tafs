@@ -22,6 +22,11 @@
   "chrome.refused": "Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.",
   "chrome.remove": "Премахване на сдвояването",
   "chrome.remove_named": "Премахване на сдвояването с {name}",
+  "chrome.shot_failed": "Картината не можа да се зареди.",
+  "chrome.shot_kept": "Пази се 30 дни, после се изтрива.",
+  "chrome.shot_none": "За тази стъпка не е запазена картина.",
+  "chrome.shot_open": "Виж страницата преди тази стъпка",
+  "chrome.shot_title": "Преди тази стъпка",
   "chrome.title": "Chrome",
   "chrome.waiting": "Изчакване на Chrome…"
 }

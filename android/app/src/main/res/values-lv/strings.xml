@@ -649,6 +649,11 @@
     <string name="chrome_refused">Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna.</string>
     <string name="chrome_remove">Atvienot</string>
     <string name="chrome_remove_named">Atvienot %1$s</string>
+    <string name="chrome_shot_failed">Attēlu neizdevās ielādēt.</string>
+    <string name="chrome_shot_kept">Glabā 30 dienas, pēc tam izdzēš.</string>
+    <string name="chrome_shot_none">Šim solim attēls netiek glabāts.</string>
+    <string name="chrome_shot_open">Skatīt lapu pirms šī soļa</string>
+    <string name="chrome_shot_title">Pirms šī soļa</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Gaida Chrome…</string>
     <string name="coach_activity_card">Sagatavo Card…</string>

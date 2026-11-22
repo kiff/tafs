@@ -613,6 +613,11 @@ object Words {
     val refused: String get() = Res.s(R.string.chrome_refused)
     val remove: String get() = Res.s(R.string.chrome_remove)
     fun removeNamed(name: String): String = Res.s(R.string.chrome_remove_named, name)
+    val shotFailed: String get() = Res.s(R.string.chrome_shot_failed)
+    val shotKept: String get() = Res.s(R.string.chrome_shot_kept)
+    val shotNone: String get() = Res.s(R.string.chrome_shot_none)
+    val shotOpen: String get() = Res.s(R.string.chrome_shot_open)
+    val shotTitle: String get() = Res.s(R.string.chrome_shot_title)
     val title: String get() = Res.s(R.string.chrome_title)
     val waiting: String get() = Res.s(R.string.chrome_waiting)
   }

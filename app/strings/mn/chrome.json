@@ -22,6 +22,11 @@
   "chrome.refused": "Өөр Chrome энэ кодыг ашигласан тул юу ч хослуулаагүй. Дахин эхлүүлнэ үү.",
   "chrome.remove": "Хослолыг салгах",
   "chrome.remove_named": "{name}-ийн хослолыг салгах",
+  "chrome.shot_failed": "Зургийг ачаалж чадсангүй.",
+  "chrome.shot_kept": "30 хоног хадгалагдаад дараа нь устгагдана.",
+  "chrome.shot_none": "Энэ алхамд зориулж хадгалсан зураг алга.",
+  "chrome.shot_open": "Энэ алхмын өмнөх хуудсыг харах",
+  "chrome.shot_title": "Энэ алхмын өмнө",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chrome-ыг хүлээж байна…"
 }

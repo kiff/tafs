@@ -583,6 +583,11 @@
     <string name="chrome_refused">มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง</string>
     <string name="chrome_remove">ยกเลิกการจับคู่</string>
     <string name="chrome_remove_named">ยกเลิกการจับคู่ %1$s</string>
+    <string name="chrome_shot_failed">โหลดภาพไม่ได้</string>
+    <string name="chrome_shot_kept">เก็บไว้ 30 วัน แล้วลบ</string>
+    <string name="chrome_shot_none">ไม่มีภาพที่เก็บไว้สำหรับขั้นตอนนี้</string>
+    <string name="chrome_shot_open">ดูหน้าก่อนขั้นตอนนี้</string>
+    <string name="chrome_shot_title">ก่อนขั้นตอนนี้</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">กำลังรอ Chrome…</string>
     <string name="coach_activity_card">กำลังเตรียม Card…</string>

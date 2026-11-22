@@ -649,6 +649,11 @@
     <string name="chrome_refused">Tento kód použil iný Chrome, takže sa nič nespárovalo. Začnite znova.</string>
     <string name="chrome_remove">Zrušiť spárovanie</string>
     <string name="chrome_remove_named">Zrušiť spárovanie %1$s</string>
+    <string name="chrome_shot_failed">Obrázok sa nepodarilo načítať.</string>
+    <string name="chrome_shot_kept">Uchovaný 30 dní, potom odstránený.</string>
+    <string name="chrome_shot_none">K tomuto kroku nie je uložený žiadny obrázok.</string>
+    <string name="chrome_shot_open">Zobraziť stránku pred týmto krokom</string>
+    <string name="chrome_shot_title">Pred týmto krokom</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čakám na Chrome…</string>
     <string name="coach_activity_card">Pripravujem Card…</string>

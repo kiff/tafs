@@ -583,6 +583,11 @@
     <string name="chrome_refused">另一個 Chrome 使用了此代碼，因此未配對任何項目。請重新開始。</string>
     <string name="chrome_remove">取消配對</string>
     <string name="chrome_remove_named">取消配對 %1$s</string>
+    <string name="chrome_shot_failed">無法載入圖片。</string>
+    <string name="chrome_shot_kept">保存 30 天，之後刪除。</string>
+    <string name="chrome_shot_none">此步驟沒有保存圖片。</string>
+    <string name="chrome_shot_open">查看此步驟之前的頁面</string>
+    <string name="chrome_shot_title">此步驟之前</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">正在等待 Chrome…</string>
     <string name="coach_activity_card">正在準備 Card…</string>

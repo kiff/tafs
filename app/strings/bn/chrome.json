@@ -22,6 +22,11 @@
   "chrome.refused": "অন্য একটি Chrome এই কোড ব্যবহার করেছে, তাই কিছু জোড়া লাগেনি। আবার শুরু করুন।",
   "chrome.remove": "জোড়া ছাড়ান",
   "chrome.remove_named": "{name}-এর জোড়া ছাড়ান",
+  "chrome.shot_failed": "ছবিটি লোড করা যায়নি।",
+  "chrome.shot_kept": "৩০ দিন রাখা হয়, তারপর মুছে ফেলা হয়।",
+  "chrome.shot_none": "এই ধাপের কোনো ছবি রাখা নেই।",
+  "chrome.shot_open": "এই ধাপের আগের পৃষ্ঠাটি দেখুন",
+  "chrome.shot_title": "এই ধাপের আগে",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chrome-এর অপেক্ষায়…"
 }

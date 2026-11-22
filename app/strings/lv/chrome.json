@@ -22,6 +22,11 @@
   "chrome.refused": "Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna.",
   "chrome.remove": "Atvienot",
   "chrome.remove_named": "Atvienot {name}",
+  "chrome.shot_failed": "Attēlu neizdevās ielādēt.",
+  "chrome.shot_kept": "Glabā 30 dienas, pēc tam izdzēš.",
+  "chrome.shot_none": "Šim solim attēls netiek glabāts.",
+  "chrome.shot_open": "Skatīt lapu pirms šī soļa",
+  "chrome.shot_title": "Pirms šī soļa",
   "chrome.title": "Chrome",
   "chrome.waiting": "Gaida Chrome…"
 }

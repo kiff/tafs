@@ -22,6 +22,11 @@
   "chrome.refused": "Otro Chrome usó este código, así que no se vinculó nada. Empieza de nuevo.",
   "chrome.remove": "Desvincular",
   "chrome.remove_named": "Desvincular {name}",
+  "chrome.shot_failed": "No se pudo cargar la imagen.",
+  "chrome.shot_kept": "Se guarda 30 días y luego se borra.",
+  "chrome.shot_none": "No hay ninguna imagen guardada de este paso.",
+  "chrome.shot_open": "Ver la página antes de este paso",
+  "chrome.shot_title": "Antes de este paso",
   "chrome.title": "Chrome",
   "chrome.waiting": "Esperando a Chrome…"
 }

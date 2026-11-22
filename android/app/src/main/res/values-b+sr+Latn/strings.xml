@@ -649,6 +649,11 @@
     <string name="chrome_refused">Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.</string>
     <string name="chrome_remove">Prekinite uparivanje</string>
     <string name="chrome_remove_named">Prekinite uparivanje: %1$s</string>
+    <string name="chrome_shot_failed">Sliku nije bilo moguće učitati.</string>
+    <string name="chrome_shot_kept">Čuva se 30 dana, zatim se briše.</string>
+    <string name="chrome_shot_none">Za ovaj korak nije sačuvana nijedna slika.</string>
+    <string name="chrome_shot_open">Pogledaj stranicu pre ovog koraka</string>
+    <string name="chrome_shot_title">Pre ovog koraka</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čeka se Chrome…</string>
     <string name="coach_activity_card">Priprema Carda…</string>

@@ -1125,6 +1125,16 @@ enum Words {
         static var remove: String { Words.line("chrome.remove") }
         /// Unpair {name}
         static func removeNamed(name: String) -> String { Words.line("chrome.remove_named", name) }
+        /// The picture couldn't be loaded.
+        static var shotFailed: String { Words.line("chrome.shot_failed") }
+        /// Kept for 30 days, then deleted.
+        static var shotKept: String { Words.line("chrome.shot_kept") }
+        /// No picture is kept for this step.
+        static var shotNone: String { Words.line("chrome.shot_none") }
+        /// See the page before this step
+        static var shotOpen: String { Words.line("chrome.shot_open") }
+        /// Before this step
+        static var shotTitle: String { Words.line("chrome.shot_title") }
         /// Chrome
         static var title: String { Words.line("chrome.title") }
         /// Waiting for Chrome…

@@ -616,6 +616,11 @@
     <string name="chrome_refused">Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.</string>
     <string name="chrome_remove">Párosítás megszüntetése</string>
     <string name="chrome_remove_named">Párosítás megszüntetése: %1$s</string>
+    <string name="chrome_shot_failed">A képet nem sikerült betölteni.</string>
+    <string name="chrome_shot_kept">30 napig megőrizzük, utána töröljük.</string>
+    <string name="chrome_shot_none">Ehhez a lépéshez nincs elmentett kép.</string>
+    <string name="chrome_shot_open">A lap megtekintése e lépés előtt</string>
+    <string name="chrome_shot_title">E lépés előtt</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Várakozás a Chrome-ra…</string>
     <string name="coach_activity_card">A Card előkészítése…</string>

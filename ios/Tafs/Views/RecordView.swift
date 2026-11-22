@@ -371,6 +371,9 @@ struct ReceiptView: View {
     /// "Report this payment" is offered on a payment tafs cloud says this reader may report, until it is reported.
     @State private var showingReport = false
     @State private var justReported = false
+    /// The pictures a paired Chrome kept before this call's steps (docs/chrome.md): empty unless planque keeps some for it.
+    @State private var shots: [PlanqueClient.ChromeShotRef] = []
+    @State private var openedShot: PlanqueClient.ChromeShotRef?
 
     /// The button shows where tafs cloud sent an offer and the payment isn't reported yet.
     static func offersReport(_ entry: RecordEntry, reportedNow: Bool = false) -> Bool {
@@ -413,6 +416,20 @@ struct ReceiptView: View {
                         }
                     }
                     if entry.receipt != nil { receiptPanel }
+                    ForEach(shots) { shot in
+                        Button { openedShot = shot } label: {
+                            HStack {
+                                Label(Words.Chrome.shotOpen, systemImage: "photo")
+                                if shots.count > 1 {
+                                    Spacer()
+                                    Text(shot.takenAt.zonedShown(date: .omitted, time: .standard)).scaledFont(13).foregroundColor(Theme.dim)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(OutlineButtonStyle())
+                        .accessibilityIdentifier("record.chromeShot")
+                    }
                     if Self.offersReport(entry, reportedNow: justReported) {
                         Button { showingReport = true } label: {
                             Text(Words.Record.Report.button).frame(maxWidth: .infinity)
@@ -433,9 +450,19 @@ struct ReceiptView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
         .task { await loadReceipt() }
+        .task { await loadShots() }
+        .sheet(item: $openedShot) { shot in
+            ChromeShotView(step: shot.step).environmentObject(model)
+        }
         .sheet(isPresented: $showingReport) {
             ReportPaymentSheet(entry: entry) { justReported = true }.environmentObject(model)
         }
+    }
+
+    /// A row that was a Chrome step has pictures; anything else gets an empty list, and the row shows nothing.
+    private func loadShots() async {
+        guard let op = entry.proposalID, model.mode == .kiff else { return }
+        shots = await model.chromeShots(op: op)
     }
 
     private func loadReceipt() async {

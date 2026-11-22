@@ -22,6 +22,11 @@
   "chrome.refused": "Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.",
   "chrome.remove": "Раздвои",
   "chrome.remove_named": "Раздвои го {name}",
+  "chrome.shot_failed": "Сликата не можеше да се вчита.",
+  "chrome.shot_kept": "Се чува 30 дена, потоа се брише.",
+  "chrome.shot_none": "За овој чекор нема зачувана слика.",
+  "chrome.shot_open": "Види ја страницата пред овој чекор",
+  "chrome.shot_title": "Пред овој чекор",
   "chrome.title": "Chrome",
   "chrome.waiting": "Се чека Chrome…"
 }

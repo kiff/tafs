@@ -616,6 +616,11 @@
     <string name="chrome_refused">अर्को Chrome ले यो कोड प्रयोग गर्‍यो, त्यसैले केही जोडिएन। फेरि सुरु गर्नुहोस्।</string>
     <string name="chrome_remove">जोडी हटाउनुहोस्</string>
     <string name="chrome_remove_named">%1$s को जोडी हटाउनुहोस्</string>
+    <string name="chrome_shot_failed">तस्बिर लोड गर्न सकिएन।</string>
+    <string name="chrome_shot_kept">३० दिन राखिन्छ, त्यसपछि मेटिन्छ।</string>
+    <string name="chrome_shot_none">यो चरणको कुनै तस्बिर राखिएको छैन।</string>
+    <string name="chrome_shot_open">यो चरणअघिको पृष्ठ हेर्नुहोस्</string>
+    <string name="chrome_shot_title">यो चरणअघि</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Chrome को प्रतीक्षा हुँदैछ…</string>
     <string name="coach_activity_card">Card तयार गर्दैछ…</string>

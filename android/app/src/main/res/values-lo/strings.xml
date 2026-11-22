@@ -583,6 +583,11 @@
     <string name="chrome_refused">Chrome ອື່ນໃຊ້ລະຫັດນີ້ ສະນັ້ນບໍ່ມີຫຍັງຖືກຈັບຄູ່. ເລີ່ມໃໝ່.</string>
     <string name="chrome_remove">ເຊົາຈັບຄູ່</string>
     <string name="chrome_remove_named">ເຊົາຈັບຄູ່ %1$s</string>
+    <string name="chrome_shot_failed">ໂຫຼດຮູບບໍ່ໄດ້.</string>
+    <string name="chrome_shot_kept">ເກັບໄວ້ 30 ວັນ ແລ້ວລຶບ.</string>
+    <string name="chrome_shot_none">ບໍ່ມີຮູບທີ່ເກັບໄວ້ສຳລັບຂັ້ນຕອນນີ້.</string>
+    <string name="chrome_shot_open">ເບິ່ງໜ້າກ່ອນຂັ້ນຕອນນີ້</string>
+    <string name="chrome_shot_title">ກ່ອນຂັ້ນຕອນນີ້</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">ກຳລັງລໍຖ້າ Chrome…</string>
     <string name="coach_activity_card">ກຳລັງກຽມ Card…</string>

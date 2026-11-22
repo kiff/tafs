@@ -649,6 +649,11 @@
     <string name="chrome_refused">Šį kodą panaudojo kita Chrome naršyklė, todėl niekas nesusieta. Pradėkite iš naujo.</string>
     <string name="chrome_remove">Atsieti</string>
     <string name="chrome_remove_named">Atsieti %1$s</string>
+    <string name="chrome_shot_failed">Nepavyko įkelti paveikslėlio.</string>
+    <string name="chrome_shot_kept">Saugoma 30 dienų, tada ištrinama.</string>
+    <string name="chrome_shot_none">Šiam žingsniui paveikslėlis nesaugomas.</string>
+    <string name="chrome_shot_open">Žiūrėti puslapį prieš šį žingsnį</string>
+    <string name="chrome_shot_title">Prieš šį žingsnį</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Laukiama Chrome…</string>
     <string name="coach_activity_card">Ruošiama Card…</string>

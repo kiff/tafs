@@ -682,6 +682,11 @@
     <string name="chrome_refused">Inny Chrome użył tego kodu, więc nic nie zostało powiązane. Zacznij od nowa.</string>
     <string name="chrome_remove">Usuń powiązanie</string>
     <string name="chrome_remove_named">Usuń powiązanie z %1$s</string>
+    <string name="chrome_shot_failed">Nie udało się wczytać obrazu.</string>
+    <string name="chrome_shot_kept">Przechowywany przez 30 dni, potem usuwany.</string>
+    <string name="chrome_shot_none">Dla tego kroku nie zapisano żadnego obrazu.</string>
+    <string name="chrome_shot_open">Zobacz stronę przed tym krokiem</string>
+    <string name="chrome_shot_title">Przed tym krokiem</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Czekam na Chrome…</string>
     <string name="coach_activity_card">Przygotowywanie Card…</string>
