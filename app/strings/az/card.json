@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Card-ın hamısı",
+    "other": "Card-ların hamısı"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, sonra sizdən soruşur",
+  "card.calls_left": {
+    "one": "{count} çağırış qalıb",
+    "other": "{count} çağırış qalıb"
+  },
+  "card.calls_left_line": {
+    "one": "{limit} limitdən {window} {count} çağırış qalıb",
+    "other": "{limit} limitdən {window} {count} çağırış qalıb"
+  },
+  "card.calls_used_of": {
+    "one": "{window} {count} çağırışdan {used} istifadə olunub",
+    "other": "{window} {count} çağırışdan {used} istifadə olunub"
+  },
+  "card.calls_window": {
+    "one": "{window} {count} çağırış",
+    "other": "{window} {count} çağırış"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF tərəfindən təsdiqlənib",
+  "card.card_draft_kiff": "Card · layihə · KIFF tərəfindən",
+  "card.card_got_room_call_needed": "Card-ına bu çağırışın tələb etdiyi yer verildi, bu cəm sıfırlanana qədər",
+  "card.card_not_issued": "Card verilmədi. ",
+  "card.card_revoked": "Card ləğv edildi",
+  "card.check.always_asks": "{rule}: həmişə sizdən soruşur",
+  "card.check.never_allowed": "{rule}: heç vaxt icazə verilmir",
+  "card.check.not_on_card": "Bu taf-ın Card-ında yoxdur",
+  "card.check.over_count": {
+    "one": "Aşır: {window} {count}",
+    "other": "Aşır: {window} {count}"
+  },
+  "card.check.over_each": "Hər biri {amount} məbləğini aşır",
+  "card.check.over_total": "Aşır: {window} {amount}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Bitdi",
+  "card.ended_on": "Bitdi: {date}",
+  "card.ends": "Bitir",
+  "card.extra_room": "+{extra} əlavə yer {window}",
+  "card.extra_room_prefix": "+{formatted} əlavə yer ",
+  "card.extra_room_until": "+{extra} əlavə yer {ends} tarixinədək",
+  "card.figure_left": "{figure} qalıb",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card-lar"
+  },
+  "card.held.count_in_window": {
+    "one": "{window} {count} çağırış{each}: bu, {nth}{item} olacaq",
+    "other": "{window} {count} çağırış{each}: bu, {nth}{item} olacaq"
+  },
+  "card.held.each_call_asks": "Hər çağırış əvvəlcə sizdən soruşur",
+  "card.held.for_each": " hər {name} üçün",
+  "card.held.for_each_join": " hər biri üçün ",
+  "card.held.for_item": " bunun üçün: {item}",
+  "card.held.over_count": {
+    "one": "{count} çağırış limitini aşır: bu, {nth} olacaq",
+    "other": "{count} çağırış limitini aşır: bu, {nth} olacaq"
+  },
+  "card.held.over_one_call": "{amount} bir çağırış üçün {cap} limitini aşır",
+  "card.held.over_total": "{amount} {cap} cəmini aşardı",
+  "card.hero.calls_left_of": {
+    "one": "çağırış qalıb: {window} {limit} limitdən",
+    "other": "çağırış qalıb: {window} {limit} limitdən"
+  },
+  "card.hero.calls_use_unavailable": "çağırış {window} · istifadə mümkün deyil",
+  "card.hero.left_of": "qalıb: {window} {limit} limitdən",
+  "card.hero.left_of_extra": "qalıb: {window} {base} + {extra} əlavə yerdən",
+  "card.hero.left_of_extra_until": "qalıb: {window} {base} + {extra} əlavə yerdən, {ends} tarixinədək",
+  "card.hero.left_of_note": "qalıb: {window} {limit} limitdən{note}",
+  "card.hero.no_currency": "valyuta yoxdur",
+  "card.hero.no_currency_suffix": " · valyuta yoxdur",
+  "card.hero.use_unavailable": "{window} · istifadə mümkün deyil",
+  "card.hero.use_unavailable_note": "{label} · istifadə mümkün deyil{note}",
+  "card.how_counted": "Bu necə hesablanır",
+  "card.issue_prompt": "{taf} üçün Card verin",
+  "card.issued_by": "Verən",
+  "card.issued_by_account": "Hesab",
+  "card.issued_by_named": "Verən: {who}",
+  "card.its_card": "Onun Card-ı",
+  "card.kiff_did_not_revoke_cards": "KIFF Card-larından {cards_left} ədədini ləğv etmədi: onları KIFF-də ləğv edin.",
+  "card.left": "{amount} qalıb {window}",
+  "card.left_extra_room": "qalıb {current}, {own} + {extra} əlavə yerdən{until}{note}",
+  "card.limit_can_not_raised_right": "Limit hazırda buradan artırıla bilmir.",
+  "card.limit_raised_read_balance_again": "Limit artırıldı. Yenidən artırmazdan əvvəl balansı bir daha oxuyun.",
+  "card.line.calls_in_window": {
+    "one": "{window} {count} çağırış{then}",
+    "other": "{window} {count} çağırış{then}"
+  },
+  "card.line.more_asks": "; çoxu əvvəlcə sizdən soruşur",
+  "card.line.then_asks": ", sonra sizdən soruşur",
+  "card.line.total_in_window": "{window} cəmi {amount}{then}",
+  "card.line.up_to_each": "hər biri {amount}-dək",
+  "card.more": {
+    "one": "daha {count}",
+    "other": "daha {count}"
+  },
+  "card.no_actions": "Hələ əməliyyat yoxdur",
+  "card.no_actions_short": "hələ əməliyyat yoxdur",
+  "card.no_currency": "{amount} (valyuta yoxdur)",
+  "card.no_end_date": "Bitmə tarixi yoxdur",
+  "card.outcome.not_a_resource": "Card-ın resurslarından biri deyil",
+  "card.outcome.outside": "Card-dan kənarda",
+  "card.outcome.over_one_action": "Card-ın bir əməliyyat limitini aşır",
+  "card.outcome.over_total": "Card-ın cəmini aşır",
+  "card.outside_held": "Kənarda: sizin üçün saxlanılıb",
+  "card.outside_refused": "Kənarda: rədd edildi",
+  "card.over_limit_calls_would": "{limit} çağırış limitini aşır: bu, {nth} olacaq",
+  "card.revoke_failed": "KIFF Card-ı ləğv etmədi. {why}",
+  "card.revoked": "Ləğv edildi",
+  "card.rule.always_asks": "həmişə sizdən soruşur",
+  "card.rule.at_most_each": "hər biri ≤ {amount}",
+  "card.rule.at_most_each_refused_above": "hər biri ≤ {amount} · yuxarısı rədd edilir",
+  "card.rule.calls": {
+    "one": "{window} {count} çağırış",
+    "other": "{window} {count} çağırış"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{window} {count} çağırış, sonra sizdən soruşur",
+    "other": "{window} {count} çağırış, sonra sizdən soruşur"
+  },
+  "card.rule.in_total": "{window} cəmi {amount}",
+  "card.rule.never": "heç vaxt",
+  "card.rule.total_then_asks": "{window} cəmi {amount}, sonra sizdən soruşur",
+  "card.rule.up_to_each": "hər biri {amount}-dək; çoxu əvvəlcə sizdən soruşur",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Taf-ın Card-ı",
+  "card.tools": {
+    "one": "{count} alət",
+    "other": "{count} alət"
+  },
+  "card.until": "Nə vaxtadək",
+  "card.until_date": "{date} tarixinədək",
+  "card.until_ends": " {ends} tarixinədək",
+  "card.used_of": "{window} {limit} limitdən {used} istifadə olunub",
+  "card.window.a_day": "gündə",
+  "card.window.a_month": "ayda",
+  "card.window.a_week": "həftədə",
+  "card.window.any_day": "istənilən 24 saatda",
+  "card.window.any_hour": "istənilən saatda",
+  "card.window.any_week": "istənilən 7 gündə",
+  "card.window.in_total": "cəmi",
+  "card.window.in_total_window": "cəmi {window}",
+  "card.window.last_day": "son 24 saatda",
+  "card.window.last_hour": "son saatda",
+  "card.window.last_week": "son 7 gündə",
+  "card.window.so_far": "indiyədək",
+  "card.window.this_month": "bu ay",
+  "card.window.this_week": "bu həftə",
+  "card.window.today": "bu gün",
+  "card.within_card": "Card daxilində"
+}

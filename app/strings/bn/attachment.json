@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} সংযুক্ত করা যায় না।",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs এই ফাইল সংযুক্ত করতে পারে না: এটি এমন ধরন বা আকারের নয় যা সে নেয়। অন্য একটি বেছে নিন।",
+  "attachment.photo": "ছবি",
+  "attachment.photo_could_not_read": "ছবিটি পড়া যায়নি।",
+  "attachment.photo_numbered": "ছবি {n}",
+  "attachment.too_large": "{name} {size}; সর্বোচ্চ {limit}।",
+  "attachment.wrong_kind": "{name} সংযুক্ত করা যায় না। ছবি, PDF, টেক্সট, CSV, Markdown, Word ও Excel ফাইল যায়।"
+}

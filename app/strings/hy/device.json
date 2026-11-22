@@ -1,0 +1,7 @@
+{
+  "device.linux": "համակարգիչ",
+  "device.mac": "Mac",
+  "device.phone": "հեռախոս",
+  "device.tablet": "պլանշետ",
+  "device.windows": "Windows PC"
+}

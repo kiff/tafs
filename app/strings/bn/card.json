@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "পুরো Card",
+    "other": "সব Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, তারপর আপনাকে জিজ্ঞেস করে",
+  "card.calls_left": {
+    "one": "{count}টি কল বাকি",
+    "other": "{count}টি কল বাকি"
+  },
+  "card.calls_left_line": {
+    "one": "{limit}-এর মধ্যে {window} {count}টি কল বাকি",
+    "other": "{limit}-এর মধ্যে {window} {count}টি কল বাকি"
+  },
+  "card.calls_used_of": {
+    "one": "{window} {count}টি কলের মধ্যে {used}টি ব্যবহৃত",
+    "other": "{window} {count}টি কলের মধ্যে {used}টি ব্যবহৃত"
+  },
+  "card.calls_window": {
+    "one": "{window} {count}টি কল",
+    "other": "{window} {count}টি কল"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF নিশ্চিত করেছে",
+  "card.card_draft_kiff": "Card · খসড়া · KIFF-এর",
+  "card.card_got_room_call_needed": "এর Card সেই জায়গা পেয়েছে যা এই কলের দরকার ছিল, এই মোট রিসেট না হওয়া পর্যন্ত",
+  "card.card_not_issued": "Card দেওয়া হয়নি। ",
+  "card.card_revoked": "Card প্রত্যাহার করা হয়েছে",
+  "card.check.always_asks": "{rule}: সবসময় আপনাকে জিজ্ঞেস করে",
+  "card.check.never_allowed": "{rule}: কখনও অনুমোদিত নয়",
+  "card.check.not_on_card": "এই taf-এর Card-এ নেই",
+  "card.check.over_count": {
+    "one": "{window} {count}-এর বেশি",
+    "other": "{window} {count}-এর বেশি"
+  },
+  "card.check.over_each": "প্রতিটি {amount}-এর বেশি",
+  "card.check.over_total": "{window} {amount}-এর বেশি",
+  "card.count": {
+    "one": "{count}টি Card",
+    "other": "{count}টি Card"
+  },
+  "card.ended": "শেষ হয়েছে",
+  "card.ended_on": "{date} শেষ হয়েছে",
+  "card.ends": "শেষ হয়",
+  "card.extra_room": "+{extra} বাড়তি জায়গা {window}",
+  "card.extra_room_prefix": "+{formatted} বাড়তি জায়গা ",
+  "card.extra_room_until": "+{extra} বাড়তি জায়গা {ends} পর্যন্ত",
+  "card.figure_left": "{figure} বাকি",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{window} {count}টি কল{each}: এটি হবে {nth}{item}",
+    "other": "{window} {count}টি কল{each}: এটি হবে {nth}{item}"
+  },
+  "card.held.each_call_asks": "প্রতিটি কল আগে আপনাকে জিজ্ঞেস করে",
+  "card.held.for_each": " প্রতিটি {name}-এর জন্য",
+  "card.held.for_each_join": " প্রতিটির জন্য ",
+  "card.held.for_item": " {item}-এর জন্য",
+  "card.held.over_count": {
+    "one": "{count}টি কলের সীমা ছাড়িয়ে: এটি হবে {nth}",
+    "other": "{count}টি কলের সীমা ছাড়িয়ে: এটি হবে {nth}"
+  },
+  "card.held.over_one_call": "{amount} একটি কলের জন্য {cap} সীমা ছাড়িয়ে যায়",
+  "card.held.over_total": "{amount} গেলে {cap} মোট ছাড়িয়ে যেত",
+  "card.hero.calls_left_of": {
+    "one": "কল বাকি {window} {limit}-এর মধ্যে",
+    "other": "কল বাকি {window} {limit}-এর মধ্যে"
+  },
+  "card.hero.calls_use_unavailable": "কল {window} · ব্যবহার অনুপলব্ধ",
+  "card.hero.left_of": "বাকি {window} {limit}-এর মধ্যে",
+  "card.hero.left_of_extra": "বাকি {window} {base} + {extra} বাড়তি জায়গার মধ্যে",
+  "card.hero.left_of_extra_until": "বাকি {window} {base} + {extra} বাড়তি জায়গার মধ্যে, {ends} পর্যন্ত",
+  "card.hero.left_of_note": "বাকি {window} {limit}-এর মধ্যে{note}",
+  "card.hero.no_currency": "মুদ্রা নেই",
+  "card.hero.no_currency_suffix": " · মুদ্রা নেই",
+  "card.hero.use_unavailable": "{window} · ব্যবহার অনুপলব্ধ",
+  "card.hero.use_unavailable_note": "{label} · ব্যবহার অনুপলব্ধ{note}",
+  "card.how_counted": "এটি কীভাবে গণনা হয়",
+  "card.issue_prompt": "{taf}-এর জন্য Card দিন",
+  "card.issued_by": "যিনি দিয়েছেন",
+  "card.issued_by_account": "অ্যাকাউন্ট",
+  "card.issued_by_named": "দিয়েছেন {who}",
+  "card.its_card": "এর Card",
+  "card.kiff_did_not_revoke_cards": "KIFF এর {cards_left}টি Card প্রত্যাহার করেনি: সেগুলো KIFF-এ প্রত্যাহার করুন।",
+  "card.left": "{window} {amount} বাকি",
+  "card.left_extra_room": "বাকি {current}, {own} + {extra} বাড়তি জায়গার মধ্যে{until}{note}",
+  "card.limit_can_not_raised_right": "এখন এখান থেকে সীমা বাড়ানো যায় না।",
+  "card.limit_raised_read_balance_again": "সীমা বাড়ানো হয়েছে। আবার বাড়ানোর আগে ব্যালেন্স আবার পড়ুন।",
+  "card.line.calls_in_window": {
+    "one": "{window} {count}টি কল{then}",
+    "other": "{window} {count}টি কল{then}"
+  },
+  "card.line.more_asks": "; বেশি হলে আগে আপনাকে জিজ্ঞেস করে",
+  "card.line.then_asks": ", তারপর আপনাকে জিজ্ঞেস করে",
+  "card.line.total_in_window": "{window} মোট {amount}{then}",
+  "card.line.up_to_each": "প্রতিটি {amount} পর্যন্ত",
+  "card.more": {
+    "one": "আরও {count}টি",
+    "other": "আরও {count}টি"
+  },
+  "card.no_actions": "এখনও কোনো কাজ নেই",
+  "card.no_actions_short": "এখনও কোনো কাজ নেই",
+  "card.no_currency": "{amount} (মুদ্রা নেই)",
+  "card.no_end_date": "শেষের তারিখ নেই",
+  "card.outcome.not_a_resource": "Card-এর রিসোর্সের একটি নয়",
+  "card.outcome.outside": "Card-এর বাইরে",
+  "card.outcome.over_one_action": "Card-এর এক কাজের সীমা ছাড়িয়ে",
+  "card.outcome.over_total": "Card-এর মোট ছাড়িয়ে",
+  "card.outside_held": "বাইরে: আপনার জন্য ধরে রাখা",
+  "card.outside_refused": "বাইরে: প্রত্যাখ্যাত",
+  "card.over_limit_calls_would": "{limit}টি কলের সীমা ছাড়িয়ে: এটি হবে {nth}",
+  "card.revoke_failed": "KIFF Card প্রত্যাহার করেনি। {why}",
+  "card.revoked": "প্রত্যাহার করা হয়েছে",
+  "card.rule.always_asks": "সবসময় আপনাকে জিজ্ঞেস করে",
+  "card.rule.at_most_each": "প্রতিটি ≤ {amount}",
+  "card.rule.at_most_each_refused_above": "প্রতিটি ≤ {amount} · এর বেশি প্রত্যাখ্যাত",
+  "card.rule.calls": {
+    "one": "{window} {count}টি কল",
+    "other": "{window} {count}টি কল"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{window} {count}টি কল, তারপর আপনাকে জিজ্ঞেস করে",
+    "other": "{window} {count}টি কল, তারপর আপনাকে জিজ্ঞেস করে"
+  },
+  "card.rule.in_total": "{window} মোট {amount}",
+  "card.rule.never": "কখনও না",
+  "card.rule.total_then_asks": "{window} মোট {amount}, তারপর আপনাকে জিজ্ঞেস করে",
+  "card.rule.up_to_each": "প্রতিটি {amount} পর্যন্ত; বেশি হলে আগে আপনাকে জিজ্ঞেস করে",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf-এর Card",
+  "card.tools": {
+    "one": "{count}টি টুল",
+    "other": "{count}টি টুল"
+  },
+  "card.until": "পর্যন্ত",
+  "card.until_date": "{date} পর্যন্ত",
+  "card.until_ends": " {ends} পর্যন্ত",
+  "card.used_of": "{window} {limit}-এর মধ্যে {used} ব্যবহৃত",
+  "card.window.a_day": "প্রতিদিন",
+  "card.window.a_month": "প্রতি মাসে",
+  "card.window.a_week": "প্রতি সপ্তাহে",
+  "card.window.any_day": "যেকোনো ২৪ ঘণ্টায়",
+  "card.window.any_hour": "যেকোনো ঘণ্টায়",
+  "card.window.any_week": "যেকোনো ৭ দিনে",
+  "card.window.in_total": "মোট",
+  "card.window.in_total_window": "মোট {window}",
+  "card.window.last_day": "গত ২৪ ঘণ্টায়",
+  "card.window.last_hour": "গত ঘণ্টায়",
+  "card.window.last_week": "গত ৭ দিনে",
+  "card.window.so_far": "এ পর্যন্ত",
+  "card.window.this_month": "এই মাসে",
+  "card.window.this_week": "এই সপ্তাহে",
+  "card.window.today": "আজ",
+  "card.within_card": "Card-এর মধ্যে"
+}

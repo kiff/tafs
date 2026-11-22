@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Ամփոփումներ",
+  "push.channel.briefs_description": "Ձեր ամփոփումը սահմանված ժամերին։",
+  "push.channel.holds_description": "Զանգը պահվում է ձեր պատասխանի համար։ Ոչինչ չի ուղարկվում, մինչև չհաստատեք։",
+  "push.channel.other": "Այլ ծանուցումներ",
+  "push.channel.other_description": "Առաջադրանքների հարցումներ և դրանց պատասխանները՝ առանց ձայնի։",
+  "push.channel.urgent_description": "Այն, ինչ չի կարող սպասել ձեր հաջորդ ամփոփմանը՝ ձայնով։",
+  "push.open_needs_you": "Բացեք «Սպասում է ձեզ»՝ պատասխանելու համար։",
+  "push.open_taf": "Բացեք taf-ը՝ տեսնելու համար։",
+  "push.open_usage": "Բացեք Պլանը և օգտագործումը՝ տեսնելու համար։"
+}

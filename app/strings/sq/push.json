@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Përmbledhjet",
+  "push.channel.briefs_description": "Përmbledhja juaj në orët e caktuara.",
+  "push.channel.holds_description": "Një thirrje mbahet për përgjigjen tuaj. Asgjë nuk dërgohet derisa ta miratoni.",
+  "push.channel.other": "Njoftime të tjera",
+  "push.channel.other_description": "Kërkesa për detyra dhe përgjigjet e tyre, pa zë.",
+  "push.channel.urgent_description": "Ajo që nuk pret përmbledhjen tuaj të radhës, me zë.",
+  "push.open_needs_you": "Hapni Ju pret për t'u përgjigjur.",
+  "push.open_taf": "Hapni taf-in për të parë.",
+  "push.open_usage": "Hapni Planin dhe përdorimin për të parë."
+}

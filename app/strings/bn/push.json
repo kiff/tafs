@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "সারসংক্ষেপ",
+  "push.channel.briefs_description": "নির্ধারিত সময়ে আপনার সারসংক্ষেপ।",
+  "push.channel.holds_description": "একটি কল আপনার উত্তরের জন্য ধরে রাখা হয়েছে। আপনি অনুমোদন না করা পর্যন্ত কিছু পাঠানো হয় না।",
+  "push.channel.other": "অন্যান্য অ্যালার্ট",
+  "push.channel.other_description": "টাস্কের অনুরোধ ও তাদের উত্তর, শব্দ ছাড়া।",
+  "push.channel.urgent_description": "যা আপনার পরবর্তী সারসংক্ষেপ পর্যন্ত অপেক্ষা করতে পারে না, শব্দ সহ।",
+  "push.open_needs_you": "উত্তর দিতে «আপনার অপেক্ষায়» খুলুন।",
+  "push.open_taf": "দেখতে taf খুলুন।",
+  "push.open_usage": "দেখতে «পরিকল্পনা ও ব্যবহার» খুলুন।"
+}

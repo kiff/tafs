@@ -1,0 +1,17 @@
+{
+  "report.already": "Këtë përgjigje e keni raportuar tashmë.",
+  "report.cant_from_here": "Kjo përgjigje nuk mund të raportohet që këtu.",
+  "report.menu": "Raportoni këtë përgjigje",
+  "report.not_sent": "Raporti juaj nuk u dërgua. {why}",
+  "report.not_sent_why": "Nuk u dërgua: {failed}",
+  "report.note_hint": "Shtoni një shënim (opsional)",
+  "report.note_most_characters": "Një shënim ka më së shumti 1.000 karaktere.",
+  "report.person_kiff_reads_your_report": "Një person te KIFF e lexon raportin tuaj, me përgjigjen siç u shkrua.",
+  "report.reason.harmful": "E dëmshme",
+  "report.reason.offensive": "Ofenduese",
+  "report.reason.other": "Tjetër",
+  "report.reason.wrong": "E gabuar",
+  "report.runs_not_loaded": "Ekzekutimet e tij nuk u ngarkuan dot. {why}",
+  "report.thanks": "Faleminderit. Dikush te KIFF do ta lexojë raportin tuaj.",
+  "report.what_wrong": "Çfarë nuk shkon me të?"
+}

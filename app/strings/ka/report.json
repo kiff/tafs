@@ -1,0 +1,17 @@
+{
+  "report.already": "ეს პასუხი უკვე დაარეპორტეთ.",
+  "report.cant_from_here": "ამ პასუხის დარეპორტება აქედან შეუძლებელია.",
+  "report.menu": "დაარეპორტეთ ეს პასუხი",
+  "report.not_sent": "თქვენი რეპორტი არ გაიგზავნა. {why}",
+  "report.not_sent_why": "არ გაიგზავნა: {failed}",
+  "report.note_hint": "დაამატეთ შენიშვნა (არასავალდებულო)",
+  "report.note_most_characters": "შენიშვნა მაქსიმუმ 1 000 სიმბოლოა.",
+  "report.person_kiff_reads_your_report": "KIFF-ის ადამიანი კითხულობს თქვენს რეპორტს პასუხთან ერთად ისე, როგორც ის დაიწერა.",
+  "report.reason.harmful": "საზიანო",
+  "report.reason.offensive": "შეურაცხმყოფელი",
+  "report.reason.other": "სხვა",
+  "report.reason.wrong": "არასწორი",
+  "report.runs_not_loaded": "მისი გაშვებები ვერ ჩაიტვირთა. {why}",
+  "report.thanks": "მადლობა. KIFF-ში ვინმე წაიკითხავს თქვენს რეპორტს.",
+  "report.what_wrong": "რა არის მასში არასწორი?"
+}

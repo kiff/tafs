@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "כל ה-Card",
+    "two": "כל ה-Card",
+    "other": "כל ה-Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, ואז הוא שואל אותך",
+  "card.calls_left": {
+    "one": "נותרה קריאה אחת",
+    "two": "נותרו שתי קריאות",
+    "other": "נותרו {count} קריאות"
+  },
+  "card.calls_left_line": {
+    "one": "נותרה קריאה אחת {window} מתוך {limit}",
+    "two": "נותרו שתי קריאות {window} מתוך {limit}",
+    "other": "נותרו {count} קריאות {window} מתוך {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} מתוך קריאה אחת {window}",
+    "two": "{used} מתוך שתי קריאות {window}",
+    "other": "{used} מתוך {count} קריאות {window}"
+  },
+  "card.calls_window": {
+    "one": "קריאה אחת {window}",
+    "two": "שתי קריאות {window}",
+    "other": "{count} קריאות {window}"
+  },
+  "card.card_confirmed_kiff": "Card · אושר על ידי KIFF",
+  "card.card_draft_kiff": "Card · טיוטה · מאת KIFF",
+  "card.card_got_room_call_needed": "ל-Card שלו ניתן המקום שהקריאה הזו הייתה צריכה, עד שהסכום הכולל יתאפס",
+  "card.card_not_issued": "ה-Card לא הונפק. ",
+  "card.card_revoked": "ה-Card בוטל",
+  "card.check.always_asks": "{rule}: תמיד שואל אותך",
+  "card.check.never_allowed": "{rule}: אף פעם לא מותר",
+  "card.check.not_on_card": "לא ב-Card של ה-taf הזה",
+  "card.check.over_count": {
+    "one": "מעל אחד {window}",
+    "two": "מעל שניים {window}",
+    "other": "מעל {count} {window}"
+  },
+  "card.check.over_each": "מעל {amount} לכל אחד",
+  "card.check.over_total": "מעל {amount} {window}",
+  "card.count": {
+    "one": "Card אחד",
+    "two": "שני Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "הסתיים",
+  "card.ended_on": "הסתיים ב-{date}",
+  "card.ends": "מסתיים",
+  "card.extra_room": "+{extra} מקום נוסף {window}",
+  "card.extra_room_prefix": "+{formatted} מקום נוסף ",
+  "card.extra_room_until": "+{extra} מקום נוסף עד {ends}",
+  "card.figure_left": "נותרו {figure}",
+  "card.heading": {
+    "one": "Card",
+    "two": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "קריאה אחת {window}{each}: זו תהיה ה-{nth}{item}",
+    "two": "שתי קריאות {window}{each}: זו תהיה ה-{nth}{item}",
+    "other": "{count} קריאות {window}{each}: זו תהיה ה-{nth}{item}"
+  },
+  "card.held.each_call_asks": "כל קריאה שואלת אותך קודם",
+  "card.held.for_each": " לכל {name}",
+  "card.held.for_each_join": " לכל ",
+  "card.held.for_item": " עבור {item}",
+  "card.held.over_count": {
+    "one": "מעבר למגבלה של קריאה אחת: זו תהיה ה-{nth}",
+    "two": "מעבר למגבלה של שתי קריאות: זו תהיה ה-{nth}",
+    "other": "מעבר למגבלה של {count} קריאות: זו תהיה ה-{nth}"
+  },
+  "card.held.over_one_call": "{amount} הם מעבר למגבלה של {cap} לקריאה אחת",
+  "card.held.over_total": "{amount} היו חורגים מהסכום הכולל של {cap}",
+  "card.hero.calls_left_of": {
+    "one": "קריאה נותרה {window} מתוך {limit}",
+    "two": "קריאות נותרו {window} מתוך {limit}",
+    "other": "קריאות נותרו {window} מתוך {limit}"
+  },
+  "card.hero.calls_use_unavailable": "קריאות {window} · השימוש לא זמין",
+  "card.hero.left_of": "נותר {window} מתוך {limit}",
+  "card.hero.left_of_extra": "נותר {window} מתוך {base} + {extra} מקום נוסף",
+  "card.hero.left_of_extra_until": "נותר {window} מתוך {base} + {extra} מקום נוסף עד {ends}",
+  "card.hero.left_of_note": "נותר {window} מתוך {limit}{note}",
+  "card.hero.no_currency": "ללא מטבע",
+  "card.hero.no_currency_suffix": " · ללא מטבע",
+  "card.hero.use_unavailable": "{window} · השימוש לא זמין",
+  "card.hero.use_unavailable_note": "{label} · השימוש לא זמין{note}",
+  "card.how_counted": "איך זה נספר",
+  "card.issue_prompt": "הנפקת Card עבור {taf}",
+  "card.issued_by": "הונפק על ידי",
+  "card.issued_by_account": "החשבון",
+  "card.issued_by_named": "הונפק על ידי {who}",
+  "card.its_card": "ה-Card שלו",
+  "card.kiff_did_not_revoke_cards": "KIFF לא ביטל {cards_left} מה-Card שלו: יש לבטל אותם ב-KIFF.",
+  "card.left": "נותרו {amount} {window}",
+  "card.left_extra_room": "נותר {current} מתוך {own} + {extra} מקום נוסף{until}{note}",
+  "card.limit_can_not_raised_right": "אי אפשר להעלות את המגבלה מכאן כרגע.",
+  "card.limit_raised_read_balance_again": "המגבלה הועלתה. יש לקרוא את היתרה שוב לפני שמעלים אותה פעם נוספת.",
+  "card.line.calls_in_window": {
+    "one": "קריאה אחת {window}{then}",
+    "two": "שתי קריאות {window}{then}",
+    "other": "{count} קריאות {window}{then}"
+  },
+  "card.line.more_asks": "; יותר שואל אותך קודם",
+  "card.line.then_asks": ", ואז הוא שואל אותך",
+  "card.line.total_in_window": "{amount} בסך הכול {window}{then}",
+  "card.line.up_to_each": "עד {amount} לכל אחד",
+  "card.more": {
+    "one": "עוד אחד",
+    "two": "עוד שניים",
+    "other": "עוד {count}"
+  },
+  "card.no_actions": "עדיין אין פעולות",
+  "card.no_actions_short": "עדיין אין פעולות",
+  "card.no_currency": "{amount} (ללא מטבע)",
+  "card.no_end_date": "אין תאריך סיום",
+  "card.outcome.not_a_resource": "לא אחד ממשאבי ה-Card",
+  "card.outcome.outside": "מחוץ ל-Card",
+  "card.outcome.over_one_action": "מעבר למגבלה של ה-Card לפעולה אחת",
+  "card.outcome.over_total": "מעבר לסכום הכולל של ה-Card",
+  "card.outside_held": "בחוץ: מוחזק עבורך",
+  "card.outside_refused": "בחוץ: נדחה",
+  "card.over_limit_calls_would": "מעבר למגבלה של {limit} קריאות: זו תהיה ה-{nth}",
+  "card.revoke_failed": "KIFF לא ביטל את ה-Card. {why}",
+  "card.revoked": "בוטל",
+  "card.rule.always_asks": "תמיד שואל אותך",
+  "card.rule.at_most_each": "≤ {amount} לכל אחד",
+  "card.rule.at_most_each_refused_above": "≤ {amount} לכל אחד · מעל זה נדחה",
+  "card.rule.calls": {
+    "one": "קריאה אחת {window}",
+    "two": "שתי קריאות {window}",
+    "other": "{count} קריאות {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "קריאה אחת {window}, ואז הוא שואל אותך",
+    "two": "שתי קריאות {window}, ואז הוא שואל אותך",
+    "other": "{count} קריאות {window}, ואז הוא שואל אותך"
+  },
+  "card.rule.in_total": "{amount} בסך הכול {window}",
+  "card.rule.never": "אף פעם",
+  "card.rule.total_then_asks": "{amount} בסך הכול {window}, ואז הוא שואל אותך",
+  "card.rule.up_to_each": "עד {amount} לכל אחד; יותר שואל אותך קודם",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "ה-Card של ה-taf",
+  "card.tools": {
+    "one": "כלי אחד",
+    "two": "שני כלים",
+    "other": "{count} כלים"
+  },
+  "card.until": "עד",
+  "card.until_date": "עד {date}",
+  "card.until_ends": " עד {ends}",
+  "card.used_of": "{used} מתוך {limit} {window}",
+  "card.window.a_day": "ביום",
+  "card.window.a_month": "בחודש",
+  "card.window.a_week": "בשבוע",
+  "card.window.any_day": "בכל 24 שעות",
+  "card.window.any_hour": "בכל שעה",
+  "card.window.any_week": "בכל 7 ימים",
+  "card.window.in_total": "בסך הכול",
+  "card.window.in_total_window": "בסך הכול {window}",
+  "card.window.last_day": "ב-24 השעות האחרונות",
+  "card.window.last_hour": "בשעה האחרונה",
+  "card.window.last_week": "ב-7 הימים האחרונים",
+  "card.window.so_far": "עד כה",
+  "card.window.this_month": "החודש",
+  "card.window.this_week": "השבוע",
+  "card.window.today": "היום",
+  "card.within_card": "בתוך ה-Card"
+}

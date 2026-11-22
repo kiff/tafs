@@ -1,0 +1,19 @@
+{
+  "halt_all.description": "Zaustavlja svakog tafa odjednom. Ništa novo ne šalje se dok ih ne nastavite u tafsu.",
+  "halt_all.failed": "tafs nije mogao blokirati vaše tafove. {why} Otvorite tafs da ih blokirate.",
+  "halt_all.halted": {
+    "one": "Blokiran je {count} taf. Ništa novo ne šalje se dok ne nastavite.",
+    "few": "Blokirana su {count} tafa. Ništa novo ne šalje se dok ne nastavite.",
+    "other": "Blokirano je {count} tafova. Ništa novo ne šalje se dok ne nastavite."
+  },
+  "halt_all.halted_all": "Vaši tafovi su blokirani. Ništa novo ne šalje se dok ne nastavite.",
+  "halt_all.halting": {
+    "one": "Blokiranje {count} tafa: nijedno izvršavanje ne počinje. KIFF još nije potvrdio sve delove; tafs prikazuje kad jeste.",
+    "few": "Blokiranje {count} tafa: nijedno izvršavanje ne počinje. KIFF još nije potvrdio sve delove; tafs prikazuje kad jeste.",
+    "other": "Blokiranje {count} tafova: nijedno izvršavanje ne počinje. KIFF još nije potvrdio sve delove; tafs prikazuje kad jeste."
+  },
+  "halt_all.halting_all": "Blokiranje vaših tafova: nijedno izvršavanje ne počinje. KIFF još nije potvrdio sve delove; tafs prikazuje kad jeste.",
+  "halt_all.running": "tafs nije mogao blokirati vaše tafove. Otvorite tafs da ih blokirate.",
+  "halt_all.signed_out": "Odjavljeni ste iz tafsa. Prijavite se da blokirate svoje tafove.",
+  "halt_all.title": "Blokirajte sve tafove"
+}
