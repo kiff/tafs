@@ -64,5 +64,16 @@
   "coach_working": { "message": "Coach is bezig…" },
   "share_chars": { "message": "$N$ tekens", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Alleen https-pagina's kunnen worden gedeeld." },
-  "share_error_site_blocked": { "message": "Pagina's zoals deze worden nooit gedeeld: banken, wallets, wachtwoorden, betalingen, gezondheid en overheid." }
+  "share_error_site_blocked": { "message": "Pagina's zoals deze worden nooit gedeeld: banken, wallets, wachtwoorden, betalingen, gezondheid en overheid." },
+  "vault_title": { "message": "Bewaarde logins" },
+  "vault_body": { "message": "Hier bewaard, op deze computer verzegeld. Een taf kan er alleen om vragen op precies die site, en hij wordt pas ingetypt nadat je dat ene invullen op je telefoon hebt goedgekeurd. tafs en KIFF zien hem nooit." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Gebruikersnaam of e-mail (optioneel)" },
+  "vault_password": { "message": "Wachtwoord" },
+  "vault_save": { "message": "Verzegeld bewaren" },
+  "vault_saved": { "message": "Bewaard. Hij is op deze computer verzegeld." },
+  "vault_error": { "message": "Niet bewaard: een site heeft https nodig, en een wachtwoord." },
+  "vault_remove": { "message": "Verwijderen" },
+  "vault_with_username": { "message": "met een gebruikersnaam" },
+  "vault_one_per_site": { "message": "Eén login per site: een andere bewaren voor dezelfde site vervangt de eerste." }
 }

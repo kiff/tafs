@@ -64,5 +64,16 @@
   "coach_working": { "message": "Coach sta lavorando…" },
   "share_chars": { "message": "$N$ caratteri", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Si possono condividere solo pagine https." },
-  "share_error_site_blocked": { "message": "Pagine come questa non vengono mai condivise: banche, wallet, password, pagamenti, salute e pubblica amministrazione." }
+  "share_error_site_blocked": { "message": "Pagine come questa non vengono mai condivise: banche, wallet, password, pagamenti, salute e pubblica amministrazione." },
+  "vault_title": { "message": "Accessi salvati" },
+  "vault_body": { "message": "Salvato qui, sigillato su questo computer. Un taf può chiederne l'uso solo su quel sito esatto, e viene digitato solo dopo che hai approvato quel singolo inserimento sul telefono. tafs e KIFF non lo vedono mai." },
+  "vault_site": { "message": "Sito" },
+  "vault_username": { "message": "Nome utente o email (facoltativo)" },
+  "vault_password": { "message": "Password" },
+  "vault_save": { "message": "Salva sigillato" },
+  "vault_saved": { "message": "Salvato. È sigillato su questo computer." },
+  "vault_error": { "message": "Non salvato: un sito richiede https, e serve una password." },
+  "vault_remove": { "message": "Rimuovi" },
+  "vault_with_username": { "message": "con nome utente" },
+  "vault_one_per_site": { "message": "Un accesso per sito: salvarne un altro per lo stesso sito sostituisce il precedente." }
 }
