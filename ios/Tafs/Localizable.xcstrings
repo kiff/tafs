@@ -340419,6 +340419,138 @@
         }
       }
     },
+    "settings.sign_in_code.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When it's on, you can sign in with a code sent to your email instead of Apple, Google or GitHub. It's off unless you turn it on, and turning it on needs a recent sign-in."
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with a code sent by email"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.not_available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in with a code isn't available yet."
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.not_changed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It didn't change. %1$@"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.not_loaded": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load this setting. %1$@"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. We emailed you about the change."
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.turn_off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn off"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.turn_on": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on"
+          }
+        }
+      }
+    },
+    "settings.sign_in_code.turn_on_in_browser": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turning it on opens KIFF's sign-in page, where you confirm it's you."
+          }
+        }
+      }
+    },
     "settings.sign_out": {
       "extractionState": "manual",
       "localizations": {

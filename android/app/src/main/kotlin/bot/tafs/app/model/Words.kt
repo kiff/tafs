@@ -2377,6 +2377,20 @@ object Words {
       val title: String get() = Res.s(R.string.settings_sign_in_again_confirm_title)
     }
     val signInAgainWhy: String get() = Res.s(R.string.settings_sign_in_again_why)
+    object SignInCode {
+      val help: String get() = Res.s(R.string.settings_sign_in_code_help)
+      val label: String get() = Res.s(R.string.settings_sign_in_code_label)
+      val notAvailable: String get() = Res.s(R.string.settings_sign_in_code_not_available)
+      fun notChanged(why: String): String = Res.s(R.string.settings_sign_in_code_not_changed, why)
+      fun notLoaded(why: String): String = Res.s(R.string.settings_sign_in_code_not_loaded, why)
+      val off: String get() = Res.s(R.string.settings_sign_in_code_off)
+      val on: String get() = Res.s(R.string.settings_sign_in_code_on)
+      val saved: String get() = Res.s(R.string.settings_sign_in_code_saved)
+      val title: String get() = Res.s(R.string.settings_sign_in_code_title)
+      val turnOff: String get() = Res.s(R.string.settings_sign_in_code_turn_off)
+      val turnOn: String get() = Res.s(R.string.settings_sign_in_code_turn_on)
+      val turnOnInBrowser: String get() = Res.s(R.string.settings_sign_in_code_turn_on_in_browser)
+    }
     val signOut: String get() = Res.s(R.string.settings_sign_out)
     object SignOutOfKiff {
       fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_out_of_kiff_body_device, device, Words.demonstrative(device, capital = true))
