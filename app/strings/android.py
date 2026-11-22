@@ -50,9 +50,16 @@ def res_name(key):
 
 
 def folder(lang):
-    """A language's resource folder: `values-pt`; a regional variant takes Android's region form, `values-pt-rBR`."""
+    """
+    A language's resource folder: `values-pt`; a regional variant takes Android's region form, `values-pt-rBR`. A tag with a
+    script (`zh-Hant`, a four-letter subtag) takes Android's BCP 47 form, `values-b+zh+Hant`: `values-zh-rHant` isn't a
+    folder Android's resource compiler takes, since `Hant` is no region.
+    """
     if lang == "en":
         return "values"
+    parts = lang.split("-")
+    if any(len(p) == 4 and p.isalpha() for p in parts[1:]):
+        return "values-b+" + "+".join(parts)
     base, _, region = lang.partition("-")
     return f"values-{base}-r{region}" if region else f"values-{base}"
 

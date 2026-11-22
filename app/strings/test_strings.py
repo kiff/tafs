@@ -358,6 +358,9 @@ class Generator(unittest.TestCase):
         import android
         self.assertEqual(android.folder("pt-BR"), "values-pt-rBR")
         self.assertEqual(android.folder("pt"), "values-pt")
+        # A script is no region: Android takes it only in its BCP 47 form (zh-Hant, when Traditional Chinese ships).
+        self.assertEqual(android.folder("zh-Hant"), "values-b+zh+Hant")
+        self.assertEqual(android.folder("zh-Hant-TW"), "values-b+zh+Hant+TW")
         self.assertIn("android/app/src/main/res/values-pt-rBR/strings.xml", files)
         self.assertIn("Precisa de você", files["android/app/src/main/res/values-pt-rBR/strings.xml"])
         self.assertIn('<locale android:name="pt-BR" />', files["android/app/src/main/res/xml/locales_config.xml"])
