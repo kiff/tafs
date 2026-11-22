@@ -61,6 +61,17 @@ class AppLocaleTest {
     assertEquals("de", AppLocale.known("de-DE", shipped))
   }
 
+  // Android 11 to 13 name Indonesian "in", its old code, even when the phone's tag is "id"; a kept tag may be either.
+  @Test fun anOldLanguageCodeIsReadAsTheNewOne() {
+    for (tag in listOf("id", "in", "in-ID", "in_ID", "id-ID")) assertEquals(tag, "id", AppLocale.known(tag))
+    assertEquals("id", AppLocale.fromLocales("in-ID,en-US"))
+    // Hebrew and Yiddish too, once they ship.
+    val shipped = AppLocale.TAGS + "he" + "yi"
+    assertEquals("he", AppLocale.known("iw-IL", shipped))
+    assertEquals("yi", AppLocale.known("ji", shipped))
+    assertNull(AppLocale.known("iw"))
+  }
+
   // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
   @Test fun aRegionalVariantTafsShipsIsKeptAsItself() {
     assertEquals("pt-BR", AppLocale.known("pt-BR"))

@@ -363,6 +363,10 @@ class Generator(unittest.TestCase):
         # A script is no region: Android takes it only in its BCP 47 form (zh-Hant, when Traditional Chinese ships).
         self.assertEqual(android.folder("zh-Hant"), "values-b+zh+Hant")
         self.assertEqual(android.folder("zh-Hant-TW"), "values-b+zh+Hant+TW")
+        # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
+        self.assertEqual(android.folders("id"), ["values-id", "values-in"])
+        self.assertEqual(android.folders("zh-Hant"), ["values-b+zh+Hant", "values-zh-rTW", "values-zh-rHK", "values-zh-rMO"])
+        self.assertEqual(android.folders("pt-BR"), ["values-pt-rBR"])
         self.assertIn("android/app/src/main/res/values-pt-rBR/strings.xml", files)
         self.assertIn("Precisa de você", files["android/app/src/main/res/values-pt-rBR/strings.xml"])
         self.assertIn('<locale android:name="pt-BR" />', files["android/app/src/main/res/xml/locales_config.xml"])

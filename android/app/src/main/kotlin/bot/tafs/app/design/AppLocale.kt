@@ -48,15 +48,20 @@ object AppLocale {
   internal fun known(tag: String?, shipped: List<String>): String? {
     if (tag.isNullOrBlank()) return null
     val locale = Locale.forLanguageTag(tag.trim().replace('_', '-'))
+    // Android 11 to 13 give some languages by their old code ("in" for Indonesian, even from "id"); so may a tag kept by one.
+    val language = OLD_CODES[locale.language] ?: locale.language
     // A phone names Traditional Chinese by its region more often than its script: those regions write it.
-    val script = locale.script.ifEmpty { if (locale.language == "zh" && locale.country in HANT_REGIONS) "Hant" else "" }
-    val scripted = script.takeIf { it.isNotEmpty() }?.let { "${locale.language}-$it" }
-    val regional = locale.country.takeIf { it.isNotEmpty() }?.let { "${locale.language}-$it" }
-    return scripted?.takeIf { it in shipped } ?: regional?.takeIf { it in shipped } ?: locale.language.takeIf { it in shipped }
+    val script = locale.script.ifEmpty { if (language == "zh" && locale.country in HANT_REGIONS) "Hant" else "" }
+    val scripted = script.takeIf { it.isNotEmpty() }?.let { "$language-$it" }
+    val regional = locale.country.takeIf { it.isNotEmpty() }?.let { "$language-$it" }
+    return scripted?.takeIf { it in shipped } ?: regional?.takeIf { it in shipped } ?: language.takeIf { it in shipped }
   }
 
   /** Where Chinese is written in Traditional characters, when a phone gives a region and no script. */
   private val HANT_REGIONS = setOf("TW", "HK", "MO")
+
+  /** Languages Java and Android once named by codes since replaced: Indonesian, Hebrew, Yiddish. */
+  private val OLD_CODES = mapOf("in" to "id", "iw" to "he", "ji" to "yi")
 
   /** The kept choice; none (the phone's language) when nothing, or a tag tafs doesn't ship, is kept. */
   fun stored(store: Store): String? = known(store.get())

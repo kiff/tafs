@@ -64,6 +64,18 @@ def folder(lang):
     return f"values-{base}-r{region}" if region else f"values-{base}"
 
 
+# Where Android looks besides `folder(lang)`. A library the app builds with (AppCompat, Compose) ships Indonesian as `in`, its
+# old code, and Traditional Chinese by region, `zh-rTW` and `zh-rHK`. Android takes the closest folder any part of the app has,
+# so a phone in Indonesian found the library's `values-in` and none of ours, and showed tafs in English; one in Taiwan, Hong
+# Kong or Macau did the same with `zh-rTW` and `zh-rHK` beside our `b+zh+Hant`. The same lines go in those folders too.
+ALSO = {"id": ["values-in"], "zh-Hant": ["values-zh-rTW", "values-zh-rHK", "values-zh-rMO"]}
+
+
+def folders(lang):
+    """Every folder a language's lines are written to: `folder(lang)`, then any in ALSO."""
+    return [folder(lang)] + ALSO.get(lang, [])
+
+
 def values(key, source, lines):
     """A line's values, in the order every language and both apps give them (generate.py): its names, a count's number
     first, then each derived value some language writes, `{name|possessive}`, `{name|this}` or `{name|This}`."""
@@ -244,7 +256,9 @@ def generated(source, lines, languages):
     shipped = languages["shipped"]
     files = {}
     for lang in shipped:
-        files[str(REPO / RES / folder(lang) / "strings.xml")] = strings_xml(lang, lines[lang], source, lines)
+        text = strings_xml(lang, lines[lang], source, lines)
+        for f in folders(lang):
+            files[str(REPO / RES / f / "strings.xml")] = text
     files[str(REPO / RES / "xml" / "locales_config.xml")] = locales_xml(shipped)
     files[str(REPO / WORDS_KT)] = words_kt(source, lines)
     ages = Path(__file__).resolve().parent / "ages.json"
@@ -253,7 +267,9 @@ def generated(source, lines, languages):
     # A key in WEAR_KEYS that isn't here is left out, and the watch's build fails where it's used; the strings tests also
     # check that every one is in app/strings/en/.
     for lang in shipped:
-        files[str(REPO / WEAR_RES / folder(lang) / "strings.xml")] = strings_xml(lang, wear_subset(lines[lang]), source, lines)
+        text = strings_xml(lang, wear_subset(lines[lang]), source, lines)
+        for f in folders(lang):
+            files[str(REPO / WEAR_RES / f / "strings.xml")] = text
     files[str(REPO / WEAR_WORDS_KT)] = words_kt(wear_subset(source), lines, package="bot.tafs.wear", r_class="bot.tafs.wear.R",
                                                 about="Every line the watch shows")
     return files
