@@ -182,7 +182,10 @@ test("every shipped language has an extension locale with English's keys and pla
   const locales = readdirSync(dir).filter((l) => l !== "en").sort();
   assert.deepEqual(locales, want, "one locale for each language the apps ship, and no other");
   // Lines that are the same in every language: names and the like. Anything else equal to English is English left in.
-  const sameAsEnglish = new Set(["name"]);
+  const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
+  // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
+  // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
+  const sharedWords = { vault_site: ["fr", "nl", "pt_BR", "pt_PT", "ro", "tr"], vault_password: ["it"], coach_untitled: ["fr"] };
   for (const loc of ["en", ...locales]) {
     const m = read(loc);
     assert.deepEqual(Object.keys(m).sort(), Object.keys(en).sort(), loc);
@@ -191,7 +194,7 @@ test("every shipped language has an extension locale with English's keys and pla
       assert.deepEqual(Object.keys(placeholders || {}).sort(), Object.keys(en[key].placeholders || {}).sort(), `${loc} ${key}`);
       const used = [...message.matchAll(/\$([A-Z_]+)\$/g)].map((x) => x[1].toLowerCase()).sort();
       assert.deepEqual([...new Set(used)], Object.keys(placeholders || {}).sort(), `${loc} ${key} uses its placeholders`);
-      if (loc !== "en" && !sameAsEnglish.has(key)) assert.notEqual(message, en[key].message, `${loc} ${key} is still English`);
+      if (loc !== "en" && !sameAsEnglish.has(key) && !(sharedWords[key] || []).includes(loc)) assert.notEqual(message, en[key].message, `${loc} ${key} is still English`);
     }
     assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
   }
