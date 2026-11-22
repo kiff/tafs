@@ -64,5 +64,16 @@
   "coach_working": { "message": "Coach está trabajando…" },
   "share_chars": { "message": "$N$ caracteres", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Solo se pueden compartir páginas https." },
-  "share_error_site_blocked": { "message": "Las páginas como esta nunca se comparten: bancos, monederos, contraseñas, pagos, salud y administración pública." }
+  "share_error_site_blocked": { "message": "Las páginas como esta nunca se comparten: bancos, monederos, contraseñas, pagos, salud y administración pública." },
+  "vault_title": { "message": "Inicios de sesión guardados" },
+  "vault_body": { "message": "Guardado aquí, sellado en este ordenador. Un taf solo puede pedir usar uno en ese sitio exacto, y se escribe únicamente después de que apruebes ese relleno en tu teléfono. tafs y KIFF nunca lo ven." },
+  "vault_site": { "message": "Sitio" },
+  "vault_username": { "message": "Nombre de usuario o correo (opcional)" },
+  "vault_password": { "message": "Contraseña" },
+  "vault_save": { "message": "Guardar sellado" },
+  "vault_saved": { "message": "Guardado. Está sellado en este ordenador." },
+  "vault_error": { "message": "No se guardó: un sitio necesita https, y una contraseña." },
+  "vault_remove": { "message": "Quitar" },
+  "vault_with_username": { "message": "con nombre de usuario" },
+  "vault_one_per_site": { "message": "Un inicio de sesión por sitio: guardar otro para el mismo sitio reemplaza el anterior." }
 }
