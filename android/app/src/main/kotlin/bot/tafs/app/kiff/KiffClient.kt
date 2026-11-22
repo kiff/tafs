@@ -75,6 +75,13 @@ data class DeviceToken(
   val subject: String,
 )
 
+/** The person's code sign-in setting (kiff/cloud `GET`/`PUT /v1/me/sign-in`): on or off, and whether KIFF can send codes. */
+@Serializable
+data class CodeSignIn(
+  @kotlinx.serialization.SerialName("email_code") val emailCode: Boolean = false,
+  val available: Boolean = false,
+)
+
 /** The KIFF account a sign-in is in (kiff/tafs#73): its name and slug, and the person's email when KIFF says it. */
 @Serializable
 data class Account(
@@ -436,6 +443,24 @@ class KiffClient(
   suspend fun setTimeZone(zone: String) {
     send("PUT", "/v1/me/time-zone", mapOf("time_zone" to zone))
   }
+
+  /**
+   * The person's own sign-in setting (kiff/cloud `GET /v1/me/sign-in`): whether they sign in with a code sent by email. Off for
+   * everyone until they turn it on; `available` is false when KIFF can't send codes.
+   */
+  suspend fun codeSignIn(): CodeSignIn = call("GET", CODE_SIGN_IN)
+
+  /**
+   * Turns code sign-in off, straight from the app (`PUT /v1/me/sign-in`). Turning it on needs a recent sign-in, which a device
+   * session never passes, so the app opens KIFF's own page for that ([codeSignInPage]).
+   */
+  suspend fun turnCodeSignInOff(): CodeSignIn {
+    val bytes = sendJson("PUT", CODE_SIGN_IN, buildJsonObject { put("email_code", false) })
+    return json.decodeFromString(if (bytes.isEmpty()) "{}" else String(bytes))
+  }
+
+  /** KIFF's own Settings › Sign-in page, where the person turns code sign-in on after a recent sign-in. */
+  val codeSignInPage: String get() = "$webUrl/dashboard/sign-in"
 
   /**
    * This device's id in KIFF (`dev_…`), from the person's device list: planque asks KIFF about the
@@ -976,6 +1001,9 @@ class KiffClient(
 
     /** The account's passkeys: registering one, or removing one by id after it, is signed by the approval key. */
     const val PASSKEYS = "/v1/me/passkeys"
+
+    /** The person's own code sign-in setting: read, and turned off, with the session alone. */
+    const val CODE_SIGN_IN = "/v1/me/sign-in"
 
     /** A device of the account, by id after it: removing one is signed by the approval key (KIFF's pairing contract). */
     const val DEVICES = "/v1/me/devices/"
