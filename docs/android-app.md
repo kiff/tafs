@@ -1509,11 +1509,28 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   secret. The Keystore's DER signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
   - **A phone without an approval key can't pair.** Unlike iOS, Android's other key signs with no prompt the Keystore enforces,
     so it could never stand for the owner's presence when a sealed value is released. Pairing says so instead of starting.
-- **Then a second fingerprint, also naming the Chrome, pairs its view-only KIFF device** (`POST /v1/me/pairings` with the
-  offer's fields, signed by the approval key, as Add a device pairs a computer), and only then does planque hear the
-  confirmation, so a Chrome is never confirmed without its device. iOS signs both behind one Face ID; Android's approval key
-  unlocks for one signature, so it asks twice. KIFF's refusal, in its own words, confirms nothing.
-- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- **Its view-only KIFF device is paired before planque hears the confirmation** (`POST /v1/me/pairings` with the offer's
+  fields, signed by the approval key, as Add a device pairs a computer), so a Chrome is never confirmed without its device.
+  Where the extension checks one-touch (`one_touch`, its `one_touch_proof` holding under the secret), **one fingerprint signs
+  both** under one `kiff.requests.v1` signature (`AppModel.confirmChromeOneTouch`), as iOS does behind one Face ID. An older
+  extension gets a second fingerprint for the device. KIFF's refusal, in its own words, confirms nothing.
+- **Re-pairing replaces, never adds** (docs/chrome.md "Your Chrome" 1). When Chromes are already paired, the offer shows
+  **Replaces** (`chrome.replace_title`): each paired Chrome, and "A new Chrome (replaces none)". The pick starts on the Chrome
+  with the offer's `profile_id`; else, when one side has no id, the one paired Chrome on the same browser and system; else
+  none, never a guess between two (`ChromePairing.replacedBy`, as iOS's `ChromeReplace.preselect`). With a Chrome picked:
+  - "Moves to this Chrome: {sites}" lists what moves. That is only each connection planque lists live on the old Chrome whose
+    `chrome_sites_sig` (this phone's own signature at approval) verifies with this phone's approval key for that Chrome
+    (`ChromePairing.carriedFrom`, `AppModel.chromeMoves`), at most 50. Never planque's sites as given. Another key's, another
+    Chrome's, wider sites, one not listed live, one carried before (no signature of its own): none move.
+  - "{name} is unpaired once this one is paired." The connections that don't move end with it, as Unpair does.
+  - The confirm sends `replaces` to planque, and `carried: [{grant, sites}]` goes inside the signed pairing body the extension
+    checks, so planque can't change it. With "A new Chrome" picked, it's a first pairing, as before.
+- **Each Chrome says what it's used for** ("Your Chrome" 4): "Used for {sites}" (`chrome.used_for`), the sites of the
+  `connections` planque lists on it (`Chrome.connections`, `chromeSites`). planque decides which are live (asked for or
+  approved, not ended or failed), so the app keeps no status rule of its own. A planque that doesn't list them shows nothing.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. Its question says what it ends, from the same
+  list: "Unpairing ends the connections that use it: {sites}…" (`chrome.unpair_ends`). The extension wipes itself at its next
+  connect.
 - **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
   `GrantRequest.browser`) sends `chrome_sites_sig` with the approve body: the approval key's signature over
   `tafs-chrome/sites/v1` of `{chrome_id, grant, sites}` (`ChromePairing.sitesSignature`), raw `r‖s`, signed behind that
@@ -1540,6 +1557,10 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   - an offer whose KIFF device could approve, or whose proof leaves it out, is refused;
   - the KIFF device paired by the approval key before planque's confirm, and KIFF's refusal confirming nothing;
   - Unpair with no prompt.
+
+  `ChromePairingTest` also checks the re-pair: what's carried (only this phone's verified signature for the old Chrome),
+  the pick's start (same profile id, else the one alike, never two), and the carried connections inside the signed bytes
+  (the vector's `signed_bytes_with_carried`).
 
 ### A held step in Chrome
 

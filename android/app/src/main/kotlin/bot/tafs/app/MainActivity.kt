@@ -1050,8 +1050,9 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
     }
     if (showingChromes) {
       bot.tafs.app.views.ChromesSheet(
-        state, refresh = model::refreshChromes, open = model::openChromePairing, step = model::chromePairingStep,
-        confirm = model::confirmChrome, remove = model::removeChrome, onClose = { showingChromes = false; showingSettings = true },
+        // The connections are read too: a re-pairing shows which of them move (docs/chrome.md "Your Chrome" 1).
+        state, refresh = { model.refreshChromes(); model.refreshConnections() }, open = model::openChromePairing, step = model::chromePairingStep,
+        confirm = model::confirmChrome, moves = model::chromeMoves, remove = model::removeChrome, onClose = { showingChromes = false; showingSettings = true },
       )
     }
     if (showingDevices) {

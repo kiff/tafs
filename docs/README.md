@@ -34,6 +34,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
 | [mac-app.md](mac-app.md) | The Mac app (macOS 13 and later): the iPhone and iPad app built with Mac Catalyst, what differs from the iPad, its tests, and what isn't done yet |
+| [parity.md](parity.md) | Every feature on every device (iPhone and iPad, Mac, macOS 12, Windows, Linux, Android, the watches, the Chrome extension): done, partial, not started, or not for it and why |
 | [files.md](files.md) | Files: what the tafs deliver in their runs, kept 30 days, shared as the file itself, seen by everyone on the account (iPhone and iPad, behind a switch) |
 | [watch-app.md](watch-app.md) | The Apple Watch companion (watchOS 10 and later): what it does in v1, how it reaches tafs cloud and KIFF through the iPhone, and where its code is |
 | [computer-passkeys.md](computer-passkeys.md) | How a computer approves with a passkey: a Mac with Touch ID, Windows Hello, and a USB security key or the phone for a Mac without Touch ID and Linux; what a passkey approval carries |
