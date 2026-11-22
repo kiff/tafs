@@ -1,3 +1,4 @@
+import { LINE_MAX } from "../src/cloud/watch-ask.js";
 import { READS_A_DAY } from "../src/cloud/approval.js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -43,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@1", "ask-a-taf@1", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@1", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -543,15 +544,27 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   // The watch's request (docs/watch-ask.md): its one skill, whatever the account's state; no phone entry ever loads it.
+  // Eval 45028072347 (route, 0 of 3): Coach's watch line ran to 234 characters, with the run's counts ("So far this run has
+  // 1 call sent, 0 held…", from kiff/agents' tally after taf_task) and a sentence of why for an ambiguous request; the
+  // watch cuts past 140 (checkedLine), so the owner heard half a sentence (ask-a-taf@2).
+  it("the watch's skill holds every answer to one line of 140 characters: the taf and working, no counts, no reasons", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "ask-a-taf")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("Every answer here is one line of at most 140 characters, plain text: the watch shows and says it, and cuts anything longer.");
+    expect(body).toContain(`Then answer "{taf}: working.", nothing else, and stop: no counts of calls, nothing about its limits, nothing it hasn't done yet.`);
+    expect(body).toContain("with no reason why each could.");
+    expect(body).toContain("Never a count of calls sent, held, refused or failed.");
+    expect(LINE_MAX).toBe(140);
+  });
+
   it("loads only ask-a-taf for the watch, and never ask-a-taf for any phone entry", () => {
-    expect(startSkills("watch")).toEqual(["ask-a-taf@1"]);
-    expect(startSkills("watch", { heldCall: true, halted: true, hasTaf: true })).toEqual(["ask-a-taf@1"]);
+    expect(startSkills("watch")).toEqual(["ask-a-taf@2"]);
+    expect(startSkills("watch", { heldCall: true, halted: true, hasTaf: true })).toEqual(["ask-a-taf@2"]);
     for (const entry of ["free", "recipe", "door", "improve", "coach_lines", "delivery", "did_this_happen"] as const) {
-      expect(startSkills(entry, { heldCall: true, halted: true, hasTaf: true })).not.toContain("ask-a-taf@1");
+      expect(startSkills(entry, { heldCall: true, halted: true, hasTaf: true })).not.toContain("ask-a-taf@2");
     }
     // No text opens the watch's conversation: the entry point read from a message is never "watch".
     for (const text of ["watch", "[watch]", "[tafs watch] Move my call", "From the watch: move my call", "entry: watch"]) expect(entryOf(text)).not.toBe("watch");
-    for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@1");
+    for (const tool of ["tafs_state", "taf_task", "taf_run", "read_skill"]) expect(toolSkills(tool)).not.toContain("ask-a-taf@2");
   });
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
