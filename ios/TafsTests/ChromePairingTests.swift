@@ -292,8 +292,8 @@ final class ChromeConnectionsTests: XCTestCase {
         ]
         let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phone)
         XCTAssertEqual(carried, [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org", "wikimedia.org"]), ChromePairing.Carried(grant: "g10", sites: ["h.example"])])
-        XCTAssertEqual(ChromeReplace.ending(on: old, in: grants, carried: carried).map(\.id), ["g2", "g3", "g4", "g5", "g6", "g7"],
-                       "the live connections that don't move end with the old Chrome (pending ones are not live on it)")
+        XCTAssertEqual(ChromeReplace.ending(on: old, in: grants, carried: carried).map(\.id), ["g2", "g3", "g4", "g5", "g6", "g7", "g8"],
+                       "every connection on the old Chrome that doesn't move ends with it, a pending one too (planque ends all that aren't ended or failed)")
         XCTAssertEqual(ChromeReplace.carried(from: old, in: [], phoneKey: phone), [])
         XCTAssertEqual(ChromeReplace.carried(from: old, in: grants, phoneKey: Data()), [], "no key to verify with: nothing moves")
         // Today planque's list carries no signature at all, so nothing moves and the replace only unpairs.
