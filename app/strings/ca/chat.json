@@ -96,7 +96,7 @@
     "other": "Això té més de {count} caràcters. Digues-ho amb menys paraules."
   },
   "chat.too_many": "Són molts missatges en pocs minuts. Dona un moment a {taf} i torna-ho a provar.",
-  "chat.waiting_for_you": "Et espera",
+  "chat.waiting_for_you": "T'espera",
   "chat.work.hides_steps": "Amaga els passos",
   "chat.work.not_made_read_first": "no fet · llegeix primer",
   "chat.work.shows_steps": "Mostra els passos",
