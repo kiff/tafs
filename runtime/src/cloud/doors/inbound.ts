@@ -197,8 +197,10 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
   if (req.path === "/doors/whatsapp/connect" && req.method === "GET") {
     const wa = cfg.whatsapp;
     const taf = req.query.get("taf") ?? "";
-    if (!wa || !/^[A-Za-z0-9-]{1,64}$/.test(taf)) return fail(404, "not found");
-    return { status: 200, type: "html", body: signupPage({ appID: wa.appID, configID: wa.configID, taf, back: "tafs://doors/whatsapp" }) };
+    // The app's one-use value for this signup, given back on the return (optional: the iPad's return is bound by its own session).
+    const state = req.query.get("state");
+    if (!wa || !/^[A-Za-z0-9-]{1,64}$/.test(taf) || (state !== null && !/^[A-Za-z0-9_-]{16,64}$/.test(state))) return fail(404, "not found");
+    return { status: 200, type: "html", body: signupPage({ appID: wa.appID, configID: wa.configID, taf, back: "tafs://doors/whatsapp", ...(state !== null ? { state } : {}) }) };
   }
 
   return fail(404, "not found");
