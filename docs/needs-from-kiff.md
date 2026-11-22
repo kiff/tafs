@@ -97,7 +97,7 @@ only, and treats the hold as answered only on `approved` for that id. A KIFF
 that ignores the field answers with no `hold`, and the app answers the hold as
 before, so there's no deploy order. iOS already signs both under one Face ID.
 
-## 8. A receipt's steps in the person's language — open
+## 8. A receipt's steps in the person's language — being built
 
 A receipt's **What happened** shows each step of KIFF's signed `causal_chain`
 by its `message`, which KIFF writes in English ("Refused"). The apps can't
@@ -106,9 +106,18 @@ as KIFF's.
 
 - **The need:** a documented, stable vocabulary of step `kind`s. A new kind is
   a new field or value, and receipts already issued still verify.
-- **tafs's part — not built.** Once the vocabulary is published, both apps word
-  the kinds they know in the person's language, and show KIFF's signed `message`
-  as it is under Details. A kind they don't know shows its `message`, as now.
+- **KIFF's answer (being built):** beside the receipt, outside its signature,
+  `GET /v1/receipts` and `GET /v1/receipts/{trace_id}` send `step_words`, one
+  entry per step: `{sequence, code, words}`. `words` is in the reader's language
+  (`Accept-Language`), from KIFF's words table; `code` is a stable vocabulary KIFF
+  documents, read from the step's kind and signed message, so it works on
+  receipts issued before. The signed `message` stays as it is, so every issued
+  receipt still verifies.
+- **tafs's part — built on Android.** "What happened" shows a step's `words`
+  (`ReceiptSteps.of`), and the full receipt shows KIFF's signed `message` as it
+  signed it (`ReceiptStep.message`). A step with no entry, or blank words, shows
+  its signed `message`, as before; nothing waits on KIFF's deploy. iPhone and iPad
+  follow.
 
 ## 9. Pairing a computer: the routes, and words for each refusal — open
 
