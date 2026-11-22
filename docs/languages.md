@@ -1025,6 +1025,44 @@ receipt "qəbz", a brief "xülasə". Apple's menu paths are the Azerbaijani ones
 | receipt | qəbz |
 | Cancel / Continue | Vaz keçin / Davam edin |
 
+### Bengali (bn)
+
+Standard Bengali, addressed as **আপনি**; buttons are polite imperatives ("অনুমোদন করুন", "প্রত্যাখ্যান করুন", "চালিয়ে যান").
+taf, Card, Coach, KIFF and Setup are names and stay in Latin letters; Bengali's suffixes join them with a hyphen
+("taf-এর", "Card-এ", "Coach-কে"), and a value is a name that takes the suffix the same way ("{taf}-এর", "{name}-এ"). A door is
+"দরজা", a call "কল", a request "অনুরোধ", a held call "ধরে রাখা কল", a receipt "রসিদ", a brief "সারসংক্ষেপ". A sentence ends
+with "।" (the danda). Apple's menu paths are the Bengali ones ("সেটিংস", "সিস্টেম সেটিংস", "গোপনীয়তা ও নিরাপত্তা"). Figures
+that a line writes itself are Bengali digits (০–৯), as the locale's own numbers are; a reference number ("#5098") stays in
+Latin digits, isolated as in the other languages. Bengali's "one" covers 0 and 1; a number takes the singular noun ("৫টি টাস্ক").
+
+| English | Bengali |
+|---|---|
+| Needs you | আপনার অপেক্ষায় |
+| Approve / Approve once | অনুমোদন করুন / একবার অনুমোদন করুন |
+| Refuse | প্রত্যাখ্যান করুন |
+| held | ধরে রাখা |
+| Halt / Halted | থামান / থামানো হয়েছে |
+| Stopped | বন্ধ করা হয়েছে |
+| Pause / Paused | বিরতি দিন / বিরতিতে আছে |
+| Resume | আবার চালু করুন |
+| Revoke | প্রত্যাহার করুন |
+| Record | রেকর্ড |
+| Connect / connection | সংযুক্ত করুন / সংযোগ |
+| Pair / Unpair | জোড়া লাগান / জোড়া ছাড়ান |
+| Account | অ্যাকাউন্ট |
+| limit / spend limit | সীমা / খরচের সীমা |
+| credits / credit pack | ক্রেডিট / ক্রেডিট প্যাক |
+| passkey | পাসকি |
+| security key | সিকিউরিটি কী |
+| Sign in / Sign out | সাইন ইন / সাইন আউট |
+| Inbox | ইনবক্স |
+| Overview | সংক্ষিপ্ত বিবরণ |
+| Calendar | ক্যালেন্ডার |
+| Usage | ব্যবহার |
+| brief | সারসংক্ষেপ |
+| receipt | রসিদ |
+| Cancel / Continue | বাতিল করুন / চালিয়ে যান |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
