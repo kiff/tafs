@@ -22,6 +22,11 @@
   "chrome.refused": "Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.",
   "chrome.remove": "Ontkoppelen",
   "chrome.remove_named": "{name} ontkoppelen",
+  "chrome.shot_failed": "De afbeelding kon niet worden geladen.",
+  "chrome.shot_kept": "30 dagen bewaard, daarna verwijderd.",
+  "chrome.shot_none": "Voor deze stap is geen afbeelding bewaard.",
+  "chrome.shot_open": "Bekijk de pagina vóór deze stap",
+  "chrome.shot_title": "Vóór deze stap",
   "chrome.title": "Chrome",
   "chrome.waiting": "Wachten op Chrome…"
 }

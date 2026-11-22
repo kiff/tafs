@@ -22,6 +22,11 @@
   "chrome.refused": "Un altre Chrome ha utilitzat aquest codi, així que no s'ha aparellat res. Torna a començar.",
   "chrome.remove": "Desaparella",
   "chrome.remove_named": "Desaparella {name}",
+  "chrome.shot_failed": "No s'ha pogut carregar la imatge.",
+  "chrome.shot_kept": "Es conserva 30 dies i després s'esborra.",
+  "chrome.shot_none": "No hi ha cap imatge guardada d'aquest pas.",
+  "chrome.shot_open": "Mostra la pàgina abans d'aquest pas",
+  "chrome.shot_title": "Abans d'aquest pas",
   "chrome.title": "Chrome",
   "chrome.waiting": "Esperant Chrome…"
 }

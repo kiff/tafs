@@ -22,6 +22,11 @@
   "chrome.refused": "Një Chrome tjetër e përdori këtë kod, ndaj asgjë nuk u çiftua. Filloni sërish.",
   "chrome.remove": "Hiqni çiftimin",
   "chrome.remove_named": "Hiqni çiftimin: {name}",
+  "chrome.shot_failed": "Imazhi nuk u ngarkua dot.",
+  "chrome.shot_kept": "Ruhet 30 ditë, pastaj fshihet.",
+  "chrome.shot_none": "Për këtë hap nuk është ruajtur asnjë imazh.",
+  "chrome.shot_open": "Shiko faqen para këtij hapi",
+  "chrome.shot_title": "Para këtij hapi",
   "chrome.title": "Chrome",
   "chrome.waiting": "Po pritet Chrome…"
 }

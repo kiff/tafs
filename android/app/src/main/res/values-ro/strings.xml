@@ -645,6 +645,11 @@
     <string name="chrome_refused">Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.</string>
     <string name="chrome_remove">Disociați</string>
     <string name="chrome_remove_named">Disociați %1$s</string>
+    <string name="chrome_shot_failed">Imaginea nu a putut fi încărcată.</string>
+    <string name="chrome_shot_kept">Păstrată 30 de zile, apoi ștearsă.</string>
+    <string name="chrome_shot_none">Pentru acest pas nu este păstrată nicio imagine.</string>
+    <string name="chrome_shot_open">Vezi pagina de dinainte de acest pas</string>
+    <string name="chrome_shot_title">Înainte de acest pas</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Se așteaptă Chrome…</string>
     <string name="coach_activity_card">Se pregătește Cardul…</string>

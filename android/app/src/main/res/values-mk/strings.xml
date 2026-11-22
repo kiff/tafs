@@ -612,6 +612,11 @@
     <string name="chrome_refused">Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.</string>
     <string name="chrome_remove">Раздвои</string>
     <string name="chrome_remove_named">Раздвои го %1$s</string>
+    <string name="chrome_shot_failed">Сликата не можеше да се вчита.</string>
+    <string name="chrome_shot_kept">Се чува 30 дена, потоа се брише.</string>
+    <string name="chrome_shot_none">За овој чекор нема зачувана слика.</string>
+    <string name="chrome_shot_open">Види ја страницата пред овој чекор</string>
+    <string name="chrome_shot_title">Пред овој чекор</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Се чека Chrome…</string>
     <string name="coach_activity_card">Го подготвувам Card…</string>

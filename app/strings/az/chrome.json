@@ -22,6 +22,11 @@
   "chrome.refused": "Başqa bir Chrome bu kodu istifadə etdi, ona görə heç nə cütləşmədi. Yenidən başlayın.",
   "chrome.remove": "Cütləşməni ləğv edin",
   "chrome.remove_named": "Cütləşməni ləğv edin: {name}",
+  "chrome.shot_failed": "Şəkil yüklənmədi.",
+  "chrome.shot_kept": "30 gün saxlanılır, sonra silinir.",
+  "chrome.shot_none": "Bu addım üçün saxlanmış şəkil yoxdur.",
+  "chrome.shot_open": "Bu addımdan əvvəlki səhifəyə bax",
+  "chrome.shot_title": "Bu addımdan əvvəl",
   "chrome.title": "Chrome",
   "chrome.waiting": "Chrome gözlənilir…"
 }

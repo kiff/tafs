@@ -612,6 +612,11 @@
     <string name="chrome_refused">Otro Chrome usó este código, así que no se vinculó nada. Empieza de nuevo.</string>
     <string name="chrome_remove">Desvincular</string>
     <string name="chrome_remove_named">Desvincular %1$s</string>
+    <string name="chrome_shot_failed">No se pudo cargar la imagen.</string>
+    <string name="chrome_shot_kept">Se guarda 30 días y luego se borra.</string>
+    <string name="chrome_shot_none">No hay ninguna imagen guardada de este paso.</string>
+    <string name="chrome_shot_open">Ver la página antes de este paso</string>
+    <string name="chrome_shot_title">Antes de este paso</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Esperando a Chrome…</string>
     <string name="coach_activity_card">Preparando la Card…</string>

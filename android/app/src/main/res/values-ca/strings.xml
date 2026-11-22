@@ -612,6 +612,11 @@
     <string name="chrome_refused">Un altre Chrome ha utilitzat aquest codi, així que no s\'ha aparellat res. Torna a començar.</string>
     <string name="chrome_remove">Desaparella</string>
     <string name="chrome_remove_named">Desaparella %1$s</string>
+    <string name="chrome_shot_failed">No s\'ha pogut carregar la imatge.</string>
+    <string name="chrome_shot_kept">Es conserva 30 dies i després s\'esborra.</string>
+    <string name="chrome_shot_none">No hi ha cap imatge guardada d\'aquest pas.</string>
+    <string name="chrome_shot_open">Mostra la pàgina abans d\'aquest pas</string>
+    <string name="chrome_shot_title">Abans d\'aquest pas</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Esperant Chrome…</string>
     <string name="coach_activity_card">Preparant el Card…</string>

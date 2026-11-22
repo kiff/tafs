@@ -710,6 +710,42 @@ final class PlanqueClient {
         return list.chromes
     }
 
+    /// The picture a Chrome kept just before a taf's step acted (docs/chrome.md, "Screenshots of a run's acts"): the step's id
+    /// at the Chrome, when it was taken, and the WebP bytes, whose hash is checked against planque's before they're shown.
+    struct ChromeScreenshot: Equatable {
+        let step: String
+        let takenAt: Date
+        let image: Data
+
+        /// The most a picture may weigh: planque keeps none over 120 KB.
+        static let largest = 120 * 1024
+
+        /// planque's answer, or nil when it isn't a picture to show: not the shape, not base64url, too big, not WebP, or
+        /// bytes whose SHA-256 isn't the one planque kept.
+        static func read(_ data: Data) -> ChromeScreenshot? {
+            struct Raw: Decodable { let step: String; let taken_at: String; let sha256: String; let image: String }
+            guard let raw = try? JSONDecoder().decode(Raw.self, from: data),
+                  let bytes = ChromePairing.base64URLDecoded(raw.image), !bytes.isEmpty, bytes.count <= largest,
+                  bytes.count >= 12, bytes.prefix(4) == Data("RIFF".utf8), bytes[8..<12] == Data("WEBP".utf8),
+                  SHA256.hash(data: bytes).map({ String(format: "%02x", $0) }).joined() == raw.sha256.lowercased(),
+                  let at = ISO8601DateFormatter().date(from: raw.taken_at) else { return nil }
+            return ChromeScreenshot(step: raw.step, takenAt: at, image: bytes)
+        }
+    }
+
+    /// The picture kept for a Chrome step, signed by this device as the Chromes list is. nil when none is kept: planque
+    /// answers 404 for a step with none, one past its 30 days, and while it keeps none. A picture that doesn't check out
+    /// is an error, never shown.
+    func chromeScreenshot(step: String) async throws -> ChromeScreenshot? {
+        do {
+            let data = try await raw("GET", "chromes/screenshots/\(escaped(step))", body: nil)
+            guard let shot = ChromeScreenshot.read(data) else { throw PlanqueError.server(status: 0, message: "bad picture") }
+            return shot
+        } catch PlanqueError.server(let status, _, _) where status == 404 {
+            return nil
+        }
+    }
+
     func openChromePairing() async throws -> ChromePairingOpened {
         try await send("POST", "chromes/pairings", body: [String: String]())
     }

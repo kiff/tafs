@@ -22,6 +22,11 @@
   "chrome.refused": "Tento kód použil iný Chrome, takže sa nič nespárovalo. Začnite znova.",
   "chrome.remove": "Zrušiť spárovanie",
   "chrome.remove_named": "Zrušiť spárovanie {name}",
+  "chrome.shot_failed": "Obrázok sa nepodarilo načítať.",
+  "chrome.shot_kept": "Uchovaný 30 dní, potom odstránený.",
+  "chrome.shot_none": "K tomuto kroku nie je uložený žiadny obrázok.",
+  "chrome.shot_open": "Zobraziť stránku pred týmto krokom",
+  "chrome.shot_title": "Pred týmto krokom",
   "chrome.title": "Chrome",
   "chrome.waiting": "Čakám na Chrome…"
 }

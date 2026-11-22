@@ -1364,3 +1364,7 @@ KIFF opens. `{taf}` is the sample's first taf.
   (`sed -n '/BEGIN app\/map/,/END app\/map/p' log | sed '1d;$d' > app/map/ios.json`).
 - **In CI** it runs with the iPhone's UI tests, and beside the unit tests, in the same run,
   when what it reads changes (`ios/Tafs/App/`, the walk, `app/routes.json`, `app/map/`).
+
+## Chrome step pictures
+
+`ChromeShotView` shows the picture a paired Chrome kept just before a taf's step acted (kept 30 days by planque, which keeps none while its switch is off). It reads `GET /v1/accounts/{tenant}/chromes/screenshots/{step}` through `PlanqueClient.chromeScreenshot(step:)`, signed by the device as the Chromes list is, and shows the bytes only if they are WebP, at most 120 KB, and hash to the `sha256` planque sent (`ChromeScreenshot.read`). A 404 reads "No picture is kept for this step"; anything else that goes wrong reads "The picture couldn't be loaded". The view is opened with a Chrome step's id; a taf's Activity row will carry one once tafs cloud sends `chrome_step`, and the row tap is wired then.

@@ -22,6 +22,11 @@
   "chrome.refused": "Chrome ອື່ນໃຊ້ລະຫັດນີ້ ສະນັ້ນບໍ່ມີຫຍັງຖືກຈັບຄູ່. ເລີ່ມໃໝ່.",
   "chrome.remove": "ເຊົາຈັບຄູ່",
   "chrome.remove_named": "ເຊົາຈັບຄູ່ {name}",
+  "chrome.shot_failed": "ໂຫຼດຮູບບໍ່ໄດ້.",
+  "chrome.shot_kept": "ເກັບໄວ້ 30 ວັນ ແລ້ວລຶບ.",
+  "chrome.shot_none": "ບໍ່ມີຮູບທີ່ເກັບໄວ້ສຳລັບຂັ້ນຕອນນີ້.",
+  "chrome.shot_open": "ເບິ່ງໜ້າກ່ອນຂັ້ນຕອນນີ້",
+  "chrome.shot_title": "ກ່ອນຂັ້ນຕອນນີ້",
   "chrome.title": "Chrome",
   "chrome.waiting": "ກຳລັງລໍຖ້າ Chrome…"
 }

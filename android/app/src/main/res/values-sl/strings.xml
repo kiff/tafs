@@ -678,6 +678,11 @@
     <string name="chrome_refused">To kodo je uporabil drug Chrome, zato ni bilo nič seznanjeno. Začnite znova.</string>
     <string name="chrome_remove">Prekini seznanitev</string>
     <string name="chrome_remove_named">Prekini seznanitev: %1$s</string>
+    <string name="chrome_shot_failed">Slike ni bilo mogoče naložiti.</string>
+    <string name="chrome_shot_kept">Hranjeno 30 dni, nato izbrisano.</string>
+    <string name="chrome_shot_none">Za ta korak ni shranjene nobene slike.</string>
+    <string name="chrome_shot_open">Poglej stran pred tem korakom</string>
+    <string name="chrome_shot_title">Pred tem korakom</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">Čakam na Chrome…</string>
     <string name="coach_activity_card">Pripravljam Card…</string>

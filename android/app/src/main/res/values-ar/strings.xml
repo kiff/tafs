@@ -744,6 +744,11 @@
     <string name="chrome_refused">استخدم Chrome آخر هذا الرمز فلم يتم إقران شيء. ابدأ من جديد.</string>
     <string name="chrome_remove">إلغاء الإقران</string>
     <string name="chrome_remove_named">إلغاء إقران %1$s</string>
+    <string name="chrome_shot_failed">تعذّر تحميل الصورة.</string>
+    <string name="chrome_shot_kept">تُحفظ ٣٠ يومًا ثم تُحذف.</string>
+    <string name="chrome_shot_none">لا توجد صورة محفوظة لهذه الخطوة.</string>
+    <string name="chrome_shot_open">عرض الصفحة قبل هذه الخطوة</string>
+    <string name="chrome_shot_title">قبل هذه الخطوة</string>
     <string name="chrome_title">Chrome</string>
     <string name="chrome_waiting">بانتظار Chrome…</string>
     <string name="coach_activity_card">جارٍ تجهيز الـ Card…</string>
