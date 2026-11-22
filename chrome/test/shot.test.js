@@ -43,6 +43,12 @@ test("a picture is scaled to at most 1280 px wide and encoded as WebP at quality
   assert.equal(deps.log.closed, true, "the bitmap is released");
 });
 
+test("a very tall picture is scaled to at most 8000 px high", async () => {
+  const deps = fakeDeps({ w: 1000, h: 16000 });
+  await encode({}, deps);
+  assert.deepEqual(deps.log.canvas, { width: 500, height: 8000 });
+});
+
 test("a small picture isn't scaled up", async () => {
   const deps = fakeDeps({ w: 800, h: 600 });
   await encode({}, deps);

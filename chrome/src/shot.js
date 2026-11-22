@@ -7,6 +7,7 @@ import { sign, LABEL, b64u } from "./crypto.js";
 import { hostOf, sensitive } from "./sites.js";
 
 export const MAX_WIDTH = 1280;
+export const MAX_HEIGHT = 8000; // planque keeps none taller
 /** What planque takes: more than this, or anything but WebP, is refused. */
 export const MAX_BYTES = 120 * 1024;
 const QUALITY = [0.6, 0.4];
@@ -32,7 +33,7 @@ export function canCapture(url, page) {
 export async function encode(blob, { createImageBitmap, OffscreenCanvas }) {
   const bitmap = await createImageBitmap(blob);
   try {
-    const scale = Math.min(1, MAX_WIDTH / bitmap.width);
+    const scale = Math.min(1, MAX_WIDTH / bitmap.width, MAX_HEIGHT / bitmap.height);
     const width = Math.max(1, Math.round(bitmap.width * scale));
     const height = Math.max(1, Math.round(bitmap.height * scale));
     const canvas = new OffscreenCanvas(width, height);
