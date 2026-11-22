@@ -316,6 +316,12 @@ message. The owner is told it was handled in Telegram.
 **What the owner does.** In the taf's Setup › Starts when, **Add a door…**, then WhatsApp. tafs
 opens WhatsApp's signup: the owner signs in with their business, picks or adds the
 number, and comes back to the app, which finishes the connection with their session.
+An app may open the signup (`GET /doors/whatsapp/connect?taf=…`) with `state`, its own
+one-use value for this signup (16 to 64 letters, digits, `-` or `_`; anything else opens no
+page), and the return to `tafs://doors/whatsapp` carries it back unchanged. An app whose
+`tafs://` link any page can open takes only the return carrying the `state` it sent, for that
+taf, within 15 minutes, so a crafted link can't connect someone else's number. The iPad's
+return is bound by its own web sign-in session and sends none.
 Then they pair the numbers that may give work (their own, colleagues'). Everyone else
 knocks.
 
