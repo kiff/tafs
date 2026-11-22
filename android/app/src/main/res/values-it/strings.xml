@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Rifiutata, con un passo successivo per il taf: %1$s</string>
     <string name="record_removed_detail">Pianificazione, memoria e chiave eliminate; nome libero</string>
     <string name="record_removed_title">Hai rimosso %1$s</string>
+    <string name="record_report_button">Segnala questo pagamento</string>
+    <string name="record_report_done">Segnalato. %1$s è bloccato e la ricevuta viene conservata. Se dei soldi sono usciti dal tuo conto, contatta anche l\'emittente della tua carta.</string>
+    <string name="record_report_failed">Impossibile inviare la segnalazione. Non è cambiato nulla. Riprova.</string>
+    <string name="record_report_intro">Segnala un pagamento che non ti aspettavi: %1$s ha pagato %2$s il %3$s. Blocchiamo %1$s finché non hai controllato.</string>
+    <string name="record_report_submit">Segnala e blocca %1$s</string>
+    <string name="record_report_title">Segnala questo pagamento</string>
     <string name="record_result_done">fatto</string>
     <string name="record_result_no_answer_yet">inviata, ancora nessuna risposta</string>
     <string name="record_result_not_done">non fatto</string>

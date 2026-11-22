@@ -1915,6 +1915,12 @@
     <string name="record_refused_next_step_detail">Atteikts, ar nākamo soli taf: %1$s</string>
     <string name="record_removed_detail">Grafiks, atmiņa un atslēga dzēsti; nosaukums brīvs</string>
     <string name="record_removed_title">Tu noņēmi %1$s</string>
+    <string name="record_report_button">Ziņot par šo maksājumu</string>
+    <string name="record_report_done">Paziņots. %1$s ir apturēts, un kvīts tiek saglabāta. Ja nauda izgājusi no tava konta, sazinies arī ar savas kartes izdevēju.</string>
+    <string name="record_report_failed">Neizdevās nosūtīt ziņojumu. Nekas nemainījās. Mēģini vēlreiz.</string>
+    <string name="record_report_intro">Ziņo par maksājumu, ko negaidīji: %1$s %3$s samaksāja %2$s. Mēs apturēsim %1$s, līdz tu to apskatīsi.</string>
+    <string name="record_report_submit">Ziņot un apturēt %1$s</string>
+    <string name="record_report_title">Ziņot par šo maksājumu</string>
     <string name="record_result_done">gatavs</string>
     <string name="record_result_no_answer_yet">nosūtīts, vēl nav atbildes</string>
     <string name="record_result_not_done">nav izdarīts</string>
