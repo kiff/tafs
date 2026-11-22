@@ -1369,7 +1369,7 @@
     <string name="halt_all_running">tafs couldn\'t halt your tafs. Open tafs to halt them.</string>
     <string name="halt_all_signed_out">You\'re signed out of tafs. Sign in to halt your tafs.</string>
     <string name="halt_all_title">Halt all tafs</string>
-    <string name="help_chrome_lead">Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in %1$s.</string>
+    <string name="help_chrome_lead">Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything that needs your yes waits for you in %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s lists your Chromes and what each one is used for. Unpairing a Chrome ends its connections.</string>
     <string name="help_chrome_title">tafs can work in your Chrome</string>
     <string name="help_code_lead">Turn it on in %1$s › %2$s. Then, when you ask, KIFF emails a code that works once, for 10 minutes, in the browser that asked.</string>

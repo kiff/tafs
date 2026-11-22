@@ -312772,7 +312772,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in %1$@."
+            "value": "Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything that needs your yes waits for you in %1$@."
           }
         },
         "es": {
