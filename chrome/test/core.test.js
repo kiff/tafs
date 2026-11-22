@@ -4,6 +4,8 @@ import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
+import { readFileSync } from "node:fs";
+import { parseCode } from "../src/pairing.js";
 import "../src/mask.js";
 
 const { maskText, maskURL } = globalThis.TafsMask;
@@ -185,5 +187,18 @@ test("every locale has English's keys and placeholders, and a description Chrome
       assert.deepEqual([...new Set(used)], Object.keys(placeholders || {}).sort(), `${loc} ${key} uses its placeholders`);
     }
     assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
+  }
+});
+
+test("the side panel's code field holds a whole pasted code, dashes and spaces included, and the extension reads it", () => {
+  const shown = "K7QF-29XM-DPQR-STVW-XYZ2-3";
+  const html = readFileSync(new URL("../sidepanel/index.html", import.meta.url), "utf8");
+  const max = Number(/<input id="code"[^>]*maxlength="(\d+)"/.exec(html)[1]);
+  assert.ok(max >= shown.length, "a code with its dashes fits");
+  assert.ok(max >= shown.replace(/-/g, " ").length + 4, "room for a stray space or two");
+  const want = parseCode(shown);
+  assert.ok(want, "the code the phone shows parses");
+  for (const typed of [shown.replace(/-/g, ""), shown.replace(/-/g, " "), " " + shown.toLowerCase() + " ", shown.replace(/-/g, " - ")]) {
+    assert.deepEqual(parseCode(typed), want, typed);
   }
 });

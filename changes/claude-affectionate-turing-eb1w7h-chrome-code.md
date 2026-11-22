@@ -1,0 +1,1 @@
+- **Chrome's pairing field takes the whole code.** The side panel's code field held 13 characters, so a pasted or typed code (21 characters, 26 with its dashes) was cut off. It now holds a whole code, with its dashes or spaces, in any case ([docs/chrome.md](docs/chrome.md)).
