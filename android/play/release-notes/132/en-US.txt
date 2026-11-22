@@ -1,0 +1,5 @@
+• New languages: Korean, Japanese, Brazilian Portuguese, and Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian, Croatian, Estonian, Latvian and Lithuanian.
+• Files: what your tafs make is in Account › Files, for 30 days.
+• Tablet: one sidebar, Coach beside your work, any orientation.
+• Watch: "From your watch" in Coach lists what you asked; the watch keeps no amounts.
+• Connect again: a failed connection says why, and one new sign-in brings back every taf that used it.
