@@ -783,10 +783,14 @@ final class KIFFClient {
         /// What this person may do on the account, as KIFF says ("cards.manage", …); nil
         /// from a KIFF that doesn't say.
         var capabilities: [String]? = nil
+        /// How this session approves, as KIFF says (`approval_mode`): `view` approves nothing, since the person
+        /// approves on another device. Nil from a KIFF that doesn't say.
+        var approvalMode: String? = nil
+        var viewOnly: Bool { approvalMode == "view" }
 
         enum CodingKeys: String, CodingKey {
             case tenantID = "tenant_id", slug = "tenant_slug", displayName = "tenant_display_name", email
-            case timeZone = "time_zone", capabilities
+            case timeZone = "time_zone", capabilities, approvalMode = "approval_mode"
         }
 
         /// The account as the owner knows it: its name, else its slug.
