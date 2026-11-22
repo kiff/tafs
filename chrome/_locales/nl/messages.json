@@ -75,5 +75,10 @@
   "vault_error": { "message": "Niet bewaard: een site heeft https nodig, en een wachtwoord." },
   "vault_remove": { "message": "Verwijderen" },
   "vault_with_username": { "message": "met een gebruikersnaam" },
-  "vault_one_per_site": { "message": "Eén login per site: een andere bewaren voor dezelfde site vervangt de eerste." }
+  "vault_one_per_site": { "message": "Eén login per site: een andere bewaren voor dezelfde site vervangt de eerste." },
+  "coach_new": { "message": "Nieuw gesprek" },
+  "coach_previous": { "message": "Eerdere gesprekken" },
+  "coach_previous_none": { "message": "Geen eerdere gesprekken." },
+  "coach_previous_error": { "message": "De eerdere gesprekken konden niet worden geladen." },
+  "coach_untitled": { "message": "Gesprek" }
 }
