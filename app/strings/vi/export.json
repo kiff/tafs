@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Các cuộc trò chuyện của bạn chưa được xuất. {why}",
+  "export.not_offered": "Không thể lưu các tệp trên điện thoại này. Hãy giải phóng bớt dung lượng rồi thử lại.",
+  "export.own_chats_each_taf_coach": "Các cuộc trò chuyện của riêng bạn với từng taf, kể cả với Coach, tên các tệp bạn đã đính kèm và ghi chú của bạn, dưới dạng tệp dễ đọc và JSON. Chỉ bạn mới xuất được chúng.",
+  "export.preparing": "Đang chuẩn bị các cuộc trò chuyện của bạn…",
+  "export.ready_share_again": "Sẵn sàng: {files}. Chia sẻ lại",
+  "export.row": "Xuất các cuộc trò chuyện của tôi",
+  "export.sign_in_first": "Hãy đăng nhập bằng KIFF để xuất các cuộc trò chuyện của bạn."
+}

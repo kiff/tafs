@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "Trả lời trong vòng",
+  "work.answer_within_days": {
+    "other": "{count} ngày"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} giờ"
+  },
+  "work.answer_within_line": "Bạn sẽ được báo khi một trường hợp phải chờ lâu hơn.",
+  "work.answer_within_none": "Chưa đặt",
+  "work.answer_within_not_set": "Không thể đặt. {why}",
+  "work.asking_kiff_run": "Đang yêu cầu KIFF chạy {tool}…",
+  "work.did_not_stop": "Không dừng được: {why}",
+  "work.duration.minutes": "{minutes} phút {seconds} giây",
+  "work.duration.seconds": "{seconds} giây",
+  "work.its_runs": "Các lượt chạy của nó",
+  "work.not_read": "Không thể đọc công việc của nó. {why}",
+  "work.not_sent_again": "Chưa gửi lại. {why}",
+  "work.request.try_reply_now": "Thử trả lời ngay",
+  "work.requests_need_you": {
+    "other": "{count} yêu cầu đang chờ bạn"
+  },
+  "work.send_again": "Gửi lại",
+  "work.sending_again": "Đang gửi lại…",
+  "work.stop_run": "Dừng lượt chạy",
+  "work.stopped_part_way_before_finished": "taf {taf} đã dừng giữa chừng, trước khi hoàn thành."
+}

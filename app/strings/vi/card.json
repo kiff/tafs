@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "Toàn bộ các Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, sau đó nó hỏi bạn",
+  "card.calls_left": {
+    "other": "Còn {count} lượt gọi"
+  },
+  "card.calls_left_line": {
+    "other": "Còn {count} lượt gọi {window} trong {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{used} / {count} lượt gọi {window}"
+  },
+  "card.calls_window": {
+    "other": "{count} lượt gọi {window}"
+  },
+  "card.card_confirmed_kiff": "Card · được KIFF xác nhận",
+  "card.card_draft_kiff": "Card · bản nháp · bởi KIFF",
+  "card.card_got_room_call_needed": "Card của nó đã có đủ chỗ cho lượt gọi này, cho đến khi tổng đó được đặt lại",
+  "card.card_not_issued": "Card chưa được cấp. ",
+  "card.card_revoked": "Card đã bị thu hồi",
+  "card.check.always_asks": "{rule}: luôn hỏi bạn",
+  "card.check.never_allowed": "{rule}: không bao giờ được phép",
+  "card.check.not_on_card": "Không có trong Card của taf này",
+  "card.check.over_count": {
+    "other": "Quá {count} {window}"
+  },
+  "card.check.over_each": "Quá {amount} mỗi lần",
+  "card.check.over_total": "Quá {amount} {window}",
+  "card.count": {
+    "other": "{count} Card"
+  },
+  "card.ended": "Đã kết thúc",
+  "card.ended_on": "Đã kết thúc {date}",
+  "card.ends": "Kết thúc",
+  "card.extra_room": "+{extra} dư địa thêm {window}",
+  "card.extra_room_prefix": "+{formatted} dư địa thêm ",
+  "card.extra_room_until": "+{extra} dư địa thêm đến {ends}",
+  "card.figure_left": "còn {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{count} lượt gọi {window}{each}: đây sẽ là lượt thứ {nth}{item}"
+  },
+  "card.held.each_call_asks": "Mỗi lượt gọi đều hỏi bạn trước",
+  "card.held.for_each": " cho mỗi {name}",
+  "card.held.for_each_join": " cho mỗi ",
+  "card.held.for_item": " cho {item}",
+  "card.held.over_count": {
+    "other": "Vượt giới hạn {count} lượt gọi: đây sẽ là lượt thứ {nth}"
+  },
+  "card.held.over_one_call": "{amount} vượt giới hạn {cap} cho một lượt gọi",
+  "card.held.over_total": "{amount} sẽ vượt tổng {cap}",
+  "card.hero.calls_left_of": {
+    "other": "lượt gọi còn lại {window} trong {limit}"
+  },
+  "card.hero.calls_use_unavailable": "lượt gọi {window} · không có số liệu sử dụng",
+  "card.hero.left_of": "còn lại {window} trong {limit}",
+  "card.hero.left_of_extra": "còn lại {window} trong {base} + {extra} dư địa thêm",
+  "card.hero.left_of_extra_until": "còn lại {window} trong {base} + {extra} dư địa thêm đến {ends}",
+  "card.hero.left_of_note": "còn lại {window} trong {limit}{note}",
+  "card.hero.no_currency": "không có đơn vị tiền tệ",
+  "card.hero.no_currency_suffix": " · không có đơn vị tiền tệ",
+  "card.hero.use_unavailable": "{window} · không có số liệu sử dụng",
+  "card.hero.use_unavailable_note": "{label} · không có số liệu sử dụng{note}",
+  "card.how_counted": "Cách tính",
+  "card.issue_prompt": "Cấp Card của {taf}",
+  "card.issued_by": "Cấp bởi",
+  "card.issued_by_account": "Tài khoản",
+  "card.issued_by_named": "Cấp bởi {who}",
+  "card.its_card": "Card của nó",
+  "card.kiff_did_not_revoke_cards": "KIFF chưa thu hồi {cards_left} Card của nó: hãy thu hồi trong KIFF.",
+  "card.left": "còn {amount} {window}",
+  "card.left_extra_room": "còn {current} trong {own} + {extra} dư địa thêm{until}{note}",
+  "card.limit_can_not_raised_right": "Hiện chưa thể nâng giới hạn từ đây.",
+  "card.limit_raised_read_balance_again": "Giới hạn đã được nâng. Hãy đọc lại số dư trước khi nâng thêm lần nữa.",
+  "card.line.calls_in_window": {
+    "other": "{count} lượt gọi {window}{then}"
+  },
+  "card.line.more_asks": "; nhiều hơn thì hỏi bạn trước",
+  "card.line.then_asks": ", sau đó nó hỏi bạn",
+  "card.line.total_in_window": "tổng cộng {amount} {window}{then}",
+  "card.line.up_to_each": "tối đa {amount} mỗi lần",
+  "card.more": {
+    "other": "thêm {count}"
+  },
+  "card.no_actions": "Chưa có hành động nào",
+  "card.no_actions_short": "chưa có hành động nào",
+  "card.no_currency": "{amount} (không có đơn vị tiền tệ)",
+  "card.no_end_date": "Không có ngày kết thúc",
+  "card.outcome.not_a_resource": "Không phải một trong các tài nguyên của Card",
+  "card.outcome.outside": "Ngoài phạm vi Card",
+  "card.outcome.over_one_action": "Vượt giới hạn của Card cho một hành động",
+  "card.outcome.over_total": "Vượt tổng của Card",
+  "card.outside_held": "Ngoài phạm vi: giữ lại cho bạn",
+  "card.outside_refused": "Ngoài phạm vi: bị từ chối",
+  "card.over_limit_calls_would": "Vượt giới hạn {limit} lượt gọi: đây sẽ là lượt thứ {nth}",
+  "card.revoke_failed": "KIFF chưa thu hồi Card. {why}",
+  "card.revoked": "Đã thu hồi",
+  "card.rule.always_asks": "luôn hỏi bạn",
+  "card.rule.at_most_each": "≤ {amount} mỗi lần",
+  "card.rule.at_most_each_refused_above": "≤ {amount} mỗi lần · từ chối nếu vượt",
+  "card.rule.calls": {
+    "other": "{count} lượt gọi {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{count} lượt gọi {window}, sau đó nó hỏi bạn"
+  },
+  "card.rule.in_total": "tổng cộng {amount} {window}",
+  "card.rule.never": "không bao giờ",
+  "card.rule.total_then_asks": "tổng cộng {amount} {window}, sau đó nó hỏi bạn",
+  "card.rule.up_to_each": "tối đa {amount} mỗi lần; nhiều hơn thì hỏi bạn trước",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card của taf",
+  "card.tools": {
+    "other": "{count} công cụ"
+  },
+  "card.until": "Đến",
+  "card.until_date": "Đến {date}",
+  "card.until_ends": " đến {ends}",
+  "card.used_of": "{used} / {limit} {window}",
+  "card.window.a_day": "mỗi ngày",
+  "card.window.a_month": "mỗi tháng",
+  "card.window.a_week": "mỗi tuần",
+  "card.window.any_day": "trong bất kỳ 24 giờ nào",
+  "card.window.any_hour": "trong bất kỳ giờ nào",
+  "card.window.any_week": "trong bất kỳ 7 ngày nào",
+  "card.window.in_total": "tổng cộng",
+  "card.window.in_total_window": "tổng cộng {window}",
+  "card.window.last_day": "trong 24 giờ qua",
+  "card.window.last_hour": "trong giờ qua",
+  "card.window.last_week": "trong 7 ngày qua",
+  "card.window.so_far": "cho đến nay",
+  "card.window.this_month": "tháng này",
+  "card.window.this_week": "tuần này",
+  "card.window.today": "hôm nay",
+  "card.within_card": "trong phạm vi Card"
+}

@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Yanıt süresi",
+  "work.answer_within_days": {
+    "one": "{count} gün",
+    "other": "{count} gün"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} saat",
+    "other": "{count} saat"
+  },
+  "work.answer_within_line": "Bir vaka bundan uzun beklerse haber verilir.",
+  "work.answer_within_none": "Ayarlanmadı",
+  "work.answer_within_not_set": "Ayarlanamadı. {why}",
+  "work.asking_kiff_run": "KIFF'ten {tool} çalıştırması isteniyor…",
+  "work.did_not_stop": "Durmadı: {why}",
+  "work.duration.minutes": "{minutes} dk {seconds} sn",
+  "work.duration.seconds": "{seconds} sn",
+  "work.its_runs": "Çalıştırmaları",
+  "work.not_read": "İşi okunamadı. {why}",
+  "work.not_sent_again": "Tekrar gönderilmedi. {why}",
+  "work.request.try_reply_now": "Yanıtı şimdi dene",
+  "work.requests_need_you": {
+    "one": "{count} istek sizi bekliyor",
+    "other": "{count} istek sizi bekliyor"
+  },
+  "work.send_again": "Tekrar gönder",
+  "work.sending_again": "Tekrar gönderiliyor…",
+  "work.stop_run": "Çalıştırmayı durdur",
+  "work.stopped_part_way_before_finished": "{taf} adlı taf bitirmeden yarıda durdu."
+}

@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Her taf'ı bir anda durdurur. Siz tafs'ta devam ettirene kadar yeni bir şey gönderilmez.",
+  "halt_all.failed": "tafs, tafs'larınızı donduramadı. {why} Dondurmak için tafs'ı açın.",
+  "halt_all.halted": {
+    "one": "{count} taf donduruldu. Siz devam ettirene kadar yeni bir şey gönderilmez.",
+    "other": "{count} taf donduruldu. Siz devam ettirene kadar yeni bir şey gönderilmez."
+  },
+  "halt_all.halted_all": "Tüm tafs'larınız donduruldu. Siz devam ettirene kadar yeni bir şey gönderilmez.",
+  "halt_all.halting": {
+    "one": "{count} taf donduruluyor: hiçbir çalıştırma başlamaz. KIFF her parçayı henüz onaylamadı; onayladığında tafs gösterir.",
+    "other": "{count} taf donduruluyor: hiçbir çalıştırma başlamaz. KIFF her parçayı henüz onaylamadı; onayladığında tafs gösterir."
+  },
+  "halt_all.halting_all": "Tüm tafs'larınız donduruluyor: hiçbir çalıştırma başlamaz. KIFF her parçayı henüz onaylamadı; onayladığında tafs gösterir.",
+  "halt_all.running": "tafs, tafs'larınızı donduramadı. Dondurmak için tafs'ı açın.",
+  "halt_all.signed_out": "tafs'ta oturumunuz kapalı. tafs'larınızı dondurmak için oturum açın.",
+  "halt_all.title": "Tüm tafs'ları dondur"
+}

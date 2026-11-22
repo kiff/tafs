@@ -1,0 +1,1 @@
+- **Android and Wear OS, right to left (for Arabic):** Coach slides in from the end edge and its tablet panel drags the right way, a job's colour edge and the Card's ring sit on the right sides, and the watch sets a name or an amount apart inside a right-to-left sentence as the phone does (docs/android-app.md, "Right to left"; docs/watch-wear.md).

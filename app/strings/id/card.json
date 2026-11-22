@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "Seluruh Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, lalu ia bertanya kepada Anda",
+  "card.calls_left": {
+    "other": "{count} panggilan tersisa"
+  },
+  "card.calls_left_line": {
+    "other": "{count} panggilan tersisa {window} dari {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{used} dari {count} panggilan {window}"
+  },
+  "card.calls_window": {
+    "other": "{count} panggilan {window}"
+  },
+  "card.card_confirmed_kiff": "Card · dikonfirmasi oleh KIFF",
+  "card.card_draft_kiff": "Card · draf · oleh KIFF",
+  "card.card_got_room_call_needed": "Card-nya mendapat ruang yang dibutuhkan panggilan ini, sampai total itu diatur ulang",
+  "card.card_not_issued": "Card tidak diterbitkan. ",
+  "card.card_revoked": "Card dicabut",
+  "card.check.always_asks": "{rule}: selalu bertanya kepada Anda",
+  "card.check.never_allowed": "{rule}: tidak pernah diizinkan",
+  "card.check.not_on_card": "Tidak ada di Card taf ini",
+  "card.check.over_count": {
+    "other": "Lebih dari {count} {window}"
+  },
+  "card.check.over_each": "Lebih dari {amount} per panggilan",
+  "card.check.over_total": "Lebih dari {amount} {window}",
+  "card.count": {
+    "other": "{count} Card"
+  },
+  "card.ended": "Berakhir",
+  "card.ended_on": "Berakhir {date}",
+  "card.ends": "Berakhir",
+  "card.extra_room": "+{extra} ruang tambahan {window}",
+  "card.extra_room_prefix": "+{formatted} ruang tambahan ",
+  "card.extra_room_until": "+{extra} ruang tambahan hingga {ends}",
+  "card.figure_left": "sisa {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{count} panggilan {window}{each}: ini akan menjadi panggilan nomor {nth}{item}"
+  },
+  "card.held.each_call_asks": "Setiap panggilan bertanya kepada Anda lebih dulu",
+  "card.held.for_each": " untuk setiap {name}",
+  "card.held.for_each_join": " untuk setiap ",
+  "card.held.for_item": " untuk {item}",
+  "card.held.over_count": {
+    "other": "Melebihi batasnya sebesar {count} panggilan: ini akan menjadi panggilan nomor {nth}"
+  },
+  "card.held.over_one_call": "{amount} melebihi batas {cap} untuk satu panggilan",
+  "card.held.over_total": "{amount} akan melebihi total {cap}",
+  "card.hero.calls_left_of": {
+    "other": "panggilan tersisa {window} dari {limit}"
+  },
+  "card.hero.calls_use_unavailable": "panggilan {window} · penggunaan tidak tersedia",
+  "card.hero.left_of": "tersisa {window} dari {limit}",
+  "card.hero.left_of_extra": "tersisa {window} dari {base} + {extra} ruang tambahan",
+  "card.hero.left_of_extra_until": "tersisa {window} dari {base} + {extra} ruang tambahan hingga {ends}",
+  "card.hero.left_of_note": "tersisa {window} dari {limit}{note}",
+  "card.hero.no_currency": "tanpa mata uang",
+  "card.hero.no_currency_suffix": " · tanpa mata uang",
+  "card.hero.use_unavailable": "{window} · penggunaan tidak tersedia",
+  "card.hero.use_unavailable_note": "{label} · penggunaan tidak tersedia{note}",
+  "card.how_counted": "Cara ini dihitung",
+  "card.issue_prompt": "Terbitkan Card milik {taf}",
+  "card.issued_by": "Diterbitkan oleh",
+  "card.issued_by_account": "Akun",
+  "card.issued_by_named": "Diterbitkan oleh {who}",
+  "card.its_card": "Card-nya",
+  "card.kiff_did_not_revoke_cards": "KIFF tidak mencabut {cards_left} dari Card-nya: cabut di KIFF.",
+  "card.left": "sisa {amount} {window}",
+  "card.left_extra_room": "sisa {current} dari {own} + {extra} ruang tambahan{until}{note}",
+  "card.limit_can_not_raised_right": "Batas tidak dapat dinaikkan dari sini saat ini.",
+  "card.limit_raised_read_balance_again": "Batas dinaikkan. Baca saldo lagi sebelum menaikkannya sekali lagi.",
+  "card.line.calls_in_window": {
+    "other": "{count} panggilan {window}{then}"
+  },
+  "card.line.more_asks": "; selebihnya bertanya kepada Anda lebih dulu",
+  "card.line.then_asks": ", lalu ia bertanya kepada Anda",
+  "card.line.total_in_window": "{amount} total {window}{then}",
+  "card.line.up_to_each": "hingga {amount} per panggilan",
+  "card.more": {
+    "other": "{count} lagi"
+  },
+  "card.no_actions": "Belum ada tindakan",
+  "card.no_actions_short": "belum ada tindakan",
+  "card.no_currency": "{amount} (tanpa mata uang)",
+  "card.no_end_date": "Tanpa tanggal berakhir",
+  "card.outcome.not_a_resource": "Bukan salah satu sumber daya Card",
+  "card.outcome.outside": "Di luar Card",
+  "card.outcome.over_one_action": "Melebihi batas Card untuk satu tindakan",
+  "card.outcome.over_total": "Melebihi total Card",
+  "card.outside_held": "Di luar: ditahan untuk Anda",
+  "card.outside_refused": "Di luar: ditolak",
+  "card.over_limit_calls_would": "Melebihi batasnya sebesar {limit} panggilan: ini akan menjadi panggilan nomor {nth}",
+  "card.revoke_failed": "KIFF tidak mencabut Card. {why}",
+  "card.revoked": "Dicabut",
+  "card.rule.always_asks": "selalu bertanya kepada Anda",
+  "card.rule.at_most_each": "≤ {amount} per panggilan",
+  "card.rule.at_most_each_refused_above": "≤ {amount} per panggilan · di atasnya ditolak",
+  "card.rule.calls": {
+    "other": "{count} panggilan {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{count} panggilan {window}, lalu ia bertanya kepada Anda"
+  },
+  "card.rule.in_total": "{amount} total {window}",
+  "card.rule.never": "tidak pernah",
+  "card.rule.total_then_asks": "{amount} total {window}, lalu ia bertanya kepada Anda",
+  "card.rule.up_to_each": "hingga {amount} per panggilan; yang lebih bertanya kepada Anda lebih dulu",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card taf",
+  "card.tools": {
+    "other": "{count} alat"
+  },
+  "card.until": "Sampai",
+  "card.until_date": "Sampai {date}",
+  "card.until_ends": " hingga {ends}",
+  "card.used_of": "{used} dari {limit} {window}",
+  "card.window.a_day": "sehari",
+  "card.window.a_month": "sebulan",
+  "card.window.a_week": "seminggu",
+  "card.window.any_day": "dalam 24 jam mana pun",
+  "card.window.any_hour": "dalam satu jam mana pun",
+  "card.window.any_week": "dalam 7 hari mana pun",
+  "card.window.in_total": "total",
+  "card.window.in_total_window": "total {window}",
+  "card.window.last_day": "dalam 24 jam terakhir",
+  "card.window.last_hour": "dalam satu jam terakhir",
+  "card.window.last_week": "dalam 7 hari terakhir",
+  "card.window.so_far": "sejauh ini",
+  "card.window.this_month": "bulan ini",
+  "card.window.this_week": "minggu ini",
+  "card.window.today": "hari ini",
+  "card.within_card": "dalam Card"
+}

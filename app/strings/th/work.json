@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "ตอบภายใน",
+  "work.answer_within_days": {
+    "other": "{count} วัน"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} ชั่วโมง"
+  },
+  "work.answer_within_line": "คุณจะได้รับแจ้งเมื่อมีเรื่องที่รอนานกว่านั้น",
+  "work.answer_within_none": "ยังไม่ได้ตั้ง",
+  "work.answer_within_not_set": "ตั้งค่าไม่ได้ {why}",
+  "work.asking_kiff_run": "กำลังขอให้ KIFF รัน {tool}…",
+  "work.did_not_stop": "ยังไม่หยุด: {why}",
+  "work.duration.minutes": "{minutes} นาที {seconds} วินาที",
+  "work.duration.seconds": "{seconds} วินาที",
+  "work.its_runs": "การทำงานของมัน",
+  "work.not_read": "อ่านงานของมันไม่ได้ {why}",
+  "work.not_sent_again": "ยังไม่ได้ส่งอีกครั้ง {why}",
+  "work.request.try_reply_now": "ลองตอบเดี๋ยวนี้",
+  "work.requests_need_you": {
+    "other": "{count} คำขอรอคุณอยู่"
+  },
+  "work.send_again": "ส่งอีกครั้ง",
+  "work.sending_again": "กำลังส่งอีกครั้ง…",
+  "work.stop_run": "หยุดการทำงาน",
+  "work.stopped_part_way_before_finished": "{taf} หยุดกลางคัน ก่อนที่จะเสร็จ"
+}

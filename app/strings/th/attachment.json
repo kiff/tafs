@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "แนบ {name} ไม่ได้",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs แนบไฟล์นี้ไม่ได้: ชนิดหรือขนาดไม่รองรับ เลือกไฟล์อื่น",
+  "attachment.photo": "รูปภาพ",
+  "attachment.photo_could_not_read": "อ่านรูปภาพนั้นไม่ได้",
+  "attachment.photo_numbered": "รูปภาพ {n}",
+  "attachment.too_large": "{name} มีขนาด {size} ใหญ่สุดคือ {limit}",
+  "attachment.wrong_kind": "แนบ {name} ไม่ได้ แนบได้เฉพาะรูปภาพ PDF ข้อความ CSV Markdown ไฟล์ Word และ Excel"
+}

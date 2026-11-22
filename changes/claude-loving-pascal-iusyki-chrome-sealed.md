@@ -1,0 +1,1 @@
+- **tafs in your Chrome, sealed sign-ins (behind a switch, off):** saved in the extension for one exact site, and typed only after you approve that one fill on your phone ([chrome.md](docs/chrome.md)).

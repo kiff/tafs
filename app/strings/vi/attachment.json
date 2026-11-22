@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "Không thể đính kèm {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs không thể đính kèm tệp này: loại hoặc kích thước của nó không được chấp nhận. Hãy chọn tệp khác.",
+  "attachment.photo": "Ảnh",
+  "attachment.photo_could_not_read": "Không thể đọc ảnh đó.",
+  "attachment.photo_numbered": "Ảnh {n}",
+  "attachment.too_large": "{name} nặng {size}; tối đa là {limit}.",
+  "attachment.wrong_kind": "Không thể đính kèm {name}. Có thể đính kèm ảnh, PDF, văn bản, CSV, Markdown, tệp Word và Excel."
+}

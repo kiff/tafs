@@ -73,7 +73,7 @@ final class AcceptLanguageTests: XCTestCase {
     /// The servers hear the languages the screens are in: the one they resolved to first, then the
     /// phone's others the app ships, by the app's own code, at most four, English last.
     func testTheServersHearTheScreensLanguages() {
-        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja"]
+        let all = ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr"]
         XCTAssertEqual(KIFFClient.screenLanguages(resolved: "de", preferred: ["de-CH", "fr-FR", "tr-TR"], shipped: all), ["de", "fr"])
         XCTAssertEqual(KIFFClient.acceptLanguage(KIFFClient.screenLanguages(resolved: "pt", preferred: ["pt-BR", "en-US"], shipped: all)), "pt, en;q=0.9")
         // A phone in a language the app doesn't ship gets the screens' language, then English.

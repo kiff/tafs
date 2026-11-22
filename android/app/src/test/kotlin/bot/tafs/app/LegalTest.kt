@@ -15,14 +15,14 @@ class LegalTest {
 
   // kiff.dev serves them in every language the app ships: each opens its own, and English is the unprefixed page.
   @Test fun eachLanguageOpensItsOwnPage() {
-    for (lang in listOf("de", "es", "fr", "it", "nl", "pl", "pt")) {
+    for (lang in listOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr")) {
       assertEquals("https://kiff.dev/$lang/tafs/terms", Legal.terms(lang))
       assertEquals("https://kiff.dev/$lang/tafs/privacy", Legal.privacy(lang))
       // In its own language, so the link doesn't say "in English".
       assertEquals("Terms", Legal.label("Terms", lang))
     }
     // Every shipped language but English is served.
-    val shipped = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl")
+    val shipped = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr")
     assertEquals(shipped.filter { it != "en" }.toSet(), Legal.SERVED)
   }
 

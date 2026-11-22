@@ -49,6 +49,22 @@
       </section>
       <div id="runs"></div>
       <p id="idle" class="note" data-m="idle"></p>
+      <details id="vault">
+        <summary data-m="vault_title"></summary>
+        <p class="note" data-m="vault_body"></p>
+        <p class="note" data-m="vault_one_per_site"></p>
+        <ul id="vaultList"></ul>
+        <form id="vaultForm">
+          <label for="vaultSite" data-m="vault_site"></label>
+          <input id="vaultSite" autocomplete="off" spellcheck="false" placeholder="shop.example" />
+          <label for="vaultUser" data-m="vault_username"></label>
+          <input id="vaultUser" autocomplete="off" spellcheck="false" />
+          <label for="vaultPass" data-m="vault_password"></label>
+          <input id="vaultPass" type="password" autocomplete="new-password" />
+          <button type="submit" data-m="vault_save"></button>
+        </form>
+        <p id="vaultStatus" class="status" role="status"></p>
+      </details>
       <button id="unpair" class="quiet" data-m="unpair"></button>
     </section>
 

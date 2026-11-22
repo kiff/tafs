@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "所有 Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted}{sum_label}，之後它會詢問您",
+  "card.calls_left": {
+    "other": "剩餘 {count} 次呼叫"
+  },
+  "card.calls_left_line": {
+    "other": "{window}剩餘 {count} 次呼叫，共 {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{window}已使用 {used} / {count} 次呼叫"
+  },
+  "card.calls_window": {
+    "other": "{window} {count} 次呼叫"
+  },
+  "card.card_confirmed_kiff": "Card · 已由 KIFF 確認",
+  "card.card_draft_kiff": "Card · 草稿 · 由 KIFF 提供",
+  "card.card_got_room_call_needed": "它的 Card 已獲得這次呼叫所需的額度，直到該總額重設",
+  "card.card_not_issued": "Card 未發出。",
+  "card.card_revoked": "Card 已撤銷",
+  "card.check.always_asks": "{rule}：一律詢問您",
+  "card.check.never_allowed": "{rule}：絕不允許",
+  "card.check.not_on_card": "不在這個 taf 的 Card 上",
+  "card.check.over_count": {
+    "other": "{window}超過 {count} 次"
+  },
+  "card.check.over_each": "每次超過 {amount}",
+  "card.check.over_total": "{window}超過 {amount}",
+  "card.count": {
+    "other": "{count} 張 Card"
+  },
+  "card.ended": "已結束",
+  "card.ended_on": "{date}結束",
+  "card.ends": "結束",
+  "card.extra_room": "{window}額外額度 +{extra}",
+  "card.extra_room_prefix": "額外額度 +{formatted} ",
+  "card.extra_room_until": "額外額度 +{extra}，至 {ends}",
+  "card.figure_left": "剩餘 {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{window}{each} {count} 次呼叫：這會是第 {nth} 次{item}"
+  },
+  "card.held.each_call_asks": "每次呼叫都會先詢問您",
+  "card.held.for_each": "，每個{name}",
+  "card.held.for_each_join": "，每個",
+  "card.held.for_item": "，{item}",
+  "card.held.over_count": {
+    "other": "超過它 {count} 次呼叫的上限：這會是第 {nth} 次"
+  },
+  "card.held.over_one_call": "{amount} 超過單次呼叫 {cap} 的上限",
+  "card.held.over_total": "{amount} 會超過 {cap} 的總額",
+  "card.hero.calls_left_of": {
+    "other": "次呼叫剩餘，{window}共 {limit}"
+  },
+  "card.hero.calls_use_unavailable": "{window}呼叫 · 無法取得用量",
+  "card.hero.left_of": "剩餘，{window}共 {limit}",
+  "card.hero.left_of_extra": "剩餘，{window}共 {base} + {extra} 額外額度",
+  "card.hero.left_of_extra_until": "剩餘，{window}共 {base} + {extra} 額外額度，至 {ends}",
+  "card.hero.left_of_note": "剩餘，{window}共 {limit}{note}",
+  "card.hero.no_currency": "無貨幣",
+  "card.hero.no_currency_suffix": " · 無貨幣",
+  "card.hero.use_unavailable": "{window} · 無法取得用量",
+  "card.hero.use_unavailable_note": "{label} · 無法取得用量{note}",
+  "card.how_counted": "計算方式",
+  "card.issue_prompt": "發出 {taf} 的 Card",
+  "card.issued_by": "發出者",
+  "card.issued_by_account": "帳號",
+  "card.issued_by_named": "由{who}發出",
+  "card.its_card": "它的 Card",
+  "card.kiff_did_not_revoke_cards": "KIFF 未撤銷它的 {cards_left} 張 Card：請在 KIFF 中撤銷。",
+  "card.left": "{window}剩餘 {amount}",
+  "card.left_extra_room": "剩餘 {current}，共 {own} + {extra} 額外額度{until}{note}",
+  "card.limit_can_not_raised_right": "目前無法從這裡提高上限。",
+  "card.limit_raised_read_balance_again": "上限已提高。再次提高之前，請重新讀取餘額。",
+  "card.line.calls_in_window": {
+    "other": "{window} {count} 次呼叫{then}"
+  },
+  "card.line.more_asks": "；超過的部分會先詢問您",
+  "card.line.then_asks": "，之後它會詢問您",
+  "card.line.total_in_window": "{window}合計 {amount}{then}",
+  "card.line.up_to_each": "每次最多 {amount}",
+  "card.more": {
+    "other": "另有 {count} 項"
+  },
+  "card.no_actions": "目前沒有動作",
+  "card.no_actions_short": "目前沒有動作",
+  "card.no_currency": "{amount}（無貨幣）",
+  "card.no_end_date": "沒有結束日期",
+  "card.outcome.not_a_resource": "不是 Card 的資源之一",
+  "card.outcome.outside": "在 Card 之外",
+  "card.outcome.over_one_action": "超過 Card 對單一動作的上限",
+  "card.outcome.over_total": "超過 Card 的總額",
+  "card.outside_held": "在範圍之外：為您保留",
+  "card.outside_refused": "在範圍之外：已拒絕",
+  "card.over_limit_calls_would": "超過它 {limit} 次呼叫的上限：這會是第 {nth} 次",
+  "card.revoke_failed": "KIFF 未撤銷 Card。{why}",
+  "card.revoked": "已撤銷",
+  "card.rule.always_asks": "一律詢問您",
+  "card.rule.at_most_each": "每次 ≤ {amount}",
+  "card.rule.at_most_each_refused_above": "每次 ≤ {amount} · 超過則拒絕",
+  "card.rule.calls": {
+    "other": "{window} {count} 次呼叫"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{window} {count} 次呼叫，之後它會詢問您"
+  },
+  "card.rule.in_total": "{window}合計 {amount}",
+  "card.rule.never": "絕不",
+  "card.rule.total_then_asks": "{window}合計 {amount}，之後它會詢問您",
+  "card.rule.up_to_each": "每次最多 {amount}；超過的部分會先詢問您",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "這個 taf 的 Card",
+  "card.tools": {
+    "other": "{count} 個工具"
+  },
+  "card.until": "直到",
+  "card.until_date": "直到 {date}",
+  "card.until_ends": "，直到 {ends}",
+  "card.used_of": "{window}已使用 {used} / {limit}",
+  "card.window.a_day": "每天",
+  "card.window.a_month": "每月",
+  "card.window.a_week": "每週",
+  "card.window.any_day": "任意 24 小時內",
+  "card.window.any_hour": "任意 1 小時內",
+  "card.window.any_week": "任意 7 天內",
+  "card.window.in_total": "合計",
+  "card.window.in_total_window": "{window}合計",
+  "card.window.last_day": "過去 24 小時內",
+  "card.window.last_hour": "過去 1 小時內",
+  "card.window.last_week": "過去 7 天內",
+  "card.window.so_far": "到目前為止",
+  "card.window.this_month": "本月",
+  "card.window.this_week": "本週",
+  "card.window.today": "今天",
+  "card.within_card": "在 Card 範圍內"
+}

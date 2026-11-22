@@ -11,5 +11,15 @@
     <locale android:name="pl" />
     <locale android:name="ko" />
     <locale android:name="ja" />
+    <locale android:name="et" />
+    <locale android:name="lt" />
+    <locale android:name="lv" />
+    <locale android:name="cs" />
+    <locale android:name="sk" />
+    <locale android:name="sl" />
+    <locale android:name="hu" />
+    <locale android:name="ro" />
+    <locale android:name="bg" />
+    <locale android:name="hr" />
     <locale android:name="pt-BR" />
 </locale-config>
