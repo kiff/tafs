@@ -140,6 +140,18 @@ class ChromePairingTest {
     assertEquals(v("signed_bytes"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c.copy(carried = emptyList()))))
     // Another order is other bytes: the extension checks the list as the phone wrote it.
     assertFalse(ChromePairing.signedBytes(v("pairing"), c.copy(carried = carried.reversed())).contentEquals(ChromePairing.signedBytes(v("pairing"), c)))
+
+  @Test fun theOneTouchProofIsTheExtensionsAsTheVectorSays() {
+    val secret = v("secret")
+    val chromeKey = bytes("chrome_key")
+    val offer = v("kiff_offer")
+    val proof = v("one_touch_proof_with_kiff_offer")
+    assertTrue(ChromePairing.oneTouchProofHolds(secret, chromeKey, proof, offer))
+    // Its own label: the pairing's proof isn't it, and it covers the KIFF offer and the key as the pairing's does.
+    assertFalse(ChromePairing.oneTouchProofHolds(secret, chromeKey, v("extension_proof_with_kiff_offer"), offer))
+    assertFalse(ChromePairing.oneTouchProofHolds(secret, chromeKey, proof))
+    assertFalse(ChromePairing.oneTouchProofHolds(secret, bytes("phone_key"), proof, offer))
+    assertFalse(ChromePairing.oneTouchProofHolds("another secret", chromeKey, proof, offer))
   }
 
   @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {

@@ -4332,8 +4332,8 @@ class AppModel(
    * Confirms the pairing behind a fingerprint naming the Chrome: the approval key, and only it, signs this phone's proof and
    * the extension's key under the secret; the extension checks that signature itself. Its view-only KIFF device is paired
    * next, as Add a device pairs a computer, and before planque hears the confirmation, so a Chrome is never confirmed without
-   * the device it reads and chats as. The approval key unlocks for one signature, so that pairing asks a second fingerprint
-   * (iOS's one Face ID covers both). False when it didn't go through.
+   * the device it reads and chats as. The approval key unlocks for one signature, so an extension that checks one-touch
+   * gets both under one `kiff.requests.v1` signature ([confirmChromeOneTouch]); an older one gets the two prompts. False when it didn't go through.
    */
   suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
@@ -4350,6 +4350,10 @@ class AppModel(
     val name = pairing.name(typed, Words.Chrome.browserOn(browser = offer.browser, system = offer.os))
     val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey)
     val reason = Words.Chrome.pairPrompt(name = name)
+    // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and
+    // its KIFF device, under one `kiff.requests.v1` signature. Else the two prompts an older extension expects.
+    val oneTouch = offer.oneTouch && pairing.oneTouchProofHolds(p.secret, chromeKey, offer.oneTouchProof, offer.kiffOffer)
+    if (oneTouch && kiffDevice is ChromeKiffDevice.Offered) return confirmChromeOneTouch(p, confirmation, kiffDevice.device, reason, generation)
     val sig = try {
       val der = signer.signCritical(reason) { pairing.signedBytes(p.pairing, confirmation) }
       pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
@@ -4363,6 +4367,66 @@ class AppModel(
     if (kiffDevice is ChromeKiffDevice.Offered && !pairChromeDevice(kiffDevice.device, reason, generation)) return false
     try {
       chromeCall { planque.confirmChromePairing(p.pairing, confirmation, sig) } ?: return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = reason, why = ErrorWords.of(e))) }
+      return false
+    }
+    refreshChromes()
+    return true
+  }
+
+  /**
+   * The pairing under one fingerprint (docs/chrome.md "Your Chrome" 5): the approval key signs `kiff.requests.v1` once, over
+   * the SHA-256 of the pairing bytes the extension checks and of KIFF's `kiff.request.v1` for the extension's device, with one
+   * `signed_at`. KIFF gets its request with that signature and the pairing's hash (`v3`, `with=`); planque's confirm carries the
+   * same signature as `phone_sig` (raw r‖s) with the tenant, `signed_at` and KIFF's hash, which the extension rebuilds it from.
+   * The device goes before the confirm, as in two prompts: a Chrome is never confirmed without the device it reads as.
+   */
+  private suspend fun confirmChromeOneTouch(
+    p: ChromePairingInProgress, confirmation: bot.tafs.app.kiff.ChromePairing.Confirmation, device: PairQr, reason: String, generation: Int,
+  ): Boolean {
+    val pairing = bot.tafs.app.kiff.ChromePairing
+    val tenant = kiffTenant ?: return false
+    kiff.tenant = tenant
+    var signedAt = ""
+    var pairHash = ""
+    var prepared: KiffClient.Prepared? = null
+    val der = try {
+      // The time is taken once the person approved, inside the prompt's success, as for any signed call.
+      signer.signCritical(reason) {
+        signedAt = kiff.nextSignedAt()
+        pairHash = KiffClient.messageHash(pairing.signedBytes(p.pairing, confirmation))
+        val req = kiff.prepare("POST", KiffClient.PAIRINGS, device.body(), gateway = false, signedAt = signedAt)
+        prepared = req
+        KiffClient.requestsMessage(tenant, signedAt, pairHash, req.hash)
+      }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = reason, why = ErrorWords.of(e))) }
+      return false
+    }
+    val kiffRequest = prepared ?: return false
+    val phoneSig = pairing.rawSignature(java.util.Base64.getMimeDecoder().decode(der))
+    if (phoneSig == null || generation != accountGeneration) return false
+    try {
+      kiff.sendTogether(kiffRequest, der, with = pairHash)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(chromesError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(chromesError = Words.Common.didntGoThrough(what = reason, why = pairingWhy(e))) }
+      return false
+    }
+    if (generation != accountGeneration) return false
+    try {
+      chromeCall {
+        planque.confirmChromePairing(p.pairing, confirmation, phoneSig, together = bot.tafs.app.kiff.ChromeTogether(tenant, signedAt, kiffRequest.hash))
+      } ?: return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
