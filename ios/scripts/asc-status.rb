@@ -28,13 +28,14 @@ module AscStatus
 
   module_function
 
-  # api.(method, path) → [status, data]; only "get" is ever called.
+  # api.(method, path, label, ok = []) → [status, data]; only "get" is ever called. `label` names the step in words
+  # ("the versions"), because a failure is printed to a public log and a path holds ids.
   def run(api, out: $stdout)
-    app = api.("get", "/v1/apps?filter[bundleId]=#{BUNDLE_ID}")[1]["data"].first or raise Failure, "no app #{BUNDLE_ID}"
+    app = api.("get", "/v1/apps?filter[bundleId]=#{BUNDLE_ID}", "the app")[1]["data"].first or raise Failure, "no app #{BUNDLE_ID}"
     app_id = app["id"]
     asked = false
 
-    versions = api.("get", "/v1/apps/#{app_id}/appStoreVersions?limit=30")[1]["data"] || []
+    versions = api.("get", "/v1/apps/#{app_id}/appStoreVersions?limit=30", "the versions")[1]["data"] || []
     out.puts "App Store"
     PLATFORMS.each do |platform, label|
       mine = versions.select { |v| v.dig("attributes", "platform") == platform }
@@ -51,7 +52,7 @@ module AscStatus
     end
     out.puts "  Apple has asked for something: #{asked ? "yes (a version was rejected)" : "no"}"
 
-    builds = api.("get", "/v1/builds?filter[app]=#{app_id}&sort=-uploadedDate&limit=#{BUILDS}&include=preReleaseVersion")
+    builds = api.("get", "/v1/builds?filter[app]=#{app_id}&sort=-uploadedDate&limit=#{BUILDS}&include=preReleaseVersion", "the builds")
     pre = (builds[1]["included"] || []).select { |i| i["type"] == "preReleaseVersions" }.to_h { |i| [i["id"], i["attributes"] || {}] }
     out.puts "TestFlight"
     list = builds[1]["data"] || []
@@ -59,7 +60,7 @@ module AscStatus
     list.each do |b|
       a = b["attributes"] || {}
       release = pre[b.dig("relationships", "preReleaseVersion", "data", "id")] || {}
-      beta = api.("get", "/v1/builds/#{b["id"]}/buildBetaDetail")[1]["data"]
+      beta = api.("get", "/v1/builds/#{b["id"]}/buildBetaDetail", "a build's beta state", [404])[1]["data"]
       beta = beta.is_a?(Hash) ? beta["attributes"] || {} : {}
       label = PLATFORMS[release["platform"]] || release["platform"] || "?"
       out.puts "  #{label} #{release["version"]} (build #{a["version"]}): #{a["processingState"]}#{a["expired"] ? ", expired" : ""}, " \
@@ -69,8 +70,12 @@ module AscStatus
     out.puts "Read at #{Time.now.utc.strftime("%Y-%m-%d %H:%M")} UTC"
   end
 
-  def errors(body)
-    (body["errors"] || []).map { |e| "#{e["code"]}: #{e["detail"]}" }.join("; ")
+  # Raises for a refusal whose status isn't in `ok`. The message names the step and Apple's error *codes* only: never the
+  # path (it holds the app's and the builds' ids) or Apple's detail (it can echo an id, or the key's issuer).
+  def check(status, data, label, ok = [])
+    return if status < 400 || ok.include?(status)
+    codes = (data["errors"] || []).map { |e| e["code"] }.compact.map { |c| c.to_s[/\A[A-Z_.a-z0-9]{1,64}\z/] || "?" }.uniq
+    raise Failure, "App Store Connect answered #{status} reading #{label}#{codes.empty? ? "" : " (#{codes.join(", ")})"}"
   end
 end
 
@@ -86,7 +91,7 @@ if $PROGRAM_NAME == __FILE__
     "#{head}.#{body}.#{b64.(sig)}"
   end
   token = jwt.()
-  api = lambda do |method, path|
+  api = lambda do |method, path, label, ok = []|
     raise AscStatus::Failure, "only reads" unless method == "get"
     uri = URI("https://api.appstoreconnect.apple.com#{path}")
     req = Net::HTTP::Get.new(uri)
@@ -94,13 +99,15 @@ if $PROGRAM_NAME == __FILE__
     res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.request(req) }
     data = res.body.to_s.empty? ? {} : JSON.parse(res.body)
     status = res.code.to_i
-    # A build with no beta detail answers 404: that's an empty state, not a failure.
-    raise AscStatus::Failure, "App Store Connect GET #{uri.path} answered #{status}: #{AscStatus.errors(data)}" if status >= 400 && status != 404
+    AscStatus.check(status, data, label, ok)
     [status, data]
   end
   begin
     AscStatus.run(api)
   rescue AscStatus::Failure => e
     abort e.message
+  rescue StandardError => e
+    # Only the kind of error: a message (a bad answer's body, a path) could carry an id into the public log.
+    abort "App Store Connect: #{e.class}"
   end
 end

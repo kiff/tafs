@@ -6,7 +6,7 @@ require_relative "asc-status"
 
 class AscStatusTest < Minitest::Test
   def api(routes, calls = [])
-    lambda do |method, path|
+    lambda do |method, path, _label = nil, _ok = []|
       calls << [method, path]
       routes.fetch(path) { raise "unexpected #{method} #{path}" }
     end
@@ -61,5 +61,27 @@ class AscStatusTest < Minitest::Test
     r = routes
     r["/v1/apps/SECRET-APP-ID/appStoreVersions?limit=30"] = [200, { "data" => [] }]
     assert_includes report(r), "macOS: no version"
+  end
+
+  # A failure is printed to a public log: it names the step and Apple's error code, never the path or Apple's detail.
+  def test_a_failure_prints_no_id_and_no_detail
+    data = { "errors" => [{ "code" => "FORBIDDEN_ERROR", "detail" => "The app SECRET-APP-ID is not allowed for issuer SECRET-ISSUER" }] }
+    e = assert_raises(AscStatus::Failure) { AscStatus.check(403, data, "the versions") }
+    assert_equal "App Store Connect answered 403 reading the versions (FORBIDDEN_ERROR)", e.message
+    refute_match(/SECRET/, e.message)
+    e = assert_raises(AscStatus::Failure) { AscStatus.check(500, {}, "the builds") }
+    assert_equal "App Store Connect answered 500 reading the builds", e.message
+  end
+
+  def test_a_code_that_isnt_a_plain_code_is_not_printed
+    data = { "errors" => [{ "code" => "secret id 12345 with spaces", "detail" => "x" }] }
+    e = assert_raises(AscStatus::Failure) { AscStatus.check(401, data, "the app") }
+    refute_match(/12345|secret/, e.message)
+  end
+
+  def test_only_the_beta_state_may_be_missing
+    AscStatus.check(404, {}, "a build's beta state", [404])
+    assert_raises(AscStatus::Failure) { AscStatus.check(404, {}, "the app") }
+    AscStatus.check(200, {}, "the app")
   end
 end
