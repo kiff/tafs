@@ -50,18 +50,17 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 
 ## Android
 
-Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
+Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **on in every build**, as on iOS.
 
 **Signing in inside the app not on** (KIFF's `unsupported_client`, from its API or its authorize page): Continue says so, in
 KIFF's `words` when it sends them, else "Signing in inside the app isn't on yet." (`sign_in.in_app_not_on`), never "didn't work"
 (`ContinueOutcome.NotOn`, as iOS's `KIFFError.signInNotOn`).
 
-**K5, the end-to-end pass on a test device** (`BuildConfig.K5`, as iOS's `TAFS_K5`): `ONBOARDING_ON` is on only in a **debug**
-build made with `-Pk5` or `TAFS_K5=1` (`./gradlew :app:assembleDebug -Pk5`, or `android.yml` run by hand with `k5`, whose
-`k5` job leaves the APK as a run artifact for 7 days). That job builds without Firebase's settings (alerts off), since the
-repository is public, and a `k5` run never starts `release` or `wear-release`. A **release** build sets `K5` to `false` whatever is
-passed, so no build for Play has it, and CI checks it on every run ("A release build never has K5"; `K5SwitchTest`: off unless
-asked for).
+**K5** (`BuildConfig.K5`, as iOS's `Onboarding.on`): `ONBOARDING_ON` is on in **every** build, debug and release, since the
+owner's yes on 22 Nov, so every build for Play has the onboarding and the sign-in inside tafs. CI checks it on every run ("A
+release build has K5"; `K5SwitchTest`). `android.yml` run by hand with `k5` still leaves a debug APK as a run artifact for 7
+days, built without Firebase's settings (alerts off) since the repository is public, for a pass on a test device; a `k5` run
+never starts `release` or `wear-release`.
 
 - **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
   law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`),
