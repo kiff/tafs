@@ -14,12 +14,12 @@ tafs lets a person hand routine jobs to AI agents ("tafs") that work inside limi
 
 How to try it
 1. Without an account: on the welcome screen, "Try it with sample data" shows the app with sample content. Nothing is sent anywhere in sample mode.
-2. With the demo account (entered in the fields above; it has no live payment or business connections): tick the box that agrees to the Terms, tap Continue, and KIFF's sign-in opens in a sheet inside the app. Choose email, type the demo account's address and password. Signing in with a code sent by email is off. After signing in, three short cards explain tafs, the Card and Needs you; then Home shows Ask Coach, which sets up a taf in conversation.
-3. Needs you: open it from Home. Approve once, Next step and Refuse each answer a held action; the sample held action sends nothing until approved.
+2. With the demo account (entered in the fields above; it has no live payment or business connections): tick the box that agrees to the Terms, tap Continue, and KIFF's sign-in opens in a sheet inside the app. Choose email, type the demo account's address and password. Signing in with a code sent by email is off. After signing in, three short cards explain tafs, the Card and Needs you; then Home opens with the account's own tafs, if it has any. With none, Home offers Ask Coach, which sets up a taf in conversation, and How tafs works.
+3. Needs you: open it from Home. Approve once and Refuse each answer a held action, and where the taf suggested its own next step it is a third button; the sample held action sends nothing until approved.
 
-In-app purchases to review: Solo (monthly, 500 credits) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). Restore Purchases is on the Solo screen. A run of a taf uses credits for the AI it used.
+In-app purchases to review: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). Restore Purchases is on the Solo screen. A run of a taf uses credits for the AI it used.
 
-AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. The person's content is not used to train models, and run data is deleted after 30 days. Sub-processors are listed at kiff.dev/subprocessors. Sample mode sends nothing.
+AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. Anthropic does not use the person's content to train models and deletes it within 30 days; what tafs itself keeps, and for how long, is on the Privacy page. Sub-processors are listed at kiff.dev/subprocessors. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
@@ -58,14 +58,14 @@ tafs lets a person hand routine jobs to AI agents ("tafs") that work inside limi
 
 How to try it
 1. Without an account: on the welcome screen, "Try it with sample data" shows the app with sample content. Nothing is sent anywhere in sample mode.
-2. With the demo account (in the fields above; it has no live payment or business connections): tick the box that agrees to the Terms, tap Continue, and KIFF's sign-in opens in a browser tab inside the app. Choose email, type the demo account's address and password; the app comes back by itself. Signing in with a code sent by email is off. Three short cards explain tafs, the Card and Needs you; then Home shows Ask Coach, which sets up a taf in conversation.
+2. With the demo account (in the fields above; it has no live payment or business connections): tick the box that agrees to the Terms, tap Continue, and KIFF's sign-in opens in a browser tab inside the app. Choose email, type the demo account's address and password; the app comes back by itself. Signing in with a code sent by email is off. Three short cards explain tafs, the Card and Needs you; then Home opens with the account's own tafs, if it has any. With none, Home offers Ask Coach, which sets up a taf in conversation, and How tafs works.
 3. Needs you: open it from Home. Approve once and Refuse each answer a held action; the sample held action sends nothing until approved.
 
 Wear OS: the watch app needs this app signed in on the paired phone; it has no sign-in of its own. It shows Ask tafs, Needs you (approved on the phone) and Your tafs.
 
-In-app products: Solo (monthly, 500 credits) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). A run of a taf uses credits for the AI it used.
+In-app products: Solo (a monthly subscription, with its credits included each month) and credit packs of 500, 1,500 and 5,000 (consumable, never expire). A run of a taf uses credits for the AI it used.
 
-AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. The person's content is not used to train models, and run data is deleted after 30 days. Sub-processors are listed at kiff.dev/subprocessors. Speech for the microphone is recognized on the device. Sample mode sends nothing.
+AI and data: a taf's work uses an AI provider (Anthropic) as a sub-processor. Anthropic does not use the person's content to train models and deletes it within 30 days; what tafs itself keeps, and for how long, is on the Privacy page. Sub-processors are listed at kiff.dev/subprocessors. Speech for the microphone is recognized on the device. Sample mode sends nothing.
 
 Chrome: Account > Chrome pairs the person's own Chrome with the tafs Chrome extension, which is a separate product on the Chrome Web Store. The row appears only where the service offers it and is not needed to review the app.
 
@@ -75,6 +75,7 @@ Legal: the Terms (kiff.dev/terms) and the Privacy Policy (kiff.dev/tafs/privacy)
 ## Keeping it right
 
 - When the sign-in steps change (the tick, the sheet, the cards), change "How to try it" with them: reviewers follow it literally. K5's walk ([onboarding.md](onboarding.md)) is the check that the steps hold.
+- **Products:** the notes name Solo and the three credit packs only. `ios/Tafs.storekit` still holds the older task packs (Pico, Vonk, Rayo, Forte, Maxi) for local testing: before a submission, confirm in App Store Connect that none of them is Ready for Sale, or the notes must say they are retired.
 - If a new feature a reviewer could reach needs its own account or setting, say it here; the Docs rows on the release board are **App Store reviewer notes** and **Play reviewer notes**.
 - The Play notes' facts must match Play's **Data safety** form too: email, purchases, in-app messages, photos and files the person attaches, app interactions, and device IDs (push token, device key, device name); no audio (recognized on the device), location or advertising ID.
 - Facts here must match the Privacy page and the App Privacy answers (see the App Store privacy labels row): name, email, content, purchases, a device key and name registered with KIFF.
