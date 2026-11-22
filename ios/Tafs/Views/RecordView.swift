@@ -368,6 +368,14 @@ struct ReceiptView: View {
     @State private var raw: Data?
     @State private var check: ReceiptCheck?
     @State private var loadProblem: String?
+    /// "Report this payment" is offered on a payment tafs cloud says this reader may report, until it is reported.
+    @State private var showingReport = false
+    @State private var justReported = false
+
+    /// The button shows where tafs cloud sent an offer and the payment isn't reported yet.
+    static func offersReport(_ entry: RecordEntry, reportedNow: Bool = false) -> Bool {
+        entry.reportTraceID != nil && entry.reportedAt == nil && !reportedNow
+    }
 
     var body: some View {
         NavStack {
@@ -405,6 +413,12 @@ struct ReceiptView: View {
                         }
                     }
                     if entry.receipt != nil { receiptPanel }
+                    if Self.offersReport(entry, reportedNow: justReported) {
+                        Button { showingReport = true } label: {
+                            Text(Words.Record.Report.button).frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    }
                     Button {
                         model.requestedTaf = entry.tafID
                         dismiss()
@@ -419,6 +433,9 @@ struct ReceiptView: View {
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button(Words.Record.Filter.done) { dismiss() }.keyboardShortcut(.cancelAction) } }
         }
         .task { await loadReceipt() }
+        .sheet(isPresented: $showingReport) {
+            ReportPaymentSheet(entry: entry) { justReported = true }.environmentObject(model)
+        }
     }
 
     private func loadReceipt() async {

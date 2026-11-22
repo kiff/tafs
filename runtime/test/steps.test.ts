@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { attachWhys, coachGuard, connectsRefused, failedStep, foldRetried, keyAppsIn, lacksAccess, refusalKind, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
-import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -206,7 +206,7 @@ describe("Coach's steps in the person's language", () => {
   it("has a line for every one of Coach's tools in every language, never English outside English", () => {
     const tools = ["show", "taf_results", "memory", "workspace", "kiff_draft", "kiff_card", "kiff_pending", "tafs_state", "taf_run", "taf_check",
       "taf_estimate", "taf_task", "run_stop", "taf_pause", "version_try", "version_install"];
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       for (const tool of tools) {
         const line = new Steps(new Map(), lang).call(tool, {});
         expect(line, `${lang} ${tool}`).toBeTruthy();

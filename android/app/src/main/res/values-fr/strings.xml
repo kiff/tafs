@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Refusé, avec une étape suivante pour le taf : %1$s</string>
     <string name="record_removed_detail">Planning, mémoire et clé supprimés ; nom libre</string>
     <string name="record_removed_title">Vous avez supprimé %1$s</string>
+    <string name="record_report_button">Signaler ce paiement</string>
+    <string name="record_report_done">Signalé. %1$s est bloqué et le reçu est conservé. Si de l\'argent a quitté votre compte, contactez aussi l\'émetteur de votre carte.</string>
+    <string name="record_report_failed">Impossible d\'envoyer le signalement. Rien n\'a changé. Réessayez.</string>
+    <string name="record_report_intro">Signalez un paiement que vous n\'attendiez pas : %1$s a payé %2$s le %3$s. Nous bloquons %1$s jusqu\'à ce que vous ayez vérifié.</string>
+    <string name="record_report_submit">Signaler et bloquer %1$s</string>
+    <string name="record_report_title">Signaler ce paiement</string>
     <string name="record_result_done">terminé</string>
     <string name="record_result_no_answer_yet">envoyé, pas encore de réponse</string>
     <string name="record_result_not_done">non effectué</string>

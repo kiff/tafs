@@ -3579,6 +3579,20 @@ enum Words {
             /// You removed {taf}
             static func title(taf: String) -> String { Words.line("record.removed.title", taf) }
         }
+        enum Report {
+            /// Report this payment
+            static var button: String { Words.line("record.report.button") }
+            /// Reported. {taf} is halted and the receipt is kept. If money left your account, contact your card issuer too.
+            static func done(taf: String) -> String { Words.line("record.report.done", taf) }
+            /// Couldn't send the report. Nothing changed. Try again.
+            static var failed: String { Words.line("record.report.failed") }
+            /// Report a payment you didn't expect: {taf} paid {amount} on {date}. We halt {taf} until you've looked.
+            static func intro(taf: String, amount: String, date: String) -> String { Words.line("record.report.intro", taf, amount, date) }
+            /// Report and halt {taf}
+            static func submit(taf: String) -> String { Words.line("record.report.submit", taf) }
+            /// Report this payment
+            static var title: String { Words.line("record.report.title") }
+        }
         enum Result {
             /// done
             static var done: String { Words.line("record.result.done") }

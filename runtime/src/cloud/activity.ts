@@ -36,7 +36,15 @@ export interface ActivityCall {
   answer?: unknown; receipt?: unknown; reasons?: string[]; made_at?: string; reason?: string;
   /** What the call is about, in the taf's words ("Order 1042"), as KIFF kept it from the call's kiff_about. */
   about?: string;
+  /** KIFF: the call's tool moves money (by its owner-approved profile) and the call was sent. */
+  payment?: boolean;
 }
+
+/**
+ * "Report this payment" (docs/record.md): a payment the reader may report as one they didn't expect. `trace_id` is its
+ * receipt's, for `POST /v1/record/{trace_id}/report`; `at` is when it was made, which the app writes as the sheet's date.
+ */
+export interface ReportOffer { trace_id: string; at: string }
 
 export interface ActivityEntry {
   id: string; at: string; kind: "done" | "approved" | "held" | "refused" | "not_done" | "sending" | "unknown";
@@ -44,6 +52,10 @@ export interface ActivityEntry {
   amount_text?: string; call: ActivityCall;
   /** What the owner can do about a call that wasn't done, when its outcome says (kiff/tafs#476, gap 10). */
   next?: NextStep;
+  /** Only on a payment this reader may report and that isn't reported yet: no `report`, no button. */
+  report?: ReportOffer;
+  /** When this payment was reported, as KIFF keeps it on its receipt. */
+  reported_at?: string;
 }
 
 /**
@@ -247,10 +259,23 @@ function worded(s: string | null | undefined): string | undefined {
 }
 
 /**
- * A call as an Activity or Record row. `manages`: the reader manages the taf, so a short plain reason the app gave is quoted;
- * anyone else, people it's shared with included, gets the reason in tafs cloud's words.
+ * The call's report, from its receipt as KIFF sent it: the offer when the reader may report it (an owner or admin, `cards.manage`,
+ * as KIFF's report route asks), KIFF says it's a payment, it has a receipt and it isn't reported yet; and when it was reported.
  */
-export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en", manages = false): ActivityEntry {
+function reportOf(c: ActivityCall, reports: boolean): { report?: ReportOffer; reported_at?: string } {
+  const receipt = c.receipt && typeof c.receipt === "object" ? c.receipt as { trace_id?: unknown; reported_at?: unknown } : undefined;
+  const reported = typeof receipt?.reported_at === "string" && receipt.reported_at ? receipt.reported_at : undefined;
+  if (reported) return { reported_at: reported };
+  const trace = typeof receipt?.trace_id === "string" && receipt.trace_id ? receipt.trace_id : undefined;
+  return reports && c.payment === true && trace ? { report: { trace_id: trace, at: c.made_at || c.created_at } } : {};
+}
+
+/**
+ * A call as an Activity or Record row. `manages`: the reader manages the taf, so a short plain reason the app gave is quoted;
+ * anyone else, people it's shared with included, gets the reason in tafs cloud's words. `reports`: the reader may report a
+ * payment of this taf (reportOf).
+ */
+export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: string, lang: Lang = "en", manages = false, reports = false): ActivityEntry {
   const kind = kindOf(c);
   const w = wordsIn(lang);
   const connection = connectionRefusalWords(c.tool_outcome, lang);
@@ -267,11 +292,11 @@ export function activityEntry(c: ActivityCall, zone: string, now: Date, taf?: st
   const next = kind === "not_done" ? nextStep(c, taf, lang) : undefined;
   const amount = amountWords(c.amount, lang);
   return { id, at: c.created_at, kind, title: c.title || c.action_name, detail: details[kind], time: timeIn(c.created_at, zone, now, lang), day, day_title: dayTitle,
-    ...(amount ? { amount_text: amount } : {}), call: shownCall(c, manages), ...(next ? { next } : {}) };
+    ...(amount ? { amount_text: amount } : {}), call: shownCall(c, manages), ...(next ? { next } : {}), ...reportOf(c, reports) };
 }
 
 /** Bounded source scanning: a cursor advances even through a page with no matching outcomes. */
-export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string; lang?: Lang; manages?: boolean }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
+export async function activityPage(input: { token: string; tenant: string; subject: string; taf: string; tafName?: string; agent: string; zone: string; now: Date; query: URLSearchParams; unitExceptions?: Held[]; unitExceptionsNotice?: string; lang?: Lang; manages?: boolean; reports?: boolean }, net: Fetch = fetch, base = KIFF_API): Promise<ActivityPage> {
   const lang = input.lang ?? "en";
   const filter = input.query.get("filter") ?? "all";
   if (!ACTIVITY_FILTERS.some((f) => f.id === filter)) throw new ActivityError(400, "filter is all, done, held or refused");
@@ -307,7 +332,7 @@ export async function activityPage(input: { token: string; tenant: string; subje
     for (const call of source.calls) {
       offset++;
       if (call.actor_id === input.agent && (!tools.length || tools.includes(call.action_name)) && (!from || Date.parse(call.created_at) >= Date.parse(from)) && activityMatches(call, filter as ActivityFilter)
-        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName, lang, input.manages === true));
+        && !collapsedCurrencyDecision(call, unitExceptions)) entries.push(activityEntry(call, input.zone, input.now, input.tafName, lang, input.manages === true, input.reports === true));
       if (entries.length === take) break;
     }
     more = offset < source.shown && !(from && source.calls.some((c) => Date.parse(c.created_at) < Date.parse(from)) && entries.length < take);

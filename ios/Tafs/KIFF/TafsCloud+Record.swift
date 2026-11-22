@@ -3,6 +3,27 @@ import Foundation
 /// The Record across the person's tafs (`GET /v1/record`, docs/api.md): search it, open one
 /// case, export receipts. tafs cloud finds, words and decides; the app sends what's typed or tapped.
 extension TafsCloud {
+    /// What reporting a payment answers (`POST /v1/record/{trace_id}/report`, no body): when KIFF marked it, the taf it halted,
+    /// and the halt as `GET /v1/tafs/{id}/halt` gives it. Reporting again answers the same.
+    struct PaymentReport: Decodable {
+        let reported_at: String
+        var taf: String?
+        let halt: Halt
+    }
+
+    /// Reports a payment the person didn't expect: KIFF marks its receipt and tafs cloud halts the taf, as the halt button does.
+    /// It only takes authority away, so it needs no Face ID; resuming stays behind the phone.
+    func reportPayment(traceID: String) async throws -> PaymentReport {
+        try await send("POST", "/v1/record/\(escaped(traceID))/report", body: [String: String]())
+    }
+
+    /// An ISO 8601 time as tafs cloud writes it, with or without fractions of a second.
+    static func isoDate(_ text: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: text) ?? ISO8601DateFormatter().date(from: text)
+    }
+
     /// One page of a search, newest first: each entry a taf's Activity entry with its taf and
     /// `about`. The search box's words (`hint`), "nothing matched" (`none_words`) and the end's
     /// words are tafs cloud's.

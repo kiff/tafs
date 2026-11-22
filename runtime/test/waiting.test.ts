@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Fired, Run } from "../src/cloud/agents.js";
 import { durationIn, late, lateAlert, oldestWaiting, waitingView } from "../src/cloud/waiting.js";
-import { LANGUAGES } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, LANGUAGES } from "../src/cloud/words/index.js";
 
 const NOW = new Date("2026-10-29T10:00:00Z");
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -56,7 +56,7 @@ describe("a taf's oldest waiting case", () => {
   it("says it in all eight languages, each its own", () => {
     const w = { since: ago(3 * 86_400_000 / 60_000), kind: "work" as const };
     const en = waitingView(w, 4, NOW, "en").words;
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       const view = waitingView(w, 4, NOW, lang);
       const alert = lateAlert("Refunds", w, 4, NOW, lang).body;
       for (const line of [view.words, alert]) {
