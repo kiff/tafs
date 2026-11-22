@@ -240,7 +240,8 @@ internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppSta
   val call = source.call
   val entry = RecordEntry(id = source.id, tafId = taf.id, kind = kind, title = source.title, detail = source.detail, at = call.createdAt,
     readOnly = call.readOnly, amountText = source.amountText, amountValue = call.amount?.value, amountUnit = call.amount?.unit,
-    entityId = call.entityId, onHash = call.onHash, onArg = call.onArg, answer = call.answer, receipt = call.receipt, why = call.reasons, madeAt = call.madeAt, reason = call.reason)
+    entityId = call.entityId, onHash = call.onHash, onArg = call.onArg, answer = call.answer, receipt = call.receipt, why = call.reasons, madeAt = call.madeAt, reason = call.reason,
+    report = source.report)
   Panel(Modifier.tapping { open = true }) {
     Row(Modifier.fillMaxWidth()) { Text(source.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f)); Text(source.time, style = scaled(12, color = Theme.dim)) }
     Text(source.detail, style = scaled(13, color = Theme.soft))

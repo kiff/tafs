@@ -66,6 +66,9 @@ import kotlinx.coroutines.launch
 /** Reads KIFF's receipt for a Record line, by its trace id, as KIFF wrote it; null signed out and in the sample. */
 val LocalReceipt = staticCompositionLocalOf<(suspend (String) -> ByteArray)?> { null }
 
+/** Reports a payment (taf id, receipt's trace id): true when tafs cloud took it; null signed out and in the sample. */
+val LocalReportPayment = staticCompositionLocalOf<(suspend (String, String) -> Boolean)?> { null }
+
 private fun seconds(at: Instant): String = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.getDefault()).format(at.atZone(zone))
 
 /**
@@ -110,6 +113,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
         Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp))
       }
       Text(entry.titleWithAmount, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
+      ReportPayment(entry, state)
       Panel {
         Fact(Words.Receipt.Fact.taf, state.taf(entry.tafId)?.name ?: "–")
         Fact(Words.Receipt.Fact.at, "${shownDate(entry.at)}, ${seconds(entry.at)}")
@@ -180,6 +184,46 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
           }
         }
       }
+    }
+  }
+}
+
+/**
+ * "Report this payment" (docs/record.md), only where tafs cloud offers it: the button, then the approved sheet (what was paid and
+ * when, and that the taf is halted until the person has looked), then the done line. No signature: it only stops things, and
+ * resuming stays behind the phone. A report that didn't go through says so and changes nothing; sending again is safe.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ReportPayment(entry: RecordEntry, state: AppState) {
+  val offer = entry.report ?: return
+  val send = LocalReportPayment.current ?: return
+  val scope = rememberCoroutineScope()
+  var asking by remember { mutableStateOf(false) }
+  var sending by remember { mutableStateOf(false) }
+  var failed by remember { mutableStateOf(false) }
+  var done by remember { mutableStateOf(false) }
+  val taf = state.taf(entry.tafId)?.name ?: "–"
+  if (done) {
+    Panel(stroke = Theme.amber.copy(alpha = 0.5f)) { Text(Words.Record.Report.done(taf), style = scaled(14, color = Theme.ink)) }
+    return
+  }
+  OutlineButton(Words.Record.Report.button, { failed = false; asking = true }, color = Theme.amberText)
+  if (!asking) return
+  val made = runCatching { Instant.parse(offer.at) }.getOrNull() ?: entry.madeAt ?: entry.at
+  DriveSheet(onDismissRequest = { if (!sending) asking = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
+    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+      Text(Words.Record.Report.title, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
+      Text(Words.Record.Report.intro(taf, entry.amountText ?: "–", shownDate(made)), style = scaled(15, color = Theme.ink))
+      if (failed) Text(Words.Record.Report.failed, style = scaled(13, color = Theme.no))
+      OutlineButton(Words.Record.Report.submit(taf), {
+        sending = true
+        scope.launch {
+          val ok = try { send(entry.tafId, offer.traceId) } finally { sending = false }
+          if (ok) { asking = false; done = true } else failed = true
+        }
+      }, color = Theme.amberText, enabled = !sending)
+      OutlineButton(Words.Common.cancel, { asking = false }, enabled = !sending)
     }
   }
 }

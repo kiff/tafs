@@ -93,6 +93,7 @@ import bot.tafs.app.views.LocalSignInAgain
 import bot.tafs.app.views.ApproveAgain
 import bot.tafs.app.views.LocalApproveAgain
 import bot.tafs.app.views.LocalReceipt
+import bot.tafs.app.views.LocalReportPayment
 import bot.tafs.app.views.CalendarView
 import bot.tafs.app.views.OverviewView
 import bot.tafs.app.views.LocalCoachInstalls
@@ -392,6 +393,7 @@ fun RootView(model: AppModel) {
         ),
         // KIFF's receipt for a Record line, signed in: the sample has none.
         LocalReceipt provides (if (state.mode == Mode.kiff) model::receipt else null),
+        LocalReportPayment provides (if (state.mode == Mode.kiff) model::reportPayment else null),
         bot.tafs.app.views.LocalCardUnitActions provides remember(model) {
           bot.tafs.app.views.CardUnitActions(discuss = model::discussCardUnit, dismiss = model::dismissCardUnit)
         },

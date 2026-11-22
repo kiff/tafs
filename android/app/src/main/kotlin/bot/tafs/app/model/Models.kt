@@ -663,6 +663,8 @@ data class RecordEntry(
    * is. KIFF's lines, titled by the action, leave it unset.
    */
   val byYou: Boolean? = null,
+  /** "Report this payment", when tafs cloud offers it to this person (docs/record.md). */
+  val report: bot.tafs.app.kiff.ReportOffer? = null,
 ) {
   /** "payment …QbstR": what it acted on, by the argument's name, when tafs has its value and it matches KIFF's hash. */
   val onText: String?

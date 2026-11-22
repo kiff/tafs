@@ -8236,6 +8236,26 @@ class AppModel(
     else -> null
   }
 
+  /**
+   * "Report this payment" (docs/record.md): tafs cloud reports it to KIFF, which keeps the receipt and halts [tafId], as the halt
+   * button does. True when it took it; the taf reads as KIFF and tafs cloud say from then on.
+   */
+  suspend fun reportPayment(tafId: String, traceId: String): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    val generation = accountGeneration
+    val report = try {
+      cloud.reportPayment(traceId)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(halts = it.halts + (tafId to report.halt)) }
+    scope.launch { refresh() }
+    return true
+  }
+
   /** Reads where a halt stands. */
   suspend fun refreshHalt(tafId: String?) {
     val key = haltKey(tafId)
