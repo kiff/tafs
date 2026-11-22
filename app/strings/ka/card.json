@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "მთელი Card",
+    "other": "ყველა Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, შემდეგ გეკითხებათ",
+  "card.calls_left": {
+    "one": "დარჩა {count} ზარი",
+    "other": "დარჩა {count} ზარი"
+  },
+  "card.calls_left_line": {
+    "one": "დარჩა {count} ზარი {window} {limit}-დან",
+    "other": "დარჩა {count} ზარი {window} {limit}-დან"
+  },
+  "card.calls_used_of": {
+    "one": "{used} {count} ზარიდან {window}",
+    "other": "{used} {count} ზარიდან {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} ზარი {window}",
+    "other": "{count} ზარი {window}"
+  },
+  "card.card_confirmed_kiff": "Card · დაადასტურა KIFF-მა",
+  "card.card_draft_kiff": "Card · დრაფტი · KIFF-ისგან",
+  "card.card_got_room_call_needed": "მისმა Card-მა მიიღო ადგილი, რომელიც ამ ზარს სჭირდებოდა, ამ ჯამის განულებამდე",
+  "card.card_not_issued": "Card არ გაიცა. ",
+  "card.card_revoked": "Card გაუქმებულია",
+  "card.check.always_asks": "{rule}: ყოველთვის გეკითხებათ",
+  "card.check.never_allowed": "{rule}: არასოდეს ნებადართულია",
+  "card.check.not_on_card": "ამ taf-ის Card-ზე არ არის",
+  "card.check.over_count": {
+    "one": "{count} {window}-ზე მეტი",
+    "other": "{count} {window}-ზე მეტი"
+  },
+  "card.check.over_each": "{amount}-ზე მეტი თითო ზარზე",
+  "card.check.over_total": "{amount}-ზე მეტი {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "დასრულდა",
+  "card.ended_on": "დასრულდა {date}",
+  "card.ends": "მთავრდება",
+  "card.extra_room": "+{extra} დამატებითი სივრცე {window}",
+  "card.extra_room_prefix": "+{formatted} დამატებითი სივრცე ",
+  "card.extra_room_until": "+{extra} დამატებითი სივრცე {ends}-მდე",
+  "card.figure_left": "დარჩა: {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} ზარი {window}{each}: ეს იქნებოდა {nth} ზარი{item}",
+    "other": "{count} ზარი {window}{each}: ეს იქნებოდა {nth} ზარი{item}"
+  },
+  "card.held.each_call_asks": "ყოველი ზარი ჯერ გეკითხებათ",
+  "card.held.for_each": " თითოეულისთვის: {name}",
+  "card.held.for_each_join": " თითოეულისთვის: ",
+  "card.held.for_item": " ამისთვის: {item}",
+  "card.held.over_count": {
+    "one": "{count} ზარის ლიმიტს ზემოთ: ეს იქნებოდა {nth} ზარი",
+    "other": "{count} ზარის ლიმიტს ზემოთ: ეს იქნებოდა {nth} ზარი"
+  },
+  "card.held.over_one_call": "{amount} აღემატება {cap}-ის ლიმიტს ერთ ზარზე",
+  "card.held.over_total": "{amount} გადააჭარბებდა {cap}-ის ჯამს",
+  "card.hero.calls_left_of": {
+    "one": "ზარი დარჩა {window} {limit}-დან",
+    "other": "ზარი დარჩა {window} {limit}-დან"
+  },
+  "card.hero.calls_use_unavailable": "ზარები {window} · გამოყენება მიუწვდომელია",
+  "card.hero.left_of": "დარჩა {window} {limit}-დან",
+  "card.hero.left_of_extra": "დარჩა {window} {base}-დან + {extra} დამატებითი სივრცე",
+  "card.hero.left_of_extra_until": "დარჩა {window} {base}-დან + {extra} დამატებითი სივრცე {ends}-მდე",
+  "card.hero.left_of_note": "დარჩა {window} {limit}-დან{note}",
+  "card.hero.no_currency": "ვალუტის გარეშე",
+  "card.hero.no_currency_suffix": " · ვალუტის გარეშე",
+  "card.hero.use_unavailable": "{window} · გამოყენება მიუწვდომელია",
+  "card.hero.use_unavailable_note": "{label} · გამოყენება მიუწვდომელია{note}",
+  "card.how_counted": "როგორ ითვლება ეს",
+  "card.issue_prompt": "გასცით Card taf-ისთვის {taf}",
+  "card.issued_by": "გასცა",
+  "card.issued_by_account": "ანგარიშმა",
+  "card.issued_by_named": "გასცა: {who}",
+  "card.its_card": "მისი Card",
+  "card.kiff_did_not_revoke_cards": "KIFF-მა მისი {cards_left} Card არ გააუქმა: გააუქმეთ ისინი KIFF-ში.",
+  "card.left": "დარჩა {amount} {window}",
+  "card.left_extra_room": "დარჩა {current} {own}-დან + {extra} დამატებითი სივრცე{until}{note}",
+  "card.limit_can_not_raised_right": "ლიმიტი ახლა აქედან ვერ გაიზრდება.",
+  "card.limit_raised_read_balance_again": "ლიმიტი გაიზარდა. წაიკითხეთ ბალანსი ხელახლა, სანამ კიდევ გაზრდით.",
+  "card.line.calls_in_window": {
+    "one": "{count} ზარი {window}{then}",
+    "other": "{count} ზარი {window}{then}"
+  },
+  "card.line.more_asks": "; მეტისთვის ჯერ გეკითხებათ",
+  "card.line.then_asks": ", შემდეგ გეკითხებათ",
+  "card.line.total_in_window": "{amount} სულ {window}{then}",
+  "card.line.up_to_each": "{amount}-მდე თითო ზარზე",
+  "card.more": {
+    "one": "კიდევ {count}",
+    "other": "კიდევ {count}"
+  },
+  "card.no_actions": "მოქმედებები ჯერ არ არის",
+  "card.no_actions_short": "მოქმედებები ჯერ არ არის",
+  "card.no_currency": "{amount} (ვალუტის გარეშე)",
+  "card.no_end_date": "დასრულების თარიღის გარეშე",
+  "card.outcome.not_a_resource": "არ არის Card-ის რესურსებიდან ერთ-ერთი",
+  "card.outcome.outside": "Card-ის გარეთ",
+  "card.outcome.over_one_action": "Card-ის ლიმიტზე მეტი ერთ მოქმედებაზე",
+  "card.outcome.over_total": "Card-ის ჯამზე მეტი",
+  "card.outside_held": "გარეთ: დაგიკავათ",
+  "card.outside_refused": "გარეთ: უარყოფილია",
+  "card.over_limit_calls_would": "{limit} ზარის ლიმიტს ზემოთ: ეს იქნებოდა {nth} ზარი",
+  "card.revoke_failed": "KIFF-მა Card არ გააუქმა. {why}",
+  "card.revoked": "გაუქმებულია",
+  "card.rule.always_asks": "ყოველთვის გეკითხებათ",
+  "card.rule.at_most_each": "≤ {amount} თითო ზარზე",
+  "card.rule.at_most_each_refused_above": "≤ {amount} თითო ზარზე · ზემოთ უარყოფილია",
+  "card.rule.calls": {
+    "one": "{count} ზარი {window}",
+    "other": "{count} ზარი {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} ზარი {window}, შემდეგ გეკითხებათ",
+    "other": "{count} ზარი {window}, შემდეგ გეკითხებათ"
+  },
+  "card.rule.in_total": "{amount} სულ {window}",
+  "card.rule.never": "არასოდეს",
+  "card.rule.total_then_asks": "{amount} სულ {window}, შემდეგ გეკითხებათ",
+  "card.rule.up_to_each": "{amount}-მდე თითო ზარზე; მეტისთვის ჯერ გეკითხებათ",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf-ის Card",
+  "card.tools": {
+    "one": "{count} ინსტრუმენტი",
+    "other": "{count} ინსტრუმენტი"
+  },
+  "card.until": "მდე",
+  "card.until_date": "{date}-მდე",
+  "card.until_ends": " {ends}-მდე",
+  "card.used_of": "{used} {limit}-დან {window}",
+  "card.window.a_day": "დღეში",
+  "card.window.a_month": "თვეში",
+  "card.window.a_week": "კვირაში",
+  "card.window.any_day": "ნებისმიერ 24 საათში",
+  "card.window.any_hour": "ნებისმიერ საათში",
+  "card.window.any_week": "ნებისმიერ 7 დღეში",
+  "card.window.in_total": "სულ",
+  "card.window.in_total_window": "სულ {window}",
+  "card.window.last_day": "ბოლო 24 საათში",
+  "card.window.last_hour": "ბოლო საათში",
+  "card.window.last_week": "ბოლო 7 დღეში",
+  "card.window.so_far": "ჯერჯერობით",
+  "card.window.this_month": "ამ თვეში",
+  "card.window.this_week": "ამ კვირაში",
+  "card.window.today": "დღეს",
+  "card.within_card": "Card-ის ფარგლებში"
+}
