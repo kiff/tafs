@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "קובץ אחד · נשמר 30 יום",
+    "two": "שני קבצים · נשמרים 30 יום",
+    "other": "{count} קבצים · נשמרים 30 יום"
+  },
+  "files.all": "הכול",
+  "files.all_tafs": "כל ה-taf",
+  "files.by_run": "לפי ריצה",
+  "files.by_taf": "לפי taf",
+  "files.delete_body": "הוא נמחק מהקבצים לכל מי שנמצא בחשבון הזה, מיד. אי אפשר לבטל את זה.",
+  "files.delete_now": "מחיקה עכשיו",
+  "files.delete_question": "למחוק את “{name}” עכשיו?",
+  "files.deleted": "נמחק לכולם",
+  "files.download": "הורדה",
+  "files.empty": "עדיין אין כלום. כש-taf יוצר דוח, גיליון או מסמך בריצה, הוא נשמר כאן 30 יום, וכל מי שנמצא בחשבון הזה יכול לפתוח, לשמור או לשתף אותו.",
+  "files.everyone": "כל מי שנמצא בחשבון הזה",
+  "files.goes_away": "נעלם",
+  "files.goes_in_days": {
+    "one": "נעלם בעוד יום",
+    "two": "נעלם בעוד יומיים",
+    "other": "נעלם בעוד {count} ימים"
+  },
+  "files.goes_on": "{date} (30 יום אחרי הריצה שלו)",
+  "files.goes_today": "נעלם היום",
+  "files.goes_tomorrow": "נעלם מחר",
+  "files.in_run": "בריצה",
+  "files.kept_line": "כל קובץ נשמר 30 יום מהריצה שלו, ואז נעלם מעצמו. כל מי שנמצא בחשבון הזה רואה את הקבצים האלה. הקבצים שצירפת בשיחות נשארים עם ההודעות שלהם.",
+  "files.kept_until": "הקבצים שלו נשמרים עד {date}",
+  "files.made_by": "נוצר על ידי",
+  "files.none_yet": "עדיין אין · נשמרים 30 יום",
+  "files.pick_one": "יש לבחור קובץ כדי לראות אותו כאן.",
+  "files.preview_start": "מוצג רק ההתחלה. יש להוריד את הקובץ כדי לקרוא את כולו.",
+  "files.saved": "נשמר בהתקן הזה",
+  "files.see_in_chat": "הצגה בשיחה",
+  "files.share": "שיתוף",
+  "files.size": "גודל",
+  "files.taf_row": {
+    "one": "קובץ אחד מהריצות שלו",
+    "two": "שני קבצים מהריצות שלו",
+    "other": "{count} קבצים מהריצות שלו"
+  },
+  "files.title": "קבצים",
+  "files.type": "סוג",
+  "files.who_sees": "מי רואה"
+}
