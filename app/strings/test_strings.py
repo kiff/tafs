@@ -50,7 +50,7 @@ def glossary_being_written():
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Catalan": "ca", "Macedonian": "mk", "Mongolian": "mn", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Catalan": "ca", "Macedonian": "mk", "Mongolian": "mn", "Nepali": "ne", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
@@ -104,9 +104,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "ca", "mk", "mn"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "ca", "mk", "mn", "ne"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ca", "mk", "mn", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ca", "mk", "mn", "ne", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -244,7 +244,8 @@ class SharedWords(unittest.TestCase):
                     bare = generate.PLACEHOLDER.sub("", text).strip()
                     # A script with no capitals (Arabic, Korean, Japanese) opens a sentence with its first letter.
                     self.assertTrue(bare[:1].isupper() or bare[:1].lower() == bare[:1].upper(), f"{lang} {key} doesn't open a sentence: {text!r}")
-                    self.assertTrue(bare.endswith((".", "!", "?", "。")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    # Armenian ends a sentence with its own full stop, "։" (U+0589); Bengali with the danda, "।" (U+0964).
+                    self.assertTrue(bare.endswith((".", "!", "?", "。", "։", "।")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
                         self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")
@@ -263,7 +264,7 @@ class SharedWords(unittest.TestCase):
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).lstrip()
                     self.assertFalse(bare[:1].isupper(), f"{lang} {key} opens with a capital: {text!r}")
-                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。")), f"{lang} {key} ends a sentence: {text!r}")
+                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。", "।")), f"{lang} {key} ends a sentence: {text!r}")
 
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:

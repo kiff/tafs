@@ -29,5 +29,6 @@
     <locale android:name="ca" />
     <locale android:name="mk" />
     <locale android:name="mn" />
+    <locale android:name="ne" />
     <locale android:name="pt-BR" />
 </locale-config>

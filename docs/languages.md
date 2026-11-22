@@ -951,6 +951,40 @@ There is one plural form in use (one and other read the same).
 | Usage | Хэрэглээ |
 | Cancel / Continue | Болих / Үргэлжлүүлэх |
 
+### Nepali (ne)
+
+Nepali in Devanagari, in the polite register (**तपाईं**). Buttons are the polite imperative ("स्वीकृत गर्नुहोस्", "अस्वीकार गर्नुहोस्",
+"जारी राख्नुहोस्"). taf, Card, Coach and KIFF stay in Latin letters; Nepali doesn't mark a plural after a number, so a count takes
+the bare noun ("३ taf", "२ कल"). A suffix follows a Latin name after a space ("taf को Card", "KIFF बाट"). Numbers in the app's
+own text are Western digits where they come from the code and Devanagari digits only in the fixed sample lines. A door is "ढोका",
+a knock "ढकढक", a call "कल", a receipt "रसिद", the dial "डायल". Quotes are “ ”. macOS has no Nepali, so a `*_mac` line gives the
+path in Nepali with macOS 12's names in brackets. Plural forms: one, other (read the same).
+
+| English | Nepali |
+|---|---|
+| Needs you | तपाईंको प्रतीक्षामा |
+| Approve / Approve once | स्वीकृत गर्नुहोस् / एक पटक स्वीकृत गर्नुहोस् |
+| Refuse | अस्वीकार गर्नुहोस् |
+| held | रोकिएको |
+| Halt / Halted | रोक्नुहोस् / रोकिएको |
+| Stopped | रोकिएको |
+| Pause / Paused | पज गर्नुहोस् / पज गरिएको |
+| Resume | फेरि सुरु गर्नुहोस् |
+| Revoke | रद्द गर्नुहोस् |
+| Record | अभिलेख |
+| Connect / connection | जडान गर्नुहोस् / जडान |
+| Pair / Unpair | जोड्नुहोस् / जोडी हटाउनुहोस् |
+| Account | खाता |
+| credits | क्रेडिट |
+| passkey | पासकी |
+| security key | सुरक्षा कुञ्जी |
+| Sign in / Sign out | साइन इन गर्नुहोस् / साइन आउट गर्नुहोस् |
+| Inbox | इनबक्स |
+| Overview | सारांश |
+| Calendar | पात्रो |
+| Usage | प्रयोग |
+| Cancel / Continue | रद्द गर्नुहोस् / जारी राख्नुहोस् |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

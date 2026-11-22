@@ -83,7 +83,7 @@
   "connect.give_key_on_sheet": "सुरक्षित पानामा कुञ्जी दिनुहोस्",
   "connect.give_key_with": "{biometry} ले कुञ्जी दिनुहोस्",
   "connect.how.key": "कुञ्जीसहित",
-  "connect.how.sign_in": "साइन इन",
+  "connect.how.sign_in": "साइन इन गर्नुहोस्",
   "connect.kept.another_taf": "अर्को taf",
   "connect.kept.for_card": {
     "one": "{who} का लागि {count} राखियो, जसको Card ले यो प्रयोग गर्छ।",
