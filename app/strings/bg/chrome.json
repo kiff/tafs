@@ -22,6 +22,7 @@
   "chrome.refused": "Друг Chrome използва този код, така че нищо не беше сдвоено. Започнете отново.",
   "chrome.remove": "Премахване на сдвояването",
   "chrome.remove_named": "Премахване на сдвояването с {name}",
+  "chrome.replace_changed": "Това, което преминава към този Chrome, се промени, затова нищо не беше сдвоено. Провери и сдвои отново.",
   "chrome.replace_moves": "Преминава към този Chrome: {sites}",
   "chrome.replace_none": "Нов Chrome (не замества никой)",
   "chrome.replace_title": "Замества",

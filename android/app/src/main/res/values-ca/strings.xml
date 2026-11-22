@@ -616,6 +616,7 @@
     <string name="chrome_refused">Un altre Chrome ha utilitzat aquest codi, així que no s\'ha aparellat res. Torna a començar.</string>
     <string name="chrome_remove">Desaparella</string>
     <string name="chrome_remove_named">Desaparella %1$s</string>
+    <string name="chrome_replace_changed">El que passa a aquest Chrome ha canviat, així que no s\'ha aparellat res. Revisa-ho i torna a aparellar.</string>
     <string name="chrome_replace_moves">Passa a aquest Chrome: %1$s</string>
     <string name="chrome_replace_none">Un Chrome nou (no en substitueix cap)</string>
     <string name="chrome_replace_title">Substitueix</string>

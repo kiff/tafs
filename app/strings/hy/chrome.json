@@ -22,6 +22,7 @@
   "chrome.refused": "Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։",
   "chrome.remove": "Չեղարկեք զուգակցումը",
   "chrome.remove_named": "Չեղարկեք զուգակցումը՝ {name}",
+  "chrome.replace_changed": "Այս Chrome տեղափոխվողը փոխվել է, ուստի ոչինչ չզուգակցվեց։ Ստուգեք և նորից զուգակցեք։",
   "chrome.replace_moves": "Տեղափոխվում է այս Chrome՝ {sites}",
   "chrome.replace_none": "Նոր Chrome (ոչ մեկին չի փոխարինում)",
   "chrome.replace_title": "Փոխարինում է",

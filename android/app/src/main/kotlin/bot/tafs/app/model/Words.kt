@@ -613,6 +613,7 @@ object Words {
     val refused: String get() = Res.s(R.string.chrome_refused)
     val remove: String get() = Res.s(R.string.chrome_remove)
     fun removeNamed(name: String): String = Res.s(R.string.chrome_remove_named, name)
+    val replaceChanged: String get() = Res.s(R.string.chrome_replace_changed)
     fun replaceMoves(sites: String): String = Res.s(R.string.chrome_replace_moves, sites)
     val replaceNone: String get() = Res.s(R.string.chrome_replace_none)
     val replaceTitle: String get() = Res.s(R.string.chrome_replace_title)

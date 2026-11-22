@@ -22,6 +22,7 @@
   "chrome.refused": "มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง",
   "chrome.remove": "ยกเลิกการจับคู่",
   "chrome.remove_named": "ยกเลิกการจับคู่ {name}",
+  "chrome.replace_changed": "สิ่งที่ย้ายมายัง Chrome นี้เปลี่ยนไป จึงยังไม่ได้จับคู่ ตรวจสอบแล้วจับคู่อีกครั้ง",
   "chrome.replace_moves": "ย้ายมายัง Chrome นี้: {sites}",
   "chrome.replace_none": "Chrome ใหม่ (ไม่แทนที่ตัวใด)",
   "chrome.replace_title": "แทนที่",

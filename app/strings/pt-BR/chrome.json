@@ -5,6 +5,7 @@
   "chrome.held_basket": "No carrinho",
   "chrome.only_yours": "Associe apenas um Chrome em um computador que esteja à sua frente.",
   "chrome.profile_note": "O tafs trabalha em seu próprio perfil do Chrome. Faça login lá apenas nos sites que você quer que seus tafs usem.",
+  "chrome.replace_changed": "O que passa para este Chrome mudou, então nada foi emparelhado. Confira e emparelhe de novo.",
   "chrome.replace_moves": "Passa para este Chrome: {sites}",
   "chrome.replace_none": "Um novo Chrome (não substitui nenhum)",
   "chrome.replace_unpairs": "{name} é desemparelhado assim que este for emparelhado.",

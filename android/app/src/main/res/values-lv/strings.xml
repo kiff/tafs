@@ -649,6 +649,7 @@
     <string name="chrome_refused">Šo kodu izmantoja cits Chrome, tāpēc nekas netika savienots pārī. Sāc no jauna.</string>
     <string name="chrome_remove">Atvienot</string>
     <string name="chrome_remove_named">Atvienot %1$s</string>
+    <string name="chrome_replace_changed">Mainījās tas, kas pāriet uz šo Chrome, tāpēc nekas netika savienots pārī. Pārbaudi un savieno pārī vēlreiz.</string>
     <string name="chrome_replace_moves">Pāriet uz šo Chrome: %1$s</string>
     <string name="chrome_replace_none">Jauns Chrome (neko neaizstāj)</string>
     <string name="chrome_replace_title">Aizstāj</string>

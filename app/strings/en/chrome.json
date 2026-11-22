@@ -22,6 +22,7 @@
   "chrome.refused": "Another Chrome used this code, so nothing was paired. Start again.",
   "chrome.remove": "Unpair",
   "chrome.remove_named": "Unpair {name}",
+  "chrome.replace_changed": "What moves to this Chrome changed, so nothing was paired. Check it and pair again.",
   "chrome.replace_moves": "Moves to this Chrome: {sites}",
   "chrome.replace_none": "A new Chrome (replaces none)",
   "chrome.replace_title": "Replaces",

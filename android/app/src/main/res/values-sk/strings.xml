@@ -649,6 +649,7 @@
     <string name="chrome_refused">Tento kód použil iný Chrome, takže sa nič nespárovalo. Začnite znova.</string>
     <string name="chrome_remove">Zrušiť spárovanie</string>
     <string name="chrome_remove_named">Zrušiť spárovanie %1$s</string>
+    <string name="chrome_replace_changed">Čo prejde do tohto Chrome, sa zmenilo, takže sa nič nespárovalo. Skontroluj to a spáruj znova.</string>
     <string name="chrome_replace_moves">Prejde do tohto Chrome: %1$s</string>
     <string name="chrome_replace_none">Nový Chrome (nič nenahrádza)</string>
     <string name="chrome_replace_title">Nahrádza</string>

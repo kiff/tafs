@@ -616,6 +616,7 @@
     <string name="chrome_refused">Një Chrome tjetër e përdori këtë kod, ndaj asgjë nuk u çiftua. Filloni sërish.</string>
     <string name="chrome_remove">Hiqni çiftimin</string>
     <string name="chrome_remove_named">Hiqni çiftimin: %1$s</string>
+    <string name="chrome_replace_changed">Ajo që kalon te ky Chrome ndryshoi, prandaj nuk u çiftua asgjë. Kontrolloje dhe çifto përsëri.</string>
     <string name="chrome_replace_moves">Kalon te ky Chrome: %1$s</string>
     <string name="chrome_replace_none">Një Chrome i ri (nuk zëvendëson asnjë)</string>
     <string name="chrome_replace_title">Zëvendëson</string>

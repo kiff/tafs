@@ -616,6 +616,7 @@
     <string name="chrome_refused">Bu kodu başka bir Chrome kullandı, bu yüzden hiçbir şey eşleştirilmedi. Baştan başlayın.</string>
     <string name="chrome_remove">Eşleştirmeyi kaldır</string>
     <string name="chrome_remove_named">Eşleştirmeyi kaldır: %1$s</string>
+    <string name="chrome_replace_changed">Bu Chrome\'a geçenler değişti, bu yüzden hiçbir şey eşleştirilmedi. Kontrol et ve yeniden eşleştir.</string>
     <string name="chrome_replace_moves">Bu Chrome\'a geçer: %1$s</string>
     <string name="chrome_replace_none">Yeni bir Chrome (hiçbirini değiştirmez)</string>
     <string name="chrome_replace_title">Değiştirir</string>

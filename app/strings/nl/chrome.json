@@ -22,6 +22,7 @@
   "chrome.refused": "Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.",
   "chrome.remove": "Ontkoppelen",
   "chrome.remove_named": "{name} ontkoppelen",
+  "chrome.replace_changed": "Wat naar deze Chrome gaat, is veranderd, dus er is niets gekoppeld. Controleer het en koppel opnieuw.",
   "chrome.replace_moves": "Gaat naar deze Chrome: {sites}",
   "chrome.replace_none": "Een nieuwe Chrome (vervangt geen)",
   "chrome.replace_title": "Vervangt",

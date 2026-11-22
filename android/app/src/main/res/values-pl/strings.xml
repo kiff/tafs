@@ -682,6 +682,7 @@
     <string name="chrome_refused">Inny Chrome użył tego kodu, więc nic nie zostało powiązane. Zacznij od nowa.</string>
     <string name="chrome_remove">Usuń powiązanie</string>
     <string name="chrome_remove_named">Usuń powiązanie z %1$s</string>
+    <string name="chrome_replace_changed">To, co przechodzi do tego Chrome, się zmieniło, więc nic nie zostało powiązane. Sprawdź i powiąż ponownie.</string>
     <string name="chrome_replace_moves">Przechodzi do tego Chrome: %1$s</string>
     <string name="chrome_replace_none">Nowa przeglądarka Chrome (nic nie zastępuje)</string>
     <string name="chrome_replace_title">Zastępuje</string>

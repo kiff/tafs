@@ -616,6 +616,7 @@
     <string name="chrome_refused">Өөр Chrome энэ кодыг ашигласан тул юу ч хослуулаагүй. Дахин эхлүүлнэ үү.</string>
     <string name="chrome_remove">Хослолыг салгах</string>
     <string name="chrome_remove_named">%1$s-ийн хослолыг салгах</string>
+    <string name="chrome_replace_changed">Энэ Chrome руу шилжих зүйл өөрчлөгдсөн тул юу ч хослуулаагүй. Шалгаад дахин хослуулна уу.</string>
     <string name="chrome_replace_moves">Энэ Chrome руу шилжинэ: %1$s</string>
     <string name="chrome_replace_none">Шинэ Chrome (юуг ч солихгүй)</string>
     <string name="chrome_replace_title">Солих</string>

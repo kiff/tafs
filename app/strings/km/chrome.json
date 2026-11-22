@@ -22,6 +22,7 @@
   "chrome.refused": "Chrome ផ្សេងបានប្រើលេខកូដនេះ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមចាប់ផ្តើមឡើងវិញ។",
   "chrome.remove": "ឈប់ផ្គូផ្គង",
   "chrome.remove_named": "ឈប់ផ្គូផ្គង {name}",
+  "chrome.replace_changed": "អ្វីដែលផ្លាស់ទៅ Chrome នេះបានផ្លាស់ប្តូរ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមពិនិត្យ ហើយផ្គូផ្គងម្តងទៀត។",
   "chrome.replace_moves": "ផ្លាស់ទៅ Chrome នេះ៖ {sites}",
   "chrome.replace_none": "Chrome ថ្មី (មិនជំនួសអ្វីទេ)",
   "chrome.replace_title": "ជំនួស",

@@ -22,6 +22,7 @@
   "chrome.refused": "To kodo je uporabil drug Chrome, zato ni bilo nič seznanjeno. Začnite znova.",
   "chrome.remove": "Prekini seznanitev",
   "chrome.remove_named": "Prekini seznanitev: {name}",
+  "chrome.replace_changed": "Kar preide v ta Chrome, se je spremenilo, zato ni bilo nič seznanjeno. Preveri in seznani znova.",
   "chrome.replace_moves": "Preide v ta Chrome: {sites}",
   "chrome.replace_none": "Nov Chrome (ne nadomešča nobenega)",
   "chrome.replace_title": "Nadomešča",

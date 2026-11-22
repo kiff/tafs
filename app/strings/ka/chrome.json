@@ -22,6 +22,7 @@
   "chrome.refused": "სხვა Chrome-მა გამოიყენა ეს კოდი, ამიტომ არაფერი დაწყვილდა. დაიწყეთ თავიდან.",
   "chrome.remove": "გააუქმეთ დაწყვილება",
   "chrome.remove_named": "გააუქმეთ დაწყვილება: {name}",
+  "chrome.replace_changed": "ამ Chrome-ზე გადასატანი შეიცვალა, ამიტომ არაფერი დაწყვილდა. გადაამოწმეთ და ხელახლა დააწყვილეთ.",
   "chrome.replace_moves": "გადადის ამ Chrome-ზე: {sites}",
   "chrome.replace_none": "ახალი Chrome (არცერთს არ ანაცვლებს)",
   "chrome.replace_title": "ანაცვლებს",

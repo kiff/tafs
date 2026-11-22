@@ -616,6 +616,7 @@
     <string name="chrome_refused">Een andere Chrome gebruikte deze code, dus er is niets gekoppeld. Begin opnieuw.</string>
     <string name="chrome_remove">Ontkoppelen</string>
     <string name="chrome_remove_named">%1$s ontkoppelen</string>
+    <string name="chrome_replace_changed">Wat naar deze Chrome gaat, is veranderd, dus er is niets gekoppeld. Controleer het en koppel opnieuw.</string>
     <string name="chrome_replace_moves">Gaat naar deze Chrome: %1$s</string>
     <string name="chrome_replace_none">Een nieuwe Chrome (vervangt geen)</string>
     <string name="chrome_replace_title">Vervangt</string>

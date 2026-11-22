@@ -616,6 +616,7 @@
     <string name="chrome_refused">Մեկ այլ Chrome օգտագործեց այս կոդը, ուստի ոչինչ չզուգակցվեց։ Սկսեք նորից։</string>
     <string name="chrome_remove">Չեղարկեք զուգակցումը</string>
     <string name="chrome_remove_named">Չեղարկեք զուգակցումը՝ %1$s</string>
+    <string name="chrome_replace_changed">Այս Chrome տեղափոխվողը փոխվել է, ուստի ոչինչ չզուգակցվեց։ Ստուգեք և նորից զուգակցեք։</string>
     <string name="chrome_replace_moves">Տեղափոխվում է այս Chrome՝ %1$s</string>
     <string name="chrome_replace_none">Նոր Chrome (ոչ մեկին չի փոխարինում)</string>
     <string name="chrome_replace_title">Փոխարինում է</string>

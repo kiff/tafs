@@ -583,6 +583,7 @@
     <string name="chrome_refused">มี Chrome อื่นใช้รหัสนี้แล้ว จึงยังไม่ได้จับคู่อะไร เริ่มใหม่อีกครั้ง</string>
     <string name="chrome_remove">ยกเลิกการจับคู่</string>
     <string name="chrome_remove_named">ยกเลิกการจับคู่ %1$s</string>
+    <string name="chrome_replace_changed">สิ่งที่ย้ายมายัง Chrome นี้เปลี่ยนไป จึงยังไม่ได้จับคู่ ตรวจสอบแล้วจับคู่อีกครั้ง</string>
     <string name="chrome_replace_moves">ย้ายมายัง Chrome นี้: %1$s</string>
     <string name="chrome_replace_none">Chrome ใหม่ (ไม่แทนที่ตัวใด)</string>
     <string name="chrome_replace_title">แทนที่</string>

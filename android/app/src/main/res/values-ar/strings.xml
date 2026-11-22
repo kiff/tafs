@@ -748,6 +748,7 @@
     <string name="chrome_refused">استخدم Chrome آخر هذا الرمز فلم يتم إقران شيء. ابدأ من جديد.</string>
     <string name="chrome_remove">إلغاء الإقران</string>
     <string name="chrome_remove_named">إلغاء إقران %1$s</string>
+    <string name="chrome_replace_changed">تغيّر ما ينتقل إلى هذا المتصفح، فلم يُقرَن شيء. راجعه وأقرِن من جديد.</string>
     <string name="chrome_replace_moves">تنتقل إلى هذا المتصفح: %1$s</string>
     <string name="chrome_replace_none">متصفح Chrome جديد (لا يستبدل أيًّا منها)</string>
     <string name="chrome_replace_title">يستبدل</string>

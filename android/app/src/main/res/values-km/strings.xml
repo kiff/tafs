@@ -583,6 +583,7 @@
     <string name="chrome_refused">Chrome ផ្សេងបានប្រើលេខកូដនេះ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមចាប់ផ្តើមឡើងវិញ។</string>
     <string name="chrome_remove">ឈប់ផ្គូផ្គង</string>
     <string name="chrome_remove_named">ឈប់ផ្គូផ្គង %1$s</string>
+    <string name="chrome_replace_changed">អ្វីដែលផ្លាស់ទៅ Chrome នេះបានផ្លាស់ប្តូរ ដូច្នេះគ្មានអ្វីត្រូវបានផ្គូផ្គងទេ។ សូមពិនិត្យ ហើយផ្គូផ្គងម្តងទៀត។</string>
     <string name="chrome_replace_moves">ផ្លាស់ទៅ Chrome នេះ៖ %1$s</string>
     <string name="chrome_replace_none">Chrome ថ្មី (មិនជំនួសអ្វីទេ)</string>
     <string name="chrome_replace_title">ជំនួស</string>

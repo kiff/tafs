@@ -616,6 +616,7 @@
     <string name="chrome_refused">სხვა Chrome-მა გამოიყენა ეს კოდი, ამიტომ არაფერი დაწყვილდა. დაიწყეთ თავიდან.</string>
     <string name="chrome_remove">გააუქმეთ დაწყვილება</string>
     <string name="chrome_remove_named">გააუქმეთ დაწყვილება: %1$s</string>
+    <string name="chrome_replace_changed">ამ Chrome-ზე გადასატანი შეიცვალა, ამიტომ არაფერი დაწყვილდა. გადაამოწმეთ და ხელახლა დააწყვილეთ.</string>
     <string name="chrome_replace_moves">გადადის ამ Chrome-ზე: %1$s</string>
     <string name="chrome_replace_none">ახალი Chrome (არცერთს არ ანაცვლებს)</string>
     <string name="chrome_replace_title">ანაცვლებს</string>

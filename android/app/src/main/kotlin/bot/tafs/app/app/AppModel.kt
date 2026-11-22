@@ -4361,14 +4361,18 @@ class AppModel(
     // A re-pairing (docs/chrome.md "Your Chrome" 1): the connections that move are those this phone signed for the replaced
     // Chrome, checked with its own key; they go inside the pairing the extension checks, so planque can't change them. Read
     // again just now, as iOS does, so what's signed is live; and signed only if it's what the owner was shown. If it changed
-    // (a connection ended, the Chrome went), nothing is signed: the screen now shows the new list, to pair again on.
+    // (a connection ended, the Chrome went), nothing is signed, and the sheet says so over the new list, to pair again on. A
+    // read that failed signs nothing either, with its own line: the list it would sign is no longer known to be live.
+    val changed = { false.also { _state.update { it.copy(chromesError = Words.Chrome.replaceChanged) } } }
     val old = replaces?.let { r ->
       refreshChromes()
+      if (_state.value.chromesError != null) return false
       refreshConnections()
-      _state.value.chromes?.firstOrNull { it.id == r.id } ?: return false
+      _state.value.connectionsError?.let { why -> return false.also { _state.update { it.copy(chromesError = Words.Chrome.notLoaded(why = why)) } } }
+      _state.value.chromes?.firstOrNull { it.id == r.id } ?: return changed()
     }
     val carried = old?.let { pairing.carriedFrom(it, _state.value.grants, phoneKey) }.orEmpty()
-    if (old != null && carried != shown) return false
+    if (old != null && carried != shown) return changed()
     val confirmation = pairing.confirmation(p.secret, chromeKey, name, phoneKey).copy(carried = carried)
     val reason = Words.Chrome.pairPrompt(name = name)
     // One fingerprint for both acts where the extension checks it (docs/chrome.md "Your Chrome" 5): the pairing it verifies and

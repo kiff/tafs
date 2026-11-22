@@ -22,6 +22,7 @@
   "chrome.refused": "Egy másik Chrome használta ezt a kódot, így semmi sem lett párosítva. Kezdd újra.",
   "chrome.remove": "Párosítás megszüntetése",
   "chrome.remove_named": "Párosítás megszüntetése: {name}",
+  "chrome.replace_changed": "Megváltozott, mi kerül át ebbe a Chrome-ba, ezért semmi sem lett párosítva. Nézd át, és párosítsd újra.",
   "chrome.replace_moves": "Átkerül ebbe a Chrome-ba: {sites}",
   "chrome.replace_none": "Új Chrome (nem cserél le egyet sem)",
   "chrome.replace_title": "Lecseréli",

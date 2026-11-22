@@ -616,6 +616,7 @@
     <string name="chrome_refused">Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.</string>
     <string name="chrome_remove">Раздвои</string>
     <string name="chrome_remove_named">Раздвои го %1$s</string>
+    <string name="chrome_replace_changed">Она што преминува на овој Chrome се смени, па ништо не е спарено. Провери и спари повторно.</string>
     <string name="chrome_replace_moves">Преминува на овој Chrome: %1$s</string>
     <string name="chrome_replace_none">Нов Chrome (не заменува ниеден)</string>
     <string name="chrome_replace_title">Заменува</string>

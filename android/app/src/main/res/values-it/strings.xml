@@ -616,6 +616,7 @@
     <string name="chrome_refused">Un altro Chrome ha usato questo codice, quindi non è stato associato nulla. Ricomincia.</string>
     <string name="chrome_remove">Dissocia</string>
     <string name="chrome_remove_named">Dissocia %1$s</string>
+    <string name="chrome_replace_changed">Ciò che passa a questo Chrome è cambiato, quindi non è stato associato nulla. Controlla e associa di nuovo.</string>
     <string name="chrome_replace_moves">Passa a questo Chrome: %1$s</string>
     <string name="chrome_replace_none">Un nuovo Chrome (non ne sostituisce nessuno)</string>
     <string name="chrome_replace_title">Sostituisce</string>

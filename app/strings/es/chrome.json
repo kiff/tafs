@@ -22,6 +22,7 @@
   "chrome.refused": "Otro Chrome usó este código, así que no se vinculó nada. Empieza de nuevo.",
   "chrome.remove": "Desvincular",
   "chrome.remove_named": "Desvincular {name}",
+  "chrome.replace_changed": "Lo que pasa a este Chrome cambió, así que no se vinculó nada. Revísalo y vuelve a vincular.",
   "chrome.replace_moves": "Pasa a este Chrome: {sites}",
   "chrome.replace_none": "Un Chrome nuevo (no reemplaza ninguno)",
   "chrome.replace_title": "Reemplaza",

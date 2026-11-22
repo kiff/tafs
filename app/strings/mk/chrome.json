@@ -22,6 +22,7 @@
   "chrome.refused": "Друг Chrome го искористи овој код, па ништо не е спарено. Почни одново.",
   "chrome.remove": "Раздвои",
   "chrome.remove_named": "Раздвои го {name}",
+  "chrome.replace_changed": "Она што преминува на овој Chrome се смени, па ништо не е спарено. Провери и спари повторно.",
   "chrome.replace_moves": "Преминува на овој Chrome: {sites}",
   "chrome.replace_none": "Нов Chrome (не заменува ниеден)",
   "chrome.replace_title": "Заменува",

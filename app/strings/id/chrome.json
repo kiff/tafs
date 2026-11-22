@@ -22,6 +22,7 @@
   "chrome.refused": "Chrome lain memakai kode ini, jadi tidak ada yang dipasangkan. Mulai lagi.",
   "chrome.remove": "Lepas pasangan",
   "chrome.remove_named": "Lepas pasangan {name}",
+  "chrome.replace_changed": "Yang dipindahkan ke Chrome ini berubah, jadi tidak ada yang dipasangkan. Periksa lalu pasangkan lagi.",
   "chrome.replace_moves": "Dipindahkan ke Chrome ini: {sites}",
   "chrome.replace_none": "Chrome baru (tidak menggantikan apa pun)",
   "chrome.replace_title": "Menggantikan",

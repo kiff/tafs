@@ -649,6 +649,7 @@
     <string name="chrome_refused">Un alt Chrome a folosit acest cod, așa că nu s-a asociat nimic. Începeți din nou.</string>
     <string name="chrome_remove">Disociați</string>
     <string name="chrome_remove_named">Disociați %1$s</string>
+    <string name="chrome_replace_changed">S-a schimbat ce trece la acest Chrome, așa că nu s-a asociat nimic. Verifică și asociază din nou.</string>
     <string name="chrome_replace_moves">Trece la acest Chrome: %1$s</string>
     <string name="chrome_replace_none">Un Chrome nou (nu înlocuiește niciunul)</string>
     <string name="chrome_replace_title">Înlocuiește</string>

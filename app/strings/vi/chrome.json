@@ -22,6 +22,7 @@
   "chrome.refused": "Một Chrome khác đã dùng mã này nên chưa có gì được ghép đôi. Hãy bắt đầu lại.",
   "chrome.remove": "Hủy ghép đôi",
   "chrome.remove_named": "Hủy ghép đôi {name}",
+  "chrome.replace_changed": "Những gì chuyển sang Chrome này đã thay đổi nên chưa ghép đôi gì cả. Hãy kiểm tra rồi ghép đôi lại.",
   "chrome.replace_moves": "Chuyển sang Chrome này: {sites}",
   "chrome.replace_none": "Một Chrome mới (không thay thế cái nào)",
   "chrome.replace_title": "Thay thế",

@@ -583,6 +583,7 @@
     <string name="chrome_refused">Chrome lain memakai kode ini, jadi tidak ada yang dipasangkan. Mulai lagi.</string>
     <string name="chrome_remove">Lepas pasangan</string>
     <string name="chrome_remove_named">Lepas pasangan %1$s</string>
+    <string name="chrome_replace_changed">Yang dipindahkan ke Chrome ini berubah, jadi tidak ada yang dipasangkan. Periksa lalu pasangkan lagi.</string>
     <string name="chrome_replace_moves">Dipindahkan ke Chrome ini: %1$s</string>
     <string name="chrome_replace_none">Chrome baru (tidak menggantikan apa pun)</string>
     <string name="chrome_replace_title">Menggantikan</string>
