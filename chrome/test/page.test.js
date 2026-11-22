@@ -385,3 +385,29 @@ test("the picture's covers sit over the password, code and saved-fill fields, an
   assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0, "nothing is left behind");
   await page.close();
 });
+
+test("text that looks like a card number or a key is covered in the picture, and ordinary text isn't", { skip: !playwright }, async () => {
+  const hex = "a1".repeat(20);
+  const page = await openHTML(`<p id="card">Paid with 4242 4242 4242 4242 today</p><p id="key">key sk_live_${"b".repeat(24)} end</p><p id="hex">id ${hex} end</p><p id="plain">Order 1234567890123 shipped, thanks for shopping with us</p>`);
+  const got = await page.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(got.ok, true);
+  assert.equal(got.masked, 3, "the card number, the key and the hex run");
+  const hit = (id, word) =>
+    page.evaluate(([id, word]) => {
+      const node = document.getElementById(id).firstChild;
+      const at = node.nodeValue.indexOf(word);
+      const range = document.createRange();
+      range.setStart(node, at);
+      range.setEnd(node, at + word.length);
+      const r = range.getBoundingClientRect();
+      return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).hasAttribute("data-tafs-shot-mask");
+    }, [id, word]);
+  assert.equal(await hit("card", "4242 4242 4242 4242"), true);
+  assert.equal(await hit("key", "sk_live_" + "b".repeat(24)), true);
+  assert.equal(await hit("hex", hex), true);
+  assert.equal(await hit("plain", "shipped"), false, "text that isn't a secret stays readable");
+  assert.equal(await hit("plain", "1234567890123"), false, "an order number that fails the Luhn check is not a card");
+  await page.evaluate(() => globalThis.TafsPage.unmaskShot());
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0);
+  await page.close();
+});

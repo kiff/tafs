@@ -240,3 +240,25 @@ test("a build's manifest hash is 64 lower-case hex characters, the form planque'
   assert.equal(hash, createHash("sha256").update(bytes).digest("hex"));
   assert.equal(await manifestHashOf(new Uint8Array(0)), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "SHA-256 of nothing");
 });
+
+test("secretSpans names what a picture must cover: cards that pass Luhn, keys by shape, labelled values, long hex and base64 runs", () => {
+  const { secretSpans } = globalThis.TafsMask;
+  const pick = (text) => secretSpans(text).map(([a, b]) => text.slice(a, b));
+  const stripe = "sk_live_" + "a".repeat(24);
+  const hex = "0123456789abcdef".repeat(2);
+  const text = `card 4242-4242-4242-4242 and 4111 1111 1111 1112, ${stripe}, api_key=abcd1234efgh, AKIA${"A".repeat(16)}, ghp_${"x".repeat(36)}, jwt eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2Q, hex ${hex}, b64 ${"Zm9v".repeat(10)}, Bearer abcdefghij1234`;
+  assert.deepEqual(pick(text), [
+    "4242-4242-4242-4242",
+    stripe,
+    "abcd1234efgh",
+    "AKIA" + "A".repeat(16),
+    "ghp_" + "x".repeat(36),
+    "eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2Q",
+    hex,
+    "Zm9v".repeat(10),
+    "abcdefghij1234",
+  ]);
+  assert.deepEqual(pick("order 1234567890123 and a long word " + "abcdefghij".repeat(4)), [], "not a card; no digit, so not a key");
+  assert.deepEqual(pick("123e4567-e89b-12d3-a456-426614174000"), [], "a uuid has dashes and runs under 32");
+  assert.deepEqual(pick(""), []);
+});
