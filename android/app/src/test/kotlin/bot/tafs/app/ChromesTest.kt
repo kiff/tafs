@@ -157,6 +157,43 @@ class ChromesTest {
     assertEquals(listOf("Work Mac"), m.state.value.chromes?.map { it.name })
   }
 
+  /**
+   * A re-pairing reads the Chromes and connections again just before it signs, as iOS does, and signs only what the owner was
+   * shown: if what moves changed meanwhile, or the Chrome replaced is gone, nothing is signed or sent, and the screen shows the
+   * new list to pair again on. When it's the same, `replaces` goes to planque.
+   */
+  @Test fun aRePairingSignsOnlyWhatTheOwnerWasShownReadAgainJustBefore() = runTest {
+    val m = model()
+    transport.answer(open, 201, """{"pairing":"pr_1","lookup":"K7QF"}""")
+    val p = m.openChromePairing()!!
+    transport.answer(read, 200, offer(p.secret))
+    val offered = (m.chromePairingStep(p) as AppModel.ChromePairingStep.Offered).offer
+    val old = bot.tafs.app.kiff.Chrome("chr_old", "Laptop")
+    val shown = listOf(ChromePairing.Carried("g1", listOf("wikipedia.org")))
+    // Read again: the Chrome is still paired, but nothing on it verifies now (planque's list changed since the screen drew).
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_old","name":"Laptop","connections":[]}]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    assertFalse("what moves changed: nothing signed", m.confirmChrome(p, offered, "Work Mac", old, shown))
+    assertTrue(auth.fingerprints.isEmpty())
+    assertTrue(transport.requestsTo(confirm).isEmpty())
+    // The Chrome replaced is gone: nothing signed either.
+    transport.reset()
+    transport.answer(chromes, 200, """{"chromes":[]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    assertFalse(m.confirmChrome(p, offered, "Work Mac", old, emptyList()))
+    assertTrue(auth.fingerprints.isEmpty() && transport.requestsTo(confirm).isEmpty())
+    // The same as shown (nothing moves): signed, and planque hears which Chrome it replaces.
+    transport.reset()
+    transport.answer(chromes, 200, """{"chromes":[{"chrome_id":"chr_old","name":"Laptop","connections":[]}]}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer(confirm, 200, """{"chrome_id":"chr_1","name":"Work Mac"}""")
+    assertTrue(m.confirmChrome(p, offered, "Work Mac", old, emptyList()))
+    assertEquals(listOf("Pair Work Mac with your tafs"), auth.fingerprints)
+    val body = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    assertEquals("chr_old", body["replaces"]!!.jsonPrimitive.content)
+    assertNull("nothing carried, so the body is a first pairing's", body["carried"])
+  }
+
   /** The extension's own KIFF device, as `chrome/src/kiff.js` offers it. */
   private val kiffKey = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
   private fun kiffOffer(kind: String = "extension", keyStore: String = "software") =
