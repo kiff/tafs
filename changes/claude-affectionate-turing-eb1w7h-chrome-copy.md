@@ -1,0 +1,1 @@
+- **The Chrome pairing code copies in one tap on iPhone and iPad.** Account › Chrome shows a Copy button beside the code, so it can be pasted into the computer's Chrome ([docs/chrome.md](docs/chrome.md)).
