@@ -1,6 +1,7 @@
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
-import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
+import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat, signingBytes, requestsMessage } from "../src/crypto.js";
+import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
 import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
@@ -119,6 +120,96 @@ test("pairing binds the phone's key and ours under the code's secret, which plan
   assert.equal(await checkConfirmation("AAAAAAAAAAAAAAAAA", ext, answer), null, "another secret");
   const otherExt = await newKeyPair();
   assert.equal(await checkConfirmation(secret, otherExt, answer), null, "an answer for another extension's key");
+});
+
+const KIFF_HASH = "ab".repeat(32);
+const SIGNED_AT = "2026-11-22T21:30:00Z";
+
+/** The phone's side of a pairing with one fingerprint: one approval-key signature over this pairing and KIFF's request. */
+async function phoneConfirmsTogether(secret, offered, { phone, kiffHash = KIFF_HASH, tenant = "tenant-1", signedAt = SIGNED_AT, name = "Work Mac" }) {
+  const answer = await phoneConfirms(secret, offered, { phone, name });
+  const spki = Uint8Array.from(Buffer.from(offered.key, "base64url"));
+  const body = { pairing: answer.pairing, chrome_key_sha256: hex(await sha256(spki)), name, phone_key: answer.phone_key, phone_proof: answer.phone_proof };
+  const own = hex(await sha256(signingBytes(LABEL.pair, body)));
+  const data = requestsMessage(tenant, signedAt, own, kiffHash);
+  const sig = new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, phone.privateKey, data));
+  return { ...answer, phone_sig: b64u(sig), tenant, signed_at: signedAt, kiff_request_sha256: kiffHash };
+}
+
+test("one fingerprint confirms the pairing and KIFF's request: the extension checks the one signature over both", async () => {
+  const secret = "29XMDPQRSTVWXYZ23";
+  const ext = await newKeyPair();
+  const phone = await newKeyPair();
+  const offered = await offer(secret, ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS" });
+  const answer = await phoneConfirmsTogether(secret, offered, { phone });
+  assert.deepEqual(await checkConfirmation(secret, ext, answer), { chromeId: "chr_1", name: "Work Mac", phoneKey: await pub(phone) });
+
+  const refused = async (change, why) => assert.equal(await checkConfirmation(secret, ext, { ...answer, ...change }), null, why);
+  await refused({ kiff_request_sha256: "cd".repeat(32) }, "another KIFF request than the one signed");
+  await refused({ tenant: "tenant-2" }, "another tenant");
+  await refused({ signed_at: "2026-11-22T21:31:00Z" }, "another time");
+  await refused({ name: "Other" }, "a renamed pairing: our message changes, so the hash does");
+  await refused({ chrome_id: "chr_1", pairing: "pr_2" }, "another pairing");
+  const mallory = await newKeyPair();
+  const swapped = { ...(await phoneConfirmsTogether(secret, offered, { phone: mallory })), phone_proof: answer.phone_proof, phone_key: answer.phone_key };
+  assert.equal(await checkConfirmation(secret, ext, swapped), null, "a signature by another key");
+  assert.equal(await checkConfirmation(secret, await newKeyPair(), answer), null, "an answer for another extension's key");
+
+  // All three fields or none; the form's fields can't shift a line; a request is never paired with itself.
+  for (const k of ["tenant", "signed_at", "kiff_request_sha256"]) {
+    const { [k]: _gone, ...partial } = answer;
+    assert.equal(await checkConfirmation(secret, ext, partial), null, "without " + k);
+  }
+  // Fields the phone really signed, so only the extension's own checks can refuse them: a newline could shift a line of
+  // the message, a hash isn't 64 lower-case hex, a tenant or a time is empty.
+  for (const [why, fields] of Object.entries({
+    "a newline in the tenant": { tenant: "tenant-1\n" + SIGNED_AT },
+    "a newline in the time": { signedAt: SIGNED_AT + "\n" + KIFF_HASH },
+    "an empty tenant": { tenant: "" },
+    "an empty time": { signedAt: "" },
+    "upper-case hex": { kiffHash: KIFF_HASH.toUpperCase() },
+    "a short hash": { kiffHash: "ab" },
+  })) {
+    assert.equal(await checkConfirmation(secret, ext, await phoneConfirmsTogether(secret, offered, { phone, ...fields })), null, why);
+  }
+  const spki = Uint8Array.from(Buffer.from(offered.key, "base64url"));
+  const own = hex(await sha256(signingBytes(LABEL.pair, { pairing: answer.pairing, chrome_key_sha256: hex(await sha256(spki)), name: "Work Mac", phone_key: answer.phone_key, phone_proof: answer.phone_proof })));
+  const itself = await phoneConfirmsTogether(secret, offered, { phone, kiffHash: own });
+  assert.equal(await checkConfirmation(secret, ext, itself), null, "this pairing's own hash as KIFF's");
+  // The signature a phone makes over the pairing alone is not a combined one, and the other way round.
+  const alone = await phoneConfirms(secret, offered, { phone });
+  assert.equal(await checkConfirmation(secret, ext, { ...alone, tenant: "tenant-1", signed_at: SIGNED_AT, kiff_request_sha256: KIFF_HASH }), null, "a pairing-only signature given as a combined one");
+  assert.deepEqual(await checkConfirmation(secret, ext, alone), { chromeId: "chr_1", name: "Work Mac", phoneKey: await pub(phone) }, "a pairing-only answer still checks as before");
+  for (const k of ["tenant", "signed_at", "kiff_request_sha256"]) {
+    assert.equal(await checkConfirmation(secret, ext, { ...alone, [k]: "x" }), null, "a pairing-only signature with only " + k + " added");
+  }
+  assert.equal(await checkConfirmation(secret, ext, { ...answer, tenant: undefined, signed_at: undefined, kiff_request_sha256: undefined }), null, "a combined signature given as a pairing-only one");
+});
+
+test("what the phone signs once for two requests is the same lines KIFF and planque build, the hashes sorted", () => {
+  const text = (m) => new TextDecoder().decode(m);
+  assert.equal(text(requestsMessage("tenant-1", "2026-11-22T21:30:00Z", "bb".repeat(32), "aa".repeat(32))), ["kiff.requests.v1", "tenant-1", "2026-11-22T21:30:00Z", "aa".repeat(32), "bb".repeat(32)].join("\n"));
+  assert.deepEqual(requestsMessage("t", "s", "bb", "aa"), requestsMessage("t", "s", "aa", "bb"), "either order");
+});
+
+test("the extension keeps an id for its Chrome profile, and offers it to pair under", async () => {
+  const area = { data: {}, get: async (k) => ({ [k]: area.data[k] }), set: async (o) => void Object.assign(area.data, o) };
+  let n = 0;
+  const random = (len) => Uint8Array.from({ length: len }, (_, i) => (n + i) % 256);
+  const id = await profileId(area, random);
+  assert.match(id, /^[0-9a-f]{32}$/);
+  n = 99;
+  assert.equal(await profileId(area, random), id, "kept, not made again");
+  area.data.profile_id = "not an id";
+  assert.notEqual(await profileId(area, random), "not an id", "a value that isn't one is replaced");
+  assert.equal((await profileId({ get: async () => ({}), set: async () => {} }, random)).length, 32);
+
+  const ext = await newKeyPair();
+  const offered = await offer("29XMDPQRSTVWXYZ23", ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS", profileId: id });
+  assert.equal(offered.profile_id, id);
+  const without = await offer("29XMDPQRSTVWXYZ23", ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS" });
+  assert.ok(!("profile_id" in without), "none made, none sent");
+  assert.equal(without.proof, offered.proof, "the proof doesn't cover the id: it is a hint, and authenticates nothing");
 });
 
 class FakeSocket {

@@ -95,6 +95,14 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    Its `POST` answers 403 for a build that isn't released, and 404 for an unknown or expired code and for one another
    Chrome used (planque spends it, and the phone reads `contested`), so a sweep can't tell them apart. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
+   - **With one fingerprint** (`kiff.requests.v1`) the answer carries `tenant`, `signed_at` and `kiff_request_sha256` beside
+     `phone_sig`, all three or none, and `phone_sig` is then the approval key's signature over `kiff.requests.v1`, the
+     tenant, `signed_at` and the sorted SHA-256 (lower-case hex) of this pairing's message (`tafs-chrome/pair/v1`, a zero
+     byte and the body's canonical JSON) and of KIFF's request for the extension's view-only device. The extension
+     rebuilds its own message and takes KIFF's hash as given; a request paired with itself, a newline in a field or a part
+     of the three is refused. Without them `phone_sig` is checked over the pairing alone, as before.
+   - **The offer carries `profile_id`**, an id the extension keeps for its Chrome profile (see "What's kept"). The phone
+     uses it only to pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing.
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
 - **Several Chromes:** each paired Chrome has its name, and a grant names the one it uses.
@@ -360,6 +368,9 @@ browser: {
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
   key), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
+- **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
+  phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
+  `chrome.storage.sync`, which would copy it to every computer on the Google account; a reinstall makes a new one.
 - **Unpairing wipes it all** and closes every run's window. It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
