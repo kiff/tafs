@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "מענה בתוך",
+  "work.answer_within_days": {
+    "one": "יום אחד",
+    "two": "יומיים",
+    "other": "{count} ימים"
+  },
+  "work.answer_within_hours": {
+    "one": "שעה אחת",
+    "two": "שעתיים",
+    "other": "{count} שעות"
+  },
+  "work.answer_within_line": "מקבלים הודעה כשמקרה ממתין יותר מזה.",
+  "work.answer_within_none": "לא נקבע",
+  "work.answer_within_not_set": "לא ניתן היה לקבוע זאת. {why}",
+  "work.asking_kiff_run": "מבקש מ-KIFF להריץ את {tool}…",
+  "work.did_not_stop": "זה לא נעצר: {why}",
+  "work.duration.minutes": "{minutes} דק׳ {seconds} שנ׳",
+  "work.duration.seconds": "{seconds} שנ׳",
+  "work.its_runs": "הריצות שלו",
+  "work.not_read": "לא ניתן היה לקרוא את העבודה שלו. {why}",
+  "work.not_sent_again": "זה לא נשלח שוב. {why}",
+  "work.request.try_reply_now": "ניסיון המענה עכשיו",
+  "work.requests_need_you": {
+    "one": "בקשה אחת זקוקה לך",
+    "two": "שתי בקשות זקוקות לך",
+    "other": "{count} בקשות זקוקות לך"
+  },
+  "work.send_again": "שליחה חוזרת",
+  "work.sending_again": "שולח שוב…",
+  "work.stop_run": "עצירת הריצה",
+  "work.stopped_part_way_before_finished": "{taf} נעצר באמצע, לפני שסיים."
+}
