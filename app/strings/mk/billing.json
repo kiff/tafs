@@ -1,6 +1,6 @@
 {
   "billing.admin_adds_tasks": "Само администраторот на сметката додава задачи.",
-  "billing.another_account": "Оваа купување припаѓа на друга сметка на tafs на овој Google профил, па тука ништо не е додадено.",
+  "billing.another_account": "Ова купување припаѓа на друга сметка на tafs на овој Google профил, па тука ништо не е додадено.",
   "billing.another_account_apple_id": "Ова купување припаѓа на друга сметка на tafs на овој Apple ID, па тука ништо не е додадено.",
   "billing.app_store_could_not_confirm": "App Store не можеше да го потврди купувањето.",
   "billing.ask.added_pack": "Администратор додаде пакет.",
@@ -20,7 +20,7 @@
   "billing.by_google_play": "Наплатено од Google Play",
   "billing.by_kiff": "Наплатено од KIFF",
   "billing.cancel_any_time_least_day": "Откажи во кое било време, најмалку еден ден пред да се обнови, во Претплатите на твојата Apple сметка.",
-  "billing.contact_support": "KIFF не може да го додаде ова купување на оваа сметка. Го платил, па јави се на поддршката на support@kiff.dev и ќе го средиме.",
+  "billing.contact_support": "KIFF не може да го додаде ова купување на оваа сметка. Го плати, па јави се на поддршката на support@kiff.dev и ќе го средиме.",
   "billing.conversation_goes_plan_tools_being": "Како тече разговорот, тука се прикажуваат планот, апликациите што се поврзуваат и Card на tafот.",
   "billing.length.days": {
     "one": "{count} ден",
