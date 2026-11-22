@@ -300,7 +300,10 @@ was done.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
-  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is.
+  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is. The blank page
+  itself (`about:blank`, where a run's window opens and where a refused move goes) is never refused: refusing it sent the
+  tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
+  line whose address can't be read draws with no site, never an error.
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.

@@ -119,6 +119,8 @@ export function refuseURL(raw, sites, allowed = []) {
 export function bareURL(raw) {
   try {
     const u = new URL(raw);
+    // A page that isn't on the web (about:blank, a browser page) has no origin to keep: "" rather than "nullblank".
+    if (u.protocol !== "https:" && u.protocol !== "http:") return "";
     return u.origin + u.pathname;
   } catch {
     return "";

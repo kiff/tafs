@@ -14,11 +14,20 @@ function send(message) {
   return chrome.runtime.sendMessage(message);
 }
 
+/** A step's site for its line, or "" when its address can't be read: a line never throws, and the panel always draws. */
+function hostOf(url) {
+  try {
+    return url ? new URL(url).hostname : "";
+  } catch {
+    return "";
+  }
+}
+
 const STEP_WORDS = {
-  open: (s) => t("step_open", s.url ? new URL(s.url).hostname : ""),
+  open: (s) => t("step_open", hostOf(s.url)),
   read: () => t("step_read"),
   act: (s) => t("step_act_" + (s.kind || "click")),
-  navigate: (s) => t("step_navigate", s.url ? new URL(s.url).hostname : ""),
+  navigate: (s) => t("step_navigate", hostOf(s.url)),
   ask: (s) => t("step_ask", s.site || ""),
   pause: (s) => t(s.by === "failures" ? "step_paused_failures" : s.by === "no_progress" ? "step_paused_no_progress" : "step_paused"),
   resume: () => t("step_resumed"),
