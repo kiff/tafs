@@ -65,7 +65,18 @@ object Res {
    * The lines' language as a locale, for numbers and money: an English app on a French phone writes "€2,000", a French app
    * "2 000 €", whatever the phone's region.
    */
-  val locale: Locale get() = Locale.forLanguageTag(language)
+  val locale: Locale get() = figures(Locale.forLanguageTag(language))
+
+  /**
+   * Languages whose figures the app writes in Western digits, 0–9, though their own locale writes others: Arabic, as its lines and
+   * its legal pages write figures (legal-i18n, 22 Nov; iOS's `Words.localeIdentifiers`). Dates are `java.time`'s, already 0–9
+   * and Gregorian.
+   */
+  internal val LATIN_DIGITS = setOf("ar")
+
+  /** [locale] as the app writes figures in: with Western digits for a language in [LATIN_DIGITS], else as it is. */
+  fun figures(locale: Locale): Locale =
+    if (locale.language in LATIN_DIGITS) Locale.Builder().setLocale(locale).setUnicodeLocaleKeyword("nu", "latn").build() else locale
 
   /** A count's number as the lines' language writes it: "1,000" in English, "1.000" in German. */
   fun number(n: Int): String = java.text.NumberFormat.getIntegerInstance(locale).format(n.toLong())
@@ -74,10 +85,10 @@ object Res {
   fun s(id: Int): String = source.string(id)
 
   /** A string with its arguments (`%1$s`, `%2$d`), formatted as Android's `getString(id, args)` does. */
-  fun s(id: Int, vararg args: Any?): String = source.let { String.format(it.locale, it.string(id), *isolated(args, it.locale.language)) }
+  fun s(id: Int, vararg args: Any?): String = source.let { String.format(figures(it.locale), it.string(id), *isolated(args, it.locale.language)) }
 
   /** A plural's form for [count], with its arguments: [count] itself is the first unless the words say otherwise. */
-  fun p(id: Int, count: Int, vararg args: Any?): String = source.let { String.format(it.locale, it.plural(id, count), *isolated(args, it.locale.language)) }
+  fun p(id: Int, count: Int, vararg args: Any?): String = source.let { String.format(figures(it.locale), it.plural(id, count), *isolated(args, it.locale.language)) }
 
   /** Whether [language] is written right to left. The rule is the watch's too: `watchlink`'s [bot.tafs.watchlink.Bidi]. */
   fun rightToLeft(language: String): Boolean = bot.tafs.watchlink.Bidi.rightToLeft(language)

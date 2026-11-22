@@ -1,5 +1,6 @@
 package bot.tafs.app.design
 
+import bot.tafs.app.model.Res
 import bot.tafs.app.model.Words
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -115,6 +116,8 @@ fun scaled(
   fontWeight = weight,
   color = color,
   fontFamily = when {
+    // The monospaced face pulls Arabic's joined letters apart, so in Arabic it's the plain face (iOS's `ScaledFont.design`).
+    mono && Res.language.substringBefore('-') in JOINED_SCRIPTS -> null
     mono -> Fonts.mono
     display -> Fonts.display
     else -> null
@@ -130,6 +133,9 @@ fun scaled(
  * apps like LinkedIn. It sets the base sizes only: they are sp, so text still grows when the person raises their font size.
  */
 const val BASE_TYPE = 0.9f
+
+/** Languages whose letters join, which a monospaced face pulls apart: Arabic (iOS's `ScaledFont.design`). */
+val JOINED_SCRIPTS = setOf("ar")
 
 /**
  * Material's type, at the base sizes and with no added letter spacing: a Text without a style of its own (a button's label,

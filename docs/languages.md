@@ -610,6 +610,10 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 - **Captions** that the app sets in a monospaced face with letter-spacing (the Needs you "time left", the section eyebrows)
   are set in the plain face with no spacing in Arabic, as in Korean, Japanese and Chinese: spacing cuts Arabic's joined
   letters apart (`Eyebrow.ideographic`, `ScaledFont.design`).
+- **Android is ready for it, before it ships there:** `Res.figures` writes Arabic's figures in Western digits
+  (`ar-u-nu-latn`) for counts, money, a line's numbers and ordinals. Dates are `java.time`'s, already 0–9 and Gregorian.
+  The eyebrows keep the plain face, untracked (`ideographic` covers the Arabic blocks), and no line takes the monospaced
+  face in Arabic (`JOINED_SCRIPTS`). Hebrew isn't in either: its letters don't join, and its digits are 0–9.
 
 | English | Arabic |
 |---|---|
