@@ -86,14 +86,29 @@ object ChromePairing {
     base64Url(hmac(secret, PHONE_PROOF_LABEL, phoneKey + sha256(chromeKey)))
 
   /** What the phone signs to confirm the pairing, and sends with its signature. */
-  data class Confirmation(val chromeKeySha256: String, val name: String, val phoneKey: String, val phoneProof: String)
+  data class Confirmation(
+    val chromeKeySha256: String,
+    val name: String,
+    val phoneKey: String,
+    val phoneProof: String,
+    /**
+     * A re-pairing's carried connections (docs/chrome.md "Your Chrome" 1): each grant that moves to this Chrome and its sites,
+     * read from the old Chrome's signed copy, in the order the phone writes them. Empty for a first pairing, and then not in
+     * the signed body at all, so a first pairing's bytes are as they always were.
+     */
+    val carried: List<Carried> = emptyList(),
+  )
+
+  /** One connection a re-pairing carries: its grant and its sites, as signed. */
+  data class Carried(val grant: String, val sites: List<String>)
 
   fun confirmation(secret: String, chromeKey: ByteArray, name: String, phoneKey: ByteArray): Confirmation =
     Confirmation(chromeKeyHash(chromeKey), name, base64Url(phoneKey), phoneProof(secret, phoneKey, chromeKey))
 
   /**
    * The bytes the phone signs for [c] of pairing [pairing]: label ‖ 0x00 ‖ JCS of
-   * `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`.
+   * `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`, and `carried: [{grant, sites}]` when a re-pairing carries
+   * connections, as the extension rebuilds it (`checkConfirmation`).
    */
   fun signedBytes(pairing: String, c: Confirmation): ByteArray {
     val body = buildJsonObject {
@@ -102,6 +117,14 @@ object ChromePairing {
       put("name", JsonPrimitive(c.name))
       put("phone_key", JsonPrimitive(c.phoneKey))
       put("phone_proof", JsonPrimitive(c.phoneProof))
+      if (c.carried.isNotEmpty()) {
+        put("carried", kotlinx.serialization.json.JsonArray(c.carried.map { e ->
+          buildJsonObject {
+            put("grant", JsonPrimitive(e.grant))
+            put("sites", kotlinx.serialization.json.JsonArray(e.sites.map { JsonPrimitive(it) }))
+          }
+        }))
+      }
     }
     return PAIR_LABEL.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
   }
