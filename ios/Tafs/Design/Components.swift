@@ -276,13 +276,21 @@ enum AccountTime {
     }
 }
 
+extension Words {
+    /// Whether the app's language has a locale of its own for figures and dates (`localeIdentifiers`: Arabic).
+    /// Read from the language's code: a `Locale`'s identifier doesn't keep the `-u-ca-` it was made with.
+    static var namesCalendar: Bool {
+        localeIdentifiers[bundle.localizedString(forKey: "_language", value: "en", table: nil)] != nil
+    }
+}
+
 extension Date.FormatStyle {
     /// This style in the app's language: its locale, and the calendar that locale names (Arabic:
     /// Gregorian, not the device's Hijri), as `Date.shown(_:)` does in the account's zone.
     var inAppLanguage: Date.FormatStyle {
         var style = self
         style.locale = Words.locale
-        if Words.locale.identifier.contains("-u-ca-") { style.calendar = Words.locale.calendar }
+        if Words.namesCalendar { style.calendar = Words.locale.calendar }
         return style
     }
 }

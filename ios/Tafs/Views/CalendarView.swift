@@ -167,7 +167,7 @@ struct CalendarView: View {
     @ViewBuilder private var datePicker: some View {
         if ThisDevice.isMac {
             Button { choosingDate = true } label: {
-                Text(Self.pickerTitle(dateBinding.wrappedValue, locale: Words.locale.identifier.contains("-u-ca-") ? Words.locale : .current))
+                Text(Self.pickerTitle(dateBinding.wrappedValue, locale: Words.namesCalendar ? Words.locale : .current))
                     .foregroundColor(Theme.ink)
                     .padding(.horizontal, 11).padding(.vertical, 6)
                     .background(Theme.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
@@ -191,8 +191,8 @@ struct CalendarView: View {
                 .environment(\.timeZone, TimeZone(identifier: "UTC")!)
                 // The picker writes its date by the environment's locale and calendar, which are the
                 // device's: the app's own, so Arabic reads Gregorian, not Hijri.
-                .environment(\.locale, Words.locale.identifier.contains("-u-ca-") ? Words.locale : Locale.current)
-                .environment(\.calendar, Words.locale.identifier.contains("-u-ca-") ? Words.locale.calendar : Calendar.current)
+                .environment(\.locale, Words.namesCalendar ? Words.locale : Locale.current)
+                .environment(\.calendar, Words.namesCalendar ? Words.locale.calendar : Calendar.current)
                 .accessibilityLabel(Words.Calendar.chooseDate)
         }
     }
@@ -201,7 +201,7 @@ struct CalendarView: View {
     /// in UTC, where the picker's dates are held.
     nonisolated static func pickerTitle(_ date: Date, locale: Locale = .current) -> String {
         var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: "UTC")!)
-        if locale.identifier.contains("-u-ca-") { style.calendar = locale.calendar }
+        style.calendar = locale.calendar
         return date.formatted(style)
     }
 
