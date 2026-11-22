@@ -432,7 +432,7 @@ tarjeta, scheda, mosaico, tegel, karta).
 **Releases to Play** (`android.yml`'s `wear-release` job), as the phone's, on their own:
 - **When:** by hand (Run workflow, form `wear`), or on a merge to main that raises the watch's `versionCode` (the `version`
   job compares the phone's and the watch's each on their own), once `test` passed, which runs the watch's tests.
-- **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key from Secrets Manager, in the `android-release`
+- **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key (GitHub's `ANDROID_UPLOAD_KEY`, else Secrets Manager's copy), in the `android-release`
   environment. The Data Layer joins the two apps only when Play signs both with one key, and Play's app signing re-signs
   every upload with the listing's key. It isn't kept as a run artifact: the repository is public, so Play holds the only copy.
 - **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear
@@ -579,6 +579,10 @@ watch doesn't know is shown as Open on phone, never guessed at.
   notification's Refuse on iPhone: they only take authority away. The phone acts only on a message from the paired watch
   running this app, and the watch sends one only while it has a screen lock and is unlocked; otherwise it says to set one
   (`watch.needs_lock`) and offers Open on phone. The approval key is never used on this path.
+- **Right to left, as the phone:** the watch declares `supportsRtl`, so its pages mirror in Arabic or Hebrew, and its
+  `Res.s` and `Res.p` set each text value apart in a right-to-left language (U+2068 … U+2069, `watchlink`'s `Bidi`, the
+  one rule both apps fill their lines through), so a Latin taf name or an amount keeps its own direction in the sentence
+  (`RtlWordsTest`). A count is written in the language's own digits, as on the phone.
 - **What the watch keeps:** in v1, on disk, only Needs you's count and its time, for the tile (`tafs.tile`), cleared on
   sign-out and when the watch comes off the wrist; the lists, Your tafs and the asks and their results stay in memory. v2 (behind
   `WATCH_V2`) keeps more, all in the app's private storage:

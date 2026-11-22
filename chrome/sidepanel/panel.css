@@ -1,0 +1,147 @@
+:root {
+  --bg: #fffaf3;
+  --ink: #1d1a16;
+  --soft: #6b6359;
+  --line: #e8dfd2;
+  --amber: #f29a2e;
+  --no: #c8412b;
+  --card: #ffffff;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15130f;
+    --ink: #f4efe8;
+    --soft: #a89f93;
+    --line: #2c2822;
+    --card: #1e1b16;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.mark {
+  font-weight: 800;
+  font-size: 18px;
+}
+.conn,
+.note,
+.where {
+  color: var(--soft);
+  font-size: 13px;
+}
+h1 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+h2 {
+  font-size: 16px;
+  margin: 0;
+}
+form {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+input {
+  font: 600 20px ui-monospace, monospace;
+  letter-spacing: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  text-transform: uppercase;
+}
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--amber);
+  color: #1d1a16;
+  cursor: pointer;
+}
+button.quiet,
+.run .stop {
+  background: transparent;
+  color: var(--no);
+  border: 1px solid var(--line);
+}
+.run {
+  background: var(--card);
+  border: 2px solid var(--amber);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+}
+.paused {
+  color: var(--amber);
+  font-weight: 600;
+}
+.steps {
+  padding-left: 18px;
+  margin: 8px 0;
+  color: var(--soft);
+}
+.steps .refused {
+  color: var(--no);
+}
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+.status {
+  min-height: 1.4em;
+}
+
+.thread {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+  display: grid;
+  gap: 6px;
+}
+.thread li {
+  padding: 8px 10px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+.thread li.owner {
+  background: var(--amber);
+  color: #1d1a16;
+  justify-self: end;
+}
+.thread li.taf {
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+textarea {
+  width: 100%;
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+.share {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  margin: 8px 0;
+}

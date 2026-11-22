@@ -76,9 +76,13 @@ data class DoorCounts(val today: Int? = null, val waiting: Int? = null)
 @Serializable
 data class DoorLastRequest(val status: String, val at: String, val words: String? = null)
 
-/** Row 4 of the API trigger (kiff/work#16): an `api` door's screens and its signed calls. Off until row 2 is live. */
+/**
+ * An `api` door's screens and its signed calls: drawn wherever tafs cloud sends them. tafs cloud's own switch (`TAFS_API_DOORS`,
+ * per account) decides: off for an account, Coach drafts no door, the list carries no `api` door and its routes answer 404, so
+ * there is nothing here to draw. The app never decides it.
+ */
 object ApiDoorFeature {
-  const val on = false
+  const val on = true
 }
 
 /**

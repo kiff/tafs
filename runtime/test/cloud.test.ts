@@ -2,6 +2,7 @@ import { fcmMessage } from "../src/cloud/fcm.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
 import { sweepBriefs, approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
@@ -1032,9 +1033,11 @@ describe("tafs cloud", () => {
       for (const lang of LANGUAGES) expect(await says(cause, lang), `${cause} in ${lang}`).not.toBe(await says("no_refresh_token", lang));
     }
     expect(await says("refresh_refused", "de")).toBe("Gmail nimmt diese Anmeldung nicht mehr an, daher kann Rae es nicht nutzen. Verbinde erneut, um dich anzumelden.");
-    // Korean isn't served yet (its catalog is on main, not wired), but its lines are there for when it is.
+    // Korean's and Japanese's own lines, as tafs cloud serves them.
     expect(ko.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Rae이(가) 제거된 연결의 Gmail 로그인을 사용하고 있었기 때문에 지금은 Gmail을(를) 사용할 수 없습니다. 다시 연결해 로그인하세요.");
     expect(ko.connect_again_refused_words("Gmail", "Rae")).not.toBe(ko.connect_again_words("Gmail", "Rae"));
+    expect(ja.connect_again_shared_gone_words("Gmail", "Rae")).toBe("Raeは削除された接続のGmailのサインインを使っていたため、現在Gmailを使用できません。再接続してサインインしてください。");
+    expect(ja.connect_again_refused_words("Gmail", "Rae")).not.toBe(ja.connect_again_words("Gmail", "Rae"));
     expect((await setup("needs_reconnect", "en", undefined, "refresh_refused")).connections?.[0]).toMatchObject({ signed_out_cause: "refresh_refused" });
     expect((await setup("connected", "en", undefined, "refresh_refused")).connections?.[0]).not.toHaveProperty("signed_out_cause");
     expect((await setup("connected")).connect_again).toBeUndefined();
@@ -2369,7 +2372,7 @@ describe("Setup (kiff/agents#91)", () => {
     // Its skills are stored first, each at its version, then its definition names them (the Coach skills design).
     expect(w.agents.calls.filter((c) => !c.startsWith("putSkill "))).toEqual([`putAgent ${NEW}`]);
     expect(w.agents.calls.filter((c) => c.startsWith("putSkill ")).length).toBe(def.skills?.length);
-    expect(def.skills?.length).toBe(13);
+    expect(def.skills?.length).toBe(14);
     expect((await call(w, "GET", "/v1/setup", { token: "ana" })).body.setup).toMatchObject({ id: NEW, name: "Setup" });
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
@@ -6266,7 +6269,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@32,draft-the-card@45,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@33,draft-the-card@45,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -6274,23 +6277,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@32,draft-the-card@45,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@33,draft-the-card@45,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@32,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@33,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@32,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@33,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@14,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@32,draft-the-card@45,halting@1,improve-a-taf@3,name-the-tools@20`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@33,draft-the-card@45,halting@1,improve-a-taf@3,name-the-tools@20`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -6308,7 +6311,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@32,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@33,draft-the-card@45,halting@1,name-the-tools@20,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -6716,10 +6719,22 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(text).not.toContain("Docs");
     expect(ownerWords(text)).toBe("I want a taf that chases overdue invoices");
     // The skills are chosen from how the owner opened, as before.
-    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@32,");
+    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@33,");
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
+  });
+
+  it("says the owner's paired Chromes after the connections only while planque offers them", async () => {
+    const w = setUp();
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const offered = planque(w, () => new Response(JSON.stringify({ connections, chromes: [{ name: "Work Mac" }] }), { status: 200 }));
+    const on = (await firstMessage(w, (await send(offered, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(on).toContain("- Stripe, for Bo: provider, entry connector:composio:stripe; mode: Mode not known yet: treated as live\n- Chrome: paired: Work Mac\n");
+    expect(ownerWords(on)).toBe("watch my shop's orders page");
+    const off = planque(w, () => new Response(JSON.stringify({ connections }), { status: 200 }));
+    const said = (await firstMessage(w, (await send(off, `/v1/tafs/${COACH}/messages`, { text: "watch my shop's orders page", new_chat: true })).session))!;
+    expect(said).not.toContain("Chrome");
   });
 
   it("starts with the guides of the apps the account's tafs hold, after their connections, read with the person's session", async () => {

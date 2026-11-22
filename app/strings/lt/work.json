@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Atsakyti per",
+  "work.answer_within_days": {
+    "one": "{count} dieną",
+    "few": "{count} dienas",
+    "other": "{count} dienų"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} valandą",
+    "few": "{count} valandas",
+    "other": "{count} valandų"
+  },
+  "work.answer_within_line": "Jums pranešama, kai atvejis laukia ilgiau.",
+  "work.answer_within_none": "Nenustatyta",
+  "work.answer_within_not_set": "Nepavyko nustatyti. {why}",
+  "work.asking_kiff_run": "Prašoma KIFF paleisti {tool}…",
+  "work.did_not_stop": "Nepavyko nutraukti: {why}",
+  "work.duration.minutes": "{minutes} min. {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Jo paleidimai",
+  "work.not_read": "Nepavyko nuskaityti jo darbo. {why}",
+  "work.not_sent_again": "Pakartotinai neišsiųsta. {why}",
+  "work.request.try_reply_now": "Bandyti atsakymą dabar",
+  "work.requests_need_you": {
+    "one": "{count} prašymas laukia jūsų",
+    "few": "{count} prašymai laukia jūsų",
+    "other": "{count} prašymų laukia jūsų"
+  },
+  "work.send_again": "Siųsti dar kartą",
+  "work.sending_again": "Siunčiama dar kartą…",
+  "work.stop_run": "Nutraukti paleidimą",
+  "work.stopped_part_way_before_finished": "{taf} sustojo pusiaukelėje, nebaigęs darbo."
+}

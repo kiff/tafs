@@ -51,6 +51,11 @@ fun DriveSheet(
   containerColor: Color,
   modifier: Modifier = Modifier,
   sheetGesturesEnabled: Boolean = true,
+  /**
+   * A secret is on the sheet (a pairing code): its own window is secure, never in a screenshot, the recents screen or a shared
+   * screen. Beside the sidebar the sheet is part of the page, so the screen that shows it secures the activity's window too.
+   */
+  secure: Boolean = false,
   content: @Composable ColumnScope.() -> Unit,
 ) {
   if (LocalSheetBeside.current) {
@@ -64,7 +69,7 @@ fun DriveSheet(
     }
     return
   }
-  ModalSheet(onDismissRequest, sheetState, containerColor, modifier, sheetGesturesEnabled, content)
+  ModalSheet(onDismissRequest, sheetState, containerColor, modifier, sheetGesturesEnabled, secure, content)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,6 +80,7 @@ private fun ModalSheet(
   containerColor: Color,
   modifier: Modifier,
   sheetGesturesEnabled: Boolean,
+  secure: Boolean,
   content: @Composable ColumnScope.() -> Unit,
 ) = ModalBottomSheet(
   onDismissRequest = driveDismissal(onDismissRequest),
@@ -82,6 +88,9 @@ private fun ModalSheet(
   sheetState = sheetState,
   sheetGesturesEnabled = sheetGesturesEnabled,
   containerColor = containerColor,
+  properties = androidx.compose.material3.ModalBottomSheetProperties(
+    securePolicy = if (secure) androidx.compose.ui.window.SecureFlagPolicy.SecureOn else androidx.compose.ui.window.SecureFlagPolicy.Inherit,
+  ),
 ) {
   DriveWindow()
   // A list that reaches its end with speed left over keeps that leftover: the sheet never gets it (KeepUpwardLeftovers).

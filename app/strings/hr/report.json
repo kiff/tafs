@@ -1,0 +1,17 @@
+{
+  "report.already": "Već ste prijavili ovaj odgovor.",
+  "report.cant_from_here": "Ovaj se odgovor odavde ne može prijaviti.",
+  "report.menu": "Prijavite ovaj odgovor",
+  "report.not_sent": "Vaša prijava nije poslana. {why}",
+  "report.not_sent_why": "Nije poslano: {failed}",
+  "report.note_hint": "Dodajte bilješku (neobavezno)",
+  "report.note_most_characters": "Bilješka može imati najviše 1000 znakova.",
+  "report.person_kiff_reads_your_report": "Osoba u KIFF-u čita vašu prijavu, s odgovorom onako kako je napisan.",
+  "report.reason.harmful": "Štetan",
+  "report.reason.offensive": "Uvredljiv",
+  "report.reason.other": "Drugo",
+  "report.reason.wrong": "Netočan",
+  "report.runs_not_loaded": "Njegova izvođenja nije bilo moguće učitati. {why}",
+  "report.thanks": "Hvala. Netko iz KIFF-a pročitat će vašu prijavu.",
+  "report.what_wrong": "Što nije u redu s njim?"
+}

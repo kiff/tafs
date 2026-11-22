@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Suvestinės",
+  "push.channel.briefs_description": "Jūsų suvestinė nustatytu laiku.",
+  "push.channel.holds_description": "Užklausa sulaikyta, kol atsakysite. Niekas nesiunčiama, kol jos nepatvirtinsite.",
+  "push.channel.other": "Kiti pranešimai",
+  "push.channel.other_description": "Užduočių prašymai ir atsakymai į juos, be garso.",
+  "push.channel.urgent_description": "Tai, kas negali laukti kitos suvestinės, su garsu.",
+  "push.open_needs_you": "Atidarykite „Laukia jūsų“, kad atsakytumėte.",
+  "push.open_taf": "Atidarykite taf, kad pamatytumėte.",
+  "push.open_usage": "Atidarykite „Planas ir naudojimas“, kad pamatytumėte."
+}

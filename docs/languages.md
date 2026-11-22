@@ -131,8 +131,9 @@ term that recurs is added here first, then used.
 
 ## Korean and Japanese (apart from the Terms table)
 
-`ko` ships (tafs#1572); `ja` has every line but is in `all`, not `shipped` (app/strings/README.md), so neither app
-shows it yet. Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
+`ko` ships (tafs#1572), and `ja` with it since 21 Nov. tafs cloud speaks `ko` and `ja` too (`LANGUAGES` in `runtime/src/cloud/words`): its own lines, alerts and the
+language Coach and the tafs are told. A recipe's words are kept per base language and none carries `ko` or `ja` yet, so a
+Korean or Japanese phone reads them in English (`recipesFor`). Their terms are kept here, apart from the Terms table above, which KIFF checks by its digest, and
 `test_strings` holds a shipped language to its table here until its column joins the Terms table.
 
 **Small section headings** (iOS's and Android's `Eyebrow`) are monospaced and letter-spaced in the Latin languages. A heading
@@ -189,6 +190,390 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Setup | セットアップ |
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
+
+## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
+`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
+
+### Estonian (et)
+
+Addressed as **sina**; buttons are sina imperatives. taf, Coach and Card take Estonian endings with no apostrophe (tafi,
+tafsi, Cardi, Coachilt). A value (`{taf}`, `{device}`, `{vendor}`) never takes an ending, so a sentence stands it in the
+nominative ("tafi {taf} Card", "see {device}").
+
+| English | Estonian |
+|---|---|
+| Needs you | Vajab sind |
+| Approve / Approve once | Kinnita / Kinnita üks kord |
+| Refuse | Keeldu |
+| held | kinni peetud |
+| Halt / Halted | Peata / Peatatud |
+| Stopped | Lõpetatud |
+| Pause / Paused | Pausile / Pausil |
+| Resume | Jätka |
+| Revoke | Tühista |
+| Record | Logi |
+| Connect / connection | Ühenda / ühendus |
+| Pair | Seo |
+| Account | Konto |
+| limit / spend limit | limiit / kululimiit |
+| credits / credit pack | krediidid / krediidipakett |
+| Sign in / Sign out | Logi sisse / Logi välja |
+| Inbox | Postkast |
+| Overview | Ülevaade |
+| Calendar | Kalender |
+| Setup | Seadistus |
+| Usage | Kasutus |
+| plan (billing) | pakett |
+| Cancel / Continue | Loobu / Edasi |
+
+### Greek (el)
+
+Addressed as **εσύ**. The glossary's buttons are nouns (Έγκριση, Άρνηση, Παύση, Συνέχιση); other buttons are
+imperatives (Δοκίμασε ξανά). In running text the names take an article: η Card / οι Cards (as the legal drafts write
+it), ο Coach, η KIFF, το taf / τα tafs. Every device word is neuter (τηλέφωνο, tablet, Mac, PC), so "αυτό το {device}"
+always agrees. A line that fills "από {who}" is written in the accusative.
+
+| English | Greek |
+|---|---|
+| Needs you | Σε χρειάζεται |
+| Approve / Approve once | Έγκριση / Έγκριση μία φορά |
+| Refuse | Άρνηση |
+| held | σε αναμονή |
+| Halt / Halted | Σταμάτημα / Σταματημένο |
+| Stopped | Διακόπηκε |
+| Pause / Paused | Παύση / Σε παύση |
+| Resume | Συνέχιση |
+| Revoke | Ανάκληση |
+| Record | Ιστορικό |
+| Connect / connection | Σύνδεση / σύνδεση |
+| Pair | Σύζευξη |
+| Account | Λογαριασμός |
+| limit / spend limit | όριο / όριο δαπανών |
+| credits / credit pack | μονάδες / πακέτο μονάδων |
+| Sign in / Sign out | Σύνδεση / Αποσύνδεση |
+| Inbox | Εισερχόμενα |
+| Overview | Επισκόπηση |
+| Calendar | Ημερολόγιο |
+| Setup (a taf's screen) | Διαμόρφωση |
+| Usage / plan (the subscription) | Χρήση / πρόγραμμα |
+| Coach's plan (its steps) | Σχέδιο |
+| Decline | Απόρριψη |
+
+### Lithuanian (lt)
+
+Addressed as **jūs**; buttons are infinitives ("Patvirtinti", "Bandyti dar kartą"). taf, Coach, Card, KIFF, Setup and
+tafs cloud are never declined, and "taf" is the same in the plural ("{count} taf"), as the legal drafts write it. A value
+(`{taf}`, `{device}`, `{biometry}`) stands alone in the nominative ("taf {taf} Card", "Patvirtinti: {biometry}").
+
+| English | Lithuanian |
+|---|---|
+| Needs you | Laukia jūsų |
+| Approve / Approve once | Patvirtinti / Patvirtinti vieną kartą |
+| Refuse | Atmesti |
+| held | sulaikyta |
+| Halt / Halted | Sustabdyti / Sustabdyta |
+| Stopped | Nutraukta |
+| Pause / Paused | Pristabdyti / Pristabdyta |
+| Resume | Tęsti |
+| Revoke | Atšaukti |
+| Record | Žurnalas |
+| Connect / connection | Prijungti / ryšys |
+| Pair / Unpair | Susieti / Atsieti |
+| Account | Paskyra |
+| limit / spend limit | limitas / išlaidų limitas |
+| credits / credit pack | kreditai / kreditų paketas |
+| Sign in / Sign out | Prisijungti / Atsijungti |
+| Inbox | Gautieji |
+| Overview | Apžvalga |
+| Calendar | Kalendorius |
+| Setup | Setup (a name, never declined) |
+| Usage | Naudojimas |
+| plan | planas |
+| door / knock | durys / beldimas |
+
+### Latvian (lv)
+
+Addressed as **tu**; buttons are infinitives ("Apstiprināt", "Atteikt"), sentences tu-imperatives ("Pieskaries"). taf,
+Card and Coach take no endings, and the plural is "taf" ("{count} taf"), as the legal drafts write it; Setup stays a
+name. A value stands alone ("šajā ierīcē ({device})", "Durvis: {door}"), and a line another line fills is written in
+the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… locative).
+
+| English | Latvian |
+|---|---|
+| Needs you | Gaida tevi |
+| Approve / Approve once | Apstiprināt / Apstiprināt vienreiz |
+| Refuse | Atteikt |
+| held | aizturēts |
+| Halt / Halted | Apturēt / Apturēts |
+| Stopped | Pārtraukts |
+| Pause / Paused | Iepauzēt / Iepauzēts |
+| Resume | Turpināt |
+| Revoke | Atsaukt |
+| Record | Žurnāls |
+| Connect / connection | Pievienot / savienojums |
+| Pair | Savienot pārī |
+| Account | Konts |
+| limit / spend limit | limits / tēriņu limits |
+| credits / credit pack | kredīti / kredītu pakete |
+| Sign in / Sign out | Pierakstīties / Izrakstīties |
+| Inbox | Iesūtne |
+| Overview | Pārskats |
+| Calendar | Kalendārs |
+| Usage | Lietojums |
+| plan | plāns |
+| door / knock | durvis / klauvējiens |
+
+## Batch 2: Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian and Croatian (being written)
+
+For the countries on sale without their language's app screens (CZ, SK, SI, HU, RO, BG, HR). Each catalog is in `all`,
+not `shipped`, until its review: no app shows it yet. Where the legal pages (kiff/cloud#77) decided a word, the app uses
+the same one.
+
+### Czech (cs)
+
+Addressed as **vy** (plural verb forms, as Czech software does); buttons are infinitives ("Schválit", "Zkusit znovu"). taf
+declines as the legal pages write it (taf, tafu, tafy, tafů); Card, Coach, KIFF and Setup are names and stay as they are
+("jeho Card", "Card tafu {taf}"). A device word is masculine in every case (telefon, tablet, počítač, Mac), so "tento
+{device}" agrees; elsewhere a value stands alone ("na tomto zařízení ({device})"). A door is "dveře", plural only:
+"dveře {door}". The plural forms are one, few (2–4) and other.
+
+| English | Czech |
+|---|---|
+| Needs you | Čeká na vás |
+| Approve / Approve once | Schválit / Schválit jednou |
+| Refuse | Odmítnout |
+| held | zadrženo |
+| Halt / Halted | Zastavit / Zastaveno |
+| Stopped | Ukončeno |
+| Pause / Paused | Pozastavit / Pozastaveno |
+| Resume | Obnovit |
+| Revoke | Odvolat |
+| Record | Záznam |
+| Connect / connection | Připojit / připojení |
+| Pair / Unpair | Spárovat / Zrušit spárování |
+| Account | Účet |
+| limit / spend limit | limit / limit útraty |
+| credits / credit pack | kredity / balíček kreditů |
+| Sign in / Sign out | Přihlásit se / Odhlásit se |
+| Inbox | Doručené (v Doručených) |
+| Overview | Přehled |
+| Calendar | Kalendář |
+| Usage | Využití |
+| plan (billing) | tarif |
+| Cancel / Continue | Zrušit / Pokračovat |
+
+### Slovak (sk)
+
+Addressed as **vy**, as Czech is; buttons are infinitives ("Schváliť", "Skúsiť znova"). taf declines (taf, tafu, tafy,
+tafov); Card, Coach, KIFF and Setup stay as names. Every device word is masculine (telefón, tablet, počítač, Mac), so
+"tento {device}" agrees; elsewhere a value stands alone ("na tomto zariadení ({device})"). A door is "dvere", plural
+only. The plural forms are one, few (2–4) and other.
+
+| English | Slovak |
+|---|---|
+| Needs you | Čaká na vás |
+| Approve / Approve once | Schváliť / Schváliť raz |
+| Refuse | Odmietnuť |
+| held | pozdržané |
+| Halt / Halted | Zastaviť / Zastavené |
+| Stopped | Ukončené |
+| Pause / Paused | Pozastaviť / Pozastavené |
+| Resume | Obnoviť |
+| Revoke | Odvolať |
+| Record | Záznam |
+| Connect / connection | Pripojiť / pripojenie |
+| Pair / Unpair | Spárovať / Zrušiť spárovanie |
+| Account | Účet |
+| limit / spend limit | limit / limit výdavkov |
+| credits / credit pack | kredity / balík kreditov |
+| Sign in / Sign out | Prihlásiť sa / Odhlásiť sa |
+| Inbox | Doručené (v Doručených) |
+| chat | chat (not "čet") |
+| Overview | Prehľad |
+| Calendar | Kalendár |
+| Usage | Využitie |
+| plan (billing) | tarif |
+| Cancel / Continue | Zrušiť / Pokračovať |
+
+### Slovenian (sl)
+
+Addressed as **vi**; buttons are the short imperative Slovenian software uses ("Odobri", "Zavrni", "Prekliči"). taf
+declines with the dual (taf, tafa, tafi, tafov); Card, Coach, KIFF and Setup stay as names. Every device word is
+masculine (telefon, tablični računalnik, računalnik, Mac), so "ta {device}" agrees; elsewhere a value stands alone ("na
+tej napravi ({device})"). A door is "vrata", plural only. iOS and macOS have no Slovenian, so their menu paths stay as
+the system shows them, in English; Windows' are in Slovenian. The plural forms are one, two, few (3–4) and other.
+
+| English | Slovenian |
+|---|---|
+| Needs you | Čaka na vas |
+| Approve / Approve once | Odobri / Odobri enkrat |
+| Refuse | Zavrni |
+| held | zadržano |
+| Halt / Halted | Ustavi / Ustavljeno |
+| Stopped | Končano |
+| Pause / Paused | Začasno ustavi / Začasno ustavljeno |
+| Resume | Nadaljuj |
+| Revoke | Odvzemi |
+| Record | Dnevnik |
+| Connect / connection | Poveži / povezava |
+| Pair / Unpair | Seznani / Prekini seznanitev |
+| Account | Račun |
+| limit / spend limit | omejitev / omejitev porabe |
+| credits / credit pack | krediti / paket kreditov |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Nabiralnik |
+| Overview | Pregled |
+| Calendar | Koledar |
+| Usage | Poraba |
+| plan (billing) | paket |
+| Cancel / Continue | Prekliči / Naprej |
+
+### Hungarian (hu)
+
+Addressed as **te**, the way Hungarian apps speak to people; buttons are nouns ("Jóváhagyás", "Elutasítás", "Mégse",
+"Tovább"). taf takes the suffixes a back-vowel word does (tafot, tafok, tafja); Card, Coach, KIFF and Setup stay as
+names. A value that would need a case ending stands apart, after a colon or in brackets ("ezen az eszközön
+({device})", "Megnyitja: {taf}"), and "a(z)" goes before a value that may start with a vowel. A noun after a number stays
+singular ("3 hívás"), so both plural forms read the same. Apple and Windows menu paths are the Hungarian ones
+("Beállítások → Face ID és jelkód", "Gépház → Fiókok → Bejelentkezési lehetőségek"). The plural forms are one and other.
+
+| English | Hungarian |
+|---|---|
+| Needs you | Rád vár |
+| Approve / Approve once | Jóváhagyás / Egyszeri jóváhagyás |
+| Refuse | Elutasítás |
+| held | visszatartva |
+| Halt / Halted | Leállítás / Leállítva |
+| Stopped | Leállt |
+| Pause / Paused | Szüneteltetés / Szüneteltetve |
+| Resume | Folytatás |
+| Revoke | Visszavonás |
+| Record | Napló |
+| Connect / connection | Csatlakoztatás / kapcsolat |
+| Pair / Unpair | Párosítás / Párosítás megszüntetése |
+| Account | Fiók |
+| limit / spend limit | limit / költési limit |
+| credits / credit pack | kreditek / kreditcsomag |
+| passkey | jelkulcs |
+| Sign in / Sign out | Bejelentkezés / Kijelentkezés |
+| Inbox | Bejövő |
+| Overview | Áttekintés |
+| Calendar | Naptár |
+| Usage | Használat |
+| plan (billing) | csomag |
+| Cancel / Continue | Mégse / Tovább |
+
+### Romanian (ro)
+
+Addressed as **dumneavoastră** (dvs.), as Romanian software does; buttons are the polite imperative ("Aprobați",
+"Refuzați", "Anulați", "Continuați"). taf is neuter (taful, tafuri, tafurile); Card, Coach, KIFF and Setup stay as names
+and take the article directly (Cardul). A device word changes gender (telefon, tabletă), so a value stands
+in brackets ("pe acest dispozitiv ({device})"). Twenty and up take "de" ("20 de apeluri"). Apple's menu paths are the
+Romanian ones ("Configurări", "Configurări sistem"); Windows' are "Setări". The plural forms are one, few (0, 2–19) and
+other (20 and up).
+
+| English | Romanian |
+|---|---|
+| Needs you | Vă așteaptă |
+| Approve / Approve once | Aprobați / Aprobați o dată |
+| Refuse | Refuzați |
+| held | reținut |
+| Halt / Halted | Opriți / Oprit |
+| Stopped | Încheiat |
+| Pause / Paused | Întrerupeți / Întrerupt |
+| Resume | Reluați |
+| Revoke | Revocați |
+| Record | Jurnal |
+| Connect / connection | Conectați / conexiune |
+| Pair / Unpair | Asociați / Disociați |
+| Account | Cont |
+| limit / spend limit | limită / limită de cheltuieli |
+| credits / credit pack | credite / pachet de credite |
+| passkey | cheie de acces |
+| Sign in / Sign out | Conectați-vă / Deconectați-vă |
+| Inbox | Mesajele primite |
+| Overview | Prezentare generală |
+| Calendar | Calendar |
+| Usage | Utilizare |
+| plan (billing) | plan |
+| Cancel / Continue | Anulați / Continuați |
+
+### Bulgarian (bg)
+
+Addressed as **вие**; buttons are nouns ("Одобряване", "Отказ", "Продължаване"). taf, Card, Coach, KIFF and Setup stay
+as names in Latin letters, as Greek writes them: "taf" is masculine (plural "tafs") and Card feminine ("неговата
+Card"), and neither takes the article. Every device word is masculine (телефон, таблет, компютър, Mac), so "този
+{device}" always agrees. Apple's menu paths are the Bulgarian ones ("Настройки", "Системни настройки"); Windows' are
+"Настройки". The plural forms are one and other.
+
+| English | Bulgarian |
+|---|---|
+| Needs you | Чака ви |
+| Approve / Approve once | Одобряване / Еднократно одобрение |
+| Refuse | Отказ |
+| held | задържана (заявка) |
+| call (an action a taf asks for) | заявка |
+| Halt / Halted | Спиране / Спряно |
+| Stopped | Приключил |
+| Pause / Paused | Пауза / На пауза |
+| Resume | Възобновяване |
+| Revoke | Оттегляне |
+| Record | Дневник |
+| Connect / connection | Свързване / връзка |
+| Pair / Unpair | Сдвояване / Премахване на сдвояването |
+| Account | Акаунт |
+| limit / spend limit | лимит / лимит на разходите |
+| credits / credit pack | кредити / пакет кредити |
+| passkey | ключ за достъп |
+| Sign in / Sign out | Вход / Изход |
+| Inbox | Входящи |
+| Overview | Преглед |
+| Calendar | Календар |
+| Usage | Използване |
+| plan (billing) | план |
+| Cancel / Continue | Отказ / Продължаване |
+
+### Croatian (hr)
+
+Addressed as **vi** (plural verb forms, as the legal pages write it); buttons are polite imperatives ("Odobrite", "Odbijte",
+"Nastavite"). taf declines as the legal pages write it (taf, tafa, tafu, tafovi, tafova) and stays animate ("zaustaviti
+tafa"); Card is masculine and declines too ("Card", "Carda", "Cardovi", "Cardova"); Coach, KIFF and Setup are names and
+stay as they are. A value is a name and doesn't decline, so a line that would need a case words around it: "taf {taf}",
+"za: {name}", "ovaj uređaj ({device})". A device word is masculine in every case (telefon, tablet, PC, Mac), so "ovaj
+{device}" agrees. A door is "vrata", plural only. A call is "poziv", a request "zahtjev", a held call "zadržan poziv". Apple's
+menu paths are the Croatian ones ("Postavke", "Postavke sustava", "Privatnost i sigurnost"). The plural forms are one, few
+(2–4) and other.
+
+| English | Croatian |
+|---|---|
+| Needs you | Čeka vas |
+| Approve / Approve once | Odobrite / Odobrite jednom |
+| Refuse | Odbijte |
+| held | zadržan |
+| Halt / Halted | Blokirajte / Blokirano |
+| Stopped | Zaustavljeno |
+| Pause / Paused | Pauzirajte / Pauzirano |
+| Resume | Nastavite |
+| Revoke | Opozovite |
+| Record | Zapisnik |
+| Connect / connection | Povežite / veza |
+| Pair / Unpair | Uparite / Prekinite uparivanje |
+| Account | Račun |
+| limit / spend limit | ograničenje / ograničenje potrošnje |
+| credits / credit pack | krediti / paket kredita |
+| passkey | pristupni ključ |
+| security key | sigurnosni ključ |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Pristigle |
+| Overview | Pregled |
+| Calendar | Kalendar |
+| Usage | Potrošnja |
+| brief | sažetak |
+| receipt | potvrda |
+| Cancel / Continue | Odustanite / Nastavite |
 
 ## The AI disclosure
 

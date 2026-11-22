@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "zero": "Visas Card",
+    "one": "Visa Card",
+    "other": "Visas Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, pēc tam tas jautā tev",
+  "card.calls_left": {
+    "zero": "Atlikuši {count} izsaukumi",
+    "one": "Atlicis {count} izsaukums",
+    "other": "Atlikuši {count} izsaukumi"
+  },
+  "card.calls_left_line": {
+    "zero": "Atlikuši {count} izsaukumi {window} no {limit}",
+    "one": "Atlicis {count} izsaukums {window} no {limit}",
+    "other": "Atlikuši {count} izsaukumi {window} no {limit}"
+  },
+  "card.calls_used_of": {
+    "zero": "{used} no {count} izsaukumiem {window}",
+    "one": "{used} no {count} izsaukuma {window}",
+    "other": "{used} no {count} izsaukumiem {window}"
+  },
+  "card.calls_window": {
+    "zero": "{count} izsaukumi {window}",
+    "one": "{count} izsaukums {window}",
+    "other": "{count} izsaukumi {window}"
+  },
+  "card.card_confirmed_kiff": "Card · apstiprinājis KIFF",
+  "card.card_draft_kiff": "Card · melnraksts · no KIFF",
+  "card.card_got_room_call_needed": "Tā Card saņēma rezervi, kas bija vajadzīga šim izsaukumam, līdz šī kopsumma tiek atiestatīta",
+  "card.card_not_issued": "Card netika izsniegta. ",
+  "card.card_revoked": "Card atsaukta",
+  "card.check.always_asks": "{rule}: vienmēr jautā tev",
+  "card.check.never_allowed": "{rule}: nekad nav atļauts",
+  "card.check.not_on_card": "Nav šī taf Card",
+  "card.check.over_count": {
+    "zero": "Vairāk nekā {count} {window}",
+    "one": "Vairāk nekā {count} {window}",
+    "other": "Vairāk nekā {count} {window}"
+  },
+  "card.check.over_each": "Vairāk nekā {amount} par katru",
+  "card.check.over_total": "Vairāk nekā {amount} {window}",
+  "card.count": {
+    "zero": "{count} Card",
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Beigusies",
+  "card.ended_on": "Beidzās {date}",
+  "card.ends": "Beidzas",
+  "card.extra_room": "+{extra} papildu rezerve {window}",
+  "card.extra_room_prefix": "+{formatted} papildu rezerve ",
+  "card.extra_room_until": "+{extra} papildu rezerve līdz {ends}",
+  "card.figure_left": "atlicis {figure}",
+  "card.heading": {
+    "zero": "Card",
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "zero": "{count} izsaukumi {window}{each}: šis būtu {nth}{item}",
+    "one": "{count} izsaukums {window}{each}: šis būtu {nth}{item}",
+    "other": "{count} izsaukumi {window}{each}: šis būtu {nth}{item}"
+  },
+  "card.held.each_call_asks": "Katrs izsaukums vispirms jautā tev",
+  "card.held.for_each": " par katru: {name}",
+  "card.held.for_each_join": " par katru: ",
+  "card.held.for_item": " par: {item}",
+  "card.held.over_count": {
+    "zero": "Pārsniedz tā limitu ({count} izsaukumi): šis būtu {nth}",
+    "one": "Pārsniedz tā limitu ({count} izsaukums): šis būtu {nth}",
+    "other": "Pārsniedz tā limitu ({count} izsaukumi): šis būtu {nth}"
+  },
+  "card.held.over_one_call": "{amount} pārsniedz viena izsaukuma limitu {cap}",
+  "card.held.over_total": "{amount} pārsniegtu kopsummu {cap}",
+  "card.hero.calls_left_of": {
+    "zero": "izsaukumi atlikuši {window} no {limit}",
+    "one": "izsaukums atlicis {window} no {limit}",
+    "other": "izsaukumi atlikuši {window} no {limit}"
+  },
+  "card.hero.calls_use_unavailable": "izsaukumi {window} · lietojums nav pieejams",
+  "card.hero.left_of": "atlicis {window} no {limit}",
+  "card.hero.left_of_extra": "atlicis {window} no {base} + {extra} papildu rezerve",
+  "card.hero.left_of_extra_until": "atlicis {window} no {base} + {extra} papildu rezerve līdz {ends}",
+  "card.hero.left_of_note": "atlicis {window} no {limit}{note}",
+  "card.hero.no_currency": "bez valūtas",
+  "card.hero.no_currency_suffix": " · bez valūtas",
+  "card.hero.use_unavailable": "{window} · lietojums nav pieejams",
+  "card.hero.use_unavailable_note": "{label} · lietojums nav pieejams{note}",
+  "card.how_counted": "Kā tas tiek skaitīts",
+  "card.issue_prompt": "Izsniegt taf {taf} Card",
+  "card.issued_by": "Izsniedza",
+  "card.issued_by_account": "Konts",
+  "card.issued_by_named": "Izsniedza {who}",
+  "card.its_card": "Tā Card",
+  "card.kiff_did_not_revoke_cards": "KIFF neatsauca daļu tā Card ({cards_left}): atsauc tās KIFF.",
+  "card.left": "atlicis {amount} {window}",
+  "card.left_extra_room": "atlicis {current} no {own} + {extra} papildu rezerve{until}{note}",
+  "card.limit_can_not_raised_right": "Limitu pašlaik nevar palielināt no šejienes.",
+  "card.limit_raised_read_balance_again": "Limits tika palielināts. Pirms to palielini vēlreiz, vēlreiz nolasi atlikumu.",
+  "card.line.calls_in_window": {
+    "zero": "{count} izsaukumi {window}{then}",
+    "one": "{count} izsaukums {window}{then}",
+    "other": "{count} izsaukumi {window}{then}"
+  },
+  "card.line.more_asks": "; par vairāk tas vispirms jautā tev",
+  "card.line.then_asks": ", pēc tam tas jautā tev",
+  "card.line.total_in_window": "{amount} kopā {window}{then}",
+  "card.line.up_to_each": "līdz {amount} par katru",
+  "card.more": {
+    "zero": "vēl {count}",
+    "one": "vēl {count}",
+    "other": "vēl {count}"
+  },
+  "card.no_actions": "Vēl nav darbību",
+  "card.no_actions_short": "vēl nav darbību",
+  "card.no_currency": "{amount} (bez valūtas)",
+  "card.no_end_date": "Bez beigu datuma",
+  "card.outcome.not_a_resource": "Nav neviens no Card resursiem",
+  "card.outcome.outside": "Ārpus Card",
+  "card.outcome.over_one_action": "Pārsniedz Card limitu vienai darbībai",
+  "card.outcome.over_total": "Pārsniedz Card kopsummu",
+  "card.outside_held": "Ārpus: aizturēts, gaida tevi",
+  "card.outside_refused": "Ārpus: atteikts",
+  "card.over_limit_calls_would": "Pārsniedz tā limitu ({limit} izsaukumi): šis būtu {nth}",
+  "card.revoke_failed": "KIFF neatsauca Card. {why}",
+  "card.revoked": "Atsaukta",
+  "card.rule.always_asks": "vienmēr jautā tev",
+  "card.rule.at_most_each": "≤ {amount} par katru",
+  "card.rule.at_most_each_refused_above": "≤ {amount} par katru · virs tā atteikts",
+  "card.rule.calls": {
+    "zero": "{count} izsaukumi {window}",
+    "one": "{count} izsaukums {window}",
+    "other": "{count} izsaukumi {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "zero": "{count} izsaukumi {window}, pēc tam tas jautā tev",
+    "one": "{count} izsaukums {window}, pēc tam tas jautā tev",
+    "other": "{count} izsaukumi {window}, pēc tam tas jautā tev"
+  },
+  "card.rule.in_total": "{amount} kopā {window}",
+  "card.rule.never": "nekad",
+  "card.rule.total_then_asks": "{amount} kopā {window}, pēc tam tas jautā tev",
+  "card.rule.up_to_each": "līdz {amount} par katru; par vairāk tas vispirms jautā tev",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf Card",
+  "card.tools": {
+    "zero": "{count} rīki",
+    "one": "{count} rīks",
+    "other": "{count} rīki"
+  },
+  "card.until": "Līdz",
+  "card.until_date": "Līdz {date}",
+  "card.until_ends": " līdz {ends}",
+  "card.used_of": "{used} no {limit} {window}",
+  "card.window.a_day": "dienā",
+  "card.window.a_month": "mēnesī",
+  "card.window.a_week": "nedēļā",
+  "card.window.any_day": "jebkurās 24 stundās",
+  "card.window.any_hour": "jebkurā stundā",
+  "card.window.any_week": "jebkurās 7 dienās",
+  "card.window.in_total": "kopā",
+  "card.window.in_total_window": "kopā {window}",
+  "card.window.last_day": "pēdējās 24 stundās",
+  "card.window.last_hour": "pēdējā stundā",
+  "card.window.last_week": "pēdējās 7 dienās",
+  "card.window.so_far": "līdz šim",
+  "card.window.this_month": "šomēnes",
+  "card.window.this_week": "šonedēļ",
+  "card.window.today": "šodien",
+  "card.within_card": "Card ietvaros"
+}

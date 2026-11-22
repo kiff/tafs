@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACCOUNT_TRIES, accountHash, type AccountStore, keepAccount } from "../src/cloud/accounts.js";
+import { ACCOUNT_TRIES, accountHash, type AccountStore, agentAlertSecrets, keepAccount } from "../src/cloud/accounts.js";
 
 /** The secret and its hash, as DynamoDB and Secrets Manager hold them, with a hook that runs between steps. */
 function store() {
@@ -90,5 +90,59 @@ describe("an account's alert secret for kiff/agents", () => {
     s.between = rival;
     await expect(keepAccount(s.api, "t_acme", "t_acme", "whsec_a")).rejects.toThrow(/try again/);
     expect(s.writes).toBe(ACCOUNT_TRIES);
+  });
+});
+
+describe("the alert secret through kiff/agents", () => {
+  function stores(keeps: boolean | Error) {
+    const calls: string[] = [];
+    const write = agentAlertSecrets(
+      {
+        async putAlertSecret(tenant, secret) {
+          calls.push(`agents ${tenant} ${secret}`);
+          if (keeps instanceof Error) throw keeps;
+          return keeps;
+        },
+      },
+      async (account, tenant, secret) => { calls.push(`secret ${account} ${tenant} ${secret}`); },
+    );
+    return { write, calls };
+  }
+
+  it("is written only through kiff/agents once it keeps them", async () => {
+    const { write, calls } = stores(true);
+    await write("t1", "t1", "s");
+    expect(calls).toEqual(["agents t1 s"]);
+  });
+
+  it("is written to the old secret while kiff/agents keeps none (404)", async () => {
+    const { write, calls } = stores(false);
+    await write("t1", "t1", "s");
+    expect(calls).toEqual(["agents t1 s", "secret t1 t1 s"]);
+  });
+
+  it("an account that isn't its tenant keeps the old secret, since kiff/agents keys by the signed tenant", async () => {
+    const { write, calls } = stores(true);
+    await write("acct_2", "t1", "s");
+    expect(calls).toEqual(["secret acct_2 t1 s"]);
+  });
+
+  it("a refusal from kiff/agents is the alert's error, never a quiet write to the old secret", async () => {
+    const { write, calls } = stores(new Error("503"));
+    await expect(write("t1", "t1", "s")).rejects.toThrow("503");
+    expect(calls).toEqual(["agents t1 s"]);
+  });
+
+  it("keepAccount's hash still guards it: the same secret again writes nothing", async () => {
+    const { write, calls } = stores(true);
+    let hash: string | undefined;
+    const store = {
+      async hash() { return hash; },
+      async swapHash(_a: string, prev: string | undefined, next: string) { if (hash !== prev) return false; hash = next; return true; },
+      writeSecret: write,
+    };
+    await keepAccount(store, "t1", "t1", "s");
+    await keepAccount(store, "t1", "t1", "s");
+    expect(calls).toEqual(["agents t1 s"]);
   });
 });

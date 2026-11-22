@@ -553,6 +553,31 @@ class PlanqueClient(
   /** Removes the grant's tools from KIFF and revokes its token at the vendor. */
   suspend fun disconnect(grantId: String): Grant = decode(raw("DELETE", "grants/${escaped(grantId)}", null))
 
+  // Chrome (docs/chrome.md, "Pairing"), as iOS's PlanqueClient.
+
+  /** The Chromes paired to the account. planque answers 404 while it doesn't offer them, and the app then shows nothing. */
+  suspend fun chromes(): List<Chrome> = decode<ChromeList>(raw("GET", "chromes", null)).chromes
+
+  /** Opens a pairing: its id, and the four characters of the code planque looks it up by. */
+  suspend fun openChromePairing(): ChromePairingOpened = decode(raw("POST", "chromes/pairings", "{}".toByteArray()))
+
+  /** A pairing as planque has it: `waiting_for_chrome`, `waiting_for_phone` with the extension's offer, or `confirmed`. 404 once expired. */
+  suspend fun chromePairing(id: String): ChromePairingState = ChromePairingState.read(raw("GET", "chromes/pairings/${escaped(id)}", null))
+
+  /** Confirms the pairing: the confirmation the approval key signed, with that signature as raw r‖s. */
+  suspend fun confirmChromePairing(id: String, c: ChromePairing.Confirmation, phoneSig: String) {
+    val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(mapOf(
+      "chrome_key_sha256" to JsonPrimitive(c.chromeKeySha256), "name" to JsonPrimitive(c.name), "phone_key" to JsonPrimitive(c.phoneKey),
+      "phone_proof" to JsonPrimitive(c.phoneProof), "phone_sig" to JsonPrimitive(phoneSig),
+    ))).toByteArray()
+    raw("POST", "chromes/pairings/${escaped(id)}/confirm", body)
+  }
+
+  /** Unpairs a Chrome: planque deletes its key at once. */
+  suspend fun removeChrome(id: String) {
+    raw("DELETE", "chromes/${escaped(id)}", null)
+  }
+
   /** Forgets the account (kiff/tafs#185): every connection disconnected and its tokens revoked. Safe to ask again. */
   suspend fun eraseAccount() {
     raw("DELETE", "", null)
@@ -683,3 +708,51 @@ class PlanqueClient(
 }
 
 private fun sha256Hex(bytes: ByteArray): String = PlanqueClient.sha256Hex(bytes)
+
+/** A Chrome paired to the account, as planque lists it: the owner's name for it, and what its extension reported. */
+@Serializable
+data class Chrome(
+  @SerialName("chrome_id") val id: String,
+  val name: String,
+  val browser: String? = null,
+  val os: String? = null,
+  @SerialName("paired_at") val pairedAt: String? = null,
+)
+
+@Serializable
+private data class ChromeList(val chromes: List<Chrome> = emptyList())
+
+/** A pairing this phone opened. */
+@Serializable
+data class ChromePairingOpened(val pairing: String, val lookup: String)
+
+/**
+ * What an extension sent for a pairing: its key (SPKI DER, base64url), what it says it is, its KIFF device's `kiff.pair.v1` offer
+ * as its text (empty when it sent none), and its proof of both under the code's secret.
+ */
+data class ChromeOffer(
+  val key: String,
+  val version: String = "",
+  val browser: String = "",
+  val os: String = "",
+  val proof: String,
+  val kiffOffer: String = "",
+)
+
+/** A pairing's state, with the extension's offer once it sent one. */
+data class ChromePairingState(val status: String, val offer: ChromeOffer? = null) {
+  companion object {
+    fun read(bytes: ByteArray): ChromePairingState {
+      val o = KiffClient.json.parseToJsonElement(String(bytes)).jsonObject
+      fun field(k: String) = (o[k] as? JsonPrimitive)?.takeIf { it.isString }?.content
+      val key = field("key")
+      val proof = field("proof")
+      val offer = if (key != null && proof != null) {
+        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty())
+      } else {
+        null
+      }
+      return ChromePairingState(field("status").orEmpty(), offer)
+    }
+  }
+}

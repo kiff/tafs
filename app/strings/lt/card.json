@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "Visos Card",
+    "few": "Visos Card",
+    "other": "Visos Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, paskui klausia jūsų",
+  "card.calls_left": {
+    "one": "Liko {count} užklausa",
+    "few": "Liko {count} užklausos",
+    "other": "Liko {count} užklausų"
+  },
+  "card.calls_left_line": {
+    "one": "Liko {count} užklausa {window} iš {limit}",
+    "few": "Liko {count} užklausos {window} iš {limit}",
+    "other": "Liko {count} užklausų {window} iš {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} iš {count} užklausos {window}",
+    "few": "{used} iš {count} užklausų {window}",
+    "other": "{used} iš {count} užklausų {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} užklausa {window}",
+    "few": "{count} užklausos {window}",
+    "other": "{count} užklausų {window}"
+  },
+  "card.card_confirmed_kiff": "Card · patvirtino KIFF",
+  "card.card_draft_kiff": "Card · juodraštis · KIFF",
+  "card.card_got_room_call_needed": "Jo Card gavo šiai užklausai reikiamą rezervą, kol ta bendra suma bus atnaujinta",
+  "card.card_not_issued": "Card neišduota. ",
+  "card.card_revoked": "Card atšaukta",
+  "card.check.always_asks": "{rule}: visada klausia jūsų",
+  "card.check.never_allowed": "{rule}: niekada neleidžiama",
+  "card.check.not_on_card": "Neįtraukta į šio taf Card",
+  "card.check.over_count": {
+    "one": "Daugiau nei {count} {window}",
+    "few": "Daugiau nei {count} {window}",
+    "other": "Daugiau nei {count} {window}"
+  },
+  "card.check.over_each": "Virš {amount} vienu kartu",
+  "card.check.over_total": "Virš {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "few": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Baigėsi",
+  "card.ended_on": "Baigėsi {date}",
+  "card.ends": "Baigiasi",
+  "card.extra_room": "+{extra} papildomas rezervas {window}",
+  "card.extra_room_prefix": "+{formatted} papildomas rezervas ",
+  "card.extra_room_until": "+{extra} papildomas rezervas iki {ends}",
+  "card.figure_left": "Liko {figure}",
+  "card.heading": {
+    "one": "Card",
+    "few": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} užklausa {window}{each}: ši būtų {nth}{item}",
+    "few": "{count} užklausos {window}{each}: ši būtų {nth}{item}",
+    "other": "{count} užklausų {window}{each}: ši būtų {nth}{item}"
+  },
+  "card.held.each_call_asks": "Kiekviena užklausa pirmiausia klausia jūsų",
+  "card.held.for_each": " kiekvienam: {name}",
+  "card.held.for_each_join": " kiekvienam: ",
+  "card.held.for_item": " – {item}",
+  "card.held.over_count": {
+    "one": "Viršijamas {count} užklausos limitas: ši būtų {nth}",
+    "few": "Viršijamas {count} užklausų limitas: ši būtų {nth}",
+    "other": "Viršijamas {count} užklausų limitas: ši būtų {nth}"
+  },
+  "card.held.over_one_call": "{amount} viršija {cap} limitą vienai užklausai",
+  "card.held.over_total": "{amount} viršytų {cap} bendrą sumą",
+  "card.hero.calls_left_of": {
+    "one": "užklausa liko {window} iš {limit}",
+    "few": "užklausos liko {window} iš {limit}",
+    "other": "užklausų liko {window} iš {limit}"
+  },
+  "card.hero.calls_use_unavailable": "užklausos {window} · naudojimo duomenų nėra",
+  "card.hero.left_of": "liko {window} iš {limit}",
+  "card.hero.left_of_extra": "liko {window} iš {base} + {extra} papildomo rezervo",
+  "card.hero.left_of_extra_until": "liko {window} iš {base} + {extra} papildomo rezervo iki {ends}",
+  "card.hero.left_of_note": "liko {window} iš {limit}{note}",
+  "card.hero.no_currency": "be valiutos",
+  "card.hero.no_currency_suffix": " · be valiutos",
+  "card.hero.use_unavailable": "{window} · naudojimo duomenų nėra",
+  "card.hero.use_unavailable_note": "{label} · naudojimo duomenų nėra{note}",
+  "card.how_counted": "Kaip tai skaičiuojama",
+  "card.issue_prompt": "Išduoti taf {taf} Card",
+  "card.issued_by": "Išdavė",
+  "card.issued_by_account": "Paskyra",
+  "card.issued_by_named": "Išdavė {who}",
+  "card.its_card": "Jo Card",
+  "card.kiff_did_not_revoke_cards": "KIFF neatšaukė kai kurių jo Card ({cards_left}): atšaukite jas KIFF.",
+  "card.left": "Liko {amount} {window}",
+  "card.left_extra_room": "liko {current} iš {own} + {extra} papildomo rezervo{until}{note}",
+  "card.limit_can_not_raised_right": "Šiuo metu limito čia padidinti negalima.",
+  "card.limit_raised_read_balance_again": "Limitas padidintas. Prieš didindami dar kartą, iš naujo nuskaitykite likutį.",
+  "card.line.calls_in_window": {
+    "one": "{count} užklausa {window}{then}",
+    "few": "{count} užklausos {window}{then}",
+    "other": "{count} užklausų {window}{then}"
+  },
+  "card.line.more_asks": "; daugiau – pirmiausia klausia jūsų",
+  "card.line.then_asks": ", paskui klausia jūsų",
+  "card.line.total_in_window": "{amount} iš viso {window}{then}",
+  "card.line.up_to_each": "iki {amount} vienu kartu",
+  "card.more": {
+    "one": "Dar {count}",
+    "few": "Dar {count}",
+    "other": "Dar {count}"
+  },
+  "card.no_actions": "Veiksmų dar nėra",
+  "card.no_actions_short": "veiksmų dar nėra",
+  "card.no_currency": "{amount} (be valiutos)",
+  "card.no_end_date": "Be pabaigos datos",
+  "card.outcome.not_a_resource": "Ne Card išteklius",
+  "card.outcome.outside": "Už Card ribų",
+  "card.outcome.over_one_action": "Viršija Card limitą vienam veiksmui",
+  "card.outcome.over_total": "Viršija Card bendrą sumą",
+  "card.outside_held": "Už ribų: sulaikyta, laukia jūsų",
+  "card.outside_refused": "Už ribų: atmesta",
+  "card.over_limit_calls_would": "Viršijamas {limit} užklausų limitas: ši būtų {nth}",
+  "card.revoke_failed": "KIFF neatšaukė Card. {why}",
+  "card.revoked": "Atšaukta",
+  "card.rule.always_asks": "visada klausia jūsų",
+  "card.rule.at_most_each": "≤ {amount} vienu kartu",
+  "card.rule.at_most_each_refused_above": "≤ {amount} vienu kartu · daugiau atmetama",
+  "card.rule.calls": {
+    "one": "{count} užklausa {window}",
+    "few": "{count} užklausos {window}",
+    "other": "{count} užklausų {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} užklausa {window}, paskui klausia jūsų",
+    "few": "{count} užklausos {window}, paskui klausia jūsų",
+    "other": "{count} užklausų {window}, paskui klausia jūsų"
+  },
+  "card.rule.in_total": "{amount} iš viso {window}",
+  "card.rule.never": "niekada",
+  "card.rule.total_then_asks": "{amount} iš viso {window}, paskui klausia jūsų",
+  "card.rule.up_to_each": "iki {amount} vienu kartu; daugiau – pirmiausia klausia jūsų",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "taf Card",
+  "card.tools": {
+    "one": "{count} įrankis",
+    "few": "{count} įrankiai",
+    "other": "{count} įrankių"
+  },
+  "card.until": "Iki",
+  "card.until_date": "Iki {date}",
+  "card.until_ends": " iki {ends}",
+  "card.used_of": "{used} iš {limit} {window}",
+  "card.window.a_day": "per dieną",
+  "card.window.a_month": "per mėnesį",
+  "card.window.a_week": "per savaitę",
+  "card.window.any_day": "per bet kurias 24 valandas",
+  "card.window.any_hour": "per bet kurią valandą",
+  "card.window.any_week": "per bet kurias 7 dienas",
+  "card.window.in_total": "iš viso",
+  "card.window.in_total_window": "iš viso {window}",
+  "card.window.last_day": "per pastarąsias 24 valandas",
+  "card.window.last_hour": "per pastarąją valandą",
+  "card.window.last_week": "per pastarąsias 7 dienas",
+  "card.window.so_far": "iki šiol",
+  "card.window.this_month": "šį mėnesį",
+  "card.window.this_week": "šią savaitę",
+  "card.window.today": "šiandien",
+  "card.within_card": "Card ribose"
+}

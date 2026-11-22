@@ -1,0 +1,17 @@
+{
+  "report.already": "Oled sellest vastusest juba teatanud.",
+  "report.cant_from_here": "Sellest vastusest ei saa siin teatada.",
+  "report.menu": "Teata sellest vastusest",
+  "report.not_sent": "Sinu teadet ei saadetud. {why}",
+  "report.not_sent_why": "Saatmata: {failed}",
+  "report.note_hint": "Lisa märkus (valikuline)",
+  "report.note_most_characters": "Märkus võib olla kuni 1000 tähemärki.",
+  "report.person_kiff_reads_your_report": "Sinu teadet loeb KIFFis inimene, koos vastusega nii, nagu see kirjutati.",
+  "report.reason.harmful": "Kahjulik",
+  "report.reason.offensive": "Solvav",
+  "report.reason.other": "Muu",
+  "report.reason.wrong": "Vale",
+  "report.runs_not_loaded": "Selle käivitusi ei õnnestunud laadida. {why}",
+  "report.thanks": "Aitäh. Keegi KIFFis loeb sinu teadet.",
+  "report.what_wrong": "Mis sellel viga on?"
+}

@@ -10,7 +10,9 @@ no other does. Two builds have it:
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue
   and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
   KIFF's sheet is private (ephemeral), so iOS shows no "Wants to Use kiff.dev to Sign In" ask for it; one that comes is
-  taken.
+  taken. **The page passes only when it draws the four ways the owner keeps on** within 30 s: Apple, Google, GitHub, and
+  email with a password. It fails on any way to sign in with a code sent by email (email-code sign-in stays off). A page
+  with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
 - **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
   testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
   (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
@@ -94,7 +96,11 @@ asked for).
 - **Continue** (`OnboardingView`): it calls `signInInApp` with the terms version read when the tick showed
   (`appTermsVersion`), and waits while it runs. Then the sign-in sheet's own celebration (`InAppSignedIn`). How it
   ends when it doesn't sign in (`continueOutcome`):
-  - **closing KIFF's page** (`access_denied`, or the tab closed) says nothing, and the welcome is as it was;
+  - **KIFF's page refused** (`access_denied`) says nothing, and the welcome is as it was;
+  - **back in tafs from the tab with no answer** (the tab closed, or tafs brought back in front: `AppModel.appSignInLeft`,
+    1.5 s after) ends the wait (`endAppSignIn`) and says "Signing in didn't work.", with Continue free again. Before, Continue
+    stayed greyed with nothing said for the tab's 15 minutes; K5 found it when KIFF's page ended on "This sign-in has
+    expired" and was closed. iOS's sheet ends as it closes, so it never waited;
   - **terms that changed** since the tick (409 `terms_outdated`) untick the box and say so (`onboarding.terms_changed`).
     KIFF refuses the terms before it spends the code, so the code is kept in memory for 50 of its 60 seconds, and the
     new tick sends it again with the new version without opening KIFF's page twice. Past that, or after any other

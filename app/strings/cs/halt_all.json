@@ -1,0 +1,19 @@
+{
+  "halt_all.description": "Zastaví všechny tafy najednou. Nic nového se neodešle, dokud je v tafs znovu nespustíte.",
+  "halt_all.failed": "tafs nemohl zastavit vaše tafy. {why} Zastavte je v aplikaci tafs.",
+  "halt_all.halted": {
+    "one": "Zastaven {count} taf. Nic nového se neodešle, dokud je znovu nespustíte.",
+    "few": "Zastaveny {count} tafy. Nic nového se neodešle, dokud je znovu nespustíte.",
+    "other": "Zastaveno {count} tafů. Nic nového se neodešle, dokud je znovu nespustíte."
+  },
+  "halt_all.halted_all": "Vaše tafy jsou zastavené. Nic nového se neodešle, dokud je znovu nespustíte.",
+  "halt_all.halting": {
+    "one": "Zastavuji {count} taf: žádný běh se nespustí. KIFF ještě nepotvrdil všechny části; tafs ukáže, až se tak stane.",
+    "few": "Zastavuji {count} tafy: žádný běh se nespustí. KIFF ještě nepotvrdil všechny části; tafs ukáže, až se tak stane.",
+    "other": "Zastavuji {count} tafů: žádný běh se nespustí. KIFF ještě nepotvrdil všechny části; tafs ukáže, až se tak stane."
+  },
+  "halt_all.halting_all": "Zastavuji vaše tafy: žádný běh se nespustí. KIFF ještě nepotvrdil všechny části; tafs ukáže, až se tak stane.",
+  "halt_all.running": "tafs nemohl zastavit vaše tafy. Zastavte je v aplikaci tafs.",
+  "halt_all.signed_out": "Jste z tafs odhlášeni. Přihlaste se, abyste mohli zastavit své tafy.",
+  "halt_all.title": "Zastavit všechny tafy"
+}

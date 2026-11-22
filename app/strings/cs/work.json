@@ -1,0 +1,33 @@
+{
+  "work.answer_within": "Odpovědět do",
+  "work.answer_within_days": {
+    "one": "{count} dne",
+    "few": "{count} dnů",
+    "other": "{count} dnů"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} hodiny",
+    "few": "{count} hodin",
+    "other": "{count} hodin"
+  },
+  "work.answer_within_line": "Dáme vám vědět, když případ čeká déle.",
+  "work.answer_within_none": "Nenastaveno",
+  "work.answer_within_not_set": "Nepodařilo se to nastavit. {why}",
+  "work.asking_kiff_run": "Žádám KIFF o spuštění {tool}…",
+  "work.did_not_stop": "Nezastavilo se: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Jeho běhy",
+  "work.not_read": "Jeho práci se nepodařilo načíst. {why}",
+  "work.not_sent_again": "Znovu se neodeslalo. {why}",
+  "work.request.try_reply_now": "Zkusit odpověď hned",
+  "work.requests_need_you": {
+    "one": "{count} žádost čeká na vás",
+    "few": "{count} žádosti čekají na vás",
+    "other": "{count} žádostí čeká na vás"
+  },
+  "work.send_again": "Odeslat znovu",
+  "work.sending_again": "Odesílám znovu…",
+  "work.stop_run": "Ukončit běh",
+  "work.stopped_part_way_before_finished": "{taf} se zastavil v půlce, než skončil."
+}

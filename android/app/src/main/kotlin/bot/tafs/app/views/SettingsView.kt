@@ -107,6 +107,9 @@ fun SettingsSheet(
   onFocused: () -> Unit = {},
   /** Files, where it's on (`LocalFiles`): its row opens the account's files. */
   onFiles: () -> Unit = {},
+  /** Account › Chrome: shown only once planque lists Chromes (`AppState.chromes`), read when Account opens. */
+  onChromes: () -> Unit = {},
+  onLoadChromes: () -> Unit = {},
   /** Whether the new onboarding is on: Legal then opens How tafs works too (docs/onboarding.md). */
   onboarding: Boolean = bot.tafs.app.model.ONBOARDING_ON,
 ) {
@@ -122,7 +125,7 @@ fun SettingsSheet(
   var zoneQuery by remember { mutableStateOf("") }
   var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
-  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions(); onLoadAIConsent() } }
+  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions(); onLoadAIConsent(); onLoadChromes() } }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
   var focusAt by remember { mutableStateOf<Int?>(null) }
   LaunchedEffect(focusAt) { focusAt?.let { scroll.animateScrollTo(it); onFocused(); focusAt = null } }
@@ -146,13 +149,15 @@ fun SettingsSheet(
             }
             if (state.mode == Mode.sample) Action(Words.SignIn.withKiff, Theme.ink, onSignIn)
             if (state.approvalKeyLost) {
-              Text(Words.Settings.signInAgainWhy, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
+              Text(if (state.noApprovalKeyHere) Words.Approval.noFingerprint else Words.Settings.signInAgainWhy, style = scaled(13, color = Theme.amberText), modifier = Modifier.padding(12.dp))
               Action(Words.Connect.signInAgain, Theme.amberText) { confirming = SignOut.SignInAgain }
             }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.peopleApps) {
             Action(Words.People.title, Theme.ink, onPeople)
             Action(Words.Settings.Devices.title, Theme.ink, onDevices)
+            // planque's switch decides: no row while it doesn't offer Chromes.
+            if (state.chromes != null) Action(Words.Chrome.title, Theme.ink, onChromes)
             Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
             // Files, behind its switch: nothing here while it's off.
             FilesAccountRow(onFiles)

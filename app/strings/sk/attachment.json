@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} sa nedá priložiť.",
+  "attachment.kilobytes": "{size} kB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs tento súbor nemôže priložiť: taký typ alebo veľkosť neprijíma. Vyberte iný.",
+  "attachment.photo": "Fotka",
+  "attachment.photo_could_not_read": "Tú fotku sa nepodarilo načítať.",
+  "attachment.photo_numbered": "Fotka {n}",
+  "attachment.too_large": "{name} má {size}; najviac sa dá {limit}.",
+  "attachment.wrong_kind": "{name} sa nedá priložiť. Priložiť sa dajú fotky, PDF, text, CSV, Markdown a súbory Word a Excel."
+}

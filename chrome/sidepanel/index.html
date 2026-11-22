@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>tafs</title>
+    <link rel="stylesheet" href="panel.css" />
+  </head>
+  <body>
+    <header><span class="mark">tafs</span><span id="conn" class="conn"></span></header>
+
+    <section id="pair" hidden>
+      <h1 data-m="pair_title"></h1>
+      <p data-m="pair_body"></p>
+      <p class="note" data-m="pair_profile"></p>
+      <form id="pairForm">
+        <label for="code" data-m="pair_code_label"></label>
+        <input id="code" autocomplete="off" spellcheck="false" maxlength="13" inputmode="text" />
+        <button type="submit" data-m="pair_button"></button>
+      </form>
+      <p id="pairStatus" class="status" role="status"></p>
+    </section>
+
+    <section id="paired" hidden>
+      <h1 id="pairedName"></h1>
+      <p data-m="paired_body"></p>
+      <section id="coach">
+        <h2 data-m="coach_title"></h2>
+        <div id="coachEmpty" hidden>
+          <p><strong data-m="coach_empty_title"></strong></p>
+          <p class="note" data-m="coach_empty_body"></p>
+        </div>
+        <ol id="coachThread" class="thread"></ol>
+        <p id="coachPhone" class="note" data-m="approve_on_phone" hidden></p>
+        <p id="coachNote" class="note"></p>
+        <form id="coachForm">
+          <textarea id="coachWords" rows="3" maxlength="2000" data-m-placeholder="coach_placeholder"></textarea>
+          <div id="sharePreview" class="share" hidden>
+            <p class="note" data-m="share_preview"></p>
+            <p id="shareWhat"></p>
+            <p class="note" data-m="share_note"></p>
+            <button type="button" id="shareRemove" class="quiet" data-m="share_remove"></button>
+          </div>
+          <div class="buttons">
+            <button type="button" id="share" class="quiet" data-m="share_button"></button>
+            <button type="submit" data-m="coach_send"></button>
+          </div>
+        </form>
+      </section>
+      <div id="runs"></div>
+      <p id="idle" class="note" data-m="idle"></p>
+      <details id="vault">
+        <summary data-m="vault_title"></summary>
+        <p class="note" data-m="vault_body"></p>
+        <p class="note" data-m="vault_one_per_site"></p>
+        <ul id="vaultList"></ul>
+        <form id="vaultForm">
+          <label for="vaultSite" data-m="vault_site"></label>
+          <input id="vaultSite" autocomplete="off" spellcheck="false" placeholder="shop.example" />
+          <label for="vaultUser" data-m="vault_username"></label>
+          <input id="vaultUser" autocomplete="off" spellcheck="false" />
+          <label for="vaultPass" data-m="vault_password"></label>
+          <input id="vaultPass" type="password" autocomplete="new-password" />
+          <button type="submit" data-m="vault_save"></button>
+        </form>
+        <p id="vaultStatus" class="status" role="status"></p>
+      </details>
+      <button id="unpair" class="quiet" data-m="unpair"></button>
+    </section>
+
+    <template id="runTemplate">
+      <article class="run">
+        <h2 class="taf"></h2>
+        <p class="where"></p>
+        <p class="paused" hidden></p>
+        <div class="asks"></div>
+        <ol class="steps"></ol>
+        <div class="buttons">
+          <button class="pause" data-m="pause"></button>
+          <button class="resume" data-m="resume" hidden></button>
+          <button class="stop" data-m="stop"></button>
+        </div>
+      </article>
+    </template>
+
+    <script type="module" src="panel.js"></script>
+  </body>
+</html>

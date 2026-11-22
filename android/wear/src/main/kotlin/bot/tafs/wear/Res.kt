@@ -29,7 +29,15 @@ object Res {
 
   fun s(id: Int): String = resources.getString(id)
 
-  fun s(id: Int, vararg args: Any?): String = String.format(locale, resources.getString(id), *args)
+  fun s(id: Int, vararg args: Any?): String = fill(resources.getString(id), language, args)
 
-  fun p(id: Int, count: Int, vararg args: Any?): String = String.format(locale, resources.getQuantityString(id, count), *args)
+  fun p(id: Int, count: Int, vararg args: Any?): String = fill(resources.getQuantityString(id, count), language, args)
+
+  /**
+   * A line's values put in, as Android's `getString(id, args)` does. In a right-to-left language each text value is set apart
+   * first, as on the phone (watchlink's `Bidi`), so a Latin taf name or an amount keeps its own direction without turning the
+   * sentence. Left to right, values are as passed.
+   */
+  internal fun fill(line: String, language: String, args: Array<out Any?>): String =
+    String.format(Locale.forLanguageTag(language), line, *bot.tafs.watchlink.Bidi.isolated(args, language))
 }

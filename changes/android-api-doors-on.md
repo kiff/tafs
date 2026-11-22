@@ -1,0 +1,1 @@
+- **Android: doors from another application show wherever tafs cloud offers them** (its own switch, per account), and an api door's key is shown in a secure window, never in a screenshot or the recents screen.

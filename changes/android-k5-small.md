@@ -1,0 +1,1 @@
+- **Android:** the time-zone question waits until the "You're connected" celebration is gone, and a phone with no fingerprint is told to add one to approve from it, not only to sign in again.

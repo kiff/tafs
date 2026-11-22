@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Отговор в рамките на",
+  "work.answer_within_days": {
+    "one": "{count} ден",
+    "other": "{count} дни"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} час",
+    "other": "{count} часа"
+  },
+  "work.answer_within_line": "Ще ви бъде казано, когато случай чака по-дълго.",
+  "work.answer_within_none": "Не е зададено",
+  "work.answer_within_not_set": "Не можа да бъде зададено. {why}",
+  "work.asking_kiff_run": "Молба към KIFF да изпълни {tool}…",
+  "work.did_not_stop": "Не спря: {why}",
+  "work.duration.minutes": "{minutes} мин {seconds} с",
+  "work.duration.seconds": "{seconds} с",
+  "work.its_runs": "Изпълненията му",
+  "work.not_read": "Работата му не можа да бъде прочетена. {why}",
+  "work.not_sent_again": "Не беше изпратено отново. {why}",
+  "work.request.try_reply_now": "Опитайте отговора сега",
+  "work.requests_need_you": {
+    "one": "{count} заявка ви чака",
+    "other": "{count} заявки ви чакат"
+  },
+  "work.send_again": "Изпращане отново",
+  "work.sending_again": "Изпращане отново…",
+  "work.stop_run": "Спиране на изпълнението",
+  "work.stopped_part_way_before_finished": "{taf} спря по средата, преди да завърши."
+}

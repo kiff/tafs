@@ -481,6 +481,8 @@ export const de: Words = {
   waited_follow_up: "Ein Nachfassen, das er sich selbst gesetzt hat, lief nicht: deine tafs warteten auf Credits. Es wird nicht wiederholt. Öffne ihn für mehr.",
   door_name: (id, label) => (id === "email" ? "E-Mail" : label),
   door_a: "eine Tür",
+  door_draft_used: "Aus diesem Entwurf wurde die Tür erstellt.",
+  door_draft_lapsed: "Dieser Entwurf ist abgelaufen: Frag Coach noch einmal.",
   door_knock: (who, door, spoofed) => `${who} hat per ${door} geschrieben${spoofed ? " (die Absenderprüfung ist fehlgeschlagen)" : ""}. Es wurde nichts unternommen.`,
   door_full_keys: (door, n) => `Deine ${door}-Tür hatte heute ihre ${n} Nachrichten von dir und gekoppelten Absendern. Weitere werden bis morgen verworfen.`,
   door_full_others: (door, n) => `Deine ${door}-Tür hatte heute ${n} Nachrichten von Personen, die nicht gekoppelt sind. Weitere werden bis morgen verworfen.`,

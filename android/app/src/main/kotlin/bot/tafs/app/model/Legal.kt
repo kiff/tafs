@@ -9,7 +9,7 @@ object Legal {
   private const val SITE = "https://kiff.dev"
 
   /** The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds). */
-  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt")
+  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja")
 
   /** [language] as kiff.dev serves it: a regional variant's pages are its language's ("pt-BR" opens `/pt/`). */
   private fun served(language: String): String = language.substringBefore('-')

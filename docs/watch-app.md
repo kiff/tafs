@@ -336,7 +336,10 @@ owner-approved Watch Coach mockup, as Wear OS's:
 - **On Coach's home, above the microphone:** each thing said from this watch since the app was opened, oldest first, so the
   page opens on the microphone with the newest turn just above it. A turn is when it was said, the person's words on the
   right, then Coach's side on the left: "✓ Sent" until Coach starts, "Coach is answering" while its chat says so, then its
-  answer, which opens whole. VoiceOver hears Coach's side as "Coach: …".
+  answer, which opens whole, with when it came under it, small. VoiceOver hears Coach's side as "Coach: …, 14:32".
+- **Times and days as a taf's chat reads them** (row 44, C): every time in the account's zone (`WatchAccountZone`, learned
+  with Your tafs), and a header where a day starts (Today, Yesterday, else the date), as Wear OS shows them. An answer from a
+  phone too old to say when it came shows no time.
 - **Closing the ask keeps the conversation,** and an answer on its way still lands in it (and in the Inbox, once). Words still
   on their way to the phone stay in the review, so a failure can be sent again under the same id.
 - **Memory only:** the turns go when the app is put away and on Sign out on this watch. Nothing new is kept on the watch, so

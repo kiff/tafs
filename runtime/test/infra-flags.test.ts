@@ -17,7 +17,8 @@ describe("infra/aws.sh", () => {
   // A rerun writes the function's whole environment: a flag it doesn't name would be turned off without a word.
   it("keeps every feature flag the code reads across a rerun", () => {
     const script = readFileSync(new URL("../../infra/aws.sh", import.meta.url), "utf8");
-    const kept = /for v in ((?:TAFS_[A-Z_]+ ?)+); do/.exec(script)?.[1]?.trim().split(/\s+/) ?? [];
+    // Every loop that keeps TAFS_ settings: the one secret's and the flags'.
+    const kept = [...script.matchAll(/for v in ((?:TAFS_[A-Z_]+ ?)+); do/g)].flatMap((m) => m[1]!.trim().split(/\s+/));
     const read = [...flagsRead(new URL("../src", import.meta.url).pathname)].filter((f) => f !== "TAFS_PUBLIC_URL");
     expect(read.length).toBeGreaterThan(0);
     for (const flag of read) expect(kept, `${flag} isn't kept by infra/aws.sh`).toContain(flag);

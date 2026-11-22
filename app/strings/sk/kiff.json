@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Pýtam sa KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "Nedostalo sa to ku KIFF. Skúste to znova.",
+  "kiff.kiff_can_not_do_sign": "KIFF to zatiaľ nevie: prihláste sa znova v Nastaveniach, aby ste mohli schvaľovať z tohto zariadenia ({device}).",
+  "kiff.kiff_did_not_answer_expected": "KIFF neodpovedal podľa očakávania. Skúste to znova.",
+  "kiff.kiff_words_do_not_match": "Slová od KIFF nezodpovedajú ich kontrole. Nedá sa nič schváliť."
+}

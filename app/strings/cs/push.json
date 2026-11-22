@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Přehledy",
+  "push.channel.briefs_description": "Váš přehled v nastavených časech.",
+  "push.channel.holds_description": "Volání čeká na vaši odpověď. Nic se neodešle, dokud ho neschválíte.",
+  "push.channel.other": "Další upozornění",
+  "push.channel.other_description": "Žádosti o úkoly a jejich odpovědi, bez zvuku.",
+  "push.channel.urgent_description": "Co nepočká do dalšího přehledu, se zvukem.",
+  "push.open_needs_you": "Otevřete Čeká na vás a odpovězte.",
+  "push.open_taf": "Otevřete taf a podívejte se.",
+  "push.open_usage": "Otevřete Tarif a využití a podívejte se."
+}

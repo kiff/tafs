@@ -115,9 +115,12 @@ struct CoachHome: View {
     var body: some View {
         NavigationStack {
             List {
-                // W4: Ask Coach as one conversation, oldest first, so the newest turn sits just over the microphone.
-                ForEach(coach.turns) { turn in
-                    CoachTurnRow(turn: turn)
+                // W4: Ask Coach as one conversation, oldest first, so the newest turn sits just over the microphone. A header
+                // where a day starts and every time in the account's zone, as a taf's chat and Wear OS read (row 44, C).
+                let days = coach.turns.map(\.at)
+                ForEach(Array(coach.turns.enumerated()), id: \.element.id) { i, turn in
+                    if ChatTime.startsDay(days, at: i, calendar: coach.calendar) { WatchChatDay(date: turn.at, calendar: coach.calendar) }
+                    CoachTurnRow(turn: turn, zone: coach.zone)
                 }
                 Button {
                     // The watch's own recording when it's on (row 44, A), else the system's dictation in one tap.
@@ -154,15 +157,17 @@ struct CoachHome: View {
 }
 
 /// One turn of the conversation (W4): when it was said, the person's words on the right, and Coach's side on the left: "Sent"
-/// until Coach starts, "Coach is answering" while it's at them, then its answer, which opens whole. VoiceOver hears whose
-/// words each side is.
+/// until Coach starts, "Coach is answering" while it's at them, then its answer, which opens whole, with when it came under
+/// it. VoiceOver hears whose words each side is.
 struct CoachTurnRow: View {
     let turn: CoachModel.Turn
+    var zone: TimeZone = .current
 
     var body: some View {
         VStack(spacing: 4) {
-            Text(turn.at, style: .time)
+            Text(ChatTime.time(turn.at, zone: zone))
                 .font(.caption2)
+                .monospacedDigit()
                 .foregroundStyle(.secondary)
             Text(verbatim: turn.said)
                 .font(.footnote)
@@ -194,17 +199,30 @@ struct CoachTurnRow: View {
             NavigationLink {
                 CoachTurnScreen(turn: turn, answer: answer)
             } label: {
-                Text(CoachTurnRow.line(answer))
-                    .font(.footnote)
-                    .lineLimit(5)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .foregroundStyle(WatchLook.onCoachGround)
-                    .background(WatchLook.coachGround, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(CoachTurnRow.line(answer))
+                        .font(.footnote)
+                        .lineLimit(5)
+                    // When the answer came (row 44, C), small, under it, as a taf's chat and Wear OS show it.
+                    if let at = answer?.at {
+                        Text(ChatTime.time(at, zone: zone)).font(.caption2).monospacedDigit().opacity(0.75)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .foregroundStyle(WatchLook.onCoachGround)
+                .background(WatchLook.coachGround, in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Words.Coach.title + ": " + CoachTurnRow.line(answer))
+            .accessibilityLabel(CoachTurnRow.spoken(answer, zone: zone))
         }
+    }
+
+    /// What VoiceOver hears of Coach's side: whose words, the words, and when they came.
+    static func spoken(_ answer: WatchCoachAnswer?, zone: TimeZone) -> String {
+        let said = Words.Coach.title + ": " + line(answer)
+        guard let at = answer?.at else { return said }
+        return said + ", " + ChatTime.time(at, zone: zone)
     }
 
     /// Coach's side once answered: its words, or, with none, where the rest is.

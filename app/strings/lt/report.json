@@ -1,0 +1,17 @@
+{
+  "report.already": "Apie šį atsakymą jau pranešėte.",
+  "report.cant_from_here": "Apie šį atsakymą iš čia pranešti negalima.",
+  "report.menu": "Pranešti apie šį atsakymą",
+  "report.not_sent": "Jūsų pranešimas neišsiųstas. {why}",
+  "report.not_sent_why": "Neišsiųsta: {failed}",
+  "report.note_hint": "Pridėkite pastabą (neprivaloma)",
+  "report.note_most_characters": "Pastaba gali būti ne ilgesnė kaip 1 000 simbolių.",
+  "report.person_kiff_reads_your_report": "Jūsų pranešimą su atsakymu, kaip jis buvo parašytas, perskaitys KIFF darbuotojas.",
+  "report.reason.harmful": "Žalingas",
+  "report.reason.offensive": "Įžeidžiantis",
+  "report.reason.other": "Kita",
+  "report.reason.wrong": "Klaidingas",
+  "report.runs_not_loaded": "Nepavyko įkelti jo paleidimų. {why}",
+  "report.thanks": "Ačiū. KIFF darbuotojas perskaitys jūsų pranešimą.",
+  "report.what_wrong": "Kas su juo negerai?"
+}

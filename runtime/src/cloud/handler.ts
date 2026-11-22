@@ -36,7 +36,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections, accountConnectionsAndChromes, chromeLine } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, GO_ON, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -46,8 +46,14 @@ import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, 
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addAPIDoor, addDoor, answerKnock, apiDraftOf, DoorError, doorsOf, doorKindOf, newAPIDoorKey, revokeAPIDoorKey, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
-import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext } from "./doors/api.js";
+import { apiDoorRequest, apiRunEnded, isAPIDoorPath, startNext, apiDoorsOn } from "./doors/api.js";
 import { type APIDraft, doorKeys } from "./doors/model.js";
+
+/**
+ * A door draft as tafs cloud keeps it (`doorKeys.apiDraft`), until it lapses: Coach's draft while it waits for the
+ * owner, then, once a door was made from it, only which door and when (`used`), so the card can say so.
+ */
+type KeptAPIDraft = { draft?: APIDraft; made: string; expires: string; used?: { door: string; at: string } };
 import { canonical } from "./jcs.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
@@ -4559,14 +4565,15 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
   if (!deps.planqueBase) return { lines: [], guides: [] };
   try {
     const token = bearer(event);
-    const [conns, records, access] = await Promise.all([
-      accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
+    const [{ connections: conns, chromes }, records, access] = await Promise.all([
+      accountConnectionsAndChromes(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
       deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
     ]);
     const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t.name]));
     // The guides of the apps those tafs hold, the most used first: Coach has read them before it offers a job with one.
     const guides = await heldGuides(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token, conns, tafs).catch(() => []);
-    return { lines: connectionLines(conns, tafs), guides };
+    // The owner's own Chrome, only while planque offers a taf in one: Coach offers it only then.
+    return { lines: [...connectionLines(conns, tafs), ...chromeLine(chromes)], guides };
   } catch (err) {
     console.error(`coach connections for ${me.tenantID}:`, err);
     return { lines: [], guides: [] };
@@ -9141,7 +9148,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_door_api") {
     // A door from another application, drafted: it makes nothing. The owner reads it in tafs and makes it with their
     // signed approval (POST …/doors {kind: "api", draft}), and its key is shown to them once, never to Coach.
-    if (process.env.TAFS_API_DOORS !== "on" || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
+    if (!apiDoorsOn(call.tenant) || !deps.doors) throw new ToolRefusal("a door from another application isn't offered here yet: say so, and draft nothing");
     if (may && !may.manage) throw new ToolRefusal(`${taf.name}'s doors are for the people who manage it`);
     if (taf.job === SETUP_JOB) throw new ToolRefusal("Setup has no doors");
     let draft: APIDraft;
@@ -10603,8 +10610,12 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   // tafs cloud checked and keeps it, for the people who manage the taf. The apps sign and send exactly this draft.
   if (parts.length === 6 && method === "GET" && a === "drafts" && b) {
     if (!await managesTaf(event, me, taf, deps)) throw new HTTPError(404, "not found");
-    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as { draft: APIDraft; made: string; expires: string } | undefined;
-    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again");
+    const kept = (await ctx.doors.store.get(doorKeys.apiDraft(me.tenantID, taf.id, b))) as KeptAPIDraft | undefined;
+    // A draft a door was made from says so, in the person's words, so Coach's card reads "Door made" when the chat is
+    // opened again; one that lapsed says to ask Coach again. The apps show `words` as sent.
+    const w = wordsIn(langOf(event));
+    if (kept?.used) throw new HTTPError(410, "a door was made from this draft", { code: "draft_used", words: w.door_draft_used, door_id: kept.used.door });
+    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed: ask Coach again", { code: "draft_lapsed", words: w.door_draft_lapsed });
     return { draft_id: b, draft: kept.draft, made_at: kept.made, expires_at: kept.expires,
       body: { kind: "api", draft_id: b, draft: kept.draft } };
   }
@@ -10622,18 +10633,20 @@ async function doorRoute(event: HTTPEvent, method: string, parts: string[], me: 
   // application hand the taf work is signed on the phone. Pausing isn't: stopping is always safe.
   const kind = a && a !== "knocks" ? await doorKindOf(ctx, me.tenantID, taf.id, a) : undefined;
   if (parts.length === 4 && method === "POST" && body.kind === "api") {
-    if (process.env.TAFS_API_DOORS !== "on") throw new HTTPError(400, "that door isn't offered here");
+    if (!apiDoorsOn(me.tenantID)) throw new HTTPError(400, "that door isn't offered here");
     await doorSigned(event, me, deps);
     // Only the draft Coach made and tafs cloud keeps (design 4): the signed body names it by draft_id, its draft is that
     // draft byte for byte (canonical), and it's used once. A body made elsewhere, changed, lapsed or replayed makes nothing.
     const draft = apiDraftOf(body.draft);
     const draftID = typeof body.draft_id === "string" ? body.draft_id : "";
     const draftKey = doorKeys.apiDraft(me.tenantID, taf.id, draftID);
-    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as { draft: APIDraft; expires: string } | undefined : undefined;
-    if (!kept || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
+    const kept = draftID ? (await ctx.doors.store.get(draftKey)) as KeptAPIDraft | undefined : undefined;
+    if (!kept || kept.used || Date.parse(kept.expires) <= ctx.now.getTime()) throw new HTTPError(404, "this draft has lapsed or was used: ask Coach again");
     if (canonical(draft) !== canonical(apiDraftOf(kept.draft))) throw new HTTPError(409, "this isn't the draft Coach made: ask Coach again");
     const added = await addAPIDoor(ctx, owner, taf, body);
-    await ctx.doors.store.remove(draftKey).catch((err) => console.error("api door draft not removed:", err instanceof Error ? err.message : "error"));
+    // Used once: what's kept now says a door was made from it (no draft), until the draft would have lapsed.
+    const used: KeptAPIDraft = { made: kept.made, expires: kept.expires, used: { door: added.door.id, at: ctx.now.toISOString() } };
+    await ctx.doors.store.put(draftKey, used, new Date(kept.expires)).catch((err) => console.error("api door draft not marked used:", err instanceof Error ? err.message : "error"));
     return added;
   }
   if (kind === "api") {

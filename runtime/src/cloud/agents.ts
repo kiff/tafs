@@ -761,6 +761,17 @@ export class Agents {
     return keptByAgents(this.call("DELETE", tenant, ["tenant", "keys", "kiff", tafID]));
   }
 
+  // Each tenant's KIFF alert secret, once kiff/agents keeps it (sealed in its own table).
+
+  /**
+   * Keeps the tenant's alert secret with kiff/agents, replacing one kept before (PUT /tenant/alert-secret, the secret
+   * alone in the body). false: kiff/agents keeps none yet (404), and the caller keeps it as before. The account's
+   * erase (DELETE /tenant) removes it.
+   */
+  async putAlertSecret(tenant: string, secret: string): Promise<boolean> {
+    return keptByAgents(this.call("PUT", tenant, ["tenant", "alert-secret"], { secret }));
+  }
+
   // Attachments (kiff/tafs#209).
 
   /**

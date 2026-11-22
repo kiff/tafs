@@ -1,0 +1,1 @@
+- **tafs cloud speaks Korean.** A phone set to Korean gets tafs cloud's own lines, alerts and Coach's language in Korean; a recipe's words stay in English until recipes carry Korean ([languages.md](docs/languages.md)).

@@ -479,6 +479,8 @@ export const ko: Words = {
   waited_follow_up: "스스로 정한 후속 확인이 실행되지 않았습니다: 내 tafs가 크레딧을 기다리는 중이었습니다. 다시 시도하지 않습니다. 자세히 보려면 여세요.",
   door_name: (_id: string, label: string) => (_id === "email" ? "이메일" : label),
   door_a: "창구",
+  door_draft_used: "이 초안으로 창구를 만들었습니다.",
+  door_draft_lapsed: "이 초안은 만료되었습니다. Coach에게 다시 요청하세요.",
   door_knock: (who: string, door: string, spoofed: boolean) => `${who}이(가) ${door}(으)로 메시지를 보냈습니다${spoofed ? " (발신자 확인 실패)" : ""}. 아무것도 하지 않았습니다.`,
   door_full_keys: (door: string, n: number) => `내 ${door} 창구가 오늘 나와 등록된 발신자에게서 메시지 ${n}건을 모두 받았습니다. 내일까지 더 오는 것은 버려집니다.`,
   door_full_others: (door: string, n: number) => `내 ${door} 창구가 오늘 등록되지 않은 사람에게서 메시지 ${n}건을 받았습니다. 내일까지 더 오는 것은 버려집니다.`,

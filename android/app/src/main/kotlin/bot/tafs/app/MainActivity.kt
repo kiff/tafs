@@ -372,12 +372,15 @@ fun RootView(model: AppModel) {
           signingInWithPhone = true
         }) else null,
         phoneTermsChanged = phoneTermsChanged,
+        signInLeft = model.appSignInLeft.collectAsState().value,
+        endSignIn = model::endAppSignIn,
       )
       else -> CompositionLocalProvider(
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         LocalSignInAgain provides { confirmingSignInAgain = true },
         bot.tafs.app.views.LocalViewOnly provides state.approvalViewOnly,
+        bot.tafs.app.views.LocalNoApprovalKeyHere provides state.noApprovalKeyHere,
         // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
         LocalApproveAgain provides (
           // A view-only session can't be re-linked either: KIFF refuses it, so the line offers Sign in again alone.
@@ -403,7 +406,7 @@ fun RootView(model: AppModel) {
           )
         },
       ) {
-        SignedInView(model, onSignIn = { signingIn = true })
+        SignedInView(model, onSignIn = { signingIn = true }, celebrating = celebrating)
       }
     }
   }
@@ -444,7 +447,8 @@ fun RootView(model: AppModel) {
   }
   // This device's time zone, asked once when the account's differs.
   val offer = state.timeZoneOffer
-  if (offer != null && state.lastError == null && state.signedIn) {
+  // Never over the celebration of a sign-in inside the app: asked once it's gone, so its answer isn't tapped through (K5, 21 Nov).
+  if (offer != null && state.lastError == null && state.signedIn && !celebrating) {
     val zoneScope = rememberCoroutineScope()
     DriveAlert(
       onDismissRequest = {},
@@ -462,7 +466,7 @@ fun RootView(model: AppModel) {
 internal fun accountShown(state: bot.tafs.app.app.AppState): String = "${state.mode}/${state.kiffAccount?.tenantId.orEmpty()}"
 
 @Composable
-internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
+internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Boolean = false) {
   val state by model.state.collectAsState()
   val scope = rememberCoroutineScope()
   var tab by rememberSaveable { mutableStateOf(Tab.Tafs) }
@@ -477,6 +481,7 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var showingSettings by rememberSaveable { mutableStateOf(false) }
   var deletingAccount by rememberSaveable { mutableStateOf(false) }
   var showingDevices by rememberSaveable { mutableStateOf(false) }
+  var showingChromes by rememberSaveable { mutableStateOf(false) }
   // Files (docs/android-app.md, Files), over tafs cloud's routes.
   val files = remember { bot.tafs.app.files.FilesModel(model.filesStore, bot.tafs.app.model.ErrorWords::of) }
   val filesShowing = files.state.collectAsState().value.showing
@@ -943,10 +948,12 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             openTaf != null || (!wide && (coachOpen || coachVisibility.currentState || !coachVisibility.isIdle)) -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }
+                // From the end edge, as a pushed screen comes: the left, in right to left.
+                val rtl = androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl
                 if (!wide) androidx.compose.animation.AnimatedVisibility(
                   visibleState = coachVisibility,
-                  enter = androidx.compose.animation.slideInHorizontally { it },
-                  exit = androidx.compose.animation.slideOutHorizontally { it },
+                  enter = androidx.compose.animation.slideInHorizontally { bot.tafs.app.design.Directions.offEndX(it, rtl) },
+                  exit = androidx.compose.animation.slideOutHorizontally { bot.tafs.app.design.Directions.offEndX(it, rtl) },
                 ) {
                   Box(Modifier.fillMaxSize().background(Theme.background)) {
                     CoachScreen(state, actions, loadCoach = model::loadCoach, onBack = { coachOpen = false }, chats = coachChats)
@@ -1023,12 +1030,20 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         focus = settingsFocus,
         onFocused = { settingsFocus = null },
         onFiles = { showingSettings = false; filesFromAccount = true; files.show() },
+        onChromes = { showingSettings = false; showingChromes = true },
+        onLoadChromes = { scope.launch { model.refreshChromes() } },
       )
     }
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (!wide && filesShowing) {
       bot.tafs.app.views.FilesSheet(files, onClose = { files.close(); if (filesFromAccount) showingSettings = true; filesFromAccount = false }, seeInChat = filesSeeInChat)
+    }
+    if (showingChromes) {
+      bot.tafs.app.views.ChromesSheet(
+        state, refresh = model::refreshChromes, open = model::openChromePairing, step = model::chromePairingStep,
+        confirm = model::confirmChrome, remove = model::removeChrome, onClose = { showingChromes = false; showingSettings = true },
+      )
     }
     if (showingDevices) {
       DevicesSheet(
@@ -1091,7 +1106,8 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).
-    state.aiConsent?.takeIf { state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
+    // Never under the celebration of a sign-in inside the app: it opens once that's gone, in order (K5, 21 Nov).
+    state.aiConsent?.takeIf { !celebrating && state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
       bot.tafs.app.views.AIConsentSheet(
         consent, busy = state.aiConsentBusy, error = state.aiConsentError,
         onAllow = { scope.launch { model.allowAI() } }, onNotNow = model::notNowAI,

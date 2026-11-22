@@ -289,7 +289,10 @@ exits 0 on an unsigned bundle too) and prints the signer certificate's SHA-256 i
 watch's. The temporary keystore is removed however the step ends. Neither bundle is kept as a run artifact: the repository
 is public, so Play holds the only copy.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
-it once into the secrets store, and `android/release.sh` builds with it. The app has no native
+it once into the secrets store, and `android/release.sh` builds with it. CI's release jobs read it from the GitHub secret
+`ANDROID_UPLOAD_KEY` (the same JSON: `keystore` in base64, `store_password`, `key_password`, `alias`), which only the
+`android-release` environment's jobs see. Until that secret is set, they read Secrets Manager's copy through the release
+role, as before. Each run's log says which ("The upload key: from GitHub"). The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
 stripped (`libandroidx.graphics.path.so` for Compose, `libdatastore_shared_counter.so` for
 DataStore), with no symbol table or debug sections, so there are no native symbols to put in the
@@ -1470,6 +1473,68 @@ implementation of §5.2 must give literally: the P-256 keys of private keys 1 an
 the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
 request, the window, each refusal) and `PairComputerTest` (the sheet).
 
+## Pairing a Chrome
+
+Account › **Chrome** (`ChromesSheet`, `ChromesView.kt`) lists the Chromes paired to the account, with Unpair, and **Pair a
+Chrome**, as iOS's `ChromesView`. The extension's side, and the contract all three sides build to, is [chrome.md](chrome.md).
+The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves `AppState.chromes` null, so planque's
+switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`).
+
+- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 17-character secret itself (about 83 bits, so the proof planque keeps under it can't be tried offline), shown in groups of four (`K7QF-29XM-DPQR-STVW-XYZ2-3`)
+  (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer
+  you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
+  `ChromePairingInProgress` leaves the secret out of its `toString`.
+- **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
+  constant time), over its key and its KIFF device's offer (`kiff_offer`, empty when it sent none), so planque can swap
+  neither. That offer must be KIFF's `kiff.pair.v1` for a `chrome` `extension` in `software`, with no approval key
+  (`PairQr.readChromeExtension`, as iOS's `PairingRequest.read`); any other is refused. The sheet reads the pairing every 2 seconds. An offer that doesn't hold means another extension used the
+  lookup: nothing is paired, and the sheet says so (`chrome.refused`). So does a pairing planque marks `contested` (more than
+  one Chrome tried the code, so it's spent). An expired pairing says `chrome.expired`.
+- **One fingerprint, naming the Chrome, signs the confirmation** with the **approval key** only (`signCritical`):
+  `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's approval key and its proof under the
+  secret. The Keystore's DER signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+  - **A phone without an approval key can't pair.** Unlike iOS, Android's other key signs with no prompt the Keystore enforces,
+    so it could never stand for the owner's presence when a sealed value is released. Pairing says so instead of starting.
+- **Then a second fingerprint, also naming the Chrome, pairs its view-only KIFF device** (`POST /v1/me/pairings` with the
+  offer's fields, signed by the approval key, as Add a device pairs a computer), and only then does planque hear the
+  confirmation, so a Chrome is never confirmed without its device. iOS signs both behind one Face ID; Android's approval key
+  unlocks for one signature, so it asks twice. KIFF's refusal, in its own words, confirms nothing.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
+- **Approving a browser grant (groundwork, not wired into approval yet):** `ChromePairing.sitesBytes` and `sensitiveBytes`
+  build `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}` and `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`,
+  as iOS's. `ChromePairing.isSensitive` marks the sites the extension blocks unless the owner allows them by name: the
+  extension's list and label pattern, with the host read as its `hostOf` reads it (lower case, an ideographic full stop as a
+  dot, no trailing dot). `ChromePairingTest` checks all three against vectors/chrome-grant.json and chrome-sensitive.json.
+- Its lines are `chrome.*`, shared with iOS.
+- **Tests:** `ChromePairingTest` (the shared vector with and without `kiff_offer`, a refused proof, the KIFF offer read only
+  as a Chrome extension in software, raw `r‖s` verified as P1363) and `ChromesTest`:
+  - the row only once planque offers Chromes;
+  - an offer shown only on its proof, and the secret never in a request;
+  - one fingerprint naming the Chrome, and the approval key's `r‖s` verifying where the device key's doesn't;
+  - a closed prompt sends nothing;
+  - an offer whose KIFF device could approve, or whose proof leaves it out, is refused;
+  - the KIFF device paired by the approval key before planque's confirm, and KIFF's refusal confirming nothing;
+  - Unpair with no prompt.
+
+### A held step in Chrome
+
+A step a taf takes in the owner's Chrome that KIFF holds is a hold like any other, drawn in Needs you with KIFF's amount, action
+and reason. KIFF keeps planque's words for the page on the hold (`browser` on the held call: docs/chrome.md, "The phone
+approval card"), and the card draws them under KIFF's own lines, never in their place (`BrowserStepBlock`, as iOS's):
+
+- the site large, the full origin small, as sent (an internationalised domain stays in its xn-- form), and which
+  Chrome ("In Work Mac", `chrome.held_in`);
+- under "On the page" (`chrome.held_page`): the element's own label as planque read it ("Click “Place order”") first,
+  then the page's title and an excerpt of at most 600 characters, masked by planque. **The label is the page's words, so
+  it never becomes the card's summary**: that stays KIFF's, the tool's, as for any hold (`aHostileLabelNeverBecomesTheSummary`);
+- under "In the basket" (`chrome.held_basket`), a checkout's lines, one each and at most 20 ("2 × Blue pen · 3.00"); the total is KIFF's
+  amount, at the top.
+
+Each piece is plain text, one paragraph, with no character that reorders or hides words (`KiffMapping.browserStep`, as the
+taf's own line). A block with no site or no action draws nothing. With no block (until KIFF carries it, or any other hold),
+the card is as it was. KIFF adds the block's digest to what the phone signs for the hold, so the words approved are the words
+shown. Tests: `BrowserStepCardTest`.
+
 ## Signing in with your other phone
 
 A new tablet can be added from a phone that's already signed in, with no browser:
@@ -1650,11 +1715,18 @@ on the left.
 - **A value inside a right-to-left line is set apart** (`Res.isolated`): in Arabic, Hebrew and the other right-to-left
   languages, each text value `Res.s` and `Res.p` fill in is wrapped in U+2068 … U+2069 with its own direction characters
   taken out, so a Latin name or an amount keeps its direction without turning the sentence (as iOS's #1557). Left to
-  right, values are as passed. **What the app copies** (`Res.clip`: a key, an address, a receipt, a sign-in link, a
+  right, values are as passed. The rule is `watchlink`'s `Bidi`, so the watch fills its lines the same way
+  (docs/watch-wear.md). A count (`%d`) is written in the line's language's digits, as `String.format` does: Arabic-Indic
+  in Arabic (٣ for 3). An amount or a code, sent as text, stays as sent. **What the app copies** (`Res.clip`: a key, an address, a receipt, a sign-in link, a
   message, an answer) carries no direction character.
 - **Each line reads in its own words' direction** (`TextDirection.Content` in `scaled` and the type scale), as Android's own
   text does: an English name, a ticket number or a chat in English stays in order on a right-to-left screen, and lines in
   the screen's language follow it. Such an English line sits at its own start (the left), as on the web with `dir="auto"`.
+- **What's drawn, slid or dragged by hand mirrors too** (`design/Directions`): Compose mirrors a layout, but not a
+  `drawBehind`'s coordinates, a slide's pixels or a drag's delta, which are always from the left. So a job's colour edge is
+  on the start side, the Card's ring at the top end corner, and Coach comes in from the end edge (the left, in right to
+  left), on a phone as a screen and on a tablet as the panel, whose handle widens it when dragged towards the start.
+  `RtlTest` checks each rule and refuses a slide or a drag fixed to the right.
 - **The pictures:** `RtlScreenshots` draws sign-in, the tafs, a taf's chat, Account, Files and Devices right to left, on a
   tablet's 1280 × 800 dp window, into `docs/screenshots/android/rtl/` (`-PrtlScreenshots`). With the app's English, so what
   moves is the layout. Each test checks it was laid out right to left.
@@ -1755,6 +1827,14 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. For an account KIFF still
   has on UTC, on a phone that isn't, that read happens before the account first shows (Android 1.20.2, as on iPhone and
   iPad), so the question never comes up for it. A later mismatch is still asked, as before.
+  It's never asked over the celebration of a sign-in inside the app (`InAppSignedIn`), and nor is "Your data and the AI": both wait until
+  "You're connected" is gone, then open in order. Two names for one fixed offset (GMT, UTC, Etc/UTC) are the same time, so
+  a phone on GMT is never asked to move an account on UTC (`AppModel.sameTime`); a zone with a summer time still differs.
+- **A phone with no fingerprint enrolled** holds no approval key, so KIFF makes its session view-only
+  (`AppState.noApprovalKeyHere`). The lines that say why approving isn't possible here (Needs you's `ApprovalKeyLine`,
+  Account) then say "Add a fingerprint to this phone to approve from it. Refusing still works."
+  (`approval.no_fingerprint`), not only "Sign in again", which changes nothing until a fingerprint is added. Sign in
+  again stays offered, since KIFF learns the new key at the next sign-in (`viewOnlyLine`).
 - **A taf made with no plan** says so on Coach's card, with **Choose a plan**, which opens Plan & usage.
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it

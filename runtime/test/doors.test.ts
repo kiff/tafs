@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it } from "vitest";
 import { AgentsError, type Run } from "../src/cloud/agents.js";
 import { coachTool, type Deps, handle, type HTTPEvent, sweepHeld, sweepReplies, type Taf } from "../src/cloud/handler.js";
@@ -1755,11 +1756,21 @@ describe("an api door's keys and signed steps", () => {
   /** Every key record the store holds: hashes, never a key. */
   const storeText = (w: World) => JSON.stringify([...w.store.held.entries()]);
 
-  it("is offered only with TAFS_API_DOORS on", async () => {
+  it("is offered only with TAFS_API_DOORS on, for every account or the accounts it lists", async () => {
     const w = world();
     const s = signing(w);
     expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(400);
     expect(s.asked).toEqual([]);
+    const was = process.env.TAFS_API_DOORS;
+    try {
+      process.env.TAFS_API_DOORS = "t_other";
+      expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(400);
+      expect(s.asked).toEqual([]);
+      process.env.TAFS_API_DOORS = "t_other,t_acme";
+      expect((await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG })).status).toBe(200);
+    } finally {
+      if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was;
+    }
   });
 
   it("makes the door and its first key only signed, shows the key once, and keeps only its hash", () => withFlag(async () => {
@@ -1984,7 +1995,13 @@ describe("an api door's keys and signed steps", () => {
       // The kept draft as it is: the door is made, and the draft is used up.
       const made = await s.call("POST", doorsPath, { body, headers: SIG });
       expect(made.status).toBe(200);
-      expect((await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).status).toBe(404);
+      // Read again (Coach's card when the chat is opened again): it says a door was made from it, in the person's words.
+      const usedRead = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`);
+      expect(usedRead.status).toBe(410);
+      expect(usedRead.body).toMatchObject({ code: "draft_used", words: "Door made from this draft.", door_id: made.body.door.id });
+      expect(usedRead.body.draft).toBeUndefined();
+      const usedFr = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`, { headers: { "accept-language": "fr" } });
+      expect(usedFr.body.words).toBe(wordsIn("fr").door_draft_used);
       // Sent again after its door is removed: the used draft makes nothing.
       expect((await s.call("DELETE", `${doorsPath}/${made.body.door.id}`, { headers: SIG })).status).toBe(200);
       // The same signature again is refused before the draft is read (signature_taken); a new signature over the same
@@ -2001,6 +2018,10 @@ describe("an api door's keys and signed steps", () => {
       const body = (await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`)).body.body as Record<string, any>;
       w.at(new Date(NOW.getTime() + 8 * 24 * 3600_000));
       expect((await s.call("POST", doorsPath, { body, headers: SIG })).status).toBe(404);
+      // Read after it lapsed: it says so, and to ask Coach again.
+      const lapsed = await s.call("GET", `${doorsPath}/drafts/${drafted.draft_id}`);
+      expect(lapsed.status).toBe(404);
+      expect(lapsed.body).toMatchObject({ code: "draft_lapsed", words: "This draft lapsed: ask Coach again." });
     }));
 
     it("refuses a lapsed draft the store still holds, as DynamoDB keeps one until it deletes it", () => withFlag(async () => {
@@ -2025,6 +2046,18 @@ describe("an api door's keys and signed steps", () => {
         await s.call("POST", doorsPath, { body: await apiBody(w), headers: SIG });
         await expect(draftOf(w, DRAFT)).rejects.toThrow(/already has a door from another application/);
       });
+    });
+
+    it("drafts only for an account the flag lists, so another account's Coach drafts nothing", async () => {
+      const was = process.env.TAFS_API_DOORS;
+      try {
+        process.env.TAFS_API_DOORS = "t_other";
+        await expect(draftOf(world(), DRAFT)).rejects.toThrow(/isn't offered here yet/);
+        process.env.TAFS_API_DOORS = "t_other,t_acme";
+        expect((await draftOf(world(), DRAFT)).draft_id).toBeTruthy();
+      } finally {
+        if (was === undefined) delete process.env.TAFS_API_DOORS; else process.env.TAFS_API_DOORS = was;
+      }
     });
   });
 
@@ -2146,6 +2179,11 @@ describe("an api door's keys and signed steps", () => {
       // Off: nothing is there.
       delete process.env.TAFS_API_DOORS;
       expect((await c.submit("off")).status).toBe(404);
+      // On for other accounts only: this account's door is as if it weren't there; on for it, it takes work.
+      process.env.TAFS_API_DOORS = "t_other";
+      expect((await c.submit("listed-other")).status).toBe(404);
+      process.env.TAFS_API_DOORS = "t_other, t_acme";
+      expect((await c.submit("listed")).status).not.toBe(404);
       process.env.TAFS_API_DOORS = "on";
     }));
 

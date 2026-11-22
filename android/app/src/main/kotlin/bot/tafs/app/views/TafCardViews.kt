@@ -96,8 +96,9 @@ fun TafCardFace(card: TafCard, issuedBy: String, color: Color, revoked: Boolean 
       .clip(RoundedCornerShape(18.dp))
       .background(cardFill(card, color).copy(alpha = if (faded(card, revoked)) 0.4f else 1f))
       .drawBehind {
-        // A ring at the top corner, as the mascot's sweep: 130 across, nudged off the edge.
-        drawCircle(Color.White.copy(alpha = 0.18f), radius = 65.dp.toPx(), center = Offset(size.width - 30.dp.toPx(), 20.dp.toPx()), style = Stroke(1.dp.toPx()))
+        // A ring at the top end corner, as the mascot's sweep: 130 across, nudged off the edge (the top left, in right to left).
+        val x = bot.tafs.app.design.Directions.fromEndX(size.width, 30.dp.toPx(), layoutDirection == androidx.compose.ui.unit.LayoutDirection.Rtl)
+        drawCircle(Color.White.copy(alpha = 0.18f), radius = 65.dp.toPx(), center = Offset(x, 20.dp.toPx()), style = Stroke(1.dp.toPx()))
       }
       .clearAndSetSemantics { contentDescription = spokenCard(card, issuedBy, revoked) },
   ) {

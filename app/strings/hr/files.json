@@ -1,0 +1,46 @@
+{
+  "files.account_row": {
+    "one": "{count} datoteka · čuva se 30 dana",
+    "few": "{count} datoteke · čuva se 30 dana",
+    "other": "{count} datoteka · čuva se 30 dana"
+  },
+  "files.all": "Sve",
+  "files.all_tafs": "Svi tafovi",
+  "files.by_run": "Po izvođenju",
+  "files.by_taf": "Po tafu",
+  "files.delete_body": "Nestaje iz Datoteka za sve na ovom računu, odmah. Ovo se ne može poništiti.",
+  "files.delete_now": "Izbrišite odmah",
+  "files.delete_question": "Izbrisati „{name}“ odmah?",
+  "files.deleted": "Izbrisano za sve",
+  "files.download": "Preuzmite",
+  "files.empty": "Još ništa. Kad taf u izvođenju napravi izvješće, tablicu ili dokument, čuva se ovdje 30 dana da ga svi na ovom računu mogu otvoriti, spremiti ili podijeliti.",
+  "files.everyone": "Svi na ovom računu",
+  "files.goes_away": "Nestaje",
+  "files.goes_in_days": {
+    "one": "nestaje za {count} dan",
+    "few": "nestaje za {count} dana",
+    "other": "nestaje za {count} dana"
+  },
+  "files.goes_on": "{date} (30 dana nakon njegova izvođenja)",
+  "files.goes_today": "nestaje danas",
+  "files.goes_tomorrow": "nestaje sutra",
+  "files.in_run": "U izvođenju",
+  "files.kept_line": "Svaka se datoteka čuva 30 dana od svog izvođenja, a zatim sama nestaje. Sve ove datoteke vide svi na ovom računu. Vaši vlastiti privici razgovora ostaju uz njihove poruke.",
+  "files.kept_until": "Njegove se datoteke čuvaju do: {date}",
+  "files.made_by": "Izradio",
+  "files.none_yet": "Još nema · čuva se 30 dana",
+  "files.pick_one": "Odaberite datoteku da je vidite ovdje.",
+  "files.preview_start": "Prikazan je samo početak. Preuzmite datoteku da pročitate cijelu.",
+  "files.saved": "Spremljeno na ovaj uređaj",
+  "files.see_in_chat": "Pogledajte u razgovoru",
+  "files.share": "Podijelite",
+  "files.size": "Veličina",
+  "files.taf_row": {
+    "one": "{count} datoteka iz njegovih izvođenja",
+    "few": "{count} datoteke iz njegovih izvođenja",
+    "other": "{count} datoteka iz njegovih izvođenja"
+  },
+  "files.title": "Datoteke",
+  "files.type": "Vrsta",
+  "files.who_sees": "Tko to vidi"
+}

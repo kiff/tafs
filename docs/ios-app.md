@@ -178,7 +178,7 @@ the app in sample mode.
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-screen usage \| connect-apps \| connect-app \| devices \| new-taf \| coach \| coach-chat` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`), and `connect-app` also opens the app with the most connections, each under its taf (`Samples/grants.json`, its agents mapped to the sample's tafs); `coach-chat` opens Coach on a sample conversation (`Samples/coach-chat.json`, read as tafs cloud's), drawn though the sample starts no Coach (`Screenshots.coachChat`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
-| `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
+| `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French, Portuguese, Korean and Japanese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
 | `-pack <id>` | The Add credits screen with that pack alone |
@@ -1066,6 +1066,28 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   the code.
 - **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
 - Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
+
+## Pairing a Chrome
+
+Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, with Unpair, and **Pair a Chrome**
+(`PairChromeView`). The extension's side, and the contract all three sides build to, is
+[chrome.md](chrome.md). The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves
+`AppModel.chromes` nil, so planque's switch decides, never the app.
+
+- **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 6-character secret
+  itself (`ChromePairing.newSecret`) and never sends it. It shows `lookup-secret`, with "Pair only a Chrome on a computer
+  you're at".
+- **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`). An
+  offer that doesn't hold means another extension used the lookup: nothing is paired, and the sheet says so.
+- **One prompt, naming the Chrome, signs the confirmation.** Only the approval key pairs a Chrome, since the extension
+  later opens a sealed sign-in only on that key's release. A phone without one doesn't open a pairing, as on Android. It
+  signs `tafs-chrome/pair/v1` over the pairing, the Chrome key's SHA-256, the name, this phone's key and its proof under
+  the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
+- **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
+  next connect.
+- Its lines are `chrome.*`, shared with Android, which follows.
+- **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`), and `PlanqueTests`' Chrome tests (the
+  row only once planque offers it, an offer shown only on its proof, the confirmation's proof and signature verified).
 
 ### The sign-in screen
 

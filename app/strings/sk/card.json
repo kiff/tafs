@@ -1,0 +1,173 @@
+{
+  "card.all_of": {
+    "one": "Celá Card",
+    "few": "Všetky Card",
+    "other": "Všetky Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, potom sa opýta vás",
+  "card.calls_left": {
+    "one": "Zostáva {count} volanie",
+    "few": "Zostávajú {count} volania",
+    "other": "Zostáva {count} volaní"
+  },
+  "card.calls_left_line": {
+    "one": "Zostáva {count} volanie {window} z {limit}",
+    "few": "Zostávajú {count} volania {window} z {limit}",
+    "other": "Zostáva {count} volaní {window} z {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} z {count} volania {window}",
+    "few": "{used} z {count} volaní {window}",
+    "other": "{used} z {count} volaní {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} volanie {window}",
+    "few": "{count} volania {window}",
+    "other": "{count} volaní {window}"
+  },
+  "card.card_confirmed_kiff": "Card · potvrdené KIFF",
+  "card.card_draft_kiff": "Card · návrh · od KIFF",
+  "card.card_got_room_call_needed": "Jeho Card dostala priestor, ktorý toto volanie potrebovalo, kým sa ten celkový limit nevynuluje",
+  "card.card_not_issued": "Card nebola vydaná. ",
+  "card.card_revoked": "Card odvolaná",
+  "card.check.always_asks": "{rule}: vždy sa opýta vás",
+  "card.check.never_allowed": "{rule}: nikdy nepovolené",
+  "card.check.not_on_card": "Nie je na Card tohto tafu",
+  "card.check.over_count": {
+    "one": "Nad {count} {window}",
+    "few": "Nad {count} {window}",
+    "other": "Nad {count} {window}"
+  },
+  "card.check.over_each": "Nad {amount} za každé",
+  "card.check.over_total": "Nad {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "few": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Skončila",
+  "card.ended_on": "Skončila {date}",
+  "card.ends": "Končí",
+  "card.extra_room": "+{extra} priestoru navyše {window}",
+  "card.extra_room_prefix": "+{formatted} priestoru navyše ",
+  "card.extra_room_until": "+{extra} priestoru navyše do {ends}",
+  "card.figure_left": "zostáva {figure}",
+  "card.heading": {
+    "one": "Card",
+    "few": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} volanie {window}{each}: toto by bolo {nth}{item}",
+    "few": "{count} volania {window}{each}: toto by bolo {nth}{item}",
+    "other": "{count} volaní {window}{each}: toto by bolo {nth}{item}"
+  },
+  "card.held.each_call_asks": "Každé volanie sa vás najprv opýta",
+  "card.held.for_each": " pre každé {name}",
+  "card.held.for_each_join": " pre každé ",
+  "card.held.for_item": " pre {item}",
+  "card.held.over_count": {
+    "one": "Nad jeho limit {count} volanie: toto by bolo {nth}",
+    "few": "Nad jeho limit {count} volania: toto by bolo {nth}",
+    "other": "Nad jeho limit {count} volaní: toto by bolo {nth}"
+  },
+  "card.held.over_one_call": "{amount} je nad limit {cap} na jedno volanie",
+  "card.held.over_total": "{amount} by prekročilo celkový limit {cap}",
+  "card.hero.calls_left_of": {
+    "one": "volanie zostáva {window} z {limit}",
+    "few": "volania zostávajú {window} z {limit}",
+    "other": "volaní zostáva {window} z {limit}"
+  },
+  "card.hero.calls_use_unavailable": "volania {window} · využitie nie je dostupné",
+  "card.hero.left_of": "zostáva {window} z {limit}",
+  "card.hero.left_of_extra": "zostáva {window} z {base} + {extra} priestoru navyše",
+  "card.hero.left_of_extra_until": "zostáva {window} z {base} + {extra} priestoru navyše do {ends}",
+  "card.hero.left_of_note": "zostáva {window} z {limit}{note}",
+  "card.hero.no_currency": "bez meny",
+  "card.hero.no_currency_suffix": " · bez meny",
+  "card.hero.use_unavailable": "{window} · využitie nie je dostupné",
+  "card.hero.use_unavailable_note": "{label} · využitie nie je dostupné{note}",
+  "card.how_counted": "Ako sa to počíta",
+  "card.issue_prompt": "Vydať Card pre {taf}",
+  "card.issued_by": "Vydal(a)",
+  "card.issued_by_account": "Účet",
+  "card.issued_by_named": "Vydal(a) {who}",
+  "card.its_card": "Jeho Card",
+  "card.kiff_did_not_revoke_cards": "KIFF neodvolal {cards_left} jeho Card: odvolajte ich v KIFF.",
+  "card.left": "zostáva {amount} {window}",
+  "card.left_extra_room": "zostáva {current} z {own} + {extra} priestoru navyše{until}{note}",
+  "card.limit_can_not_raised_right": "Limit teraz odtiaľto nemožno zvýšiť.",
+  "card.limit_raised_read_balance_again": "Limit bol zvýšený. Kým ho zvýšite znova, načítajte zostatok znova.",
+  "card.line.calls_in_window": {
+    "one": "{count} volanie {window}{then}",
+    "few": "{count} volania {window}{then}",
+    "other": "{count} volaní {window}{then}"
+  },
+  "card.line.more_asks": "; viac sa vás najprv opýta",
+  "card.line.then_asks": ", potom sa opýta vás",
+  "card.line.total_in_window": "spolu {amount} {window}{then}",
+  "card.line.up_to_each": "do {amount} za každé",
+  "card.more": {
+    "one": "ešte {count}",
+    "few": "ešte {count}",
+    "other": "ešte {count}"
+  },
+  "card.no_actions": "Zatiaľ žiadne akcie",
+  "card.no_actions_short": "zatiaľ žiadne akcie",
+  "card.no_currency": "{amount} (bez meny)",
+  "card.no_end_date": "Bez dátumu konca",
+  "card.outcome.not_a_resource": "Nie je to jeden zo zdrojov Card",
+  "card.outcome.outside": "Mimo Card",
+  "card.outcome.over_one_action": "Nad limit Card na jednu akciu",
+  "card.outcome.over_total": "Nad celkový limit Card",
+  "card.outside_held": "Mimo: pozdržané pre vás",
+  "card.outside_refused": "Mimo: odmietnuté",
+  "card.over_limit_calls_would": "Nad jeho limit {limit} volaní: toto by bolo {nth}",
+  "card.revoke_failed": "KIFF Card neodvolal. {why}",
+  "card.revoked": "Odvolané",
+  "card.rule.always_asks": "vždy sa opýta vás",
+  "card.rule.at_most_each": "≤ {amount} za každé",
+  "card.rule.at_most_each_refused_above": "≤ {amount} za každé · nad to odmietnuté",
+  "card.rule.calls": {
+    "one": "{count} volanie {window}",
+    "few": "{count} volania {window}",
+    "other": "{count} volaní {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} volanie {window}, potom sa opýta vás",
+    "few": "{count} volania {window}, potom sa opýta vás",
+    "other": "{count} volaní {window}, potom sa opýta vás"
+  },
+  "card.rule.in_total": "spolu {amount} {window}",
+  "card.rule.never": "nikdy",
+  "card.rule.total_then_asks": "spolu {amount} {window}, potom sa opýta vás",
+  "card.rule.up_to_each": "do {amount} za každé; viac sa vás najprv opýta",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card tafu",
+  "card.tools": {
+    "one": "{count} nástroj",
+    "few": "{count} nástroje",
+    "other": "{count} nástrojov"
+  },
+  "card.until": "Do",
+  "card.until_date": "Do {date}",
+  "card.until_ends": " do {ends}",
+  "card.used_of": "{used} z {limit} {window}",
+  "card.window.a_day": "denne",
+  "card.window.a_month": "mesačne",
+  "card.window.a_week": "týždenne",
+  "card.window.any_day": "za ľubovoľných 24 hodín",
+  "card.window.any_hour": "za ľubovoľnú hodinu",
+  "card.window.any_week": "za ľubovoľných 7 dní",
+  "card.window.in_total": "spolu",
+  "card.window.in_total_window": "spolu {window}",
+  "card.window.last_day": "za posledných 24 hodín",
+  "card.window.last_hour": "za poslednú hodinu",
+  "card.window.last_week": "za posledných 7 dní",
+  "card.window.so_far": "zatiaľ",
+  "card.window.this_month": "tento mesiac",
+  "card.window.this_week": "tento týždeň",
+  "card.window.today": "dnes",
+  "card.within_card": "v rámci Card"
+}
