@@ -12,7 +12,7 @@ object Legal {
    * The languages kiff.dev serves tafs's legal pages in, besides English (the unprefixed page, and the one that binds).
    * Traditional Chinese (zh-Hant) is served at `/zh/`, and Serbian in Latin script (sr-Latn) at `/sr/`: each tag's language.
    */
-  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy")
+  val SERVED = setOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy", "az")
 
   /** [language] as kiff.dev serves it: a regional variant's pages are its language's ("pt-BR" opens `/pt/`). */
   private fun served(language: String): String = language.substringBefore('-')
