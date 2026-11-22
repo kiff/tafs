@@ -103,7 +103,7 @@
   "views/ReceiptSheet.kt": {
     "receipt ${entry.receipt?.traceId.orEmpty()}": "a receipt's technical line",
     "signer ${it.take(6)}…${it.takeLast(4)}": "a receipt's technical line",
-    "${i + 1}  ${step.words} · ${step.at?.let(::seconds).orEmpty()}\\n   hash ${step.hash}": "a receipt's technical line",
+    "${i + 1}  ${step.message} · ${step.at?.let(::seconds).orEmpty()}\\n   hash ${step.hash}": "a receipt's technical line",
     "✎  trace ${entry.receipt?.traceId.orEmpty()} · secp256k1 + keccak256\\n   sig 0x${sig.take(4)}…${sig.takeLast(4)}": "a receipt's technical line",
     "KIFF receipt": "the clipboard's label, for the system"
   },

@@ -3,7 +3,7 @@
 // the key pinned in this build. Only then are steps taken, each checked as planque's (protocol.checkStep) before the runner
 // sees it. planque's relay can't choose a close code, so it says `close` with the code first; a real close code counts too.
 
-import { CLOSE, Nonces, checkStep, checkWelcome, hello, result } from "./protocol.js";
+import { CLOSE, Nonces, checkStep, checkWelcome, clockOffset, hello, result } from "./protocol.js";
 import { randomId } from "./crypto.js";
 
 const PING_MS = 20_000;
@@ -41,6 +41,7 @@ export class Relay {
     this.ready = false;
     this.nonceE = null;
     this.nonceP = null;
+    this.offset = null;
     // planque can't post until the connection is up, so the extension speaks first; the challenge comes as the answer.
     ws.onopen = () => this.send({ type: "open" });
     ws.onmessage = (e) => this.receive(e.data).catch(() => this.close());
@@ -113,6 +114,7 @@ export class Relay {
         const ok = await checkWelcome(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonceP: this.nonceP, nonceE: this.nonceE });
         if (!ok) return this.close();
         this.ready = true;
+        this.offset = clockOffset(m, this.now());
         this.retries = 0;
         this.pinger = setInterval(() => this.runner.active && this.send({ type: "ping" }), PING_MS);
         this.onChange();
@@ -123,7 +125,7 @@ export class Relay {
     if (m.type === "ping") return this.send({ type: "pong" });
     if (m.type === "pong") return;
     if (m.type === "step") {
-      const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now() });
+      const checked = await checkStep(m, { planqueKey: this.config.planqueKey, chromeId: pairing.chromeId, nonces: this.nonces, now: this.now(), offset: this.offset ?? null });
       if (checked.why) {
         // Not run, and said so only when it carries an id we can answer: an unsigned message gets no signed answer.
         const id = m.step && typeof m.step.id === "string" ? m.step.id : null;

@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Konfigurimi i një taf kërkon miratime: Coach ju kërkon të miratoni mjetet e tij dhe Card-in e taf-it.</string>
     <string name="approval_has_no_face_id_touch">Kjo pajisje (%1$s) nuk ka Face ID ose Touch ID, ndaj nuk mund të miratojë. Miratoni në një iPhone, iPad ose telefon Android tjetër të hyrë në llogarinë tuaj.</string>
     <string name="approval_has_no_passcode_needs_one">Kjo pajisje (%1$s) nuk ka kod, dhe %2$s ka nevojë për një. Vendosni një kod te: %3$s, pastaj shtoni: %4$s, pastaj ktheheni.</string>
+    <string name="approval_hello_before">Po miratohet: %1$s. Windows Hello kërkon PIN-in, fytyrën ose gjurmën e gishtit tuaj.</string>
     <string name="approval_kept">Ruhet te Ju pret.</string>
     <string name="approval_key_could_not_sign">Çelësi nuk mundi të nënshkruajë</string>
     <string name="approval_key_gone_approve_again">Gjurmët tuaja të gishtave ndryshuan, ose asnjë nuk u njoh, ndaj ky telefon nuk mund të miratojë derisa ta miratoni sërish në shfletuesin tuaj.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Shtoni çelësin</string>
     <string name="approval_security_key_add_enter_pin">Futni PIN-in e çelësit tuaj të sigurisë për ta shtuar. tafs e kërkon çdo herë dhe nuk e ruan kurrë.</string>
     <string name="approval_security_key_add_title">Shtoni çelësin tuaj të sigurisë në këtë kompjuter</string>
+    <string name="approval_security_key_before">Kjo kërkon çelësin tuaj të sigurisë: %1$s. Futeni, prekeni dhe shkruani PIN-in e tij.</string>
     <string name="approval_security_key_enter_pin">Futni PIN-in e çelësit tuaj të sigurisë. tafs e kërkon çdo herë dhe nuk e ruan kurrë.</string>
     <string name="approval_security_key_failed">Çelësi i sigurisë nuk mundi të nënshkruajë, ndaj asgjë nuk u miratua. Kërkesa ruhet: miratoni sërish kur të jeni gati.</string>
     <string name="approval_security_key_locked">Ky çelës sigurie është kyçur pas shumë PIN-eve të gabuar, ndaj nuk mund të miratojë. Miratoni në telefonin tuaj. Rivendosja e çelësit e fshin, ndaj për të miratuar sërish me një çelës, çiftojeni sërish këtë kompjuter.</string>
     <string name="approval_security_key_no_key">Futni çelësin tuaj të sigurisë, pastaj provoni sërish.</string>
     <string name="approval_security_key_no_pin_set">Ky çelës sigurie nuk ka PIN, ndaj nuk mund të miratojë. Futni atë që shkon me këtë kompjuter. Nëse është rivendosur, miratoni në telefonin tuaj dhe çiftojeni sërish këtë kompjuter për të miratuar me një çelës.</string>
+    <string name="approval_security_key_none_paired">Ky kompjuter nuk ka ende çelës sigurie. Çelësi i sigurisë është një çelës i vogël USB që e prekni për të miratuar; një USB e zakonshme nuk funksionon.</string>
     <string name="approval_security_key_not_allowed">Çelësi i sigurisë nuk e lejoi, ndaj asgjë nuk u miratua. Kërkesa ruhet: miratoni sërish kur të jeni gati.</string>
     <string name="approval_security_key_not_fido2">Ky çelës sigurie nuk mund të kontrollojë një PIN, ndaj nuk mund të miratojë. Futni atë që shkon me këtë kompjuter.</string>
     <string name="approval_security_key_not_this_key">Ky nuk është çelësi i sigurisë që shkon me këtë kompjuter. Futni atë dhe provoni sërish, ose miratoni në telefonin tuaj.</string>
+    <string name="approval_security_key_on_phone">Miratoni më mirë në telefonin tuaj</string>
     <string name="approval_security_key_pair_without">Çiftoni pa çelës</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Kjo janë tre PIN të gabuar radhazi. Hiqeni çelësin, futeni sërish, pastaj provoni sërish.</string>

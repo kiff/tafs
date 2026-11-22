@@ -1,1 +1,1 @@
-Wersja testowa tafs na Wear OS: mówienie jednym dotknięciem, bez przerywania, gdy robisz pauzę, godziny w każdym czacie i natychmiastowe otwieranie. Pokazuje też, jak długo zegarek czeka na telefon; te czasy nigdy nie zawierają Twoich wiadomości.
+tafs na Wear OS mówi teraz we wszystkich językach telefonu, m.in. w japońskim i brazylijskim portugalskim. Gdy telefon nie odpowiada, zegarek podaje powód i od razu otwiera się na tym, co zapamiętał.

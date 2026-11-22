@@ -225,7 +225,10 @@ object RawJson {
 /** One step of a receipt, as KIFF signed it: what the sheet shows as happened. */
 data class ReceiptStep(
   val kind: String,
-  /** KIFF's message for it, else its kind in words. */
+  /**
+   * What "What happened" shows: KIFF's `step_words` for this step in the reader's language, sent beside the receipt and outside
+   * its signature, else [message].
+   */
   val words: String,
   val at: java.time.Instant?,
   /** Its data's hash, shortened for reading: "aa12…ff09". */
@@ -237,6 +240,8 @@ data class ReceiptStep(
   val amountUnit: String? = null,
   /** A hold_settled step's answer, as KIFF records it ("reject" for a refusal). */
   val answer: String? = null,
+  /** KIFF's signed message for it, in KIFF's English, else its kind in words: what the full receipt shows. */
+  val message: String = words,
 )
 
 object ReceiptSteps {
@@ -248,10 +253,15 @@ object ReceiptSteps {
   fun showsWhatHappened(check: ReceiptCheck?, entry: bot.tafs.app.model.RecordEntry, steps: List<ReceiptStep>): Boolean =
     check is ReceiptCheck.Verified && mismatch(entry, steps) == null
 
-  /** The signed chain's steps, from the receipt as KIFF wrote it; none when it can't be read. */
+  /**
+   * The signed chain's steps, from the receipt as KIFF wrote it; none when it can't be read. Each step reads in KIFF's
+   * `step_words` for its `sequence` when KIFF sent them (`[{sequence, code, words}]`, beside the receipt, outside the signature,
+   * in the reader's language); a step with none reads as its signed message, as before.
+   */
   fun of(raw: ByteArray): List<ReceiptStep> {
     val chain = RawJson.valueOf("causal_chain", raw) ?: return emptyList()
     val list = runCatching { KiffClient.json.parseToJsonElement(String(chain)) as? kotlinx.serialization.json.JsonArray }.getOrNull() ?: return emptyList()
+    val stepWords = stepWords(raw)
     return list.mapNotNull { element ->
       val s = element as? JsonObject ?: return@mapNotNull null
       fun text(o: JsonObject?, key: String) = (o?.get(key) as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content
@@ -259,9 +269,12 @@ object ReceiptSteps {
       val data = s["data"] as? JsonObject
       val amount = data?.get("amount") as? JsonObject
       val hash = text(s, "data_hash").orEmpty()
+      val message = text(s, "message")?.takeIf { it.isNotEmpty() } ?: kind.replace("_", " ")
+      val sequence = (s["sequence"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { !it.isString }?.content?.toLongOrNull()
       ReceiptStep(
         kind = kind,
-        words = text(s, "message")?.takeIf { it.isNotEmpty() } ?: kind.replace("_", " "),
+        words = sequence?.let { stepWords[it] } ?: message,
+        message = message,
         at = text(s, "occurred_at")?.let { runCatching { java.time.Instant.parse(it) }.getOrNull() },
         hash = if (hash.length > 8) hash.take(4) + "…" + hash.takeLast(4) else hash,
         onHash = text(data, "on_hash"),
@@ -270,6 +283,18 @@ object ReceiptSteps {
         answer = text(data, "answer"),
       )
     }
+  }
+
+  /** KIFF's words for each step by its `sequence`: only an entry with a number and words that aren't blank. */
+  private fun stepWords(raw: ByteArray): Map<Long, String> {
+    val list = RawJson.valueOf("step_words", raw)?.let { runCatching { KiffClient.json.parseToJsonElement(String(it)) as? kotlinx.serialization.json.JsonArray }.getOrNull() }
+      ?: return emptyMap()
+    return list.mapNotNull { element ->
+      val o = element as? JsonObject ?: return@mapNotNull null
+      val sequence = (o["sequence"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { !it.isString }?.content?.toLongOrNull() ?: return@mapNotNull null
+      val words = (o["words"] as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+      sequence to words
+    }.toMap()
   }
 
   /**

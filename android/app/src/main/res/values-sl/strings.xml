@@ -77,6 +77,7 @@
     <string name="approval_first_taf">Nastavitev tafa potrebuje odobritve: Coach vas prosi, da odobrite njegova orodja in Card tafa.</string>
     <string name="approval_has_no_face_id_touch">Ta %1$s nima Face ID ali Touch ID, zato ne more odobravati. Odobrite na drugem iPhonu, iPadu ali telefonu Android, prijavljenem v vaš račun.</string>
     <string name="approval_has_no_passcode_needs_one">Ta %1$s nima gesla, %2$s pa ga potrebuje. Nastavite geslo v %3$s, nato dodajte %4$s in se vrnite.</string>
+    <string name="approval_hello_before">Odobritev: %1$s. Windows Hello zahteva vaš PIN, obraz ali prstni odtis.</string>
     <string name="approval_kept">Ostane v Čaka na vas.</string>
     <string name="approval_key_could_not_sign">Ključ ni mogel podpisati</string>
     <string name="approval_key_gone_approve_again">Vaši prstni odtisi so se spremenili ali nobeden ni bil prepoznan, zato ta telefon ne more odobravati, dokler ga znova ne odobrite v brskalniku.</string>
@@ -101,14 +102,17 @@
     <string name="approval_security_key_add">Dodaj ključ</string>
     <string name="approval_security_key_add_enter_pin">Za dodajanje vnesite PIN varnostnega ključa. tafs ga zahteva vsakič in ga nikoli ne shrani.</string>
     <string name="approval_security_key_add_title">Dodajte svoj varnostni ključ temu računalniku</string>
+    <string name="approval_security_key_before">Za to je potreben vaš varnostni ključ: %1$s. Priključite ga, se ga dotaknite in vnesite njegov PIN.</string>
     <string name="approval_security_key_enter_pin">Vnesite PIN varnostnega ključa. tafs ga zahteva vsakič in ga nikoli ne shrani.</string>
     <string name="approval_security_key_failed">Varnostni ključ ni mogel podpisati, zato ni bilo nič odobreno. Zahteva ostane: odobrite znova, ko boste pripravljeni.</string>
     <string name="approval_security_key_locked">Ta varnostni ključ je po preveč napačnih PIN-ih zaklenjen, zato ne more odobravati. Odobrite v telefonu. Ponastavitev ključ izbriše, zato za odobravanje s ključem ta računalnik znova seznanite.</string>
     <string name="approval_security_key_no_key">Priključite varnostni ključ in poskusite znova.</string>
     <string name="approval_security_key_no_pin_set">Ta varnostni ključ nima PIN-a, zato ne more odobravati. Priključite tistega, ki spada k temu računalniku. Če je bil ponastavljen, odobrite v telefonu in za odobravanje s ključem ta računalnik znova seznanite.</string>
+    <string name="approval_security_key_none_paired">Ta računalnik še nima varnostnega ključa. Varnostni ključ je majhen USB-ključ, ki se ga dotaknete za odobritev; navaden USB-ključek ne deluje.</string>
     <string name="approval_security_key_not_allowed">Varnostni ključ tega ni dovolil, zato ni bilo nič odobreno. Zahteva ostane: odobrite znova, ko boste pripravljeni.</string>
     <string name="approval_security_key_not_fido2">Ta varnostni ključ ne more preveriti PIN-a, zato ne more odobravati. Priključite tistega, ki spada k temu računalniku.</string>
     <string name="approval_security_key_not_this_key">To ni varnostni ključ, ki spada k temu računalniku. Priključite pravega in poskusite znova ali odobrite v telefonu.</string>
+    <string name="approval_security_key_on_phone">Namesto tega odobrite v telefonu</string>
     <string name="approval_security_key_pair_without">Seznani brez ključa</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Trikrat zapored napačen PIN. Izključite ključ, ga znova priključite in poskusite znova.</string>

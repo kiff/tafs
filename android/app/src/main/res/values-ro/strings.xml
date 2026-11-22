@@ -76,6 +76,7 @@
     <string name="approval_first_taf">Configurarea unui taf are nevoie de aprobări: Coach vă cere să-i aprobați instrumentele și Cardul tafului.</string>
     <string name="approval_has_no_face_id_touch">Acest dispozitiv (%1$s) nu are Face ID sau Touch ID, așa că nu poate aproba. Aprobați pe alt iPhone, iPad sau telefon Android conectat la contul dvs.</string>
     <string name="approval_has_no_passcode_needs_one">Acest dispozitiv (%1$s) nu are cod de acces, iar %2$s are nevoie de unul. Setați un cod de acces în %3$s, adăugați %4$s, apoi reveniți.</string>
+    <string name="approval_hello_before">Se aprobă: %1$s. Windows Hello vă cere PIN-ul, fața sau amprenta.</string>
     <string name="approval_kept">Se păstrează în Vă așteaptă.</string>
     <string name="approval_key_could_not_sign">Cheia nu a putut semna</string>
     <string name="approval_key_gone_approve_again">Amprentele dvs. s-au schimbat sau niciuna nu a fost recunoscută, așa că acest telefon nu poate aproba până nu îl aprobați din nou în browser.</string>
@@ -100,14 +101,17 @@
     <string name="approval_security_key_add">Adăugați cheia</string>
     <string name="approval_security_key_add_enter_pin">Introduceți PIN-ul cheii de securitate pentru a o adăuga. tafs îl cere de fiecare dată și nu îl stochează niciodată.</string>
     <string name="approval_security_key_add_title">Adăugați cheia de securitate pe acest computer</string>
+    <string name="approval_security_key_before">Aceasta are nevoie de cheia dvs. de securitate: %1$s. Conectați-o, atingeți-o și introduceți PIN-ul ei.</string>
     <string name="approval_security_key_enter_pin">Introduceți PIN-ul cheii de securitate. tafs îl cere de fiecare dată și nu îl stochează niciodată.</string>
     <string name="approval_security_key_failed">Cheia de securitate nu a putut semna, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.</string>
     <string name="approval_security_key_locked">Această cheie de securitate este blocată după prea multe PIN-uri greșite, așa că nu poate aproba. Aprobați pe telefon. Resetarea cheii o șterge, așa că, pentru a aproba din nou cu o cheie, asociați din nou acest computer.</string>
     <string name="approval_security_key_no_key">Conectați cheia de securitate, apoi încercați din nou.</string>
     <string name="approval_security_key_no_pin_set">Această cheie de securitate nu are PIN, așa că nu poate aproba. Conectați-o pe cea care merge cu acest computer. Dacă a fost resetată, aprobați pe telefon și asociați din nou acest computer pentru a aproba cu o cheie.</string>
+    <string name="approval_security_key_none_paired">Acest computer nu are încă nicio cheie de securitate. O cheie de securitate este o mică cheie USB pe care o atingeți pentru a aproba; un stick USB obișnuit nu funcționează.</string>
     <string name="approval_security_key_not_allowed">Cheia de securitate nu a permis, așa că nu s-a aprobat nimic. Solicitarea se păstrează: aprobați din nou când sunteți gata.</string>
     <string name="approval_security_key_not_fido2">Această cheie de securitate nu poate verifica un PIN, așa că nu poate aproba. Conectați-o pe cea care merge cu acest computer.</string>
     <string name="approval_security_key_not_this_key">Aceasta nu este cheia de securitate care merge cu acest computer. Conectați-o pe aceea și încercați din nou sau aprobați pe telefon.</string>
+    <string name="approval_security_key_on_phone">Aprobați mai bine pe telefon</string>
     <string name="approval_security_key_pair_without">Asociați fără cheie</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Au fost trei PIN-uri greșite la rând. Scoateți cheia, conectați-o din nou, apoi încercați din nou.</string>

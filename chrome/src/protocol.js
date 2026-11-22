@@ -8,6 +8,30 @@ export const CLOSE = Object.freeze({ unknownChrome: 4401, buildNotAllowed: 4403,
 
 /** How far ahead a step's expiry may be, and how long a nonce is remembered. */
 export const MAX_AHEAD_MS = 30_000;
+
+/**
+ * The slack a step's expiry gets for a clock that is a little off. A computer's clock drifts (one that doesn't sync can be
+ * minutes out), and a step whose expiry is checked against the wrong now is refused whole. With planque's own time from its
+ * welcome (`clockOffset`), the slack is SKEW_KNOWN_MS; without it, SKEW_MS. A step is still one signed, once-only step with a
+ * nonce: the slack widens only how long its expiry is read as valid, never what it may do.
+ */
+export const SKEW_MS = 60_000;
+export const SKEW_KNOWN_MS = 5_000;
+/** The most the welcome's time may move this clock's reading: more than that and it is ignored. */
+export const MAX_OFFSET_MS = 120_000;
+
+/**
+ * How far this clock is behind planque's (positive) or ahead of it (negative), in milliseconds, from the time planque
+ * put in its welcome (`now`, milliseconds since 1970), or null when the welcome has none or it is further out than
+ * MAX_OFFSET_MS. The welcome's proof covers the connection's nonces, not this time, so it only ever shifts the reading a
+ * little: a wrong one costs at most MAX_OFFSET_MS of expiry, like the slack.
+ */
+export function clockOffset(welcome, now = Date.now()) {
+  const at = welcome && welcome.now;
+  if (typeof at !== "number" || !Number.isFinite(at)) return null;
+  const offset = at - now;
+  return Math.abs(offset) <= MAX_OFFSET_MS ? offset : null;
+}
 export const NONCE_MEMORY_MS = 10 * 60_000;
 
 const OPS = new Set(["open", "read", "act", "close"]);
@@ -43,14 +67,16 @@ export const RELEASE_MAX_AHEAD_MS = 120_000;
  * Why the signed step `message` may not run: a reason, or null with `step` set when it may. `planqueKey` is the pinned
  * key (a CryptoKey or SPKI base64url); `chromeId` this Chrome's id.
  */
-export async function checkStep(message, { planqueKey, chromeId, nonces, now = Date.now() }) {
+export async function checkStep(message, { planqueKey, chromeId, nonces, now = Date.now(), offset = null }) {
   const step = message && message.step;
   if (!step || typeof step !== "object" || typeof message.sig !== "string") return { why: "not a step" };
   if (!(await verify(planqueKey, LABEL.step, step, message.sig))) return { why: "not signed by planque" };
   if (step.chrome_id !== chromeId) return { why: "not for this Chrome" };
   if (typeof step.id !== "string" || typeof step.nonce !== "string" || !OPS.has(step.op)) return { why: "malformed" };
-  if (typeof step.exp !== "number" || step.exp < now) return { why: "expired" };
-  if (step.exp > now + MAX_AHEAD_MS) return { why: "expiry too far ahead" };
+  const here = now + (offset || 0);
+  const slack = offset == null ? SKEW_MS : SKEW_KNOWN_MS;
+  if (typeof step.exp !== "number" || step.exp < here - slack) return { why: "expired" };
+  if (step.exp > here + MAX_AHEAD_MS + slack) return { why: "expiry too far ahead" };
   if (!Array.isArray(step.sites) || step.sites.length === 0) return { why: "no sites" };
   if (!(await nonces.take(step.nonce))) return { why: "seen before" };
   return { why: null, step };
