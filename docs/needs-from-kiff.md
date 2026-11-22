@@ -113,11 +113,11 @@ as KIFF's.
   documents, read from the step's kind and signed message, so it works on
   receipts issued before. The signed `message` stays as it is, so every issued
   receipt still verifies.
-- **tafs's part — built on Android.** "What happened" shows a step's `words`
+- **tafs's part — built on Android, iPhone and iPad.** "What happened" shows a step's `words`
   (`ReceiptSteps.of`), and the full receipt shows KIFF's signed `message` as it
   signed it (`ReceiptStep.message`). A step with no entry, or blank words, shows
-  its signed `message`, as before; nothing waits on KIFF's deploy. iPhone and iPad
-  follow.
+  its signed `message`, as before; nothing waits on KIFF's deploy. The same on
+  iPhone and iPad (`ReceiptStepWords`).
 
 ## 9. Pairing a computer: the routes, and words for each refusal — open
 
@@ -144,7 +144,7 @@ never the app's message.
   status and a canonical code (`FAILED_PRECONDITION`, `PERMISSION_DENIED`…), with
   `words` in the person's language, as KIFF's other refusals carry. `message`
   stays for Details, or goes.
-- **tafs's part — built on Android.** The Record quotes `message` only when it's
+- **tafs's part — built on Android, iPhone and iPad.** The Record quotes `message` only when it's
   a short, plain, one-line reason, and otherwise keeps its own line that names
   the app ([android-app.md](android-app.md#the-record)). With a typed reason,
   both apps show KIFF's words and never `message`. iPhone and iPad follow.
