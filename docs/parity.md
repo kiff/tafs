@@ -2,7 +2,7 @@
 
 One row per feature, one column per device: **done**, **partial** (what's missing is named), **not started**, or **not for it** (and why). The iPad's view files are the feature list for the apps with screens; the phones, the watches and the Chrome extension have their own tables below. A pull request that moves a row updates it, and the desktop columns follow each repo's `docs/port-checklist.md`.
 
-**Read from:** kiff/tafs main `a805de3` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `4f77f27`, kiff/tafs-windows `5df8afe` and kiff/tafs-linux `18ab591`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
+**Read from:** kiff/tafs main `a188960` (iOS, Android, Wear OS, Apple Watch, the extension, docs); kiff/tafs-macos `4f77f27`, kiff/tafs-windows `5df8afe` and kiff/tafs-linux `18ab591`, each `docs/port-checklist.md` (judged against the iPad at the pin `9843655`). Phone gaps were checked in the code, not only in the docs; a doc note that the code contradicts is listed under [Docs that say otherwise](#docs-that-say-otherwise).
 
 - **Mac 13+** is the iPad app built with Mac Catalyst ([mac-app.md](mac-app.md)): it follows the iPad unless that page says it differs.
 - **macOS 12, Windows, Linux** are native ports ([kiff/tafs-macos](https://github.com/kiff/tafs-macos), [kiff/tafs-windows](https://github.com/kiff/tafs-windows), [kiff/tafs-linux](https://github.com/kiff/tafs-linux)).
@@ -126,7 +126,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
   - **iPhone/iPad** (partial): "Your Chrome" 2 (switch a connection) and 5 (one signature for both acts); a connection's Chrome on the taf's page (see Your Chrome)
   - **Mac 13+** (partial): "Your Chrome" 2 (switch a connection) and 5 (one signature for both acts); a connection's Chrome on the taf's page (see Your Chrome)
   - **macOS 12** (not started): AppModel.chromes
-  - **Android** (partial): "Your Chrome" 1, 3, 4 (re-pair pick, Unpair says what it ends, Used for): tafs#1756 in review; 2 not started
+  - **Android** (partial): "Your Chrome" 2 (switch a connection) not started; a connection's Chrome on the taf's page
 - **CoachMode**
   - **macOS 12** (partial): The dimmed ground and its tap outside, and closing by a drag past the narrowest or a swipe: on the Mac the screen beside Coach stays usable, and Back or Esc close it. `PhoneCoachPanel` is the phone's
   - **Linux** (partial): The swipe of the conversation that closes it (touch); the slide in and out; `PhoneCoachPanel` (a phone's)
@@ -191,7 +191,7 @@ Per file, each device that isn't done. The desktop lines are short forms of the 
 - **PairComputerView**
   - **macOS 12** (not for it): The phone's side of pairing: its camera reads a computer's code. This Mac is the computer being added.
   - **Windows** (not for it): The phone's side of pairing: the camera reads a computer's code.
-  - **Linux** (not for it): The phone's side of pairing: the camera reads a computer's code. The computer's side is tafs-macos's, ported in [pairing](pairing.md) (`pairing.rs`, `tafs-core/pairing.rs`).
+  - **Linux** (not for it): The phone's side of pairing: the camera reads a computer's code. The computer's side is tafs-macos's, ported in tafs-linux's `docs/pairing.md` (`pairing.rs`, `tafs-core/pairing.rs`).
 - **PairSignInView**
   - **Mac 13+** (partial): built (the iPad's "from another phone"); not yet tried on a real Mac (docs/mac-app.md)
   - **Windows** (partial): An expired code replaced by itself, with its line (Windows shows the expiry and Show a new code); the iPad's sign-in words for it (Windows uses Add this Windows PC's)
@@ -297,10 +297,10 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 
 | # | Item | iPhone/iPad | Android | Chrome extension |
 | -: | :- | :- | :- | :- |
-| 1 | Re-pairing replaces, never adds; only what this phone signed moves | done (tafs#1755) | in review: tafs#1756 | done |
+| 1 | Re-pairing replaces, never adds; only what this phone signed moves | done (tafs#1755) | done (tafs#1756) | done |
 | 2 | Switch a connection to another Chrome | not started (planque's `PUT …/grants/{id}/chrome` is on planque main) | not started (same) | not for it: planque tells it |
-| 3 | Unpairing ends its connections, and says which | done (tafs#1751) | in review: tafs#1756 | not for it |
-| 4 | Each Chrome says what it's used for; a connection names its Chrome | partial: Account › Chrome and the held card; not yet the taf's page | partial: the held card; Account › Chrome in tafs#1756 | not for it |
+| 3 | Unpairing ends its connections, and says which | done (tafs#1751) | done (tafs#1756) | not for it |
+| 4 | Each Chrome says what it's used for; a connection names its Chrome | partial: Account › Chrome and the held card; not yet the taf's page | partial: Account › Chrome (tafs#1756) and the held card; not yet the taf's page | not for it |
 | 5 | One fingerprint for pairing and the extension's KIFF device | not started: one Face ID, two signatures; no `one_touch` | done (`confirmChromeOneTouch`) | done |
 | 6 | Isolation: each connection's sites signed per Chrome | done | done | done (`checkSites`, `checkAllowances`) |
 
@@ -360,12 +360,8 @@ The design's six items (chrome.md, "Your Chrome"). The desktops' Account › Chr
 
 ## Docs that say otherwise
 
-What a doc says that the code on main doesn't. Each gets its fix in the PR that touches it, or one docs PR.
+What a doc says that the code on main doesn't. Each gets its fix in the PR that touches it. (drive.md, connect-apps.md, coach.md and chrome.md's planque line were fixed with this page's second PR.)
 
-- **drive.md:473,** "iOS has no approval window": iPhone and iPad have it (`KIFFClient.window`, `AppModel.windowWords`), as approvals.md:182-190 says.
-- **connect-apps.md:133,** "iOS follows": iOS already leaves a removed taf's connections to tafs cloud (`AppModel.removeTaf`).
-- **coach.md:159,** "iOS follows": iOS draws Start's screen and signs the batch with the draft (`SetupChatView`, `KIFFClient.swift:1513`).
-- **chrome.md, "Not done yet":** "planque's `extension` driver, the relay" are on planque main (`chrome_driver.go`, `chrome_relay.go`). "Your Chrome (design… not built yet)": items 1, 3, 5 and 6 are built (tables above).
 - **tafs-macos `docs/port-checklist.md`, Counts:** says "Ported 9, partial 27, not started 17, not for macOS 12 4"; its tables hold 11, 27, 12 and 7.
 - **tafs-windows `docs/port-checklist.md`, Coverage:** says "Ported 27, partial 21, not started 1, not for Windows 8"; its tables hold 28, 21, 0 and 8 (ReportPaymentSheet moved with #249).
 - **All three desktop checklists** are read against the pin `9843655`: ChromeShotView, new on the iPad since, is in none of them.
