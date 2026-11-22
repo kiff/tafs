@@ -75,5 +75,10 @@
   "vault_error": { "message": "Non salvato: un sito richiede https, e serve una password." },
   "vault_remove": { "message": "Rimuovi" },
   "vault_with_username": { "message": "con nome utente" },
-  "vault_one_per_site": { "message": "Un accesso per sito: salvarne un altro per lo stesso sito sostituisce il precedente." }
+  "vault_one_per_site": { "message": "Un accesso per sito: salvarne un altro per lo stesso sito sostituisce il precedente." },
+  "coach_new": { "message": "Nuova conversazione" },
+  "coach_previous": { "message": "Conversazioni precedenti" },
+  "coach_previous_none": { "message": "Nessuna conversazione precedente." },
+  "coach_previous_error": { "message": "Impossibile caricare le conversazioni precedenti." },
+  "coach_untitled": { "message": "Conversazione" }
 }

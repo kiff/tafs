@@ -75,5 +75,10 @@
   "vault_error": { "message": "저장되지 않았습니다. 사이트는 https와 비밀번호가 필요합니다." },
   "vault_remove": { "message": "제거" },
   "vault_with_username": { "message": "사용자 이름 있음" },
-  "vault_one_per_site": { "message": "사이트당 로그인 하나: 같은 사이트에 다른 것을 저장하면 바꿔집니다." }
+  "vault_one_per_site": { "message": "사이트당 로그인 하나: 같은 사이트에 다른 것을 저장하면 바꿔집니다." },
+  "coach_new": { "message": "새 대화" },
+  "coach_previous": { "message": "이전 대화" },
+  "coach_previous_none": { "message": "이전 대화가 없습니다." },
+  "coach_previous_error": { "message": "이전 대화를 불러오지 못했습니다." },
+  "coach_untitled": { "message": "대화" }
 }
