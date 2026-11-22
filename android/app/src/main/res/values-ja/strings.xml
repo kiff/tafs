@@ -1497,6 +1497,7 @@
     <string name="onboarding_consent_tick">%1$sと%2$sに同意します。</string>
     <string name="onboarding_control_lead">tafがあなたを必要とすると、要確認で待ちます。Apple Watchがあればそこでも待ちます。Face IDまたはTouch IDで承認するか、拒否してください。</string>
     <string name="onboarding_control_lead_android">tafがあなたを必要とすると、要確認で待ちます。スマートウォッチがあればそこでも待ちます。画面ロックで承認するか、拒否してください。</string>
+    <string name="onboarding_control_lead_desktop">tafがあなたを必要とすると要確認で待ちます。スマートフォンで承認するか、拒否してください。</string>
     <string name="onboarding_control_lead_mac">Macでは、tafがあなたを必要とすると要確認で待ちます。Touch IDまたはスマートフォンで承認するか、拒否してください。</string>
     <string name="onboarding_control_title">主導権はあなたに</string>
     <string name="onboarding_get_started">はじめる</string>

@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Resums",
+  "push.channel.briefs_description": "El teu resum a les hores establertes.",
+  "push.channel.holds_description": "Una crida es reté per a la teva resposta. No s'envia res fins que ho aprovis.",
+  "push.channel.other": "Altres alertes",
+  "push.channel.other_description": "Sol·licituds de tasques i les seves respostes, sense so.",
+  "push.channel.urgent_description": "El que no pot esperar el teu pròxim resum, amb so.",
+  "push.open_needs_you": "Obre «Et necessita» per respondre.",
+  "push.open_taf": "Obre el taf per veure-ho.",
+  "push.open_usage": "Obre Pla i ús per veure-ho."
+}

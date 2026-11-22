@@ -1797,6 +1797,7 @@
     <string name="onboarding_consent_tick">أوافق على: %1$s و%2$s.</string>
     <string name="onboarding_control_lead">عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق بـ Face ID أو Touch ID، أو ترفض.</string>
     <string name="onboarding_control_lead_android">عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق بقفل الشاشة، أو ترفض.</string>
+    <string name="onboarding_control_lead_desktop">عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو ترفض.</string>
     <string name="onboarding_control_lead_mac">عندما يحتاجك taf ينتظر في «بانتظارك». توافق بـ Touch ID أو على هاتفك، أو ترفض.</string>
     <string name="onboarding_control_title">أنت تبقى المتحكم</string>
     <string name="onboarding_get_started">ابدأ</string>

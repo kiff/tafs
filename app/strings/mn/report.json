@@ -1,0 +1,17 @@
+{
+  "report.already": "Та энэ хариуг аль хэдийн мэдэгдсэн.",
+  "report.cant_from_here": "Энэ хариуг эндээс мэдэгдэх боломжгүй.",
+  "report.menu": "Энэ хариуг мэдэгдэх",
+  "report.not_sent": "Таны мэдэгдэл илгээгдсэнгүй. {why}",
+  "report.not_sent_why": "Илгээгдээгүй: {failed}",
+  "report.note_hint": "Тэмдэглэл нэмэх (заавал биш)",
+  "report.note_most_characters": "Тэмдэглэл хамгийн ихдээ 1,000 тэмдэгт.",
+  "report.person_kiff_reads_your_report": "KIFF-ийн хүн таны мэдэгдлийг хариу бичигдсэн хэвээр нь уншина.",
+  "report.reason.harmful": "Хортой",
+  "report.reason.offensive": "Доромжилсон",
+  "report.reason.other": "Бусад",
+  "report.reason.wrong": "Буруу",
+  "report.runs_not_loaded": "Түүний ажиллалтуудыг ачаалж чадсангүй. {why}",
+  "report.thanks": "Баярлалаа. KIFF-ийн хэн нэгэн таны мэдэгдлийг уншина.",
+  "report.what_wrong": "Юу нь буруу байна вэ?"
+}

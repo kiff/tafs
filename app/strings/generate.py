@@ -230,7 +230,11 @@ PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["o
            "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": [], "ar": ["zero", "one", "two", "few", "many"],
            # Batch 4. Hebrew's "many" left CLDR in 42: an older phone that still asks for it reads "other". Armenian and Bengali's
            # "one" is 0 and 1.
-           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"]}
+           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"],
+           # Batch 5. Catalan's "many" is only for the compact form ("1 M"), never a whole count; Khmer and Lao have no plural.
+           # Russian, Malay and Uzbek are ready for when they come.
+           "ca": ["one"], "mk": ["one"], "mn": ["one"], "ne": ["one"], "km": [], "lo": [],
+           "ru": ["one", "few", "many"], "ms": [], "uz": ["one"]}
 
 
 def ios_text(text, key, source, owned=()):

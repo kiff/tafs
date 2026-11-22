@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "ທັງໝົດຂອງ Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label} ແລ້ວມັນຖາມທ່ານ",
+  "card.calls_left": {
+    "other": "ເຫຼືອ {count} ການໂທ"
+  },
+  "card.calls_left_line": {
+    "other": "ເຫຼືອ {count} ການໂທ {window} ຈາກ {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{used} ຈາກ {count} ການໂທ {window}"
+  },
+  "card.calls_window": {
+    "other": "{count} ການໂທ {window}"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF ຢືນຢັນແລ້ວ",
+  "card.card_draft_kiff": "Card · ຮ່າງ · ໂດຍ KIFF",
+  "card.card_got_room_call_needed": "Card ຂອງມັນໄດ້ພື້ນທີ່ທີ່ການໂທນີ້ຕ້ອງການ ຈົນກວ່າຍອດລວມນັ້ນຕັ້ງໃໝ່",
+  "card.card_not_issued": "Card ບໍ່ໄດ້ຖືກອອກ. ",
+  "card.card_revoked": "ຖອນ Card ແລ້ວ",
+  "card.check.always_asks": "{rule}: ຖາມທ່ານສະເໝີ",
+  "card.check.never_allowed": "{rule}: ບໍ່ອະນຸຍາດເດັດຂາດ",
+  "card.check.not_on_card": "ບໍ່ຢູ່ໃນ Card ຂອງ taf ນີ້",
+  "card.check.over_count": {
+    "other": "ເກີນ {count} {window}"
+  },
+  "card.check.over_each": "ເກີນ {amount} ຕໍ່ເທື່ອ",
+  "card.check.over_total": "ເກີນ {amount} {window}",
+  "card.count": {
+    "other": "{count} Card"
+  },
+  "card.ended": "ສິ້ນສຸດແລ້ວ",
+  "card.ended_on": "ສິ້ນສຸດ {date}",
+  "card.ends": "ສິ້ນສຸດ",
+  "card.extra_room": "+{extra} ພື້ນທີ່ເພີ່ມ {window}",
+  "card.extra_room_prefix": "+{formatted} ພື້ນທີ່ເພີ່ມ ",
+  "card.extra_room_until": "+{extra} ພື້ນທີ່ເພີ່ມຈົນເຖິງ {ends}",
+  "card.figure_left": "ເຫຼືອ {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{count} ການໂທ {window}{each}: ນີ້ຈະເປັນ{nth}{item}"
+  },
+  "card.held.each_call_asks": "ທຸກການໂທຖາມທ່ານກ່ອນ",
+  "card.held.for_each": " ສຳລັບແຕ່ລະ {name}",
+  "card.held.for_each_join": " ສຳລັບແຕ່ລະ ",
+  "card.held.for_item": " ສຳລັບ {item}",
+  "card.held.over_count": {
+    "other": "ເກີນຂີດຈຳກັດ {count} ການໂທ: ນີ້ຈະເປັນ{nth}"
+  },
+  "card.held.over_one_call": "{amount} ເກີນຂີດຈຳກັດ {cap} ຕໍ່ການໂທໜຶ່ງເທື່ອ",
+  "card.held.over_total": "{amount} ຈະເກີນຍອດລວມ {cap}",
+  "card.hero.calls_left_of": {
+    "other": "ການໂທທີ່ເຫຼືອ {window} ຈາກ {limit}"
+  },
+  "card.hero.calls_use_unavailable": "ການໂທ {window} · ເບິ່ງການໃຊ້ບໍ່ໄດ້",
+  "card.hero.left_of": "ເຫຼືອ {window} ຈາກ {limit}",
+  "card.hero.left_of_extra": "ເຫຼືອ {window} ຈາກ {base} + {extra} ພື້ນທີ່ເພີ່ມ",
+  "card.hero.left_of_extra_until": "ເຫຼືອ {window} ຈາກ {base} + {extra} ພື້ນທີ່ເພີ່ມຈົນເຖິງ {ends}",
+  "card.hero.left_of_note": "ເຫຼືອ {window} ຈາກ {limit}{note}",
+  "card.hero.no_currency": "ບໍ່ມີສະກຸນເງິນ",
+  "card.hero.no_currency_suffix": " · ບໍ່ມີສະກຸນເງິນ",
+  "card.hero.use_unavailable": "{window} · ເບິ່ງການໃຊ້ບໍ່ໄດ້",
+  "card.hero.use_unavailable_note": "{label} · ເບິ່ງການໃຊ້ບໍ່ໄດ້{note}",
+  "card.how_counted": "ນັບຢ່າງໃດ",
+  "card.issue_prompt": "ອອກ Card ຂອງ {taf}",
+  "card.issued_by": "ອອກໂດຍ",
+  "card.issued_by_account": "ບັນຊີ",
+  "card.issued_by_named": "ອອກໂດຍ {who}",
+  "card.its_card": "Card ຂອງມັນ",
+  "card.kiff_did_not_revoke_cards": "KIFF ບໍ່ໄດ້ຖອນ {cards_left} Card ຂອງມັນ: ຖອນໃນ KIFF.",
+  "card.left": "ເຫຼືອ {amount} {window}",
+  "card.left_extra_room": "ເຫຼືອ {current} ຈາກ {own} + {extra} ພື້ນທີ່ເພີ່ມ{until}{note}",
+  "card.limit_can_not_raised_right": "ດຽວນີ້ເພີ່ມຂີດຈຳກັດຈາກບ່ອນນີ້ບໍ່ໄດ້.",
+  "card.limit_raised_read_balance_again": "ເພີ່ມຂີດຈຳກັດແລ້ວ. ອ່ານຍອດຄົງເຫຼືອອີກກ່ອນເພີ່ມອີກຄັ້ງ.",
+  "card.line.calls_in_window": {
+    "other": "{count} ການໂທ {window}{then}"
+  },
+  "card.line.more_asks": "; ຫຼາຍກວ່ານັ້ນຖາມທ່ານກ່ອນ",
+  "card.line.then_asks": " ແລ້ວມັນຖາມທ່ານ",
+  "card.line.total_in_window": "{amount} ທັງໝົດ {window}{then}",
+  "card.line.up_to_each": "ສູງສຸດ {amount} ຕໍ່ເທື່ອ",
+  "card.more": {
+    "other": "ອີກ {count}"
+  },
+  "card.no_actions": "ຍັງບໍ່ມີການກະທຳ",
+  "card.no_actions_short": "ຍັງບໍ່ມີການກະທຳ",
+  "card.no_currency": "{amount} (ບໍ່ມີສະກຸນເງິນ)",
+  "card.no_end_date": "ບໍ່ມີວັນສິ້ນສຸດ",
+  "card.outcome.not_a_resource": "ບໍ່ແມ່ນຊັບພະຍາກອນຂອງ Card",
+  "card.outcome.outside": "ນອກ Card",
+  "card.outcome.over_one_action": "ເກີນຂີດຈຳກັດຂອງ Card ຕໍ່ການກະທຳໜຶ່ງເທື່ອ",
+  "card.outcome.over_total": "ເກີນຍອດລວມຂອງ Card",
+  "card.outside_held": "ນອກ: ພັກໄວ້ໃຫ້ທ່ານ",
+  "card.outside_refused": "ນອກ: ປະຕິເສດ",
+  "card.over_limit_calls_would": "ເກີນຂີດຈຳກັດ {limit} ການໂທ: ນີ້ຈະເປັນ{nth}",
+  "card.revoke_failed": "KIFF ບໍ່ໄດ້ຖອນ Card. {why}",
+  "card.revoked": "ຖອນແລ້ວ",
+  "card.rule.always_asks": "ຖາມທ່ານສະເໝີ",
+  "card.rule.at_most_each": "≤ {amount} ຕໍ່ເທື່ອ",
+  "card.rule.at_most_each_refused_above": "≤ {amount} ຕໍ່ເທື່ອ · ປະຕິເສດຖ້າເກີນ",
+  "card.rule.calls": {
+    "other": "{count} ການໂທ {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{count} ການໂທ {window} ແລ້ວມັນຖາມທ່ານ"
+  },
+  "card.rule.in_total": "{amount} ທັງໝົດ {window}",
+  "card.rule.never": "ບໍ່ເດັດຂາດ",
+  "card.rule.total_then_asks": "{amount} ທັງໝົດ {window} ແລ້ວມັນຖາມທ່ານ",
+  "card.rule.up_to_each": "ສູງສຸດ {amount} ຕໍ່ເທື່ອ; ຫຼາຍກວ່ານັ້ນຖາມທ່ານກ່ອນ",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card ຂອງ taf",
+  "card.tools": {
+    "other": "{count} ເຄື່ອງມື"
+  },
+  "card.until": "ຈົນເຖິງ",
+  "card.until_date": "ຈົນເຖິງ {date}",
+  "card.until_ends": " ຈົນເຖິງ {ends}",
+  "card.used_of": "{used} ຈາກ {limit} {window}",
+  "card.window.a_day": "ຕໍ່ມື້",
+  "card.window.a_month": "ຕໍ່ເດືອນ",
+  "card.window.a_week": "ຕໍ່ອາທິດ",
+  "card.window.any_day": "ໃນ 24 ຊົ່ວໂມງໃດໆ",
+  "card.window.any_hour": "ໃນຊົ່ວໂມງໃດໆ",
+  "card.window.any_week": "ໃນ 7 ວັນໃດໆ",
+  "card.window.in_total": "ທັງໝົດ",
+  "card.window.in_total_window": "ທັງໝົດ {window}",
+  "card.window.last_day": "ໃນ 24 ຊົ່ວໂມງທີ່ຜ່ານມາ",
+  "card.window.last_hour": "ໃນຊົ່ວໂມງທີ່ຜ່ານມາ",
+  "card.window.last_week": "ໃນ 7 ວັນທີ່ຜ່ານມາ",
+  "card.window.so_far": "ຈົນຮອດດຽວນີ້",
+  "card.window.this_month": "ເດືອນນີ້",
+  "card.window.this_week": "ອາທິດນີ້",
+  "card.window.today": "ມື້ນີ້",
+  "card.within_card": "ພາຍໃນ Card"
+}

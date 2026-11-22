@@ -299,7 +299,7 @@ export const vi: Words = {
   home_discard_no: "Giữ lại",
   home_needs_you_none: "Không có gì đang chờ bạn.",
   labels_all: "Tất cả",
-  brief_title: "Bản tóm tắt của bạn",
+  brief_title: "Tóm tắt của bạn",
   brief_ready: (hm: string) => `Bản tóm tắt ${hm} của bạn đã sẵn sàng.`,
   brief_decisions: "Quyết định",
   brief_done: "Xong",
