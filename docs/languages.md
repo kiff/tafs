@@ -191,10 +191,11 @@ apart ("내   TAFS"): `Eyebrow.ideographic` on iOS, `ideographic`/`eyebrowStyle`
 | Activity | アクティビティ |
 | Terms / Privacy Policy | 利用規約 / プライバシーポリシー |
 
-## Batch 1: Greek, Estonian, Latvian and Lithuanian (being written)
+## Batch 1: Greek, Estonian, Latvian and Lithuanian
 
-For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Each catalog is in `all`, not
-`shipped`, until its review: no app shows it yet. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
+For the countries on sale without their language's app screens (GR, CY, EE, LV, LT). Estonian, Lithuanian and Latvian
+ship, and kiff.dev serves their legal pages. Greek is in `all`, not `shipped`, until its review: no app shows it yet.
+Until a shipped language's column joins the Terms table, `test_strings` holds it to its own table below. Where the legal drafts (kiff/cloud `web/legal-drafts/<l>`) decided a
 word, the app uses the same one. The legal pages address people formally; the app's screens use the form below.
 
 ### Estonian (et)
@@ -326,11 +327,11 @@ the case its sentence needs (`approval.biometry.*` accusative, `usage.month`… 
 | plan | plāns |
 | door / knock | durvis / klauvējiens |
 
-## Batch 2: Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian and Croatian (being written)
+## Batch 2: Czech, Slovak, Slovenian, Hungarian, Romanian, Bulgarian and Croatian
 
-For the countries on sale without their language's app screens (CZ, SK, SI, HU, RO, BG, HR). Each catalog is in `all`,
-not `shipped`, until its review: no app shows it yet. Where the legal pages (kiff/cloud#77) decided a word, the app uses
-the same one.
+For the countries on sale without their language's app screens (CZ, SK, SI, HU, RO, BG, HR). All seven ship, and kiff.dev
+serves their legal pages (kiff/cloud#77). `test_strings` holds each to its own table below until its column joins the
+Terms table. Where the legal pages decided a word, the app uses the same one.
 
 ### Czech (cs)
 

@@ -74,7 +74,7 @@
   "settings.devices.passkey_with_computer": "A számítógépéhez tartozik",
   "settings.devices.passkeys_not_loaded": "A jelkulcsaidat nem sikerült betölteni. {why}",
   "settings.devices.passkeys_title": "Jelkulcsok",
-  "settings.devices.sign_out": "Kijelentkeztetés",
+  "settings.devices.sign_out": "Kijelentkezés",
   "settings.devices.sign_out_named": "Kijelentkezteted: {device}?",
   "settings.devices.sign_out_prompt": "{device} kijelentkeztetése a fiókodból",
   "settings.devices.sign_out_prompt_mac": "{device} kijelentkeztetése a fiókodból",

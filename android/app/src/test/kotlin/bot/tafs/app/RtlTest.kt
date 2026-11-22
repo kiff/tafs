@@ -1,6 +1,8 @@
 package bot.tafs.app
 
+import bot.tafs.app.design.Directions
 import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -19,6 +21,30 @@ class RtlTest {
     assertTrue("the chevrons are found", directional.any { it.name == "ic_chevron_left.xml" } && directional.any { it.name == "ic_chevron_right.xml" })
     val fixed = directional.filter { "android:autoMirrored=\"true\"" !in it.readText() }.map { it.name }
     assertTrue("These point a way but don't mirror in right to left: $fixed", fixed.isEmpty())
+  }
+
+  @Test fun whatIsDrawnOrDraggedByHandMirrors() {
+    // A job's colour edge on the start side: the left, or the right of a 300-wide row in right to left.
+    assertEquals(0f, Directions.startEdgeX(300f, 4f, rtl = false))
+    assertEquals(296f, Directions.startEdgeX(300f, 4f, rtl = true))
+    // The Card's ring at the top end corner.
+    assertEquals(270f, Directions.fromEndX(300f, 30f, rtl = false))
+    assertEquals(30f, Directions.fromEndX(300f, 30f, rtl = true))
+    // Coach's panel, on the end edge: dragging its handle towards the start widens it, whichever way that is on screen.
+    assertEquals(-12f, Directions.towardsEnd(-12f, rtl = false))
+    assertEquals(-12f, Directions.towardsEnd(12f, rtl = true))
+    // And it slides in from off the end edge: from the right, or from the left in right to left.
+    assertEquals(800, Directions.offEndX(800, rtl = false))
+    assertEquals(-800, Directions.offEndX(800, rtl = true))
+  }
+
+  /** A slide's or a drag's pixels don't mirror, so each goes through [Directions]: a bare `{ it }` slides in from the right always. */
+  @Test fun noSlideOrDragFixedToTheRight() {
+    val fixed = Regex("""slide(In|Out)Horizontally(\([^)]*\))?\s*\{\s*(it|-it)\s*\}|\{\s*_,\s*amount\s*->\s*drag\s*\+=\s*amount\s*\}""")
+    val found = sources.walkTopDown().filter { it.isFile && it.extension == "kt" }.flatMap { f ->
+      f.readLines().mapIndexedNotNull { i, line -> if (fixed.containsMatchIn(line)) "${f.name}:${i + 1}" else null }
+    }.toList()
+    assertTrue("Use Directions.offEndX / towardsEnd for these: $found", found.isEmpty())
   }
 
   @Test fun noFixedMaterialArrow() {
