@@ -1,0 +1,1 @@
+- **A receipt's steps read in your language.** "What happened" shows KIFF's words for each step (`step_words`, sent beside the receipt and outside its signature) in the language you read, and the full receipt keeps KIFF's signed message as it signed it. A step KIFF sends no words for reads as before ([needs-from-kiff.md](docs/needs-from-kiff.md), item 8).
