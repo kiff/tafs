@@ -518387,6 +518387,12 @@
             "value": "চালু থাকলে Apple, Google বা GitHub-এর বদলে আপনার ইমেইলে পাঠানো কোড দিয়ে সাইন ইন করতে পারবেন। আপনি চালু না করা পর্যন্ত এটি বন্ধ থাকে, আর চালু করতে সাম্প্রতিক সাইন-ইন লাগে।"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quan està activat, pots iniciar la sessió amb un codi enviat al teu correu en lloc d'Apple, Google o GitHub. Està desactivat fins que l'activis, i activar-lo requereix un inici de sessió recent."
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -518471,10 +518477,22 @@
             "value": "როცა ჩართულია, შეგიძლიათ შეხვიდეთ თქვენს ელფოსტაზე გამოგზავნილი კოდით Apple-ის, Google-ის ან GitHub-ის ნაცვლად. ის გამორთულია, სანამ არ ჩართავთ, ხოლო ჩასართავად საჭიროა ახალი შესვლა."
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "នៅពេលបើក អ្នកអាចចូលដោយប្រើកូដដែលផ្ញើទៅអ៊ីមែលរបស់អ្នក ជំនួសឱ្យ Apple, Google ឬ GitHub។ វាបិទ លុះត្រាតែអ្នកបើក ហើយការបើកត្រូវការការចូលថ្មីៗ។"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "켜면 Apple, Google, GitHub 대신 이메일로 받은 코드로 로그인할 수 있습니다. 직접 켜지 않으면 꺼져 있으며, 켜려면 최근 로그인이 필요합니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເມື່ອເປີດ ທ່ານສາມາດເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທີ່ສົ່ງໄປອີເມວຂອງທ່ານ ແທນ Apple, Google ຫຼື GitHub. ມັນປິດຢູ່ຈົນກວ່າທ່ານຈະເປີດ ແລະ ການເປີດຕ້ອງມີການເຂົ້າສູ່ລະບົບເມື່ອບໍ່ດົນມານີ້."
           }
         },
         "lt": {
@@ -518487,6 +518505,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kad tas ir ieslēgts, vari pierakstīties ar kodu, kas nosūtīts uz tavu e-pastu, nevis ar Apple, Google vai GitHub. Tas ir izslēgts, kamēr tu to neieslēdz, un ieslēgšanai vajag nesen veiktu pierakstīšanos."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кога е вклучено, можеш да се најавиш со код испратен на твојата е-пошта наместо со Apple, Google или GitHub. Исклучено е сè додека не го вклучиш, а за вклучување е потребна неодамнешна најава."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Асаалттай үед та Apple, Google эсвэл GitHub-ын оронд имэйлээр ирсэн кодоор нэвтэрч болно. Та асаахгүй бол унтарсан байна, асаахад саяхны нэвтрэлт шаардлагатай."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो खुला हुँदा, तपाईं Apple, Google वा GitHub को सट्टा इमेलमा पठाइएको कोडबाट साइन इन गर्न सक्नुहुन्छ। तपाईंले खोल्नुभएन भने यो बन्द रहन्छ, र खोल्न हालको साइन इन चाहिन्छ।"
           }
         },
         "nl": {
@@ -518596,6 +518632,12 @@
             "value": "ইমেইলে পাঠানো কোড দিয়ে সাইন ইন"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia la sessió amb un codi enviat per correu"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -518680,10 +518722,22 @@
             "value": "შესვლა ელფოსტით გამოგზავნილი კოდით"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ចូលដោយប្រើកូដដែលផ្ញើតាមអ៊ីមែល"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "이메일로 받은 코드로 로그인"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທີ່ສົ່ງທາງອີເມວ"
           }
         },
         "lt": {
@@ -518696,6 +518750,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pierakstīties ar kodu, kas nosūtīts pa e-pastu"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Најава со код испратен по е-пошта"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имэйлээр ирсэн кодоор нэвтрэх"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "इमेलमा पठाइएको कोडबाट साइन इन गर्नुहोस्"
           }
         },
         "nl": {
@@ -518805,6 +518877,12 @@
             "value": "কোড দিয়ে সাইন ইন এখনো পাওয়া যায় না।"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar la sessió amb un codi encara no està disponible."
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -518889,10 +518967,22 @@
             "value": "კოდით შესვლა ჯერ მიუწვდომელია."
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការចូលដោយប្រើកូដមិនទាន់មានទេ។"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "코드로 로그인하는 기능은 아직 사용할 수 없습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດຍັງບໍ່ມີ."
           }
         },
         "lt": {
@@ -518905,6 +518995,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pierakstīšanās ar kodu vēl nav pieejama."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Најавата со код сè уште не е достапна."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кодоор нэвтрэх боломж хараахан алга."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कोडबाट साइन इन गर्ने सुविधा अहिले उपलब्ध छैन।"
           }
         },
         "nl": {
@@ -519014,6 +519122,12 @@
             "value": "কিছু বদলায়নি। %1$@"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ha canviat. %1$@"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -519098,10 +519212,22 @@
             "value": "არაფერი შეცვლილა. %1$@"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "មិនបានផ្លាស់ប្តូរទេ។ %1$@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "변경되지 않았습니다. %1$@"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ບໍ່ໄດ້ປ່ຽນ. %1$@"
           }
         },
         "lt": {
@@ -519114,6 +519240,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nekas nemainījās. %1$@"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не се промени. %1$@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Өөрчлөгдсөнгүй. %1$@"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "परिवर्तन भएन। %1$@"
           }
         },
         "nl": {
@@ -519223,6 +519367,12 @@
             "value": "এই সেটিং লোড করা যায়নি। %1$@"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No s'ha pogut carregar aquest ajust. %1$@"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -519307,10 +519457,22 @@
             "value": "ამ პარამეტრის ჩატვირთვა ვერ მოხერხდა. %1$@"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "មិនអាចផ្ទុកការកំណត់នេះបានទេ។ %1$@"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "이 설정을 불러오지 못했습니다. %1$@"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ໂຫຼດການຕັ້ງຄ່ານີ້ບໍ່ໄດ້. %1$@"
           }
         },
         "lt": {
@@ -519323,6 +519485,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Neizdevās ielādēt šo iestatījumu. %1$@"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оваа поставка не можеше да се вчита. %1$@"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ тохиргоог ачаалж чадсангүй. %1$@"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो सेटिङ लोड गर्न सकिएन। %1$@"
           }
         },
         "nl": {
@@ -519432,6 +519612,12 @@
             "value": "বন্ধ"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivat"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -519516,10 +519702,22 @@
             "value": "გამორთულია"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បិទ"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "꺼짐"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ປິດ"
           }
         },
         "lt": {
@@ -519532,6 +519730,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Izslēgts"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исклучено"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Унтарсан"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बन्द"
           }
         },
         "nl": {
@@ -519641,6 +519857,12 @@
             "value": "চালু"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activat"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -519725,10 +519947,22 @@
             "value": "ჩართულია"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើក"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "켜짐"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດ"
           }
         },
         "lt": {
@@ -519741,6 +519975,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ieslēgts"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вклучено"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Асаалттай"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "खुला"
           }
         },
         "nl": {
@@ -519850,6 +520102,12 @@
             "value": "সংরক্ষিত হয়েছে। পরিবর্তনটি নিয়ে আমরা আপনাকে ইমেইল করেছি।"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desat. T'hem enviat un correu sobre el canvi."
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -519934,10 +520192,22 @@
             "value": "შენახულია. ცვლილების შესახებ ელფოსტაზე გაგიგზავნეთ წერილი."
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បានរក្សាទុក។ យើងបានផ្ញើអ៊ីមែលអំពីការផ្លាស់ប្តូរនេះ។"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "저장했습니다. 변경 내용을 이메일로 알려 드렸습니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ບັນທຶກແລ້ວ. ພວກເຮົາສົ່ງອີເມວກ່ຽວກັບການປ່ຽນແປງຫາທ່ານແລ້ວ."
           }
         },
         "lt": {
@@ -519950,6 +520220,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saglabāts. Mēs tev nosūtījām e-pastu par izmaiņu."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зачувано. Ти испративме е-порака за промената."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Хадгалагдлаа. Өөрчлөлтийн талаар имэйл илгээсэн."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "सुरक्षित गरियो। परिवर्तनबारे हामीले तपाईंलाई इमेल पठायौं।"
           }
         },
         "nl": {
@@ -520059,6 +520347,12 @@
             "value": "সাইন-ইন"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inici de sessió"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -520143,10 +520437,22 @@
             "value": "შესვლა"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការចូល"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "로그인"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການເຂົ້າສູ່ລະບົບ"
           }
         },
         "lt": {
@@ -520159,6 +520465,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pierakstīšanās"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Најава"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нэвтрэлт"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "साइन इन"
           }
         },
         "nl": {
@@ -520268,6 +520592,12 @@
             "value": "বন্ধ করুন"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactiva"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -520352,10 +520682,22 @@
             "value": "გამორთვა"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បិទ"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "끄기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ປິດ"
           }
         },
         "lt": {
@@ -520368,6 +520710,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Izslēgt"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Исклучи"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Унтраах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "बन्द गर्नुहोस्"
           }
         },
         "nl": {
@@ -520477,6 +520837,12 @@
             "value": "চালু করুন"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activa"
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -520561,10 +520927,22 @@
             "value": "ჩართვა"
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "បើក"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "켜기"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ເປີດ"
           }
         },
         "lt": {
@@ -520577,6 +520955,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ieslēgt"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вклучи"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Асаах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "खोल्नुहोस्"
           }
         },
         "nl": {
@@ -520686,6 +521082,12 @@
             "value": "চালু করলে KIFF-এর সাইন-ইন পেজ খোলে, যেখানে আপনি নিশ্চিত করেন যে এটি আপনি।"
           }
         },
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar-lo obre la pàgina d'inici de sessió de KIFF, on confirmes que ets tu."
+          }
+        },
         "cs": {
           "stringUnit": {
             "state": "translated",
@@ -520770,10 +521172,22 @@
             "value": "ჩართვისას იხსნება KIFF-ის შესვლის გვერდი, სადაც ადასტურებთ, რომ ეს თქვენ ხართ."
           }
         },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ការបើកនឹងបើកទំព័រចូលរបស់ KIFF ដែលអ្នកបញ្ជាក់ថាជាអ្នក។"
+          }
+        },
         "ko": {
           "stringUnit": {
             "state": "translated",
             "value": "켜면 KIFF 로그인 페이지가 열리고, 거기서 본인임을 확인합니다."
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ການເປີດຈະເປີດໜ້າເຂົ້າສູ່ລະບົບຂອງ KIFF ບ່ອນທີ່ທ່ານຢືນຢັນວ່າແມ່ນທ່ານ."
           }
         },
         "lt": {
@@ -520786,6 +521200,24 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ieslēdzot tiek atvērta KIFF pierakstīšanās lapa, kurā apstiprini, ka tas esi tu."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вклучувањето ја отвора страницата за најава на KIFF, каде потврдуваш дека си ти."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Асаахад KIFF-ийн нэвтрэх хуудас нээгдэж, та тэнд өөрөө мөн гэдгээ баталгаажуулна."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "खोल्दा KIFF को साइन इन पृष्ठ खुल्छ, जहाँ तपाईं आफू नै हो भनी पुष्टि गर्नुहुन्छ।"
           }
         },
         "nl": {
