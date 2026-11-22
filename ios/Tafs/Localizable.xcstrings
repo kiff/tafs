@@ -443478,6 +443478,12 @@
     "settings.sign_in_code.help": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عند التشغيل، يمكنك تسجيل الدخول برمز يُرسل إلى بريدك الإلكتروني بدل Apple أو Google أو GitHub. هو متوقف ما لم تشغّله، ويتطلب تشغيله تسجيل دخول حديثًا."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -443639,6 +443645,12 @@
     "settings.sign_in_code.label": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول برمز يُرسل بالبريد الإلكتروني"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -443800,6 +443812,12 @@
     "settings.sign_in_code.not_available": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول برمز غير متاح بعد."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -443961,6 +443979,12 @@
     "settings.sign_in_code.not_changed": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتغير شيء. %1$@"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444122,6 +444146,12 @@
     "settings.sign_in_code.not_loaded": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل هذا الإعداد. %1$@"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444283,6 +444313,12 @@
     "settings.sign_in_code.off": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوقف"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444444,6 +444480,12 @@
     "settings.sign_in_code.on": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيد التشغيل"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444605,6 +444647,12 @@
     "settings.sign_in_code.saved": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الحفظ. أرسلنا إليك بريدًا إلكترونيًا عن التغيير."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444766,6 +444814,12 @@
     "settings.sign_in_code.title": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -444927,6 +444981,12 @@
     "settings.sign_in_code.turn_off": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -445088,6 +445148,12 @@
     "settings.sign_in_code.turn_on": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل"
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
@@ -445249,6 +445315,12 @@
     "settings.sign_in_code.turn_on_in_browser": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفتح التشغيل صفحة تسجيل الدخول في KIFF، حيث تؤكد أنك أنت."
+          }
+        },
         "bg": {
           "stringUnit": {
             "state": "translated",
