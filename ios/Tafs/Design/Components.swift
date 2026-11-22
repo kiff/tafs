@@ -276,6 +276,17 @@ enum AccountTime {
     }
 }
 
+extension Date.FormatStyle {
+    /// This style in the app's language: its locale, and the calendar that locale names (Arabic:
+    /// Gregorian, not the device's Hijri), as `Date.shown(_:)` does in the account's zone.
+    var inAppLanguage: Date.FormatStyle {
+        var style = self
+        style.locale = Words.locale
+        if Words.locale.identifier.contains("-u-ca-") { style.calendar = Words.locale.calendar }
+        return style
+    }
+}
+
 extension Date {
     /// The time of day, as 14:05, in the account's zone.
     var shortTime: String {
@@ -309,8 +320,7 @@ extension Date {
     func shown(_ style: Date.FormatStyle) -> String {
         var style = style
         style.timeZone = AccountTime.zone
-        style.locale = Words.locale
-        return formatted(style)
+        return formatted(style.inAppLanguage)
     }
 }
 
