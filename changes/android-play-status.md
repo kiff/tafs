@@ -1,0 +1,1 @@
+- **Play's state, read twice a day for the release board** (`play-status.yml`): each track's releases with their status and version codes, read inside an edit that's deleted unsaved, so nothing on Play changes ([android-app.md](docs/android-app.md), "Releases to Play").
