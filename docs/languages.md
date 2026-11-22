@@ -844,6 +844,43 @@ Ready before their lines are written, so the strings PR only adds the words:
 - **Plural forms** (`generate.py`'s `PLURALS`): Serbian one, few; Hebrew one, two (an older phone asking for "many" reads
   "other"); Albanian, Georgian, Armenian, Azerbaijani and Bengali one. Armenian and Bengali's "one" covers 0 and 1.
 
+## Batch 5: Catalan, Macedonian, Mongolian, Nepali, Khmer and Lao
+
+### Catalan (ca)
+
+Standard Catalan (Barcelona usage), addressed as **tu**, the informal form every Catalan app uses ("Aprova", "Rebutja", "Continua").
+Buttons are verbs in the imperative. taf, Card, Coach, KIFF and Setup (Configuració) are names: taf doesn't take a plural "s"
+("els teus taf") and Card keeps its capital. Catalan has no English-style possessive, so "{owner}'s Card" is "el Card de {owner}"
+(a vowel after "de" elides: "d'"). A door is "porta", a knock "trucada", a call "crida", a request "sol·licitud", a receipt "rebut",
+the dial "selector". The punctuation mark in "sol·licitud" and "cancel·la" is the interpunct (·), never a full stop. Quotes are « ».
+Plural forms: one, other.
+
+| English | Catalan |
+|---|---|
+| Needs you | Et necessita |
+| Approve / Approve once | Aprova / Aprova una vegada |
+| Refuse | Rebutja |
+| held | retingut |
+| Halt / Halted | Bloqueja / Bloquejat |
+| Stopped | Aturat |
+| Pause / Paused | Posa en pausa / En pausa |
+| Resume | Reprèn |
+| Revoke | Revoca |
+| Record | Registre |
+| Connect / connection | Connecta / connexió |
+| Pair / Unpair | Aparella / Desaparella |
+| Account | Compte |
+| limit / spend limit | límit / límit de despesa |
+| credits / credit pack | crèdits / paquet de crèdits |
+| passkey | clau d'accés |
+| security key | clau de seguretat |
+| Sign in / Sign out | Inicia la sessió / Tanca la sessió |
+| Inbox | Safata d'entrada |
+| Overview | Visió general |
+| Calendar | Calendari |
+| Usage | Ús |
+| Cancel / Continue | Cancel·la / Continua |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

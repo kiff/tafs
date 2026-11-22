@@ -12,7 +12,7 @@
   "pair.passkey_why_body": "Es queda en aquest dispositiu ({device}), darrere de {biometry}. Amb ella, aquest dispositiu aprova les accions dels teus taf, i no s'aprova res sense tu. A continuació Windows et demana el rostre, l'empremta o el PIN.",
   "pair.passkey_why_go": "Crea la clau d'accés",
   "pair.passkey_why_title": "Crea una clau d'accés per a aquest dispositiu ({device})",
-  "pair.refused_key_registered": "El teu telèfon diu que aquest dispositiu ({device}) ja està vinculat al teu compte. Mostra un codi nou i torna a escanejar.",
+  "pair.refused_key_registered": "El teu telèfon diu que aquest dispositiu ({device}) ja està aparellat al teu compte. Mostra un codi nou i torna a escanejar.",
   "pair.refused_other": "El teu telèfon no ha pogut afegir aquest dispositiu ({device}). Mostra un codi nou i torna a escanejar.",
   "pair.refused_title": "El teu telèfon no ha afegit aquest dispositiu ({device})",
   "pair.steps": "Al telèfon, obre tafs i després {account}, {devices}, {pair}. Escaneja aquest codi.",
