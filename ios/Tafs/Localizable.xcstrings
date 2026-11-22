@@ -340422,10 +340422,160 @@
     "settings.sign_in_code.help": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когато е включено, можете да влизате с код, изпратен на имейла ви, вместо с Apple, Google или GitHub. Изключено е, докато не го включите, а за включването е нужен скорошен вход."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Když je zapnuté, můžete se přihlásit kódem zaslaným na váš e-mail místo přes Apple, Google nebo GitHub. Dokud ho nezapnete, je vypnuté, a k zapnutí je potřeba nedávné přihlášení."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn sie an ist, kannst du dich mit einem Code anmelden, der an deine E-Mail geschickt wird, statt mit Apple, Google oder GitHub. Sie ist aus, solange du sie nicht einschaltest, und zum Einschalten brauchst du eine aktuelle Anmeldung."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "When it's on, you can sign in with a code sent to your email instead of Apple, Google or GitHub. It's off unless you turn it on, and turning it on needs a recent sign-in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando está activado, puedes iniciar sesión con un código enviado a tu correo en lugar de Apple, Google o GitHub. Está desactivado salvo que lo actives, y activarlo requiere un inicio de sesión reciente."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kui see on sees, saad sisse logida e-postile saadetud koodiga Apple'i, Google'i või GitHubi asemel. See on väljas, kuni sa selle sisse lülitad, ja sisselülitamiseks on vaja hiljutist sisselogimist."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand il est activé, vous pouvez vous connecter avec un code envoyé par e-mail, au lieu d'Apple, de Google ou de GitHub. Il est désactivé tant que vous ne l'activez pas, et l'activer demande une connexion récente."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad je uključeno, možete se prijaviti kodom poslanim na vašu e-poštu umjesto s Apple, Google ili GitHub. Isključeno je dok ga ne uključite, a za uključivanje je potrebna nedavna prijava."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekapcsolva a Apple, Google vagy GitHub helyett az e-mailedre küldött kóddal is bejelentkezhetsz. Alapból ki van kapcsolva, és a bekapcsolásához friss bejelentkezés kell."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saat aktif, Anda bisa masuk dengan kode yang dikirim ke email Anda, bukan lewat Apple, Google, atau GitHub. Pengaturan ini nonaktif kecuali Anda mengaktifkannya, dan untuk mengaktifkannya diperlukan proses masuk yang baru."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando è attivo, puoi accedere con un codice inviato alla tua email invece che con Apple, Google o GitHub. È disattivo finché non lo attivi, e per attivarlo serve un accesso recente."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンにすると、Apple、Google、GitHubの代わりに、メールで届くコードでサインインできます。オンにしない限りオフで、オンにするには最近のサインインが必要です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜면 Apple, Google, GitHub 대신 이메일로 받은 코드로 로그인할 수 있습니다. 직접 켜지 않으면 꺼져 있으며, 켜려면 최근 로그인이 필요합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kai įjungta, galite prisijungti kodu, išsiųstu į jūsų el. paštą, vietoje Apple, Google ar GitHub. Jei neįjungsite, ji išjungta, o norint įjungti reikia neseno prisijungimo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kad tas ir ieslēgts, vari pierakstīties ar kodu, kas nosūtīts uz tavu e-pastu, nevis ar Apple, Google vai GitHub. Tas ir izslēgts, kamēr tu to neieslēdz, un ieslēgšanai vajag nesen veiktu pierakstīšanos."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als het aan staat, kun je inloggen met een code die naar je e-mail wordt gestuurd, in plaats van met Apple, Google of GitHub. Het staat uit tenzij je het aanzet, en aanzetten vraagt een recente login."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy jest włączone, możesz zalogować się kodem wysłanym na Twój e-mail zamiast przez Apple, Google lub GitHub. Jest wyłączone, dopóki go nie włączysz, a włączenie wymaga niedawnego logowania."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando está ativado, pode iniciar sessão com um código enviado para o seu email, em vez de Apple, Google ou GitHub. Está desativado a menos que o ative, e ativá-lo exige um início de sessão recente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quando está ativado, pode iniciar sessão com um código enviado para o seu email, em vez de Apple, Google ou GitHub. Está desativado a menos que o ative, e ativá-lo exige um início de sessão recente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când este activată, vă puteți conecta cu un cod trimis pe e-mail, în loc de Apple, Google sau GitHub. Este dezactivată dacă nu o activați, iar activarea cere o conectare recentă."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keď je zapnuté, môžete sa prihlásiť kódom zaslaným na váš e-mail namiesto cez Apple, Google alebo GitHub. Kým ho nezapnete, je vypnuté, a na zapnutie treba nedávne prihlásenie."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ko je vklopljeno, se lahko prijavite s kodo, poslano na vaš e-naslov, namesto z Apple, Google ali GitHub. Dokler ga ne vklopite, je izklopljeno, za vklop pa je potrebna nedavna prijava."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เมื่อเปิดอยู่ คุณเข้าสู่ระบบด้วยรหัสที่ส่งไปยังอีเมลของคุณแทน Apple, Google หรือ GitHub ได้ ตั้งค่านี้ปิดอยู่จนกว่าคุณจะเปิด และการเปิดต้องมีการเข้าสู่ระบบครั้งล่าสุด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açıkken Apple, Google veya GitHub yerine e-postanıza gönderilen kodla oturum açabilirsiniz. Siz açmadıkça kapalıdır ve açmak için yakın zamanda oturum açmış olmanız gerekir."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Khi bật, bạn có thể đăng nhập bằng mã gửi đến email của mình thay vì Apple, Google hoặc GitHub. Mặc định là tắt trừ khi bạn bật, và để bật cần một lần đăng nhập gần đây."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟後，您可以用寄到電子郵件的代碼登入，而不必用 Apple、Google 或 GitHub。除非您開啟，否則預設關閉，而開啟需要最近一次登入。"
           }
         }
       }
@@ -340433,10 +340583,160 @@
     "settings.sign_in_code.label": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход с код, изпратен по имейл"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přihlásit se kódem zaslaným e-mailem"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem per E-Mail gesendeten Code anmelden"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sign in with a code sent by email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con un código enviado por correo"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logi sisse e-postiga saadetud koodiga"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter avec un code envoyé par e-mail"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom poslanim e-poštom"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezés e-mailben küldött kóddal"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masuk dengan kode yang dikirim lewat email"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi con un codice inviato per email"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールで届くコードでサインイン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이메일로 받은 코드로 로그인"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prisijungti kodu, atsiųstu el. paštu"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pierakstīties ar kodu, kas nosūtīts pa e-pastu"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met een code die per e-mail is verstuurd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj się kodem wysłanym e-mailem"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com um código enviado por email"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com um código enviado por email"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectare cu un cod trimis prin e-mail"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prihlásiť sa kódom zaslaným e-mailom"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava s kodo, poslano po e-pošti"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เข้าสู่ระบบด้วยรหัสที่ส่งทางอีเมล"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-postayla gönderilen kodla oturum aç"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đăng nhập bằng mã gửi qua email"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用電子郵件寄送的代碼登入"
           }
         }
       }
@@ -340444,10 +340744,160 @@
     "settings.sign_in_code.not_available": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входът с код още не е наличен."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přihlášení kódem zatím není k dispozici."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung mit einem Code ist noch nicht verfügbar."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Signing in with a code isn't available yet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con un código aún no está disponible."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koodiga sisselogimine pole veel saadaval."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion avec un code n'est pas encore disponible."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava kodom još nije dostupna."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A kóddal való bejelentkezés még nem érhető el."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masuk dengan kode belum tersedia."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accesso con un codice non è ancora disponibile."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードでのサインインはまだ利用できません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코드로 로그인하는 기능은 아직 사용할 수 없습니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prisijungimas kodu dar nepasiekiamas."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pierakstīšanās ar kodu vēl nav pieejama."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met een code is nog niet beschikbaar."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie kodem nie jest jeszcze dostępne."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O início de sessão com um código ainda não está disponível."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O início de sessão com um código ainda não está disponível."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectarea cu un cod nu este încă disponibilă."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prihlásenie kódom zatiaľ nie je dostupné."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava s kodo še ni na voljo."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าสู่ระบบด้วยรหัสยังใช้ไม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kodla oturum açma henüz kullanılamıyor."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đăng nhập bằng mã chưa dùng được."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "尚無法使用代碼登入。"
           }
         }
       }
@@ -340455,10 +340905,160 @@
     "settings.sign_in_code.not_changed": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нищо не се промени. %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nic se nezměnilo. %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es hat sich nichts geändert. %1$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "It didn't change. %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No ha cambiado. %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Midagi ei muutunud. %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n'a changé. %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ništa se nije promijenilo. %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem változott. %1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak berubah. %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è cambiato nulla. %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更されませんでした。%1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "변경되지 않았습니다. %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nepasikeitė. %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nekas nemainījās. %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is niets veranderd. %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nic się nie zmieniło. %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não mudou. %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não mudou. %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a schimbat nimic. %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nič sa nezmenilo. %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ni se spremenilo. %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่มีอะไรเปลี่ยน %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişmedi. %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không có gì thay đổi. %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "沒有變更。%1$@"
           }
         }
       }
@@ -340466,10 +341066,160 @@
     "settings.sign_in_code.not_loaded": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Настройката не можа да се зареди. %1$@"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toto nastavení se nepodařilo načíst. %1$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Einstellung konnte nicht geladen werden. %1$@"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Couldn't load this setting. %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar este ajuste. %1$@"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seda seadet ei õnnestunud laadida. %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger ce réglage. %1$@"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovu postavku nije bilo moguće učitati. %1$@"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nem sikerült betölteni ezt a beállítást. %1$@"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pengaturan ini tidak dapat dimuat. %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare questa impostazione. %1$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この設定を読み込めませんでした。%1$@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 설정을 불러오지 못했습니다. %1$@"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nepavyko įkelti šio nustatymo. %1$@"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neizdevās ielādēt šo iestatījumu. %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon deze instelling niet laden. %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wczytać tego ustawienia. %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar esta definição. %1$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar esta definição. %1$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setarea nu a putut fi încărcată. %1$@"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toto nastavenie sa nepodarilo načítať. %1$@"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te nastavitve ni bilo mogoče naložiti. %1$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โหลดการตั้งค่านี้ไม่ได้ %1$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ayar yüklenemedi. %1$@"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không thể tải cài đặt này. %1$@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法載入這項設定。%1$@"
           }
         }
       }
@@ -340477,10 +341227,160 @@
     "settings.sign_in_code.off": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изключено"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vypnuto"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Väljas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isključeno"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ki"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nonaktif"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "꺼짐"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Išjungta"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izslēgts"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uit"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłączone"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativado"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivat"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vypnuté"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izklopljeno"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
           }
         }
       }
@@ -340488,10 +341388,160 @@
     "settings.sign_in_code.on": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включено"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnuto"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "On"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activado"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sees"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activé"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključeno"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Be"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktif"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜짐"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įjungta"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieslēgts"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włączone"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativado"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activat"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnuté"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vklopljeno"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bật"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟"
           }
         }
       }
@@ -340499,10 +341549,160 @@
     "settings.sign_in_code.saved": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запазено. Изпратихме ви имейл за промяната."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uloženo. O změně jsme vám poslali e-mail."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichert. Wir haben dir wegen der Änderung eine E-Mail geschickt."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Saved. We emailed you about the change."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado. Te escribimos por correo sobre el cambio."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvestatud. Saatsime sulle muudatuse kohta e-kirja."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré. Nous vous avons écrit au sujet du changement."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spremljeno. Poslali smo vam e-poštu o promjeni."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mentve. A változásról e-mailt küldtünk neked."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tersimpan. Kami mengirim email kepada Anda tentang perubahan ini."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvato. Ti abbiamo scritto un'email sulla modifica."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存しました。変更についてメールをお送りしました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저장했습니다. 변경 내용을 이메일로 알려 드렸습니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Išsaugota. Išsiuntėme jums el. laišką apie pakeitimą."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saglabāts. Mēs tev nosūtījām e-pastu par izmaiņu."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opgeslagen. We hebben je over de wijziging gemaild."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisano. Wysłaliśmy Ci e-mail o zmianie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado. Enviámos-lhe um email sobre a alteração."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado. Enviámos-lhe um email sobre a alteração."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvat. V-am trimis un e-mail despre schimbare."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uložené. O zmene sme vám poslali e-mail."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shranjeno. O spremembi smo vam poslali e-pošto."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บันทึกแล้ว เราส่งอีเมลถึงคุณเกี่ยวกับการเปลี่ยนแปลงนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedildi. Değişiklik hakkında size e-posta gönderdik."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đã lưu. Chúng tôi đã gửi email cho bạn về thay đổi này."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已儲存。我們已就這項變更寄信給您。"
           }
         }
       }
@@ -340510,10 +341710,160 @@
     "settings.sign_in_code.title": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Přihlášení"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Sign-in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sisselogimine"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bejelentkezés"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masuk"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインイン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prisijungimas"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pierakstīšanās"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início de sessão"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início de sessão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectare"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prihlásenie"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prijava"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าสู่ระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum açma"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đăng nhập"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入"
           }
         }
       }
@@ -340521,10 +341871,160 @@
     "settings.sign_in_code.turn_off": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изключване"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vypnout"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausschalten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Turn off"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivar"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lülita välja"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactiver"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isključite"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kikapcsolás"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nonaktifkan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disattiva"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフにする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "끄기"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Išjungti"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izslēgt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitzetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłącz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativar"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desativar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivați"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vypnúť"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Izklopi"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tắt"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
           }
         }
       }
@@ -340532,10 +342032,160 @@
     "settings.sign_in_code.turn_on": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включване"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnout"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einschalten"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Turn on"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lülita sisse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključite"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekapcsolás"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktifkan"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンにする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜기"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įjungti"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieslēgt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanzetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activați"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnúť"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vklopi"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bật"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟"
           }
         }
       }
@@ -340543,10 +342193,160 @@
     "settings.sign_in_code.turn_on_in_browser": {
       "extractionState": "manual",
       "localizations": {
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включването отваря страницата за вход на KIFF, където потвърждавате, че сте вие."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnutím se otevře přihlašovací stránka KIFF, kde potvrdíte, že jste to vy."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Einschalten öffnet sich die Anmeldeseite von KIFF, auf der du bestätigst, dass du es bist."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Turning it on opens KIFF's sign-in page, where you confirm it's you."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al activarlo se abre la página de inicio de sesión de KIFF, donde confirmas que eres tú."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sisselülitamisel avaneb KIFFi sisselogimisleht, kus kinnitad, et see oled sina."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'activer ouvre la page de connexion de KIFF, où vous confirmez que c'est bien vous."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uključivanje otvara stranicu za prijavu u KIFF-u, na kojoj potvrđujete da ste to vi."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A bekapcsolás megnyitja a KIFF bejelentkezési oldalát, ahol megerősíted, hogy te vagy az."
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mengaktifkannya membuka halaman masuk KIFF, tempat Anda mengonfirmasi bahwa ini memang Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attivarlo apre la pagina di accesso di KIFF, dove confermi che sei tu."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オンにするとKIFFのサインインページが開き、ご本人であることを確認します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "켜면 KIFF 로그인 페이지가 열리고, 거기서 본인임을 확인합니다."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Įjungus atidaromas KIFF prisijungimo puslapis, kuriame patvirtinate, kad tai jūs."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ieslēdzot tiek atvērta KIFF pierakstīšanās lapa, kurā apstiprini, ka tas esi tu."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanzetten opent de inlogpagina van KIFF, waar je bevestigt dat jij het bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włączenie otwiera stronę logowania KIFF, na której potwierdzasz, że to Ty."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativá-lo abre a página de início de sessão do KIFF, onde confirma que é você."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativá-lo abre a página de início de sessão do KIFF, onde confirma que é você."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activarea deschide pagina de conectare KIFF, unde confirmați că sunteți dumneavoastră."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapnutím sa otvorí prihlasovacia stránka KIFF, kde potvrdíte, že ste to vy."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z vklopom se odpre prijavna stran KIFF, kjer potrdite, da ste to vi."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเปิดจะเปิดหน้าเข้าสู่ระบบของ KIFF ซึ่งคุณยืนยันว่าเป็นคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açmak, KIFF'in oturum açma sayfasını açar; orada sizin olduğunuzu onaylarsınız."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bật sẽ mở trang đăng nhập của KIFF, nơi bạn xác nhận đó là bạn."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟時會打開 KIFF 的登入頁面，您在那裡確認是您本人。"
           }
         }
       }
