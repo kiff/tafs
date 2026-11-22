@@ -45,7 +45,7 @@ on:
         options: [none, full, key, languages, reference, rtl, preview]
         default: none
       preview:
-        description: "For screenshots: preview, the language to show before it ships (in app/strings/languages.json's all, not shipped). None now: ko and ja ship, and the languages set shows them."
+        description: "For screenshots: preview, the language to show before it ships (in app/strings/languages.json's all, not shipped). ar (Arabic, right to left, with its own words) until it ships; ko and ja ship, and the languages set shows them."
         type: string
         default: ko
       external:
@@ -654,7 +654,8 @@ jobs:
             ls -la "$RUNNER_TEMP/shots"
             exit 0
           fi
-          # The rtl set: the main screens laid out right to left, before Arabic or Hebrew words exist.
+          # The rtl set: the main screens laid out right to left with English words. Arabic's own words are the preview set with
+          # preview=ar (the same screens, then the iPad's Overview and Calendar, in an Arabic phone's locale).
           # English words with the layout forced RTL (NSForceRightToLeftWritingDirection), as a phone
           # set to Arabic lays it out: arrows, amounts, charts, the dial and swipes show mirrored or not.
           # Light, then dark for the Card and the dial; then the 13-inch iPad's Overview.

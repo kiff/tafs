@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "الملخصات",
+  "push.channel.briefs_description": "ملخصك في أوقاته المحددة.",
+  "push.channel.holds_description": "طلب استدعاء معلّق بانتظار ردك. لا يُرسل شيء حتى توافق عليه.",
+  "push.channel.other": "تنبيهات أخرى",
+  "push.channel.other_description": "طلبات المهام وردودها، بلا صوت.",
+  "push.channel.urgent_description": "ما لا يحتمل الانتظار حتى ملخصك التالي، مع صوت.",
+  "push.open_needs_you": "افتح «بانتظارك» لتردّ.",
+  "push.open_taf": "افتح الـ taf لتطّلع.",
+  "push.open_usage": "افتح «الخطة والاستخدام» لتطّلع."
+}
