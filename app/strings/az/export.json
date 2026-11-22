@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Söhbətləriniz ixrac edilmədi. {why}",
+  "export.not_offered": "Fayllar bu telefonda saxlanıla bilmədi. Bir az yer boşaldın, sonra yenidən cəhd edin.",
+  "export.own_chats_each_taf_coach": "Hər taf-la, o cümlədən Coach-la öz söhbətləriniz, əlavə etdiyiniz faylların adları və qeydləriniz, oxunaqlı fayl və JSON şəklində. Onları yalnız siz ixrac edə bilərsiniz.",
+  "export.preparing": "Söhbətləriniz hazırlanır…",
+  "export.ready_share_again": "Hazırdır: {files}. Yenidən paylaşın",
+  "export.row": "Söhbətlərimi ixrac et",
+  "export.sign_in_first": "Söhbətlərinizi ixrac etmək üçün KIFF ilə daxil olun."
+}

@@ -1,0 +1,13 @@
+{
+  "halt.again": "עצירה נוספת",
+  "halt.all_now": "עצירת הכול עכשיו",
+  "halt.explain.halted": "נעצר. חידוש מתחיל רק עבודה חדשה.",
+  "halt.explain.halted_since": "מאז {time}. חידוש מתחיל רק עבודה חדשה.",
+  "halt.explain.halting": "שום דבר חדש לא מתחיל. «נעצר» יוצג כש-KIFF והחיבור יאשרו שניהם.",
+  "halt.explain.running_all": "עצירה מפסיקה את ה-taf שלך עד שתחדש. קריאה שכבר נשלחה עדיין עשויה להגיע.",
+  "halt.explain.running_one": "עצירה מפסיקה אותו עד שתחדש. קריאה שכבר נשלחה עדיין עשויה להגיע.",
+  "halt.halting_stops_no_run_starts": "עצירה מפסיקה את {who} עד שתחדש. קריאה שכבר נשלחה עדיין עשויה להגיע.",
+  "halt.now": "עצירה עכשיו",
+  "halt.row_running": "הפסקה עד שתחדש",
+  "halt.your_tafs_lower": "ה-taf שלך"
+}

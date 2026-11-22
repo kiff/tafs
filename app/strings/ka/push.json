@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "მიმოხილვები",
+  "push.channel.briefs_description": "თქვენი მიმოხილვა დადგენილ დროს.",
+  "push.channel.holds_description": "ზარი თქვენს პასუხს ელოდება. არაფერი იგზავნება, სანამ არ დაამტკიცებთ.",
+  "push.channel.other": "სხვა შეტყობინებები",
+  "push.channel.other_description": "ამოცანების მოთხოვნები და მათი პასუხები, ხმის გარეშე.",
+  "push.channel.urgent_description": "რაც თქვენს შემდეგ მიმოხილვას ვერ დაელოდება, ხმით.",
+  "push.open_needs_you": "გახსენით „გელოდებათ“ პასუხისთვის.",
+  "push.open_taf": "გახსენით taf, რომ ნახოთ.",
+  "push.open_usage": "გახსენით გეგმა და გამოყენება, რომ ნახოთ."
+}

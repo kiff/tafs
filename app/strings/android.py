@@ -68,7 +68,11 @@ def folder(lang):
 # old code, and Traditional Chinese by region, `zh-rTW` and `zh-rHK`. Android takes the closest folder any part of the app has,
 # so a phone in Indonesian found the library's `values-in` and none of ours, and showed tafs in English; one in Taiwan, Hong
 # Kong or Macau did the same with `zh-rTW` and `zh-rHK` beside our `b+zh+Hant`. The same lines go in those folders too.
-ALSO = {"id": ["values-in"], "zh-Hant": ["values-zh-rTW", "values-zh-rHK", "values-zh-rMO"]}
+# Hebrew is the same case: the libraries ship `values-iw`, its old code, and no `values-he`. Azerbaijani in Latin script is
+# plain `values-az` in the libraries (Latin is its default script), so shipped as `az-Latn` its lines go there too; Serbian in
+# Latin script is `values-b+sr+Latn` in the libraries as in ours, while plain `values-sr` is Cyrillic and stays the libraries'.
+ALSO = {"id": ["values-in"], "zh-Hant": ["values-zh-rTW", "values-zh-rHK", "values-zh-rMO"], "he": ["values-iw"],
+        "az-Latn": ["values-az"]}
 
 
 def folders(lang):

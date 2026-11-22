@@ -227,7 +227,10 @@ IOS_LOCALE = {"ar": "ar-u-ca-gregory-nu-latn"}
 # The plural forms a language's whole numbers take (CLDR), beside "other".
 PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["one"], "pt": ["one"], "fr": ["one"],
            "pl": ["one", "few", "many"], "ja": [], "ko": [], "et": ["one"], "el": ["one"], "lt": ["one", "few"], "lv": ["zero", "one"],
-           "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": [], "ar": ["zero", "one", "two", "few", "many"]}
+           "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": [], "ar": ["zero", "one", "two", "few", "many"],
+           # Batch 4. Hebrew's "many" left CLDR in 42: an older phone that still asks for it reads "other". Armenian and Bengali's
+           # "one" is 0 and 1.
+           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"]}
 
 
 def ios_text(text, key, source, owned=()):

@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name}-ը հնարավոր չէ կցել։",
+  "attachment.kilobytes": "{size} ԿԲ",
+  "attachment.megabytes": "{size} ՄԲ",
+  "attachment.not_taken": "tafs-ը չի կարող կցել այս ֆայլը․ այն այն տեսակի կամ չափի չէ, որ ընդունում է։ Ընտրեք մեկ ուրիշը։",
+  "attachment.photo": "Լուսանկար",
+  "attachment.photo_could_not_read": "Այդ լուսանկարը չկարողացավ կարդացվել։",
+  "attachment.photo_numbered": "Լուսանկար {n}",
+  "attachment.too_large": "{name}-ը {size} է․ առավելագույնը {limit} է։",
+  "attachment.wrong_kind": "{name}-ը հնարավոր չէ կցել։ Կարելի է կցել լուսանկարներ, PDF, տեքստ, CSV, Markdown, Word և Excel ֆայլեր։"
+}

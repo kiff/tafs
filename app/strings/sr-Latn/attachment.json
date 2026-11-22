@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} ne može da se priloži.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs ne može da priloži ovu datoteku: nije vrsta ili veličina koju prima. Izaberite drugu.",
+  "attachment.photo": "Fotografija",
+  "attachment.photo_could_not_read": "Ta fotografija nije mogla da se pročita.",
+  "attachment.photo_numbered": "Fotografija {n}",
+  "attachment.too_large": "{name} je {size}; najviše je {limit}.",
+  "attachment.wrong_kind": "{name} ne može da se priloži. Mogu fotografije, PDF-ovi, tekst, CSV, Markdown, Word i Excel datoteke."
+}

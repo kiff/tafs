@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Ամբողջ Card-ը",
+    "other": "Բոլոր Card-երը"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, ապա հարցնում է ձեզ",
+  "card.calls_left": {
+    "one": "Մնացել է {count} զանգ",
+    "other": "Մնացել է {count} զանգ"
+  },
+  "card.calls_left_line": {
+    "one": "Մնացել է {count} զանգ {window} {limit}-ից",
+    "other": "Մնացել է {count} զանգ {window} {limit}-ից"
+  },
+  "card.calls_used_of": {
+    "one": "{used} {count} զանգից {window}",
+    "other": "{used} {count} զանգից {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} զանգ {window}",
+    "other": "{count} զանգ {window}"
+  },
+  "card.card_confirmed_kiff": "Card · հաստատված է KIFF-ի կողմից",
+  "card.card_draft_kiff": "Card · սևագիր · KIFF-ից",
+  "card.card_got_room_call_needed": "Նրա Card-ը ստացավ այն տարածքը, որ այս զանգին պետք էր, մինչև այդ ընդհանուրի վերակայումը",
+  "card.card_not_issued": "Card-ը չթողարկվեց։ ",
+  "card.card_revoked": "Card-ը չեղարկված է",
+  "card.check.always_asks": "{rule}՝ միշտ հարցնում է ձեզ",
+  "card.check.never_allowed": "{rule}՝ երբեք թույլատրված չէ",
+  "card.check.not_on_card": "Այս taf-ի Card-ում չէ",
+  "card.check.over_count": {
+    "one": "Ավելի քան {count} {window}",
+    "other": "Ավելի քան {count} {window}"
+  },
+  "card.check.over_each": "Ավելի քան {amount} մեկ զանգի համար",
+  "card.check.over_total": "Ավելի քան {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Ավարտվել է",
+  "card.ended_on": "Ավարտվել է {date}",
+  "card.ends": "Ավարտվում է",
+  "card.extra_room": "+{extra} լրացուցիչ տարածք {window}",
+  "card.extra_room_prefix": "+{formatted} լրացուցիչ տարածք ",
+  "card.extra_room_until": "+{extra} լրացուցիչ տարածք մինչև {ends}",
+  "card.figure_left": "մնացել է՝ {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} զանգ {window}{each}․ սա կլիներ {nth}-րդ զանգը{item}",
+    "other": "{count} զանգ {window}{each}․ սա կլիներ {nth}-րդ զանգը{item}"
+  },
+  "card.held.each_call_asks": "Յուրաքանչյուր զանգ նախ հարցնում է ձեզ",
+  "card.held.for_each": " յուրաքանչյուրի համար՝ {name}",
+  "card.held.for_each_join": " յուրաքանչյուրի համար՝ ",
+  "card.held.for_item": " համար՝ {item}",
+  "card.held.over_count": {
+    "one": "{count} զանգի սահմանաչափը գերազանցում է․ սա կլիներ {nth}-րդ զանգը",
+    "other": "{count} զանգի սահմանաչափը գերազանցում է․ սա կլիներ {nth}-րդ զանգը"
+  },
+  "card.held.over_one_call": "{amount}-ը գերազանցում է {cap} սահմանաչափը մեկ զանգի համար",
+  "card.held.over_total": "{amount}-ը կգերազանցեր {cap} ընդհանուրը",
+  "card.hero.calls_left_of": {
+    "one": "զանգ մնացել է {window} {limit}-ից",
+    "other": "զանգ մնացել է {window} {limit}-ից"
+  },
+  "card.hero.calls_use_unavailable": "զանգեր {window} · օգտագործումը հասանելի չէ",
+  "card.hero.left_of": "մնացել է {window} {limit}-ից",
+  "card.hero.left_of_extra": "մնացել է {window} {base}-ից + {extra} լրացուցիչ տարածք",
+  "card.hero.left_of_extra_until": "մնացել է {window} {base}-ից + {extra} լրացուցիչ տարածք մինչև {ends}",
+  "card.hero.left_of_note": "մնացել է {window} {limit}-ից{note}",
+  "card.hero.no_currency": "առանց արժույթի",
+  "card.hero.no_currency_suffix": " · առանց արժույթի",
+  "card.hero.use_unavailable": "{window} · օգտագործումը հասանելի չէ",
+  "card.hero.use_unavailable_note": "{label} · օգտագործումը հասանելի չէ{note}",
+  "card.how_counted": "Ինչպես է սա հաշվվում",
+  "card.issue_prompt": "Թողարկեք Card taf-ի համար՝ {taf}",
+  "card.issued_by": "Թողարկել է",
+  "card.issued_by_account": "Հաշիվը",
+  "card.issued_by_named": "Թողարկել է՝ {who}",
+  "card.its_card": "Նրա Card-ը",
+  "card.kiff_did_not_revoke_cards": "KIFF-ը չեղարկեց նրա Card-երից {cards_left}-ը․ չեղարկեք դրանք KIFF-ում։",
+  "card.left": "մնացել է {amount} {window}",
+  "card.left_extra_room": "մնացել է {current} {own}-ից + {extra} լրացուցիչ տարածք{until}{note}",
+  "card.limit_can_not_raised_right": "Սահմանաչափը հիմա այստեղից հնարավոր չէ բարձրացնել։",
+  "card.limit_raised_read_balance_again": "Սահմանաչափը բարձրացվեց։ Նորից կարդացեք մնացորդը, նախքան կրկին բարձրացնելը։",
+  "card.line.calls_in_window": {
+    "one": "{count} զանգ {window}{then}",
+    "other": "{count} զանգ {window}{then}"
+  },
+  "card.line.more_asks": "․ ավելիի համար նախ հարցնում է ձեզ",
+  "card.line.then_asks": ", ապա հարցնում է ձեզ",
+  "card.line.total_in_window": "{amount} ընդհանուր {window}{then}",
+  "card.line.up_to_each": "մինչև {amount} մեկ զանգի համար",
+  "card.more": {
+    "one": "ևս {count}",
+    "other": "ևս {count}"
+  },
+  "card.no_actions": "Գործողություններ դեռ չկան",
+  "card.no_actions_short": "գործողություններ դեռ չկան",
+  "card.no_currency": "{amount} (առանց արժույթի)",
+  "card.no_end_date": "Առանց ավարտի ամսաթվի",
+  "card.outcome.not_a_resource": "Card-ի ռեսուրսներից մեկը չէ",
+  "card.outcome.outside": "Card-ից դուրս",
+  "card.outcome.over_one_action": "Card-ի սահմանաչափից ավելի մեկ գործողության համար",
+  "card.outcome.over_total": "Card-ի ընդհանուրից ավելի",
+  "card.outside_held": "Դուրս․ պահված է ձեզ համար",
+  "card.outside_refused": "Դուրս․ մերժված է",
+  "card.over_limit_calls_would": "{limit} զանգի սահմանաչափը գերազանցում է․ սա կլիներ {nth}-րդ զանգը",
+  "card.revoke_failed": "KIFF-ը չեղարկեց Card-ը։ {why}",
+  "card.revoked": "Չեղարկված է",
+  "card.rule.always_asks": "միշտ հարցնում է ձեզ",
+  "card.rule.at_most_each": "≤ {amount} մեկ զանգի համար",
+  "card.rule.at_most_each_refused_above": "≤ {amount} մեկ զանգի համար · դրանից ավելին մերժվում է",
+  "card.rule.calls": {
+    "one": "{count} զանգ {window}",
+    "other": "{count} զանգ {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} զանգ {window}, ապա հարցնում է ձեզ",
+    "other": "{count} զանգ {window}, ապա հարցնում է ձեզ"
+  },
+  "card.rule.in_total": "{amount} ընդհանուր {window}",
+  "card.rule.never": "երբեք",
+  "card.rule.total_then_asks": "{amount} ընդհանուր {window}, ապա հարցնում է ձեզ",
+  "card.rule.up_to_each": "մինչև {amount} մեկ զանգի համար․ ավելիի համար նախ հարցնում է ձեզ",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Taf-ի Card-ը",
+  "card.tools": {
+    "one": "{count} գործիք",
+    "other": "{count} գործիք"
+  },
+  "card.until": "Մինչև",
+  "card.until_date": "Մինչև {date}",
+  "card.until_ends": " մինչև {ends}",
+  "card.used_of": "{used} {limit}-ից {window}",
+  "card.window.a_day": "օրական",
+  "card.window.a_month": "ամսական",
+  "card.window.a_week": "շաբաթական",
+  "card.window.any_day": "ցանկացած 24 ժամվա ընթացքում",
+  "card.window.any_hour": "ցանկացած ժամվա ընթացքում",
+  "card.window.any_week": "ցանկացած 7 օրվա ընթացքում",
+  "card.window.in_total": "ընդհանուր",
+  "card.window.in_total_window": "ընդհանուր {window}",
+  "card.window.last_day": "վերջին 24 ժամվա ընթացքում",
+  "card.window.last_hour": "վերջին ժամվա ընթացքում",
+  "card.window.last_week": "վերջին 7 օրվա ընթացքում",
+  "card.window.so_far": "մինչ այժմ",
+  "card.window.this_month": "այս ամիս",
+  "card.window.this_week": "այս շաբաթ",
+  "card.window.today": "այսօր",
+  "card.within_card": "Card-ի շրջանակներում"
+}

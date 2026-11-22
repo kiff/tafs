@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "סיכומים",
+  "push.channel.briefs_description": "הסיכום שלך בשעות שנקבעו.",
+  "push.channel.holds_description": "קריאה מוחזקת עד שתשיב. שום דבר לא נשלח עד שתאשר.",
+  "push.channel.other": "התראות אחרות",
+  "push.channel.other_description": "בקשות למשימות והתשובות להן, בלי צליל.",
+  "push.channel.urgent_description": "מה שלא יכול לחכות לסיכום הבא שלך, עם צליל.",
+  "push.open_needs_you": "יש לפתוח את «זקוק לך» כדי להשיב.",
+  "push.open_taf": "יש לפתוח את ה-taf כדי לראות.",
+  "push.open_usage": "יש לפתוח את «תוכנית ושימוש» כדי לראות."
+}

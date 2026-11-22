@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "უპასუხეთ ამ ვადაში",
+  "work.answer_within_days": {
+    "one": "{count} დღე",
+    "other": "{count} დღე"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} საათი",
+    "other": "{count} საათი"
+  },
+  "work.answer_within_line": "გაცნობებთ, როცა საქმე უფრო დიდხანს ელოდება.",
+  "work.answer_within_none": "არ არის დაყენებული",
+  "work.answer_within_not_set": "ვერ დაყენდა. {why}",
+  "work.asking_kiff_run": "KIFF-ს ვთხოვთ გაუშვას {tool}…",
+  "work.did_not_stop": "არ გაჩერდა: {why}",
+  "work.duration.minutes": "{minutes} წთ {seconds} წმ",
+  "work.duration.seconds": "{seconds} წმ",
+  "work.its_runs": "მისი გაშვებები",
+  "work.not_read": "მისი სამუშაო ვერ წაიკითხა. {why}",
+  "work.not_sent_again": "ხელახლა არ გაიგზავნა. {why}",
+  "work.request.try_reply_now": "სცადეთ პასუხი ახლავე",
+  "work.requests_need_you": {
+    "one": "{count} მოთხოვნა გელოდებათ",
+    "other": "{count} მოთხოვნა გელოდებათ"
+  },
+  "work.send_again": "გაგზავნეთ ხელახლა",
+  "work.sending_again": "იგზავნება ხელახლა…",
+  "work.stop_run": "გააჩერეთ გაშვება",
+  "work.stopped_part_way_before_finished": "{taf} შუაში გაჩერდა, დასრულებამდე."
+}
