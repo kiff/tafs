@@ -650,6 +650,41 @@ Keamanan"). There is one plural form (other): a number takes the same noun ("5 t
 | Usage | Penggunaan |
 | Cancel / Continue | Batal / Lanjutkan |
 
+### Vietnamese (vi)
+
+Addressed as **bạn**; buttons are plain verbs ("Phê duyệt", "Từ chối", "Tiếp tục") and sentences are plain statements with no
+sentence-final particles. taf, Card, Coach, KIFF and Setup are names and stay as they are. Vietnamese doesn't decline or
+conjugate for a name, so "{taf}" stands where English has it, and a possessive is "của {name}" ("Card của {owner}"). A door is
+"cửa", a call "lượt gọi", a request "yêu cầu", a held call "lượt gọi đang giữ", a receipt "biên nhận", a brief "bản tóm tắt",
+the dial "núm xoay". Apple's menu paths are the Vietnamese ones ("Cài đặt", "Cài đặt hệ thống", "Quyền riêng tư & Bảo mật").
+There is one plural form (other): a number takes the same noun ("5 nhiệm vụ").
+
+| English | Vietnamese |
+|---|---|
+| Needs you | Đang chờ bạn |
+| Approve / Approve once | Phê duyệt / Phê duyệt một lần |
+| Refuse | Từ chối |
+| held | đang giữ |
+| Halt / Halted | Đóng băng / Đã đóng băng |
+| Stopped | Đã dừng |
+| Pause / Paused | Tạm dừng / Đã tạm dừng |
+| Resume | Tiếp tục |
+| Revoke | Thu hồi |
+| Record | Sổ ghi |
+| Connect / connection | Kết nối / kết nối |
+| Pair / Unpair | Ghép đôi / Hủy ghép đôi |
+| Account | Tài khoản |
+| limit / spend limit | giới hạn / hạn mức chi tiêu |
+| credits / credit pack | tín dụng / gói tín dụng |
+| passkey | khóa truy cập |
+| security key | khóa bảo mật |
+| Sign in / Sign out | Đăng nhập / Đăng xuất |
+| Inbox | Hộp thư |
+| Overview | Tổng quan |
+| Calendar | Lịch |
+| Usage | Mức sử dụng |
+| Cancel / Continue | Hủy / Tiếp tục |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language

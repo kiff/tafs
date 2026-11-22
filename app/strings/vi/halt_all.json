@@ -1,0 +1,15 @@
+{
+  "halt_all.description": "Dừng mọi taf cùng lúc. Sẽ không có gì mới được gửi cho đến khi bạn tiếp tục chúng trong tafs.",
+  "halt_all.failed": "tafs không thể đóng băng các tafs của bạn. {why} Hãy mở tafs để đóng băng chúng.",
+  "halt_all.halted": {
+    "other": "Đã đóng băng {count} taf. Sẽ không có gì mới được gửi cho đến khi bạn tiếp tục."
+  },
+  "halt_all.halted_all": "Đã đóng băng các tafs của bạn. Sẽ không có gì mới được gửi cho đến khi bạn tiếp tục.",
+  "halt_all.halting": {
+    "other": "Đang đóng băng {count} taf: không lượt chạy nào bắt đầu. KIFF chưa xác nhận mọi phần; tafs sẽ hiện khi đã xong."
+  },
+  "halt_all.halting_all": "Đang đóng băng các tafs của bạn: không lượt chạy nào bắt đầu. KIFF chưa xác nhận mọi phần; tafs sẽ hiện khi đã xong.",
+  "halt_all.running": "tafs không thể đóng băng các tafs của bạn. Hãy mở tafs để đóng băng chúng.",
+  "halt_all.signed_out": "Bạn đã đăng xuất khỏi tafs. Hãy đăng nhập để đóng băng các tafs của bạn.",
+  "halt_all.title": "Đóng băng tất cả tafs"
+}

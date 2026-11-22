@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Bản tóm tắt",
+  "push.channel.briefs_description": "Bản tóm tắt của bạn vào các giờ đã đặt.",
+  "push.channel.holds_description": "Một lệnh gọi đang được giữ lại chờ bạn trả lời. Sẽ không có gì được gửi cho đến khi bạn phê duyệt.",
+  "push.channel.other": "Cảnh báo khác",
+  "push.channel.other_description": "Các yêu cầu giao việc và câu trả lời, không phát âm thanh.",
+  "push.channel.urgent_description": "Những gì không thể đợi bản tóm tắt tiếp theo, có âm thanh.",
+  "push.open_needs_you": "Mở Đang chờ bạn để trả lời.",
+  "push.open_taf": "Mở taf để xem.",
+  "push.open_usage": "Mở Gói & mức sử dụng để xem."
+}

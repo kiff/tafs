@@ -1,0 +1,7 @@
+{
+  "device.linux": "máy tính",
+  "device.mac": "Mac",
+  "device.phone": "điện thoại",
+  "device.tablet": "máy tính bảng",
+  "device.windows": "máy tính Windows"
+}
