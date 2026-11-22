@@ -2080,7 +2080,7 @@
     <string name="sample_deploys_deploy_api_why">PR ⁦#812⁩ מוזג, CI ירוק</string>
     <string name="sample_deploys_drop_table_why">נראה שאינו בשימוש</string>
     <string name="sample_deploys_job">להעלות לייצור תיקונים שמוזגו כש-CI ירוק, ולחזור אחורה כשהשגיאות מזנקות. לעולם לא להשמיט או למחוק נתוני ייצור.</string>
-    <string name="sample_deploys_migration">הרצת מיגרציה 0042_orders_index</string>
+    <string name="sample_deploys_migration">הרצת מיגרציה ⁦0042_orders_index⁩</string>
     <string name="sample_deploys_migration_why">מוסיפה אינדקס, 3 מיליון שורות</string>
     <string name="sample_deploys_name">פריסות</string>
     <string name="sample_deploys_next_step">להריץ הלילה</string>

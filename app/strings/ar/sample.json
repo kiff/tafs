@@ -115,7 +115,7 @@
   "sample.deploys.deploy_api_why": "تم دمج PR ⁦#812⁩، وCI أخضر",
   "sample.deploys.drop_table_why": "يبدو غير مستخدم",
   "sample.deploys.job": "انشر الإصلاحات المدمجة في الإنتاج عندما يكون CI أخضر، وتراجع عندما ترتفع الأخطاء. لا تُسقط بيانات الإنتاج ولا تحذفها أبدًا.",
-  "sample.deploys.migration": "تشغيل الترحيل 0042_orders_index",
+  "sample.deploys.migration": "تشغيل الترحيل ⁦0042_orders_index⁩",
   "sample.deploys.migration_why": "يضيف فهرسًا، 3 ملايين صف",
   "sample.deploys.name": "عمليات النشر",
   "sample.deploys.next_step": "شغّله الليلة",

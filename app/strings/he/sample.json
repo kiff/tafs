@@ -112,7 +112,7 @@
   "sample.deploys.deploy_api_why": "PR ⁦#812⁩ מוזג, CI ירוק",
   "sample.deploys.drop_table_why": "נראה שאינו בשימוש",
   "sample.deploys.job": "להעלות לייצור תיקונים שמוזגו כש-CI ירוק, ולחזור אחורה כשהשגיאות מזנקות. לעולם לא להשמיט או למחוק נתוני ייצור.",
-  "sample.deploys.migration": "הרצת מיגרציה 0042_orders_index",
+  "sample.deploys.migration": "הרצת מיגרציה ⁦0042_orders_index⁩",
   "sample.deploys.migration_why": "מוסיפה אינדקס, 3 מיליון שורות",
   "sample.deploys.name": "פריסות",
   "sample.deploys.next_step": "להריץ הלילה",
