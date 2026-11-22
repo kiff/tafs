@@ -15,7 +15,7 @@ import org.junit.Test
 class AppSignInTest {
   private val attempt = AppSignIn.attempt()
 
-  @Test fun theSwitchIsOffUntilTheEndToEndTest() = assertFalse(ONBOARDING_ON)
+  @Test fun theSwitchIsOnInEveryBuild() = assertTrue(ONBOARDING_ON)
 
   /** S256, against a value made outside the app: Python's `base64.urlsafe_b64encode(hashlib.sha256(v).digest()).rstrip(b"=")`. */
   @Test fun theChallengeIsS256() =

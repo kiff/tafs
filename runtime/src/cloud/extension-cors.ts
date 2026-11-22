@@ -1,7 +1,7 @@
 /**
  * The tafs Chrome extension's side panel talks to Coach (chrome/src/coach.js) from its own origin, with no host permission
  * for tafs cloud (docs/chrome.md: none is asked at install), so Chrome sends each call as a CORS request, a preflight first:
- * it carries a bearer and, on a send, a JSON body. A browser is let read the answers of those three routes alone, and only
+ * it carries a bearer and, on a send, a JSON body. A browser is let read the answers of those routes alone, and only
  * from an extension's own origin: never `*` and never with credentials (the bearer rides in its header, not a cookie). The
  * origin's scheme and shape are the CORS gate only, as no Web Store id is fixed yet: the view-only KIFF session's bearer, and
  * everything tafs cloud checks behind it, stay the checks.
@@ -12,8 +12,17 @@ import type { HTTPEvent, HTTPResult } from "./handler.js";
 /** A Chrome extension's origin: the scheme, and an id of 32 letters a to p, as Chrome makes them, with nothing after. */
 const EXTENSION_ORIGIN = /^chrome-extension:\/\/[a-p]{32}$/;
 
-/** The routes the side panel calls: the account's Coach, its conversation, and a message to it. */
-const EXTENSION_ROUTES = [/^\/v1\/setup$/, /^\/v1\/tafs\/[^/]+\/conversation$/, /^\/v1\/tafs\/[^/]+\/messages$/];
+/**
+ * The routes the side panel calls: the account's Coach, its live conversation or one chat of it, its list of chats
+ * (Previous conversations), and a message to it. Reads and a send only: archiving a chat stays the apps'.
+ */
+const EXTENSION_ROUTES = [
+  /^\/v1\/setup$/,
+  /^\/v1\/tafs\/[^/]+\/conversation$/,
+  /^\/v1\/tafs\/[^/]+\/conversation\/[^/]+$/,
+  /^\/v1\/tafs\/[^/]+\/chats$/,
+  /^\/v1\/tafs\/[^/]+\/messages$/,
+];
 
 function origin(event: HTTPEvent): string {
   const h = event.headers ?? {};

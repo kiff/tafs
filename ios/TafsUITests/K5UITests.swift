@@ -1,13 +1,12 @@
 import XCTest
 
 /// K5, the end-to-end pass of row 39: the welcome's one tick, the age line per country, and Continue
-/// opening KIFF's sign-in in the system's sheet. It runs only in the K5 build (`TAFS_K5`, `.github/workflows/ios-k5.yml`,
-/// which sets `K5=1` for the test runner): every other build ships the welcome without the tick, so there's nothing
-/// to walk. Each step keeps a screenshot in the result. It stops on KIFF's page: the sign-up's email code and GitHub
+/// opening KIFF's sign-in in the system's sheet. It runs only from `.github/workflows/ios-k5.yml`, which sets `K5=1` for
+/// the test runner, so an ordinary UI test run skips it. Each step keeps a screenshot in the result. It stops on KIFF's page: the sign-up's email code and GitHub
 /// sign-in are the device pass's.
 final class K5UITests: TafsUITestCase {
     override func setUpWithError() throws {
-        try XCTSkipUnless(ProcessInfo.processInfo.environment["K5"] == "1", "only in the K5 build (TAFS_K5)")
+        try XCTSkipUnless(ProcessInfo.processInfo.environment["K5"] == "1", "only from the K5 workflow (K5=1)")
     }
 
     /// The age line, by the device's region: 18 in India, Brazil and Colombia (app/strings/ages.json), the line every
@@ -76,13 +75,15 @@ final class K5UITests: TafsUITestCase {
         }
         XCTAssertTrue(page.exists, "KIFF's sign-in page in the sheet, within 60 s of Continue")
         // A page is not a way in: on 21 Nov KIFF's page drew its title and one line, and no way to sign in. So the test
-        // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email with a password. Email-code sign-in
+        // waits for the four ways the owner keeps on: Apple, Google, GitHub, and email (its password follows on the next step). Email-code sign-in
         // stays off, so a way to sign in with a code sent by email is a finding, never a pass. (A new sign-up's one-time
         // check of the address isn't a sign-in, and isn't on this page.)
+        // KIFF's own "Email me a code" link (id `email-code-link`, kiff/cloud) is always shown and is KIFF's own, per person; what must stay off is
+        // the provider's email-code strategy, so that link is left out of the check.
         func control(_ words: String) -> XCUIElement {
-            page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@",
+            page.descendants(matching: .any).matching(NSPredicate(format: "(elementType == %d OR elementType == %d) AND label MATCHES[c] %@ AND identifier != %@",
                                                                   XCUIElement.ElementType.button.rawValue, XCUIElement.ElementType.link.rawValue,
-                                                                  ".*(\(words)).*")).firstMatch
+                                                                  ".*(\(words)).*", Self.kiffsEmailCodeLink)).firstMatch
         }
         let drawn = control("google").waitForExistence(timeout: 30)
         keep("kiff-sign-in")
@@ -91,12 +92,16 @@ final class K5UITests: TafsUITestCase {
             XCTAssertTrue(control(words).exists, "KIFF's sign-in page offers \(name)")
         }
         XCTAssertTrue(page.textFields.firstMatch.exists, "KIFF's sign-in page has an email field")
-        XCTAssertTrue(page.secureTextFields.firstMatch.exists, "KIFF's sign-in page offers email with a password")
+        // The provider's form asks for the email first and draws the password on its next step, so the page offers email with a
+        // password when its email step has a way on (a Continue button). The password step itself is the device pass's.
+        XCTAssertTrue(control("continue").exists, "KIFF's sign-in page offers email with a password: its email step has Continue")
         XCTAssertFalse(control(Self.emailCodeWords).exists, "no sign-in with a code sent by email: email-code sign-in stays off")
     }
 
     /// The four ways the owner keeps on (21 Nov), by the words on their controls.
     static let ways: [(String, String)] = [("Apple", "apple"), ("Google", "google"), ("GitHub", "github")]
+    /// KIFF's own link to its email-code sign-in (kiff/cloud): not the provider's strategy, which must stay off.
+    static let kiffsEmailCodeLink = "email-code-link"
     /// A control that signs in with a code sent by email instead of a password.
     static let emailCodeWords = "email me a code|send me a code|sign in with a code|use a code|code by email|magic link"
 
