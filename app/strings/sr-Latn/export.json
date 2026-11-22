@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Vaši razgovori nisu izvezeni. {why}",
+  "export.not_offered": "Datoteke nije bilo moguće sačuvati na ovaj telefon. Oslobodite malo prostora pa pokušajte ponovo.",
+  "export.own_chats_each_taf_coach": "Vaši razgovori sa svakim tafom, uključujući Coachove, nazivi datoteka koje ste priložili i vaše beleške, kao čitljiva datoteka i kao JSON. Samo ih vi možete izvesti.",
+  "export.preparing": "Priprema vaših razgovora…",
+  "export.ready_share_again": "Spremno: {files}. Podelite ponovo",
+  "export.row": "Izvezi moje razgovore",
+  "export.sign_in_first": "Prijavite se KIFF-om da biste izvezli svoje razgovore."
+}

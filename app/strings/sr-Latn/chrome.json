@@ -2,7 +2,7 @@
   "chrome.browser_on": "{browser} na sistemu {system}",
   "chrome.code_body": "U Chrome-u otvorite proširenje tafs i otkucajte ovaj kôd. Važi 10 minuta.",
   "chrome.code_title": "Otkucajte ovaj kôd u Chrome-u",
-  "chrome.confirm": "Upari",
+  "chrome.confirm": "Uparite",
   "chrome.expired": "Kôd je istekao, pa ništa nije upareno. Počnite ponovo.",
   "chrome.footer": "Vaš tafs može da koristi upareni Chrome samo na sajtovima koje navodi veza, a rizične korake odobravate ovde.",
   "chrome.held_basket": "U korpi",
@@ -20,8 +20,8 @@
   "chrome.paired": "{name} je uparen.",
   "chrome.profile_note": "tafs radi u svom Chrome profilu. Prijavite se tamo samo na sajtove koje želite da koristi vaš tafs.",
   "chrome.refused": "Drugi Chrome je upotrebio ovaj kôd, pa ništa nije upareno. Počnite ponovo.",
-  "chrome.remove": "Prekini uparivanje",
-  "chrome.remove_named": "Prekini uparivanje: {name}",
+  "chrome.remove": "Prekinite uparivanje",
+  "chrome.remove_named": "Prekinite uparivanje: {name}",
   "chrome.title": "Chrome",
   "chrome.waiting": "Čeka se Chrome…"
 }

@@ -767,6 +767,51 @@ the app builds with ships `zh-rTW` and `zh-rHK`, and Android took those over our
 | Usage | 用量 |
 | Cancel / Continue | 取消 / 繼續 |
 
+## Batch 4: Serbian (Latin), Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
+
+For the countries whose language the apps didn't have (RS, IL, AL, GE, AM, AZ, BD), whose legal pages kiff.dev serves
+(kiff/cloud#85). They ship one language at a time, each in its own commit. First drafts: no native speaker has read them.
+Android's side is under "Batch 4 on Android" below.
+
+### Serbian (sr-Latn)
+
+Serbian in the Latin script, ekavian, as the legal pages write it; Cyrillic is not written yet. Addressed as **vi** (plural
+verb forms); buttons are polite imperatives ("Odobrite", "Odbijte", "Nastavite"). Written from Croatian's lines
+(`app/strings/hr/`) with Serbian's words and sound changes: "nalog" for an account, "zahtev", "obaveštenje", "sistem",
+"podešavanja" for settings, "nedelja" for a week, "porudžbina" for an order. taf and Card decline as in Croatian (taf,
+tafa, tafovi, tafova; Card, Carda, Cardovi, Cardova); Coach, KIFF and Setup are names and stay as they are. A value is a
+name and doesn't decline, so a line that would need a case words around it. A door is "vrata", a call "poziv", a held
+call "zadržan poziv". Apple's menu paths are the Serbian (Latin) ones ("Podešavanja", "Sistemska podešavanja", "Privatnost
+i bezbednost"). The plural forms are one, few (2–4) and other.
+
+| English | Serbian |
+|---|---|
+| Needs you | Čeka vas |
+| Approve / Approve once | Odobrite / Odobrite jednom |
+| Refuse | Odbijte |
+| held | zadržan |
+| Halt / Halted | Blokirajte / Blokirano |
+| Stopped | Zaustavljeno |
+| Pause / Paused | Pauzirajte / Pauzirano |
+| Resume | Nastavite |
+| Revoke | Opozovite |
+| Record | Zapisnik |
+| Connect / connection | Povežite / veza |
+| Pair / Unpair | Uparite / Prekinite uparivanje |
+| Account | Nalog |
+| limit / spend limit | ograničenje / ograničenje potrošnje |
+| credits / credit pack | krediti / paket kredita |
+| passkey | pristupni ključ |
+| security key | sigurnosni ključ |
+| Sign in / Sign out | Prijava / Odjava |
+| Inbox | Pristigle |
+| Overview | Pregled |
+| Calendar | Kalendar |
+| Usage | Potrošnja |
+| brief | sažetak |
+| receipt | potvrda |
+| Cancel / Continue | Odustanite / Nastavite |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
