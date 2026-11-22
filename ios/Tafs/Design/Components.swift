@@ -80,8 +80,9 @@ struct Eyebrow: View {
     var color: Color = Theme.dim
 
     var body: some View {
-        // Text's own tracking, before the font. Korean, Japanese and Chinese keep the plain face with no tracking:
-        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview).
+        // Text's own tracking, before the font. Korean, Japanese, Chinese and Arabic keep the plain face with no tracking:
+        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview), and tracking cuts
+        // Arabic's joined letters apart (the ar preview: "بـانـتـظـار ك").
         let ideographic = Eyebrow.ideographic(text)
         Text(text.uppercased())
             .tracking(ideographic ? 0 : 0.7)
@@ -89,11 +90,14 @@ struct Eyebrow: View {
             .foregroundColor(color)
     }
 
-    /// Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart.
+    /// Whether a line is written in Hangul, kana, Han or Arabic script, which a monospaced face and letter-spacing only pull apart
+    /// (Arabic's letters join, so spacing them breaks the word).
     static func ideographic(_ text: String) -> Bool {
         text.unicodeScalars.contains { s in
             (0x1100...0x11FF).contains(s.value) || (0x3040...0x30FF).contains(s.value) || (0x3130...0x318F).contains(s.value)
                 || (0x3400...0x4DBF).contains(s.value) || (0x4E00...0x9FFF).contains(s.value) || (0xAC00...0xD7AF).contains(s.value)
+                || (0x0600...0x06FF).contains(s.value) || (0x0750...0x077F).contains(s.value) || (0x08A0...0x08FF).contains(s.value)
+                || (0xFB50...0xFDFF).contains(s.value) || (0xFE70...0xFEFF).contains(s.value)
         }
     }
 }

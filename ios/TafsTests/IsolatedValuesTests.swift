@@ -32,6 +32,11 @@ final class IsolatedValuesTests: XCTestCase {
         XCTAssertTrue(Eyebrow.ideographic("기억하는 것"))
         XCTAssertTrue(Eyebrow.ideographic("確認が必要"))
         XCTAssertTrue(Eyebrow.ideographic("内 TAFS"))
+        XCTAssertEqual(ScaledFont.design(.monospaced, language: "ar"), .default, "the monospaced face splits Arabic's joined letters")
+        XCTAssertEqual(ScaledFont.design(.monospaced, language: "fr"), .monospaced)
+        XCTAssertEqual(ScaledFont.design(.rounded, language: "ar"), .rounded, "only the monospaced face is replaced")
+        XCTAssertTrue(Eyebrow.ideographic("بانتظارك"), "Arabic's letters join: no tracking, no monospaced face")
+        XCTAssertTrue(Eyebrow.ideographic("المتبقي 9:57"))
         XCTAssertFalse(Eyebrow.ideographic("WHAT IT REMEMBERS"))
         XCTAssertFalse(Eyebrow.ideographic("À VOUS DE VOIR"))
     }

@@ -600,6 +600,12 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 - The two dials (the Card knob and the door dial) turn the same way in Arabic. They are physical objects drawn with screen
   angles, not a leading or trailing edge, so a swipe or drag clockwise is clockwise in either direction. Nothing in their
   code mirrors.
+- **A reference number** ("#5098") written in a line is wrapped in U+2066 … U+2069 (a left-to-right isolate). After an
+  Arabic letter the digits become Arabic-script digits (the bidi rule W2), which leaves the "#" outside their run and shows
+  "5098#". `test_strings` checks it.
+- **Captions** that the app sets in a monospaced face with letter-spacing (the Needs you "time left", the section eyebrows)
+  are set in the plain face with no spacing in Arabic, as in Korean, Japanese and Chinese: spacing cuts Arabic's joined
+  letters apart (`Eyebrow.ideographic`, `ScaledFont.design`).
 
 | English | Arabic |
 |---|---|

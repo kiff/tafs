@@ -13,7 +13,7 @@
   "alert.haptics": "الاهتزاز",
   "alert.kiff_did_not_take_refusal": "لم يقبل KIFF الرفض. افتح tafs لتردّ.",
   "alert.kiff_doesnt_send": "لا يرسل KIFF تنبيهات إلى tafs بعد في هذا الحساب.",
-  "alert.loud_example": "الطرود المتأخرة بانتظارك · الطلب #5098 · إعادة الشحن تنتظر موافقتك",
+  "alert.loud_example": "الطرود المتأخرة بانتظارك · الطلب ⁦#5098⁩ · إعادة الشحن تنتظر موافقتك",
   "alert.needs_you": "taf بانتظارك",
   "alert.no_push_token_device": "لم يعطِ هذا الجهاز ({device}) tafs رمز الإشعارات. حاول مرة أخرى بعد قليل.",
   "alert.not_in_build": "التنبيهات غير معدّة في هذا الإصدار من tafs.",

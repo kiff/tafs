@@ -218,6 +218,16 @@ class SharedWords(unittest.TestCase):
                 if "→" in "".join(generate.forms_of(self.source[key])):
                     self.assertIn("←", "".join(generate.forms_of(line)), f"{lang} {key}: English has →, so this line writes ←")
 
+    def test_a_right_to_left_language_keeps_a_reference_number_in_its_own_left_to_right_run(self):
+        # After an Arabic letter the digits of "#5098" become Arabic-script digits (bidi rule W2), which leaves the "#" outside
+        # their run: "7802#". A reference written in a line is wrapped in U+2066 … U+2069 so it reads "#7802".
+        for lang in ("ar",):
+            for key, line in self.lines[lang].items():
+                for text in generate.forms_of(line):
+                    for found in re.finditer(r"#\d+", text):
+                        self.assertEqual(text[max(0, found.start() - 1):found.start()], "\u2066", f"{lang} {key}: isolate {found.group()}")
+                        self.assertEqual(text[found.end():found.end() + 1], "\u2069", f"{lang} {key}: close the isolate after {found.group()}")
+
     def test_a_macs_own_sentence_sits_beside_the_phones_and_names_the_macs_settings(self):
         # A `*_mac` line that isn't a Touch ID prompt (no "prompt" in its key) is a whole sentence for
         # the Mac: its phone line is beside it, it opens with a capital and ends with a stop, and a
