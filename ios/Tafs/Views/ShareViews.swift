@@ -233,19 +233,6 @@ struct OverviewView: View {
     let open: (HomeSelection) -> Void
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var shares: [String: [KIFFClient.Share]] = [:]
-    @State private var showingHowItWorks = false
-
-    /// With no taf, for someone who may use Coach, the Overview is the first Home (docs/onboarding.md), as the phone's Home is:
-    /// the iPad's wide layout opens here, so the table's "No tafs yet" line would be the first thing it said.
-    private var showsFirstHome: Bool {
-        Self.showsFirstHome(kiff: model.mode == .kiff, loaded: model.listLoaded, unread: model.listUnread,
-                            noTafs: model.tafs.isEmpty, mayUseCoach: model.mayUseCoach)
-    }
-
-    static func showsFirstHome(kiff: Bool, loaded: Bool, unread: Bool, noTafs: Bool, mayUseCoach: Bool) -> Bool {
-        kiff && loaded && !unread && noTafs && Onboarding.showsFirstHome(mayUseCoach: mayUseCoach)
-    }
-
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -297,6 +284,19 @@ struct OverviewView: View {
                 if let cloud = model.cloudTaf(for: taf.id), model.reports[cloud.id] == nil { await model.loadReport(cloud) }
             }
         }
+    }
+
+    @State private var showingHowItWorks = false
+
+    /// With no taf, for someone who may use Coach, the Overview is the first Home (docs/onboarding.md), as the phone's Home is:
+    /// the iPad's wide layout opens here, so the table's "No tafs yet" line would be the first thing it said.
+    private var showsFirstHome: Bool {
+        Self.showsFirstHome(kiff: model.mode == .kiff, loaded: model.listLoaded, unread: model.listUnread,
+                            noTafs: model.tafs.isEmpty, mayUseCoach: model.mayUseCoach)
+    }
+
+    static func showsFirstHome(kiff: Bool, loaded: Bool, unread: Bool, noTafs: Bool, mayUseCoach: Bool) -> Bool {
+        kiff && loaded && !unread && noTafs && Onboarding.showsFirstHome(mayUseCoach: mayUseCoach)
     }
 
     private var needsYou: some View {
