@@ -47,7 +47,7 @@ final class OnboardingTests: XCTestCase {
         XCTAssertTrue(Onboarding.showsCards(on: true, seen: false))
         XCTAssertFalse(Onboarding.showsCards(on: true, seen: true), "seen here: Home at once")
         XCTAssertFalse(Onboarding.showsCards(on: false, seen: false), "off: the celebration goes straight to Home, as it ships")
-        XCTAssertFalse(Onboarding.showsCards(seen: false), "ships off")
+        XCTAssertTrue(Onboarding.showsCards(seen: false), "ships on, in every build (K5)")
     }
 
     /// The first Home shows for anyone who may use Coach with the new onboarding on, whatever tafs cloud says there;
@@ -56,7 +56,7 @@ final class OnboardingTests: XCTestCase {
         XCTAssertTrue(Onboarding.showsFirstHome(on: true, mayUseCoach: true))
         XCTAssertFalse(Onboarding.showsFirstHome(on: true, mayUseCoach: false), "a viewer reads where shared tafs show, as today")
         XCTAssertFalse(Onboarding.showsFirstHome(on: false, mayUseCoach: true), "off: Home as it ships")
-        XCTAssertFalse(Onboarding.showsFirstHome(mayUseCoach: true), "ships off")
+        XCTAssertTrue(Onboarding.showsFirstHome(mayUseCoach: true), "ships on, in every build (K5)")
     }
 
     /// tafs cloud's own empty line comes first when it sends one; the app's words only when it doesn't.

@@ -1964,8 +1964,10 @@ list's top still reaches the sheet and closes it.
 choices are saved for this device and account and sent on registration; Off
 unregisters this phone. Account › Time zone shows the account's zone, Choose a time zone, and "Use this phone's: ‹zone›"
 only when the account's zone isn't already the phone's (`offersDeviceZone`, UTC when KIFF names none), with the iPad's footer
-under it: "Holds' deadlines, Activity, the Record and what your tafs write use this time zone." Time zone changes keep the
-existing signed KIFF flow; once KIFF
+under it: "Holds' deadlines, Activity, the Record and what your tafs write use this time zone." The alert that offers this
+phone's zone after a sign-in ("Use ‹zone› for times in tafs?") hands its yes to the model, which finishes it, confirmation
+and KIFF's call, under `NonCancellable`: the alert closes as the offer clears, and its own scope would otherwise cancel the
+prompt as it opens (`TimeZoneTest.useIsFinishedWhenTheAlertThatAskedCloses`). Time zone changes keep the existing signed KIFF flow; once KIFF
 has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
 (`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
 home and each dial again; a page, Setup, dial or work read begun in the old zone is dropped when

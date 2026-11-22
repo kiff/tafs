@@ -8395,11 +8395,16 @@ class AppModel(
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
 
-  /** The owner's answer to the time zone offer: yes sets it (one confirmation), no is remembered for that zone. */
+  /**
+   * The owner's answer to the time zone offer: yes sets it (one confirmation), no is remembered for that zone. The offer is
+   * cleared first, so the alert that asked closes, and the coroutine it launched the answer in closes with it: the yes is
+   * finished regardless (its confirmation and KIFF's call), else the prompt was cancelled as it opened and nothing was set (the
+   * owner's K5 pass, 22 Nov).
+   */
   suspend fun answerTimeZoneOffer(use: Boolean) {
     val zone = _state.value.timeZoneOffer ?: return
     _state.update { it.copy(timeZoneOffer = null) }
-    if (use) useThisDevicesTimeZone() else secrets.save(zone, declinedZoneKey())
+    if (use) withContext(NonCancellable) { useThisDevicesTimeZone() } else secrets.save(zone, declinedZoneKey())
   }
 
   /** Sets the account's time zone to this device's, so a Card's day ends at the owner's midnight: a signed call, which KIFF takes from the owner or an admin. */

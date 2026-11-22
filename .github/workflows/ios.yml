@@ -52,10 +52,6 @@ on:
         description: Also give the build to the external Beta testers (after Apple's review). Off keeps it to Team.
         type: boolean
         default: true
-      k5:
-        description: "K5 only (row 39's device pass): build with TAFS_K5, the in-app sign-in and the illustrated onboarding on. Team only: never to the Beta testers, whatever external says. Never for the App Store."
-        type: boolean
-        default: false
 
 # A pull request's runs share one group, so a newer push cancels the older run.
 # Every other run (main, tags, TestFlight builds) has a group of its own, keyed
@@ -947,14 +943,9 @@ jobs:
             bot.tafs.app.notify="tafs notify App Store CI" \
             bot.tafs.app.watchkitapp="tafs watch App Store CI"
 
-      # A K5 build (inputs.k5) turns row 39 on for the device pass; every other archive is built as it ships.
       - name: Archive
-        env:
-          K5: ${{ github.event_name == 'workflow_dispatch' && inputs.k5 }}
         run: |
           cd ios
-          k5=()
-          if [ "$K5" = true ]; then k5=('SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) TAFS_K5'); echo "::notice::K5 build: TAFS_K5 on, Team only"; fi
           xcodebuild archive \
             -project Tafs.xcodeproj -scheme Tafs -configuration Release \
             -destination 'generic/platform=iOS' \
@@ -967,8 +958,7 @@ jobs:
             TAFS_PROFILE_NOTIFY="tafs notify App Store CI" \
             TAFS_PROFILE_WATCH="tafs watch App Store CI" \
             OTHER_CODE_SIGN_FLAGS="--keychain $RUNNER_TEMP/signing.keychain-db" \
-            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
-            "${k5[@]}"
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}"
 
       - name: Export the .ipa
         run: |
@@ -1008,8 +998,8 @@ jobs:
       # External testers get a build only once it is added to their group and
       # Apple has reviewed it; Team gets it without either.
       - name: Give the build to Beta testers
-        # A tag always goes to them; a manual run unless it says not to. A K5 build never does: it stays with Team.
-        if: github.event_name != 'workflow_dispatch' || (inputs.external && !inputs.k5)
+        # A tag always goes to them; a manual run unless it says not to.
+        if: github.event_name != 'workflow_dispatch' || inputs.external
         env:
           ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
           BUILD_NUMBER: ${{ github.run_number }}
@@ -1017,15 +1007,6 @@ jobs:
           BETA_CONTACT: ${{ secrets.BETA_CONTACT }}
           BETA_FEEDBACK_EMAIL: ${{ secrets.BETA_FEEDBACK_EMAIL }}
         run: WHAT_TO_TEST="$(cat ios/WhatToTest.txt)" ruby ios/scripts/asc-beta.rb
-
-      # A K5 build (inputs.k5) says so where a build is picked for App Store review: its What to Test reads "never submit".
-      - name: Mark the K5 build
-        if: github.event_name == 'workflow_dispatch' && inputs.k5
-        env:
-          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
-          BUILD_NUMBER: ${{ github.run_number }}
-          K5: "true"
-        run: ruby ios/scripts/asc-beta.rb
 
       - name: Remove the key and the keychain
         if: always()

@@ -3,7 +3,7 @@ import { extensionOrigin, extensionPreflight, withExtensionCORS } from "../src/c
 import { handle, type Deps, type HTTPEvent, type HTTPResult } from "../src/cloud/handler.js";
 
 // The Chrome extension's side panel talks to Coach from its own origin with no host permission for tafs cloud, so Chrome
-// asks first (22 Nov, the owner's Chrome: the preflight got 401). Only an extension's origin, on the panel's three routes,
+// asks first (22 Nov, the owner's Chrome: the preflight got 401). Only an extension's origin, on the panel's routes,
 // is let read the answers: never `*`, never with credentials.
 const EXT = "chrome-extension://abcdefghijklmnopabcdefghijklmnop";
 const ev = (method: string, path: string, origin?: string): HTTPEvent => ({
@@ -12,7 +12,7 @@ const ev = (method: string, path: string, origin?: string): HTTPEvent => ({
   headers: origin === undefined ? {} : { origin, "access-control-request-method": "POST", "access-control-request-headers": "authorization,content-type" },
 });
 const answer = (): HTTPResult => ({ statusCode: 401, headers: { "content-type": "application/json" }, body: `{"error":"sign in"}` });
-const ROUTES = ["/v1/setup", "/v1/tafs/taf-1/conversation", "/v1/tafs/taf-1/messages"];
+const ROUTES = ["/v1/setup", "/v1/tafs/taf-1/conversation", "/v1/tafs/taf-1/conversation/s-1", "/v1/tafs/taf-1/chats", "/v1/tafs/taf-1/messages"];
 
 describe("the Chrome extension's side panel routes (extension-cors.ts)", () => {
   it("answer Chrome's preflight from an extension's origin: 204, GET and POST, its bearer and a JSON body, no credentials", () => {
@@ -51,8 +51,8 @@ describe("the Chrome extension's side panel routes (extension-cors.ts)", () => {
     }
   });
 
-  it("only on those three routes: any other route gets no preflight answer and no CORS header", () => {
-    for (const path of ["/v1/tafs", "/v1/tafs/taf-1", "/v1/tafs/taf-1/messages/stream", "/v1/connect/grants/g/check", "/v1/setup/x", "/v1/home"]) {
+  it("only on those routes: any other route gets no preflight answer and no CORS header", () => {
+    for (const path of ["/v1/tafs/taf-1/chats/s-1/archive", "/v1/tafs/taf-1/chats/archived", "/v1/tafs/taf-1/conversation/s-1/x", "/v1/tafs", "/v1/tafs/taf-1", "/v1/tafs/taf-1/messages/stream", "/v1/connect/grants/g/check", "/v1/setup/x", "/v1/home"]) {
       expect(extensionPreflight(ev("OPTIONS", path, EXT)), path).toBeUndefined();
       expect(withExtensionCORS(ev("GET", path, EXT), answer()).headers, path).toEqual(answer().headers);
     }

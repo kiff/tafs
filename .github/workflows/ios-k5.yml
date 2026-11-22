@@ -1,10 +1,8 @@
 name: iOS K5
 
-# K5, the end-to-end pass of row 39: the app built with TAFS_K5, which
-# turns the in-app sign-in and the illustrated onboarding on (ios/Tafs/Model/Onboarding.swift), on an iPhone
-# simulator, walked by K5UITests with a screenshot kept at each step. Manual only. It never archives, signs or
-# uploads. ios.yml has TAFS_K5 only with its k5 input, a TestFlight build kept to Team; an App Store build never
-# has it, so shipping users keep today's welcome.
+# K5, the end-to-end pass of row 39: the app's in-app sign-in and illustrated onboarding (ios/Tafs/Model/Onboarding.swift)
+# on an iPhone simulator, walked by K5UITests with a screenshot kept at each step. Manual only. It never archives,
+# signs or uploads.
 
 on:
   workflow_dispatch:
@@ -34,7 +32,7 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
-      - name: Build with TAFS_K5
+      - name: Build
         run: |
           cd ios
           xcodebuild -version
@@ -49,8 +47,7 @@ jobs:
           xcodebuild build-for-testing \
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
-            CODE_SIGNING_ALLOWED=NO \
-            'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) TAFS_K5'
+            CODE_SIGNING_ALLOWED=NO
 
       # TEST_RUNNER_K5 reaches the test runner as K5: K5UITests runs only with it.
       - name: K5 on a simulator
