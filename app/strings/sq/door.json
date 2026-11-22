@@ -175,7 +175,7 @@
   "door.slack_subscription_not_stopped_door": "Abonimi i Slack nuk u ndal, ndaj porta mbetet: {why}",
   "door.slack_workspace": "Hapësira e punës në Slack",
   "door.stamp.by": "NGA {app}",
-  "door.stamp.goes_back": "KTHEHET NGA {app} KUR TË MBARojë",
+  "door.stamp.goes_back": "KTHEHET NGA {app} KUR TË MBAROJË",
   "door.stamp.not_sent_back": "NUK U DËRGUA PRAPA",
   "door.stamp.sent_back": "↩ DËRGUAR PRAPA NGA {app} · NË TË NJËJTËN BISEDË",
   "door.start_connected_tools_first_slack": "Fillimisht filloni nga Aplikacionet e lidhura në këtë pajisje ({device}). Abonimi i Slack duhet të ndalet para se të hiqet porta e tij.",
