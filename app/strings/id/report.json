@@ -1,0 +1,17 @@
+{
+  "report.already": "Anda sudah melaporkan jawaban ini.",
+  "report.cant_from_here": "Jawaban ini tidak dapat dilaporkan dari sini.",
+  "report.menu": "Laporkan jawaban ini",
+  "report.not_sent": "Laporan Anda tidak terkirim. {why}",
+  "report.not_sent_why": "Tidak terkirim: {failed}",
+  "report.note_hint": "Tambahkan catatan (opsional)",
+  "report.note_most_characters": "Catatan maksimal 1.000 karakter.",
+  "report.person_kiff_reads_your_report": "Seseorang di KIFF membaca laporan Anda, beserta jawaban seperti yang ditulis.",
+  "report.reason.harmful": "Berbahaya",
+  "report.reason.offensive": "Menyinggung",
+  "report.reason.other": "Lainnya",
+  "report.reason.wrong": "Salah",
+  "report.runs_not_loaded": "Eksekusinya tidak dapat dimuat. {why}",
+  "report.thanks": "Terima kasih. Seseorang di KIFF akan membaca laporan Anda.",
+  "report.what_wrong": "Apa yang salah?"
+}

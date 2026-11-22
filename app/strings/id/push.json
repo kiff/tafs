@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Ringkasan",
+  "push.channel.briefs_description": "Ringkasan Anda pada waktu yang ditentukan.",
+  "push.channel.holds_description": "Sebuah panggilan ditahan menunggu jawaban Anda. Tidak ada yang dikirim sampai Anda menyetujuinya.",
+  "push.channel.other": "Peringatan lain",
+  "push.channel.other_description": "Permintaan tugas dan jawabannya, tanpa suara.",
+  "push.channel.urgent_description": "Yang tidak bisa menunggu ringkasan berikutnya, dengan suara.",
+  "push.open_needs_you": "Buka Menunggu Anda untuk menjawab.",
+  "push.open_taf": "Buka taf untuk melihat.",
+  "push.open_usage": "Buka Paket & penggunaan untuk melihat."
+}

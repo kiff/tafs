@@ -616,6 +616,40 @@ one words around it: "{taf} taf'ı", "şu Card: {owner}", "bu {device} cihazı".
 | Usage | Kullanım |
 | Cancel / Continue | Vazgeç / Devam et |
 
+### Indonesian (id)
+
+Addressed as **Anda**; buttons are plain imperatives ("Setujui", "Tolak", "Lanjutkan"). taf, Card, Coach, KIFF and Setup are
+names and stay as they are. Indonesian doesn't decline or conjugate for a name, so "{taf}" stands where English has it.
+A door is "pintu", a call "panggilan", a request "permintaan", a held call "panggilan yang ditahan", a receipt "tanda
+terima", a brief "ringkasan". Apple's menu paths are the Indonesian ones ("Pengaturan", "Pengaturan Sistem", "Privasi &
+Keamanan"). There is one plural form (other): a number takes the same noun ("5 tugas").
+
+| English | Indonesian |
+|---|---|
+| Needs you | Menunggu Anda |
+| Approve / Approve once | Setujui / Setujui sekali |
+| Refuse | Tolak |
+| held | ditahan |
+| Halt / Halted | Bekukan / Dibekukan |
+| Stopped | Dihentikan |
+| Pause / Paused | Jeda / Dijeda |
+| Resume | Lanjutkan |
+| Revoke | Cabut |
+| Record | Catatan |
+| Connect / connection | Hubungkan / koneksi |
+| Pair / Unpair | Pasangkan / Lepas pasangan |
+| Account | Akun |
+| limit / spend limit | batas / batas pengeluaran |
+| credits / credit pack | kredit / paket kredit |
+| passkey | kunci sandi |
+| security key | kunci keamanan |
+| Sign in / Sign out | Masuk / Keluar |
+| Inbox | Kotak Masuk |
+| Overview | Ikhtisar |
+| Calendar | Kalender |
+| Usage | Penggunaan |
+| Cancel / Continue | Batal / Lanjutkan |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
