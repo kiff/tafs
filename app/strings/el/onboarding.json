@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Συμφωνώ με {kiff_terms} και {tafs_terms}.",
   "onboarding.control_lead": "Όταν ένα taf σε χρειάζεται, περιμένει στο «Σε χρειάζεται» και στο ρολόι σου, αν έχεις. Εγκρίνεις με Face ID ή Touch ID ή αρνείσαι.",
   "onboarding.control_lead_android": "Όταν ένα taf σε χρειάζεται, περιμένει στο «Σε χρειάζεται» και στο ρολόι σου, αν έχεις. Εγκρίνεις με το κλείδωμα οθόνης σου ή αρνείσαι.",
+  "onboarding.control_lead_desktop": "Όταν ένα taf σε χρειάζεται, περιμένει στο «Σε χρειάζεται». Εγκρίνεις από το τηλέφωνό σου ή αρνείσαι.",
   "onboarding.control_lead_mac": "Όταν ένα taf σε χρειάζεται, περιμένει στο «Σε χρειάζεται». Εγκρίνεις με Touch ID ή από το τηλέφωνό σου ή αρνείσαι.",
   "onboarding.control_title": "Ο έλεγχος μένει σε σένα",
   "onboarding.get_started": "Ξεκίνα",

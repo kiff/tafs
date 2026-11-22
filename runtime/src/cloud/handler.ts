@@ -32,6 +32,7 @@ import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startS
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
+import { extensionPreflight, withExtensionCORS } from "./extension-cors.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TRIGGER_KEYS, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -132,7 +133,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve; 409 not_needed for a taf that doesn't use the app
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
- *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
+ *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?, conversation?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and, with no conversation (the card's, its events) to read them from, that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -613,9 +614,11 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
-  const r = await answer(event, withKIFFLanguage(event, deps));
+  // The Chrome extension's side panel, from its own origin: Chrome's preflight is answered before anything is read, and
+  // its answers carry its origin (extension-cors.ts).
+  const r = extensionPreflight(event) ?? await answer(event, withKIFFLanguage(event, deps));
   logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
-  return secured(r);
+  return secured(withExtensionCORS(event, r));
 }
 
 /**
@@ -4210,7 +4213,7 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
 }
 
 /**
- * POST /v1/connect/grants/{grant}/check {draft, shown_draft}: the checks Approve makes on a Card draft before it asks
+ * POST /v1/connect/grants/{grant}/check {draft, shown_draft, conversation?}: the checks Approve makes on a Card draft before it asks
  * for a signature (approval.ts checkDraft), for a caller that confirms the draft itself: the e2e (Eval 43681227913).
  * It only checks: nothing is signed, confirmed, kept or told to Coach. The grant is read from planque with the
  * caller's own phone proof (planque-device-signature), so only this account's grants; the draft with the caller's
@@ -4230,7 +4233,17 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   }
   // What the phone can sign, as it says on the chat's read (`can`), so the step is the one its card would take.
   const can = (Array.isArray(body.can) ? body.can : str(body.can).split(",")).map((x) => str(x).trim()).filter(Boolean);
-  const ctx = checkContext(event, me, deps);
+  // The card's conversation as its caller shows it (`conversation`, its events in order): the rules the owner agreed there
+  // are checked as the chat's read checks them (rulesAgreement), and their refusals are redraft ones. The route signs,
+  // confirms and keeps nothing, so a caller that sends other events only misleads its own check. The e2e sends its setup's:
+  // it runs Coach's conversation itself, so tafs cloud has none to read, and a draft the phone would refuse for its rules
+  // was signed in the Eval (45028072347: a confirm skipped, a notice whose words gave no figures). Without it, the route
+  // has no conversation and says so (`rules_unchecked`).
+  const conversation = body.conversation;
+  if (conversation !== undefined && (!Array.isArray(conversation) || conversation.length > CHECK_EVENTS_MAX || !conversation.every((e) => e && typeof e === "object" && !Array.isArray(e)))) {
+    throw new HTTPError(400, `conversation is the card's conversation: its events in order, at most ${CHECK_EVENTS_MAX}`);
+  }
+  const ctx = conversation ? withShownRules(checkContext(event, me, deps), conversation as Array<{ kind?: string; run?: string; body?: unknown }>) : checkContext(event, me, deps);
   // One read of the grants, with the caller's proof (planque takes each signed read once), for the check and the step.
   let read: Awaited<ReturnType<typeof readGrants>> | undefined;
   const out = await (async () => {
@@ -4242,11 +4255,11 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
   // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
   // Whether the chat's read checks this card at all (`checked_on_read`) is said too, by the same rule (markSigns), so the
-  // caller never keeps its own copy of it. The rules the owner agreed are Approve's and the chat read's only: this route
-  // has no conversation to read them from, so it says it didn't check them (`rules_unchecked`), and an ok here is never
-  // taken for "the rules hold".
+  // caller never keeps its own copy of it. The rules the owner agreed are checked only with the card's conversation
+  // (`conversation`): with none, the route says it didn't check them (`rules_unchecked`), and an ok here is never taken
+  // for "the rules hold".
   const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
-  return { ...answered, checked_on_read: checkedOnRead, rules_unchecked: true };
+  return { ...answered, checked_on_read: checkedOnRead, ...(conversation ? {} : { rules_unchecked: true }) };
 }
 
 /**
@@ -4310,6 +4323,22 @@ function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity,
     rulesAgreement: async () => rulesAgreement((await conversation()).events),
     sessionStarted: async () => (await conversation()).session.started,
     askedHere: async (grant) => askedInSession((await conversation()).events, grant),
+  };
+}
+
+/** A check route's conversation: at most this many events, the ones its caller shows. */
+const CHECK_EVENTS_MAX = 2000;
+
+/**
+ * withRules for a conversation its caller shows (the check route's `conversation`): the rules the owner agreed in those
+ * events, read by the same rule (rulesAgreement), with the same switches.
+ */
+function withShownRules(ctx: import("./approval.js").DecideContext, events: ReadonlyArray<{ kind?: string; run?: string; body?: unknown }>): import("./approval.js").DecideContext {
+  return {
+    ...ctx,
+    rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
+    rulesPerToTheLetter: process.env.TAFS_RULES_PER === "on",
+    rulesAgreement: async () => rulesAgreement(events),
   };
 }
 

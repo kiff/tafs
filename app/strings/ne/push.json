@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "सारांशहरू",
+  "push.channel.briefs_description": "तोकिएको समयमा तपाईंको सारांश।",
+  "push.channel.holds_description": "एउटा अनुरोध तपाईंको जवाफका लागि रोकिएको छ। तपाईंले स्वीकृत नगरेसम्म केही पठाइँदैन।",
+  "push.channel.other": "अन्य सूचनाहरू",
+  "push.channel.other_description": "कार्यका अनुरोध र तिनका जवाफ, आवाजविना।",
+  "push.channel.urgent_description": "अर्को सारांशसम्म पर्खन नमिल्ने कुरा, आवाजसहित।",
+  "push.open_needs_you": "जवाफ दिन तपाईंको प्रतीक्षामा खोल्नुहोस्।",
+  "push.open_taf": "हेर्न taf खोल्नुहोस्।",
+  "push.open_usage": "हेर्न योजना र प्रयोग खोल्नुहोस्।"
+}

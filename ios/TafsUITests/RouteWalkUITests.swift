@@ -54,7 +54,7 @@ final class RouteWalkUITests: TafsUITestCase {
         var entries: [Entry] = []
         for route in routes {
             let path = route.route.replacingOccurrences(of: "{taf}", with: taf)
-            guard enter(path, into: field) else {
+            guard enter(path, into: field, answer: answer) else {
                 XCTFail("\(route.route): \(path) couldn't be typed whole into the hook's field (\(field.value ?? "-"))")
                 continue
             }
@@ -135,14 +135,16 @@ final class RouteWalkUITests: TafsUITestCase {
     /// reaches it, and the next path is typed after the half ("no answer"). So what's left is deleted first, and the
     /// path is typed again until it's whole, at most three times.
     @MainActor
-    private func enter(_ path: String, into field: XCUIElement) -> Bool {
+    /// Types `path` whole and submits it, and only returns once the hook has answered for it (`answer`'s label starts with
+    /// `path|`): the same system alert that can take the keyboard while the path is typed can take it before the Return, and
+    /// then nothing is submitted. So a path that isn't answered is typed and submitted again, three times at most.
+    private func enter(_ path: String, into field: XCUIElement, answer: XCUIElement) -> Bool {
         for _ in 0..<3 {
             let left = Self.typed(field)
-            typeInto(field, text: String(repeating: XCUIKeyboardKey.delete.rawValue, count: left.count) + path)
-            if within(2, { Self.typed(field) == path }) {
-                field.typeText("\n")
-                return true
-            }
+            typeInto(field, text: String(repeating: XCUIKeyboardKey.delete.rawValue, count: left.count) + path, tolerateLostKeyboard: true)
+            guard within(2, { Self.typed(field) == path }) else { continue }
+            typeInto(field, text: "\n", tolerateLostKeyboard: true)
+            if within(8, { answer.label.hasPrefix(path + "|") }) { return true }
         }
         return false
     }

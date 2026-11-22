@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Es piekrītu {kiff_terms} un {tafs_terms}.",
   "onboarding.control_lead": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar Face ID vai Touch ID vai atsaki.",
   "onboarding.control_lead_android": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar ekrāna bloķēšanu vai atsaki.",
+  "onboarding.control_lead_desktop": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī vai atsaki.",
   "onboarding.control_lead_mac": "Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini ar Touch ID vai savā tālrunī vai atsaki.",
   "onboarding.control_title": "Kontrole paliek tev",
   "onboarding.get_started": "Sākt",

@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "No s'han exportat els teus xats. {why}",
+  "export.not_offered": "No s'han pogut desar els fitxers en aquest telèfon. Allibera una mica d'espai i torna-ho a provar.",
+  "export.own_chats_each_taf_coach": "Els teus propis xats amb cada taf, també els de Coach, els noms dels fitxers que has adjuntat i les teves notes, com a fitxer llegible i com a JSON. Només tu els pots exportar.",
+  "export.preparing": "Preparant els teus xats…",
+  "export.ready_share_again": "A punt: {files}. Comparteix de nou",
+  "export.row": "Exporta els meus xats",
+  "export.sign_in_first": "Inicia la sessió amb KIFF per exportar els teus xats."
+}

@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Sunt de acord cu {kiff_terms} și cu {tafs_terms}.",
   "onboarding.control_lead": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu Face ID sau Touch ID, ori refuzați.",
   "onboarding.control_lead_android": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu blocarea ecranului sau refuzați.",
+  "onboarding.control_lead_desktop": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, ori refuzați.",
   "onboarding.control_lead_mac": "Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați cu Touch ID sau pe telefon, ori refuzați.",
   "onboarding.control_title": "Dvs. păstrați controlul",
   "onboarding.get_started": "Să începem",

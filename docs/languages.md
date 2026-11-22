@@ -1129,6 +1129,211 @@ Ready before their lines are written, so the strings PR only adds the words:
 - **Plural forms** (`generate.py`'s `PLURALS`): Serbian one, few; Hebrew one, two (an older phone asking for "many" reads
   "other"); Albanian, Georgian, Armenian, Azerbaijani and Bengali one. Armenian and Bengali's "one" covers 0 and 1.
 
+## Batch 5: Catalan, Macedonian, Mongolian, Nepali, Khmer and Lao
+
+### Catalan (ca)
+
+Standard Catalan (Barcelona usage), addressed as **tu**, the informal form every Catalan app uses ("Aprova", "Rebutja", "Continua").
+Buttons are verbs in the imperative. taf, Card, Coach, KIFF and Setup (Configuració) are names: taf doesn't take a plural "s"
+("els teus taf") and Card keeps its capital. Catalan has no English-style possessive, so "{owner}'s Card" is "el Card de {owner}"
+(a vowel after "de" elides: "d'"). A door is "porta", a knock "trucada", a call "crida", a request "sol·licitud", a receipt "rebut",
+the dial "selector". The punctuation mark in "sol·licitud" and "cancel·la" is the interpunct (·), never a full stop. Quotes are « ».
+Plural forms: one, other.
+
+| English | Catalan |
+|---|---|
+| Needs you | Et necessita |
+| Approve / Approve once | Aprova / Aprova una vegada |
+| Refuse | Rebutja |
+| held | retingut |
+| Halt / Halted | Bloqueja / Bloquejat |
+| Stopped | Aturat |
+| Pause / Paused | Posa en pausa / En pausa |
+| Resume | Reprèn |
+| Revoke | Revoca |
+| Record | Registre |
+| Connect / connection | Connecta / connexió |
+| Pair / Unpair | Aparella / Desaparella |
+| Account | Compte |
+| limit / spend limit | límit / límit de despesa |
+| credits / credit pack | crèdits / paquet de crèdits |
+| passkey | clau d'accés |
+| security key | clau de seguretat |
+| Sign in / Sign out | Inicia la sessió / Tanca la sessió |
+| Inbox | Safata d'entrada |
+| Overview | Visió general |
+| Calendar | Calendari |
+| Usage | Ús |
+| Cancel / Continue | Cancel·la / Continua |
+
+### Macedonian (mk)
+
+Standard Macedonian in Cyrillic, addressed as **ти**, the informal form. Buttons are verbs in the imperative ("Одобри", "Одбиј",
+"Продолжи"). taf, Card, Coach, KIFF and Setup are names. Setup is "Конфигурација" in its own screen's title and taf, Card, Coach and
+KIFF stay in Latin letters. A taf takes the plural "tafови" (a Cyrillic ending on the Latin name); Card doesn't change. The possessive
+is "на": "Card на {owner}". A door is "врата" (a plural noun, so "Врата {door}" and "овие врата"), a knock "тропање", a call "барање", a
+receipt "признаница", the dial "селектор". Months and weekdays are lower case in a sentence ("јануари", "пон"). Quotes are „ “.
+macOS has no Macedonian, so a `*_mac` line names the English-named paths in Macedonian with macOS 12's names in brackets.
+Plural forms: one, other.
+
+| English | Macedonian |
+|---|---|
+| Needs you | Те чека |
+| Approve / Approve once | Одобри / Одобри еднаш |
+| Refuse | Одбиј |
+| held | задржано |
+| Halt / Halted | Запри / Запрен |
+| Stopped | Стопиран |
+| Pause / Paused | Паузирај / Паузиран |
+| Resume | Продолжи |
+| Revoke | Отповикај |
+| Record | Запис |
+| Connect / connection | Поврзи / врска |
+| Pair / Unpair | Спари / Раздвои |
+| Account | Сметка |
+| credits | кредити |
+| passkey | клуч за пристап |
+| security key | безбедносен клуч |
+| Sign in / Sign out | Најави се / Одјави се |
+| Inbox | Приемно сандаче |
+| Overview | Преглед |
+| Calendar | Календар |
+| Usage | Користење |
+| Cancel / Continue | Откажи / Продолжи |
+
+### Mongolian (mn)
+
+Mongolian in Cyrillic, in the polite register (**та**). Buttons are the verbal noun, as Mongolian apps write them ("Зөвшөөрөх",
+"Татгалзах", "Үргэлжлүүлэх"). taf, Card, Coach and KIFF stay in Latin letters; Mongolian doesn't mark a plural after a number, so a
+count takes the bare noun ("3 taf", "2 дуудлага") and the plural of "taf" is the same word ("taf-ууд" only without a number).
+A suffix joins a Latin name with a hyphen ("KIFF-ийн", "Card-ын"). Months are numbered ("11-р сар") and weekdays are two letters
+("Да", "Мя"). A door is "хаалга", a knock "тогшилт", a call "дуудлага", a receipt "баримт", the dial "товчлуур". Quotes are “ ”.
+macOS has no Mongolian, so a `*_mac` line gives the path in Mongolian with macOS 12's names in brackets.
+There is one plural form in use (one and other read the same).
+
+| English | Mongolian |
+|---|---|
+| Needs you | Таныг хүлээж байна |
+| Approve / Approve once | Зөвшөөрөх / Нэг удаа зөвшөөрөх |
+| Refuse | Татгалзах |
+| held | түр барьсан |
+| Halt / Halted | Зогсоох / Зогссон |
+| Stopped | Зогссон |
+| Pause / Paused | Түр зогсоох / Түр зогссон |
+| Resume | Үргэлжлүүлэх |
+| Revoke | Хүчингүй болгох |
+| Record | Бүртгэл |
+| Connect / connection | Холбох / холболт |
+| Pair / Unpair | Хослуулах / Хослолыг салгах |
+| Account | Бүртгэл |
+| credits | кредит |
+| passkey | нэвтрэх түлхүүр |
+| security key | аюулгүй байдлын түлхүүр |
+| Sign in / Sign out | Нэвтрэх / Гарах |
+| Inbox | Ирсэн |
+| Overview | Тойм |
+| Calendar | Хуанли |
+| Usage | Хэрэглээ |
+| Cancel / Continue | Болих / Үргэлжлүүлэх |
+
+### Nepali (ne)
+
+Nepali in Devanagari, in the polite register (**तपाईं**). Buttons are the polite imperative ("स्वीकृत गर्नुहोस्", "अस्वीकार गर्नुहोस्",
+"जारी राख्नुहोस्"). taf, Card, Coach and KIFF stay in Latin letters; Nepali doesn't mark a plural after a number, so a count takes
+the bare noun ("३ taf", "२ कल"). A suffix follows a Latin name after a space ("taf को Card", "KIFF बाट"). Numbers in the app's
+own text are Western digits where they come from the code and Devanagari digits only in the fixed sample lines. A door is "ढोका",
+a knock "ढकढक", a call "कल", a receipt "रसिद", the dial "डायल". Quotes are “ ”. macOS has no Nepali, so a `*_mac` line gives the
+path in Nepali with macOS 12's names in brackets. Plural forms: one, other (read the same).
+
+| English | Nepali |
+|---|---|
+| Needs you | तपाईंको प्रतीक्षामा |
+| Approve / Approve once | स्वीकृत गर्नुहोस् / एक पटक स्वीकृत गर्नुहोस् |
+| Refuse | अस्वीकार गर्नुहोस् |
+| held | रोकिएको |
+| Halt / Halted | रोक्नुहोस् / रोकिएको |
+| Stopped | रोकिएको |
+| Pause / Paused | पज गर्नुहोस् / पज गरिएको |
+| Resume | फेरि सुरु गर्नुहोस् |
+| Revoke | रद्द गर्नुहोस् |
+| Record | अभिलेख |
+| Connect / connection | जडान गर्नुहोस् / जडान |
+| Pair / Unpair | जोड्नुहोस् / जोडी हटाउनुहोस् |
+| Account | खाता |
+| credits | क्रेडिट |
+| passkey | पासकी |
+| security key | सुरक्षा कुञ्जी |
+| Sign in / Sign out | साइन इन गर्नुहोस् / साइन आउट गर्नुहोस् |
+| Inbox | इनबक्स |
+| Overview | सारांश |
+| Calendar | पात्रो |
+| Usage | प्रयोग |
+| Cancel / Continue | रद्द गर्नुहोस् / जारी राख्नुहोस् |
+
+### Khmer (km)
+
+Khmer script, in a plain polite register with no honorific particles in buttons (verbs stand alone: "អនុម័ត", "បដិសេធ"). taf, Card,
+Coach and KIFF stay in Latin letters. Khmer has no plural marking, so a count takes the bare noun ("3 taf", "2 ការហៅ"). Words are not
+separated by spaces: a space marks a phrase or clause. A door is "ទ្វារ", a knock "ការគោះ", a call "ការហៅ", a receipt "បង្កាន់ដៃ". Numbers
+are Western digits. Quotes are “ ”. macOS has no Khmer, so a `*_mac` line gives the path in Khmer with macOS 12's names in brackets.
+Plural forms: other only.
+
+| English | Khmer |
+|---|---|
+| Needs you | ត្រូវការអ្នក |
+| Approve / Approve once | អនុម័ត / អនុម័តម្តង |
+| Refuse | បដិសេធ |
+| held | ផ្អាកទុក |
+| Halt / Halted | បញ្ឈប់ / បានបញ្ឈប់ |
+| Stopped | បានឈប់ |
+| Pause / Paused | ផ្អាក / បានផ្អាក |
+| Resume | បន្ត |
+| Revoke | ដកហូត |
+| Record | កំណត់ត្រា |
+| Connect / connection | ភ្ជាប់ / ការតភ្ជាប់ |
+| Pair / Unpair | ផ្គូផ្គង / ឈប់ផ្គូផ្គង |
+| Account | គណនី |
+| credits | ក្រេឌីត |
+| passkey | passkey |
+| security key | សោសុវត្ថិភាព |
+| Sign in / Sign out | ចូល / ចាកចេញ |
+| Inbox | ប្រអប់សារចូល |
+| Overview | ទិដ្ឋភាពទូទៅ |
+| Calendar | ប្រតិទិន |
+| Usage | ការប្រើប្រាស់ |
+| Cancel / Continue | បោះបង់ / បន្ត |
+
+### Lao (lo)
+
+Lao script, in a plain polite register. taf, Card, Coach and KIFF stay in Latin letters. Lao has no plural marking, so a count takes the
+bare noun ("3 taf", "2 ການໂທ"). Words are not separated by spaces: a space marks a phrase or clause. A door is "ປະຕູ", a knock "ການເຄາະ",
+a call "ການໂທ", a receipt "ໃບຮັບເງິນ". Numbers are Western digits. Quotes are “ ”. macOS has no Lao, so a `*_mac` line gives the path in
+Lao with macOS 12's names in brackets. Plural forms: other only.
+
+| English | Lao |
+|---|---|
+| Needs you | ຕ້ອງການທ່ານ |
+| Approve / Approve once | ອະນຸມັດ / ອະນຸມັດຄັ້ງດຽວ |
+| Refuse | ປະຕິເສດ |
+| held | ພັກໄວ້ |
+| Halt / Halted | ຢຸດ / ຢຸດແລ້ວ |
+| Stopped | ຖືກຢຸດ |
+| Pause / Paused | ຢຸດຊົ່ວຄາວ / ຢຸດຊົ່ວຄາວແລ້ວ |
+| Resume | ສືບຕໍ່ |
+| Revoke | ຖອນ |
+| Record | ບັນທຶກ |
+| Connect / connection | ເຊື່ອມຕໍ່ / ການເຊື່ອມຕໍ່ |
+| Pair / Unpair | ຈັບຄູ່ / ເຊົາຈັບຄູ່ |
+| Account | ບັນຊີ |
+| credits | ເຄຣດິດ |
+| security key | ກຸນແຈຄວາມປອດໄພ |
+| Sign in / Sign out | ເຂົ້າສູ່ລະບົບ / ອອກຈາກລະບົບ |
+| Inbox | ກ່ອງຂໍ້ຄວາມ |
+| Overview | ພາບລວມ |
+| Calendar | ປະຕິທິນ |
+| Usage | ການໃຊ້ງານ |
+| Cancel / Continue | ຍົກເລີກ / ສືບຕໍ່ |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
