@@ -84,6 +84,20 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       const offset = Number(q.get("offset") ?? 0), limit = Number(q.get("limit") ?? calls.length);
       return new Response(JSON.stringify({ calls: calls.slice(offset, offset + limit), shown: calls.length }), { status: 200 });
     }
+    // A payment's report (Q26): its receipt marked once, its taf halted, as KIFF's route does.
+    const reported = /\/v1\/receipts\/([^/?]+)\/report$/.exec(url);
+    if (reported && init?.method === "POST") {
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      const trace = decodeURIComponent(reported[1]!);
+      const c = (account.calls ?? []).find((x) => (x.receipt as { trace_id?: string } | undefined)?.trace_id === trace);
+      if (!c) return new Response(JSON.stringify({ error: "not_found" }), { status: 404 });
+      if (c.payment !== true) return new Response(JSON.stringify({ error: "not_a_payment" }), { status: 409 });
+      const r = c.receipt as { reported_at?: string };
+      r.reported_at ??= "2026-11-05T10:30:00Z";
+      account.halts ??= {};
+      account.halts[c.actor_id!] = { state: "halting", kiff_ack: true, planque_ack: false, halted_at: "2026-11-05T10:30:00Z" };
+      return new Response(JSON.stringify({ trace_id: trace, proposal_id: c.proposal_id, agent: c.actor_id, reported_at: r.reported_at, halt: account.halts[c.actor_id!] }), { status: 200 });
+    }
     const receipt = /\/v1\/receipts\/([^/?]+)$/.exec(url);
     if (receipt) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -7004,6 +7018,71 @@ describe("the oldest waiting case and the owner's promise", () => {
     expect(w.pushed).toHaveLength(1);
     const page = await call(w, "GET", `/v1/tafs/${RAE}/work`, { token: "ana" });
     expect(page.body.oldest_waiting).toMatchObject({ since: ago(180), late: true });
+  });
+});
+
+describe("reporting a payment the owner didn't expect (Q26)", () => {
+  const at = (hours: number) => new Date(Date.parse("2026-11-05T10:00:00Z") - hours * 3_600_000).toISOString();
+  const calls = (): ActivityCall[] => [
+    { proposal_id: "p-pay", actor_id: "rae", action_name: "browse_pay", title: "Pay at the checkout", outcome: "allowed", created_at: at(2), made_at: at(1),
+      amount: { value: "42.00", unit: "EUR" }, payment: true, receipt: { trace_id: "tr-pay", status: "anchored" } },
+    { proposal_id: "p-refund", actor_id: "rae", action_name: "create_refund", title: "Refund a payment", outcome: "allowed", created_at: at(3),
+      amount: { value: "150.00", unit: "EUR" }, receipt: { trace_id: "tr-refund", status: "anchored" } },
+    { proposal_id: "p-unsigned", actor_id: "rae", action_name: "browse_pay", title: "Pay at the checkout", outcome: "allowed", created_at: at(4), payment: true },
+  ];
+  const entries = async (w: ReturnType<typeof world>, token: string) => {
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/activity`, { token });
+    expect(r.status).toBe(200);
+    return Object.fromEntries((r.body.entries as Array<{ call: ActivityCall; report?: unknown; reported_at?: string }>).map((e) => [e.call.proposal_id, e]));
+  };
+
+  it("offers it only on a payment with a receipt, to an owner or admin, and on the Record too", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.account.calls = calls();
+    const own = await entries(w, "ana");
+    // Its date is when it was made; a call that moved no money, or has no receipt yet, has none.
+    expect(own["p-pay"]!.report).toEqual({ trace_id: "tr-pay", at: at(1) });
+    expect(own["p-refund"]!.report).toBeUndefined();
+    expect(own["p-unsigned"]!.report).toBeUndefined();
+    // Someone who can't manage the account's Cards sees no button: KIFF's route takes an owner or admin.
+    expect(Object.values(await entries(w, "viewer")).every((e) => e.report === undefined)).toBe(true);
+    const record = await call(w, "GET", "/v1/record", { token: "ana", query: "q=checkout" });
+    expect(record.body.entries.map((e: { report?: unknown }) => e.report)).toEqual([{ trace_id: "tr-pay", at: at(1) }, undefined]);
+  });
+
+  it("reports it in KIFF and halts its taf in kiff/agents too, once, and the row then says when", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.account.calls = calls();
+    expect((await call(w, "POST", "/v1/record/tr-pay/report", { token: "viewer" })).status).toBe(403);
+    expect(w.agents.calls).not.toContain(`halt ${RAE}`);
+    const r = await call(w, "POST", "/v1/record/tr-pay/report", { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ reported_at: "2026-11-05T10:30:00Z", taf: RAE, halt: { state: "halting", runtime: true, kiff: true, planque: false } });
+    expect(w.agents.calls).toContain(`halt ${RAE}`);
+    // The row: reported, and no button any more.
+    const after = (await entries(w, "ana"))["p-pay"]!;
+    expect(after.reported_at).toBe("2026-11-05T10:30:00Z");
+    expect(after.report).toBeUndefined();
+    // Again: the same answer, the first time kept.
+    const again = await call(w, "POST", "/v1/record/tr-pay/report", { token: "ana" });
+    expect(again.status).toBe(200);
+    expect(again.body.reported_at).toBe("2026-11-05T10:30:00Z");
+    // The halt is in Activity as the halt button's is.
+    const events = (await call(w, "GET", "/v1/events", { token: "ana" })).body.events;
+    expect(events[0]).toMatchObject({ kind: "halted", name: "Rae" });
+  });
+
+  it("refuses a call that isn't a payment, and one that isn't there, halting nothing", async () => {
+    const w = world();
+    w.account.calls = calls();
+    const notPay = await call(w, "POST", "/v1/record/tr-refund/report", { token: "ana" });
+    expect(notPay.status).toBe(409);
+    expect(notPay.body.error).toBe("that call isn't a payment, so there is nothing to report");
+    expect((await call(w, "POST", "/v1/record/tr-nowhere/report", { token: "ana" })).status).toBe(404);
+    expect((await call(w, "POST", "/v1/record/bad%20id/report", { token: "ana" })).status).toBe(400);
+    expect(w.agents.calls).not.toContain(`halt ${RAE}`);
   });
 });
 
