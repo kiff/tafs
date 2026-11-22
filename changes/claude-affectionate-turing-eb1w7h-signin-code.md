@@ -1,2 +1,2 @@
 - **Sign in with a code sent by email, as a setting in the apps.** Account › Sign-in shows whether it is on, turns it off at once, and opens KIFF's sign-in page to turn it on (the page asks you to confirm it's you). It is off for everyone until they turn it on ([docs/ios-app.md](docs/ios-app.md)).
-- **The Chrome pairing code has a Copy button on iPhone and iPad.** It copies for this device only, for a minute, so a code left on the clipboard lapses with it ([docs/chrome.md](docs/chrome.md)).
+- **The Chrome pairing code has a Copy button on iPhone and iPad.** It stays on the clipboard for a few minutes, so a code left there lapses with it ([docs/chrome.md](docs/chrome.md)).

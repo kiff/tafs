@@ -125,9 +125,9 @@ struct PairChromeView: View {
                     .foregroundColor(Theme.ink)
                     .textSelection(.enabled)
                     .accessibilityIdentifier("chrome.code")
-                // The code is typed or pasted into the computer's Chrome, so it copies in one tap. It is a short-lived secret, so it goes
-                // on the pasteboard for this device only (not Universal Clipboard) and for a minute (`Clipboard.copySecret`).
-                Button { Clipboard.copySecret(pairing.code) } label: { Label(Words.Common.copy, systemImage: "doc.on.doc") }
+                // The code is typed or pasted into the computer's Chrome, so it copies in one tap, for a few minutes
+                // (`Clipboard.copyPairingCode`), and Universal Clipboard may carry it to the person's own computer.
+                Button { Clipboard.copyPairingCode(pairing.code) } label: { Label(Words.Common.copy, systemImage: "doc.on.doc") }
                     .buttonStyle(OutlineButtonStyle())
                     .accessibilityIdentifier("chrome.code.copy")
                 Text(Words.Chrome.codeBody).scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
