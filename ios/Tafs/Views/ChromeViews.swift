@@ -13,14 +13,22 @@ enum ChromeReplace {
         return alike.count == 1 ? alike[0] : nil
     }
 
-    /// The connections that move when `old` is replaced: its live ones, each with its sites, in the order planque lists them;
-    /// a connection without sites is left out (it has nothing to carry). At most the extension's limits (50 connections, 100
-    /// sites each): past them the rest end with the old Chrome, as unpairing does.
-    static func carried(from old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant]) -> [ChromePairing.Carried] {
+    /// The connections that move when `old` is replaced: each live one whose sites **this phone's own signature verifies** for the
+    /// Chrome replaced (`chrome_sites_sig` over `{chrome_id, grant, sites}`, by `phoneKey`, its approval key), with those sites, in
+    /// planque's order. Never from what planque says: a connection without a verifying signature, one carried here from an earlier
+    /// Chrome, or one with no sites moves nothing and ends with the old Chrome, as unpairing does. At most the extension's limits
+    /// (50 connections, 100 sites each).
+    static func carried(from old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant], phoneKey: Data) -> [ChromePairing.Carried] {
         ChromeConnections.on(old, in: grants).compactMap { g in
-            guard g.connected, let sites = g.request.browser?.sites, !sites.isEmpty, sites.count <= 100 else { return nil }
+            guard g.connected, let sites = g.request.browser?.sites, !sites.isEmpty, sites.count <= 100, let sig = g.chromeSitesSig, !sig.isEmpty,
+                  ChromePairing.sitesSignatureHolds(sig, publicKeyDER: phoneKey, chromeID: old.id, grant: g.id, sites: sites) else { return nil }
             return ChromePairing.Carried(grant: g.id, sites: sites)
         }.prefix(50).map { $0 }
+    }
+
+    /// The live connections on `old` that do not move: they end with it.
+    static func ending(on old: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant], carried: [ChromePairing.Carried]) -> [PlanqueClient.Grant] {
+        ChromeConnections.on(old, in: grants).filter { g in !carried.contains { $0.grant == g.id } }
     }
 }
 
@@ -142,10 +150,12 @@ struct PairChromeView: View {
                     }
                     .accessibilityIdentifier("chrome.replace")
                     if let old = replacing {
-                        let moves = ChromeConnections.sites(of: ChromeConnections.on(old, in: model.grants)
-                            .filter { g in ChromeReplace.carried(from: old, in: model.grants).contains { $0.grant == g.id } })
+                        let carried = ChromeReplace.carried(from: old, in: model.grants, phoneKey: model.approvalPublicKey)
+                        let moves = ChromeConnections.sites(of: ChromeConnections.on(old, in: model.grants).filter { g in carried.contains { $0.grant == g.id } })
+                        let ends = ChromeConnections.sites(of: ChromeReplace.ending(on: old, in: model.grants, carried: carried))
                         if !moves.isEmpty { Text(Words.Chrome.replaceMoves(sites: moves)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                         Text(Words.Chrome.replaceUnpairs(name: old.name)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                        if !ends.isEmpty { Text(Words.Chrome.unpairEnds(sites: ends)).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                     }
                 }
                 Text(Words.Chrome.onlyYours).scaledFont(14).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)

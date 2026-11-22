@@ -229,21 +229,46 @@ final class ChromePairingTests: XCTestCase {
         XCTAssertNil(ChromeReplace.preselect(offer: offer(browser: "", os: ""), chromes: [try chromeRow("chr_x", browser: nil, os: nil)]), "nothing known: a new Chrome")
     }
 
-    /// Only a connection live on the Chrome replaced moves, with its sites, in planque's order; the rest end with the old Chrome.
-    func testOnlyLiveConnectionsOnTheOldChromeAreCarried() throws {
+    /// Only a connection live on the Chrome replaced whose sites **this phone's own signature verifies** moves, in planque's order;
+    /// the rest end with the old Chrome. Never from what planque says: no signature, a signature by another key, over other sites,
+    /// for another grant or another Chrome, or a connection carried here from an earlier Chrome, moves nothing.
+    func testOnlyConnectionsTheirOwnSignatureVerifiesAreCarried() throws {
+        let key = P256.Signing.PrivateKey()
+        let other = P256.Signing.PrivateKey()
+        let phone = key.publicKey.derRepresentation
         let old = try chromeRow("chr_1")
+        func signed(_ grant: String, chrome: String = "chr_1", sites: [String], by signer: P256.Signing.PrivateKey? = nil) throws -> String {
+            let bytes = try ChromePairing.sitesBytes(chromeID: chrome, grant: grant, sites: sites)
+            return try ChromePairing.rawSignature(fromDER: (signer ?? key).signature(for: bytes).derRepresentation.base64EncodedString())
+        }
+        func grant(_ id: String, chrome: String = "chr_1", status: String = "connected", sites: [String], sig: String?, carried: String? = nil) throws -> PlanqueClient.Grant {
+            var g = try self.grant(id, chrome: chrome, status: status, sites: sites)
+            g.chromeSitesSig = sig
+            g.chromeSitesCarried = carried
+            return g
+        }
         let grants = [
-            try grant("g1", chrome: "chr_1", status: "connected", sites: ["wikipedia.org", "wikimedia.org"]),
-            try grant("g2", chrome: "chr_1", status: "pending", sites: ["pending.example"]),
-            try grant("g3", chrome: "chr_2", status: "connected", sites: ["other.example"]),
-            try grant("g4", chrome: "chr_1", status: "connected", sites: []),
-            try grant("g5", chrome: "chr_1", status: "connected", sites: ["shop.example"]),
-            try grant("g6", chrome: "chr_1", status: "disconnected", sites: ["ended.example"]),
+            try grant("g1", sites: ["wikipedia.org", "wikimedia.org"], sig: try signed("g1", sites: ["wikipedia.org", "wikimedia.org"])),
+            try grant("g2", sites: ["shop.example"], sig: nil),
+            try grant("g3", sites: ["a.example"], sig: try signed("g3", sites: ["a.example"], by: other)),
+            try grant("g4", sites: ["b.example", "evil.example"], sig: try signed("g4", sites: ["b.example"])),
+            try grant("g5", sites: ["c.example"], sig: try signed("g_other", sites: ["c.example"])),
+            try grant("g6", sites: ["d.example"], sig: try signed("g6", chrome: "chr_2", sites: ["d.example"])),
+            try grant("g7", sites: ["e.example"], sig: nil, carried: "chr_1"),
+            try grant("g8", status: "pending", sites: ["f.example"], sig: try signed("g8", sites: ["f.example"])),
+            try grant("g9", chrome: "chr_2", sites: ["g.example"], sig: try signed("g9", chrome: "chr_2", sites: ["g.example"])),
+            try grant("g10", sites: ["h.example"], sig: try signed("g10", sites: ["h.example"])),
         ]
-        let carried = ChromeReplace.carried(from: old, in: grants)
-        XCTAssertEqual(carried, [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org", "wikimedia.org"]), ChromePairing.Carried(grant: "g5", sites: ["shop.example"])])
-        XCTAssertEqual(ChromeReplace.carried(from: old, in: []), [])
-        let many = try (0..<60).map { try grant("m\($0)", chrome: "chr_1", status: "connected", sites: ["s\($0).example"]) }
-        XCTAssertEqual(ChromeReplace.carried(from: old, in: many).count, 50, "the extension keeps at most 50 connections")
+        let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phone)
+        XCTAssertEqual(carried, [ChromePairing.Carried(grant: "g1", sites: ["wikipedia.org", "wikimedia.org"]), ChromePairing.Carried(grant: "g10", sites: ["h.example"])])
+        XCTAssertEqual(ChromeReplace.ending(on: old, in: grants, carried: carried).map(\.id), ["g2", "g3", "g4", "g5", "g6", "g7"],
+                       "the live connections that don't move end with the old Chrome (pending ones are not live on it)")
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: [], phoneKey: phone), [])
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: grants, phoneKey: Data()), [], "no key to verify with: nothing moves")
+        // Today planque's list carries no signature at all, so nothing moves and the replace only unpairs.
+        let unsigned = try (0..<3).map { try grant("u\($0)", sites: ["s\($0).example"], sig: nil) }
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: unsigned, phoneKey: phone), [])
+        let many = try (0..<60).map { try grant("m\($0)", sites: ["s\($0).example"], sig: try signed("m\($0)", sites: ["s\($0).example"])) }
+        XCTAssertEqual(ChromeReplace.carried(from: old, in: many, phoneKey: phone).count, 50, "the extension keeps at most 50 connections")
     }
 }

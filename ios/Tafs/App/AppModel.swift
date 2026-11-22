@@ -1469,6 +1469,9 @@ final class AppModel: ObservableObject {
     /// Confirms the pairing behind Face ID or Touch ID naming the Chrome: the approval key, and only it, signs this phone's proof and
     /// the extension's key under the secret, and the extension later checks that signature itself. False when it didn't
     /// go through.
+    /// This phone's approval public key (SPKI DER), which verifies the signatures it made at approval.
+    var approvalPublicKey: Data { signer.approvalPublicKeyDER }
+
     func confirmChrome(_ p: ChromePairingInProgress, offer: PlanqueClient.ChromeOffer, name typed: String,
                        replacing old: PlanqueClient.Chrome? = nil) async -> Bool {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant,
@@ -1485,7 +1488,7 @@ final class AppModel: ObservableObject {
         if let old {
             await refreshConnections()
             confirmation.replaces = old.id
-            let carried = ChromeReplace.carried(from: old, in: grants)
+            let carried = ChromeReplace.carried(from: old, in: grants, phoneKey: phoneKey)
             if !carried.isEmpty { confirmation.carried = carried }
         }
         let reason = Words.Chrome.pairPrompt(name: name)

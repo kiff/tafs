@@ -140,6 +140,16 @@ enum ChromePairing {
         return try rawSignature(fromDER: try sign(try sitesBytes(chromeID: chrome, grant: grant, sites: sites)))
     }
 
+    /// Whether `signature` (raw r‖s, base64url) is this phone's own signature, by `publicKeyDER` (its approval key), over `sites` for
+    /// `grant` on the Chrome `chromeID`: what the phone signed at approval, and the only copy of a connection's sites it carries
+    /// to a new Chrome ("Your Chrome" 1). False for anything else, never an error.
+    static func sitesSignatureHolds(_ signature: String, publicKeyDER: Data, chromeID: String, grant: String, sites: [String]) -> Bool {
+        guard !sites.isEmpty, let raw = base64URLDecoded(signature), let bytes = try? sitesBytes(chromeID: chromeID, grant: grant, sites: sites),
+              let key = try? P256.Signing.PublicKey(derRepresentation: publicKeyDER),
+              let sig = try? P256.Signing.ECDSASignature(rawRepresentation: raw) else { return false }
+        return key.isValidSignature(sig, for: bytes)
+    }
+
     private static func labelled(_ label: String, _ body: JCS.Value) throws -> Data {
         var out = Data(label.utf8)
         out.append(0)

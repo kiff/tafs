@@ -219,7 +219,12 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", reconnect }
+        /// For an extension grant, the phone's own signature over its sites for the Chrome it was approved for (raw r‖s,
+        /// `tafs-chrome/sites/v1`), and the Chrome whose pairing carried those sites when a re-pairing replaced the one they
+        /// were signed for. planque's list gives them ("Your Chrome" 1); the phone verifies the first before it carries anything.
+        var chromeSitesSig: String?
+        var chromeSitesCarried: String?
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", reconnect, chromeSitesSig = "chrome_sites_sig", chromeSitesCarried = "chrome_sites_carried" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
