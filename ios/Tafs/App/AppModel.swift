@@ -5357,6 +5357,7 @@ final class AppModel: ObservableObject {
             chatStates[tafID]?.workingRun = thread.workingRun
             chatStates[tafID]?.steering = thread.steering
             chatStates[tafID]?.askCoach = thread.askCoach
+            chatStates[tafID]?.runFailed = thread.failed
             // The thread is the source: tafs cloud says when the latest run stopped at a cap, and a
             // run at work, or one that answered since, is past it.
             chatStates[tafID]?.capped = thread.working == nil ? thread.capped?.stop : nil
@@ -5676,6 +5677,9 @@ final class AppModel: ObservableObject {
         var unsent: [UnsentMessage] = []
         /// The taf's ask_coach cards, as its thread has them (kiff/tafs#476, gap 15).
         var askCoach: [TafsCloud.AskCoachCard] = []
+        /// The latest run ended without an answer, as the thread says (`failed`): tafs cloud's words,
+        /// the chat's last line. A later read with none clears it.
+        var runFailed: TafsCloud.RunFailed?
         /// What waits in this chat to go once the taf is done: tafs cloud holds it
         /// (docs/chat.md, `hold`), and sends it as the person's next message. The app keeps no
         /// queue of its own.
@@ -6160,6 +6164,16 @@ final class AppModel: ObservableObject {
             a.element.at != b.element.at ? a.element.at < b.element.at : a.offset < b.offset
         }.map(\.element), anchors: state.anchors)
         if let live { timeline += streamingItems(live, held: held, tafID: tafID) }
+        // A run that ended without an answer: tafs cloud's words, as the taf's last line, after everything else
+        // (docs/chat.md). One refused line per run: a run followed live here already ends with its own, with Retry
+        // (`ended`), so the thread's isn't added. A chat with nothing in it (a new chat) had no run here to fail. As
+        // Android's `chatItems`.
+        var endedFailed = false
+        if case .failed? = state.ended { endedFailed = true }
+        if let failed = state.runFailed, live == nil, !endedFailed, let last = timeline.map(\.at).max() {
+            timeline.append(.message(TafsCloud.ChatMessage(at: last.addingTimeInterval(0.001), from: .taf, text: failed.words,
+                                                           session: "failed|" + failed.run)))
+        }
         // Each once, by id: the same message twice in a thread shows once.
         var seen = Set<String>()
         timeline = timeline.filter { seen.insert($0.id).inserted }
