@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Sutinku su %1$s ir %2$s.</string>
     <string name="onboarding_control_lead">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate su Face ID ar Touch ID arba atmetate.</string>
     <string name="onboarding_control_lead_android">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“ ir jūsų laikrodyje, jei jį turite. Tvirtinate ekrano užraktu arba atmetate.</string>
+    <string name="onboarding_control_lead_desktop">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate telefone arba atmetate.</string>
     <string name="onboarding_control_lead_mac">Kai taf jūsų laukia, jis laukia skiltyje „Laukia jūsų“. Tvirtinate su Touch ID ar telefone arba atmetate.</string>
     <string name="onboarding_control_title">Valdote jūs</string>
     <string name="onboarding_get_started">Pradėti</string>
@@ -1915,6 +1916,12 @@
     <string name="record_refused_next_step_detail">Atmesta, su kitu žingsniu taf: %1$s</string>
     <string name="record_removed_detail">Tvarkaraštis, atmintis ir raktas ištrinti; pavadinimas laisvas</string>
     <string name="record_removed_title">Pašalinote %1$s</string>
+    <string name="record_report_button">Pranešti apie šį mokėjimą</string>
+    <string name="record_report_done">Pranešta. %1$s sustabdytas, o kvitas išsaugotas. Jei pinigai išėjo iš Jūsų sąskaitos, susisiekite ir su kortelės išdavėju.</string>
+    <string name="record_report_failed">Nepavyko išsiųsti pranešimo. Niekas nepasikeitė. Bandykite dar kartą.</string>
+    <string name="record_report_intro">Pranešite apie mokėjimą, kurio nesitikėjote: %1$s sumokėjo %2$s %3$s. Sustabdysime %1$s, kol patikrinsite.</string>
+    <string name="record_report_submit">Pranešti ir sustabdyti %1$s</string>
+    <string name="record_report_title">Pranešti apie šį mokėjimą</string>
     <string name="record_result_done">atlikta</string>
     <string name="record_result_no_answer_yet">išsiųsta, atsakymo dar nėra</string>
     <string name="record_result_not_done">neatlikta</string>

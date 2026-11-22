@@ -98,9 +98,9 @@ class PlanqueTest {
   // MARK: The signed request
 
   private val me = """{"tenant_id":"t_01","tenant_slug":"acme","tenant_display_name":"Acme Pay"}"""
-  private val request = """{"server":"mcp.stripe.com","agent":"refunds-1","tools":[{"tool":"create_refund","name":"create_refund_repg","title":"Refund a payment","read_only":false},{"tool":"list_charges","read_only":true}]}"""
+  private var request = """{"server":"mcp.stripe.com","agent":"refunds-1","tools":[{"tool":"create_refund","name":"create_refund_repg","title":"Refund a payment","read_only":false},{"tool":"list_charges","read_only":true}]}"""
   private fun digestOf(json: String) = MessageDigest.getInstance("SHA-256").digest(Jcs.canonical(json).toByteArray()).joinToString("") { "%02x".format(it) }
-  private val digest = digestOf(request)
+  private val digest: String get() = digestOf(request)
 
   private fun grant(id: String = "g1", status: String = "pending", digest: String = this.digest, extra: String = "") =
     """{"id":"$id","status":"$status","text":"Connect Stripe: refund a payment, list charges.","terms":["create_refund: pinned to refunds"],"digest":"$digest","request":$request,"events":[{"at":"2026-10-28T08:00:00.123456789Z","what":"Setup asked"}]$extra}"""
@@ -970,6 +970,46 @@ class PlanqueTest {
     assertTrue("the phone never answers the card itself", transport.requestsTo(answerRoute).isEmpty())
     assertNull(m.state.value.coachNotes["a1"])
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
+  }
+
+  /**
+   * A grant for the owner's own Chrome, asked by tafs cloud: the one fingerprint signs its sites with the approval key, and planque
+   * gets tafs cloud's body with this phone's `chrome_sites_sig` added; a window's tap never stands in for it.
+   */
+  @Test fun aGrantForTheOwnersChromeIsApprovedWithItsSitesSignedUnderTheOneFingerprint() = runTest {
+    request = request.dropLast(1) + ""","browser":{"driver":"extension","chrome":"chr_01HZX5","sites":["shop.example","paypal.com"]}}"""
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect(""))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertEquals("one fingerprint, the approval key's", listOf("Connect Stripe to Refunds"), auth.fingerprints)
+    val sent = bodyOf(transport.requestsTo(approve).single())
+    assertEquals(digest, sent.getValue("digest").jsonPrimitive.content)
+    val raw = bot.tafs.app.kiff.ChromePairing.base64UrlDecoded(sent.getValue("chrome_sites_sig").jsonPrimitive.content)!!
+    val signed = bot.tafs.app.kiff.ChromePairing.sitesBytes("chr_01HZX5", "g1", listOf("shop.example", "paypal.com"))
+    val approvalKey = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(signer.approvalPublicKeyDER))
+    assertTrue(java.security.Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(approvalKey); update(signed); verify(raw) })
+    assertTrue(transport.requestsTo("POST /v1/me/window").isEmpty())
+  }
+
+  /** The refused case in Coach's step: a grant for the owner's Chrome that names no sites is never signed, and nothing is approved. */
+  @Test fun aGrantForTheOwnersChromeWithNoSitesIsNeverSignedInCoachsStep() = runTest {
+    request = request.dropLast(1) + ""","browser":{"driver":"extension","chrome":"chr_01HZX5","sites":[]}}"""
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect(""))
+    val m = model(FakeSignIn(back = "tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de"))
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(auth.fingerprints.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
   }
 
   // Open again on an approval card (tafs cloud's asked call): the page given up is reported to no one, and the card's approval

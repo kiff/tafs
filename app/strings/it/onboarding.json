@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Accetto {kiff_terms} e {tafs_terms}.",
   "onboarding.control_lead": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull'orologio. Approvi con Face ID o Touch ID, oppure rifiuti.",
   "onboarding.control_lead_android": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta» e, se ne hai uno, sull'orologio. Approvi con il blocco schermo, oppure rifiuti.",
+  "onboarding.control_lead_desktop": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi sul telefono, oppure rifiuti.",
   "onboarding.control_lead_mac": "Quando un taf ha bisogno di te, aspetta in «Ti aspetta». Approvi con Touch ID o sul telefono, oppure rifiuti.",
   "onboarding.control_title": "Il controllo resta a te",
   "onboarding.get_started": "Inizia",

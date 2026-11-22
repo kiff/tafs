@@ -220,11 +220,21 @@ IOS_PLURAL_KEY = "_plural"
 # decide it, and neither does `Bundle.main.preferredLocalizations`: that can answer Spanish or
 # French, the languages of Siri's phrases, while every screen is still in English.
 IOS_LANGUAGE_KEY = "_language"
+# A language the app formats with other than its own plain locale: Arabic, with Western digits and the Gregorian calendar, as
+# its legal pages and its lines write figures (an "ar" locale would write Arabic-script digits, and "ar_SA" the Hijri calendar).
+IOS_LOCALE = {"ar": "ar-u-ca-gregory-nu-latn"}
 
 # The plural forms a language's whole numbers take (CLDR), beside "other".
 PLURALS = {"en": ["one"], "de": ["one"], "nl": ["one"], "it": ["one"], "es": ["one"], "pt": ["one"], "fr": ["one"],
            "pl": ["one", "few", "many"], "ja": [], "ko": [], "et": ["one"], "el": ["one"], "lt": ["one", "few"], "lv": ["zero", "one"],
-           "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": []}
+           "cs": ["one", "few"], "sk": ["one", "few"], "sl": ["one", "two", "few"], "hu": ["one"], "ro": ["one", "few"], "bg": ["one"], "hr": ["one", "few"], "tr": ["one"], "id": [], "vi": [], "th": [], "zh": [], "ar": ["zero", "one", "two", "few", "many"],
+           # Batch 4. Hebrew's "many" left CLDR in 42: an older phone that still asks for it reads "other". Armenian and Bengali's
+           # "one" is 0 and 1.
+           "sr": ["one", "few"], "he": ["one", "two"], "sq": ["one"], "ka": ["one"], "hy": ["one"], "az": ["one"], "bn": ["one"],
+           # Batch 5. Catalan's "many" is only for the compact form ("1 M"), never a whole count; Khmer and Lao have no plural.
+           # Russian, Malay and Uzbek are ready for when they come.
+           "ca": ["one"], "mk": ["one"], "mn": ["one"], "ne": ["one"], "km": [], "lo": [],
+           "ru": ["one", "few", "many"], "ms": [], "uz": ["one"]}
 
 
 def ios_text(text, key, source, owned=()):
@@ -374,7 +384,14 @@ def ios_swift(source, lines=None, shipped=("en",)):
             "    nonisolated(unsafe) static var bundle = Bundle.main",
             "",
             "    /// The language the app's lines are in, as the catalog names it, never the device's region.",
-            f"    static var locale: Locale {{ Locale(identifier: bundle.localizedString(forKey: \"{IOS_LANGUAGE_KEY}\", value: \"en\", table: nil)) }}",
+            f"    static var locale: Locale {{ locale(for: bundle.localizedString(forKey: \"{IOS_LANGUAGE_KEY}\", value: \"en\", table: nil)) }}",
+            "",
+            "    /// The locales the app formats with where a language's own writes figures or dates the lines don't (Arabic: Western",
+            "    /// digits, the Gregorian calendar). Any other language is its own code.",
+            f"    static let localeIdentifiers: [String: String] = [{", ".join(f'\"{k}\": \"{v}\"' for k, v in sorted(IOS_LOCALE.items()))}]",
+            "",
+            "    /// The locale a language code is formatted with.",
+            "    static func locale(for code: String) -> Locale { Locale(identifier: localeIdentifiers[code] ?? code) }",
             "",
             "    /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.",
             "    static func number(_ n: Int) -> String {",
@@ -440,7 +457,7 @@ def ios_swift(source, lines=None, shipped=("en",)):
             "    /// around it. Left to right, values are as they are. Inside the isolate a value carries no direction character of",
             "    /// its own (qa-kiff, #1557), so none can close it early, whoever calls.",
             "    static func isolated(_ values: [String], in locale: Locale) -> [String] {",
-            "        guard Locale.characterDirection(forLanguage: locale.identifier) == .rightToLeft else { return values }",
+            "        guard Locale.characterDirection(forLanguage: locale.language.languageCode?.identifier ?? locale.identifier) == .rightToLeft else { return values }",
             "        return values.map { \"\\u{2068}\\(withoutDirection($0))\\u{2069}\" }",
             "    }",
             "",

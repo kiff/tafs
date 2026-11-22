@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} skedar · ruhet 30 ditë",
+    "other": "{count} skedarë · ruhen 30 ditë"
+  },
+  "files.all": "Të gjitha",
+  "files.all_tafs": "Të gjithë tafs-et",
+  "files.by_run": "Sipas ekzekutimit",
+  "files.by_taf": "Sipas taf-it",
+  "files.delete_body": "Hiqet nga Skedarët për këdo në këtë llogari, menjëherë. Kjo nuk mund të zhbëhet.",
+  "files.delete_now": "Fshijeni tani",
+  "files.delete_question": "Ta fshini “{name}” tani?",
+  "files.deleted": "U fshi për të gjithë",
+  "files.download": "Shkarkoni",
+  "files.empty": "Ende asgjë. Kur një taf bën një raport, një fletë ose një dokument në një ekzekutim, ruhet këtu për 30 ditë, që këdo në këtë llogari ta hapë, ta ruajë ose ta ndajë.",
+  "files.everyone": "Çdokush në këtë llogari",
+  "files.goes_away": "Zhduket",
+  "files.goes_in_days": {
+    "one": "zhduket pas {count} dite",
+    "other": "zhduket pas {count} ditësh"
+  },
+  "files.goes_on": "{date} (30 ditë pas ekzekutimit të tij)",
+  "files.goes_today": "zhduket sot",
+  "files.goes_tomorrow": "zhduket nesër",
+  "files.in_run": "Në ekzekutim",
+  "files.kept_line": "Çdo skedar ruhet 30 ditë nga ekzekutimi i tij, pastaj zhduket vetë. Çdokush në këtë llogari i sheh këta skedarë. Bashkëngjitjet tuaja të bisedave qëndrojnë me mesazhet e tyre.",
+  "files.kept_until": "Skedarët e tij ruhen deri më {date}",
+  "files.made_by": "Bërë nga",
+  "files.none_yet": "Ende asnjë · ruhen 30 ditë",
+  "files.pick_one": "Zgjidhni një skedar për ta parë këtu.",
+  "files.preview_start": "Shfaqet vetëm fillimi. Shkarkoni skedarin për ta lexuar të gjithë.",
+  "files.saved": "U ruajt në këtë pajisje",
+  "files.see_in_chat": "Shiheni në bisedë",
+  "files.share": "Ndajeni",
+  "files.size": "Madhësia",
+  "files.taf_row": {
+    "one": "{count} skedar nga ekzekutimet e tij",
+    "other": "{count} skedarë nga ekzekutimet e tij"
+  },
+  "files.title": "Skedarët",
+  "files.type": "Lloji",
+  "files.who_sees": "Kush e sheh"
+}

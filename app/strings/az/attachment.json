@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} əlavə edilə bilmir.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs bu faylı əlavə edə bilmir: o, qəbul etdiyi növdə və ya ölçüdə deyil. Başqasını seçin.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Həmin foto oxuna bilmədi.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} {size}-dir; maksimum {limit}-dir.",
+  "attachment.wrong_kind": "{name} əlavə edilə bilmir. Foto, PDF, mətn, CSV, Markdown, Word və Excel faylları əlavə edilə bilər."
+}

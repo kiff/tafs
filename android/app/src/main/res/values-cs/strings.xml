@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Souhlasím s %1$s a %2$s.</string>
     <string name="onboarding_control_lead">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte přes Face ID nebo Touch ID, nebo odmítnete.</string>
     <string name="onboarding_control_lead_android">Když vás taf potřebuje, čeká v Čeká na vás, a na hodinkách, pokud je máte. Schválíte zámkem obrazovky, nebo odmítnete.</string>
+    <string name="onboarding_control_lead_desktop">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte v telefonu, nebo odmítnete.</string>
     <string name="onboarding_control_lead_mac">Když vás taf potřebuje, čeká v Čeká na vás. Schválíte přes Touch ID nebo v telefonu, nebo odmítnete.</string>
     <string name="onboarding_control_title">Kontrolu máte vy</string>
     <string name="onboarding_get_started">Začít</string>
@@ -1915,6 +1916,12 @@
     <string name="record_refused_next_step_detail">Odmítnuto, s dalším krokem pro taf: %1$s</string>
     <string name="record_removed_detail">Plán, paměť a klíč smazány; název je volný</string>
     <string name="record_removed_title">Odstranili jste %1$s</string>
+    <string name="record_report_button">Nahlásit tuto platbu</string>
+    <string name="record_report_done">Nahlášeno. %1$s je zastaven a potvrzení zůstává uloženo. Pokud z vašeho účtu odešly peníze, obraťte se také na vydavatele své karty.</string>
+    <string name="record_report_failed">Hlášení se nepodařilo odeslat. Nic se nezměnilo. Zkuste to znovu.</string>
+    <string name="record_report_intro">Nahlaste platbu, kterou jste nečekali: %1$s zaplatil %2$s dne %3$s. %1$s zastavíme, dokud se nepodíváte.</string>
+    <string name="record_report_submit">Nahlásit a zastavit %1$s</string>
+    <string name="record_report_title">Nahlásit tuto platbu</string>
     <string name="record_result_done">hotovo</string>
     <string name="record_result_no_answer_yet">odesláno, zatím bez odpovědi</string>
     <string name="record_result_not_done">neprovedeno</string>

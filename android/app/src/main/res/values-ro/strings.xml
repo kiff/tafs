@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Sunt de acord cu %1$s și cu %2$s.</string>
     <string name="onboarding_control_lead">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu Face ID sau Touch ID, ori refuzați.</string>
     <string name="onboarding_control_lead_android">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă și pe ceas, dacă aveți unul. Aprobați cu blocarea ecranului sau refuzați.</string>
+    <string name="onboarding_control_lead_desktop">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați pe telefon, ori refuzați.</string>
     <string name="onboarding_control_lead_mac">Când un taf are nevoie de dvs., așteaptă în Vă așteaptă. Aprobați cu Touch ID sau pe telefon, ori refuzați.</string>
     <string name="onboarding_control_title">Dvs. păstrați controlul</string>
     <string name="onboarding_get_started">Să începem</string>
@@ -1915,6 +1916,12 @@
     <string name="record_refused_next_step_detail">Refuzat, cu un pas următor pentru taf: %1$s</string>
     <string name="record_removed_detail">Program, memorie și cheie șterse; nume liber</string>
     <string name="record_removed_title">Ați eliminat %1$s</string>
+    <string name="record_report_button">Raportați această plată</string>
+    <string name="record_report_done">Raportat. %1$s este oprit, iar chitanța se păstrează. Dacă au ieșit bani din contul dumneavoastră, contactați și emitentul cardului.</string>
+    <string name="record_report_failed">Raportul nu a putut fi trimis. Nimic nu s-a schimbat. Încercați din nou.</string>
+    <string name="record_report_intro">Raportați o plată la care nu vă așteptați: %1$s a plătit %2$s pe %3$s. Oprim %1$s până când verificați.</string>
+    <string name="record_report_submit">Raportați și opriți %1$s</string>
+    <string name="record_report_title">Raportați această plată</string>
     <string name="record_result_done">făcut</string>
     <string name="record_result_no_answer_yet">trimis, încă fără răspuns</string>
     <string name="record_result_not_done">nefăcut</string>

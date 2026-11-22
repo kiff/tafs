@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Elfogadom a következőket: %1$s és %2$s.</string>
     <string name="onboarding_control_lead">Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. Face ID-val vagy Touch ID-val hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_lead_android">Ha egy tafnak szüksége van rád, a Rád vár részben vár, és az órádon is, ha van. A képernyőzárral hagyod jóvá, vagy elutasítod.</string>
+    <string name="onboarding_control_lead_desktop">Ha egy tafnak szüksége van rád, a Rád vár részben vár. A telefonodon hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_lead_mac">Ha egy tafnak szüksége van rád, a Rád vár részben vár. Touch ID-val vagy a telefonodon hagyod jóvá, vagy elutasítod.</string>
     <string name="onboarding_control_title">Az irányítás nálad marad</string>
     <string name="onboarding_get_started">Kezdés</string>
@@ -1851,6 +1852,12 @@
     <string name="record_refused_next_step_detail">Elutasítva, egy következő lépéssel a tafnak: %1$s</string>
     <string name="record_removed_detail">Ütemezés, memória és kulcs törölve; a név szabad</string>
     <string name="record_removed_title">Eltávolítottad: %1$s</string>
+    <string name="record_report_button">Fizetés jelentése</string>
+    <string name="record_report_done">Jelentve. A(z) %1$s le van állítva, a nyugtát pedig megőrizzük. Ha pénz hagyta el a számládat, fordulj a kártyakibocsátódhoz is.</string>
+    <string name="record_report_failed">A jelentést nem sikerült elküldeni. Semmi sem változott. Próbáld újra.</string>
+    <string name="record_report_intro">Jelents egy fizetést, amire nem számítottál: a(z) %1$s %3$s napján %2$s összeget fizetett. Leállítjuk a(z) %1$s tafot, amíg át nem nézed.</string>
+    <string name="record_report_submit">Jelentés és a(z) %1$s leállítása</string>
+    <string name="record_report_title">Fizetés jelentése</string>
     <string name="record_result_done">kész</string>
     <string name="record_result_no_answer_yet">elküldve, még nincs válasz</string>
     <string name="record_result_not_done">nincs kész</string>

@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Tot el Card",
+    "other": "Tots els Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, i després et pregunta",
+  "card.calls_left": {
+    "one": "Queda {count} crida",
+    "other": "Queden {count} crides"
+  },
+  "card.calls_left_line": {
+    "one": "Queda {count} crida {window} de {limit}",
+    "other": "Queden {count} crides {window} de {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} d'{count} crida {window}",
+    "other": "{used} de {count} crides {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} crida {window}",
+    "other": "{count} crides {window}"
+  },
+  "card.card_confirmed_kiff": "Card · confirmat per KIFF",
+  "card.card_draft_kiff": "Card · esborrany · de KIFF",
+  "card.card_got_room_call_needed": "El seu Card ha rebut el marge que necessitava aquesta crida, fins que aquest total es reiniciï",
+  "card.card_not_issued": "El Card no s'ha emès. ",
+  "card.card_revoked": "Card revocat",
+  "card.check.always_asks": "{rule}: sempre et pregunta",
+  "card.check.never_allowed": "{rule}: mai permès",
+  "card.check.not_on_card": "No és al Card d'aquest taf",
+  "card.check.over_count": {
+    "one": "Més d'{count} {window}",
+    "other": "Més de {count} {window}"
+  },
+  "card.check.over_each": "Més de {amount} cada un",
+  "card.check.over_total": "Més de {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Acabat",
+  "card.ended_on": "Acabat el {date}",
+  "card.ends": "Acaba",
+  "card.extra_room": "+{extra} de marge addicional {window}",
+  "card.extra_room_prefix": "+{formatted} de marge addicional ",
+  "card.extra_room_until": "+{extra} de marge addicional fins al {ends}",
+  "card.figure_left": "Queden {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} crida {window}{each}: aquesta seria la {nth}{item}",
+    "other": "{count} crides {window}{each}: aquesta seria la {nth}{item}"
+  },
+  "card.held.each_call_asks": "Cada crida et pregunta primer",
+  "card.held.for_each": " per a cada {name}",
+  "card.held.for_each_join": " per a cada ",
+  "card.held.for_item": " per a {item}",
+  "card.held.over_count": {
+    "one": "Per sobre del seu límit d'{count} crida: aquesta seria la {nth}",
+    "other": "Per sobre del seu límit de {count} crides: aquesta seria la {nth}"
+  },
+  "card.held.over_one_call": "{amount} supera el límit de {cap} per a una crida",
+  "card.held.over_total": "{amount} superaria el total de {cap}",
+  "card.hero.calls_left_of": {
+    "one": "crida restant {window} de {limit}",
+    "other": "crides restants {window} de {limit}"
+  },
+  "card.hero.calls_use_unavailable": "crides {window} · ús no disponible",
+  "card.hero.left_of": "queda {window} de {limit}",
+  "card.hero.left_of_extra": "queda {window} de {base} + {extra} de marge addicional",
+  "card.hero.left_of_extra_until": "queda {window} de {base} + {extra} de marge addicional fins al {ends}",
+  "card.hero.left_of_note": "queda {window} de {limit}{note}",
+  "card.hero.no_currency": "sense moneda",
+  "card.hero.no_currency_suffix": " · sense moneda",
+  "card.hero.use_unavailable": "{window} · ús no disponible",
+  "card.hero.use_unavailable_note": "{label} · ús no disponible{note}",
+  "card.how_counted": "Com es compta",
+  "card.issue_prompt": "Emet un Card per a {taf}",
+  "card.issued_by": "Emès per",
+  "card.issued_by_account": "El compte",
+  "card.issued_by_named": "Emès per {who}",
+  "card.its_card": "El seu Card",
+  "card.kiff_did_not_revoke_cards": "KIFF no ha revocat {cards_left} dels seus Card: revoca'ls a KIFF.",
+  "card.left": "Queden {amount} {window}",
+  "card.left_extra_room": "queda {current} de {own} + {extra} de marge addicional{until}{note}",
+  "card.limit_can_not_raised_right": "Ara mateix el límit no es pot pujar des d'aquí.",
+  "card.limit_raised_read_balance_again": "El límit s'ha pujat. Torna a llegir el saldo abans de tornar-lo a pujar.",
+  "card.line.calls_in_window": {
+    "one": "{count} crida {window}{then}",
+    "other": "{count} crides {window}{then}"
+  },
+  "card.line.more_asks": "; més et pregunta primer",
+  "card.line.then_asks": ", i després et pregunta",
+  "card.line.total_in_window": "{amount} en total {window}{then}",
+  "card.line.up_to_each": "fins a {amount} cada un",
+  "card.more": {
+    "one": "{count} més",
+    "other": "{count} més"
+  },
+  "card.no_actions": "Encara no hi ha accions",
+  "card.no_actions_short": "encara no hi ha accions",
+  "card.no_currency": "{amount} (sense moneda)",
+  "card.no_end_date": "Sense data de fi",
+  "card.outcome.not_a_resource": "No és un dels recursos del Card",
+  "card.outcome.outside": "Fora del Card",
+  "card.outcome.over_one_action": "Per sobre del límit del Card per a una acció",
+  "card.outcome.over_total": "Per sobre del total del Card",
+  "card.outside_held": "Fora: retinguda per a tu",
+  "card.outside_refused": "Fora: rebutjada",
+  "card.over_limit_calls_would": "Per sobre del seu límit de {limit} crides: aquesta seria la {nth}",
+  "card.revoke_failed": "KIFF no ha revocat el Card. {why}",
+  "card.revoked": "Revocat",
+  "card.rule.always_asks": "sempre et pregunta",
+  "card.rule.at_most_each": "≤ {amount} cada un",
+  "card.rule.at_most_each_refused_above": "≤ {amount} cada un · es rebutja per sobre",
+  "card.rule.calls": {
+    "one": "{count} crida {window}",
+    "other": "{count} crides {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} crida {window}, i després et pregunta",
+    "other": "{count} crides {window}, i després et pregunta"
+  },
+  "card.rule.in_total": "{amount} en total {window}",
+  "card.rule.never": "mai",
+  "card.rule.total_then_asks": "{amount} en total {window}, i després et pregunta",
+  "card.rule.up_to_each": "fins a {amount} cada un; més et pregunta primer",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "El Card del taf",
+  "card.tools": {
+    "one": "{count} eina",
+    "other": "{count} eines"
+  },
+  "card.until": "Fins",
+  "card.until_date": "Fins al {date}",
+  "card.until_ends": " fins al {ends}",
+  "card.used_of": "{used} de {limit} {window}",
+  "card.window.a_day": "al dia",
+  "card.window.a_month": "al mes",
+  "card.window.a_week": "a la setmana",
+  "card.window.any_day": "en qualsevol període de 24 hores",
+  "card.window.any_hour": "en qualsevol hora",
+  "card.window.any_week": "en qualsevol període de 7 dies",
+  "card.window.in_total": "en total",
+  "card.window.in_total_window": "en total {window}",
+  "card.window.last_day": "en les últimes 24 hores",
+  "card.window.last_hour": "en l'última hora",
+  "card.window.last_week": "en els últims 7 dies",
+  "card.window.so_far": "fins ara",
+  "card.window.this_month": "aquest mes",
+  "card.window.this_week": "aquesta setmana",
+  "card.window.today": "avui",
+  "card.within_card": "dins del Card"
+}

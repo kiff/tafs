@@ -1500,14 +1500,25 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   confirmation, so a Chrome is never confirmed without its device. iOS signs both behind one Face ID; Android's approval key
   unlocks for one signature, so it asks twice. KIFF's refusal, in its own words, confirms nothing.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its next connect.
-- **Approving a browser grant (groundwork, not wired into approval yet):** `ChromePairing.sitesBytes` and `sensitiveBytes`
+- **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
+  `GrantRequest.browser`) sends `chrome_sites_sig` with the approve body: the approval key's signature over
+  `tafs-chrome/sites/v1` of `{chrome_id, grant, sites}` (`ChromePairing.sitesSignature`), raw `r‖s`, signed behind that
+  approval's one fingerprint (`signCritical`, so a debug phone with no lock gets no demo signature). planque approves such a
+  grant only with it, and the extension runs nothing outside those sites. Such an approval never rides an approval window:
+  it opens none and taps none, in Coach's step and in Connect again alike, and the app never offers `tools_and_cards` for
+  it, since Android's approval key signs once per fingerprint. A grant that names no Chrome or no sites is refused before
+  anything is signed; in Coach's step the sites are signed only when the grant held, the one shown and the ask's body share
+  one digest. The signature is added by the phone, never by tafs cloud.
+- **The bytes:** `ChromePairing.sitesBytes` and `sensitiveBytes`
   build `tafs-chrome/sites/v1` over `{chrome_id, grant, sites}` and `tafs-chrome/sensitive/v1` over `{chrome_id, grant, site}`,
   as iOS's. `ChromePairing.isSensitive` marks the sites the extension blocks unless the owner allows them by name: the
   extension's list and label pattern, with the host read as its `hostOf` reads it (lower case, an ideographic full stop as a
   dot, no trailing dot). `ChromePairingTest` checks all three against vectors/chrome-grant.json and chrome-sensitive.json.
 - Its lines are `chrome.*`, shared with iOS.
 - **Tests:** `ChromePairingTest` (the shared vector with and without `kiff_offer`, a refused proof, the KIFF offer read only
-  as a Chrome extension in software, raw `r‖s` verified as P1363) and `ChromesTest`:
+  as a Chrome extension in software, raw `r‖s` verified as P1363, the sites signature over vectors/chrome-grant.json's bytes,
+  and its refused cases), `ConnectWindowTest` (a grant for the owner's Chrome: one fingerprint, no window, `chrome_sites_sig`
+  verified with the approval key; with no sites, nothing signed or approved) and `ChromesTest`:
   - the row only once planque offers Chromes;
   - an offer shown only on its proof, and the secret never in a request;
   - one fingerprint naming the Chrome, and the approval key's `r‖s` verifying where the device key's doesn't;
@@ -1949,8 +1960,10 @@ list's top still reaches the sheet and closes it.
 choices are saved for this device and account and sent on registration; Off
 unregisters this phone. Account › Time zone shows the account's zone, Choose a time zone, and "Use this phone's: ‹zone›"
 only when the account's zone isn't already the phone's (`offersDeviceZone`, UTC when KIFF names none), with the iPad's footer
-under it: "Holds' deadlines, Activity, the Record and what your tafs write use this time zone." Time zone changes keep the
-existing signed KIFF flow; once KIFF
+under it: "Holds' deadlines, Activity, the Record and what your tafs write use this time zone." The alert that offers this
+phone's zone after a sign-in ("Use ‹zone› for times in tafs?") hands its yes to the model, which finishes it, confirmation
+and KIFF's call, under `NonCancellable`: the alert closes as the offer clears, and its own scope would otherwise cancel the
+prompt as it opens (`TimeZoneTest.useIsFinishedWhenTheAlertThatAskedCloses`). Time zone changes keep the existing signed KIFF flow; once KIFF
 has the new zone, `AppModel.applyAccountTimeZone` asks tafs cloud to move the schedules
 (`POST /v1/account/time-zone`), then drops the pages and Setups read in the old zone and reads
 home and each dial again; a page, Setup, dial or work read begun in the old zone is dropped when

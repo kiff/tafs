@@ -1,0 +1,42 @@
+{
+  "work.answer_within": "الرد خلال",
+  "work.answer_within_days": {
+    "zero": "لا أيام",
+    "one": "يوم واحد",
+    "two": "يومان",
+    "few": "{count} أيام",
+    "many": "{count} يومًا",
+    "other": "{count} يوم"
+  },
+  "work.answer_within_hours": {
+    "zero": "لا ساعات",
+    "one": "ساعة واحدة",
+    "two": "ساعتان",
+    "few": "{count} ساعات",
+    "many": "{count} ساعة",
+    "other": "{count} ساعة"
+  },
+  "work.answer_within_line": "يتم إبلاغك عندما تنتظر حالة أطول من ذلك.",
+  "work.answer_within_none": "غير محدد",
+  "work.answer_within_not_set": "تعذّر التحديد. {why}",
+  "work.asking_kiff_run": "جارٍ طلب تشغيل {tool} من KIFF…",
+  "work.did_not_stop": "لم يتوقف: {why}",
+  "work.duration.minutes": "{minutes} د {seconds} ث",
+  "work.duration.seconds": "{seconds} ث",
+  "work.its_runs": "عمليات تشغيله",
+  "work.not_read": "تعذّرت قراءة عمله. {why}",
+  "work.not_sent_again": "لم يُرسل مرة أخرى. {why}",
+  "work.request.try_reply_now": "جرّب الرد الآن",
+  "work.requests_need_you": {
+    "zero": "لا طلبات بانتظارك",
+    "one": "طلب واحد بانتظارك",
+    "two": "طلبان بانتظارك",
+    "few": "{count} طلبات بانتظارك",
+    "many": "{count} طلبًا بانتظارك",
+    "other": "{count} طلب بانتظارك"
+  },
+  "work.send_again": "إرسال مرة أخرى",
+  "work.sending_again": "جارٍ الإرسال مرة أخرى…",
+  "work.stop_run": "إيقاف التشغيل",
+  "work.stopped_part_way_before_finished": "توقف taf {taf} في منتصف العمل، قبل أن ينتهي."
+}

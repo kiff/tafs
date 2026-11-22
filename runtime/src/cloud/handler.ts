@@ -5,7 +5,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type DeliveredFile, type FileQuery, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type KeyedRun, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, type KIFFReport, reportInKIFF, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -32,6 +32,7 @@ import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startS
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
+import { extensionPreflight, withExtensionCORS } from "./extension-cors.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TRIGGER_KEYS, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -132,7 +133,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve; 409 not_needed for a taf that doesn't use the app
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
- *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
+ *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?, conversation?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and, with no conversation (the card's, its events) to read them from, that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -180,6 +181,7 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/record                     ?q=&from=&to=&limit=&cursor=: the Record across the person's tafs, searched by order, invoice, amount or action (record.ts)
  *   GET  /v1/record/cases/{about}       one case: every call about the same thing, oldest first, and the step that didn't go through
  *   GET  /v1/record/receipts            ?from=&to=: the receipts of those days for an accountant (at most 92 days), for those who see every taf's Record
+ *   POST /v1/record/{trace_id}/report   "Report this payment": KIFF marks the receipt reported and halts its taf, and so does kiff/agents (owner or admin)
  *   GET  /v1/tafs/{id}/setup            its Setup, ready to draw: connections, workflow, memory and versions (Planque-Device-Signature forwarded for the grants read)
  *   GET  /v1/tafs/{id}/calls            what its calls through KIFF acted on (kiff/tafs#167)
  *   DELETE /v1/tafs/{id}/memory/{note}  forget one note
@@ -612,9 +614,11 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
-  const r = await answer(event, withKIFFLanguage(event, deps));
+  // The Chrome extension's side panel, from its own origin: Chrome's preflight is answered before anything is read, and
+  // its answers carry its origin (extension-cors.ts).
+  const r = extensionPreflight(event) ?? await answer(event, withKIFFLanguage(event, deps));
   logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
-  return secured(r);
+  return secured(withExtensionCORS(event, r));
 }
 
 /**
@@ -728,6 +732,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "files") return filesRoute(event, method, parts, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
+  if (parts[1] === "record" && parts.length === 4 && parts[3] === "report" && method === "POST") return paymentReportRoute(event, parts[2]!, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
   // A request from the watch, through the paired phone (docs/watch-ask.md).
@@ -891,7 +896,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       catch { unitExceptionsNotice = cardUnitNotice(langOf(event)); }
       return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
         taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
-        unitExceptions, unitExceptionsNotice, lang: langOf(event), manages: access.get(taf.kiffAgent)?.manage === true }, deps.fetch, deps.kiffBase));
+        unitExceptions, unitExceptionsNotice, lang: langOf(event), manages: access.get(taf.kiffAgent)?.manage === true,
+        reports: me.capabilities.includes("cards.manage") }, deps.fetch, deps.kiffBase));
     }
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
@@ -1455,6 +1461,41 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     return { halt: haltView({ status: "fulfilled", value: kiff }, runtime) };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * "Report this payment" (docs/record.md): KIFF marks the receipt reported, keeps it and halts the call's taf; kiff/agents halts
+ * it too, so no run of it starts, and the phones hear the halt as from the halt button. No signature, since it only takes
+ * authority away: resuming stays behind the phone. Again, the same answer: KIFF keeps the first `reported_at`, and a taf
+ * resumed in between is halted again.
+ */
+async function paymentReportRoute(event: HTTPEvent, trace: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(trace)) throw new HTTPError(400, "that receipt's id isn't readable");
+  let report: KIFFReport;
+  try { report = await reportInKIFF(bearer(event), trace, deps.fetch, deps.kiffBase); } catch (err) {
+    if (err instanceof KIFFError && err.status === 404) throw new HTTPError(404, "no such receipt in this account");
+    if (err instanceof KIFFError && err.status === 409) {
+      throw new HTTPError(409, err.message === "agent_unknown" ? "KIFF can't tell which taf made this payment, so nothing was reported" : "that call isn't a payment, so there is nothing to report");
+    }
+    throw err;
+  }
+  const taf = (await deps.tafs.list(me.tenantID).catch(() => [] as Taf[])).find((t) => t.kiffAgent === report.agent && !t.removing);
+  // KIFF has reported it and halted the taf: from here nothing fails the report, or the entry reads reported, with no button
+  // to try again, while kiff/agents may still start a run. kiff/agents not halting leaves the halt `halting`, and the taf's
+  // Halt button asks again. A taf tafs cloud no longer lists (removed): KIFF's halt is the whole of it.
+  const notHalted: AgentsHalt = { halted: false, own: false, tenant: false };
+  const runtime: AgentsHalt = taf ? await deps.agents.halt(me.tenantID, taf.id).catch((err: unknown) => {
+    console.log(JSON.stringify({ event: "report_halt_failed", tenant: me.tenantID, taf: taf.id, status: err instanceof AgentsError ? err.status : 0 }));
+    return notHalted;
+  }) : notHalted;
+  const view = haltView({ status: "fulfilled", value: report.halt }, runtime);
+  if (taf) {
+    await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));
+    await logEvent(deps.events, me.tenantID, { kind: "halted", taf: taf.id, name: taf.name }, deps.now?.());
+    await tellChange(me.tenantID, "halted", taf.id, deps);
+  }
+  return { reported_at: report.reported_at, ...(taf ? { taf: taf.id } : {}), halt: view };
 }
 
 /**
@@ -4172,7 +4213,7 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
 }
 
 /**
- * POST /v1/connect/grants/{grant}/check {draft, shown_draft}: the checks Approve makes on a Card draft before it asks
+ * POST /v1/connect/grants/{grant}/check {draft, shown_draft, conversation?}: the checks Approve makes on a Card draft before it asks
  * for a signature (approval.ts checkDraft), for a caller that confirms the draft itself: the e2e (Eval 43681227913).
  * It only checks: nothing is signed, confirmed, kept or told to Coach. The grant is read from planque with the
  * caller's own phone proof (planque-device-signature), so only this account's grants; the draft with the caller's
@@ -4192,7 +4233,17 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   }
   // What the phone can sign, as it says on the chat's read (`can`), so the step is the one its card would take.
   const can = (Array.isArray(body.can) ? body.can : str(body.can).split(",")).map((x) => str(x).trim()).filter(Boolean);
-  const ctx = checkContext(event, me, deps);
+  // The card's conversation as its caller shows it (`conversation`, its events in order): the rules the owner agreed there
+  // are checked as the chat's read checks them (rulesAgreement), and their refusals are redraft ones. The route signs,
+  // confirms and keeps nothing, so a caller that sends other events only misleads its own check. The e2e sends its setup's:
+  // it runs Coach's conversation itself, so tafs cloud has none to read, and a draft the phone would refuse for its rules
+  // was signed in the Eval (45028072347: a confirm skipped, a notice whose words gave no figures). Without it, the route
+  // has no conversation and says so (`rules_unchecked`).
+  const conversation = body.conversation;
+  if (conversation !== undefined && (!Array.isArray(conversation) || conversation.length > CHECK_EVENTS_MAX || !conversation.every((e) => e && typeof e === "object" && !Array.isArray(e)))) {
+    throw new HTTPError(400, `conversation is the card's conversation: its events in order, at most ${CHECK_EVENTS_MAX}`);
+  }
+  const ctx = conversation ? withShownRules(checkContext(event, me, deps), conversation as Array<{ kind?: string; run?: string; body?: unknown }>) : checkContext(event, me, deps);
   // One read of the grants, with the caller's proof (planque takes each signed read once), for the check and the step.
   let read: Awaited<ReturnType<typeof readGrants>> | undefined;
   const out = await (async () => {
@@ -4204,11 +4255,11 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
   // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
   // Whether the chat's read checks this card at all (`checked_on_read`) is said too, by the same rule (markSigns), so the
-  // caller never keeps its own copy of it. The rules the owner agreed are Approve's and the chat read's only: this route
-  // has no conversation to read them from, so it says it didn't check them (`rules_unchecked`), and an ok here is never
-  // taken for "the rules hold".
+  // caller never keeps its own copy of it. The rules the owner agreed are checked only with the card's conversation
+  // (`conversation`): with none, the route says it didn't check them (`rules_unchecked`), and an ok here is never taken
+  // for "the rules hold".
   const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
-  return { ...answered, checked_on_read: checkedOnRead, rules_unchecked: true };
+  return { ...answered, checked_on_read: checkedOnRead, ...(conversation ? {} : { rules_unchecked: true }) };
 }
 
 /**
@@ -4272,6 +4323,22 @@ function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity,
     rulesAgreement: async () => rulesAgreement((await conversation()).events),
     sessionStarted: async () => (await conversation()).session.started,
     askedHere: async (grant) => askedInSession((await conversation()).events, grant),
+  };
+}
+
+/** A check route's conversation: at most this many events, the ones its caller shows. */
+const CHECK_EVENTS_MAX = 2000;
+
+/**
+ * withRules for a conversation its caller shows (the check route's `conversation`): the rules the owner agreed in those
+ * events, read by the same rule (rulesAgreement), with the same switches.
+ */
+function withShownRules(ctx: import("./approval.js").DecideContext, events: ReadonlyArray<{ kind?: string; run?: string; body?: unknown }>): import("./approval.js").DecideContext {
+  return {
+    ...ctx,
+    rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
+    rulesPerToTheLetter: process.env.TAFS_RULES_PER === "on",
+    rulesAgreement: async () => rulesAgreement(events),
   };
 }
 
@@ -7590,7 +7657,8 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
   // be read back. An unreadable list leaves them out.
   const removed = me.capabilities.includes("cards.manage") && deps.coach
     ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
-  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, manages: access.get(t.kiffAgent)?.manage === true })), ...removed];
+  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, manages: access.get(t.kiffAgent)?.manage === true,
+    reports: me.capabilities.includes("cards.manage") })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));

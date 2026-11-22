@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Товчлолууд",
+  "push.channel.briefs_description": "Таны товчлол тогтоосон цагт.",
+  "push.channel.holds_description": "Нэг хүсэлт таны хариуг хүлээж түр барьсан. Та зөвшөөрөхгүй бол юу ч илгээгдэхгүй.",
+  "push.channel.other": "Бусад мэдэгдэл",
+  "push.channel.other_description": "Даалгаврын хүсэлт болон тэдгээрийн хариу, дуугүй.",
+  "push.channel.urgent_description": "Дараагийн товчлол хүртэл хүлээж болохгүй зүйл, дуутай.",
+  "push.open_needs_you": "Хариулахын тулд Таныг хүлээж байна хэсгийг нээнэ үү.",
+  "push.open_taf": "Харахын тулд taf-ыг нээнэ үү.",
+  "push.open_usage": "Харахын тулд Багц ба хэрэглээг нээнэ үү."
+}

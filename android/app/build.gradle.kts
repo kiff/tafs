@@ -37,13 +37,12 @@ android {
 
   buildTypes {
     debug {
-      // K5, the end-to-end pass of row 39 (docs/onboarding.md): the onboarding and the sign-in inside tafs on, in a debug build
-      // for a test device or the emulator only, made with -Pk5 or TAFS_K5=1. Without either, it's off, as it ships.
-      buildConfigField("boolean", "K5", (project.hasProperty("k5") || System.getenv("TAFS_K5") == "1").toString())
+      // K5, row 39 (docs/onboarding.md): the onboarding and the sign-in inside tafs, on in every build since the owner's yes.
+      buildConfigField("boolean", "K5", "true")
     }
     release {
-      // Never in a release build, whatever is passed: every build for Play has the onboarding off.
-      buildConfigField("boolean", "K5", "false")
+      // On in every build for Play, as in debug: the onboarding and the sign-in inside tafs (owner, 22 Nov).
+      buildConfigField("boolean", "K5", "true")
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       // R8 keeps only the code the app reaches: most of Bouncy Castle goes. app/proguard-rules.pro keeps what's
       // looked up by name. A release build's receipt check on a phone is the test for these rules.

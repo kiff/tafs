@@ -62,6 +62,27 @@ class AppLocaleTest {
   }
 
   // Android 11 to 13 name Indonesian "in", its old code, even when the phone's tag is "id"; a kept tag may be either.
+  // Batch 4, read as each would ship. Serbian in Latin script ("sr-Latn"): a phone set to it reads it; one set to Serbian alone,
+  // which Android writes in Cyrillic, doesn't. Azerbaijani ("az", Latin by default) whether the phone names the script or not.
+  // Hebrew by either code.
+  @Test fun batchFourIsReadByScriptAndOldCode() {
+    val shipped = AppLocale.TAGS + listOf("sr-Latn", "he", "az", "sq", "ka", "hy", "bn")
+    for (tag in listOf("sr-Latn", "sr-Latn-RS", "sr-Latn-ME", "sr_Latn_RS")) assertEquals(tag, "sr-Latn", AppLocale.known(tag, shipped))
+    for (tag in listOf("sr", "sr-RS", "sr-Cyrl-RS")) assertNull(tag, AppLocale.known(tag, shipped))
+    for (tag in listOf("az", "az-AZ", "az-Latn-AZ")) assertEquals(tag, "az", AppLocale.known(tag, shipped))
+    for (tag in listOf("he", "he-IL", "iw", "iw-IL")) assertEquals(tag, "he", AppLocale.known(tag, shipped))
+    for (tag in listOf("sq-AL", "ka-GE", "hy-AM", "bn-BD")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
+  }
+
+  // Batch 5, read as each would ship: plain codes, as the libraries' folders are. Uzbek is Latin by default; a phone that names
+  // Cyrillic reads the Latin lines too, as Uzbekistan's official script is Latin. Russian serves Kazakhstan and Kyrgyzstan.
+  @Test fun batchFiveIsReadByItsPlainCodes() {
+    val shipped = AppLocale.TAGS + listOf("ca", "mn", "ne", "km", "lo", "mk", "ru", "ms", "uz")
+    for (tag in listOf("ru", "ru-RU", "ru-KZ", "ru-KG")) assertEquals(tag, "ru", AppLocale.known(tag, shipped))
+    for (tag in listOf("uz", "uz-UZ", "uz-Latn-UZ", "uz-Cyrl-UZ")) assertEquals(tag, "uz", AppLocale.known(tag, shipped))
+    for (tag in listOf("mk-MK", "ca-ES", "ca-AD", "mn-MN", "ne-NP", "km-KH", "lo-LA", "ms-MY", "ms-BN")) assertEquals(tag, tag.substringBefore('-'), AppLocale.known(tag, shipped))
+  }
+
   @Test fun anOldLanguageCodeIsReadAsTheNewOne() {
     for (tag in listOf("id", "in", "in-ID", "in_ID", "id-ID")) assertEquals(tag, "id", AppLocale.known(tag))
     assertEquals("id", AppLocale.fromLocales("in-ID,en-US"))
@@ -69,7 +90,8 @@ class AppLocaleTest {
     val shipped = AppLocale.TAGS + "he" + "yi"
     assertEquals("he", AppLocale.known("iw-IL", shipped))
     assertEquals("yi", AppLocale.known("ji", shipped))
-    assertNull(AppLocale.known("iw"))
+    // Hebrew ships: a phone that still names it by its old code reads it.
+    assertEquals("he", AppLocale.known("iw"))
   }
 
   // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
@@ -89,10 +111,10 @@ class AppLocaleTest {
 
   @Test fun theListIsThePhonesLanguageThenTheShippedOnesInOrderNamedInThemselves() {
     val rows = AppLocale.choices(device = "phone")
-    assertEquals(27, rows.size)
+    assertEquals(41, rows.size)
     assertEquals(AppLocale.Choice(null, "This phone's language"), rows.first())
     assertEquals(
-      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "pt-BR" to "Português (Brasil)"),
+      listOf("en" to "English", "de" to "Deutsch", "fr" to "Français", "es" to "Español", "it" to "Italiano", "pt" to "Português", "nl" to "Nederlands", "pl" to "Polski", "ko" to "한국어", "ja" to "日本語", "et" to "Eesti", "lt" to "Lietuvių", "lv" to "Latviešu", "cs" to "Čeština", "sk" to "Slovenčina", "sl" to "Slovenščina", "hu" to "Magyar", "ro" to "Română", "bg" to "Български", "hr" to "Hrvatski", "tr" to "Türkçe", "id" to "Indonesia", "vi" to "Tiếng Việt", "th" to "ไทย", "ar" to "العربية", "sr-Latn" to "Srpski (latinica)", "sq" to "Shqip", "ka" to "ქართული", "hy" to "Հայերեն", "az" to "Azərbaycan", "bn" to "বাংলা", "he" to "עברית", "ca" to "Català", "mk" to "Македонски", "mn" to "Монгол", "ne" to "नेपाली", "km" to "ខ្មែរ", "lo" to "ລາວ", "pt-BR" to "Português (Brasil)"),
       rows.drop(1).filter { it.tag != "zh-Hant" }.map { it.tag to it.title },
     )
     // Traditional Chinese is named with its script, so it doesn't read as Simplified: "中文 (繁體)", whichever brackets the system uses.

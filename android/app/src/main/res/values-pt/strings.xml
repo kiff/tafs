@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Aceito %1$s e %2$s.</string>
     <string name="onboarding_control_lead">Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com Face ID ou Touch ID, ou recusa.</string>
     <string name="onboarding_control_lead_android">Quando um taf precisa de si, espera em «Precisa de si» e, se tiver um, no relógio. Aprova com o bloqueio de ecrã, ou recusa.</string>
+    <string name="onboarding_control_lead_desktop">Quando um taf precisa de si, espera em «Precisa de si». Aprova no telemóvel, ou recusa.</string>
     <string name="onboarding_control_lead_mac">Quando um taf precisa de si, espera em «Precisa de si». Aprova com Touch ID ou no telemóvel, ou recusa.</string>
     <string name="onboarding_control_title">O controlo é seu</string>
     <string name="onboarding_get_started">Começar</string>
@@ -1851,6 +1852,12 @@
     <string name="record_refused_next_step_detail">Recusada, com um próximo passo para o taf: %1$s</string>
     <string name="record_removed_detail">Agendamento, memória e chave eliminados; nome livre</string>
     <string name="record_removed_title">Removeu %1$s</string>
+    <string name="record_report_button">Comunicar este pagamento</string>
+    <string name="record_report_done">Comunicado. %1$s está bloqueado e o recibo é mantido. Se saiu dinheiro da sua conta, fale também com o emissor do seu cartão.</string>
+    <string name="record_report_failed">Não foi possível enviar a comunicação. Nada mudou. Tente novamente.</string>
+    <string name="record_report_intro">Comunique um pagamento que não esperava: %1$s pagou %2$s em %3$s. Bloqueamos %1$s até que verifique.</string>
+    <string name="record_report_submit">Comunicar e bloquear %1$s</string>
+    <string name="record_report_title">Comunicar este pagamento</string>
     <string name="record_result_done">concluído</string>
     <string name="record_result_no_answer_yet">enviado, ainda sem resposta</string>
     <string name="record_result_not_done">não feito</string>

@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Slažem se s: %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate Face ID-jem ili Touch ID-jem ili odbijate.</string>
     <string name="onboarding_control_lead_android">Kad tafu trebate vi, čeka u Čeka vas, a na satu ako ga imate. Odobravate zaključavanjem zaslona ili odbijate.</string>
+    <string name="onboarding_control_lead_desktop">Kad tafu trebate vi, čeka u Čeka vas. Odobravate na telefonu ili odbijate.</string>
     <string name="onboarding_control_lead_mac">Kad tafu trebate vi, čeka u Čeka vas. Odobravate Touch ID-jem ili na telefonu ili odbijate.</string>
     <string name="onboarding_control_title">Vi ostajete u kontroli</string>
     <string name="onboarding_get_started">Započnite</string>
@@ -1915,6 +1916,12 @@
     <string name="record_refused_next_step_detail">Odbijeno, sa sljedećim korakom za taf: %1$s</string>
     <string name="record_removed_detail">Raspored, memorija i ključ izbrisani; naziv slobodan</string>
     <string name="record_removed_title">Uklonili ste taf %1$s</string>
+    <string name="record_report_button">Prijavite ovo plaćanje</string>
+    <string name="record_report_done">Prijavljeno. Taf %1$s je blokiran, a potvrda se čuva. Ako je novac otišao s vašeg računa, obratite se i izdavatelju svoje kartice.</string>
+    <string name="record_report_failed">Prijava nije poslana. Ništa se nije promijenilo. Pokušajte ponovno.</string>
+    <string name="record_report_intro">Prijavite plaćanje koje niste očekivali: taf %1$s platio je %2$s dana %3$s. Blokiramo taf %1$s dok ne provjerite.</string>
+    <string name="record_report_submit">Prijavite i blokirajte taf %1$s</string>
+    <string name="record_report_title">Prijavite ovo plaćanje</string>
     <string name="record_result_done">učinjeno</string>
     <string name="record_result_no_answer_yet">poslano, još nema odgovora</string>
     <string name="record_result_not_done">nije učinjeno</string>

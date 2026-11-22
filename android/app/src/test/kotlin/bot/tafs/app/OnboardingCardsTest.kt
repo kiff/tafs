@@ -68,14 +68,14 @@ class OnboardingCardsTest {
     assertTrue(showsOnboardingCards(seen = false, on = true))
     assertFalse("seen here: Home at once", showsOnboardingCards(seen = true, on = true))
     assertFalse("off: Home as it ships", showsOnboardingCards(seen = false, on = false))
-    assertFalse("ships off", showsOnboardingCards(seen = false))
+    assertTrue("ships on: the cards show once after signing in", showsOnboardingCards(seen = false))
   }
 
   @Test fun theFirstHomeShowsWithTheSwitchForWhoeverMayUseCoach() {
     assertTrue(showsFirstHome(mayUseCoach = true, on = true))
     assertFalse("a viewer reads where shared tafs show, as today", showsFirstHome(mayUseCoach = false, on = true))
     assertFalse(showsFirstHome(mayUseCoach = true, on = false))
-    assertFalse("ships off", showsFirstHome(mayUseCoach = true))
+    assertTrue("ships on: the first Home for whoever may use Coach", showsFirstHome(mayUseCoach = true))
   }
 
   @Test fun theFirstHomeSaysTafsCloudsLineFirst() {

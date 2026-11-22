@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "لم يتم تصدير محادثاتك. {why}",
+  "export.not_offered": "تعذّر حفظ الملفات على هذا الهاتف. حرّر بعض المساحة ثم حاول مرة أخرى.",
+  "export.own_chats_each_taf_coach": "محادثاتك مع كل taf، بما فيها محادثات Coach، وأسماء الملفات التي أرفقتها، وملاحظاتك، كملف مقروء وبصيغة JSON. لا يستطيع تصديرها غيرك.",
+  "export.preparing": "جارٍ تجهيز محادثاتك…",
+  "export.ready_share_again": "جاهز: {files}. شارك مرة أخرى",
+  "export.row": "تصدير محادثاتي",
+  "export.sign_in_first": "سجّل الدخول عبر KIFF لتصدير محادثاتك."
+}

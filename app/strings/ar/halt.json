@@ -1,0 +1,13 @@
+{
+  "halt.again": "تجميد مرة أخرى",
+  "halt.all_now": "تجميد الكل الآن",
+  "halt.explain.halted": "مجمّد. الاستئناف يبدأ العمل الجديد فقط.",
+  "halt.explain.halted_since": "منذ {time}. الاستئناف يبدأ العمل الجديد فقط.",
+  "halt.explain.halting": "لا يبدأ شيء جديد. تظهر حالة «مجمّد» عندما يؤكد KIFF والاتصال معًا.",
+  "halt.explain.running_all": "التجميد يوقف جميع tafs لديك حتى تستأنف. قد يصل مع ذلك طلب استدعاء أُرسل بالفعل.",
+  "halt.explain.running_one": "التجميد يوقفه حتى تستأنف. قد يصل مع ذلك طلب استدعاء أُرسل بالفعل.",
+  "halt.halting_stops_no_run_starts": "التجميد يوقف {who} حتى تستأنف. قد يصل مع ذلك طلب استدعاء أُرسل بالفعل.",
+  "halt.now": "تجميد الآن",
+  "halt.row_running": "أوقفه حتى تستأنف",
+  "halt.your_tafs_lower": "جميع tafs لديك"
+}

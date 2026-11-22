@@ -5310,8 +5310,14 @@ class AppModel(
       // never a tap riding on it, and the connection's window doesn't outlive it (closed in `finally`).
       if (kiff.window != null) closeWindow()
       windowAsked = false
+      // A grant that uses the owner's own Chrome: its fingerprint signs the grant's sites with the approval key (`chrome_sites_sig`),
+      // never a window's tap, so the one prompt is the person's yes and the signature the extension checks.
+      var sitesSig: String? = null
       val windowed = try {
-        holdWindow(prompt).also { ownWindow = it } || run {
+        if (grant.request.usesOwnChrome) {
+          sitesSig = bot.tafs.app.kiff.ChromePairing.sitesSignature(grant.request.browser, grant.id) { signer.signCritical(prompt, it) }
+          false
+        } else holdWindow(prompt).also { ownWindow = it } || run {
           // No window: the phone asks for the fingerprint itself, unless the window's prompt just came up (a KIFF from before
           // windows answers 404 only after it), so the person is asked once.
           if (!windowAsked) signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), prompt)
@@ -5345,7 +5351,7 @@ class AppModel(
       try {
         // A connection planque can't sign in again on its old account starts a new sign-in instead, which brings back every
         // connection signed out on it: never a reconnect it would refuse first.
-        val approved = inWindow { if (fresh || grant.reconnectsFresh) planque.connectFresh(grant, words) else planque.approve(grant, words) }
+        val approved = inWindow { if (fresh || grant.reconnectsFresh) planque.connectFresh(grant, words, sitesSig) else planque.approve(grant, words, sitesSig) }
           ?: return Connected.Stopped
         val url = approved.signInUrl
         if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
@@ -5561,7 +5567,8 @@ class AppModel(
         val drawsSigns = if (c.signs != null) listOf("signs") else emptyList()
         val can = when {
           together != null -> listOf("key_and_cards") + drawsSigns
-          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> listOf("tools_and_cards") + drawsSigns
+          // Not for a grant that uses the owner's own Chrome: its sites take the approval key's one signature behind the fingerprint.
+          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost && !ownChrome(grantId) -> listOf("tools_and_cards") + drawsSigns
           else -> emptyList()
         }
         if (can.isNotEmpty()) put("can", kotlinx.serialization.json.buildJsonArray { can.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
@@ -5600,22 +5607,38 @@ class AppModel(
             // phone holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
             kiff.setupSigner = sign
             var windowed = false
+            // A grant that uses the owner's own Chrome is approved with this phone's signature over its sites, made with the approval
+            // key behind this approval's fingerprint, over the sites the digest the owner saw covers. Never a window's tap.
+            val chromeGrant = asked.planque?.takeIf { asked.step != "cards" }?.let { p -> _state.value.grants.firstOrNull { it.id == p.grant } }?.takeIf { it.request.usesOwnChrome }
+            if (chromeGrant != null && (!chromeGrant.digestMatches || chromeGrant.digest != shownDigest || chromeGrant.digest != askedDigest(asked))) {
+              note(c.id, VersionWords.OUT_OF_DATE_CARD)
+              return true
+            }
+            var sitesSig: String? = null
             try {
               // A window this phone already holds is ridden only where the button said "Approve"; with none held, one is opened
               // behind the fingerprint, as the button said.
-              windowed = asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason)
+              windowed = chromeGrant == null && asked.key == "window" && (kiff.window == null || shownAsTap) && holdWindow(asked.reason)
               // The Cards step grants authority: the approval key signs it where the session has one; a connection, the device's key.
               if (!windowed) {
-                if (asked.step == "cards") confirmGrant(asked.message, asked.reason) else signer.sign(asked.message.toByteArray(), asked.reason)
+                when {
+                  asked.step == "cards" -> confirmGrant(asked.message, asked.reason)
+                  chromeGrant != null -> sitesSig = bot.tafs.app.kiff.ChromePairing.sitesSignature(chromeGrant.request.browser, chromeGrant.id) { signer.signCritical(asked.reason, it) }
+                  else -> signer.sign(asked.message.toByteArray(), asked.reason)
+                }
               }
             } catch (e: SignerException) {
               note(c.id, notSigned(e, Words.Common.notDoneUnconfirmed))
+              return true
+            } catch (e: PlanqueError.DigestMismatch) {
+              // The grant names no Chrome or no sites: nothing is signed over an open list.
+              note(c.id, VersionWords.OUT_OF_DATE_CARD)
               return true
             }
             if (generation != accountGeneration) return true
             planque.signer = sign
             if (windowed) planque.window = kiff.window?.id
-            var made = makeAskedCall(asked)
+            var made = makeAskedCall(asked, sitesSig)
             // planque says the window ended before anything was done: a new one, behind the fingerprint, and the call once more.
             if (windowed && made == Came.WindowEnded) {
               kiff.window = null
@@ -5878,8 +5901,15 @@ class AppModel(
     _state.update { it.copy(windowWords = null) }
   }
 
+  /** Whether [grantId] uses the owner's own Chrome, as this phone holds the grant. */
+  private fun ownChrome(grantId: String): Boolean = _state.value.grants.firstOrNull { it.id == grantId }?.request?.usesOwnChrome == true
+
+  /** The digest in the approve body tafs cloud built, or null: the sites are signed only for the grant the owner was shown. */
+  private fun askedDigest(asked: bot.tafs.app.kiff.ApprovalAsk): String? =
+    runCatching { (asked.planque?.body as? kotlinx.serialization.json.JsonObject)?.get("digest")?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { p -> p.isString }?.content } }.getOrNull()
+
   /** Makes the one call tafs cloud asked for, as given, and says what came of it. */
-  private suspend fun makeAskedCall(asked: bot.tafs.app.kiff.ApprovalAsk): Came = try {
+  private suspend fun makeAskedCall(asked: bot.tafs.app.kiff.ApprovalAsk, chromeSitesSig: String? = null): Came = try {
     when (asked.step) {
       "cards" -> {
         val k = asked.kiff ?: return Came.Of("failed", why = "tafs cloud named no draft to confirm")
@@ -5888,7 +5918,7 @@ class AppModel(
       }
       else -> {
         val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
-        val approved = planque.approveAsAsked(p.grant, p.body)
+        val approved = planque.approveAsAsked(p.grant, p.body, chromeSitesSig)
         val url = approved.signInUrl
         if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
           // Signed in at the provider already: no second sign-in. planque revokes the held sign-in unless this phone confirms it
@@ -8236,6 +8266,26 @@ class AppModel(
     else -> null
   }
 
+  /**
+   * "Report this payment" (docs/record.md): tafs cloud reports it to KIFF, which keeps the receipt and halts [tafId], as the halt
+   * button does. True when it took it; the taf reads as KIFF and tafs cloud say from then on.
+   */
+  suspend fun reportPayment(tafId: String, traceId: String): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    val generation = accountGeneration
+    val report = try {
+      cloud.reportPayment(traceId)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return false
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(halts = it.halts + (tafId to report.halt)) }
+    scope.launch { refresh() }
+    return true
+  }
+
   /** Reads where a halt stands. */
   suspend fun refreshHalt(tafId: String?) {
     val key = haltKey(tafId)
@@ -8291,11 +8341,16 @@ class AppModel(
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
 
-  /** The owner's answer to the time zone offer: yes sets it (one confirmation), no is remembered for that zone. */
+  /**
+   * The owner's answer to the time zone offer: yes sets it (one confirmation), no is remembered for that zone. The offer is
+   * cleared first, so the alert that asked closes, and the coroutine it launched the answer in closes with it: the yes is
+   * finished regardless (its confirmation and KIFF's call), else the prompt was cancelled as it opened and nothing was set (the
+   * owner's K5 pass, 22 Nov).
+   */
   suspend fun answerTimeZoneOffer(use: Boolean) {
     val zone = _state.value.timeZoneOffer ?: return
     _state.update { it.copy(timeZoneOffer = null) }
-    if (use) useThisDevicesTimeZone() else secrets.save(zone, declinedZoneKey())
+    if (use) withContext(NonCancellable) { useThisDevicesTimeZone() } else secrets.save(zone, declinedZoneKey())
   }
 
   /** Sets the account's time zone to this device's, so a Card's day ends at the owner's midnight: a signed call, which KIFF takes from the owner or an admin. */

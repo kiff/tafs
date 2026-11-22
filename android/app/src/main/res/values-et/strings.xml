@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Nõustun tingimustega: %1$s ja %2$s.</string>
     <string name="onboarding_control_lead">Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad Face ID või Touch ID abil või keeldud.</string>
     <string name="onboarding_control_lead_android">Kui taf vajab sind, ootab see vaates Vajab sind ja kellas, kui sul see on. Kinnitad ekraaniluku abil või keeldud.</string>
+    <string name="onboarding_control_lead_desktop">Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad telefonis või keeldud.</string>
     <string name="onboarding_control_lead_mac">Kui taf vajab sind, ootab see vaates Vajab sind. Kinnitad Touch ID abil või telefonis või keeldud.</string>
     <string name="onboarding_control_title">Otsustad sina</string>
     <string name="onboarding_get_started">Alusta</string>
@@ -1851,6 +1852,12 @@
     <string name="record_refused_next_step_detail">Keeldutud, tafile järgmise sammuga: %1$s</string>
     <string name="record_removed_detail">Ajakava, mälu ja võti kustutatud; nimi on vaba</string>
     <string name="record_removed_title">Eemaldasid tafi %1$s</string>
+    <string name="record_report_button">Teata sellest maksest</string>
+    <string name="record_report_done">Teatatud. Taf %1$s on peatatud ja kviitung säilitatakse. Kui sinu kontolt lahkus raha, võta ühendust ka oma kaardi väljaandjaga.</string>
+    <string name="record_report_failed">Teadet ei õnnestunud saata. Midagi ei muutunud. Proovi uuesti.</string>
+    <string name="record_report_intro">Teata maksest, mida sa ei oodanud: %1$s maksis %3$s summa %2$s. Peatame tafi %1$s, kuni oled järele vaadanud.</string>
+    <string name="record_report_submit">Teata ja peata taf %1$s</string>
+    <string name="record_report_title">Teata sellest maksest</string>
     <string name="record_result_done">tehtud</string>
     <string name="record_result_no_answer_yet">saadetud, veel vastuseta</string>
     <string name="record_result_not_done">tegemata</string>

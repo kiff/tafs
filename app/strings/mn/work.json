@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Хариулах хугацаа",
+  "work.answer_within_days": {
+    "one": "{count} өдөр",
+    "other": "{count} өдөр"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} цаг",
+    "other": "{count} цаг"
+  },
+  "work.answer_within_line": "Тохиолдол үүнээс удаан хүлээвэл танд мэдэгдэнэ.",
+  "work.answer_within_none": "Тохируулаагүй",
+  "work.answer_within_not_set": "Тохируулж чадсангүй. {why}",
+  "work.asking_kiff_run": "KIFF-ээс {tool}-ийг ажиллуулахыг хүсч байна…",
+  "work.did_not_stop": "Зогссонгүй: {why}",
+  "work.duration.minutes": "{minutes} мин {seconds} с",
+  "work.duration.seconds": "{seconds} с",
+  "work.its_runs": "Түүний ажиллалтууд",
+  "work.not_read": "Түүний ажлыг уншиж чадсангүй. {why}",
+  "work.not_sent_again": "Дахин илгээгдсэнгүй. {why}",
+  "work.request.try_reply_now": "Хариуг одоо оролдох",
+  "work.requests_need_you": {
+    "one": "{count} хүсэлт таныг хүлээж байна",
+    "other": "{count} хүсэлт таныг хүлээж байна"
+  },
+  "work.send_again": "Дахин илгээх",
+  "work.sending_again": "Дахин илгээж байна…",
+  "work.stop_run": "Ажиллалтыг зогсоох",
+  "work.stopped_part_way_before_finished": "{taf} дуусахаас өмнө дундаа зогслоо."
+}

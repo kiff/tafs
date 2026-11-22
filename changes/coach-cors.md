@@ -1,0 +1,1 @@
+- **The Chrome extension's side panel can reach Coach.** tafs cloud answers Chrome's preflight on the panel's three routes (`/v1/setup`, a taf's conversation, a message to it) and lets only an extension's own origin read the answers, never `*` and never with credentials ([chrome.md](docs/chrome.md)).

@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "Card-ын бүгд",
+    "other": "Card-уудын бүгд"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, дараа нь танаас асууна",
+  "card.calls_left": {
+    "one": "{count} дуудлага үлдсэн",
+    "other": "{count} дуудлага үлдсэн"
+  },
+  "card.calls_left_line": {
+    "one": "{window} {limit}-ээс {count} дуудлага үлдсэн",
+    "other": "{window} {limit}-ээс {count} дуудлага үлдсэн"
+  },
+  "card.calls_used_of": {
+    "one": "{window} {count} дуудлагаас {used}",
+    "other": "{window} {count} дуудлагаас {used}"
+  },
+  "card.calls_window": {
+    "one": "{window} {count} дуудлага",
+    "other": "{window} {count} дуудлага"
+  },
+  "card.card_confirmed_kiff": "Card · KIFF баталгаажуулсан",
+  "card.card_draft_kiff": "Card · ноорог · KIFF-ээс",
+  "card.card_got_room_call_needed": "Түүний Card энэ дуудлагад хэрэгтэй зайг тэр нийт дүн шинэчлэгдэх хүртэл авсан",
+  "card.card_not_issued": "Card олгогдоогүй. ",
+  "card.card_revoked": "Card хүчингүй болсон",
+  "card.check.always_asks": "{rule}: үргэлж танаас асууна",
+  "card.check.never_allowed": "{rule}: хэзээ ч зөвшөөрөгдөхгүй",
+  "card.check.not_on_card": "Энэ taf-ын Card дээр алга",
+  "card.check.over_count": {
+    "one": "{window} {count}-аас хэтэрсэн",
+    "other": "{window} {count}-аас хэтэрсэн"
+  },
+  "card.check.over_each": "Тус бүр {amount}-аас хэтэрсэн",
+  "card.check.over_total": "{window} {amount}-аас хэтэрсэн",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card"
+  },
+  "card.ended": "Дууссан",
+  "card.ended_on": "{date}-д дууссан",
+  "card.ends": "Дуусна",
+  "card.extra_room": "{window} +{extra} нэмэлт зай",
+  "card.extra_room_prefix": "+{formatted} нэмэлт зай ",
+  "card.extra_room_until": "{ends} хүртэл +{extra} нэмэлт зай",
+  "card.figure_left": "{figure} үлдсэн",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "one": "{window} {count} дуудлага{each}: энэ нь {nth}{item} байх байсан",
+    "other": "{window} {count} дуудлага{each}: энэ нь {nth}{item} байх байсан"
+  },
+  "card.held.each_call_asks": "Дуудлага бүр эхлээд танаас асууна",
+  "card.held.for_each": " {name} бүрт",
+  "card.held.for_each_join": " бүрт ",
+  "card.held.for_item": " {item}-д",
+  "card.held.over_count": {
+    "one": "Түүний {count} дуудлагын хязгаараас хэтэрсэн: энэ нь {nth} байх байсан",
+    "other": "Түүний {count} дуудлагын хязгаараас хэтэрсэн: энэ нь {nth} байх байсан"
+  },
+  "card.held.over_one_call": "{amount} нь нэг дуудлагын {cap} хязгаараас хэтэрсэн",
+  "card.held.over_total": "{amount} нь {cap}-ийн нийт дүнгээс хэтрэх байсан",
+  "card.hero.calls_left_of": {
+    "one": "{window} {limit}-ээс дуудлага үлдсэн",
+    "other": "{window} {limit}-ээс дуудлага үлдсэн"
+  },
+  "card.hero.calls_use_unavailable": "{window} дуудлага · хэрэглээ боломжгүй",
+  "card.hero.left_of": "{window} {limit}-ээс үлдсэн",
+  "card.hero.left_of_extra": "{window} {base} + {extra} нэмэлт зайнаас үлдсэн",
+  "card.hero.left_of_extra_until": "{window} {base} + {ends} хүртэл {extra} нэмэлт зайнаас үлдсэн",
+  "card.hero.left_of_note": "{window} {limit}-ээс үлдсэн{note}",
+  "card.hero.no_currency": "валютгүй",
+  "card.hero.no_currency_suffix": " · валютгүй",
+  "card.hero.use_unavailable": "{window} · хэрэглээ боломжгүй",
+  "card.hero.use_unavailable_note": "{label} · хэрэглээ боломжгүй{note}",
+  "card.how_counted": "Үүнийг хэрхэн тоолдог",
+  "card.issue_prompt": "{taf}-ын Card олгох",
+  "card.issued_by": "Олгосон",
+  "card.issued_by_account": "Бүртгэл",
+  "card.issued_by_named": "{who} олгосон",
+  "card.its_card": "Түүний Card",
+  "card.kiff_did_not_revoke_cards": "KIFF түүний {cards_left} Card-ыг хүчингүй болгосонгүй: тэдгээрийг KIFF дээр хүчингүй болгоно уу.",
+  "card.left": "{window} {amount} үлдсэн",
+  "card.left_extra_room": "{own} + {extra} нэмэлт зайнаас {current} үлдсэн{until}{note}",
+  "card.limit_can_not_raised_right": "Хязгаарыг яг одоо эндээс нэмэгдүүлэх боломжгүй.",
+  "card.limit_raised_read_balance_again": "Хязгаарыг нэмэгдүүлсэн. Дахин нэмэгдүүлэхээсээ өмнө үлдэгдлийг дахин уншина уу.",
+  "card.line.calls_in_window": {
+    "one": "{window} {count} дуудлага{then}",
+    "other": "{window} {count} дуудлага{then}"
+  },
+  "card.line.more_asks": "; түүнээс илүүд эхлээд танаас асууна",
+  "card.line.then_asks": ", дараа нь танаас асууна",
+  "card.line.total_in_window": "{window} нийт {amount}{then}",
+  "card.line.up_to_each": "тус бүр {amount} хүртэл",
+  "card.more": {
+    "one": "дахин {count}",
+    "other": "дахин {count}"
+  },
+  "card.no_actions": "Одоогоор үйлдэл алга",
+  "card.no_actions_short": "одоогоор үйлдэл алга",
+  "card.no_currency": "{amount} (валютгүй)",
+  "card.no_end_date": "Дуусах огноо алга",
+  "card.outcome.not_a_resource": "Card-ын нөөцүүдийн нэг биш",
+  "card.outcome.outside": "Card-аас гадуур",
+  "card.outcome.over_one_action": "Card-ын нэг үйлдлийн хязгаараас хэтэрсэн",
+  "card.outcome.over_total": "Card-ын нийт дүнгээс хэтэрсэн",
+  "card.outside_held": "Гадуур: таны төлөө түр барьсан",
+  "card.outside_refused": "Гадуур: татгалзсан",
+  "card.over_limit_calls_would": "Түүний {limit} дуудлагын хязгаараас хэтэрсэн: энэ нь {nth} байх байсан",
+  "card.revoke_failed": "KIFF Card-ыг хүчингүй болгосонгүй. {why}",
+  "card.revoked": "Хүчингүй болсон",
+  "card.rule.always_asks": "үргэлж танаас асууна",
+  "card.rule.at_most_each": "тус бүр ≤ {amount}",
+  "card.rule.at_most_each_refused_above": "тус бүр ≤ {amount} · түүнээс дээш татгалзана",
+  "card.rule.calls": {
+    "one": "{window} {count} дуудлага",
+    "other": "{window} {count} дуудлага"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{window} {count} дуудлага, дараа нь танаас асууна",
+    "other": "{window} {count} дуудлага, дараа нь танаас асууна"
+  },
+  "card.rule.in_total": "{window} нийт {amount}",
+  "card.rule.never": "хэзээ ч үгүй",
+  "card.rule.total_then_asks": "{window} нийт {amount}, дараа нь танаас асууна",
+  "card.rule.up_to_each": "тус бүр {amount} хүртэл; түүнээс илүүд эхлээд танаас асууна",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Taf-ын Card",
+  "card.tools": {
+    "one": "{count} хэрэгсэл",
+    "other": "{count} хэрэгсэл"
+  },
+  "card.until": "Хүртэл",
+  "card.until_date": "{date} хүртэл",
+  "card.until_ends": " {ends} хүртэл",
+  "card.used_of": "{window} {limit}-ээс {used}",
+  "card.window.a_day": "өдөрт",
+  "card.window.a_month": "сард",
+  "card.window.a_week": "долоо хоногт",
+  "card.window.any_day": "дурын 24 цагт",
+  "card.window.any_hour": "дурын цагт",
+  "card.window.any_week": "дурын 7 хоногт",
+  "card.window.in_total": "нийт",
+  "card.window.in_total_window": "{window} нийт",
+  "card.window.last_day": "сүүлийн 24 цагт",
+  "card.window.last_hour": "сүүлийн цагт",
+  "card.window.last_week": "сүүлийн 7 хоногт",
+  "card.window.so_far": "одоогоор",
+  "card.window.this_month": "энэ сард",
+  "card.window.this_week": "энэ долоо хоногт",
+  "card.window.today": "өнөөдөр",
+  "card.within_card": "Card-ын хүрээнд"
+}

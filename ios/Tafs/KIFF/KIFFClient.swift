@@ -1690,7 +1690,8 @@ final class KIFFClient {
             let parts = tag.split(whereSeparator: { $0 == "-" || $0 == "_" }).map(String.init)
             let code = parts.first?.lowercased() ?? ""
             // Traditional Chinese ships as "zh-Hant" and is served under its language ("zh"), as pt-BR's pages are pt's.
-            let shippedCode = shipped.contains(code) ? code : (code == "zh" && shipped.contains("zh-Hant") && isTraditionalChinese(parts) ? code : "")
+            // Serbian ships in Latin script ("sr-Latn") and is served under "sr": a Cyrillic tag isn't the language the app ships.
+            let shippedCode = shipped.contains(code) ? code : ((code == "zh" && shipped.contains("zh-Hant") && isTraditionalChinese(parts)) || (code == "sr" && shipped.contains("sr-Latn") && isLatinScript(parts)) ? code : "")
             if !shippedCode.isEmpty, !out.contains(shippedCode) { out.append(shippedCode) }
             if out.count == 4 { break }
         }
@@ -1703,6 +1704,11 @@ final class KIFFClient {
         if let script = rest.first(where: { $0.count == 4 }) { return script.lowercased() == "hant" }
         guard let region = rest.first(where: { $0.count == 2 }) else { return false }
         return ["TW", "HK", "MO"].contains(region.uppercased())
+    }
+
+    /// Whether a tag (its subtags, "sr-Latn-RS") names the Latin script: Serbian is written in either, and the app ships the Latin one.
+    nonisolated static func isLatinScript(_ parts: [String]) -> Bool {
+        parts.dropFirst().contains { $0.count == 4 && $0.lowercased() == "latn" }
     }
 
     /// What every call to KIFF, tafs cloud and planque sends as `Accept-Language`: the screens' languages, with the

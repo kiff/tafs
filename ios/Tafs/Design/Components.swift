@@ -80,8 +80,9 @@ struct Eyebrow: View {
     var color: Color = Theme.dim
 
     var body: some View {
-        // Text's own tracking, before the font. Korean, Japanese and Chinese keep the plain face with no tracking:
-        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview).
+        // Text's own tracking, before the font. Korean, Japanese, Chinese and Arabic keep the plain face with no tracking:
+        // the monospaced face's wide spaces split "기억하는 것" into "기억하는   것" (the ko preview), and tracking cuts
+        // Arabic's joined letters apart (the ar preview: "بـانـتـظـار ك").
         let ideographic = Eyebrow.ideographic(text)
         Text(text.uppercased())
             .tracking(ideographic ? 0 : 0.7)
@@ -89,11 +90,14 @@ struct Eyebrow: View {
             .foregroundColor(color)
     }
 
-    /// Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart.
+    /// Whether a line is written in Hangul, kana, Han or Arabic script, which a monospaced face and letter-spacing only pull apart
+    /// (Arabic's letters join, so spacing them breaks the word).
     static func ideographic(_ text: String) -> Bool {
         text.unicodeScalars.contains { s in
             (0x1100...0x11FF).contains(s.value) || (0x3040...0x30FF).contains(s.value) || (0x3130...0x318F).contains(s.value)
                 || (0x3400...0x4DBF).contains(s.value) || (0x4E00...0x9FFF).contains(s.value) || (0xAC00...0xD7AF).contains(s.value)
+                || (0x0600...0x06FF).contains(s.value) || (0x0750...0x077F).contains(s.value) || (0x08A0...0x08FF).contains(s.value)
+                || (0xFB50...0xFDFF).contains(s.value) || (0xFE70...0xFEFF).contains(s.value)
         }
     }
 }
@@ -272,11 +276,34 @@ enum AccountTime {
     }
 }
 
+extension Words {
+    /// Whether the app's language has a locale of its own for figures and dates (`localeIdentifiers`: Arabic).
+    /// Read from the language's code: a `Locale`'s identifier doesn't keep the `-u-ca-` it was made with.
+    static var namesCalendar: Bool {
+        localeIdentifiers[bundle.localizedString(forKey: "_language", value: "en", table: nil)] != nil
+    }
+}
+
+extension Date.FormatStyle {
+    /// This style in the app's language: its locale, and the calendar that locale names (Arabic:
+    /// Gregorian, not the device's Hijri), as `Date.shown(_:)` does in the account's zone.
+    var inAppLanguage: Date.FormatStyle {
+        var style = self
+        // Only where the language has a locale of its own (Arabic): any other language keeps the device's region.
+        if Words.namesCalendar {
+            style.locale = Words.locale
+            style.calendar = Words.locale.calendar
+        }
+        return style
+    }
+}
+
 extension Date {
     /// The time of day, as 14:05, in the account's zone.
     var shortTime: String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
+        if Words.namesCalendar { f.locale = Words.locale }
         f.timeZone = AccountTime.zone
         return f.string(from: self)
     }
@@ -304,7 +331,7 @@ extension Date {
     func shown(_ style: Date.FormatStyle) -> String {
         var style = style
         style.timeZone = AccountTime.zone
-        return formatted(style)
+        return formatted(style.inAppLanguage)
     }
 }
 
@@ -314,8 +341,9 @@ extension Date {
 /// unprefixed path, never `/en/`. A link to the English page from another language says so (`label`).
 enum Legal {
     /// The languages kiff.dev serves tafs's Terms and Privacy in, besides English. Traditional Chinese (`zh-Hant`) is served
-    /// under its language, `/zh/`: `Legal.language` is "zh" for it, as it is "pt" for pt-BR.
-    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh"]
+    /// under its language, `/zh/`, and Serbian in Latin script (`sr-Latn`) at `/sr/`: `Legal.language` is "zh" and "sr" for them, as it
+    /// is "pt" for pt-BR.
+    static let translated: Set<String> = ["de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "ar", "sr", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo"]
 
     static var terms: URL { page("terms") }
     static var privacy: URL { page("privacy") }

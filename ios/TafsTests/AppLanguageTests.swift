@@ -70,6 +70,22 @@ final class AppLanguageTests: XCTestCase {
         XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["zh-TW"], shipped: ["en", "pt"]), "en")
     }
 
+    /// Serbian ships in Latin script ("sr-Latn"): a phone says it by its script. Cyrillic isn't shipped, so it falls through to
+    /// the person's next language, else English. Azerbaijani, Bengali, Hebrew and the others ship under their own codes.
+    func testSerbianIsReadByItsScript() {
+        for tag in ["sr-Latn", "sr-Latn-RS", "sr_Latn_ME", "sr-Latn-BA"] {
+            XCTAssertEqual(AppLanguage.deviceLanguage(preferred: [tag]), "sr-Latn", tag)
+        }
+        for tag in ["sr", "sr-RS", "sr-Cyrl", "sr-Cyrl-RS"] {
+            XCTAssertEqual(AppLanguage.deviceLanguage(preferred: [tag]), "en", tag)
+        }
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["sr-Cyrl-RS", "fr-FR"]), "fr", "Cyrillic is skipped, not mistaken for Latin")
+        XCTAssertEqual(AppLanguage.deviceLanguage(preferred: ["sr-Latn-RS"], shipped: ["en", "pt"]), "en", "before the app ships it, it isn't one the app has")
+        for (tag, code) in [("ar-SA", "ar"), ("sq-AL", "sq"), ("ka-GE", "ka"), ("hy-AM", "hy"), ("az-Latn-AZ", "az"), ("bn-BD", "bn"), ("bn-IN", "bn"), ("he-IL", "he")] {
+            XCTAssertEqual(AppLanguage.deviceLanguage(preferred: [tag]), code, tag)
+        }
+    }
+
     /// The picker's rows: the device's language, by the device's name, then the 8, each named in itself.
     func testThePickerListsTheDeviceThenTheEight() throws {
         XCTAssertEqual(Words.Settings.languageDevice(device: "iPhone"), "This iPhone's language")
@@ -77,8 +93,14 @@ final class AppLanguageTests: XCTestCase {
         // Traditional Chinese is named with its script, so it doesn't read as Simplified ("繁體中文", or "中文 (繁體)").
         let hant = try XCTUnwrap(Words.languages.firstIndex(of: "zh-Hant"))
         XCTAssertTrue(names[hant].contains("繁體"), names[hant])
-        XCTAssertEqual(names.enumerated().filter { $0.offset != hant }.map(\.element),
-                       ["English", "Deutsch", "Français", "Español", "Italiano", "Português", "Nederlands", "Polski", "한국어", "日本語", "Eesti", "Lietuvių", "Latviešu", "Čeština", "Slovenčina", "Slovenščina", "Magyar", "Română", "Български", "Hrvatski", "Türkçe", "Indonesia", "Tiếng Việt", "ไทย", "Português (Brasil)"])
+        let pinned = ["en": "English", "de": "Deutsch", "fr": "Français", "es": "Español", "it": "Italiano", "pt": "Português", "nl": "Nederlands", "pl": "Polski", "ko": "한국어", "ja": "日本語", "et": "Eesti", "lt": "Lietuvių", "lv": "Latviešu", "cs": "Čeština", "sk": "Slovenčina", "sl": "Slovenščina", "hu": "Magyar", "ro": "Română", "bg": "Български", "hr": "Hrvatski", "tr": "Türkçe", "id": "Indonesia", "vi": "Tiếng Việt", "th": "ไทย", "ca": "Català", "mk": "Македонски", "mn": "Монгол", "ne": "नेपाली", "km": "ខ្មែរ", "lo": "ລາວ", "pt-BR": "Português (Brasil)"]
+        // Batch 4's languages are each named in its own script; ICU spells a few of the names differently by OS version, so each is read by a part of it.
+        let parts = ["ar": "العربية", "sr-Latn": "rpski", "sq": "hqip", "ka": "ქართული", "hy": "երեն", "az": "zərbaycan", "bn": "বাংলা", "he": "עברית"]
+        XCTAssertEqual(Set(pinned.keys).union(parts.keys).union(["zh-Hant"]), Set(Words.languages), "every shipped language is checked")
+        for (code, name) in zip(Words.languages, names) {
+            if let want = pinned[code] { XCTAssertEqual(name, want, code) }
+            if let part = parts[code] { XCTAssertTrue(name.localizedCaseInsensitiveContains(part), "\(code): \(name)") }
+        }
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
         XCTAssertTrue(account.contains("NavigationLink { LanguagePicker() }"), "Change language opens the app's own list")

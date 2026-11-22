@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Ik ga akkoord met %1$s en %2$s.</string>
     <string name="onboarding_control_lead">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met Face ID of Touch ID, of weigert.</string>
     <string name="onboarding_control_lead_android">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met je schermvergrendeling, of weigert.</string>
+    <string name="onboarding_control_lead_desktop">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of weigert.</string>
     <string name="onboarding_control_lead_mac">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed met Touch ID of op je telefoon, of weigert.</string>
     <string name="onboarding_control_title">Jij houdt de controle</string>
     <string name="onboarding_get_started">Aan de slag</string>
@@ -1851,6 +1852,12 @@
     <string name="record_refused_next_step_detail">Geweigerd, met een volgende stap voor het taf: %1$s</string>
     <string name="record_removed_detail">Planning, geheugen en sleutel verwijderd; naam vrij</string>
     <string name="record_removed_title">Je hebt %1$s verwijderd</string>
+    <string name="record_report_button">Deze betaling melden</string>
+    <string name="record_report_done">Gemeld. %1$s is stilgezet en het ontvangstbewijs blijft bewaard. Als er geld van je rekening is gegaan, neem dan ook contact op met de uitgever van je kaart.</string>
+    <string name="record_report_failed">Het rapport kon niet worden verzonden. Er is niets veranderd. Probeer het opnieuw.</string>
+    <string name="record_report_intro">Meld een betaling die je niet verwachtte: %1$s betaalde %2$s op %3$s. We zetten %1$s stil totdat je hebt gekeken.</string>
+    <string name="record_report_submit">Melden en %1$s stilzetten</string>
+    <string name="record_report_title">Deze betaling melden</string>
     <string name="record_result_done">klaar</string>
     <string name="record_result_no_answer_yet">verzonden, nog geen antwoord</string>
     <string name="record_result_not_done">niet uitgevoerd</string>

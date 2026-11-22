@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "यति समयभित्र जवाफ दिनुहोस्",
+  "work.answer_within_days": {
+    "one": "{count} दिन",
+    "other": "{count} दिन"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} घण्टा",
+    "other": "{count} घण्टा"
+  },
+  "work.answer_within_line": "कुनै मामिला यसभन्दा लामो पर्खँदा तपाईंलाई जानकारी दिइन्छ।",
+  "work.answer_within_none": "तोकिएको छैन",
+  "work.answer_within_not_set": "तोक्न सकिएन। {why}",
+  "work.asking_kiff_run": "KIFF लाई {tool} चलाउन भनिँदैछ…",
+  "work.did_not_stop": "रोकिएन: {why}",
+  "work.duration.minutes": "{minutes} मिनेट {seconds} सेकेन्ड",
+  "work.duration.seconds": "{seconds} सेकेन्ड",
+  "work.its_runs": "यसका चलाइहरू",
+  "work.not_read": "यसको काम पढ्न सकिएन। {why}",
+  "work.not_sent_again": "फेरि पठाइएन। {why}",
+  "work.request.try_reply_now": "अहिले जवाफ प्रयास गर्नुहोस्",
+  "work.requests_need_you": {
+    "one": "{count} अनुरोधले तपाईंलाई पर्खिरहेको छ",
+    "other": "{count} अनुरोधले तपाईंलाई पर्खिरहेका छन्"
+  },
+  "work.send_again": "फेरि पठाउनुहोस्",
+  "work.sending_again": "फेरि पठाइँदैछ…",
+  "work.stop_run": "चलाइ रोक्नुहोस्",
+  "work.stopped_part_way_before_finished": "{taf} सकिनुअघि नै बीचमा रोकियो।"
+}

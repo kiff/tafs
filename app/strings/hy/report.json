@@ -1,0 +1,17 @@
+{
+  "report.already": "Դուք արդեն հաղորդել եք այս պատասխանի մասին։",
+  "report.cant_from_here": "Այս պատասխանի մասին այստեղից հնարավոր չէ հաղորդել։",
+  "report.menu": "Հաղորդեք այս պատասխանի մասին",
+  "report.not_sent": "Ձեր հաղորդումը չուղարկվեց։ {why}",
+  "report.not_sent_why": "Չուղարկվեց՝ {failed}",
+  "report.note_hint": "Ավելացրեք նշում (ըստ ցանկության)",
+  "report.note_most_characters": "Նշումը առավելագույնը 1 000 նիշ է։",
+  "report.person_kiff_reads_your_report": "KIFF-ի մարդը կարդում է ձեր հաղորդումը՝ պատասխանի հետ միասին, ինչպես այն գրվել է։",
+  "report.reason.harmful": "Վնասակար",
+  "report.reason.offensive": "Վիրավորական",
+  "report.reason.other": "Այլ",
+  "report.reason.wrong": "Սխալ",
+  "report.runs_not_loaded": "Նրա գործարկումները չկարողացան բեռնվել։ {why}",
+  "report.thanks": "Շնորհակալություն։ KIFF-ում ինչ-որ մեկը կկարդա ձեր հաղորդումը։",
+  "report.what_wrong": "Ի՞նչ սխալ կա դրանում։"
+}

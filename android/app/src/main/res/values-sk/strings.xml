@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Súhlasím s %1$s a %2$s.</string>
     <string name="onboarding_control_lead">Keď vás taf potrebuje, čaká v Čaká na vás, a na hodinkách, ak ich máte. Schválite cez Face ID alebo Touch ID, alebo odmietnete.</string>
     <string name="onboarding_control_lead_android">Keď vás taf potrebuje, čaká v Čaká na vás, a na hodinkách, ak ich máte. Schválite zámkou obrazovky, alebo odmietnete.</string>
+    <string name="onboarding_control_lead_desktop">Keď vás taf potrebuje, čaká v Čaká na vás. Schválite v telefóne, alebo odmietnete.</string>
     <string name="onboarding_control_lead_mac">Keď vás taf potrebuje, čaká v Čaká na vás. Schválite cez Touch ID alebo v telefóne, alebo odmietnete.</string>
     <string name="onboarding_control_title">Kontrolu máte vy</string>
     <string name="onboarding_get_started">Začať</string>
@@ -1915,6 +1916,12 @@
     <string name="record_refused_next_step_detail">Odmietnuté, s ďalším krokom pre taf: %1$s</string>
     <string name="record_removed_detail">Plán, pamäť a kľúč odstránené; názov je voľný</string>
     <string name="record_removed_title">Odstránili ste %1$s</string>
+    <string name="record_report_button">Nahlásiť túto platbu</string>
+    <string name="record_report_done">Nahlásené. %1$s je zastavený a potvrdenie sa uchováva. Ak z vášho účtu odišli peniaze, obráťte sa aj na vydavateľa svojej karty.</string>
+    <string name="record_report_failed">Hlásenie sa nepodarilo odoslať. Nič sa nezmenilo. Skúste to znova.</string>
+    <string name="record_report_intro">Nahláste platbu, ktorú ste nečakali: %1$s zaplatil %2$s dňa %3$s. %1$s zastavíme, kým sa nepozriete.</string>
+    <string name="record_report_submit">Nahlásiť a zastaviť %1$s</string>
+    <string name="record_report_title">Nahlásiť túto platbu</string>
     <string name="record_result_done">hotovo</string>
     <string name="record_result_no_answer_yet">odoslané, zatiaľ bez odpovede</string>
     <string name="record_result_not_done">nevykonané</string>

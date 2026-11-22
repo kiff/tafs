@@ -2610,6 +2610,46 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(off.s.checks).toEqual([]);
   });
 
+  // Eval 45028072347: the e2e confirms drafts through the check route, which read no conversation, so a draft the phone's
+  // read refuses for its rules (a confirm skipped, a notice with no figures) was signed, and the grader failed the run.
+  // The e2e runs Coach's conversation itself, so it shows the route its events, read by the chat read's own rule.
+  it("the check route checks the agreed rules in the conversation its caller shows, and only then", async () => {
+    const CHECK = "/v1/connect/grants/g_1/check";
+    const events = (w: Awaited<ReturnType<typeof setUp>>["w"]) => w.agents.events.get(w.stored.session) ?? [];
+    const check = async (w: Awaited<ReturnType<typeof setUp>>["w"], extra: Record<string, unknown> = {}) =>
+      (await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", ...extra })).body;
+    // The draft's on_exceed isn't the rule's: no conversation, ok and unchecked; with it, Approve's refusal, a redraft one.
+    const off = await setUp("owner");
+    off.rules("rules-1", RULES);
+    expect(await check(off.w)).toMatchObject({ outcome: "ok", rules_unchecked: true });
+    const ruled = await check(off.w, { conversation: events(off.w) });
+    expect(ruled).toMatchObject({ outcome: "answered", code: "rules_on_exceed", redraft: true });
+    expect(ruled.rules_unchecked).toBeUndefined();
+    // As drafted to the rules: ok, and nothing said unchecked.
+    const ok = await setUp("refuse");
+    ok.rules("rules-1", RULES);
+    const passed = await check(ok.w, { conversation: events(ok.w) });
+    expect(passed).toMatchObject({ outcome: "ok", version: "v3" });
+    expect(passed.rules_unchecked).toBeUndefined();
+    // A notice with no confirm agreed (desk-2), and one whose words don't say its figures (setup-2): refused, to redraft.
+    const unagreed = await setUp("refuse");
+    unagreed.rules("rules-1", RULES, false);
+    expect(await check(unagreed.w, { conversation: events(unagreed.w) })).toMatchObject({ outcome: "answered", code: "rules_unagreed", redraft: true });
+    const unsaid = await setUp("refuse");
+    (unsaid.s.drafts.drf_1.cards as Array<{ aggregates: unknown[] }>)[0]!.aggregates = [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }];
+    unsaid.rules("rules-1", [{ tool: "refund_charge", over: "refuse", limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] }, { tool: "list_charges", over: "refuse" }], true, "Refunds only refunds charges.");
+    expect(await check(unsaid.w, { conversation: events(unsaid.w) })).toMatchObject({ outcome: "answered", code: "rules_unsaid", redraft: true });
+    // No rules shown, where they're required: refused with the conversation, ok without it (as before).
+    const none = await setUp("refuse");
+    process.env.TAFS_RULES_REQUIRED = "on";
+    expect(await check(none.w, { conversation: [] })).toMatchObject({ outcome: "answered", code: "rules_required", redraft: true });
+    expect(await check(none.w)).toMatchObject({ outcome: "ok", rules_unchecked: true });
+    // Not a list of events, or too long: refused.
+    for (const conversation of ["rules-1", [1, 2], [[]], Array.from({ length: 2001 }, () => ({}))]) {
+      expect((await none.w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", conversation })).status).toBe(400);
+    }
+  });
+
   it("the chat's read refuses it before the card is drawn, so the owner never approves it", async () => {
     const { w, rules } = await setUp("owner");
     rules("rules-1", RULES);

@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">I agree to %1$s and %2$s.</string>
     <string name="onboarding_control_lead">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with Face ID or Touch ID, or refuse.</string>
     <string name="onboarding_control_lead_android">When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.</string>
+    <string name="onboarding_control_lead_desktop">When a taf needs you, it waits in Needs you. You approve on your phone, or refuse.</string>
     <string name="onboarding_control_lead_mac">When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.</string>
     <string name="onboarding_control_title">You stay in control</string>
     <string name="onboarding_get_started">Get started</string>
@@ -1851,6 +1852,12 @@
     <string name="record_refused_next_step_detail">Refused, with a next step for the taf: %1$s</string>
     <string name="record_removed_detail">Schedule, memory and key deleted; name free</string>
     <string name="record_removed_title">You removed %1$s</string>
+    <string name="record_report_button">Report this payment</string>
+    <string name="record_report_done">Reported. %1$s is halted and the receipt is kept. If money left your account, contact your card issuer too.</string>
+    <string name="record_report_failed">Couldn\'t send the report. Nothing changed. Try again.</string>
+    <string name="record_report_intro">Report a payment you didn\'t expect: %1$s paid %2$s on %3$s. We halt %1$s until you\'ve looked.</string>
+    <string name="record_report_submit">Report and halt %1$s</string>
+    <string name="record_report_title">Report this payment</string>
     <string name="record_result_done">done</string>
     <string name="record_result_no_answer_yet">sent, no answer yet</string>
     <string name="record_result_not_done">not done</string>

@@ -4,6 +4,7 @@ import json
 import os
 import re
 import tempfile
+import unicodedata
 import unittest
 
 import android_literals
@@ -46,15 +47,15 @@ def glossary():
 
 
 def glossary_being_written():
-    """The tables under "Korean and Japanese", "Batch 1", "Batch 2" and "Batch 3" (docs/languages.md): a language that ships before its column joins the
+    """The tables under "Korean and Japanese", "Batch 1", "Batch 2", "Batch 3" and "Batch 4" (docs/languages.md): a language that ships before its column joins the
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "Georgian": "ka", "Armenian": "hy", "Azerbaijani": "az", "Bengali": "bn", "Hebrew": "he", "Arabic": "ar", "Catalan": "ca", "Macedonian": "mk", "Mongolian": "mn", "Nepali": "ne", "Khmer": "km", "Lao": "lo", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
-    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Batch 2", "\n## Batch 3", "\n## Regional variants"):
+    for section in ("\n## Korean and Japanese", "\n## Batch 1", "\n## Batch 2", "\n## Batch 3", "\n## Batch 4", "\n## Batch 5", "\n## Regional variants"):
         # Every section that opens so ("Batch 3" has more than one piece, Arabic's apart from the others).
         for found in re.finditer(re.escape(section), md):
             start = found.start()
@@ -104,9 +105,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar", "sr-Latn", "sq", "ka", "hy", "az", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 
@@ -210,6 +211,26 @@ class SharedWords(unittest.TestCase):
                     if lang not in generate.THIS:
                         self.assertNotRegex(text, r"\|[Tt]his\}", f"{lang} {key}: {lang} has no rule for \"this\"; write the word in the line")
 
+    def test_a_right_to_left_language_writes_its_menu_arrows_pointing_left(self):
+        # "→" doesn't mirror with the text direction, so an Arabic or Hebrew line writes "←" where English writes "→".
+        # "‹" and "›" do mirror, and stay as English writes them.
+        for lang in ("ar", "he"):
+            for key, line in self.lines[lang].items():
+                for text in generate.forms_of(line):
+                    self.assertNotIn("→", text, f"{lang} {key}: write ← in a right-to-left language")
+                if "→" in "".join(generate.forms_of(self.source[key])):
+                    self.assertIn("←", "".join(generate.forms_of(line)), f"{lang} {key}: English has →, so this line writes ←")
+
+    def test_a_right_to_left_language_keeps_a_reference_number_in_its_own_left_to_right_run(self):
+        # After an Arabic letter the digits of "#5098" become Arabic-script digits (bidi rule W2), which leaves the "#" outside
+        # their run: "7802#". A reference written in a line is wrapped in U+2066 … U+2069 so it reads "#7802".
+        for lang in ("ar", "he"):
+            for key, line in self.lines[lang].items():
+                for text in generate.forms_of(line):
+                    for found in re.finditer(r"#\d+", text):
+                        self.assertEqual(text[max(0, found.start() - 1):found.start()], "\u2066", f"{lang} {key}: isolate {found.group()}")
+                        self.assertEqual(text[found.end():found.end() + 1], "\u2069", f"{lang} {key}: close the isolate after {found.group()}")
+
     def test_a_macs_own_sentence_sits_beside_the_phones_and_names_the_macs_settings(self):
         # A `*_mac` line that isn't a Touch ID prompt (no "prompt" in its key) is a whole sentence for
         # the Mac: its phone line is beside it, it opens with a capital and ends with a stop, and a
@@ -222,9 +243,13 @@ class SharedWords(unittest.TestCase):
                 self.assertIn(key[:-len("_mac")], self.source, f"{key}: the phone's line beside it")
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).strip()
-                    # A script with no capitals (Arabic, Korean, Japanese) opens a sentence with its first letter.
-                    self.assertTrue(bare[:1].isupper() or bare[:1].lower() == bare[:1].upper(), f"{lang} {key} doesn't open a sentence: {text!r}")
-                    self.assertTrue(bare.endswith((".", "!", "?", "。")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    # A script with no capitals (Arabic, Korean, Japanese) opens a sentence with its first letter. So does
+                    # Georgian: Unicode gives its letters (Mkhedruli) an upper case (Mtavruli), but a sentence isn't written in it.
+                    first = bare[:1]
+                    self.assertTrue(first.isupper() or first.lower() == first.upper() or "GEORGIAN" in unicodedata.name(first, ""),
+                                    f"{lang} {key} doesn't open a sentence: {text!r}")
+                    # Armenian ends a sentence with its own full stop, "։" (U+0589); Bengali with the danda, "।" (U+0964); Khmer with the khan, "។" (U+17D4).
+                    self.assertTrue(bare.endswith((".", "!", "?", "。", "։", "।", "។")), f"{lang} {key} doesn't end a sentence: {text!r}")
                     phone = self.lines[lang][key[:-len("_mac")]]
                     if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
                         self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")
@@ -243,7 +268,7 @@ class SharedWords(unittest.TestCase):
                 for text in generate.forms_of(line):
                     bare = generate.PLACEHOLDER.sub("", text).lstrip()
                     self.assertFalse(bare[:1].isupper(), f"{lang} {key} opens with a capital: {text!r}")
-                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。")), f"{lang} {key} ends a sentence: {text!r}")
+                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。", "।", "។")), f"{lang} {key} ends a sentence: {text!r}")
 
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:
@@ -363,6 +388,17 @@ class Generator(unittest.TestCase):
         # A script is no region: Android takes it only in its BCP 47 form (zh-Hant, when Traditional Chinese ships).
         self.assertEqual(android.folder("zh-Hant"), "values-b+zh+Hant")
         self.assertEqual(android.folder("zh-Hant-TW"), "values-b+zh+Hant+TW")
+        # Batch 4: Hebrew also under its old code, as the libraries ship it; Serbian in Latin script in its BCP 47 folder, never
+        # plain values-sr (Cyrillic); Azerbaijani in Latin script also in plain values-az, the libraries' Latin.
+        self.assertEqual(android.folders("he"), ["values-he", "values-iw"])
+        self.assertEqual(android.folders("sr-Latn"), ["values-b+sr+Latn"])
+        self.assertEqual(android.folders("az-Latn"), ["values-b+az+Latn", "values-az"])
+        self.assertEqual(android.folders("az"), ["values-az"])
+        # Batch 5: plain folders, as the libraries ship them (Uzbek is Latin by default on Android).
+        for lang in ("ca", "mk", "mn", "ne", "km", "lo", "ru", "ms", "uz"):
+            self.assertEqual(android.folders(lang), [f"values-{lang}"])
+        for lang in ("sr", "he", "sq", "ka", "hy", "az", "bn", "ca", "mk", "mn", "ne", "km", "lo", "ru", "ms", "uz"):
+            self.assertIn(lang, generate.PLURALS, f"{lang} has its plural forms")
         # A library's folder Android would take before ours gets the same lines: Indonesian's old code, Chinese by region.
         self.assertEqual(android.folders("id"), ["values-id", "values-in"])
         self.assertEqual(android.folders("zh-Hant"), ["values-b+zh+Hant", "values-zh-rTW", "values-zh-rHK", "values-zh-rMO"])

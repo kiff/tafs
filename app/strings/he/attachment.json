@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "לא ניתן לצרף את {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs לא יכול לצרף את הקובץ הזה: הוא לא מסוג או בגודל שהוא מקבל. יש לבחור קובץ אחר.",
+  "attachment.photo": "תמונה",
+  "attachment.photo_could_not_read": "לא ניתן היה לקרוא את התמונה.",
+  "attachment.photo_numbered": "תמונה {n}",
+  "attachment.too_large": "{name} הוא {size}; המקסימום הוא {limit}.",
+  "attachment.wrong_kind": "לא ניתן לצרף את {name}. אפשר לצרף תמונות, קובצי PDF, טקסט, CSV, Markdown, Word ו-Excel."
+}

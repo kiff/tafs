@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Atura cada taf alhora. No s'envia res de nou fins que els reprenguis a tafs.",
+  "halt_all.failed": "tafs no ha pogut bloquejar els teus taf. {why} Obre tafs per bloquejar-los.",
+  "halt_all.halted": {
+    "one": "S'ha bloquejat {count} taf. No s'envia res de nou fins que ho reprenguis.",
+    "other": "S'han bloquejat {count} taf. No s'envia res de nou fins que ho reprenguis."
+  },
+  "halt_all.halted_all": "S'han bloquejat els teus taf. No s'envia res de nou fins que ho reprenguis.",
+  "halt_all.halting": {
+    "one": "Bloquejant {count} taf: no s'inicia cap execució. KIFF encara no ha confirmat cada part; tafs ho mostra quan ho hagi fet.",
+    "other": "Bloquejant {count} taf: no s'inicia cap execució. KIFF encara no ha confirmat cada part; tafs ho mostra quan ho hagi fet."
+  },
+  "halt_all.halting_all": "Bloquejant els teus taf: no s'inicia cap execució. KIFF encara no ha confirmat cada part; tafs ho mostra quan ho hagi fet.",
+  "halt_all.running": "tafs no ha pogut bloquejar els teus taf. Obre tafs per bloquejar-los.",
+  "halt_all.signed_out": "Has tancat la sessió de tafs. Inicia-la per bloquejar els teus taf.",
+  "halt_all.title": "Bloqueja tots els taf"
+}

@@ -15,7 +15,7 @@ class LegalTest {
 
   // kiff.dev serves them in every language the app ships: each opens its own, and English is the unprefixed page.
   @Test fun eachLanguageOpensItsOwnPage() {
-    for (lang in listOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh")) {
+    for (lang in listOf("de", "es", "fr", "it", "nl", "pl", "pt", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy", "az", "ar", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo")) {
       assertEquals("https://kiff.dev/$lang/tafs/terms", Legal.terms(lang))
       assertEquals("https://kiff.dev/$lang/tafs/privacy", Legal.privacy(lang))
       // In its own language, so the link doesn't say "in English".
@@ -23,7 +23,7 @@ class LegalTest {
     }
     // Every shipped language but English is served.
     // Traditional Chinese (zh-Hant) is served under its language, /zh/.
-    val shipped = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh")
+    val shipped = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh", "sr", "sq", "ka", "hy", "az", "ar", "bn", "he", "ca", "mk", "mn", "ne", "km", "lo")
     assertEquals(shipped.filter { it != "en" }.toSet(), Legal.SERVED)
   }
 
@@ -33,6 +33,13 @@ class LegalTest {
     assertEquals("https://kiff.dev/zh/tafs/terms", Legal.terms("zh-Hant"))
     assertEquals("https://kiff.dev/zh/privacy", Legal.kiffPrivacy("zh-Hant"))
     assertEquals("Terms", Legal.label("Terms", "zh-Hant"))
+  }
+
+  // Serbian ships in Latin script, as sr-Latn; kiff.dev serves it under its language, /sr/.
+  @Test fun serbianInLatinScriptOpensTheSerbianPages() {
+    assertEquals("https://kiff.dev/sr/tafs/terms", Legal.terms("sr-Latn"))
+    assertEquals("https://kiff.dev/sr/privacy", Legal.kiffPrivacy("sr-Latn"))
+    assertEquals("Terms", Legal.label("Terms", "sr-Latn"))
   }
 
   @Test fun aRegionalVariantOpensItsLanguagesPages() {

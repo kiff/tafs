@@ -1,6 +1,8 @@
 package bot.tafs.app
 
 import bot.tafs.app.kiff.ChromePairing
+import bot.tafs.app.kiff.GrantBrowser
+import bot.tafs.app.kiff.PlanqueError
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.PairQr
 import java.io.File
@@ -55,6 +57,47 @@ class ChromePairingTest {
       "another site list is other bytes",
       ChromePairing.sitesBytes(s("chrome_id"), s("grant"), sites + "evil.example").contentEquals(ChromePairing.sitesBytes(s("chrome_id"), s("grant"), sites)),
     )
+  }
+
+  /**
+   * `chrome_sites_sig`: approving a grant for the owner's own Chrome signs exactly the vector's bytes with the approval key, and
+   * sends it as raw r‖s that WebCrypto (the extension's `checkSites`) verifies.
+   */
+  @Test fun theSitesSignatureSignsTheVectorsBytesAsRawRAndS() = kotlinx.coroutines.test.runTest {
+    val g = repoJson("vectors/chrome-grant.json")
+    fun s(k: String) = g[k]!!.jsonPrimitive.content
+    val sites = g["sites"]!!.jsonArray.map { it.jsonPrimitive.content }
+    val keys = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    var signed: ByteArray? = null
+    val sig = ChromePairing.sitesSignature(GrantBrowser(GrantBrowser.EXTENSION, s("chrome_id"), sites), s("grant")) { built ->
+      val bytes = built().also { signed = it }
+      java.util.Base64.getEncoder().encodeToString(Signature.getInstance("SHA256withECDSA").run { initSign(keys.private); update(bytes); sign() })
+    }!!
+    assertEquals(s("sites_signed_bytes"), ChromePairing.base64Url(signed!!))
+    val raw = ChromePairing.base64UrlDecoded(sig)!!
+    assertEquals(64, raw.size)
+    assertTrue(Signature.getInstance("SHA256withECDSAinP1363Format").run { initVerify(keys.public); update(signed); verify(raw) })
+  }
+
+  /** Nothing is signed over an open list: a grant for the owner's Chrome that names no Chrome or no sites is refused; others sign nothing. */
+  @Test fun theSitesSignatureIsRefusedWithoutAChromeOrSitesAndNoneForOtherGrants() = kotlinx.coroutines.test.runTest {
+    var asked = 0
+    val sign: suspend (() -> ByteArray) -> String = { asked++; "MEUCIQ" }
+    for (open in listOf(
+      GrantBrowser(GrantBrowser.EXTENSION, null, listOf("shop.example")),
+      GrantBrowser(GrantBrowser.EXTENSION, "", listOf("shop.example")),
+      GrantBrowser(GrantBrowser.EXTENSION, "chr_01HZX5", null),
+      GrantBrowser(GrantBrowser.EXTENSION, "chr_01HZX5", emptyList()),
+    )) {
+      try {
+        ChromePairing.sitesSignature(open, "g_7Q2M", sign)
+        org.junit.Assert.fail("refused: $open")
+      } catch (_: PlanqueError.DigestMismatch) {
+      }
+    }
+    assertNull(ChromePairing.sitesSignature(null, "g_7Q2M", sign))
+    assertNull(ChromePairing.sitesSignature(GrantBrowser("hosted", "chr_01HZX5", listOf("shop.example")), "g_7Q2M", sign))
+    assertEquals("nothing was signed", 0, asked)
   }
 
   /** The sensitive list is the extension's (vectors/chrome-sensitive.json), and reads each sample host as it does. */

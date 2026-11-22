@@ -4172,6 +4172,23 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Reports a payment the person didn't expect ("Report this payment"): KIFF marks its receipt and its taf is halted, in
+    /// kiff/agents, KIFF and planque, as the halt button does; one tap, no Face ID, since it only takes authority away. True
+    /// when tafs cloud answered, with the taf's halt read from its answer so the taf shows halting at once.
+    func reportPayment(_ entry: RecordEntry) async -> Bool {
+        guard mode == .kiff, let trace = entry.reportTraceID else { return false }
+        let gen = accountGeneration
+        do {
+            let answer = try await cloud.reportPayment(traceID: trace)
+            guard gen == accountGeneration else { return false }
+            if let key = haltKey(entry.tafID) { halts[key] = answer.halt }
+            await refresh()
+            return true
+        } catch {
+            return false
+        }
+    }
+
     // MARK: Plan & usage (pricing phase 2, docs/accounts.md › Credits and plans)
 
     /// Reads Plan & usage: the balance and this period's credits from tafs cloud, KIFF's usage
@@ -9424,7 +9441,9 @@ final class AppModel: ObservableObject {
                     // windows leaves the step as it was. As Android's `holdWindow`. Only on a card that says Approve is
                     // a tap (`signs.takes`): a card whose line says Face ID is asked always asks it, so Approve never
                     // approves without the Face ID the card promised (the owner's emulator pass, 21 Nov).
-                    let takesWindow = ask.key == "window" && component.signs?.tap == true && windowAvailable
+                    // A grant for the owner's own Chrome always takes Face ID: its sites are signed under it.
+                    let ownChrome = grants.first { $0.id == ask.planque?.grant }?.request.browser?.driver == "extension"
+                    let takesWindow = !ownChrome && ask.key == "window" && component.signs?.tap == true && windowAvailable
                     let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
                     var windowed = takesWindow && kiff.window != nil
                     do {
@@ -9825,7 +9844,15 @@ final class AppModel: ObservableObject {
                 return Came(result: "confirmed")
             }
             guard let p = ask.planque else { return Came(result: "failed", why: Words.Connect.tafsCloudNamedNoConnection) }
-            let approved = try await planque.approve(grantID: p.grant, body: p.body)
+            var body = p.body
+            // A grant that uses the owner's own Chrome is approved with this phone's signature over its sites, made with the
+            // approval key under the Face ID of this approval, over the sites the digest the owner saw covers.
+            if let grant = grants.first(where: { $0.id == p.grant }), grant.request.browser?.driver == "extension" {
+                guard grant.digestMatches, grant.digest == p.body.digest else { throw PlanqueClient.PlanqueError.digestMismatch }
+                let signer = self.signer
+                body.chromeSitesSig = try ChromePairing.sitesSignature(of: grant.request.browser, grant: grant.id) { try signer.signApprovalConfirmed($0) }
+            }
+            let approved = try await planque.approve(grantID: p.grant, body: body)
             return try await connectedAfter(approved, grantID: p.grant, tenant: tenant, gen: gen)
         } catch VendorSignIn.SignInError.cancelled {
             return Came(result: "sign_in_closed")

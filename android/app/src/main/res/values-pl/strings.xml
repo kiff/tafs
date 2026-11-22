@@ -1677,6 +1677,7 @@
     <string name="onboarding_consent_tick">Akceptuję %1$s i %2$s.</string>
     <string name="onboarding_control_lead">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz przez Face ID lub Touch ID albo odrzucasz.</string>
     <string name="onboarding_control_lead_android">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie” i, jeśli go masz, na zegarku. Zatwierdzasz blokadą ekranu albo odrzucasz.</string>
+    <string name="onboarding_control_lead_desktop">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz na telefonie albo odrzucasz.</string>
     <string name="onboarding_control_lead_mac">Gdy taf Cię potrzebuje, czeka w „Czeka na Ciebie”. Zatwierdzasz przez Touch ID lub na telefonie albo odrzucasz.</string>
     <string name="onboarding_control_title">Kontrola zostaje przy Tobie</string>
     <string name="onboarding_get_started">Zaczynamy</string>
@@ -1979,6 +1980,12 @@
     <string name="record_refused_next_step_detail">Odrzucone, z kolejnym krokiem dla tafa: %1$s</string>
     <string name="record_removed_detail">Harmonogram, pamięć i klucz usunięte; nazwa wolna</string>
     <string name="record_removed_title">Usunięto %1$s</string>
+    <string name="record_report_button">Zgłoś tę płatność</string>
+    <string name="record_report_done">Zgłoszono. %1$s jest zablokowany, a potwierdzenie zostaje zachowane. Jeśli pieniądze opuściły Twoje konto, skontaktuj się też z wystawcą swojej karty.</string>
+    <string name="record_report_failed">Nie udało się wysłać zgłoszenia. Nic się nie zmieniło. Spróbuj ponownie.</string>
+    <string name="record_report_intro">Zgłoś nieoczekiwaną płatność: %1$s zapłacił %2$s dnia %3$s. Blokujemy %1$s, dopóki jej nie sprawdzisz.</string>
+    <string name="record_report_submit">Zgłoś i zablokuj %1$s</string>
+    <string name="record_report_title">Zgłoś tę płatność</string>
     <string name="record_result_done">gotowe</string>
     <string name="record_result_no_answer_yet">wysłano, jeszcze bez odpowiedzi</string>
     <string name="record_result_not_done">nie wykonano</string>

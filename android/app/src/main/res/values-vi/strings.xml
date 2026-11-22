@@ -1497,6 +1497,7 @@
     <string name="onboarding_consent_tick">Tôi đồng ý với %1$s và %2$s.</string>
     <string name="onboarding_control_lead">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng Face ID hoặc Touch ID, hoặc từ chối.</string>
     <string name="onboarding_control_lead_android">Khi một taf cần bạn, nó chờ trong Đang chờ bạn, và trên đồng hồ của bạn nếu có. Bạn phê duyệt bằng khóa màn hình, hoặc từ chối.</string>
+    <string name="onboarding_control_lead_desktop">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt trên điện thoại, hoặc từ chối.</string>
     <string name="onboarding_control_lead_mac">Khi một taf cần bạn, nó chờ trong Đang chờ bạn. Bạn phê duyệt bằng Touch ID hoặc trên điện thoại, hoặc từ chối.</string>
     <string name="onboarding_control_title">Bạn luôn nắm quyền kiểm soát</string>
     <string name="onboarding_get_started">Bắt đầu</string>
@@ -1787,6 +1788,12 @@
     <string name="record_refused_next_step_detail">Đã từ chối, kèm bước tiếp theo cho taf: %1$s</string>
     <string name="record_removed_detail">Lịch, bộ nhớ và khóa đã bị xóa; tên được giải phóng</string>
     <string name="record_removed_title">Bạn đã gỡ %1$s</string>
+    <string name="record_report_button">Báo cáo khoản thanh toán này</string>
+    <string name="record_report_done">Đã báo cáo. %1$s đã bị đóng băng và biên nhận được giữ lại. Nếu tiền đã rời khỏi tài khoản của bạn, hãy liên hệ cả đơn vị phát hành thẻ.</string>
+    <string name="record_report_failed">Không gửi được báo cáo. Không có gì thay đổi. Hãy thử lại.</string>
+    <string name="record_report_intro">Báo cáo khoản thanh toán bạn không ngờ tới: %1$s đã thanh toán %2$s vào %3$s. Chúng tôi đóng băng %1$s cho đến khi bạn xem xét.</string>
+    <string name="record_report_submit">Báo cáo và đóng băng %1$s</string>
+    <string name="record_report_title">Báo cáo khoản thanh toán này</string>
     <string name="record_result_done">đã xong</string>
     <string name="record_result_no_answer_yet">đã gửi, chưa có câu trả lời</string>
     <string name="record_result_not_done">chưa làm</string>

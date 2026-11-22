@@ -1677,6 +1677,7 @@
     <string name="onboarding_consent_tick">Strinjam se s %1$s in %2$s.</string>
     <string name="onboarding_control_lead">Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite s Face ID ali Touch ID ali zavrnete.</string>
     <string name="onboarding_control_lead_android">Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite z zaklepanjem zaslona ali zavrnete.</string>
+    <string name="onboarding_control_lead_desktop">Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete.</string>
     <string name="onboarding_control_lead_mac">Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite s Touch ID ali v telefonu ali zavrnete.</string>
     <string name="onboarding_control_title">Nadzor ostane vaš</string>
     <string name="onboarding_get_started">Začni</string>
@@ -1979,6 +1980,12 @@
     <string name="record_refused_next_step_detail">Zavrnjeno, z naslednjim korakom za taf: %1$s</string>
     <string name="record_removed_detail">Urnik, spomin in ključ izbrisani; ime je prosto</string>
     <string name="record_removed_title">Odstranili ste %1$s</string>
+    <string name="record_report_button">Prijavi to plačilo</string>
+    <string name="record_report_done">Prijavljeno. %1$s je ustavljen, potrdilo pa se hrani. Če je z vašega računa odšel denar, se obrnite tudi na izdajatelja svoje kartice.</string>
+    <string name="record_report_failed">Prijave ni bilo mogoče poslati. Nič se ni spremenilo. Poskusite znova.</string>
+    <string name="record_report_intro">Prijavite plačilo, ki ga niste pričakovali: %1$s je dne %3$s plačal %2$s. %1$s bomo ustavili, dokler ne preverite.</string>
+    <string name="record_report_submit">Prijavi in ustavi %1$s</string>
+    <string name="record_report_title">Prijavi to plačilo</string>
     <string name="record_result_done">opravljeno</string>
     <string name="record_result_no_answer_yet">poslano, še brez odgovora</string>
     <string name="record_result_not_done">ni opravljeno</string>

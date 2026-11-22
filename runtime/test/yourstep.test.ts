@@ -3,7 +3,7 @@ import type { Requirement, Run } from "../src/cloud/agents.js";
 import { definition, yourStepOn } from "../src/cloud/tafdef.js";
 import { requestOf, summaryOf } from "../src/cloud/work.js";
 import { linkHost, vendorReach, yourStepsOf } from "../src/cloud/yourstep.js";
-import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { jobById } from "../src/jobs.js";
 
 const NOW = new Date("2026-11-11T17:00:00Z");
@@ -55,7 +55,7 @@ describe("Your step: a step a taf handed its owner", () => {
   });
 
   it("has its words in every language, the vendor and the step written in", () => {
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       const w = wordsIn(lang);
       for (const k of ["your_step_title", "your_step_done", "your_step_skip"] as const) expect(w[k], `${lang} ${k}`).toBeTruthy();
       expect(w.your_step_open("example.com"), lang).toContain("example.com");
