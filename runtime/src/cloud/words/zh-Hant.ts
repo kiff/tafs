@@ -15,7 +15,7 @@ const list = (xs: string[]) => new Intl.ListFormat("zh-Hant", { type: "conjuncti
 const day = (d: number, style: "long" | "short") => new Intl.DateTimeFormat("zh-Hant", { weekday: style, timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
 const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
-export const zh-Hant: Partial<Words> = {
+export const zhHant: Partial<Words> = {
   work_working: "處理中",
   work_waiting_approval: "等待您核准",
   your_step_title: "您的步驟",
@@ -107,11 +107,11 @@ export const zh-Hant: Partial<Words> = {
   connect_again_signed_out_words: (app: string, taf: string) => `${app} 已被登出，所以 ${taf} 無法使用它。請重新連接並登入。`,
   connected_again_as: (app: string, account: string, tafs: string[], others = 0) => {
     const n = others, all = tafs.length + others;
-    const items = list([...tafs, ...(n > 0 ? [`${n} 個你看不到的 taf`] : [])]);
+    const items = list([...tafs, ...(n > 0 ? [`${n} 個您看不到的 taf`] : [])]);
     return `${app} 已重新連接為 ${account}。${all === 1 ? "這個 taf 現在使用它" : "這些 taf 現在使用它"}：${items}。如果這不是正確的帳號，請在「連接應用程式」中移除它的存取權，再連接正確的帳號。`;
   },
   connect_not_needed: (taf: string) => `${taf} 沒有使用這個應用程式。Coach 可以為 ${taf} 設定它。`,
-  connect_tafs_unread: "目前讀取不到你的 taf，所以沒有連接任何東西。請稍後再試。",
+  connect_tafs_unread: "目前讀取不到您的 taf，所以沒有連接任何東西。請稍後再試。",
   check_key_not_ready: "它的金鑰還沒準備好；下次會再試一次",
   check_dropped: "它的檢查讀取不到這個應用程式，所以它現在在固定時間不經檢查就執行。Coach 可以修復這項檢查。",
   check_dropped_hourly: "它的檢查讀取不到這個應用程式，所以它現在不經檢查就執行，每小時最多一次。Coach 可以修復這項檢查。",
@@ -170,7 +170,7 @@ export const zh-Hant: Partial<Words> = {
   approval_on_demand: (vendor: string, tool: string) => `${vendor} 今天才設定，因此每項變更都必須先詢問您；此 Card 會讓「${tool}」不經詢問就執行。未核准任何內容。Coach 會重新擬定。`,
   approval_critical_key: "這會擴大 taf 可以做的事，因此需要您的指紋。未核准任何內容；請用指紋再次核准。",
   approval_drive_key: "讓 Coach 操作應用程式需要您的指紋。尚未開始任何操作；請用指紋再次核准。",
-  remove_signed: "請從你的裝置移除它：移除 taf 每次都需要你的螢幕鎖定。尚未移除任何東西。",
+  remove_signed: "請從您的裝置移除它：移除 taf 每次都需要您的螢幕鎖定。尚未移除任何東西。",
   approval_window_closed: "您的核准時段已結束。未核准任何內容；請用指紋再次核准。",
   approval_sign_missing: "這份內容未在此裝置上簽署，因此未執行任何動作。請在這裡再試一次。",
   approval_sign_both: "這份內容同時以密碼金鑰與裝置金鑰簽署了兩次，因此未執行任何動作。請在這裡再試一次。",
@@ -194,7 +194,7 @@ export const zh-Hant: Partial<Words> = {
   apps_not_connected: "未連接",
   apps_needs_setup: "需要設定",
   apps_used_by: (names: string) => `使用者：${names}`,
-  apps_whose_yours: "你的",
+  apps_whose_yours: "您的",
   apps_whose_company: "公司的",
   approval_confirm_first: "您的登入已完成，但尚未確認。請再次核准以確認。",
   approval_not_connected: (vendor: string) => `在 ${vendor} 的登入未完成，因此未連接任何內容。請再試著登入一次。`,
@@ -284,8 +284,8 @@ export const zh-Hant: Partial<Words> = {
   health_do_that_run: "打開那次執行，看看它做了什麼。",
   work_halted: "已凍結 · 從「凍結」繼續",
   work_needs_you_count: (n: number, _form: Intl.LDMLPluralRule) => `${n} 項請求等您處理`,
-  alert_needs_you_title: "有 taf 需要你",
-  alert_needs_you_words: "用於等待你回覆的呼叫",
+  alert_needs_you_title: "有 taf 需要您",
+  alert_needs_you_words: "用於等待您回覆的呼叫",
   alert_halted_title: "所有 taf 已停止",
   alert_halted_words: "當 taf 或帳號被停止時",
   alert_answered_title: "有 taf 回覆了某人",
@@ -301,8 +301,8 @@ export const zh-Hant: Partial<Words> = {
   home_discard_no: "保留",
   home_needs_you_none: "沒有等您處理的項目。",
   labels_all: "全部",
-  brief_title: "你的摘要",
-  brief_ready: (hm: string) => `你的 ${hm} 摘要已準備好。`,
+  brief_title: "您的摘要",
+  brief_ready: (hm: string) => `您的 ${hm} 摘要已準備好。`,
   brief_decisions: "決定",
   brief_done: "已完成",
   brief_rest: "其餘",
@@ -310,8 +310,8 @@ export const zh-Hant: Partial<Words> = {
   brief_approve: "核准",
   brief_refuse: "拒絕",
   brief_more: (n: number, _form: Intl.LDMLPluralRule) => `還有 ${n} 個`,
-  brief_rest_line: (n: number, _form: Intl.LDMLPluralRule) => (n === 0 ? "沒有其他了。" : `另外 ${n} 個 taf 不需要你做任何事。`),
-  brief_coach_line: (n: number, _form: Intl.LDMLPluralRule) => `${n} 個 Coach 對話在等你回覆。`,
+  brief_rest_line: (n: number, _form: Intl.LDMLPluralRule) => (n === 0 ? "沒有其他了。" : `另外 ${n} 個 taf 不需要您做任何事。`),
+  brief_coach_line: (n: number, _form: Intl.LDMLPluralRule) => `${n} 個 Coach 對話在等您回覆。`,
   home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => `${n} 項等您處理.`,
   home_working: (n: number, _form: Intl.LDMLPluralRule) => `${n} taf 正在工作.`,
   home_ready: (n: number, _form: Intl.LDMLPluralRule) => `${n} taf 已就緒.`,
