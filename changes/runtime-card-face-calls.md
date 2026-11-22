@@ -1,0 +1,1 @@
+- **A taf's Card no longer reads "0 calls left today of 0" when one of its tools asks before every call.** Its calls total is the first count above 0, as KIFF counts it ([tafs.md](docs/tafs.md)).

@@ -150,7 +150,9 @@ without that route lists none from it. So a Card that acts is never left where n
 A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
 the most of its limit first (its money total or its calls, whichever is further along), then
 KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while
-another is half used. The apps keep this order.
+another is half used. The apps keep this order. A Card's calls total is its first count of calls with a limit above 0,
+with that count's own line from KIFF: a count of 0 means every call asks first, which its rules already say, and is never
+the face's total (it read "0 calls left today of 0" beside a tool allowed 10,000 a day).
 
 Each taf's `job_summary` is what Coach said it does, one line in the owner's language, kept
 from Coach's result (`summary`); a taf from before, or one Coach didn't make, shows its job's
