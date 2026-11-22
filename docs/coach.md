@@ -340,6 +340,14 @@ things (`runtime/src/cloud/approval.ts`):
   a count is never one of the owner's rules, to drop without asking them. Then "Draft it again now
   and show a new approval." and, last, "Change only what this names; every other line stays
   exactly as agreed." (Coach read a bare `failed: …` as an approval still waiting.)
+  **The owner reads why, on every read.** What goes to Coach is written for Coach, and kiff/agents
+  records only that, so the owner's own reason is kept beside it: whenever tafs cloud answers an
+  approval card in the person's place with a failure (the check on the read, Approve's refusal at
+  the tap, an approval that settled as failed), its note is kept for the card (per account, chat
+  and card, 30 days), and every read of the chat words the card's line with it: "Approve · it
+  didn't go through: Coach drafted this before you agreed to the rules it showed…". Only where no
+  reason was kept does the line say "it didn't go through" alone (`keepApprovalNote`,
+  `fillApprovalNotes`). The apps draw the line as sent.
   A Card covers a tool by the name planque registered for this taf (`request.tools[].name`),
   never the vendor's own (`tool`). When the vendor's name was taken in KIFF, planque gives the
   tool a free one (`list_charges_noyy`). A draft whose Card names the vendor's name

@@ -1109,6 +1109,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     await markSigns(event, me, taf, components, deps);
+    await fillApprovalNotes(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps, langOf(event));
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
@@ -1119,6 +1120,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
     await markSigns(event, me, taf, components, deps);
+    await fillApprovalNotes(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps, langOf(event));
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(latest.failed ? { failed: latest.failed } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -3526,6 +3528,42 @@ const precheckKeys = {
 /** A refusal Coach was told on a chat's read: its answer, so every phone draws the card as answered. */
 interface PrecheckTold { answer: string; at: string; note?: string }
 
+/** How long the owner's reason for an approval tafs cloud answered in their place is kept, to show beside its card. */
+const APPROVAL_NOTE_KEPT_MS = 30 * 24 * 3600_000;
+const approvalNoteKey = (tenant: string, session: string, component: string) => `${tenant}#approval-note#${session}#${component}`;
+
+/**
+ * The owner's own words for why an approval didn't count, kept when tafs cloud answers the card in their place (the
+ * precheck, Approve's refusal, a settled approval that failed). kiff/agents records only the answer written for Coach, so
+ * every later read of the chat said "it didn't go through" with no reason (22 Nov, the emulator: a Card refused for rules
+ * not yet agreed). Only a failed answer's: any other answer has its own words. Best effort: a store that can't keep it
+ * leaves the line as it was.
+ */
+async function keepApprovalNote(deps: Deps, tenant: string, session: string, component: string, answer: string, note: string | undefined): Promise<void> {
+  if (!deps.coach || !note || !session || !component || !answer.startsWith("failed: ")) return;
+  await deps.coach.put(approvalNoteKey(tenant, session, component), { note }, new Date(nowOf(deps).getTime() + APPROVAL_NOTE_KEPT_MS)).catch(() => undefined);
+}
+
+/**
+ * An approval card answered "failed: …" says why in the owner's words, on every read of the chat: its kept note
+ * (keepApprovalNote) goes into its line as approvalAnswerWords words it, the same line the precheck draws. A card with no
+ * kept note, or any other answer, is left as it is: "it didn't go through" stays only where no reason was kept.
+ */
+async function fillApprovalNotes(event: HTTPEvent, me: KIFFIdentity, components: ThreadComponent[], deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const lang = langOf(event);
+  await Promise.all(components.map(async (c) => {
+    const card = c.component as { type?: unknown; id?: unknown } | undefined;
+    const settled = c.answer?.answer;
+    if (!c.answer || c.answer.state !== "answered" || card?.type !== "approval" || typeof settled !== "string" || !settled.startsWith("failed: ")) return;
+    const id = String(card.id ?? "");
+    if (!id) return;
+    const kept = (await deps.coach!.get(approvalNoteKey(me.tenantID, c.session, id)).catch(() => undefined)) as { note?: unknown } | undefined;
+    if (typeof kept?.note !== "string" || !kept.note) return;
+    c.answer = { ...c.answer, words: approvalAnswerWords({ type: "approval", answer: settled, note: kept.note }, lang) ?? c.answer.words };
+  }));
+}
+
 /**
  * A Card draft checked as the phone reads the chat, before its card is drawn (Eval 43690861487's Refunds: the owner
  * approved a Card that Approve then refused, and approved the redraft, two Card approvals for one app). The check is
@@ -3577,6 +3615,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
   }
   const told: PrecheckTold = { answer: out.answer, at: now.toISOString(), ...(out.note ? { note: out.note } : {}) };
   await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+  await keepApprovalNote(deps, me.tenantID, c.session, component, out.answer, out.note);
   return shown(told);
 }
 
@@ -4234,6 +4273,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
     const answer = signIn && decision.answer.startsWith("already approved") ? "signed in" : decision.answer;
     const told = await tellCoach(me, taf, card, component, answer, deps);
+    await keepApprovalNote(deps, me.tenantID, card.session, component, answer, decision.note);
     return { outcome: "answered", answer, note: decision.note, ...told };
   }
   // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
@@ -4308,6 +4348,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
   try {
     told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+    await keepApprovalNote(deps, me.tenantID, card.session, component, outcome.answer, outcome.note);
   } catch (err) {
     // The card stopped waiting while the person approved (a message started a new run before this came in): the
     // approval still happened, so Coach reads its outcome with the next message in the card's chat, and the card shows

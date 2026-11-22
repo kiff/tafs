@@ -2356,6 +2356,34 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
     expect((await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).status).toBe(409);
   });
 
+  // 22 Nov, the emulator: a Card refused for rules not yet agreed read "Approve · it didn't go through", with no reason,
+  // once Coach's answer was in the chat: kiff/agents records only the answer written for Coach, and the precheck's note
+  // was drawn only while the card waited.
+  it("keeps the owner's reason on every read once Coach's answer is in the chat, never the answer written for Coach", async () => {
+    const { w } = await refused();
+    const first = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(first).toMatch(/^Approve · it didn't go through: \S/);
+    // The answer is recorded now: this read draws it from the chat, not from the precheck, and says the same.
+    const again = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(again).toBe(first);
+    expect(again).not.toMatch(/Draft it again|Change only what this names/);
+    // A phone with no proof reads the same line: it's the chat's, not the check's.
+    expect(a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer?.words).toBe(first);
+    // Another account's card by the same id isn't given this one's reason.
+    expect(await w.coach.get("t_other#approval-note#" + w.stored.session + "#a1")).toBeUndefined();
+  });
+
+  it("keeps Approve's own refusal's reason too, when the card was drawn before the check and the tap refused it", async () => {
+    const { w } = await refused();
+    // Read with no proof: nothing checked, the card is drawn as before, and the tap checks it.
+    expect(a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer).toBeUndefined();
+    const tap = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(tap.body).toMatchObject({ outcome: "answered" });
+    expect(String(tap.body.note)).not.toBe("");
+    const line = a1(await w.call("GET", CHAT, undefined))?.answer?.words;
+    expect(line).toBe(`Approve · it didn't go through: ${String(tap.body.note)}`);
+  });
+
   it("a draft that passes is drawn as before, its Card to sign", async () => {
     const { s, w } = await refused();
     s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
