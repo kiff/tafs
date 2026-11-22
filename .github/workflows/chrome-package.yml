@@ -1,0 +1,44 @@
+name: Chrome package
+
+# The extension as the Chrome Web Store takes it: a zip with manifest.json at its root, the same bytes every time for the same
+# files (chrome/store/package.py). It uploads nothing and holds no key: the zip is the run's artifact, and the log says its
+# size, its SHA-256 and the SHA-256 of manifest.json (the form planque's allowlist keeps). The upload is the owner's.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ["chrome/**", ".github/workflows/chrome-package.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Test the packaging
+        run: python3 -m unittest chrome/store/test_package.py
+
+      - name: Check the package's files
+        run: python3 chrome/store/package.py --check
+
+      - name: Build the zip
+        run: python3 chrome/store/package.py --out dist
+
+      - name: Build it again, and compare
+        run: |
+          python3 chrome/store/package.py --out dist2 > /dev/null
+          cmp dist/tafs-chrome-*.zip dist2/tafs-chrome-*.zip
+          echo "the same bytes twice"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tafs-chrome
+          path: dist/tafs-chrome-*.zip
+          if-no-files-found: error
+          retention-days: 30
