@@ -44,7 +44,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are fourteen, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@1", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["a-browser-taf@2", "ask-a-taf@2", "cards-and-holds@3", "connect-an-app@33", "did-this-happen@1", "draft-the-card@45", "drive-the-app@3", "halting@1", "improve-a-taf@3", "name-the-tools@20", "set-up-a-taf@14", "the-dial@8", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
