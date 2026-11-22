@@ -1479,12 +1479,12 @@
     <string name="halt_all_running">tafs ni mogel ustaviti vaših tafov. Ustavite jih v aplikaciji tafs.</string>
     <string name="halt_all_signed_out">Iz tafs ste odjavljeni. Prijavite se, da boste lahko ustavili svoje tafe.</string>
     <string name="halt_all_title">Ustavi vse tafe</string>
-    <string name="help_chrome_lead">Seznanite razširitev tafs s telefonom in taf bo lahko delal v vašem Chromu, samo na straneh, ki jih dovolite. Dela v svojih zavihkih, vse tvegano pa vas čaka v razdelku %1$s.</string>
+    <string name="help_chrome_lead">Seznanite razširitev tafs s telefonom in taf bo lahko delal v vašem Chromu, samo na straneh, ki jih dovolite. Dela v svojih zavihkih, vse, kar potrebuje vaše soglasje, pa vas čaka v razdelku %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s prikaže vaše Chrome in za kaj se vsak uporablja. S prekinitvijo seznanitve Chroma se njegove povezave končajo.</string>
     <string name="help_chrome_title">tafs lahko dela v vašem Chromu</string>
     <string name="help_code_lead">Vklopite to v razdelku %1$s › %2$s. Nato vam KIFF na zahtevo pošlje kodo, ki velja enkrat, 10 minut, v brskalniku, ki jo je zahteval.</string>
     <string name="help_code_safe">Te kode nikoli nikomur ne dajte. KIFF je od vas nikoli ne bo zahteval.</string>
-    <string name="help_code_title">Prijava s kodo, poslano po e-pošti</string>
+    <string name="help_code_title">Prijava s kodo po e-pošti</string>
     <string name="home_calendar_not_read">Koledarja ni bilo mogoče prebrati. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF ni dosegljiv</string>
     <string name="home_choose_taf">Izberite taf.</string>

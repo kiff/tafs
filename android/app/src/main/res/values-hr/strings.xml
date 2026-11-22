@@ -1424,12 +1424,12 @@
     <string name="halt_all_running">tafs nije mogao blokirati vaše tafove. Otvorite tafs da ih blokirate.</string>
     <string name="halt_all_signed_out">Odjavljeni ste iz tafsa. Prijavite se da blokirate svoje tafove.</string>
     <string name="halt_all_title">Blokirajte sve tafove</string>
-    <string name="help_chrome_lead">Uparite proširenje tafs s telefonom i taf može raditi u vašem Chromeu, samo na stranicama koje dopustite. Radi u vlastitim karticama, a sve rizično čeka vas u %1$s.</string>
+    <string name="help_chrome_lead">Uparite proširenje tafs s telefonom i taf može raditi u vašem Chromeu, samo na stranicama koje dopustite. Radi u vlastitim karticama, a sve što treba vaše odobrenje čeka vas u %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s prikazuje vaše Chromeove i za što se koristi svaki. Prekidom uparivanja Chromea prestaju njegove veze.</string>
     <string name="help_chrome_title">tafs može raditi u vašem Chromeu</string>
     <string name="help_code_lead">Uključite to u %1$s › %2$s. Zatim vam KIFF na zahtjev e-poštom šalje kod koji vrijedi jednom, 10 minuta, u pregledniku koji ga je zatražio.</string>
     <string name="help_code_safe">Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti.</string>
-    <string name="help_code_title">Prijava kodom poslanim e-poštom</string>
+    <string name="help_code_title">Prijava kodom iz e-pošte</string>
     <string name="home_calendar_not_read">Kalendar nije bilo moguće pročitati. %1$s</string>
     <string name="home_cant_reach_kiff">Nije moguće doći do KIFF-a</string>
     <string name="home_choose_taf">Odaberite taf.</string>

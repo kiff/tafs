@@ -1424,12 +1424,12 @@
     <string name="halt_all_running">tafs nemohl zastavit vaše tafy. Zastavte je v aplikaci tafs.</string>
     <string name="halt_all_signed_out">Jste z tafs odhlášeni. Přihlaste se, abyste mohli zastavit své tafy.</string>
     <string name="halt_all_title">Zastavit všechny tafy</string>
-    <string name="help_chrome_lead">Spárujte rozšíření tafs s telefonem a taf může pracovat ve vašem Chrome, jen na webech, které povolíte. Pracuje ve vlastních kartách a vše riskantní na vás čeká v části %1$s.</string>
+    <string name="help_chrome_lead">Spárujte rozšíření tafs s telefonem a taf může pracovat ve vašem Chrome, jen na webech, které povolíte. Pracuje ve vlastních kartách a vše, co potřebuje váš souhlas, na vás čeká v části %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s ukazuje vaše Chrome a k čemu který slouží. Zrušením spárování Chrome skončí jeho připojení.</string>
     <string name="help_chrome_title">tafs může pracovat ve vašem Chrome</string>
     <string name="help_code_lead">Zapněte to v části %1$s › %2$s. Pak vám KIFF na požádání pošle e-mailem kód, který platí jednou, 10 minut, v prohlížeči, který o něj požádal.</string>
     <string name="help_code_safe">Nikdy tento kód nikomu nesdělujte. KIFF vás o něj nikdy nepožádá.</string>
-    <string name="help_code_title">Přihlásit se kódem zaslaným e-mailem</string>
+    <string name="help_code_title">Přihlášení kódem z e-mailu</string>
     <string name="home_calendar_not_read">Kalendář se nepodařilo načíst. %1$s</string>
     <string name="home_cant_reach_kiff">Nelze se spojit s KIFF</string>
     <string name="home_choose_taf">Vyberte taf.</string>

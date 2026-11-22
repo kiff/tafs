@@ -1,8 +1,8 @@
 {
-  "help.chrome_lead": "Seo tafsi laiendus oma telefoniga ja taf saab töötada sinu Chrome'is, ainult nendel saitidel, mida lubad. See töötab oma kaartidel ja kõik riskantne ootab sind jaotises {needs_you}.",
+  "help.chrome_lead": "Seo tafsi laiendus oma telefoniga ja taf saab töötada sinu Chrome'is, ainult nendel saitidel, mida lubad. See töötab oma kaartidel ja kõik, mis vajab sinu nõusolekut, ootab sind jaotises {needs_you}.",
   "help.chrome_manage": "{account} › {chrome} loetleb sinu Chrome'id ja selle, milleks igaüht kasutatakse. Chrome'i sidumise tühistamine lõpetab selle ühendused.",
   "help.chrome_title": "tafs saab töötada sinu Chrome'is",
   "help.code_lead": "Lülita see sisse jaotises {account} › {sign_in}. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.",
   "help.code_safe": "Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.",
-  "help.code_title": "Logi sisse e-postiga saadetud koodiga"
+  "help.code_title": "Sisselogimine e-kirjaga saadetud koodiga"
 }

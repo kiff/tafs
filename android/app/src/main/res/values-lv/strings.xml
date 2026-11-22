@@ -1424,12 +1424,12 @@
     <string name="halt_all_running">tafs nevarēja apturēt tavus taf. Atver tafs, lai tos apturētu.</string>
     <string name="halt_all_signed_out">Tu esi izrakstījies no tafs. Pieraksties, lai apturētu savus taf.</string>
     <string name="halt_all_title">Apturēt visus taf</string>
-    <string name="help_chrome_lead">Savieno tafs paplašinājumu pārī ar savu tālruni, un taf varēs strādāt tavā Chrome, tikai tajās vietnēs, ko atļauj. Tas strādā savās cilnēs, un viss riskantais gaida tevi sadaļā %1$s.</string>
+    <string name="help_chrome_lead">Savieno tafs paplašinājumu pārī ar savu tālruni, un taf varēs strādāt tavā Chrome, tikai tajās vietnēs, ko atļauj. Tas strādā savās cilnēs, un viss, kam vajadzīgs tavs jā, gaida tevi sadaļā %1$s.</string>
     <string name="help_chrome_manage">%1$s › %2$s parāda tavus Chrome un to, kam katrs tiek izmantots. Atvienojot Chrome, tā savienojumi beidzas.</string>
     <string name="help_chrome_title">tafs var strādāt tavā Chrome</string>
     <string name="help_code_lead">Ieslēdz to sadaļā %1$s › %2$s. Tad, kad pieprasīsi, KIFF nosūtīs e-pastā kodu, kas darbojas vienu reizi, 10 minūtes, pārlūkā, kas to pieprasīja.</string>
     <string name="help_code_safe">Nekad nedod šo kodu nevienam. KIFF to no tevis nekad neprasīs.</string>
-    <string name="help_code_title">Pierakstīties ar kodu, kas nosūtīts pa e-pastu</string>
+    <string name="help_code_title">Pieslēgšanās ar e-pastā saņemtu kodu</string>
     <string name="home_calendar_not_read">Kalendāru nevarēja nolasīt. %1$s</string>
     <string name="home_cant_reach_kiff">Nevar sazināties ar KIFF</string>
     <string name="home_choose_taf">Izvēlies taf.</string>

@@ -2599,7 +2599,7 @@ enum Words {
         static var title: String { Words.line("halt_all.title") }
     }
     enum Help {
-        /// Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything that needs your yes waits for you in {needs_you}.
+        /// Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in {needs_you}.
         static func chromeLead(needsYou: String) -> String { Words.line("help.chrome_lead", needsYou) }
         /// {account} › {chrome} lists your Chromes and what each one is used for. Unpairing a Chrome ends its connections.
         static func chromeManage(account: String, chrome: String) -> String { Words.line("help.chrome_manage", account, chrome) }
@@ -2609,7 +2609,7 @@ enum Words {
         static func codeLead(account: String, signIn: String) -> String { Words.line("help.code_lead", account, signIn) }
         /// Never give this code to anyone. KIFF will never ask you for it.
         static var codeSafe: String { Words.line("help.code_safe") }
-        /// Sign in with a code sent by email
+        /// Sign in with an emailed code
         static var codeTitle: String { Words.line("help.code_title") }
     }
     enum Home {
