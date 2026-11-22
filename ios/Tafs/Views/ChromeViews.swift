@@ -240,7 +240,6 @@ struct PairChromeView: View {
             case .offered(let offer):
                 // The Chrome it most likely replaces, and what is live on it, read now so the pick shows what would move.
                 await model.refreshChromes()
-                await model.refreshConnections()
                 replacingID = ChromeReplace.preselect(offer: offer, chromes: model.chromes ?? [])?.id
                 step = next
                 return
