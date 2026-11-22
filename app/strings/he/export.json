@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "השיחות שלך לא יוצאו. {why}",
+  "export.not_offered": "לא ניתן היה לשמור את הקבצים בטלפון הזה. יש לפנות קצת מקום ולנסות שוב.",
+  "export.own_chats_each_taf_coach": "השיחות שלך עם כל taf, כולל Coach, שמות הקבצים שצירפת וההערות שלך, כקובץ קריא וכ-JSON. רק אתה יכול לייצא אותן.",
+  "export.preparing": "מכין את השיחות שלך…",
+  "export.ready_share_again": "מוכן: {files}. שיתוף נוסף",
+  "export.row": "ייצוא השיחות שלי",
+  "export.sign_in_first": "יש להיכנס עם KIFF כדי לייצא את השיחות שלך."
+}

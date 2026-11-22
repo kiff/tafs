@@ -1,0 +1,13 @@
+{
+  "halt.again": "Blokirajte ponovo",
+  "halt.all_now": "Blokirajte sve odmah",
+  "halt.explain.halted": "Blokirano. Nastavak pokreće samo novi rad.",
+  "halt.explain.halted_since": "Od {time}. Nastavak pokreće samo novi rad.",
+  "halt.explain.halting": "Ništa novo ne počinje. Blokirano se prikaže kad KIFF i veza oboje potvrde.",
+  "halt.explain.running_all": "Blokiranje zaustavlja vaše tafove dok ne nastavite. Već poslan poziv još može stići.",
+  "halt.explain.running_one": "Blokiranje ga zaustavlja dok ne nastavite. Već poslan poziv još može stići.",
+  "halt.halting_stops_no_run_starts": "Blokiranje zaustavlja {who} dok ne nastavite. Već poslan poziv još može stići.",
+  "halt.now": "Blokirajte odmah",
+  "halt.row_running": "Zaustavite ga dok ne nastavite",
+  "halt.your_tafs_lower": "vaše tafove"
+}

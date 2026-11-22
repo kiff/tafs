@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF-কে জিজ্ঞেস করা হচ্ছে: {title}…",
+  "kiff.did_not_reach_kiff_try": "এটি KIFF-এ পৌঁছায়নি। আবার চেষ্টা করুন।",
+  "kiff.kiff_can_not_do_sign": "KIFF এখনও এটি করতে পারে না: এই {device} থেকে অনুমোদন করতে সেটিংস থেকে আবার সাইন ইন করুন।",
+  "kiff.kiff_did_not_answer_expected": "KIFF প্রত্যাশামতো উত্তর দেয়নি। আবার চেষ্টা করুন।",
+  "kiff.kiff_words_do_not_match": "KIFF-এর কথা তার যাচাইয়ের সঙ্গে মেলে না। কিছুই অনুমোদন করা যায় না।"
+}

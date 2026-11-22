@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "এর মধ্যে উত্তর দিন",
+  "work.answer_within_days": {
+    "one": "{count} দিন",
+    "other": "{count} দিন"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} ঘণ্টা",
+    "other": "{count} ঘণ্টা"
+  },
+  "work.answer_within_line": "কোনো কেস এর চেয়ে বেশি অপেক্ষা করলে আপনাকে জানানো হয়।",
+  "work.answer_within_none": "ঠিক করা নেই",
+  "work.answer_within_not_set": "এটি ঠিক করা যায়নি। {why}",
+  "work.asking_kiff_run": "KIFF-কে {tool} চালাতে বলা হচ্ছে…",
+  "work.did_not_stop": "এটি থামেনি: {why}",
+  "work.duration.minutes": "{minutes} মি {seconds} সে",
+  "work.duration.seconds": "{seconds} সে",
+  "work.its_runs": "এর রান",
+  "work.not_read": "এর কাজ পড়া যায়নি। {why}",
+  "work.not_sent_again": "এটি আবার পাঠানো হয়নি। {why}",
+  "work.request.try_reply_now": "উত্তরটি এখন চেষ্টা করুন",
+  "work.requests_need_you": {
+    "one": "{count}টি অনুরোধ আপনার অপেক্ষায়",
+    "other": "{count}টি অনুরোধ আপনার অপেক্ষায়"
+  },
+  "work.send_again": "আবার পাঠান",
+  "work.sending_again": "আবার পাঠানো হচ্ছে…",
+  "work.stop_run": "রান বন্ধ করুন",
+  "work.stopped_part_way_before_finished": "{taf} শেষ হওয়ার আগে মাঝপথে থেমে গেছে।"
+}

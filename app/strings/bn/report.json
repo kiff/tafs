@@ -1,0 +1,17 @@
+{
+  "report.already": "আপনি ইতিমধ্যে এই উত্তর জানিয়েছেন।",
+  "report.cant_from_here": "এই উত্তর এখান থেকে জানানো যায় না।",
+  "report.menu": "এই উত্তর জানান",
+  "report.not_sent": "আপনার রিপোর্ট পাঠানো হয়নি। {why}",
+  "report.not_sent_why": "পাঠানো হয়নি: {failed}",
+  "report.note_hint": "একটি নোট যোগ করুন (ঐচ্ছিক)",
+  "report.note_most_characters": "একটি নোট সর্বোচ্চ ১,০০০ অক্ষরের।",
+  "report.person_kiff_reads_your_report": "KIFF-এর একজন ব্যক্তি আপনার রিপোর্ট পড়েন, উত্তরটি যেমন লেখা হয়েছিল তেমনভাবে।",
+  "report.reason.harmful": "ক্ষতিকর",
+  "report.reason.offensive": "আপত্তিকর",
+  "report.reason.other": "অন্যান্য",
+  "report.reason.wrong": "ভুল",
+  "report.runs_not_loaded": "এর রান লোড করা যায়নি। {why}",
+  "report.thanks": "ধন্যবাদ। KIFF-এর কেউ আপনার রিপোর্ট পড়বেন।",
+  "report.what_wrong": "এতে কী ভুল?"
+}

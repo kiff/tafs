@@ -1,0 +1,13 @@
+{
+  "halt.again": "Bllokoni sërish",
+  "halt.all_now": "Bllokoni të gjithë tani",
+  "halt.explain.halted": "I bllokuar. Rinisja nis vetëm punë të re.",
+  "halt.explain.halted_since": "Që nga {time}. Rinisja nis vetëm punë të re.",
+  "halt.explain.halting": "Asgjë e re nuk nis. Bllokuar shfaqet kur KIFF dhe lidhja ta konfirmojnë të dyja.",
+  "halt.explain.running_all": "Bllokimi i ndalon tafs-et tuaj derisa t'i riniseni. Një thirrje e dërguar tashmë mund të arrijë prapë.",
+  "halt.explain.running_one": "Bllokimi e ndalon derisa ta riniseni. Një thirrje e dërguar tashmë mund të arrijë prapë.",
+  "halt.halting_stops_no_run_starts": "Bllokimi e ndalon: {who} derisa ta riniseni. Një thirrje e dërguar tashmë mund të arrijë prapë.",
+  "halt.now": "Bllokoni tani",
+  "halt.row_running": "Ndalojeni derisa ta riniseni",
+  "halt.your_tafs_lower": "tafs-et tuaj"
+}

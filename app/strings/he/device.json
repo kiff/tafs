@@ -1,0 +1,7 @@
+{
+  "device.linux": "מחשב",
+  "device.mac": "Mac",
+  "device.phone": "טלפון",
+  "device.tablet": "טאבלט",
+  "device.windows": "Windows PC"
+}
