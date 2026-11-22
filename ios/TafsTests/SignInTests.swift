@@ -173,9 +173,9 @@ final class SignInTests: XCTestCase {
         XCTAssertFalse(tick.canContinue, "untapped, Continue waits again")
     }
 
-    /// The welcome ships as it is until the end-to-end test with the owner.
-    func testTheNewOnboardingShipsOff() {
-        XCTAssertFalse(Onboarding.on)
+    /// The new welcome, the in-app sign-in and the three cards are on in every build.
+    func testTheNewOnboardingShipsOn() {
+        XCTAssertTrue(Onboarding.on)
     }
 
     /// A row says the page is in English only when it opens in English from another language.

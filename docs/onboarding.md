@@ -1,25 +1,20 @@
 # Onboarding
 
 The first run after one sign-in, on iPhone, iPad and Mac (Android follows the same steps). It's built behind
-`Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **off**: while it's off, the welcome and the sign-in are as they
-ship. It goes on only after an end-to-end test on real devices with the owner present.
+`Onboarding.on` (`ios/Tafs/Model/Onboarding.swift`), **on in every build**, after the end-to-end test on real devices with
+the owner (K5).
 
-**K5, the end-to-end pass:** a build compiled with `TAFS_K5` has it on, and
-no other does. Two builds have it:
+**K5, the end-to-end pass, is a simulator walk and a device pass:**
 - **A simulator run:** `.github/workflows/ios-k5.yml`, manual. `K5UITests` walks the age line in India, Brazil and
   Colombia (18), and in the US and France (16), plus one more country from the `region` input. Then the tick, Continue
   and KIFF's sign-in page, with a screenshot kept at each step and at 5, 20 and 40 s after Continue (the `k5` artifact).
   KIFF's sheet is private (ephemeral), so iOS shows no "Wants to Use kiff.dev to Sign In" ask for it; one that comes is
   taken. **The page passes only when it draws the four ways the owner keeps on** within 30 s: Apple, Google, GitHub, and
-  email with a password. It fails on any way to sign in with a code sent by email (email-code sign-in stays off). A page
+  email, whose password the provider's form asks for on its next step (the device pass takes it). It fails on the provider's own way to sign in with a code sent by email (that strategy stays off); KIFF's own "Email me a code" link, whose id is `email-code-link`, is not counted. A page
   with its title and nothing to sign in with fails, as KIFF's did on 21 Nov.
-- **A TestFlight build for the device pass:** `ios.yml`'s `k5` input. It goes to Team only and never to the Beta
-  testers, whatever `external` says. Its What to Test reads "K5 TEST BUILD: never submit for App Store review"
-  (`asc-beta.rb`, `K5=true`), so it's never the build picked for review.
-  When the device pass ends, that build is **expired** in App Store Connect (TestFlight, the build, Expire Build), so it
-  can't be installed or picked any more. The lane that ran the pass posts it on the thread.
+- **A device pass** on a TestFlight build, with the owner in person at the sign-in step.
 
-App Store builds never have `TAFS_K5`. While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
+While KIFF has in-app sign-in off (`unsupported_client` on `/v1/auth/app/…`), Continue says so in KIFF's words, or
 the app's "Signing in inside the app isn't on yet." (`KIFFError.signInNotOn`), as when KIFF's authorize page sends it
 back (`AppSignIn.Failure.refused("unsupported_client")`). The sign-up's email code and GitHub sign-in are left to the device pass.
 
@@ -55,18 +50,17 @@ language puts it. KIFF's own pages are `Legal.kiffTerms` and `Legal.kiffPrivacy`
 
 ## Android
 
-Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **off**, as on iOS.
+Behind `ONBOARDING_ON` (`android/app/src/main/kotlin/bot/tafs/app/model/Onboarding.kt`), **on in every build**, as on iOS.
 
 **Signing in inside the app not on** (KIFF's `unsupported_client`, from its API or its authorize page): Continue says so, in
 KIFF's `words` when it sends them, else "Signing in inside the app isn't on yet." (`sign_in.in_app_not_on`), never "didn't work"
 (`ContinueOutcome.NotOn`, as iOS's `KIFFError.signInNotOn`).
 
-**K5, the end-to-end pass on a test device** (`BuildConfig.K5`, as iOS's `TAFS_K5`): `ONBOARDING_ON` is on only in a **debug**
-build made with `-Pk5` or `TAFS_K5=1` (`./gradlew :app:assembleDebug -Pk5`, or `android.yml` run by hand with `k5`, whose
-`k5` job leaves the APK as a run artifact for 7 days). That job builds without Firebase's settings (alerts off), since the
-repository is public, and a `k5` run never starts `release` or `wear-release`. A **release** build sets `K5` to `false` whatever is
-passed, so no build for Play has it, and CI checks it on every run ("A release build never has K5"; `K5SwitchTest`: off unless
-asked for).
+**K5** (`BuildConfig.K5`, as iOS's `Onboarding.on`): `ONBOARDING_ON` is on in **every** build, debug and release, since the
+owner's yes on 22 Nov, so every build for Play has the onboarding and the sign-in inside tafs. CI checks it on every run ("A
+release build has K5"; `K5SwitchTest`). `android.yml` run by hand with `k5` still leaves a debug APK as a run artifact for 7
+days, built without Firebase's settings (alerts off) since the repository is public, for a pass on a test device; a `k5` run
+never starts `release` or `wear-release`.
 
 - **The welcome** (`OnboardingView`, step 1): the same tick, links and age line (the person's country's age where the
   law asks more than 16: `ageLine` from the device's region and `MinimumAge.kt`, generated from `app/strings/ages.json`),

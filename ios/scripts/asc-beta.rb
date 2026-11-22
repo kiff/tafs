@@ -11,7 +11,6 @@
 #   BETA_CONTACT                              "First:Last:phone:email", for Beta App Review (secret)
 #   BETA_FEEDBACK_EMAIL                       where testers' feedback goes (secret)
 #   WHAT_TO_TEST                              this build's "What to Test" (ios/WhatToTest.txt)
-#   K5                                        "true": a K5 build. Only its What to Test is set, to "never submit"
 # This repository is public: no email or account detail is written here.
 #   ruby asc-beta.rb
 #
@@ -139,18 +138,6 @@ module AscBeta
     end
   end
 
-  # A K5 build (ios.yml's k5 input: TAFS_K5, row 39 on) stays with Team and is never added to the Beta testers. Where
-  # a build is picked for App Store review, it says so in its What to Test, so it's never the one submitted.
-  K5_WHAT_TO_TEST = "K5 TEST BUILD: never submit for App Store review. The in-app sign-in and the illustrated onboarding are on in it (TAFS_K5). Team only."
-
-  def mark_k5(api, env, out: $stdout, wait: ->(s) { sleep s })
-    app = api.("get", "/v1/apps?filter[bundleId]=#{BUNDLE_ID}")[1]["data"].first or raise Failure, "no app #{BUNDLE_ID}"
-    number = env.fetch("BUILD_NUMBER")
-    build = processed(api, app["id"], number, out, wait)
-    what_to_test(api, build, number, K5_WHAT_TO_TEST, out)
-    out.puts "build #{number} is marked K5: never submit it for review"
-  end
-
   # The build numbered `number`, once App Store Connect has processed it; a failure past 30 minutes or when it's refused.
   def processed(api, app_id, number, out, wait)
     build = nil
@@ -220,11 +207,7 @@ if $PROGRAM_NAME == __FILE__
     [status, data]
   end
   begin
-    if ENV["K5"] == "true"
-      AscBeta.mark_k5(api, ENV)
-    else
-      AscBeta.run(api, ENV)
-    end
+    AscBeta.run(api, ENV)
   rescue AscBeta::Failure => e
     abort e.message
   end

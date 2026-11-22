@@ -7,6 +7,7 @@ import bot.tafs.app.model.AccountTime
 import bot.tafs.app.model.zone
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -122,6 +123,26 @@ class TimeZoneTest {
     assertNotNull(put.headers["KIFF-Device-Signature"])
     assertEquals("""{"time_zone":"$other"}""", String(put.body!!))
     assertEquals(other, m.state.value.kiffAccount?.timeZone)
+  }
+
+  /**
+   * The alert that asked closes as the offer clears, and the coroutine it launched the yes in is cancelled with it: the yes is
+   * still finished, its confirmation answered and KIFF's call made, never a prompt cancelled as it opens.
+   */
+  @Test fun useIsFinishedWhenTheAlertThatAskedCloses() = runTest {
+    transport.answer("PUT /v1/me/time-zone", 200, """{"time_zone":"$device"}""")
+    val m = model(other)
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","time_zone":"$device"}""")
+    lateinit var alert: kotlinx.coroutines.Job
+    // The alert leaves as soon as the offer clears, while the prompt is up.
+    auth.whilePrompted = { alert.cancel() }
+    // A prompt is up a while, as a real one is: a cancelled caller would end it there.
+    auth.waitMs = 50
+    alert = launch { m.answerTimeZoneOffer(use = true) }
+    alert.join()
+    assertEquals(listOf("Set your account's time zone to $device"), auth.asked)
+    assertEquals(1, transport.requestsTo("PUT /v1/me/time-zone").size)
+    assertEquals(device, m.state.value.kiffAccount?.timeZone)
   }
 
   @Test fun useSetsItSignedBehindOneConfirmationAndReadsTheAccountAgain() = runTest {
