@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs puede trabajar en tu Chrome",
   "help.code_lead": "Actívalo en {account} › {sign_in}. Después, cuando lo pidas, KIFF te envía por correo un código que sirve una sola vez, durante 10 minutos, en el navegador que lo pidió.",
   "help.code_safe": "No le des este código a nadie. KIFF nunca te lo pedirá.",
-  "help.code_title": "Iniciar sesión con un código por correo"
+  "help.code_title": "Iniciar sesión con un código enviado por correo"
 }

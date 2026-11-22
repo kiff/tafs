@@ -1429,7 +1429,7 @@
     <string name="help_chrome_title">tafs יכול לעבוד ב-Chrome שלך</string>
     <string name="help_code_lead">הפעילו זאת ב-%1$s › %2$s. אחר כך, כשתבקשו, KIFF שולח במייל קוד שפועל פעם אחת, 10 דקות, בדפדפן שביקש אותו.</string>
     <string name="help_code_safe">לעולם אל תיתן את הקוד הזה לאף אחד. KIFF לעולם לא יבקש אותו ממך.</string>
-    <string name="help_code_title">כניסה עם קוד שמגיע במייל</string>
+    <string name="help_code_title">כניסה עם קוד שנשלח באימייל</string>
     <string name="home_calendar_not_read">לא ניתן היה לקרוא את לוח השנה. %1$s</string>
     <string name="home_cant_reach_kiff">אי אפשר להגיע ל-KIFF</string>
     <string name="home_choose_taf">יש לבחור taf.</string>

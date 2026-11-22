@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs lahko dela v vašem Chromu",
   "help.code_lead": "Vklopite to v razdelku {account} › {sign_in}. Nato vam KIFF na zahtevo pošlje kodo, ki velja enkrat, 10 minut, v brskalniku, ki jo je zahteval.",
   "help.code_safe": "Te kode nikoli nikomur ne dajte. KIFF je od vas nikoli ne bo zahteval.",
-  "help.code_title": "Prijava s kodo po e-pošti"
+  "help.code_title": "Prijava s kodo, poslano po e-pošti"
 }

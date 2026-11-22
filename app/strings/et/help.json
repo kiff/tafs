@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs saab töötada sinu Chrome'is",
   "help.code_lead": "Lülita see sisse jaotises {account} › {sign_in}. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.",
   "help.code_safe": "Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.",
-  "help.code_title": "Sisselogimine e-kirjaga saadetud koodiga"
+  "help.code_title": "Logi sisse e-postiga saadetud koodiga"
 }

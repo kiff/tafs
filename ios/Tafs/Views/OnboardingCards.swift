@@ -250,7 +250,7 @@ struct HowTafsWorksView: View {
                 }
             }
         }
-        .task { await model.loadCodeSignIn() }
+        .task { await model.loadCodeSignIn(); await model.refreshChromes() }
         .navigationTitle(Words.Onboarding.howItWorks)
         .sheet(item: $opened) { page in
             OnboardingCards(start: page) { opened = nil }

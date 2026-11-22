@@ -1429,7 +1429,7 @@
     <string name="help_chrome_title">tafs poate lucra în Chrome-ul tău</string>
     <string name="help_code_lead">Activează-l în %1$s › %2$s. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut.</string>
     <string name="help_code_safe">Nu dați acest cod nimănui. KIFF nu vi-l va cere niciodată.</string>
-    <string name="help_code_title">Conectare cu un cod primit pe e-mail</string>
+    <string name="help_code_title">Conectare cu un cod trimis prin e-mail</string>
     <string name="home_calendar_not_read">Calendarul nu a putut fi citit. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF nu poate fi contactat</string>
     <string name="home_choose_taf">Alegeți un taf.</string>

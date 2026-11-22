@@ -4,5 +4,5 @@
   "help.chrome_title": "A tafs dolgozhat a Chrome-odban",
   "help.code_lead": "Kapcsold be itt: {account} › {sign_in}. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte.",
   "help.code_safe": "Ezt a kódot soha ne add át senkinek. A KIFF soha nem fogja kérni.",
-  "help.code_title": "Bejelentkezés e-mailben kapott kóddal"
+  "help.code_title": "Bejelentkezés e-mailben küldött kóddal"
 }

@@ -1319,7 +1319,7 @@
     <string name="help_chrome_title">tafs ເຮັດວຽກໃນ Chrome ຂອງທ່ານໄດ້</string>
     <string name="help_code_lead">ເປີດມັນໃນ %1$s › %2$s. ຈາກນັ້ນ ເມື່ອທ່ານຂໍ KIFF ຈະສົ່ງລະຫັດທາງອີເມວທີ່ໃຊ້ໄດ້ຄັ້ງດຽວ ພາຍໃນ 10 ນາທີ ໃນບຣາວເຊີທີ່ຂໍ.</string>
     <string name="help_code_safe">ຢ່າໃຫ້ລະຫັດນີ້ແກ່ໃຜ. KIFF ຈະບໍ່ເຄີຍຂໍມັນຈາກທ່ານ.</string>
-    <string name="help_code_title">ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທາງອີເມວ</string>
+    <string name="help_code_title">ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທີ່ສົ່ງທາງອີເມວ</string>
     <string name="home_calendar_not_read">ອ່ານປະຕິທິນບໍ່ໄດ້. %1$s</string>
     <string name="home_cant_reach_kiff">ຕິດຕໍ່ KIFF ບໍ່ໄດ້</string>
     <string name="home_choose_taf">ເລືອກ taf.</string>

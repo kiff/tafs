@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs poate lucra în Chrome-ul tău",
   "help.code_lead": "Activează-l în {account} › {sign_in}. Apoi, când ceri, KIFF îți trimite pe e-mail un cod care funcționează o singură dată, 10 minute, în browserul care l-a cerut.",
   "help.code_safe": "Nu dați acest cod nimănui. KIFF nu vi-l va cere niciodată.",
-  "help.code_title": "Conectare cu un cod primit pe e-mail"
+  "help.code_title": "Conectare cu un cod trimis prin e-mail"
 }

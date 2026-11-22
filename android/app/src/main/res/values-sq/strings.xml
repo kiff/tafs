@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs mund të punojë në Chrome-in tuaj</string>
     <string name="help_code_lead">Aktivizojeni te %1$s › %2$s. Pastaj, kur e kërkoni, KIFF ju dërgon me email një kod që vlen një herë, për 10 minuta, në shfletuesin që e kërkoi.</string>
     <string name="help_code_safe">Mos ia jepni kurrë këtë kod askujt. KIFF nuk do t\'jua kërkojë kurrë.</string>
-    <string name="help_code_title">Hyni me një kod me email</string>
+    <string name="help_code_title">Hyni me një kod të dërguar me email</string>
     <string name="home_calendar_not_read">Kalendari nuk u lexua dot. %1$s</string>
     <string name="home_cant_reach_kiff">Nuk arrihet te KIFF</string>
     <string name="home_choose_taf">Zgjidhni një taf.</string>

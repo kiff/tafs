@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs ले तपाईंको Chrome मा काम गर्न सक्छ</string>
     <string name="help_code_lead">यसलाई %1$s › %2$s मा खोल्नुहोस्। त्यसपछि तपाईंले अनुरोध गर्दा KIFF ले एक पटक मात्र काम गर्ने, १० मिनेटसम्म, अनुरोध गरेको ब्राउजरमा चल्ने कोड इमेलमा पठाउँछ।</string>
     <string name="help_code_safe">यो कोड कसैलाई नदिनुहोस्। KIFF ले तपाईंसँग यो कहिल्यै माग्दैन।</string>
-    <string name="help_code_title">इमेलमा आएको कोडले साइन इन</string>
+    <string name="help_code_title">इमेलमा पठाइएको कोडबाट साइन इन गर्नुहोस्</string>
     <string name="home_calendar_not_read">पात्रो पढ्न सकिएन। %1$s</string>
     <string name="home_cant_reach_kiff">KIFF सम्म पुग्न सकिएन</string>
     <string name="home_choose_taf">taf छान्नुहोस्।</string>

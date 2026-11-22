@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs може да работи във вашия Chrome</string>
     <string name="help_code_lead">Включете го в %1$s › %2$s. След това, когато поискате, KIFF изпраща по имейл код, който важи веднъж, 10 минути, в браузъра, който го е поискал.</string>
     <string name="help_code_safe">Никога не давайте този код на никого. KIFF никога няма да ви го поиска.</string>
-    <string name="help_code_title">Вход с код по имейл</string>
+    <string name="help_code_title">Вход с код, изпратен по имейл</string>
     <string name="home_calendar_not_read">Календарът не можа да бъде прочетен. %1$s</string>
     <string name="home_cant_reach_kiff">Няма връзка с KIFF</string>
     <string name="home_choose_taf">Изберете taf.</string>

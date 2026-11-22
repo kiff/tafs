@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs-ը կարող է աշխատել ձեր Chrome-ում</string>
     <string name="help_code_lead">Միացրեք այն %1$s › %2$s-ում։ Հետո, երբ խնդրեք, KIFF-ը էլ. փոստով կուղարկի կոդ, որը գործում է մեկ անգամ, 10 րոպե, այն դիտարկիչում, որը խնդրել է։</string>
     <string name="help_code_safe">Երբեք այս կոդը ոչ մեկին մի տվեք։ KIFF-ը երբեք այն ձեզնից չի խնդրի։</string>
-    <string name="help_code_title">Մուտք էլ. փոստով ստացված կոդով</string>
+    <string name="help_code_title">Մուտք էլ. փոստով ուղարկված կոդով</string>
     <string name="home_calendar_not_read">Օրացույցը չկարողացավ կարդացվել։ %1$s</string>
     <string name="home_cant_reach_kiff">Չի հաջողվում կապվել KIFF-ի հետ</string>
     <string name="home_choose_taf">Ընտրեք taf։</string>

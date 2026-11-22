@@ -312910,7 +312910,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associe a extensão do tafs ao seu telemóvel e um taf pode trabalhar no seu Chrome, só nos sites que permitir. Trabalha em separadores próprios, e tudo o que tenha risco espera por si em %1$@."
+            "value": "Associe a extensão do tafs ao seu celular e um taf pode trabalhar no seu Chrome, só nos sites que você permitir. Ele trabalha em abas próprias, e tudo o que tem risco espera por você em %1$@."
           }
         },
         "ro": {
@@ -313155,7 +313155,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ › %2$@ lista os seus Chrome e para que serve cada um. Desassociar um Chrome termina as suas ligações."
+            "value": "%1$@ › %2$@ lista seus Chromes e para que cada um é usado. Desassociar um Chrome encerra as conexões dele."
           }
         },
         "ro": {
@@ -313645,7 +313645,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ative-o em %1$@ › %2$@. Depois, quando o pedir, o KIFF envia-lhe por email um código que serve uma só vez, durante 10 minutos, no navegador que o pediu."
+            "value": "Ative em %1$@ › %2$@. Depois, quando você pedir, o KIFF envia por e-mail um código que vale uma única vez, por 10 minutos, no navegador que o pediu."
           }
         },
         "ro": {
@@ -313890,7 +313890,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nunca dê este código a ninguém. O KIFF nunca lho vai pedir."
+            "value": "Nunca dê este código a ninguém. O KIFF nunca vai pedir isso a você."
           }
         },
         "ro": {
@@ -313955,37 +313955,37 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تسجيل الدخول برمز يصل بالبريد الإلكتروني"
+            "value": "تسجيل الدخول برمز يُرسل بالبريد الإلكتروني"
           }
         },
         "az": {
           "stringUnit": {
             "state": "translated",
-            "value": "E-poçtla gələn kodla daxil olun"
+            "value": "E-poçtla göndərilən kodla giriş"
           }
         },
         "bg": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вход с код по имейл"
+            "value": "Вход с код, изпратен по имейл"
           }
         },
         "bn": {
           "stringUnit": {
             "state": "translated",
-            "value": "ইমেইলে পাওয়া কোড দিয়ে সাইন ইন"
+            "value": "ইমেইলে পাঠানো কোড দিয়ে সাইন ইন"
           }
         },
         "ca": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicia la sessió amb un codi per correu"
+            "value": "Inicia la sessió amb un codi enviat per correu"
           }
         },
         "cs": {
           "stringUnit": {
             "state": "translated",
-            "value": "Přihlášení kódem z e-mailu"
+            "value": "Přihlásit se kódem zaslaným e-mailem"
           }
         },
         "de": {
@@ -313997,61 +313997,61 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in with an emailed code"
+            "value": "Sign in with a code sent by email"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sesión con un código por correo"
+            "value": "Iniciar sesión con un código enviado por correo"
           }
         },
         "et": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sisselogimine e-kirjaga saadetud koodiga"
+            "value": "Logi sisse e-postiga saadetud koodiga"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se connecter avec un code reçu par e-mail"
+            "value": "Se connecter avec un code envoyé par e-mail"
           }
         },
         "he": {
           "stringUnit": {
             "state": "translated",
-            "value": "כניסה עם קוד שמגיע במייל"
+            "value": "כניסה עם קוד שנשלח באימייל"
           }
         },
         "hr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijava kodom iz e-pošte"
+            "value": "Prijava kodom poslanim e-poštom"
           }
         },
         "hu": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bejelentkezés e-mailben kapott kóddal"
+            "value": "Bejelentkezés e-mailben küldött kóddal"
           }
         },
         "hy": {
           "stringUnit": {
             "state": "translated",
-            "value": "Մուտք էլ. փոստով ստացված կոդով"
+            "value": "Մուտք էլ. փոստով ուղարկված կոդով"
           }
         },
         "id": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masuk dengan kode lewat email"
+            "value": "Masuk dengan kode yang dikirim lewat email"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accedi con un codice via email"
+            "value": "Accedi con un codice inviato per email"
           }
         },
         "ja": {
@@ -314063,13 +314063,13 @@
         "ka": {
           "stringUnit": {
             "state": "translated",
-            "value": "შესვლა ელფოსტით მიღებული კოდით"
+            "value": "შესვლა ელფოსტით გამოგზავნილი კოდით"
           }
         },
         "km": {
           "stringUnit": {
             "state": "translated",
-            "value": "ចូលដោយកូដដែលផ្ញើតាមអ៊ីមែល"
+            "value": "ចូលដោយប្រើកូដដែលផ្ញើតាមអ៊ីមែល"
           }
         },
         "ko": {
@@ -314081,103 +314081,103 @@
         "lo": {
           "stringUnit": {
             "state": "translated",
-            "value": "ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທາງອີເມວ"
+            "value": "ເຂົ້າສູ່ລະບົບດ້ວຍລະຫັດທີ່ສົ່ງທາງອີເມວ"
           }
         },
         "lt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prisijungimas el. paštu gautu kodu"
+            "value": "Prisijungti kodu, atsiųstu el. paštu"
           }
         },
         "lv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pieslēgšanās ar e-pastā saņemtu kodu"
+            "value": "Pierakstīties ar kodu, kas nosūtīts pa e-pastu"
           }
         },
         "mk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Најава со код по е-пошта"
+            "value": "Најава со код испратен по е-пошта"
           }
         },
         "mn": {
           "stringUnit": {
             "state": "translated",
-            "value": "И-мэйлээр ирсэн кодоор нэвтрэх"
+            "value": "Имэйлээр ирсэн кодоор нэвтрэх"
           }
         },
         "ne": {
           "stringUnit": {
             "state": "translated",
-            "value": "इमेलमा आएको कोडले साइन इन"
+            "value": "इमेलमा पठाइएको कोडबाट साइन इन गर्नुहोस्"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inloggen met een code per e-mail"
+            "value": "Inloggen met een code die per e-mail is verstuurd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logowanie kodem z e-maila"
+            "value": "Zaloguj się kodem wysłanym e-mailem"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sessão com um código por email"
+            "value": "Iniciar sessão com um código enviado por email"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sessão com um código por email"
+            "value": "Entrar com um código enviado por e-mail"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conectare cu un cod primit pe e-mail"
+            "value": "Conectare cu un cod trimis prin e-mail"
           }
         },
         "sk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prihlásenie kódom z e-mailu"
+            "value": "Prihlásiť sa kódom zaslaným e-mailom"
           }
         },
         "sl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijava s kodo po e-pošti"
+            "value": "Prijava s kodo, poslano po e-pošti"
           }
         },
         "sq": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hyni me një kod me email"
+            "value": "Hyni me një kod të dërguar me email"
           }
         },
         "sr-Latn": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prijava kodom iz e-pošte"
+            "value": "Prijava kodom poslanim e-poštom"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ลงชื่อเข้าใช้ด้วยรหัสที่ส่งทางอีเมล"
+            "value": "เข้าสู่ระบบด้วยรหัสที่ส่งทางอีเมล"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "E-postayla gelen kodla giriş yap"
+            "value": "E-postayla gönderilen kodla oturum aç"
           }
         },
         "vi": {
@@ -314189,7 +314189,7 @@
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "使用電子郵件寄來的代碼登入"
+            "value": "用電子郵件寄送的代碼登入"
           }
         }
       }

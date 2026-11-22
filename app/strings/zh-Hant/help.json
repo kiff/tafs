@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs 可以在您的 Chrome 中工作",
   "help.code_lead": "在 {account} › {sign_in} 開啟。之後您提出要求時，KIFF 會以電子郵件寄出一組代碼，僅能使用一次、10 分鐘內有效，且只能在提出要求的瀏覽器中使用。",
   "help.code_safe": "請勿將此代碼給任何人。KIFF 絕不會向您索取。",
-  "help.code_title": "使用電子郵件寄來的代碼登入"
+  "help.code_title": "用電子郵件寄送的代碼登入"
 }

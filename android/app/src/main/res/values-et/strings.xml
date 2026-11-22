@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs saab töötada sinu Chrome\'is</string>
     <string name="help_code_lead">Lülita see sisse jaotises %1$s › %2$s. Siis saadab KIFF sinu soovil e-kirjaga koodi, mis kehtib ühe korra, 10 minutit, selles brauseris, mis seda küsis.</string>
     <string name="help_code_safe">Ära anna seda koodi kellelegi. KIFF ei küsi seda sinult kunagi.</string>
-    <string name="help_code_title">Sisselogimine e-kirjaga saadetud koodiga</string>
+    <string name="help_code_title">Logi sisse e-postiga saadetud koodiga</string>
     <string name="home_calendar_not_read">Kalendrit ei õnnestunud lugeda. %1$s</string>
     <string name="home_cant_reach_kiff">KIFFini ei jõuta</string>
     <string name="home_choose_taf">Vali taf.</string>

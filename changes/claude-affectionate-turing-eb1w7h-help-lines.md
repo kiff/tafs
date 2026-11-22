@@ -1,1 +1,1 @@
-- **How tafs works explains Chrome and the emailed code:** two short sections, shown only where each is available, in every language ([docs/ios-app.md](docs/ios-app.md)).
+- **How tafs works explains Chrome and the emailed code:** two short sections, shown only where each is available, on iPhone and iPad in every language; Android follows ([docs/ios-app.md](docs/ios-app.md)).

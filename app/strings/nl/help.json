@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs kan in je Chrome werken",
   "help.code_lead": "Zet het aan in {account} › {sign_in}. Als je erom vraagt, mailt KIFF je daarna een code die één keer werkt, 10 minuten lang, in de browser die erom vroeg.",
   "help.code_safe": "Geef deze code aan niemand. KIFF vraagt er nooit om.",
-  "help.code_title": "Inloggen met een code per e-mail"
+  "help.code_title": "Inloggen met een code die per e-mail is verstuurd"
 }

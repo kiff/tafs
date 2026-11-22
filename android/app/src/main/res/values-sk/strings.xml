@@ -1429,7 +1429,7 @@
     <string name="help_chrome_title">tafs môže pracovať vo vašom Chrome</string>
     <string name="help_code_lead">Zapnite to v časti %1$s › %2$s. Potom vám KIFF na požiadanie pošle e-mailom kód, ktorý platí raz, 10 minút, v prehliadači, ktorý oň požiadal.</string>
     <string name="help_code_safe">Nikdy tento kód nikomu nedávajte. KIFF vás oň nikdy nepožiada.</string>
-    <string name="help_code_title">Prihlásenie kódom z e-mailu</string>
+    <string name="help_code_title">Prihlásiť sa kódom zaslaným e-mailom</string>
     <string name="home_calendar_not_read">Kalendár sa nepodarilo načítať. %1$s</string>
     <string name="home_cant_reach_kiff">Nedá sa spojiť s KIFF</string>
     <string name="home_choose_taf">Vyberte taf.</string>

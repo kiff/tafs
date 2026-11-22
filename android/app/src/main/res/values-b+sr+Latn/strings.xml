@@ -1429,7 +1429,7 @@
     <string name="help_chrome_title">tafs može da radi u vašem Chromeu</string>
     <string name="help_code_lead">Uključite to u %1$s › %2$s. Zatim vam KIFF na zahtev šalje e-poštom kod koji važi jednom, 10 minuta, u pregledaču koji ga je zatražio.</string>
     <string name="help_code_safe">Nikome nikad ne dajte ovaj kod. KIFF ga od vas nikad neće tražiti.</string>
-    <string name="help_code_title">Prijava kodom iz e-pošte</string>
+    <string name="help_code_title">Prijava kodom poslanim e-poštom</string>
     <string name="home_calendar_not_read">Kalendar nije bilo moguće pročitati. %1$s</string>
     <string name="home_cant_reach_kiff">Nije moguće doći do KIFF-a</string>
     <string name="home_choose_taf">Odaberite taf.</string>

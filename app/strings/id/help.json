@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs bisa bekerja di Chrome Anda",
   "help.code_lead": "Aktifkan di {account} › {sign_in}. Setelah itu, saat Anda memintanya, KIFF mengirim kode lewat email yang berlaku sekali, selama 10 menit, di browser yang memintanya.",
   "help.code_safe": "Jangan berikan kode ini kepada siapa pun. KIFF tidak akan pernah memintanya dari Anda.",
-  "help.code_title": "Masuk dengan kode lewat email"
+  "help.code_title": "Masuk dengan kode yang dikirim lewat email"
 }

@@ -2609,7 +2609,7 @@ enum Words {
         static func codeLead(account: String, signIn: String) -> String { Words.line("help.code_lead", account, signIn) }
         /// Never give this code to anyone. KIFF will never ask you for it.
         static var codeSafe: String { Words.line("help.code_safe") }
-        /// Sign in with an emailed code
+        /// Sign in with a code sent by email
         static var codeTitle: String { Words.line("help.code_title") }
     }
     enum Home {

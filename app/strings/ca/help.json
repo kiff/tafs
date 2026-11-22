@@ -4,5 +4,5 @@
   "help.chrome_title": "tafs pot treballar al teu Chrome",
   "help.code_lead": "Activa-ho a {account} › {sign_in}. Després, quan ho demanis, KIFF t'envia per correu un codi que serveix una sola vegada, durant 10 minuts, al navegador que l'ha demanat.",
   "help.code_safe": "No donis mai aquest codi a ningú. KIFF no te'l demanarà mai.",
-  "help.code_title": "Inicia la sessió amb un codi per correu"
+  "help.code_title": "Inicia la sessió amb un codi enviat per correu"
 }

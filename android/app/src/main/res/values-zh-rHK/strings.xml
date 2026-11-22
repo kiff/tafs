@@ -1319,7 +1319,7 @@
     <string name="help_chrome_title">tafs 可以在您的 Chrome 中工作</string>
     <string name="help_code_lead">在 %1$s › %2$s 開啟。之後您提出要求時，KIFF 會以電子郵件寄出一組代碼，僅能使用一次、10 分鐘內有效，且只能在提出要求的瀏覽器中使用。</string>
     <string name="help_code_safe">請勿將此代碼給任何人。KIFF 絕不會向您索取。</string>
-    <string name="help_code_title">使用電子郵件寄來的代碼登入</string>
+    <string name="help_code_title">用電子郵件寄送的代碼登入</string>
     <string name="home_calendar_not_read">無法讀取行事曆。%1$s</string>
     <string name="home_cant_reach_kiff">無法連線至 KIFF</string>
     <string name="home_choose_taf">請選擇一個 taf。</string>

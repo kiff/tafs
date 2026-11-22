@@ -1483,6 +1483,10 @@ implementation of §5.2 must give literally: the P-256 keys of private keys 1 an
 the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
 request, the window, each refusal) and `PairComputerTest` (the sheet).
 
+## Help: Chrome and the emailed code (Android follows)
+
+The words are in (`Words.Help`, from `help.json` in every language); Android's How tafs works does not draw the two sections yet. They follow iOS's rule: Chrome once planque lists Chromes, the emailed code once KIFF says it is available. Until then nothing calls `Words.Help`.
+
 ## Pairing a Chrome
 
 Account › **Chrome** (`ChromesSheet`, `ChromesView.kt`) lists the Chromes paired to the account, with Unpair, and **Pair a

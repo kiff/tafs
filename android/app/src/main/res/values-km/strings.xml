@@ -1319,7 +1319,7 @@
     <string name="help_chrome_title">tafs អាចធ្វើការក្នុង Chrome របស់អ្នកបាន</string>
     <string name="help_code_lead">បើវានៅក្នុង %1$s › %2$s។ បន្ទាប់មក នៅពេលអ្នកស្នើសុំ KIFF នឹងផ្ញើកូដតាមអ៊ីមែលដែលប្រើបានតែម្តង ក្នុងរយៈពេល 10 នាទី នៅក្នុងកម្មវិធីរុករកដែលបានស្នើសុំ។</string>
     <string name="help_code_safe">កុំឱ្យកូដនេះទៅអ្នកណាឡើយ។ KIFF នឹងមិនសុំវាពីអ្នកទេ។</string>
-    <string name="help_code_title">ចូលដោយកូដដែលផ្ញើតាមអ៊ីមែល</string>
+    <string name="help_code_title">ចូលដោយប្រើកូដដែលផ្ញើតាមអ៊ីមែល</string>
     <string name="home_calendar_not_read">មិនអាចអានប្រតិទិនបានទេ។ %1$s</string>
     <string name="home_cant_reach_kiff">មិនអាចទៅដល់ KIFF</string>
     <string name="home_choose_taf">ជ្រើសរើស taf មួយ។</string>

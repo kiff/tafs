@@ -1429,7 +1429,7 @@
     <string name="help_chrome_title">tafs gali dirbti jūsų Chrome</string>
     <string name="help_code_lead">Įjunkite tai skiltyje %1$s › %2$s. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė.</string>
     <string name="help_code_safe">Niekada neduokite šio kodo niekam. KIFF jo niekada neprašys.</string>
-    <string name="help_code_title">Prisijungimas el. paštu gautu kodu</string>
+    <string name="help_code_title">Prisijungti kodu, atsiųstu el. paštu</string>
     <string name="home_calendar_not_read">Nepavyko nuskaityti kalendoriaus. %1$s</string>
     <string name="home_cant_reach_kiff">Nepavyksta pasiekti KIFF</string>
     <string name="home_choose_taf">Pasirinkite taf.</string>

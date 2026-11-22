@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">A tafs dolgozhat a Chrome-odban</string>
     <string name="help_code_lead">Kapcsold be itt: %1$s › %2$s. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte.</string>
     <string name="help_code_safe">Ezt a kódot soha ne add át senkinek. A KIFF soha nem fogja kérni.</string>
-    <string name="help_code_title">Bejelentkezés e-mailben kapott kóddal</string>
+    <string name="help_code_title">Bejelentkezés e-mailben küldött kóddal</string>
     <string name="home_calendar_not_read">A naptárt nem sikerült beolvasni. %1$s</string>
     <string name="home_cant_reach_kiff">A KIFF nem érhető el</string>
     <string name="home_choose_taf">Válassz egy tafot.</string>

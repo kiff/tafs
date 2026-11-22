@@ -1374,7 +1374,7 @@
     <string name="help_chrome_title">tafs আপনার Chrome-এ কাজ করতে পারে</string>
     <string name="help_code_lead">এটি %1$s › %2$s-এ চালু করুন। এরপর আপনি চাইলে KIFF ইমেইলে এমন একটি কোড পাঠায় যা একবারই, ১০ মিনিট, যে ব্রাউজার চেয়েছে তাতে কাজ করে।</string>
     <string name="help_code_safe">এই কোড কাউকে দেবেন না। KIFF কখনও আপনার কাছে এটি চাইবে না।</string>
-    <string name="help_code_title">ইমেইলে পাওয়া কোড দিয়ে সাইন ইন</string>
+    <string name="help_code_title">ইমেইলে পাঠানো কোড দিয়ে সাইন ইন</string>
     <string name="home_calendar_not_read">ক্যালেন্ডার পড়া যায়নি। %1$s</string>
     <string name="home_cant_reach_kiff">KIFF-এ পৌঁছানো যাচ্ছে না</string>
     <string name="home_choose_taf">একটি taf বেছে নিন।</string>
