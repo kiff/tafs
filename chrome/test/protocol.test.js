@@ -1,7 +1,7 @@
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat } from "../src/crypto.js";
-import { Nonces, checkStep, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS } from "../src/protocol.js";
+import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
 import { parseCode, offer, checkConfirmation, extensionProof, ALPHABET, hex } from "../src/pairing.js";
 import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
 
@@ -27,8 +27,8 @@ test("a step runs only when planque signed it for this Chrome, unexpired and new
   assert.equal((await checkStep(await signed(step()), ctx)).why, null);
   assert.equal((await checkStep(await signed(step()), ctx)).why, "seen before", "a replay");
   assert.equal((await checkStep(await signed(step({ nonce: "n2", chrome_id: "chr_2" })), ctx)).why, "not for this Chrome");
-  assert.equal((await checkStep(await signed(step({ nonce: "n3", exp: NOW - 1 })), ctx)).why, "expired");
-  assert.equal((await checkStep(await signed(step({ nonce: "n4", exp: NOW + MAX_AHEAD_MS + 1 })), ctx)).why, "expiry too far ahead");
+  assert.equal((await checkStep(await signed(step({ nonce: "n3", exp: NOW - SKEW_MS - 1 })), ctx)).why, "expired");
+  assert.equal((await checkStep(await signed(step({ nonce: "n4", exp: NOW + MAX_AHEAD_MS + SKEW_MS + 1 })), ctx)).why, "expiry too far ahead");
   assert.equal((await checkStep(await signed(step({ nonce: "n5", sites: [] })), ctx)).why, "no sites");
   assert.equal((await checkStep(await signed(step({ nonce: "n6", op: "eval" })), ctx)).why, "malformed");
 
@@ -328,4 +328,34 @@ test("a sensitive site opens only on the paired phone's own allowance for that g
   assert.deepEqual(await checkAllowances([await allow(phone, "g_2", "paypal.com")], ctx), [], "another grant's");
   assert.deepEqual(await checkAllowances(["paypal.com"], ctx), [], "a bare name");
   assert.deepEqual(await checkAllowances([await allow(phone, "g_1", "paypal.com")], { ...ctx, phoneKey: null }), [], "not paired");
+});
+
+test("a clock a little off still runs a step, by planque's time when the welcome carries it and by a fixed slack when not", async () => {
+  const p = await planque();
+  const signed = async (extra) => {
+    const s = step(extra);
+    return { type: "step", step: s, sig: await sign(p.keys.privateKey, LABEL.step, s) };
+  };
+  const base = { planqueKey: p.key, chromeId: "chr_1", now: NOW };
+  const run = async (extra, over) => (await checkStep(await signed({ nonce: "n" + Math.random(), ...extra }), { ...base, nonces: new Nonces(() => NOW), ...over })).why;
+  // Without planque's time: a Chrome whose clock is 2 s behind or 40 s ahead still runs a step; a step 61 s stale doesn't.
+  assert.equal(await run({ exp: NOW + MAX_AHEAD_MS + 2_000 }), null, "2 s behind");
+  assert.equal(await run({ exp: NOW - 40_000 }), null, "40 s ahead of planque");
+  assert.equal(await run({ exp: NOW - SKEW_MS - 1 }), "expired");
+  // With it, the clock is moved by the offset and the slack shrinks.
+  const behind = 20_000;
+  assert.equal(await run({ exp: NOW + behind + MAX_AHEAD_MS }, { offset: behind }), null, "a Chrome 20 s behind");
+  assert.equal(await run({ exp: NOW + behind - SKEW_KNOWN_MS - 1 }, { offset: behind }), "expired");
+  assert.equal(await run({ exp: NOW + behind + MAX_AHEAD_MS + SKEW_KNOWN_MS + 1 }, { offset: behind }), "expiry too far ahead");
+});
+
+test("planque's time in the welcome moves the clock only a little, and only when it is a number", () => {
+  assert.equal(clockOffset({ now: NOW + 2_000 }, NOW), 2_000);
+  assert.equal(clockOffset({ now: NOW - 5_000 }, NOW), -5_000);
+  assert.equal(clockOffset({ now: NOW + MAX_OFFSET_MS }, NOW), MAX_OFFSET_MS);
+  assert.equal(clockOffset({ now: NOW + MAX_OFFSET_MS + 1 }, NOW), null, "too far out: ignored");
+  assert.equal(clockOffset({ now: "later" }, NOW), null);
+  assert.equal(clockOffset({ now: NaN }, NOW), null);
+  assert.equal(clockOffset({}, NOW), null);
+  assert.equal(clockOffset(null, NOW), null);
 });
