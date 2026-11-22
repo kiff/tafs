@@ -149,7 +149,12 @@ export async function checkAllowances(entries, { phoneKey, chromeId, grant }) {
  * relays it and can't widen it. Chrome's per-site permission stays the second gate.
  */
 export async function checkSites(step, pairing) {
-  if (!pairing || !pairing.phoneKey || !step || !Array.isArray(step.sites) || !step.sites_signed) return false;
+  if (!pairing || !pairing.phoneKey || !step || !Array.isArray(step.sites)) return false;
+  // A connection a re-pairing carried: its sites are in the pairing the phone signed (docs/chrome.md "Your Chrome" 1), and
+  // a step is within them. No signature of its own is needed.
+  const carried = Array.isArray(pairing.carried) ? pairing.carried.find((e) => e.grant === step.grant) : null;
+  if (carried && step.sites.every((s) => carried.sites.includes(s))) return true;
+  if (!step.sites_signed) return false;
   const signed = step.sites_signed;
   if (!Array.isArray(signed.sites) || typeof signed.sig !== "string") return false;
   if (!step.sites.every((s) => signed.sites.includes(s))) return false;

@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { LABEL, b64u, fromB64u, hmac, sha256, concat, signingBytes } from "../src/crypto.js";
-import { extensionProof, oneTouchProof, hex } from "../src/pairing.js";
+import { extensionProof, oneTouchProof, readCarried, hex } from "../src/pairing.js";
 
 const v = JSON.parse(readFileSync(new URL("../../vectors/chrome-pairing.json", import.meta.url), "utf8"));
 
@@ -18,6 +18,9 @@ test("the extension's proof, the phone's proof and the signed bytes are the vect
   assert.equal(b64u(await hmac(v.secret, LABEL.phoneProof, concat(phoneKey, hash))), v.phone_proof);
   const body = { pairing: v.pairing, chrome_key_sha256: v.chrome_key_sha256, name: v.name, phone_key: v.phone_key, phone_proof: v.phone_proof };
   assert.equal(b64u(signingBytes(LABEL.pair, body)), v.signed_bytes);
+  // A re-pairing's carried connections are inside what the phone signs, in the order it wrote them (written apart in Python).
+  assert.deepEqual(readCarried(v.carried), v.carried);
+  assert.equal(b64u(signingBytes(LABEL.pair, { ...body, carried: v.carried })), v.signed_bytes_with_carried);
   // With the KIFF device's offer, the proof covers it too, as the phones check it.
   assert.equal(await extensionProof(v.secret, chromeKey, v.kiff_offer), v.extension_proof_with_kiff_offer);
   assert.equal(await oneTouchProof(v.secret, chromeKey, v.kiff_offer), v.one_touch_proof_with_kiff_offer, "the proof of the one-fingerprint flag, written apart in Python");

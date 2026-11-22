@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, hmac, sha256, concat, signingBytes, requestsMessage } from "../src/crypto.js";
 import { profileId } from "../src/store.js";
 import { Nonces, checkStep, clockOffset, result, hello, checkWelcome, checkRelease, checkAllowances, MAX_AHEAD_MS, MAX_OFFSET_MS, SKEW_MS, SKEW_KNOWN_MS } from "../src/protocol.js";
-import { parseCode, offer, checkConfirmation, extensionProof, oneTouchProof, postOffer, ALPHABET, hex } from "../src/pairing.js";
+import { parseCode, offer, checkConfirmation, extensionProof, oneTouchProof, postOffer, readCarried, ALPHABET, hex } from "../src/pairing.js";
+import { checkSites } from "../src/protocol.js";
 import { Relay, MAX_RESULT_BYTES } from "../src/relay.js";
 
 const pub = async (k) => b64u(await publicSPKI(k.publicKey));
@@ -90,14 +91,14 @@ test("a pairing code is four characters of lookup and a 17-character secret, abo
 });
 
 /** The phone's side of a pairing, as the apps do it: checks our proof, then signs and proves its own key. */
-async function phoneConfirms(secret, offered, { phone, pairing = "pr_1", name = "Work Mac", chromeId = "chr_1" }) {
+async function phoneConfirms(secret, offered, { phone, pairing = "pr_1", name = "Work Mac", chromeId = "chr_1", carried }) {
   const spki = Uint8Array.from(Buffer.from(offered.key, "base64url"));
   assert.equal(await extensionProof(secret, spki), offered.proof, "the phone checks the extension's proof");
   const phoneKey = await pub(phone);
   const chromeHash = await sha256(spki);
   const phoneProof = b64u(await hmac(secret, LABEL.phoneProof, concat(Uint8Array.from(Buffer.from(phoneKey, "base64url")), chromeHash)));
-  const body = { pairing, chrome_key_sha256: hex(chromeHash), name, phone_key: phoneKey, phone_proof: phoneProof };
-  return { pairing, chrome_id: chromeId, name, phone_key: phoneKey, phone_proof: phoneProof, phone_sig: await sign(phone.privateKey, LABEL.pair, body) };
+  const body = { pairing, chrome_key_sha256: hex(chromeHash), name, phone_key: phoneKey, phone_proof: phoneProof, ...(carried !== undefined ? { carried } : {}) };
+  return { pairing, chrome_id: chromeId, name, phone_key: phoneKey, phone_proof: phoneProof, phone_sig: await sign(phone.privateKey, LABEL.pair, body), ...(carried !== undefined ? { carried } : {}) };
 }
 
 test("pairing binds the phone's key and ours under the code's secret, which planque never sees", async () => {
@@ -126,10 +127,10 @@ const KIFF_HASH = "ab".repeat(32);
 const SIGNED_AT = "2026-11-22T21:30:00Z";
 
 /** The phone's side of a pairing with one fingerprint: one approval-key signature over this pairing and KIFF's request. */
-async function phoneConfirmsTogether(secret, offered, { phone, kiffHash = KIFF_HASH, tenant = "tenant-1", signedAt = SIGNED_AT, name = "Work Mac" }) {
-  const answer = await phoneConfirms(secret, offered, { phone, name });
+async function phoneConfirmsTogether(secret, offered, { phone, kiffHash = KIFF_HASH, tenant = "tenant-1", signedAt = SIGNED_AT, name = "Work Mac", carried }) {
+  const answer = await phoneConfirms(secret, offered, { phone, name, carried });
   const spki = Uint8Array.from(Buffer.from(offered.key, "base64url"));
-  const body = { pairing: answer.pairing, chrome_key_sha256: hex(await sha256(spki)), name, phone_key: answer.phone_key, phone_proof: answer.phone_proof };
+  const body = { pairing: answer.pairing, chrome_key_sha256: hex(await sha256(spki)), name, phone_key: answer.phone_key, phone_proof: answer.phone_proof, ...(carried !== undefined ? { carried } : {}) };
   const own = hex(await sha256(signingBytes(LABEL.pair, body)));
   const data = requestsMessage(tenant, signedAt, own, kiffHash);
   const sig = new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, phone.privateKey, data));
@@ -230,6 +231,85 @@ test("an offer planque refuses for a field it doesn't know goes again without th
   const { profile_id: _a, one_touch: _b, one_touch_proof: _c, ...plain } = body;
   assert.equal((await postOffer(planque(["key"]), "u", plain)).status, 400);
   assert.equal(calls.length, 1);
+});
+
+const CARRIED = [{ grant: "grt_wiki01", sites: ["wikipedia.org", "wikimedia.org"] }, { grant: "grt_shop02", sites: ["shop.example"] }];
+
+test("a re-pairing's carried connections are kept only as the phone signed them", async () => {
+  const secret = "29XMDPQRSTVWXYZ23";
+  const ext = await newKeyPair();
+  const phone = await newKeyPair();
+  const offered = await offer(secret, ext, { version: "0.1.0", manifestHash: "h", browser: "Chrome 131", os: "macOS" });
+  const keep = { chromeId: "chr_1", name: "Work Mac", phoneKey: await pub(phone), carried: CARRIED };
+  // The pairing-only form and the one-fingerprint form both carry them.
+  assert.deepEqual(await checkConfirmation(secret, ext, await phoneConfirms(secret, offered, { phone, carried: CARRIED })), keep);
+  assert.deepEqual(await checkConfirmation(secret, ext, await phoneConfirmsTogether(secret, offered, { phone, carried: CARRIED })), keep);
+  // No list, none kept: today's pairing.
+  assert.deepEqual(await checkConfirmation(secret, ext, await phoneConfirms(secret, offered, { phone })), { chromeId: "chr_1", name: "Work Mac", phoneKey: await pub(phone) });
+
+  // planque relays another list than the one signed: the signature no longer holds.
+  const signed = await phoneConfirms(secret, offered, { phone, carried: CARRIED });
+  const changes = {
+    "a connection added": [...CARRIED, { grant: "grt_bank03", sites: ["bank.example"] }],
+    "a site added": [{ grant: "grt_wiki01", sites: ["wikipedia.org", "wikimedia.org", "evil.example"] }, CARRIED[1]],
+    "a site changed": [{ grant: "grt_wiki01", sites: ["wikipedia.org", "wikimedia.net"] }, CARRIED[1]],
+    "another order": [CARRIED[1], CARRIED[0]],
+    "a connection dropped": [CARRIED[0]],
+    "the list removed": undefined,
+  };
+  for (const [why, carried] of Object.entries(changes)) {
+    assert.equal(await checkConfirmation(secret, ext, { ...signed, carried }), null, why);
+  }
+  const without = await phoneConfirms(secret, offered, { phone });
+  assert.equal(await checkConfirmation(secret, ext, { ...without, carried: CARRIED }), null, "a list added to an answer signed without one");
+  const together = await phoneConfirmsTogether(secret, offered, { phone, carried: CARRIED });
+  assert.equal(await checkConfirmation(secret, ext, { ...together, carried: [CARRIED[0]] }), null, "a changed list, one fingerprint");
+
+  // A malformed list is no pairing even when the phone really signed it.
+  const many = Array.from({ length: 51 }, (_, i) => ({ grant: "g" + i, sites: ["shop.example"] }));
+  const malformed = {
+    "not a list": "grt_wiki01",
+    "an object, not a list": { grant: "grt_a", sites: ["shop.example"] },
+    "a number": 7,
+    "null": null,
+    "a site over 253 characters": [{ grant: "grt_a", sites: ["a".repeat(250) + ".com"] }],
+    "more than 50": many,
+    "an extra key": [{ grant: "grt_a", sites: ["shop.example"], note: "x" }],
+    "a grant twice": [CARRIED[1], CARRIED[1]],
+    "a grant that isn't one": [{ grant: "a b", sites: ["shop.example"] }],
+    "an empty grant": [{ grant: "", sites: ["shop.example"] }],
+    "no sites": [{ grant: "grt_a", sites: [] }],
+    "a public suffix": [{ grant: "grt_a", sites: ["co.uk"] }],
+    "a site that isn't one": [{ grant: "grt_a", sites: ["localhost"] }],
+    "a site twice": [{ grant: "grt_a", sites: ["shop.example", "shop.example"] }],
+    "more than 100 sites": [{ grant: "grt_a", sites: Array.from({ length: 101 }, (_, i) => "s" + i + ".example") }],
+    "a site that isn't text": [{ grant: "grt_a", sites: [7] }],
+    "an entry that isn't an object": ["grt_a"],
+  };
+  for (const [why, carried] of Object.entries(malformed)) {
+    assert.equal(await checkConfirmation(secret, ext, await phoneConfirms(secret, offered, { phone, carried })), null, why);
+  }
+  assert.equal(readCarried(many.slice(0, 50)).length, 50, "50 is the most");
+  assert.deepEqual(readCarried([{ grant: "grt_a", sites: ["b.example", "a.example"] }]), [{ grant: "grt_a", sites: ["b.example", "a.example"] }], "the order is kept");
+});
+
+test("a step for a carried connection runs on the sites the pairing carried, and never beyond them", async () => {
+  const phone = await newKeyPair();
+  const pairing = { chromeId: "chr_2", phoneKey: await pub(phone), carried: CARRIED };
+  const step = (extra) => ({ grant: "grt_wiki01", sites: ["wikipedia.org"], sites_signed: { sites: ["wikipedia.org", "wikimedia.org"], sig: "", carried: true }, ...extra });
+  assert.equal(await checkSites(step(), pairing), true, "within the carried sites, with no signature");
+  assert.equal(await checkSites(step({ sites: ["wikipedia.org", "wikimedia.org"], sites_signed: undefined }), pairing), true, "the whole list");
+  assert.equal(await checkSites(step({ sites: ["wikipedia.org", "evil.example"] }), pairing), false, "a site beyond them");
+  assert.equal(await checkSites(step({ grant: "grt_other" }), pairing), false, "a grant that wasn't carried");
+  assert.equal(await checkSites(step({ grant: "grt_shop02" }), pairing), false, "another carried grant's sites aren't this one's");
+  assert.equal(await checkSites(step(), { ...pairing, carried: undefined }), false, "a pairing that carried nothing");
+  assert.equal(await checkSites(step(), { ...pairing, carried: [] }), false, "an empty list");
+  assert.equal(await checkSites(step(), { ...pairing, phoneKey: "" }), false, "no phone key");
+  // A grant of the pairing's own is signed for this Chrome as ever, and a carried one can be signed anew.
+  const fresh = async (grant, sites) => ({ sites, sig: await sign(phone.privateKey, LABEL.sites, { chrome_id: "chr_2", grant, sites }) });
+  assert.equal(await checkSites({ grant: "grt_new", sites: ["new.example"], sites_signed: await fresh("grt_new", ["new.example"]) }, pairing), true, "signed for this Chrome");
+  assert.equal(await checkSites({ grant: "grt_wiki01", sites: ["extra.example"], sites_signed: await fresh("grt_wiki01", ["extra.example"]) }, pairing), true, "a carried grant signed anew");
+  assert.equal(await checkSites({ grant: "grt_new", sites: ["new.example"], sites_signed: { sites: ["new.example"], sig: "", carried: true } }, pairing), false, "carried: true without a carried grant");
 });
 
 test("what the phone signs once for two requests is the same lines KIFF and planque build, the hashes sorted", () => {
