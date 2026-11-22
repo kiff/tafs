@@ -10,5 +10,6 @@
   "phone_proof": "92rXatjc8uBTJuRnCYX5MqX4ANbu7OBE6atBbaerJ5Q",
   "signed_bytes": "dGFmcy1jaHJvbWUvcGFpci92MQB7ImNocm9tZV9rZXlfc2hhMjU2IjoiODUzNzNlNjQ1MjRkZmYwNDdmNTQyMzEwMGZhM2I5MzI4ZWZlZDQ5ZjQ5YmY5YmE3NTJhYTFlMDE3MDgxMzdmOCIsIm5hbWUiOiJXb3JrIE1hYyIsInBhaXJpbmciOiJwcl8xIiwicGhvbmVfa2V5IjoiQlJBYkpqRThSMUpkYUhOLWlaU2ZxclhBeTliaDdQY0NEUmdqTGpsRVQxcGxjSHVHa1p5bnNyM0kwOTdwOVA4S0ZTQXJOa0ZNVjJKdGVJT09tYVN2dXNYUTItYnhfQWNTSFNnelBrbFVYMnAxZ0l1V29heTN3czNZNHciLCJwaG9uZV9wcm9vZiI6IjkyclhhdGpjOHVCVEp1Um5DWVg1TXFYNEFOYnU3T0JFNmF0QmJhZXJKNVEifQ",
   "kiff_offer": "{\"exp\":\"2026-11-21T12:04:30Z\",\"key_store\":\"software\",\"kind\":\"extension\",\"name\":\"tafs for Chrome\",\"nonce\":\"AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8\",\"platform\":\"chrome\",\"pub\":\"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAExqoJc6n74qHbehBaL10DorKvdjosCXhrELCT78RO1xdDB4uDkLtFXbZ2UUaXWlnCxS8dxpuFCfLMUKN8ouUjAA\",\"v\":\"kiff.pair.v1\"}",
-  "extension_proof_with_kiff_offer": "F20hNylOmVBR3FU-6ShHCHOUn4Wo60ZKRUSczSyr2yE"
+  "extension_proof_with_kiff_offer": "F20hNylOmVBR3FU-6ShHCHOUn4Wo60ZKRUSczSyr2yE",
+  "one_touch_proof_with_kiff_offer": "WoWb758OTXoFGxVSGJsWiY0HZtiaTi3Pjvnl--1Iy1Q"
 }

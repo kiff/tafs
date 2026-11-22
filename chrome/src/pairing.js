@@ -36,6 +36,15 @@ export async function extensionProof(secret, spki, kiffOffer = "") {
 }
 
 /**
+ * The proof that this extension checks one fingerprint for the pairing and KIFF's request (`one_touch`): the same HMAC as
+ * `extensionProof`, under its own label, so the flag can't be added to an offer by anyone without the code's secret, and a
+ * phone that doesn't know it never reads it. A phone sends the combined signature only when this verifies, else today's.
+ */
+export async function oneTouchProof(secret, spki, kiffOffer = "") {
+  return b64u(await hmac(secret, LABEL.extOneTouch, concat(spki, new TextEncoder().encode(kiffOffer))));
+}
+
+/**
  * What the extension sends planque for the pairing `lookup` names, with its KIFF device's offer (`kiff_offer`), and the id
  * it keeps for this Chrome profile (`profile_id`, docs/chrome.md "Your Chrome"). The id is a hint the phone uses to
  * pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing, and the owner's
@@ -50,9 +59,30 @@ export async function offer(secret, keyPair, { version, manifestHash, browser, o
     browser,
     os,
     ...(profileId ? { profile_id: profileId } : {}),
+    one_touch: true,
+    one_touch_proof: await oneTouchProof(secret, spki, kiffOffer),
     ...(kiffOffer ? { kiff_offer: kiffOffer } : {}),
     proof: await extensionProof(secret, spki, kiffOffer),
   };
+}
+
+/** The offer's fields that planque added to its pairing POST later: a planque that doesn't know them refuses the body. */
+const NEWER_FIELDS = ["profile_id", "one_touch", "one_touch_proof"];
+
+/**
+ * POST the offer to `url`. A planque that predates `profile_id` and the one-fingerprint flag reads its body strictly and
+ * answers 400 "unknown field"; the offer is then sent once more without them, which only costs the phone its hints (it
+ * pairs the old way), so an extension is never kept from pairing by a field its planque doesn't take. Any other answer,
+ * a 400 for something else included, is returned as it is. `fetchFn` is the browser's `fetch`.
+ */
+export async function postOffer(fetchFn, url, body) {
+  const send = (b) => fetchFn(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(b) });
+  const sent = await send(body);
+  if (sent.status !== 400 || !NEWER_FIELDS.some((k) => k in body)) return sent;
+  const said = await sent.clone().text().catch(() => "");
+  if (!/unknown field/i.test(said)) return sent;
+  const older = Object.fromEntries(Object.entries(body).filter(([k]) => !NEWER_FIELDS.includes(k)));
+  return send(older);
 }
 
 /**
