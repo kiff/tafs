@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">J\'accepte %1$s et %2$s.</string>
     <string name="onboarding_control_lead">Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec Face ID ou Touch ID, ou vous refusez.</string>
     <string name="onboarding_control_lead_android">Quand un taf a besoin de vous, il attend dans « Vous attend » et, si vous en avez une, sur votre montre. Vous approuvez avec le verrouillage de l\'écran, ou vous refusez.</string>
+    <string name="onboarding_control_lead_desktop">Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez sur votre téléphone, ou vous refusez.</string>
     <string name="onboarding_control_lead_mac">Quand un taf a besoin de vous, il attend dans « Vous attend ». Vous approuvez avec Touch ID ou sur votre téléphone, ou vous refusez.</string>
     <string name="onboarding_control_title">Vous gardez le contrôle</string>
     <string name="onboarding_get_started">Commencer</string>

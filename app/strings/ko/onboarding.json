@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "{kiff_terms} 및 {tafs_terms}에 동의합니다.",
   "onboarding.control_lead": "taf에 내가 필요하면 확인 필요에서 기다리고, 워치가 있으면 워치에서도 기다립니다. Face ID나 Touch ID로 승인하거나 거절하세요.",
   "onboarding.control_lead_android": "taf에 내가 필요하면 확인 필요에서 기다리고, 워치가 있으면 워치에서도 기다립니다. 화면 잠금으로 승인하거나 거절하세요.",
+  "onboarding.control_lead_desktop": "taf에 내가 필요하면 확인 필요에서 기다립니다. 휴대폰으로 승인하거나 거절하세요.",
   "onboarding.control_lead_mac": "Mac에서는 taf에 내가 필요하면 확인 필요에서 기다립니다. Touch ID나 휴대폰으로 승인하거나 거절하세요.",
   "onboarding.control_title": "결정은 내가 합니다",
   "onboarding.get_started": "시작하기",
