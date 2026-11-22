@@ -399,6 +399,12 @@ foot), the crown on the answer, no amount in the alert, TalkBack's "Coach: …" 
 send. No recording kept (`KEEP_AUDIO` off), as 0.4.0. It goes to `wear:internal` only, for the owner's test, and is promoted
 to production only **after 0.4.0's review passes**, so the review isn't restarted (PM, 19 Nov 13:04).
 
+**400,000,010 (0.4.5)** is a production build again: no timing readout, no recording kept. It carries every language the
+phone ships (Japanese, Brazilian Portuguese and the Baltic and batch 2 languages, #1688), values set apart in a right-to-left
+line as on the phone (#1696), the watch saying why when the phone gives no answer (#1644), and opening at once on what it kept
+(#1594). It goes with Android 132, to `wear:internal` on merge once 128's production review is published, and then to
+production with the phone.
+
 **400,000,009 (0.4.4-timing)** is the measuring build for row 44 (D0): its `-timing` name draws the link's line (lookup,
 reply, bytes, or why it failed; "Measuring the link", above), with no recording kept (`KEEP_AUDIO` off). For the owner's 10
 minutes on the Galaxy Watch, each screen opened twice near the phone. To `wear:internal` only; never promoted to production,

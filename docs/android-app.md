@@ -277,7 +277,7 @@ the run: no key file, and no secret holds a key. A bundle Play reads as another 
 than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
-  it-IT, pt-PT, nl-NL, pl-PL and, since 130, ko-KR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
+  it-IT, pt-PT, nl-NL, pl-PL, since 130 ko-KR, and since 132 es-419 and pt-BR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
