@@ -66,6 +66,13 @@ enum ChromePairing {
         return base64URL(hmac(secret, phoneProofLabel, data))
     }
 
+    /// A connection a re-pairing moves to the new Chrome, with the sites the owner approved for it ("Your Chrome" 1). It is
+    /// inside what the phone signs for the extension, so planque can't add, drop or change one.
+    struct Carried: Encodable, Equatable {
+        let grant: String
+        let sites: [String]
+    }
+
     /// What the phone signs to confirm the pairing, and sends with its signature.
     struct Confirmation: Encodable, Equatable {
         let chromeKeySHA256: String
@@ -73,9 +80,13 @@ enum ChromePairing {
         let phoneKey: String
         let phoneProof: String
         var phoneSig = ""
+        /// The Chrome this one replaces (planque's field, on the confirm's own signature) and the connections that move to
+        /// it. Both absent for a Chrome that replaces nothing: the pairing is then exactly today's.
+        var replaces: String? = nil
+        var carried: [Carried]? = nil
 
         enum CodingKeys: String, CodingKey {
-            case chromeKeySHA256 = "chrome_key_sha256", name, phoneKey = "phone_key", phoneProof = "phone_proof", phoneSig = "phone_sig"
+            case chromeKeySHA256 = "chrome_key_sha256", name, phoneKey = "phone_key", phoneProof = "phone_proof", phoneSig = "phone_sig", replaces, carried
         }
     }
 
@@ -85,15 +96,20 @@ enum ChromePairing {
     }
 
     /// The bytes the phone signs for `confirmation` of pairing `pairing`: label ‖ 0x00 ‖ JCS of
-    /// `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`.
+    /// `{pairing, chrome_key_sha256, name, phone_key, phone_proof}`, and `carried` (`[{grant, sites}]`, in the order sent)
+    /// when the pairing carries connections; without any, exactly today's body.
     static func signedBytes(pairing: String, _ c: Confirmation) throws -> Data {
-        let body: JCS.Value = .object([
+        var fields: [String: JCS.Value] = [
             "pairing": .string(pairing),
             "chrome_key_sha256": .string(c.chromeKeySHA256),
             "name": .string(c.name),
             "phone_key": .string(c.phoneKey),
             "phone_proof": .string(c.phoneProof),
-        ])
+        ]
+        if let carried = c.carried, !carried.isEmpty {
+            fields["carried"] = .array(carried.map { .object(["grant": .string($0.grant), "sites": .array($0.sites.map { .string($0) })]) })
+        }
+        let body: JCS.Value = .object(fields)
         var out = Data(pairLabel.utf8)
         out.append(0)
         out.append(try JCS.canonical(body))
