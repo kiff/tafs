@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "{count} file · disimpan 30 hari"
+  },
+  "files.all": "Semua",
+  "files.all_tafs": "Semua tafs",
+  "files.by_run": "Menurut eksekusi",
+  "files.by_taf": "Menurut taf",
+  "files.delete_body": "File akan hilang dari Berkas untuk semua orang di akun ini, segera. Tidak dapat dibatalkan.",
+  "files.delete_now": "Hapus sekarang",
+  "files.delete_question": "Hapus “{name}” sekarang?",
+  "files.deleted": "Dihapus untuk semua orang",
+  "files.download": "Unduh",
+  "files.empty": "Belum ada apa-apa. Saat sebuah taf membuat laporan, lembar, atau dokumen dalam sebuah eksekusi, hasilnya disimpan di sini selama 30 hari, agar semua orang di akun ini dapat membuka, menyimpan, atau membagikannya.",
+  "files.everyone": "Semua orang di akun ini",
+  "files.goes_away": "Hilang",
+  "files.goes_in_days": {
+    "other": "hilang dalam {count} hari"
+  },
+  "files.goes_on": "{date} (30 hari setelah eksekusinya)",
+  "files.goes_today": "hilang hari ini",
+  "files.goes_tomorrow": "hilang besok",
+  "files.in_run": "Dalam eksekusi",
+  "files.kept_line": "Setiap file disimpan 30 hari sejak eksekusinya, lalu hilang dengan sendirinya. Semua orang di akun ini melihat file-file ini. Lampiran obrolan Anda sendiri tetap bersama pesannya.",
+  "files.kept_until": "File-filenya disimpan sampai {date}",
+  "files.made_by": "Dibuat oleh",
+  "files.none_yet": "Belum ada · disimpan 30 hari",
+  "files.pick_one": "Pilih file untuk melihatnya di sini.",
+  "files.preview_start": "Hanya bagian awal yang ditampilkan. Unduh file untuk membaca seluruhnya.",
+  "files.saved": "Tersimpan di perangkat ini",
+  "files.see_in_chat": "Lihat di obrolan",
+  "files.share": "Bagikan",
+  "files.size": "Ukuran",
+  "files.taf_row": {
+    "other": "{count} file dari eksekusinya"
+  },
+  "files.title": "Berkas",
+  "files.type": "Jenis",
+  "files.who_sees": "Siapa yang melihat"
+}

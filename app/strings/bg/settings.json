@@ -74,7 +74,7 @@
   "settings.devices.passkey_with_computer": "Принадлежи на компютъра си",
   "settings.devices.passkeys_not_loaded": "Ключовете ви за достъп не можаха да се заредят. {why}",
   "settings.devices.passkeys_title": "Ключове за достъп",
-  "settings.devices.sign_out": "Извеждане",
+  "settings.devices.sign_out": "Изход",
   "settings.devices.sign_out_named": "Извеждане на {device}?",
   "settings.devices.sign_out_prompt": "Извеждане на {device} от акаунта ви",
   "settings.devices.sign_out_prompt_mac": "извеждане на {device} от акаунта ви",

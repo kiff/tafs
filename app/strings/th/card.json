@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "Card ทั้งหมด"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label} จากนั้นมันจะถามคุณ",
+  "card.calls_left": {
+    "other": "เหลือการเรียก {count} ครั้ง"
+  },
+  "card.calls_left_line": {
+    "other": "เหลือการเรียก {count} ครั้ง {window} จาก {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{used} จาก {count} การเรียก {window}"
+  },
+  "card.calls_window": {
+    "other": "{count} การเรียก {window}"
+  },
+  "card.card_confirmed_kiff": "Card · ยืนยันโดย KIFF",
+  "card.card_draft_kiff": "Card · ฉบับร่าง · โดย KIFF",
+  "card.card_got_room_call_needed": "Card ของมันได้รับพื้นที่ที่การเรียกนี้ต้องการ จนกว่ายอดรวมนั้นจะรีเซ็ต",
+  "card.card_not_issued": "ยังไม่ได้ออก Card ",
+  "card.card_revoked": "เพิกถอน Card แล้ว",
+  "card.check.always_asks": "{rule}: ถามคุณเสมอ",
+  "card.check.never_allowed": "{rule}: ไม่อนุญาตเลย",
+  "card.check.not_on_card": "ไม่อยู่ใน Card ของ taf นี้",
+  "card.check.over_count": {
+    "other": "เกิน {count} {window}"
+  },
+  "card.check.over_each": "เกิน {amount} ต่อครั้ง",
+  "card.check.over_total": "เกิน {amount} {window}",
+  "card.count": {
+    "other": "{count} Card"
+  },
+  "card.ended": "สิ้นสุดแล้ว",
+  "card.ended_on": "สิ้นสุดเมื่อ {date}",
+  "card.ends": "สิ้นสุด",
+  "card.extra_room": "+{extra} พื้นที่เพิ่ม {window}",
+  "card.extra_room_prefix": "+{formatted} พื้นที่เพิ่ม ",
+  "card.extra_room_until": "+{extra} พื้นที่เพิ่มจนถึง {ends}",
+  "card.figure_left": "เหลือ {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "{count} การเรียก {window}{each}: นี่จะเป็นครั้งที่ {nth}{item}"
+  },
+  "card.held.each_call_asks": "ทุกการเรียกจะถามคุณก่อน",
+  "card.held.for_each": " สำหรับแต่ละ {name}",
+  "card.held.for_each_join": " สำหรับแต่ละ ",
+  "card.held.for_item": " สำหรับ {item}",
+  "card.held.over_count": {
+    "other": "เกินขีดจำกัด {count} การเรียกของมัน: นี่จะเป็นครั้งที่ {nth}"
+  },
+  "card.held.over_one_call": "{amount} เกินขีดจำกัด {cap} สำหรับหนึ่งการเรียก",
+  "card.held.over_total": "{amount} จะเกินยอดรวม {cap}",
+  "card.hero.calls_left_of": {
+    "other": "การเรียกที่เหลือ {window} จาก {limit}"
+  },
+  "card.hero.calls_use_unavailable": "การเรียก {window} · ไม่มีข้อมูลการใช้งาน",
+  "card.hero.left_of": "เหลือ {window} จาก {limit}",
+  "card.hero.left_of_extra": "เหลือ {window} จาก {base} + {extra} พื้นที่เพิ่ม",
+  "card.hero.left_of_extra_until": "เหลือ {window} จาก {base} + {extra} พื้นที่เพิ่มจนถึง {ends}",
+  "card.hero.left_of_note": "เหลือ {window} จาก {limit}{note}",
+  "card.hero.no_currency": "ไม่มีสกุลเงิน",
+  "card.hero.no_currency_suffix": " · ไม่มีสกุลเงิน",
+  "card.hero.use_unavailable": "{window} · ไม่มีข้อมูลการใช้งาน",
+  "card.hero.use_unavailable_note": "{label} · ไม่มีข้อมูลการใช้งาน{note}",
+  "card.how_counted": "วิธีนับ",
+  "card.issue_prompt": "ออก Card ของ {taf}",
+  "card.issued_by": "ออกโดย",
+  "card.issued_by_account": "บัญชี",
+  "card.issued_by_named": "ออกโดย {who}",
+  "card.its_card": "Card ของมัน",
+  "card.kiff_did_not_revoke_cards": "KIFF ไม่ได้เพิกถอน {cards_left} Card ของมัน: เพิกถอนใน KIFF",
+  "card.left": "เหลือ {amount} {window}",
+  "card.left_extra_room": "เหลือ {current} จาก {own} + {extra} พื้นที่เพิ่ม{until}{note}",
+  "card.limit_can_not_raised_right": "ตอนนี้เพิ่มขีดจำกัดจากที่นี่ไม่ได้",
+  "card.limit_raised_read_balance_again": "เพิ่มขีดจำกัดแล้ว อ่านยอดคงเหลืออีกครั้งก่อนเพิ่มอีก",
+  "card.line.calls_in_window": {
+    "other": "{count} การเรียก {window}{then}"
+  },
+  "card.line.more_asks": "; มากกว่านั้นจะถามคุณก่อน",
+  "card.line.then_asks": " จากนั้นมันจะถามคุณ",
+  "card.line.total_in_window": "รวม {amount} {window}{then}",
+  "card.line.up_to_each": "สูงสุด {amount} ต่อครั้ง",
+  "card.more": {
+    "other": "อีก {count}"
+  },
+  "card.no_actions": "ยังไม่มีการกระทำ",
+  "card.no_actions_short": "ยังไม่มีการกระทำ",
+  "card.no_currency": "{amount} (ไม่มีสกุลเงิน)",
+  "card.no_end_date": "ไม่มีวันสิ้นสุด",
+  "card.outcome.not_a_resource": "ไม่ใช่ทรัพยากรของ Card",
+  "card.outcome.outside": "นอก Card",
+  "card.outcome.over_one_action": "เกินขีดจำกัดของ Card สำหรับหนึ่งการกระทำ",
+  "card.outcome.over_total": "เกินยอดรวมของ Card",
+  "card.outside_held": "นอก Card: พักไว้ให้คุณ",
+  "card.outside_refused": "นอก Card: ปฏิเสธ",
+  "card.over_limit_calls_would": "เกินขีดจำกัด {limit} การเรียกของมัน: นี่จะเป็นครั้งที่ {nth}",
+  "card.revoke_failed": "KIFF ไม่ได้เพิกถอน Card {why}",
+  "card.revoked": "เพิกถอนแล้ว",
+  "card.rule.always_asks": "ถามคุณเสมอ",
+  "card.rule.at_most_each": "≤ {amount} ต่อครั้ง",
+  "card.rule.at_most_each_refused_above": "≤ {amount} ต่อครั้ง · ปฏิเสธหากเกิน",
+  "card.rule.calls": {
+    "other": "{count} การเรียก {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "{count} การเรียก {window} จากนั้นมันจะถามคุณ"
+  },
+  "card.rule.in_total": "รวม {amount} {window}",
+  "card.rule.never": "ไม่เลย",
+  "card.rule.total_then_asks": "รวม {amount} {window} จากนั้นมันจะถามคุณ",
+  "card.rule.up_to_each": "สูงสุด {amount} ต่อครั้ง มากกว่านั้นจะถามคุณก่อน",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card ของ taf",
+  "card.tools": {
+    "other": "{count} เครื่องมือ"
+  },
+  "card.until": "จนถึง",
+  "card.until_date": "จนถึง {date}",
+  "card.until_ends": " จนถึง {ends}",
+  "card.used_of": "{used} จาก {limit} {window}",
+  "card.window.a_day": "ต่อวัน",
+  "card.window.a_month": "ต่อเดือน",
+  "card.window.a_week": "ต่อสัปดาห์",
+  "card.window.any_day": "ในช่วง 24 ชั่วโมงใดก็ตาม",
+  "card.window.any_hour": "ในชั่วโมงใดก็ตาม",
+  "card.window.any_week": "ในช่วง 7 วันใดก็ตาม",
+  "card.window.in_total": "รวม",
+  "card.window.in_total_window": "รวม {window}",
+  "card.window.last_day": "ใน 24 ชั่วโมงที่ผ่านมา",
+  "card.window.last_hour": "ในชั่วโมงที่ผ่านมา",
+  "card.window.last_week": "ใน 7 วันที่ผ่านมา",
+  "card.window.so_far": "จนถึงตอนนี้",
+  "card.window.this_month": "เดือนนี้",
+  "card.window.this_week": "สัปดาห์นี้",
+  "card.window.today": "วันนี้",
+  "card.within_card": "ภายใน Card"
+}

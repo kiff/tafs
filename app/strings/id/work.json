@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "Jawab dalam",
+  "work.answer_within_days": {
+    "other": "{count} hari"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} jam"
+  },
+  "work.answer_within_line": "Anda diberi tahu saat sebuah kasus menunggu lebih lama.",
+  "work.answer_within_none": "Belum diatur",
+  "work.answer_within_not_set": "Tidak dapat diatur. {why}",
+  "work.asking_kiff_run": "Meminta KIFF menjalankan {tool}…",
+  "work.did_not_stop": "Tidak berhenti: {why}",
+  "work.duration.minutes": "{minutes} mnt {seconds} dtk",
+  "work.duration.seconds": "{seconds} dtk",
+  "work.its_runs": "Eksekusinya",
+  "work.not_read": "Pekerjaannya tidak dapat dibaca. {why}",
+  "work.not_sent_again": "Tidak dikirim ulang. {why}",
+  "work.request.try_reply_now": "Coba balasan sekarang",
+  "work.requests_need_you": {
+    "other": "{count} permintaan menunggu Anda"
+  },
+  "work.send_again": "Kirim lagi",
+  "work.sending_again": "Mengirim lagi…",
+  "work.stop_run": "Hentikan eksekusi",
+  "work.stopped_part_way_before_finished": "taf {taf} berhenti di tengah jalan, sebelum selesai."
+}

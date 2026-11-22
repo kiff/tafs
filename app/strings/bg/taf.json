@@ -116,7 +116,7 @@
   "taf.signed_tools_being_chosen": "Влязъл · инструментите се избират",
   "taf.signed_tools_waiting_your_approval": "Влязъл · инструментите чакат вашето одобрение",
   "taf.starting_run": "Стартиране на изпълнение…",
-  "taf.state.halted": "Спрян",
+  "taf.state.halted": "Спряно",
   "taf.state.paused": "На пауза",
   "taf.state.ready": "Готов",
   "taf.state.stopped": "Приключил",

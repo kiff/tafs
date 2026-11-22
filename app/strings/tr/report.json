@@ -1,0 +1,17 @@
+{
+  "report.already": "Bu yanıtı zaten bildirdiniz.",
+  "report.cant_from_here": "Bu yanıt buradan bildirilemez.",
+  "report.menu": "Bu yanıtı bildir",
+  "report.not_sent": "Bildiriminiz gönderilmedi. {why}",
+  "report.not_sent_why": "Gönderilmedi: {failed}",
+  "report.note_hint": "Not ekleyin (isteğe bağlı)",
+  "report.note_most_characters": "Bir not en fazla 1.000 karakter olabilir.",
+  "report.person_kiff_reads_your_report": "KIFF'te bir kişi, yanıtı yazıldığı haliyle birlikte bildiriminizi okur.",
+  "report.reason.harmful": "Zararlı",
+  "report.reason.offensive": "Saldırgan",
+  "report.reason.other": "Diğer",
+  "report.reason.wrong": "Yanlış",
+  "report.runs_not_loaded": "Çalıştırmaları yüklenemedi. {why}",
+  "report.thanks": "Teşekkürler. KIFF'ten biri bildiriminizi okuyacak.",
+  "report.what_wrong": "Neresi yanlış?"
+}

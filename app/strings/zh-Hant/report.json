@@ -1,0 +1,17 @@
+{
+  "report.already": "您已回報過此回覆。",
+  "report.cant_from_here": "無法從這裡回報此回覆。",
+  "report.menu": "回報此回覆",
+  "report.not_sent": "未能傳送您的回報。{why}",
+  "report.not_sent_why": "未傳送：{failed}",
+  "report.note_hint": "新增備註（選填）",
+  "report.note_most_characters": "備註最多 1,000 個字元。",
+  "report.person_kiff_reads_your_report": "KIFF 的專人會閱讀您的回報，並附上原樣的回覆內容。",
+  "report.reason.harmful": "有害",
+  "report.reason.offensive": "冒犯",
+  "report.reason.other": "其他",
+  "report.reason.wrong": "錯誤",
+  "report.runs_not_loaded": "無法載入它的執行紀錄。{why}",
+  "report.thanks": "謝謝。KIFF 的專人會閱讀您的回報。",
+  "report.what_wrong": "哪裡有問題？"
+}

@@ -1,0 +1,15 @@
+{
+  "halt_all.description": "一次讓所有 taf 停止。在您於 tafs 中繼續之前，不會傳送任何新內容。",
+  "halt_all.failed": "tafs 無法凍結您的 taf。{why}請開啟 tafs 來凍結。",
+  "halt_all.halted": {
+    "other": "已凍結 {count} 個 taf。在您繼續之前，不會傳送任何新內容。"
+  },
+  "halt_all.halted_all": "已凍結您的 taf。在您繼續之前，不會傳送任何新內容。",
+  "halt_all.halting": {
+    "other": "正在凍結 {count} 個 taf：不會啟動任何執行。KIFF 尚未確認每個部分；確認後 tafs 會顯示。"
+  },
+  "halt_all.halting_all": "正在凍結您的 taf：不會啟動任何執行。KIFF 尚未確認每個部分；確認後 tafs 會顯示。",
+  "halt_all.running": "tafs 無法凍結您的 taf。請開啟 tafs 來凍結。",
+  "halt_all.signed_out": "您已登出 tafs。請登入以凍結您的 taf。",
+  "halt_all.title": "凍結所有 taf"
+}

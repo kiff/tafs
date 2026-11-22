@@ -74,7 +74,7 @@
   "settings.devices.passkey_with_computer": "Patří ke svému počítači",
   "settings.devices.passkeys_not_loaded": "Vaše přístupové klíče se nepodařilo načíst. {why}",
   "settings.devices.passkeys_title": "Přístupové klíče",
-  "settings.devices.sign_out": "Odhlásit",
+  "settings.devices.sign_out": "Odhlásit se",
   "settings.devices.sign_out_named": "Odhlásit {device}?",
   "settings.devices.sign_out_prompt": "Odhlásit {device} z vašeho účtu",
   "settings.devices.sign_out_prompt_mac": "odhlásit {device} z vašeho účtu",

@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "回覆期限",
+  "work.answer_within_days": {
+    "other": "{count} 天"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} 小時"
+  },
+  "work.answer_within_line": "案件等待超過此時間時，您會收到通知。",
+  "work.answer_within_none": "未設定",
+  "work.answer_within_not_set": "無法設定。{why}",
+  "work.asking_kiff_run": "正在請 KIFF 執行 {tool}…",
+  "work.did_not_stop": "未能停止：{why}",
+  "work.duration.minutes": "{minutes} 分 {seconds} 秒",
+  "work.duration.seconds": "{seconds} 秒",
+  "work.its_runs": "它的執行紀錄",
+  "work.not_read": "無法讀取它的工作。{why}",
+  "work.not_sent_again": "未能再次傳送。{why}",
+  "work.request.try_reply_now": "立即嘗試回覆",
+  "work.requests_need_you": {
+    "other": "{count} 項請求等您處理"
+  },
+  "work.send_again": "再次傳送",
+  "work.sending_again": "再次傳送中…",
+  "work.stop_run": "停止執行",
+  "work.stopped_part_way_before_finished": "{taf} 在完成之前中途停止了。"
+}
