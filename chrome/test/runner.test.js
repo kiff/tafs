@@ -287,3 +287,22 @@ test("a read at an offset asks the page for that window, and a bad offset is a b
   }
   assert.deepEqual(asked, [20000, 0], "a bad offset never reaches the page");
 });
+
+test("on a checkout page a taf clicks nothing, and a dialog the page raised stops the next act with what the page said", async () => {
+  const checkout = { lines: [{ item: "Blue pen", quantity: 2, price: "2.50" }], total: "5.00", currency: "EUR" };
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/basket", title: "Basket", text: "Total €5.00", fields: [], controls: [{ ref: "c1", label: "Continue" }], links: [], checkout } });
+  const r = runner(c);
+  const opened = await r.handle(step({ url: "https://shop.example/basket" }));
+  assert.deepEqual(opened.page.checkout, checkout, "the checkout goes up as read");
+  const before = c.calls.filter((x) => x[0] === "executeScript").length;
+  assert.equal((await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }))).error.code, "payment_step", "even a control that doesn't pay");
+  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
+  // A dialog the page raised: the next act is refused by the page, the code goes up as it is, and it counts as a failure.
+  const d = fakeChrome({ page: { read_id: "rd_y", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [], dialog: { kind: "confirm", text: "Delete everything?" } } });
+  const r2 = runner(d);
+  const read = await r2.handle(step());
+  assert.deepEqual(read.page.dialog, { kind: "confirm", text: "Delete everything?" }, "the read reports the dialog");
+  d.setAct({ ok: false, code: "dialog_open" });
+  assert.equal((await r2.handle(step({ op: "act", read_id: "rd_y", act: { kind: "click", ref: "c1" } }))).error.code, "dialog_open");
+  assert.equal(r2.runs.get("run_1").failures, 1);
+});

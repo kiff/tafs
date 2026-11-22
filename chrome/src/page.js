@@ -223,6 +223,80 @@
     );
   }
 
+  // ---- A checkout, as the page shows it: its lines, its total and the total's currency (docs/chrome.md, "Steps"). The
+  // facts planque pays and holds on, so they must be the same ones planque's own browser reads: one amount next to a
+  // "total" word in one currency (two different candidates, or none, is no total), and the rows with an amount in that
+  // currency that aren't a total, a subtotal, shipping, tax or a discount. Numbers are decimal strings ("12.50").
+  const CODES = "EUR|USD|GBP|CHF|SEK|NOK|DKK|PLN|CZK|HUF|JPY|CAD|AUD|BRL|MXN";
+  const NUM = "\\d{1,3}(?:[.,\\s]\\d{3})*(?:[.,]\\d{2})?";
+  const MONEY = new RegExp("(?:(" + CODES + ")|([€$£]))\\s?(" + NUM + ")|(" + NUM + ")\\s?(?:(" + CODES + ")|([€$£]))", "g");
+  const SYMBOL = { "€": "EUR", $: "USD", "£": "GBP" };
+  const TOTAL_WORD = /\b(total|totale|gesamt(?:betrag|summe|preis)?|summe|totaal|montant total|importe total|a pagar|à payer|zu zahlen|da pagare|te betalen|razem|do zapłaty|to pay|amount due)\b/i;
+  const STRONG_TOTAL = /grand total|order total|total to pay|to pay|a pagar|à payer|zu zahlen|da pagare|te betalen|do zapłaty|importe total|montant total|gesamtbetrag|amount due/i;
+  const NOT_A_LINE = /\b(sub.?total|total|totale|gesamt|summe|totaal|montant|importe|razem|shipping|delivery|livraison|versand|envío|envio|spedizione|verzend|dostawa|tax|vat|tva|mwst|iva|btw|podatek|discount|coupon|rabatt|remise|descuento|sconto|korting|desconto|rabat)\b/i;
+  const QTY = /(?:×|x|qty\.?|quantity|menge|cantidad|quantité|quantità|aantal|qtd|ilość)\s*:?\s*(\d{1,4})|(\d{1,4})\s*(?:×|x)\b/i;
+
+  /** "1.234,50" and "1,234.50" are 1234.50: the last separator before two digits is the decimal one. */
+  function normalizeAmount(text) {
+    const t = text.replace(/\s/g, "");
+    const m = t.match(/^(.*?)([.,])(\d{2})$/);
+    const whole = (m ? m[1] : t).replace(/[.,]/g, "");
+    return whole + "." + (m ? m[3] : "00");
+  }
+
+  function amountsIn(text) {
+    const out = [];
+    for (const m of text.matchAll(MONEY)) {
+      const currency = m[1] || SYMBOL[m[2]] || m[5] || SYMBOL[m[6]];
+      const amount = m[3] || m[4];
+      if (currency && amount) out.push({ amount: normalizeAmount(amount), currency });
+    }
+    return out;
+  }
+
+  function checkoutOf() {
+    if (!document.body) return null;
+    const found = [];
+    let seen = 0;
+    for (const el of document.body.querySelectorAll("*")) {
+      if (++seen > 6000) break;
+      if (["SCRIPT", "STYLE", "INPUT", "TEXTAREA", "SELECT", "OPTION"].includes(el.tagName) || !visible(el)) continue;
+      const text = clean(el.textContent, 400);
+      if (text.length > 160 || !TOTAL_WORD.test(text)) continue;
+      let candidates = amountsIn(text);
+      if (!candidates.length && el.parentElement) candidates = amountsIn(clean(el.parentElement.textContent, 240));
+      if (!candidates.length && el.nextElementSibling) candidates = amountsIn(clean(el.nextElementSibling.textContent, 160));
+      if (!candidates.length) continue;
+      // A row naming several amounts (a subtotal and a total) gives its last.
+      found.push({ ...candidates[candidates.length - 1], strong: STRONG_TOTAL.test(text) });
+    }
+    const distinct = (list) => [...new Set(list.map((a) => a.amount + " " + a.currency))];
+    const strong = found.filter((a) => a.strong);
+    const total = distinct(strong).length === 1 ? strong[0] : distinct(found).length === 1 ? found[0] : null;
+    if (!total) return null;
+    const lines = [];
+    const had = new Set();
+    for (const row of document.querySelectorAll("tr, li, [class*=line], [class*=item]")) {
+      if (lines.length >= 50) break;
+      if (!visible(row) || row.querySelector("tr, li")) continue;
+      // Cells joined with a separator: a row's text runs them together ("Blue pen × 2" and "2.50" would read as 22.50).
+      const text = row.children.length > 1 ? Array.from(row.children).map((c) => clean(c.textContent, 200)).filter(Boolean).join(" | ") : clean(row.textContent, 200);
+      if (!text || text.length > 200 || NOT_A_LINE.test(text)) continue;
+      const priced = amountsIn(text).filter((a) => a.currency === total.currency);
+      if (!priced.length) continue;
+      const price = priced[priced.length - 1];
+      const q = text.match(QTY);
+      const quantity = q ? parseInt(q[1] || q[2], 10) : 1;
+      const item = clean(text.replace(MONEY, "").replace(QTY, "").replace(/^[\s—–\-:|,]+|[\s—–\-:|,]+$/g, ""), 120);
+      if (!item) continue;
+      const key = item + "|" + quantity + "|" + price.amount;
+      if (had.has(key)) continue;
+      had.add(key);
+      lines.push({ item: M.maskText(item), quantity, price: price.amount });
+    }
+    return { lines, total: total.amount, currency: total.currency };
+  }
+
   function bare(href) {
     try {
       const u = new URL(href);
@@ -257,6 +331,8 @@
     }
     page.links = linksOf(page.controls);
     if (paymentFrame()) page.payment_frame = true;
+    const checkout = checkoutOf();
+    if (checkout) page.checkout = checkout;
     if (dialog) page.dialog = dialog;
     dialog = null;
     current = { read_id: page.read_id, href: location.href };

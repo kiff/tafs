@@ -286,3 +286,65 @@ test("a long page's text comes in windows: each says where the next starts, the 
   assert.equal((await page.evaluate(() => TafsPage.read(-5))).offset, undefined, "a negative offset is the start");
   await page.close();
 });
+
+const CHECKOUT = `<!doctype html><html><head><title>Your basket</title></head><body>
+<table>
+<tr><td>Blue pen × 2</td><td>€2.50</td></tr>
+<tr><td>Notebook A5</td><td>€8.00</td></tr>
+<tr><td>Subtotal</td><td>€10.50</td></tr>
+<tr><td>Shipping</td><td>€3.00</td></tr>
+<tr><td>Discount</td><td>-€1.00</td></tr>
+<tr class="t"><td>Order total</td><td>€12.50</td></tr>
+</table>
+<form action="/checkout/pay"><input autocomplete="cc-number" aria-label="Card number"><button type="submit">Pay</button></form>
+</body></html>`;
+
+async function openHTML(html) {
+  const page = await ctx.newPage();
+  await page.goto("https://shop.example/account");
+  await page.evaluate(() => (globalThis.chrome = { runtime: { sendMessage: () => {} } }));
+  await page.setContent(html);
+  await page.addScriptTag({ content: MASK });
+  await page.addScriptTag({ content: PAGE });
+  return page;
+}
+
+test("a checkout is read as its lines, its total and its currency, the same way planque's own browser reads one", { skip: !playwright }, async () => {
+  const page = await openHTML(CHECKOUT);
+  const read = await page.evaluate(() => TafsPage.read());
+  assert.deepEqual(read.checkout, {
+    lines: [
+      { item: "Blue pen", quantity: 2, price: "2.50" },
+      { item: "Notebook A5", quantity: 1, price: "8.00" },
+    ],
+    total: "12.50",
+    currency: "EUR",
+  });
+  await page.close();
+});
+
+test("a checkout reads European and English number marks the same, and a page with two different totals reads none", { skip: !playwright }, async () => {
+  const european = await openHTML("<table><tr><td>Lamp</td><td>1.234,50 €</td></tr><tr><td>Total</td><td>1.234,50 €</td></tr></table>");
+  assert.deepEqual((await european.evaluate(() => TafsPage.read())).checkout, { lines: [{ item: "Lamp", quantity: 1, price: "1234.50" }], total: "1234.50", currency: "EUR" });
+  await european.close();
+  const english = await openHTML("<ul><li>Lamp $1,234.50</li><li>Total $1,234.50</li></ul>");
+  assert.deepEqual((await english.evaluate(() => TafsPage.read())).checkout, { lines: [{ item: "Lamp", quantity: 1, price: "1234.50" }], total: "1234.50", currency: "USD" });
+  await english.close();
+  const two = await openHTML("<p>Total €10.00</p><p>Total €12.00</p>");
+  assert.equal((await two.evaluate(() => TafsPage.read())).checkout, undefined, "two different candidates is no total");
+  await two.close();
+  const none = await openHTML("<p>Welcome back</p><button>Save</button>");
+  assert.equal((await none.evaluate(() => TafsPage.read())).checkout, undefined, "a page that isn't a checkout");
+  await none.close();
+});
+
+test("a checkout's lines are masked like the page's text, and a total in two currencies reads none", { skip: !playwright }, async () => {
+  const masked = await openHTML("<table><tr><td>Gift card sk_live_" + "a".repeat(24) + "</td><td>€5.00</td></tr><tr><td>Total</td><td>€5.00</td></tr></table>");
+  const read = await masked.evaluate(() => TafsPage.read());
+  assert.ok(!JSON.stringify(read).includes("a".repeat(24)), "no key anywhere in the read");
+  assert.equal(read.checkout.lines[0].price, "5.00");
+  await masked.close();
+  const mixed = await openHTML("<p>Total €10.00</p><p>Total $10.00</p>");
+  assert.equal((await mixed.evaluate(() => TafsPage.read())).checkout, undefined);
+  await mixed.close();
+});

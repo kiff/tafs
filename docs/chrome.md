@@ -198,7 +198,7 @@ page = {read_id, url (no query or fragment), title, text (a window of ≤ 20 000
         offset?, more?, next_offset?,        // see "A page's text comes in windows"
         fields: [{ref, label, kind, value?, options?, masked?, disabled?}],
         controls: [{ref, label, submits, places_order?}], links: [{ref, label, url}],
-        payment_frame?, dialog?: {kind, text}, checkout?}    // checkout: a later slice
+        payment_frame?, dialog?: {kind, text}, checkout?: {lines: [{item, quantity, price}], total, currency}}
 error = {code, detail?}      // detail never carries page text
 ```
 
@@ -210,6 +210,18 @@ error = {code, detail?}      // detail never carries page text
   - `payment_frame` is a payment provider's frame on the page.
   - With these facts, planque refuses a payment step before it reaches the extension, whose own check stays as the second
     guard.
+- **`checkout` is a checkout page as it shows itself,** read the way planque's own browser reads one, so the two agree on
+  what the owner approves and what planque pays:
+  - The total is one amount next to a "total" word (in English, German, French, Spanish, Italian, Dutch and Polish) in
+    one currency (`EUR USD GBP CHF SEK NOK DKK PLN CZK HUF JPY CAD AUD BRL MXN`, or `€ $ £`). A row that names several
+    amounts gives its last, and "grand total", "to pay" and their translations win over a plain "total". Two different
+    candidates, or none, is no total, and then `checkout` is left out.
+  - The lines are the rows (table rows, list items) with an amount in that currency that aren't a total, a subtotal,
+    shipping, tax or a discount: the item's words, the quantity from "× 2", "x 2" or "qty 2" (else 1), and the price. A
+    page that shows them otherwise gives a total with no lines.
+  - Amounts are decimal strings, whichever marks the page uses (`1.234,50 €` and `$1,234.50` are `1234.50`). Words are masked
+    like the page's text, and at most 50 lines go up.
+  - **With a checkout, any click on the page is `payment_step`** (the guard's second look), whatever the control says.
 - **`read_id` is the extension's own binding to the tab.** planque keeps its own fingerprint of the page it sent the taf
   (the URL, the title, and every ref with its kind and words, no values) and which `read_id` goes with it. Both are
   checked: planque refuses `page_changed` before sending, and the extension refuses it again in the tab.
@@ -399,7 +411,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
   are the pauses (failures, no progress, the owner), Stop, steps that never overlap, windows of a page's text, and the
-  site permission.
+  site permission, a checkout page that refuses every click, and a dialog's answer.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
@@ -411,7 +423,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
   checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
-  input, card number or key), a long page's windows, page text that imitates a fence or an instruction (it goes up as
+  input, card number or key), a long page's windows, a checkout's lines, total and currency (in European and English number marks, masked, none when the total is unclear), page text that imitates a fence or an instruction (it goes up as
   written), an act that refuses an element that has become something else (its words, its target, its row), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
   clicked, and dialogs.
 
