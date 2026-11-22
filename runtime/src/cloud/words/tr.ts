@@ -743,7 +743,7 @@ export const tr: Partial<Words> = {
   cal_folded: (words: string, n: number, first: string, last: string) => `${words}: ${first} ile ${last} arasında ${n} kez`,
   ct_tafs_state: "taf'larınızı, sürümlerini ve çalıştırmalarını görün",
   ct_taf_run: "Bir taf'ın çalıştırmalarından birini okuyun",
-  ct_taf_check: "Bir taf'ın nesinin yanlış olduğunu kontrol edin",
+  ct_taf_check: "Bir taf'ta neyin yanlış olduğunu kontrol edin",
   ct_taf_task: "Bir taf'a görev veya ileti verin",
   ct_run_stop: "Bir taf'ın çalıştırmasını durdurun",
   ct_taf_pause: "Bir taf'ın zamanlamasını duraklatın veya sürdürün",
