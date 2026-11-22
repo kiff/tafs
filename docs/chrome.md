@@ -212,7 +212,7 @@ error = {code, detail?}      // detail never carries page text
     guard.
 - **`checkout` is a checkout page as it shows itself,** read the way planque's own browser reads one, so the two agree on
   what the owner approves and what planque pays:
-  - The total is one amount next to a "total" word (in English, German, French, Spanish, Italian, Dutch and Polish) in
+  - The total is one amount next to a "total" word (in the languages planque's own browser reads: English, German, French, Spanish, Italian, Dutch and Portuguese) in
     one currency (`EUR USD GBP CHF SEK NOK DKK PLN CZK HUF JPY CAD AUD BRL MXN`, or `€ $ £`). A row that names several
     amounts gives its last, and "grand total", "to pay" and their translations win over a plain "total". Two different
     candidates, or none, is no total, and then `checkout` is left out.
@@ -410,8 +410,8 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
-  are the pauses (failures, no progress, the owner), Stop, steps that never overlap, windows of a page's text, and the
-  site permission, a checkout page that refuses every click, and a dialog's answer.
+  are the pauses (failures, no progress, the owner), Stop, steps that never overlap, windows of a page's text, the site
+  permission, a checkout page that refuses every click, and a dialog's answer.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.

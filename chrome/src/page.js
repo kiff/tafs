@@ -231,10 +231,10 @@
   const NUM = "\\d{1,3}(?:[.,\\s]\\d{3})*(?:[.,]\\d{2})?";
   const MONEY = new RegExp("(?:(" + CODES + ")|([€$£]))\\s?(" + NUM + ")|(" + NUM + ")\\s?(?:(" + CODES + ")|([€$£]))", "g");
   const SYMBOL = { "€": "EUR", $: "USD", "£": "GBP" };
-  const TOTAL_WORD = /\b(total|totale|gesamt(?:betrag|summe|preis)?|summe|totaal|montant total|importe total|a pagar|à payer|zu zahlen|da pagare|te betalen|razem|do zapłaty|to pay|amount due)\b/i;
-  const STRONG_TOTAL = /grand total|order total|total to pay|to pay|a pagar|à payer|zu zahlen|da pagare|te betalen|do zapłaty|importe total|montant total|gesamtbetrag|amount due/i;
-  const NOT_A_LINE = /\b(sub.?total|total|totale|gesamt|summe|totaal|montant|importe|razem|shipping|delivery|livraison|versand|envío|envio|spedizione|verzend|dostawa|tax|vat|tva|mwst|iva|btw|podatek|discount|coupon|rabatt|remise|descuento|sconto|korting|desconto|rabat)\b/i;
-  const QTY = /(?:×|x|qty\.?|quantity|menge|cantidad|quantité|quantità|aantal|qtd|ilość)\s*:?\s*(\d{1,4})|(\d{1,4})\s*(?:×|x)\b/i;
+  const TOTAL_WORD = /\b(total|totale|gesamt(?:betrag|summe|preis)?|summe|totaal|montant total|importe total|a pagar|à payer|zu zahlen|da pagare|te betalen|to pay|amount due)\b/i;
+  const STRONG_TOTAL = /grand total|order total|total to pay|to pay|a pagar|à payer|zu zahlen|da pagare|te betalen|importe total|montant total|gesamtbetrag|amount due/i;
+  const NOT_A_LINE = /\b(sub.?total|total|totale|gesamt|summe|totaal|montant|importe|shipping|delivery|livraison|versand|envío|envio|spedizione|verzend|tax|vat|tva|mwst|iva|btw|discount|coupon|rabatt|remise|descuento|sconto|korting|desconto)\b/i;
+  const QTY = /(?:×|x|qty\.?|quantity|menge|cantidad|quantité|quantità|aantal|qtd)\s*:?\s*(\d{1,4})|(\d{1,4})\s*(?:×|x)\b/i;
 
   /** "1.234,50" and "1,234.50" are 1234.50: the last separator before two digits is the decimal one. */
   function normalizeAmount(text) {
