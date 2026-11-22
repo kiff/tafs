@@ -166,7 +166,7 @@ export const id: Partial<Words> = {
   each_item_calls: (n: number, _form: Intl.LDMLPluralRule, window: string, item: string) => `${n} panggilan ${window} untuk setiap: ${item}`,
   each_item_amount: (amount: string, over: string, item: string) => `${amount} ${over} untuk setiap: ${item}`,
   each_item_total_day: "total per hari",
-  each_item_name: (key: string) => ({ payment_intent: "pembayaran", payment: "pembayaran", charge: "tagihan", invoice: "faktur", customer: "pelanggan", order: "pesanan", subscription: "langganan", refund: "pengembalian dana" } as Record<string, string>)[key] ?? "item",
+  each_item_name: (key: string) => ({ payment_intent: "pembayaran", payment: "pembayaran", charge: "tagihan", invoice: "faktur", customer: "pelanggan", order: "pesanan", subscription: "langganan", refund: "pengembalian dana" } as Record<string, string>)[key] ?? "butir",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} diatur hari ini, jadi setiap perubahan harus bertanya kepada Anda dulu; Card ini akan membiarkan "${tool}" berjalan tanpa bertanya. Tidak ada yang disetujui. Coach menyusunnya lagi.`,
   approval_critical_key: "Ini memperluas apa yang boleh dilakukan taf, jadi memerlukan sidik jari Anda. Tidak ada yang disetujui; setujui lagi dengan sidik jari Anda.",
   approval_drive_key: "Mengizinkan Coach mengendalikan aplikasi memerlukan sidik jari Anda. Belum ada yang dimulai; setujui lagi dengan sidik jari Anda.",
