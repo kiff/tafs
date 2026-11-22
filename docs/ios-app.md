@@ -1229,7 +1229,9 @@ other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line f
 first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
 again". A connect planque ended failed (409 `code: connect_failed`, planque#329) with no `words` reads as not working
 on our side, never as its 409's "changed meanwhile": its `error` is the reason for Coach (`PlanqueClient.connectFailed`,
-as Android's `ErrorWords.CONNECT_FAILED`). KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
+as Android's `ErrorWords.CONNECT_FAILED`). A vendor refusing planque's client (502 `code: vendor_refused_client`) is said in
+planque's `error`, since it says whose it is ("… doesn't allow tafs to sign in yet"), when no `words` come
+(`PlanqueClient.wordedCodes`, as Android's `ErrorWords.PLANQUE_WORDED`). KIFF's refusal of a new sign-in from where it isn't offered (403, `code: region_unsupported`) is
 shown in KIFF's words too (`KIFFError.regionUnsupported`): its `message`, in the app's language, as the welcome and the
 sign-in sheet's line, with nothing that says to try again. The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.
