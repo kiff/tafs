@@ -1,0 +1,40 @@
+{
+  "files.account_row": {
+    "other": "{count} ไฟล์ · เก็บไว้ 30 วัน"
+  },
+  "files.all": "ทั้งหมด",
+  "files.all_tafs": "ทุก taf",
+  "files.by_run": "ตามการทำงาน",
+  "files.by_taf": "ตาม taf",
+  "files.delete_body": "มันจะหายไปจากไฟล์สำหรับทุกคนในบัญชีนี้ทันที ไม่สามารถย้อนกลับได้",
+  "files.delete_now": "ลบทันที",
+  "files.delete_question": "ลบ “{name}” ทันทีหรือไม่",
+  "files.deleted": "ลบสำหรับทุกคนแล้ว",
+  "files.download": "ดาวน์โหลด",
+  "files.empty": "ยังไม่มีอะไร เมื่อ taf สร้างรายงาน ชีต หรือเอกสารในการทำงาน จะเก็บไว้ที่นี่ 30 วัน ให้ทุกคนในบัญชีนี้เปิด บันทึก หรือแชร์",
+  "files.everyone": "ทุกคนในบัญชีนี้",
+  "files.goes_away": "หายไป",
+  "files.goes_in_days": {
+    "other": "หายไปใน {count} วัน"
+  },
+  "files.goes_on": "{date} (30 วันหลังการทำงาน)",
+  "files.goes_today": "หายไปวันนี้",
+  "files.goes_tomorrow": "หายไปพรุ่งนี้",
+  "files.in_run": "ในการทำงาน",
+  "files.kept_line": "แต่ละไฟล์เก็บไว้ 30 วันนับจากการทำงาน แล้วหายไปเอง ทุกคนในบัญชีนี้เห็นไฟล์เหล่านี้ ไฟล์แนบในแชตของคุณเองยังอยู่กับข้อความของมัน",
+  "files.kept_until": "ไฟล์ของมันเก็บไว้ถึง {date}",
+  "files.made_by": "สร้างโดย",
+  "files.none_yet": "ยังไม่มี · เก็บไว้ 30 วัน",
+  "files.pick_one": "เลือกไฟล์เพื่อดูที่นี่",
+  "files.preview_start": "แสดงเฉพาะส่วนต้น ดาวน์โหลดไฟล์เพื่ออ่านทั้งหมด",
+  "files.saved": "บันทึกลงอุปกรณ์นี้แล้ว",
+  "files.see_in_chat": "ดูในแชต",
+  "files.share": "แชร์",
+  "files.size": "ขนาด",
+  "files.taf_row": {
+    "other": "{count} ไฟล์จากการทำงานของมัน"
+  },
+  "files.title": "ไฟล์",
+  "files.type": "ประเภท",
+  "files.who_sees": "ใครเห็น"
+}

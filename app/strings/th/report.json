@@ -1,0 +1,17 @@
+{
+  "report.already": "คุณรายงานคำตอบนี้ไปแล้ว",
+  "report.cant_from_here": "รายงานคำตอบนี้จากตรงนี้ไม่ได้",
+  "report.menu": "รายงานคำตอบนี้",
+  "report.not_sent": "ยังไม่ได้ส่งรายงานของคุณ {why}",
+  "report.not_sent_why": "ยังไม่ได้ส่ง: {failed}",
+  "report.note_hint": "เพิ่มหมายเหตุ (ไม่บังคับ)",
+  "report.note_most_characters": "หมายเหตุยาวได้สูงสุด 1,000 ตัวอักษร",
+  "report.person_kiff_reads_your_report": "เจ้าหน้าที่ของ KIFF จะอ่านรายงานของคุณพร้อมคำตอบตามที่เขียนไว้",
+  "report.reason.harmful": "เป็นอันตราย",
+  "report.reason.offensive": "ไม่เหมาะสม",
+  "report.reason.other": "อื่น ๆ",
+  "report.reason.wrong": "ไม่ถูกต้อง",
+  "report.runs_not_loaded": "โหลดการทำงานของมันไม่ได้ {why}",
+  "report.thanks": "ขอบคุณ เจ้าหน้าที่ของ KIFF จะอ่านรายงานของคุณ",
+  "report.what_wrong": "มีอะไรผิดปกติ"
+}

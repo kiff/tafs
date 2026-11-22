@@ -685,6 +685,44 @@ There is one plural form (other): a number takes the same noun ("5 nhiệm vụ"
 | Usage | Mức sử dụng |
 | Cancel / Continue | Hủy / Tiếp tục |
 
+### Thai (th)
+
+Polite but neutral: **คุณ** for "you", and no sentence-final particles (ครับ/ค่ะ), so a line reads the same to every reader.
+Buttons are plain verbs ("อนุมัติ", "ปฏิเสธ", "ดำเนินการต่อ"). taf, Card, Coach, KIFF and Setup are names and stay in Latin
+letters. Thai has no plural and doesn't decline, so a number takes a classifier or the bare noun ("5 งาน", "3 ครั้ง"), and a
+possessive is "ของ" ("Card ของ {owner}"). Words run together with no spaces, so a value that sits beside Thai text gets its
+space from the line, and a line that joins a value to a Thai word writes them without one ("{device}เครื่องนี้"). A
+`*_mac` sentence ends with a stop, as the test needs, though Thai ordinarily doesn't write one. A door is "ประตู", a call
+"การเรียก", a request "คำขอ", a held call "การเรียกที่พักไว้", a receipt "ใบเสร็จ", a brief "สรุป", the dial "ปุ่มหมุน".
+Apple's menu paths are the Thai ones ("การตั้งค่า", "การตั้งค่าระบบ", "ความเป็นส่วนตัวและความปลอดภัย"). There is one plural
+form (other).
+
+| English | Thai |
+|---|---|
+| Needs you | รอคุณอยู่ |
+| Approve / Approve once | อนุมัติ / อนุมัติครั้งเดียว |
+| Refuse | ปฏิเสธ |
+| held | พักไว้ |
+| Halt / Halted | ระงับ / ระงับแล้ว |
+| Stopped | หยุดแล้ว |
+| Pause / Paused | หยุดชั่วคราว / หยุดชั่วคราวแล้ว |
+| Resume | ทำต่อ |
+| Revoke | เพิกถอน |
+| Record | บันทึก |
+| Connect / connection | เชื่อมต่อ / การเชื่อมต่อ |
+| Pair / Unpair | จับคู่ / ยกเลิกการจับคู่ |
+| Account | บัญชี |
+| limit / spend limit | ขีดจำกัด / ขีดจำกัดการใช้จ่าย |
+| credits / credit pack | เครดิต / แพ็กเครดิต |
+| passkey | พาสคีย์ |
+| security key | กุญแจความปลอดภัย |
+| Sign in / Sign out | เข้าสู่ระบบ / ออกจากระบบ |
+| Inbox | กล่องข้อความ |
+| Overview | ภาพรวม |
+| Calendar | ปฏิทิน |
+| Usage | การใช้งาน |
+| Cancel / Continue | ยกเลิก / ดำเนินการต่อ |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
