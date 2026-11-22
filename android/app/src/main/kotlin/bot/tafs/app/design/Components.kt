@@ -100,15 +100,20 @@ fun Eyebrow(text: String, color: Color = Theme.dim) {
 }
 
 /**
- * A section's small heading: monospaced and tracked, except in Korean, Japanese or Chinese, whose words the monospaced face's
- * wide spaces and the tracking pull apart ("내   TAFS"; the Korean preview). Those keep the plain face, untracked, as on iOS.
+ * A section's small heading: monospaced and tracked, except in Korean, Japanese, Chinese or Arabic, whose words the monospaced
+ * face's wide spaces and the tracking pull apart ("내   TAFS"; the Korean preview), and whose joined letters tracking cuts apart
+ * (Arabic). Those keep the plain face, untracked, as on iOS.
  */
 fun eyebrowStyle(text: String, color: Color = Theme.dim): TextStyle =
   if (ideographic(text)) scaled(12, color = color) else scaled(12, color = color, mono = true, tracking = 0.7.sp)
 
-/** Whether a line is written in Hangul, kana or Han, which a monospaced face and letter-spacing only pull apart. */
+/**
+ * Whether a line is written in Hangul, kana, Han or Arabic script, which a monospaced face and letter-spacing only pull apart
+ * (Arabic's letters join, so spacing them breaks the word: iOS's `Eyebrow.ideographic`).
+ */
 fun ideographic(text: String): Boolean = text.codePoints().anyMatch { c ->
-  c in 0x1100..0x11FF || c in 0x3040..0x30FF || c in 0x3130..0x318F || c in 0x3400..0x4DBF || c in 0x4E00..0x9FFF || c in 0xAC00..0xD7AF
+  c in 0x1100..0x11FF || c in 0x3040..0x30FF || c in 0x3130..0x318F || c in 0x3400..0x4DBF || c in 0x4E00..0x9FFF || c in 0xAC00..0xD7AF ||
+    c in 0x0600..0x06FF || c in 0x0750..0x077F || c in 0x08A0..0x08FF || c in 0xFB50..0xFDFF || c in 0xFE70..0xFEFF
 }
 
 /** The screen title: iOS's 34pt rounded bold. */
