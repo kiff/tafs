@@ -4335,6 +4335,13 @@ class AppModel(
    * the device it reads and chats as. The approval key unlocks for one signature, so an extension that checks one-touch
    * gets both under one `kiff.requests.v1` signature ([confirmChromeOneTouch]); an older one gets the two prompts. False when it didn't go through.
    */
+  /**
+   * The sites that move when [old] is replaced, as the owner reads them before the fingerprint: each connection this phone signed
+   * for [old], checked with its own key ([bot.tafs.app.kiff.ChromePairing.carriedFrom]), the same list [confirmChrome] signs.
+   */
+  fun chromeMoves(old: bot.tafs.app.kiff.Chrome): List<String> =
+    bot.tafs.app.kiff.ChromePairing.carriedFrom(old.id, _state.value.grants, signer.approvalPublicKeyDER).flatMap { it.sites }.distinct()
+
   suspend fun confirmChrome(p: ChromePairingInProgress, offer: bot.tafs.app.kiff.ChromeOffer, typed: String, replaces: bot.tafs.app.kiff.Chrome? = null): Boolean {
     val pairing = bot.tafs.app.kiff.ChromePairing
     val chromeKey = pairing.base64UrlDecoded(offer.key) ?: return false

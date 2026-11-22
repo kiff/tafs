@@ -184,6 +184,14 @@ class ChromePairingTest {
     assertEquals("chr_a", ChromePairing.replacedBy(offer("a".repeat(32)), chromes)?.id)
     assertNull(ChromePairing.replacedBy(offer("b".repeat(32)), chromes))
     assertNull("no id, no guess", ChromePairing.replacedBy(offer(""), chromes))
+    // One side without an id: the one paired Chrome on the same browser and system, never a guess between two.
+    val alike = listOf(bot.tafs.app.kiff.Chrome("chr_c", "Laptop", browser = "Chrome 131", os = "macOS"), bot.tafs.app.kiff.Chrome("chr_d", "PC", browser = "Chrome 131", os = "Windows"))
+    fun on(os: String, id: String = "") = bot.tafs.app.kiff.ChromeOffer(key = "k", proof = "p", browser = "Chrome 131", os = os, profileId = id)
+    assertEquals("chr_c", ChromePairing.replacedBy(on("macOS"), alike)?.id)
+    assertEquals("chr_c", ChromePairing.replacedBy(on("macOS", "e".repeat(32)), alike)?.id)
+    assertNull("two alike", ChromePairing.replacedBy(on("macOS"), alike + alike[0].copy(id = "chr_e")))
+    assertNull("another system", ChromePairing.replacedBy(on("Linux"), alike))
+    assertNull("both have ids that differ", ChromePairing.replacedBy(on("macOS", "e".repeat(32)), listOf(alike[0].copy(profileId = "f".repeat(32)))))
   }
 
   @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {

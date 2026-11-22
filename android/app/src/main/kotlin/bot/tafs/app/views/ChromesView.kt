@@ -29,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,8 @@ const val CHROME_CODE = "chrome-code"
 const val CHROME_CODE_COPY = "chrome-code-copy"
 const val CHROME_PAIR = "chrome-pair"
 const val CHROME_CONFIRM = "chrome-confirm"
+const val CHROME_REPLACE = "chrome-replace"
+const val CHROME_REPLACE_NONE = "chrome-replace-none"
 
 /** How often the sheet reads a pairing while the owner types its code in Chrome. */
 private const val PAIRING_READ_MS = 2_000L
@@ -70,7 +74,8 @@ fun ChromesSheet(
   refresh: suspend () -> Unit,
   open: suspend () -> ChromePairingInProgress?,
   step: suspend (ChromePairingInProgress) -> ChromePairingStep,
-  confirm: suspend (ChromePairingInProgress, ChromeOffer, String) -> Boolean,
+  confirm: suspend (ChromePairingInProgress, ChromeOffer, String, Chrome?) -> Boolean,
+  moves: (Chrome) -> List<String>,
   remove: suspend (Chrome) -> Unit,
   onClose: () -> Unit,
 ) {
@@ -115,24 +120,41 @@ fun ChromesSheet(
         line?.let { Panel { Text(it, style = scaled(14, color = Theme.ink)) } }
         val p = pairing
         val offered = current as? ChromePairingStep.Offered
+        // The pick's start, set once per offer so a list read again doesn't undo the owner's choice.
+        var replacing by remember(offered?.offer) { mutableStateOf(offered?.let { ChromePairing.replacedBy(it.offer, state.chromes.orEmpty()) }) }
         when {
           p != null && offered != null -> Panel {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Text(Words.Chrome.offeredTitle, style = scaled(17, FontWeight.SemiBold, Theme.ink))
               Text(Words.Chrome.offeredSays(browser = offered.offer.browser, system = offered.offer.os), style = scaled(14, color = Theme.dim))
               OutlinedTextField(name, bot.tafs.app.drive.driveTyped({ name = it.take(ChromePairing.NAME_MAX) }), label = { Text(Words.Chrome.nameLabel) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+              // Re-pairing replaces, never adds ("Your Chrome" 1, docs/chrome.md): the owner picks which paired Chrome this one
+              // replaces, starting on the same profile, else the one alike; with none picked it's a new Chrome, as before.
+              val paired = state.chromes.orEmpty()
+              if (paired.isNotEmpty()) {
+                Text(Words.Chrome.replaceTitle, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp))
+                paired.forEach { c -> ReplaceRow(c.name, selected = replacing?.id == c.id, enabled = !busy, tag = "$CHROME_REPLACE-${c.id}") { replacing = c } }
+                ReplaceRow(Words.Chrome.replaceNone, selected = replacing == null, enabled = !busy, tag = CHROME_REPLACE_NONE) { replacing = null }
+                replacing?.let { old ->
+                  // What moves is what this phone signed for the old Chrome, checked with its own key; the rest ends with it.
+                  val moving = moves(old)
+                  if (moving.isNotEmpty()) Text(Words.Chrome.replaceMoves(sites = moving.joinToString(", ")), style = scaled(14, color = Theme.soft))
+                  Text(Words.Chrome.replaceUnpairs(name = old.name), style = scaled(14, color = Theme.soft))
+                }
+              }
               Text(
                 Words.Chrome.confirm,
                 style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
                 modifier = Modifier.heightIn(min = 48.dp).testTag(CHROME_CONFIRM).confirms().tapping(enabled = !busy) {
                   busy = true
                   scope.launch {
-                    val done = confirm(p, offered.offer, name)
+                    val done = confirm(p, offered.offer, name, replacing?.takeIf { r -> paired.any { it.id == r.id } })
                     busy = false
                     if (done) {
                       line = Words.Chrome.paired(name = ChromePairing.name(name, Words.Chrome.browserOn(browser = offered.offer.browser, system = offered.offer.os)))
                       pairing = null
                       name = ""
+                      refresh()
                     }
                   }
                 }.padding(vertical = 12.dp),
@@ -202,5 +224,20 @@ fun ChromesSheet(
       confirmButton = { TextButton(onClick = { removing = null; scope.launch { remove(chrome) } }, modifier = Modifier.confirms()) { Text(Words.Chrome.remove, color = Theme.no) } },
       dismissButton = { TextButton({ removing = null }) { Text(Words.Common.cancel) } },
     )
+  }
+}
+
+/** One answer to "Replaces": a paired Chrome, or a new one. Amber and ticked when picked. */
+@Composable
+private fun ReplaceRow(words: String, selected: Boolean, enabled: Boolean, tag: String, onClick: () -> Unit) {
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).testTag(tag)
+      .tapping(enabled = enabled, role = androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick)
+      .semantics { this.selected = selected },
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(10.dp),
+  ) {
+    Text(if (selected) "◉" else "○", style = scaled(17, FontWeight.SemiBold, if (selected) Theme.amber else Theme.dim))
+    Text(words, style = scaled(15, if (selected) FontWeight.SemiBold else FontWeight.Normal, Theme.ink), modifier = Modifier.weight(1f))
   }
 }
