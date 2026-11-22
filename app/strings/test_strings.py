@@ -50,7 +50,7 @@ def glossary_being_written():
     Terms table is held to its own table, English term to its word ("Approve / Approve once" is two terms)."""
     with open(os.path.join(REPO, "docs", "languages.md"), encoding="utf-8") as f:
         md = f.read()
-    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "pt-BR": "pt-BR"}
+    codes = {"Korean": "ko", "Japanese": "ja", "Estonian": "et", "Greek": "el", "Lithuanian": "lt", "Latvian": "lv", "Czech": "cs", "Slovak": "sk", "Slovenian": "sl", "Hungarian": "hu", "Romanian": "ro", "Bulgarian": "bg", "Croatian": "hr", "Turkish": "tr", "Indonesian": "id", "Vietnamese": "vi", "Thai": "th", "Traditional Chinese": "zh-Hant", "Serbian": "sr-Latn", "Albanian": "sq", "pt-BR": "pt-BR"}
     tables, rows = [], []
     # Korean and Japanese's tables, batch 1's, then each regional variant's (pt-BR, under "Regional variants").
     text = ""
@@ -104,9 +104,9 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "sr-Latn"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "sr-Latn", "sq"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
-        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "sr-Latn", "pt-BR"])
+        self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "sr-Latn", "sq", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
         self.assertTrue(set(self.langs["shipped"]) <= set(self.langs["all"]) | set(self.langs.get("variants", {})))
 

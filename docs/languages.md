@@ -812,6 +812,44 @@ i bezbednost"). The plural forms are one, few (2–4) and other.
 | receipt | potvrda |
 | Cancel / Continue | Odustanite / Nastavite |
 
+### Albanian (sq)
+
+Addressed as **ju** (the polite plural); buttons are polite imperatives ("Miratoni", "Refuzoni", "Vazhdoni"). taf, Card, Coach,
+KIFF and Setup are names and stay as they are; taf and Card take Albanian's endings with a hyphen as a loanword ("taf-i",
+"Card-i", "Card-et", "tafs-et"), and a value is a name that takes none, so a line that would need one words around it:
+"taf-i {taf}", "Card-i i: {owner}", "kjo pajisje ({device})". A door is "portë", a call "thirrje", a request "kërkesë", a
+held call "thirrje e mbajtur", a receipt "dëftesë", a brief "përmbledhje". Apple's menu paths are the Albanian ones
+("Cilësimet", "Cilësimet e Sistemit", "Privatësia dhe Siguria"). The plural forms are one and other; a number takes the
+plural noun from 2 ("5 detyra").
+
+| English | Albanian |
+|---|---|
+| Needs you | Ju pret |
+| Approve / Approve once | Miratoni / Miratoni një herë |
+| Refuse | Refuzoni |
+| held | e mbajtur |
+| Halt / Halted | Bllokoni / Bllokuar |
+| Stopped | Ndalur |
+| Pause / Paused | Pezulloni / Pezulluar |
+| Resume | Vazhdoni |
+| Revoke | Revokoni |
+| Record | Regjistri |
+| Connect / connection | Lidhni / lidhje |
+| Pair / Unpair | Çiftoni / Hiqni çiftimin |
+| Account | Llogaria |
+| limit / spend limit | kufi / kufi shpenzimesh |
+| credits / credit pack | kreditet / paketë kreditesh |
+| passkey | çelës kalimi |
+| security key | çelës sigurie |
+| Sign in / Sign out | Hyrje / Dalje |
+| Inbox | Kutia hyrëse |
+| Overview | Përmbledhje |
+| Calendar | Kalendari |
+| Usage | Përdorimi |
+| brief | përmbledhje |
+| receipt | dëftesë |
+| Cancel / Continue | Anuloni / Vazhdoni |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
