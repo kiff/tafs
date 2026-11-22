@@ -285,6 +285,12 @@ test("the run's own blank page is never refused: no loop, and the page the step 
   c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/" });
   assert.equal(blanks(), before + 1);
   assert.equal(r.state()[0].steps.at(-1).url, "https://evil.example/");
+  // Only the exact blank page: any other page off the web is still refused (a looser match would let these through).
+  let n = blanks();
+  for (const url of ["about:srcdoc", "about:blank#x", "chrome://settings/", "data:text/html,hi", "javascript:void(0)"]) {
+    c.listeners.before({ tabId: tab, frameId: 0, url });
+    assert.equal(blanks(), ++n, url + " is still refused");
+  }
 });
 
 test("a read at an offset asks the page for that window, and a bad offset is a bad step", async () => {
