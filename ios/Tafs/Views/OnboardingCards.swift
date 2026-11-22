@@ -190,6 +190,7 @@ struct OnboardingPicture: View {
 /// How tafs works, any time (Account): the three cards again, each opening where it's tapped, and the privacy and
 /// terms pages, KIFF's and tafs's.
 struct HowTafsWorksView: View {
+    @EnvironmentObject private var model: AppModel
     @State private var opened: OnboardingPage?
 
     /// The four legal pages as rows, each titled as its page is: standalone titles (`onboarding.row_*`), never the
@@ -220,12 +221,36 @@ struct HowTafsWorksView: View {
                     .accessibilityIdentifier("howItWorks.\(page.rawValue)")
                 }
             }
+            // Chrome, only where planque offers it; the emailed code, only where KIFF can send it: the app says nothing about
+            // what the person can't use (as Account says nothing about Chrome until planque offers it).
+            if model.chromes != nil {
+                Section {
+                    Text(Words.Help.chromeLead(needsYou: Words.NeedsYou.title)).scaledFont(15).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(Words.Help.chromeManage(account: Words.Settings.title, chrome: Words.Chrome.title)).scaledFont(14).foregroundColor(Theme.dim)
+                        .fixedSize(horizontal: false, vertical: true)
+                } header: {
+                    Text(Words.Help.chromeTitle)
+                }
+                .accessibilityIdentifier("howItWorks.chrome")
+            }
+            if model.codeSignIn?.available == true {
+                Section {
+                    Text(Words.Help.codeLead(account: Words.Settings.title, signIn: Words.Settings.SignInCode.title)).scaledFont(15).foregroundColor(Theme.soft)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(Words.Help.codeSafe).scaledFont(14).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+                } header: {
+                    Text(Words.Help.codeTitle)
+                }
+                .accessibilityIdentifier("howItWorks.code")
+            }
             Section {
                 ForEach(Self.legalRows, id: \.url) { row in
                     Link(Legal.label(row.title), destination: row.url)
                 }
             }
         }
+        .task { await model.loadCodeSignIn() }
         .navigationTitle(Words.Onboarding.howItWorks)
         .sheet(item: $opened) { page in
             OnboardingCards(start: page) { opened = nil }

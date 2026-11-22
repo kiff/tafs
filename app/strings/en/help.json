@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} lists your Chromes and what each one is used for. Unpairing a Chrome ends its connections.",
+  "help.chrome_title": "tafs can work in your Chrome",
+  "help.code_lead": "Turn it on in {account} › {sign_in}. Then, when you ask, KIFF emails a code that works once, for 10 minutes, in the browser that asked.",
+  "help.code_safe": "Never give this code to anyone. KIFF will never ask you for it.",
+  "help.code_title": "Sign in with an emailed code"
+}

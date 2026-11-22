@@ -312724,6 +312724,72 @@
         }
       }
     },
+    "help.chrome_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair the tafs extension with your phone and a taf can work in your Chrome, only on the sites you allow. It works in its own tabs, and anything risky waits for you in %1$@."
+          }
+        }
+      }
+    },
+    "help.chrome_manage": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ › %2$@ lists your Chromes and what each one is used for. Unpairing a Chrome ends its connections."
+          }
+        }
+      }
+    },
+    "help.chrome_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs can work in your Chrome"
+          }
+        }
+      }
+    },
+    "help.code_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn it on in %1$@ › %2$@. Then, when you ask, KIFF emails a code that works once, for 10 minutes, in the browser that asked."
+          }
+        }
+      }
+    },
+    "help.code_safe": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Never give this code to anyone. KIFF will never ask you for it."
+          }
+        }
+      }
+    },
+    "help.code_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with an emailed code"
+          }
+        }
+      }
+    },
     "home.calendar_not_read": {
       "extractionState": "manual",
       "localizations": {
