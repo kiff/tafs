@@ -1,0 +1,1 @@
+- **Arabic: "Report this payment" and the glossary row for Setup.** The six `record.report.*` lines are written in Arabic, and `docs/languages.md` says how Setup is written (Latin letters for the agent, الإعداد for the two screen titles). Arabic is not shipped yet ([languages.md](docs/languages.md)).
