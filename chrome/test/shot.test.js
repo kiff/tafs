@@ -116,21 +116,22 @@ test("no picture when a secret field can't be confirmed covered, on a sensitive 
   assert.equal((await pay.shots.capture({ tabId: 7, windowId: 9, page: { payment_frame: true } })).why, "site");
 });
 
-test("the picture is posted for its step as WebP, signed by the extension's key over the step and its hash", async () => {
+test("the picture is posted for its step as JSON with the WebP in base64url, signed by the extension's key over the step and its hash", async () => {
   const { shots, key, fetched } = await rig();
   const out = await shots.send("data:image/png;base64,AAAA", "CHROMESTEP#1 a/b");
   assert.equal(out, "sent");
   const [url, init] = fetched.at(-1);
-  const u = new URL(url);
-  assert.equal(u.origin + u.pathname, "https://planque.test/v1/extension/steps/CHROMESTEP%231%20a%2Fb/screenshot");
+  assert.equal(url, "https://planque.test/v1/extension/steps/CHROMESTEP%231%20a%2Fb/screenshot");
   assert.equal(init.method, "POST");
-  assert.deepEqual(init.headers, { "content-type": "image/webp" });
-  assert.equal(u.searchParams.get("chrome"), "chr_1");
-  const sha256 = await sha256Hex(init.body);
-  assert.equal(u.searchParams.get("sha256"), sha256);
+  assert.deepEqual(init.headers, { "content-type": "application/json" });
+  const body = JSON.parse(init.body);
+  assert.deepEqual(Object.keys(body).sort(), ["chrome_id", "image", "sig"]);
+  assert.equal(body.chrome_id, "chr_1");
+  const bytes = Uint8Array.from(Buffer.from(body.image, "base64url"));
+  const sha256 = await sha256Hex(bytes);
   const spki = b64u(await publicSPKI(key.publicKey));
-  assert.ok(await verify(spki, LABEL.screenshot, { chrome_id: "chr_1", step: "CHROMESTEP#1 a/b", sha256 }, u.searchParams.get("sig")), "planque can check it");
-  assert.ok(!(await verify(spki, LABEL.screenshot, { chrome_id: "chr_1", step: "another", sha256 }, u.searchParams.get("sig"))), "and it is for this step only");
+  assert.ok(await verify(spki, LABEL.screenshot, { chrome_id: "chr_1", step: "CHROMESTEP#1 a/b", sha256 }, body.sig), "planque can check it");
+  assert.ok(!(await verify(spki, LABEL.screenshot, { chrome_id: "chr_1", step: "another", sha256 }, body.sig)), "and it is for this step only");
 });
 
 test("a refused upload, or one that fails, is only a word: nothing throws", async () => {

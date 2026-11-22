@@ -3,7 +3,7 @@
 // It is encoded here (WebP, at most 1280 px wide, about 50 KB) and sent to planque over HTTPS, signed with the extension's key
 // over the step it belongs to. It can only ever add: whatever goes wrong here, the act goes ahead.
 
-import { sign, LABEL } from "./crypto.js";
+import { sign, LABEL, b64u } from "./crypto.js";
 import { hostOf, sensitive } from "./sites.js";
 
 export const MAX_WIDTH = 1280;
@@ -107,8 +107,9 @@ export class Shots {
       const bytes = new Uint8Array(await webp.arrayBuffer());
       const sha256 = await sha256Hex(bytes);
       const sig = await signScreenshot(keys.privateKey, { chromeId: pairing.chromeId, step: stepId, sha256 });
-      const url = this.base + "/v1/extension/steps/" + encodeURIComponent(stepId) + "/screenshot?chrome=" + encodeURIComponent(pairing.chromeId) + "&sha256=" + sha256 + "&sig=" + encodeURIComponent(sig);
-      const res = await this.fetch(url, { method: "POST", headers: { "content-type": "image/webp" }, body: bytes });
+      const url = this.base + "/v1/extension/steps/" + encodeURIComponent(stepId) + "/screenshot";
+      const body = JSON.stringify({ chrome_id: pairing.chromeId, image: b64u(bytes), sig });
+      const res = await this.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body });
       return res.ok ? "sent" : "upload";
     } catch {
       return "error";
