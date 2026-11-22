@@ -359,3 +359,10 @@ test("planque's time in the welcome moves the clock only a little, and only when
   assert.equal(clockOffset({}, NOW), null);
   assert.equal(clockOffset(null, NOW), null);
 });
+
+test("the clock slack's values are pinned: a wider one is a decision, not a drift", () => {
+  assert.equal(MAX_AHEAD_MS, 30_000);
+  assert.equal(SKEW_MS, 60_000, "slack without planque's time");
+  assert.equal(SKEW_KNOWN_MS, 5_000, "slack with it");
+  assert.equal(MAX_OFFSET_MS, 120_000, "the most the welcome's time may move the clock");
+});

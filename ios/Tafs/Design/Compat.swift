@@ -69,6 +69,20 @@ enum Clipboard {
                                       options: secretOptions(now: now))
     }
 
+    /// How long a copied Chrome pairing code stays on the pasteboard: a few minutes, and the code lapses in ten and works once.
+    static let pairingCodeLifetime: TimeInterval = 5 * 60
+
+    /// A Chrome pairing code, copied to type or paste into the computer's Chrome. Not this-device-only, so Universal Clipboard can
+    /// carry it to the person's own computer; it leaves the pasteboard after a few minutes, whether or not tafs is still open.
+    static func copyPairingCode(_ text: String, now: Date = Date()) {
+        UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: Words.withoutDirection(text)]],
+                                      options: pairingCodeOptions(now: now))
+    }
+
+    static func pairingCodeOptions(now: Date) -> [UIPasteboard.OptionsKey: Any] {
+        [.expirationDate: now.addingTimeInterval(pairingCodeLifetime)]
+    }
+
     /// The options a secret is copied with: this device only, and an expiry a minute from now.
     static func secretOptions(now: Date) -> [UIPasteboard.OptionsKey: Any] {
         [.localOnly: true, .expirationDate: now.addingTimeInterval(secretLifetime)]

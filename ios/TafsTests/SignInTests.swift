@@ -297,4 +297,11 @@ final class SignInTests: XCTestCase {
         XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/auth/device/logout" })
         Keychain.delete(AppModel.tokenAccount)
     }
+
+    /// KIFF's `GET /v1/me/sign-in`: whether code sign-in is on, and whether KIFF can send codes.
+    func testTheCodeSignInSettingReadsKIFFsAnswer() throws {
+        let json = #"{"email_code":false,"changed_at":"2026-11-22T13:05:00Z","available":true}"#
+        let setting = try JSONDecoder().decode(KIFFClient.CodeSignIn.self, from: Data(json.utf8))
+        XCTAssertEqual(setting, KIFFClient.CodeSignIn(emailCode: false, available: true))
+    }
 }

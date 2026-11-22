@@ -272,20 +272,23 @@ internal fun ApiKeyShownOnce(door: Door, issued: bot.tafs.app.kiff.IssuedKey, en
 /** The label a copied key's clip carries, so the minute's clear only ever takes away tafs's own clip, never the person's next copy. */
 internal const val API_KEY_CLIP = "tafs.api.key"
 
+/** The label of a copied Chrome pairing code's clip, cleared the same way. */
+internal const val CHROME_CODE_CLIP = "tafs.chrome.code"
+
 /**
  * Copies [key], marked sensitive (Android 13+: the system's copy preview never shows it), and clears it from the clipboard a
  * minute later if it's still tafs's clip, while tafs is running: Android has no clipboard expiry of its own, and the app can't
  * stop a phone maker's clipboard sync for one clip (kiff/work#16 §3.1).
  */
 @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
-internal fun copyKeyForAMinute(context: android.content.Context, key: String, after: Long = 60_000) {
+internal fun copyKeyForAMinute(context: android.content.Context, key: String, after: Long = 60_000, label: String = API_KEY_CLIP) {
   val clipboard = context.getSystemService(android.content.ClipboardManager::class.java) ?: return
-  val clip = bot.tafs.app.model.Res.clip(API_KEY_CLIP, key)
+  val clip = bot.tafs.app.model.Res.clip(label, key)
   if (Build.VERSION.SDK_INT >= 33) clip.description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
   clipboard.setPrimaryClip(clip)
   kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.Main) {
     kotlinx.coroutines.delay(after)
-    runCatching { if (clipboard.primaryClipDescription?.label == API_KEY_CLIP && Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() }
+    runCatching { if (clipboard.primaryClipDescription?.label == label && Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() }
   }
 }
 

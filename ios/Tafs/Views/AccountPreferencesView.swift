@@ -75,3 +75,34 @@ struct TimeZonePicker: View {
         .screenBackground()
     }
 }
+
+/// Account › Sign-in: whether the person signs in with a code sent by email. Off for everyone until they turn it on. On opens
+/// KIFF's own page in the sheet (it asks for a recent sign-in); off goes straight from here. There is no code screen in the app:
+/// the code is entered on KIFF's page.
+struct CodeSignInRow: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let setting = model.codeSignIn {
+                LabeledContent(Words.Settings.SignInCode.label, value: setting.emailCode ? Words.Settings.SignInCode.on : Words.Settings.SignInCode.off)
+                    .accessibilityIdentifier("settings.sign-in-code")
+                Text(Words.Settings.SignInCode.help).scaledFont(13).foregroundColor(Theme.soft)
+                if setting.emailCode {
+                    Button(Words.Settings.SignInCode.turnOff) { Task { await model.turnCodeSignInOff() } }
+                        .disabled(model.codeSignInBusy)
+                        .accessibilityIdentifier("settings.sign-in-code.off")
+                } else if setting.available {
+                    Button(Words.Settings.SignInCode.turnOn) { Task { await model.turnCodeSignInOn() } }
+                        .disabled(model.codeSignInBusy)
+                        .accessibilityIdentifier("settings.sign-in-code.on")
+                    Text(Words.Settings.SignInCode.turnOnInBrowser).scaledFont(13).foregroundColor(Theme.soft)
+                } else {
+                    Text(Words.Settings.SignInCode.notAvailable).scaledFont(13).foregroundColor(Theme.soft)
+                }
+            }
+            if let why = model.codeSignInError { Text(why).scaledFont(13).foregroundColor(Theme.no) }
+        }
+        .task { await model.loadCodeSignIn() }
+    }
+}

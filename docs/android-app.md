@@ -269,7 +269,11 @@ console for review and restarted production's. Play's managed publishing is on s
 parameter (400, "Changes are sent for review automatically. The query parameter changesNotSentForReview must not be set.",
 21 Nov): on those words alone, and no others, the script commits the edit plainly (`commit`), and the release waits in
 "Changes ready to publish" until mac-local presses Publish. Any other refusal commits nothing. While a production review is in
-flight, no internal upload runs: mac-local says when (row 44's 0.4.4-timing waited for 128). It never touches production,
+flight, no internal upload runs: mac-local says when (row 44's 0.4.4-timing waited for 128). **Before merging a pull
+request that raises either `versionCode`**, Play Console's Publishing overview must list nothing saved and not yet sent for
+review: with managed publishing on, the plain commit sends every saved change for review with the release (on 22 Nov,
+132's commit sent a saved country expansion along with it). Managed publishing holds only the publishing, and Publish then
+sends every change that is ready, production's too, so whoever presses it checks that list first. It never touches production,
 closed or open testing, or a rollout: the track is fixed in the script, and its tests check
 it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
 `PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts
@@ -277,9 +281,15 @@ the run: no key file, and no secret holds a key. A bundle Play reads as another 
 than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
-  it-IT, pt-PT, nl-NL, pl-PL and, since 130, ko-KR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
+  it-IT, pt-PT, nl-NL, pl-PL, since 130 ko-KR, and since 132 es-419 and pt-BR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
+- **Where tafs stands on Play, read only** (`.github/workflows/play-status.yml`, by hand and at 06:17 and 17:17 UTC, beside
+  the App Store's `store-status.yml`): `android/play/play_status.py` opens an edit, reads every track and deletes the edit
+  unsaved, so nothing is uploaded, changed or sent for review, and managed publishing never sees it. It prints one line per
+  release (track, release name, status, version codes) to the run's summary, and nothing else: no ids, tokens or countries.
+  It can make only those three calls, by their exact shape, and the file never names Play's save call: the job checks that
+  with a grep before any token exists, and `test_play_status.py` checks it too. Same workload identity as the uploads.
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
   signed with the same upload key (docs/watch-wear.md, Versions). A run by hand builds the phone's bundle unless its
   `form` is `wear`.
@@ -1478,12 +1488,16 @@ request, the window, each refusal) and `PairComputerTest` (the sheet).
 Account › **Chrome** (`ChromesSheet`, `ChromesView.kt`) lists the Chromes paired to the account, with Unpair, and **Pair a
 Chrome**, as iOS's `ChromesView`. The extension's side, and the contract all three sides build to, is [chrome.md](chrome.md).
 The row shows only once planque offers Chromes: its `GET …/chromes` answering 404 leaves `AppState.chromes` null, so planque's
-switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`).
+switch decides, never the app. Account reads it when it opens (`AppModel.refreshChromes`). Account reads them when it opens; one opened before planque is ready (the first seconds after launch) reads nothing, so the first grants read that makes planque ready reads them too (`refreshConnections`, `ChromesTest.theRowShowsOnceReadyEvenWhenAccountOpenedBeforePlanqueWas`).
 
 - **The phone shows the code.** `POST …/chromes/pairings` gives the lookup. The phone makes the 17-character secret itself (about 83 bits, so the proof planque keeps under it can't be tried offline), shown in groups of four (`K7QF-29XM-DPQR-STVW-XYZ2-3`)
   (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer
   you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
   `ChromePairingInProgress` leaves the secret out of its `toString`.
+- **The code can be selected, and Copy copies it** (`CHROME_CODE_COPY`): the code is typed on another device, so it's carried there
+  on the clipboard (the owner's ask, 22 Nov). It's copied as a key is (`copyKeyForAMinute`, label `tafs.chrome.code`): marked
+  sensitive (Android 13 and later, so the system's preview never shows it) and taken off the clipboard after a minute if the
+  clipboard still holds it, never the person's next copy (`ApiDoorScreensTest.aCopiedChromePairingCodeIsSensitiveAndGoneAfterItsMinute`).
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
   constant time), over its key and its KIFF device's offer (`kiff_offer`, empty when it sent none), so planque can swap
   neither. That offer must be KIFF's `kiff.pair.v1` for a `chrome` `extension` in `software`, with no approval key
@@ -1992,3 +2006,15 @@ The API contracts and recent-run history bound are in [api.md](api.md).
 
 The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** and **Cancel**. Open again never opens the same link: a vendor's link is single-use once its sign-in reached planque, so the page would only say it was used. It ends the wait on that page quietly, with nothing answered to Coach or reported to tafs cloud (`VendorSignInReplaced`, `Came.Replaced`), and runs the card's approval again, one fingerprint (`AppModel.reopenSignIn`). Planque decides from there: a grant it holds signed in answers `signed_in` with its confirm code, and the phone confirms it with no page, as any held sign-in; any other gets a fresh link, opened as the first was (Android 1.29.4). Only with no approval to run again does it open the same page. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 60 minutes end the wait as a closed sign-in (`SIGN_IN_WINDOW_MS`, as long as planque's sign-in link works); the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting). **The tab gone** (closed with back or its ✕, or closed above tafs's screen by the launcher) marks the sign-in left even when no resume was seen: the tab opens for a result (`MainActivity.vendorTab`), which comes back once the tab is gone, never while it's still there behind another app, and with no link within the grace the card or Connect apps' sheet offers Open again and Cancel (`VendorWait.closed`). It's never left on "Approving…" with no way back (Android 1.30.1; before, a closed tab could leave it there).
 Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.
+
+## Account › Sign-in: the email-code setting
+
+Account › Sign-in shows `GET /v1/me/sign-in` (`KiffClient.codeSignIn`, `AppState.codeSignIn`): whether the person signs in with
+a code sent by email, and whether KIFF can send codes (`available`). It is off for everyone until they turn it on, and there is
+no code screen in the app: the code is typed on KIFF's page. A KIFF without the route (404) shows no section. **Turn off** goes
+straight from the app (`PUT /v1/me/sign-in {"email_code": false}`, `AppModel.turnCodeSignInOff`); KIFF emails the person about
+the change. **Turn on** opens KIFF's own `/dashboard/sign-in` (`KiffClient.codeSignInPage`), because turning it on needs a
+recent sign-in, which a device session never passes; the setting is read again whenever the app comes back to Account
+(`ON_RESUME`). When KIFF can't send codes (`available` false) the section says so and offers nothing. A read KIFF refuses (any answer but 404) shows the section with "Couldn't load this setting" and why, never nothing. As iOS's
+([ios-app.md](ios-app.md)). Tests: `CodeSignInTest` (the answer read, a 404 shows nothing, off sent with the session alone and
+never on, a refusal said in the person's words with the setting kept).

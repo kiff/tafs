@@ -1,0 +1,1 @@
+- **Chrome opens a taf's window even when Chrome gives its tabs large numbers:** a run no longer fails at its first step, and a window that can't be set up is closed instead of being left blank ([docs/chrome.md](docs/chrome.md)).

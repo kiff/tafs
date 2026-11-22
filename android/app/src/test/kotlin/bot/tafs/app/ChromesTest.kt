@@ -58,6 +58,37 @@ class ChromesTest {
   private fun offer(secret: String, proofKey: ByteArray = extension.public.encoded, kiffOffer: String? = null, proofOffer: String? = kiffOffer) =
     """{"pairing":"pr_1","status":"waiting_for_phone",${kiffOffer?.let { "\"kiff_offer\":" + kotlinx.serialization.json.JsonPrimitive(it) + "," }.orEmpty()}"key":"${ChromePairing.base64Url(extension.public.encoded)}","proof":"${ChromePairing.base64Url(ChromePairing.hmac(secret, ChromePairing.EXTENSION_PROOF_LABEL, proofKey + proofOffer.orEmpty().toByteArray()))}","version":"1.0.0","browser":"Chrome 131","os":"macOS"}"""
 
+  /**
+   * Account opened before planque was ready (the first seconds after launch) read no Chromes, and its row stayed hidden: the
+   * first grants read that makes planque ready reads them, so the row shows whatever else Account read meanwhile.
+   */
+  @Test fun theRowShowsOnceReadyEvenWhenAccountOpenedBeforePlanqueWas() = runTest {
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme"}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    // planque isn't ready at first (its first grants read fails), then is.
+    transport.answer("GET /v1/accounts/t_01/grants", 503, """{"error":"unavailable"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[{"id":"dev_1","name":"tafs on Android phone","this_device":true}]}""")
+    transport.answer("GET /v1/me/sign-in", 403, """{"error":"phone_session_forbidden"}""")
+    transport.answer(chromes, 200, """{"chromes":[]}""")
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    secrets.save("1", AppModel.KEYED)
+    secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
+    val m = testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false).also { it.restore() }
+    // Account opens first: the Sign-in read is refused, and the Chromes can't be read yet.
+    m.loadCodeSignIn()
+    m.refreshChromes()
+    assertNull("not ready: no row yet", m.state.value.chromes)
+    // planque becomes ready: the Chromes are read, and the row shows.
+    m.refreshConnections()
+    assertEquals(emptyList<bot.tafs.app.kiff.Chrome>(), m.state.value.chromes)
+    assertEquals(1, transport.requestsTo(chromes).size)
+  }
+
   @Test fun theRowShowsOnlyOncePlanqueOffersChromes() = runTest {
     val m = model()
     transport.answer(chromes, 404, """{"error":"a browser in your own Chrome isn't offered here"}""")

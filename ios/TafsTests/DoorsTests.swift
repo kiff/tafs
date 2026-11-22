@@ -196,6 +196,15 @@ final class DoorsTests: XCTestCase {
         XCTAssertEqual(options[.expirationDate] as? Date, now.addingTimeInterval(60))
     }
 
+    /// A Chrome pairing code is copied so Universal Clipboard can carry it to the person's own computer, and it leaves the
+    /// pasteboard after a few minutes.
+    func testAChromePairingCodeIsCopiedForAFewMinutes() {
+        let now = Date(timeIntervalSince1970: 1_000)
+        let options = Clipboard.pairingCodeOptions(now: now)
+        XCTAssertNil(options[.localOnly], "the person's own computer may take it")
+        XCTAssertEqual(options[.expirationDate] as? Date, now.addingTimeInterval(300))
+    }
+
     /// Coach's drafted door (`contracts/doors-api-draft.json`): what's drawn is read from `body`, the bytes signed and sent;
     /// approving signs `POST …/doors` over exactly those bytes, sends them, and shows the first key once.
     func testCoachsDraftedDoorIsApprovedSignedOverExactlyItsBody() async throws {

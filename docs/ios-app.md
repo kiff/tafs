@@ -1368,3 +1368,27 @@ KIFF opens. `{taf}` is the sample's first taf.
 ## Chrome step pictures
 
 `ChromeShotView` shows the picture a paired Chrome kept just before a taf's step acted (kept 30 days by planque, which keeps none while its switch is off). It reads `GET /v1/accounts/{tenant}/chromes/screenshots/{step}` through `PlanqueClient.chromeScreenshot(step:)`, signed by the device as the Chromes list is, and shows the bytes only if they are WebP, at most 120 KB, and hash to the `sha256` planque sent (`ChromeScreenshot.read`). A 404 reads "No picture is kept for this step"; anything else that goes wrong reads "The picture couldn't be loaded". A call's receipt (`ReceiptView`, from the Record) lists the pictures kept for it: `PlanqueClient.chromeShots(op:)` asks `GET /v1/accounts/{tenant}/chromes/screenshots?op=<proposal_id>` (device-signed, the query covered), which answers the step ids and times (oldest first, the newest 20, none past 30 days, no bytes). Each picture is a "See the page before this step" button that opens the viewer, which then reads that step's bytes. A call that was not a Chrome step, a failed list, or planque keeping none shows nothing: `AppModel.chromeShots` answers `[]` on any failure.
+
+## Account › Sign-in: the email-code setting
+
+Account › Sign-in shows `GET /v1/me/sign-in`: whether the person signs in with a code sent by email, and whether KIFF can send
+codes (`available`). It is off for everyone until they turn it on, and there is no code screen in the app: the code is typed
+on KIFF's page. **Turn off** goes straight from the app (`PUT /v1/me/sign-in {"email_code": false}`); KIFF emails the person
+about the change. **Turn on** opens KIFF's own `/dashboard/sign-in` in the private sheet, because turning it on needs a recent
+sign-in, which a device session never passes; the setting is read again when the sheet closes. When KIFF can't send codes
+(`available` false) the row says so and offers nothing.
+
+## Store status: a read-only look at App Store Connect
+
+`.github/workflows/store-status.yml` (by hand, and twice a day at 06:17 and 17:17 UTC) says where the App Store stands without
+anyone signing in to App Store Connect: for iPhone and iPad and for macOS, the newest two App Store versions with Apple's review
+state (`WAITING_FOR_REVIEW`, `IN_REVIEW`, `READY_FOR_SALE`, `REJECTED`, …), whether Apple has asked for something (a rejected
+version), and the latest TestFlight builds with their processing, internal and external states. It's `ios/scripts/asc-status.rb`,
+tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
+
+- **Read only:** it calls only `GET`; it uploads, marks and submits nothing, and has no way to.
+- **Prints only versions, build numbers and states:** no id, key, token, email or account detail, because the repository and
+  its Actions logs are public. The result is in the run's log and its summary.
+- **The key** is the `apple-release` environment's `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8`, which a run from `main` can read
+  (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
+- The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.

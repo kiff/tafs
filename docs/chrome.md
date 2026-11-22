@@ -73,7 +73,7 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 2. **The owner types the code into the side panel.** The extension makes its key pair and calls
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
-   {key: <SPKI, base64url>, version, manifest_hash, browser, os, kiff_offer,
+   {key: <SPKI, base64url>, version, manifest_hash (64 lower-case hex), browser, os, kiff_offer,
     proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer)}
    ```
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
@@ -125,7 +125,7 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 
 ## Connect: both ends prove themselves
 
-`wss://planque.kiff.dev/v1/extension?chrome=chr_…`, opened by the extension:
+`wss://relay.planque.kiff.dev?chrome=chr_…` (the WebSocket API's own domain, mapped onto its stage, so no path), opened by the extension:
 
 1. **The extension sends** `{type: "open"}` once the connection is up. planque's relay can't post to a connection until
    its connect has returned, so the extension speaks first.
@@ -155,8 +155,11 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
   Removing a line revokes that build at the next deploy.
 - **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step. The
   connection drops after a minute with no run.
-- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it. The release
-  workflow writes each released build's hash into planque's allowlist.
+- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it, written as **64
+  lower-case hex characters** in the pairing and in the relay's `hello` alike (not base64url, which every other value in this
+  protocol uses). The release workflow writes each released build's hash into planque's allowlist in the same form
+  (`chrome-builds.txt`), and planque looks a build up by the text it is sent. `manifestHashOf` in `chrome/src/crypto.js` is
+  the one place it is made.
 
 ## Steps
 
@@ -278,7 +281,9 @@ was done.
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
   another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
-  rules go when the run ends. `webNavigation`'s record of a refused move stays as the log.
+  rules go when the run ends. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
+  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+  (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
