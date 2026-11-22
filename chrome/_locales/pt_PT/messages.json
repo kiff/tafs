@@ -64,5 +64,16 @@
   "coach_working": { "message": "O Coach está a trabalhar…" },
   "share_chars": { "message": "$N$ caracteres", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Só é possível partilhar páginas https." },
-  "share_error_site_blocked": { "message": "Páginas como esta nunca são partilhadas: bancos, carteiras, palavras-passe, pagamentos, saúde e administração pública." }
+  "share_error_site_blocked": { "message": "Páginas como esta nunca são partilhadas: bancos, carteiras, palavras-passe, pagamentos, saúde e administração pública." },
+  "vault_title": { "message": "Inícios de sessão guardados" },
+  "vault_body": { "message": "Guardado aqui, selado neste computador. Um taf só pode pedir para usar um nesse site exato, e só é escrito depois de aprovar esse preenchimento no telemóvel. O tafs e o KIFF nunca o veem." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Nome de utilizador ou email (opcional)" },
+  "vault_password": { "message": "Palavra-passe" },
+  "vault_save": { "message": "Guardar selado" },
+  "vault_saved": { "message": "Guardado. Está selado neste computador." },
+  "vault_error": { "message": "Não foi guardado: um site precisa de https e de uma palavra-passe." },
+  "vault_remove": { "message": "Remover" },
+  "vault_with_username": { "message": "com nome de utilizador" },
+  "vault_one_per_site": { "message": "Um início de sessão por site: guardar outro para o mesmo site substitui o anterior." }
 }

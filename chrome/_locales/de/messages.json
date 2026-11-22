@@ -64,5 +64,16 @@
   "coach_working": { "message": "Coach arbeitet…" },
   "share_chars": { "message": "$N$ Zeichen", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Nur https-Seiten können geteilt werden." },
-  "share_error_site_blocked": { "message": "Seiten wie diese werden nie geteilt: Banken, Wallets, Passwörter, Zahlungen, Gesundheit und Behörden." }
+  "share_error_site_blocked": { "message": "Seiten wie diese werden nie geteilt: Banken, Wallets, Passwörter, Zahlungen, Gesundheit und Behörden." },
+  "vault_title": { "message": "Gespeicherte Anmeldungen" },
+  "vault_body": { "message": "Hier gespeichert, auf diesem Computer versiegelt. Ein taf kann nur auf genau dieser Website darum bitten, und es wird erst eingetippt, nachdem du dieses eine Ausfüllen auf deinem Handy genehmigt hast. tafs und KIFF sehen es nie." },
+  "vault_site": { "message": "Website" },
+  "vault_username": { "message": "Benutzername oder E-Mail (optional)" },
+  "vault_password": { "message": "Passwort" },
+  "vault_save": { "message": "Versiegelt speichern" },
+  "vault_saved": { "message": "Gespeichert. Auf diesem Computer versiegelt." },
+  "vault_error": { "message": "Nicht gespeichert: Eine Website braucht https, und ein Passwort." },
+  "vault_remove": { "message": "Entfernen" },
+  "vault_with_username": { "message": "mit Benutzername" },
+  "vault_one_per_site": { "message": "Eine Anmeldung pro Website: Wenn du eine weitere für dieselbe Website speicherst, ersetzt sie die bisherige." }
 }
