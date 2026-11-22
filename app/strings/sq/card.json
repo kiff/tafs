@@ -1,0 +1,157 @@
+{
+  "card.all_of": {
+    "one": "I gjithë Card-i",
+    "other": "Të gjithë Card-et"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, pastaj ju pyet",
+  "card.calls_left": {
+    "one": "Mbetet {count} thirrje",
+    "other": "Mbeten {count} thirrje"
+  },
+  "card.calls_left_line": {
+    "one": "Mbetet {count} thirrje {window} nga {limit}",
+    "other": "Mbeten {count} thirrje {window} nga {limit}"
+  },
+  "card.calls_used_of": {
+    "one": "{used} nga {count} thirrje {window}",
+    "other": "{used} nga {count} thirrje {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} thirrje {window}",
+    "other": "{count} thirrje {window}"
+  },
+  "card.card_confirmed_kiff": "Card · konfirmuar nga KIFF",
+  "card.card_draft_kiff": "Card · draft · nga KIFF",
+  "card.card_got_room_call_needed": "Card-i i tij mori hapësirën që i duhej kësaj thirrjeje, deri sa të rivendoset ai total",
+  "card.card_not_issued": "Card-i nuk u lëshua. ",
+  "card.card_revoked": "Card-i u revokua",
+  "card.check.always_asks": "{rule}: ju pyet gjithmonë",
+  "card.check.never_allowed": "{rule}: nuk lejohet kurrë",
+  "card.check.not_on_card": "Nuk është në Card-in e këtij taf",
+  "card.check.over_count": {
+    "one": "Mbi {count} {window}",
+    "other": "Mbi {count} {window}"
+  },
+  "card.check.over_each": "Mbi {amount} për thirrje",
+  "card.check.over_total": "Mbi {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Card-e"
+  },
+  "card.ended": "Përfundoi",
+  "card.ended_on": "Përfundoi më {date}",
+  "card.ends": "Përfundon",
+  "card.extra_room": "+{extra} hapësirë shtesë {window}",
+  "card.extra_room_prefix": "+{formatted} hapësirë shtesë ",
+  "card.extra_room_until": "+{extra} hapësirë shtesë deri më {ends}",
+  "card.figure_left": "mbeten: {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Card-e"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} thirrje {window}{each}: kjo do të ishte thirrja e {nth}{item}",
+    "other": "{count} thirrje {window}{each}: kjo do të ishte thirrja e {nth}{item}"
+  },
+  "card.held.each_call_asks": "Çdo thirrje ju pyet më parë",
+  "card.held.for_each": " për çdo: {name}",
+  "card.held.for_each_join": " për çdo: ",
+  "card.held.for_item": " për: {item}",
+  "card.held.over_count": {
+    "one": "Mbi kufirin e {count} thirrjeje: kjo do të ishte thirrja e {nth}",
+    "other": "Mbi kufirin e {count} thirrjeve: kjo do të ishte thirrja e {nth}"
+  },
+  "card.held.over_one_call": "{amount} është mbi kufirin prej {cap} për një thirrje",
+  "card.held.over_total": "{amount} do ta kalonte totalin prej {cap}",
+  "card.hero.calls_left_of": {
+    "one": "thirrje e mbetur {window} nga {limit}",
+    "other": "thirrje të mbetura {window} nga {limit}"
+  },
+  "card.hero.calls_use_unavailable": "thirrje {window} · përdorimi nuk ofrohet",
+  "card.hero.left_of": "mbeten {window} nga {limit}",
+  "card.hero.left_of_extra": "mbeten {window} nga {base} + {extra} hapësirë shtesë",
+  "card.hero.left_of_extra_until": "mbeten {window} nga {base} + {extra} hapësirë shtesë deri më {ends}",
+  "card.hero.left_of_note": "mbeten {window} nga {limit}{note}",
+  "card.hero.no_currency": "pa monedhë",
+  "card.hero.no_currency_suffix": " · pa monedhë",
+  "card.hero.use_unavailable": "{window} · përdorimi nuk ofrohet",
+  "card.hero.use_unavailable_note": "{label} · përdorimi nuk ofrohet{note}",
+  "card.how_counted": "Si numërohet kjo",
+  "card.issue_prompt": "Lëshoni Card-in për taf-in {taf}",
+  "card.issued_by": "Lëshuar nga",
+  "card.issued_by_account": "Llogaria",
+  "card.issued_by_named": "Lëshuar nga: {who}",
+  "card.its_card": "Card-i i tij",
+  "card.kiff_did_not_revoke_cards": "KIFF nuk revokoi {cards_left} nga Card-et e tij: revokojini në KIFF.",
+  "card.left": "mbeten {amount} {window}",
+  "card.left_extra_room": "mbeten {current} nga {own} + {extra} hapësirë shtesë{until}{note}",
+  "card.limit_can_not_raised_right": "Kufiri nuk mund të rritet që këtu tani.",
+  "card.limit_raised_read_balance_again": "Kufiri u rrit. Lexoni sërish gjendjen para se ta rrisni edhe një herë.",
+  "card.line.calls_in_window": {
+    "one": "{count} thirrje {window}{then}",
+    "other": "{count} thirrje {window}{then}"
+  },
+  "card.line.more_asks": "; për më shumë ju pyet më parë",
+  "card.line.then_asks": ", pastaj ju pyet",
+  "card.line.total_in_window": "{amount} gjithsej {window}{then}",
+  "card.line.up_to_each": "deri në {amount} për thirrje",
+  "card.more": {
+    "one": "edhe {count}",
+    "other": "edhe {count}"
+  },
+  "card.no_actions": "Ende pa veprime",
+  "card.no_actions_short": "ende pa veprime",
+  "card.no_currency": "{amount} (pa monedhë)",
+  "card.no_end_date": "Pa datë përfundimi",
+  "card.outcome.not_a_resource": "Nuk është një nga burimet e Card-it",
+  "card.outcome.outside": "Jashtë Card-it",
+  "card.outcome.over_one_action": "Mbi kufirin e Card-it për një veprim",
+  "card.outcome.over_total": "Mbi totalin e Card-it",
+  "card.outside_held": "Jashtë: mbajtur për ju",
+  "card.outside_refused": "Jashtë: refuzuar",
+  "card.over_limit_calls_would": "Mbi kufirin prej {limit} thirrjesh: kjo do të ishte thirrja e {nth}",
+  "card.revoke_failed": "KIFF nuk e revokoi Card-in. {why}",
+  "card.revoked": "Revokuar",
+  "card.rule.always_asks": "ju pyet gjithmonë",
+  "card.rule.at_most_each": "≤ {amount} për thirrje",
+  "card.rule.at_most_each_refused_above": "≤ {amount} për thirrje · refuzohet mbi të",
+  "card.rule.calls": {
+    "one": "{count} thirrje {window}",
+    "other": "{count} thirrje {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} thirrje {window}, pastaj ju pyet",
+    "other": "{count} thirrje {window}, pastaj ju pyet"
+  },
+  "card.rule.in_total": "{amount} gjithsej {window}",
+  "card.rule.never": "kurrë",
+  "card.rule.total_then_asks": "{amount} gjithsej {window}, pastaj ju pyet",
+  "card.rule.up_to_each": "deri në {amount} për thirrje; për më shumë ju pyet më parë",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card-i i taf-it",
+  "card.tools": {
+    "one": "{count} mjet",
+    "other": "{count} mjete"
+  },
+  "card.until": "Deri",
+  "card.until_date": "Deri më {date}",
+  "card.until_ends": " deri më {ends}",
+  "card.used_of": "{used} nga {limit} {window}",
+  "card.window.a_day": "në ditë",
+  "card.window.a_month": "në muaj",
+  "card.window.a_week": "në javë",
+  "card.window.any_day": "në çdo 24 orë",
+  "card.window.any_hour": "në çdo orë",
+  "card.window.any_week": "në çdo 7 ditë",
+  "card.window.in_total": "gjithsej",
+  "card.window.in_total_window": "gjithsej {window}",
+  "card.window.last_day": "në 24 orët e fundit",
+  "card.window.last_hour": "në orën e fundit",
+  "card.window.last_week": "në 7 ditët e fundit",
+  "card.window.so_far": "deri tani",
+  "card.window.this_month": "këtë muaj",
+  "card.window.this_week": "këtë javë",
+  "card.window.today": "sot",
+  "card.within_card": "brenda Card-it"
+}
