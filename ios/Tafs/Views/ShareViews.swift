@@ -292,11 +292,13 @@ struct OverviewView: View {
     /// the iPad's wide layout opens here, so the table's "No tafs yet" line would be the first thing it said.
     private var showsFirstHome: Bool {
         Self.showsFirstHome(kiff: model.mode == .kiff, loaded: model.listLoaded, unread: model.listUnread,
-                            noTafs: model.tafs.isEmpty, mayUseCoach: model.mayUseCoach)
+                            noTafs: model.tafs.isEmpty, mayUseCoach: model.mayUseCoach, listsRecipes: model.homeListsRecipes)
     }
 
-    static func showsFirstHome(kiff: Bool, loaded: Bool, unread: Bool, noTafs: Bool, mayUseCoach: Bool) -> Bool {
-        kiff && loaded && !unread && noTafs && Onboarding.showsFirstHome(mayUseCoach: mayUseCoach)
+    /// Where tafs cloud lists recipes, Home is as it ships (docs/onboarding.md): the phone shows the recipes, and the
+    /// Overview keeps its table, not the first Home.
+    static func showsFirstHome(kiff: Bool, loaded: Bool, unread: Bool, noTafs: Bool, mayUseCoach: Bool, listsRecipes: Bool) -> Bool {
+        kiff && loaded && !unread && noTafs && !listsRecipes && Onboarding.showsFirstHome(mayUseCoach: mayUseCoach)
     }
 
     private var needsYou: some View {

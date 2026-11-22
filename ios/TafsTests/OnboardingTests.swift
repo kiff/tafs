@@ -116,8 +116,8 @@ final class OnboardingTests: XCTestCase {
 
     /// The iPad's wide layout opens on the Overview, so with no taf it is the first Home, as the phone's Home is.
     func testTheOverviewIsTheFirstHomeWithNoTaf() {
-        func shows(kiff: Bool = true, loaded: Bool = true, unread: Bool = false, noTafs: Bool = true, coach: Bool = true) -> Bool {
-            OverviewView.showsFirstHome(kiff: kiff, loaded: loaded, unread: unread, noTafs: noTafs, mayUseCoach: coach)
+        func shows(kiff: Bool = true, loaded: Bool = true, unread: Bool = false, noTafs: Bool = true, coach: Bool = true, recipes: Bool = false) -> Bool {
+            OverviewView.showsFirstHome(kiff: kiff, loaded: loaded, unread: unread, noTafs: noTafs, mayUseCoach: coach, listsRecipes: recipes)
         }
         XCTAssertTrue(shows())
         XCTAssertFalse(shows(kiff: false), "sample mode keeps the table")
@@ -125,5 +125,6 @@ final class OnboardingTests: XCTestCase {
         XCTAssertFalse(shows(unread: true), "a list that couldn't be read says so; it is not an empty account")
         XCTAssertFalse(shows(noTafs: false), "with a taf, the table")
         XCTAssertFalse(shows(coach: false), "someone who may not use Coach reads where shared tafs show")
+        XCTAssertFalse(shows(recipes: true), "where tafs cloud lists recipes, Home is as it ships: the table, not the first Home")
     }
 }
