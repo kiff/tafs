@@ -119,5 +119,8 @@
   "Services/AppLanguage.swift": {
     "zh-Hant": "a language tag (Traditional Chinese), data",
     "sr-Latn": "a language tag (Serbian in Latin script), data"
+  },
+  "KIFF/PlanqueClient.swift": {
+    "chromes/screenshots?op=\\(query)": "a planque route path, never shown"
   }
 }

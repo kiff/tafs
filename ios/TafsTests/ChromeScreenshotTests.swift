@@ -43,4 +43,19 @@ final class ChromeScreenshotTests: XCTestCase {
         let upper = SHA256.hash(data: image).map { String(format: "%02X", $0) }.joined()
         XCTAssertNotNil(PlanqueClient.ChromeScreenshot.read(answer(image, sha: upper)))
     }
+
+    func testAnOperationsListKeepsItsOrderAndLeavesOutWhatIsNotAPicture() throws {
+        let json = """
+        {"shots":[{"step":"op_1.1","taken_at":"2026-11-22T17:20:00Z","sha256":"aa"},
+                  {"step":"","taken_at":"2026-11-22T17:21:00Z"},
+                  {"step":"op_1.2","taken_at":"yesterday"},
+                  {"taken_at":"2026-11-22T17:22:00Z"},
+                  {"step":"op_1.3","taken_at":"2026-11-22T17:23:00Z","sha256":"bb"}]}
+        """
+        let shots = try XCTUnwrap(PlanqueClient.ChromeShotRef.readList(Data(json.utf8)))
+        XCTAssertEqual(shots.map(\.step), ["op_1.1", "op_1.3"])
+        XCTAssertEqual(PlanqueClient.ChromeShotRef.readList(Data(#"{"shots":[]}"#.utf8)), [])
+        XCTAssertNil(PlanqueClient.ChromeShotRef.readList(Data("{}".utf8)), "not the shape")
+        XCTAssertNil(PlanqueClient.ChromeShotRef.readList(Data("nope".utf8)))
+    }
 }

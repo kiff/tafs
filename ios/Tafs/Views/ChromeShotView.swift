@@ -55,7 +55,7 @@ struct ChromeShotView: View {
 
     private func load() async {
         do {
-            if let shot = try await model.planque.chromeScreenshot(step: step) {
+            if let shot = try await model.chromeScreenshot(step: step) {
                 phase = .shown(shot)
             } else {
                 phase = .none
