@@ -1,0 +1,1 @@
+- **Serbian (Latin), Albanian, Georgian, Armenian, Azerbaijani, Bengali and Hebrew (in progress, draft):** the app's screens in each, with kiff.dev's pages in each language (kiff/cloud#85). First drafts, not yet read by a native speaker; the PR ships a language only when its lines, its tables and its checks are all in ([languages.md](docs/languages.md)).
