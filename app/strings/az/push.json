@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Xülasələr",
+  "push.channel.briefs_description": "Xülasəniz təyin olunmuş vaxtlarda.",
+  "push.channel.holds_description": "Çağırış cavabınız üçün saxlanılıb. Siz təsdiq edənə qədər heç nə göndərilmir.",
+  "push.channel.other": "Digər bildirişlər",
+  "push.channel.other_description": "Tapşırıq sorğuları və onların cavabları, səssiz.",
+  "push.channel.urgent_description": "Növbəti xülasənizi gözləyə bilməyən şeylər, səslə.",
+  "push.open_needs_you": "Cavab vermək üçün «Sizi gözləyir» bölməsini açın.",
+  "push.open_taf": "Baxmaq üçün taf-ı açın.",
+  "push.open_usage": "Baxmaq üçün «Plan və istifadə» bölməsini açın."
+}

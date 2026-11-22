@@ -1,0 +1,43 @@
+{
+  "files.account_row": {
+    "one": "{count} fayl · 30 gün saxlanılır",
+    "other": "{count} fayl · 30 gün saxlanılır"
+  },
+  "files.all": "Hamısı",
+  "files.all_tafs": "Bütün taf-lar",
+  "files.by_run": "İşə görə",
+  "files.by_taf": "Taf-a görə",
+  "files.delete_body": "O, bu hesabdakı hər kəs üçün dərhal Fayllardan silinir. Bunu geri qaytarmaq olmaz.",
+  "files.delete_now": "İndi silin",
+  "files.delete_question": "“{name}” indi silinsin?",
+  "files.deleted": "Hamı üçün silindi",
+  "files.download": "Yükləyin",
+  "files.empty": "Hələ heç nə yoxdur. Taf işdə hesabat, cədvəl və ya sənəd hazırlayanda, o, burada 30 gün saxlanılır və bu hesabdakı hər kəs onu aça, saxlaya və ya paylaşa bilər.",
+  "files.everyone": "Bu hesabdakı hər kəs",
+  "files.goes_away": "Silinir",
+  "files.goes_in_days": {
+    "one": "{count} gündən sonra silinir",
+    "other": "{count} gündən sonra silinir"
+  },
+  "files.goes_on": "{date} (işdən 30 gün sonra)",
+  "files.goes_today": "bu gün silinir",
+  "files.goes_tomorrow": "sabah silinir",
+  "files.in_run": "İşdə",
+  "files.kept_line": "Hər fayl işdən 30 gün saxlanılır, sonra özü silinir. Bu hesabdakı hər kəs bu faylları görür. Öz söhbət əlavələriniz mesajlarının yanında qalır.",
+  "files.kept_until": "Faylları {date} tarixinədək saxlanılır",
+  "files.made_by": "Hazırlayan",
+  "files.none_yet": "Hələ yoxdur · 30 gün saxlanılır",
+  "files.pick_one": "Burada görmək üçün fayl seçin.",
+  "files.preview_start": "Yalnız başlanğıc göstərilir. Hamısını oxumaq üçün faylı yükləyin.",
+  "files.saved": "Bu cihazda saxlanıldı",
+  "files.see_in_chat": "Söhbətdə baxın",
+  "files.share": "Paylaşın",
+  "files.size": "Həcm",
+  "files.taf_row": {
+    "one": "İşlərindən {count} fayl",
+    "other": "İşlərindən {count} fayl"
+  },
+  "files.title": "Fayllar",
+  "files.type": "Növ",
+  "files.who_sees": "Kim görür"
+}

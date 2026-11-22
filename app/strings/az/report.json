@@ -1,0 +1,17 @@
+{
+  "report.already": "Siz bu cavabı artıq bildirmisiniz.",
+  "report.cant_from_here": "Bu cavab buradan bildirilə bilmir.",
+  "report.menu": "Bu cavabı bildirin",
+  "report.not_sent": "Bildirişiniz göndərilmədi. {why}",
+  "report.not_sent_why": "Göndərilmədi: {failed}",
+  "report.note_hint": "Qeyd əlavə edin (ixtiyari)",
+  "report.note_most_characters": "Qeyd ən çoxu 1000 simvoldur.",
+  "report.person_kiff_reads_your_report": "KIFF-də bir nəfər bildirişinizi cavabın yazıldığı kimi oxuyur.",
+  "report.reason.harmful": "Zərərli",
+  "report.reason.offensive": "Təhqiramiz",
+  "report.reason.other": "Digər",
+  "report.reason.wrong": "Yanlış",
+  "report.runs_not_loaded": "İşləri yüklənə bilmədi. {why}",
+  "report.thanks": "Təşəkkürlər. KIFF-də kimsə bildirişinizi oxuyacaq.",
+  "report.what_wrong": "Bunda nə səhvdir?"
+}
