@@ -407,8 +407,9 @@ things (`runtime/src/cloud/approval.ts`):
   conversation, the draft is approved as before and one line is logged ("approval rules: none
   agreed in the conversation"); with `TAFS_RULES_REQUIRED=on` it's refused (`rules_required`),
   once every Coach run sends them. A conversation that can't be read is read again, never trusted.
-  The check route (`…/check`), which has no conversation, doesn't check the rules, and says so
-  on every answer (`rules_unchecked: true`). Coach sends the
+  The check route (`…/check`) checks them in the conversation its caller shows
+  (`conversation`, its events), as the e2e does with the setup it runs itself; with none, it
+  doesn't, and says so on every answer (`rules_unchecked: true`). Coach sends the
   fields from `draft-the-card@26`: the rules notice carries `rules: [{tool, over, limits}]`, only
   the owner's figures and as the Card will have them, and its confirm `agrees` with its id, with
   options Agree (value `agree`) and Change something. kiff/agents' component schema takes the
