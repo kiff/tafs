@@ -32,6 +32,7 @@ import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startS
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
+import { extensionPreflight, withExtensionCORS } from "./extension-cors.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TRIGGER_KEYS, TriggerError, type Trigger } from "./triggers.js";
 import { calendarOf, dateOf, eventsOf, localOf, MAX_DAYS, plusDays } from "./calendar.js";
 
@@ -613,9 +614,11 @@ function conditionalPage(event: HTTPEvent, value: unknown): PageResponse {
 
 export async function handle(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
   const began = Date.now();
-  const r = await answer(event, withKIFFLanguage(event, deps));
+  // The Chrome extension's side panel, from its own origin: Chrome's preflight is answered before anything is read, and
+  // its answers carry its origin (extension-cors.ts).
+  const r = extensionPreflight(event) ?? await answer(event, withKIFFLanguage(event, deps));
   logRequest(event, r.statusCode, Date.now() - began, r.statusCode >= 500 ? errorOf(r) : undefined);
-  return secured(r);
+  return secured(withExtensionCORS(event, r));
 }
 
 /**
