@@ -411,3 +411,40 @@ test("text that looks like a card number or a key is covered in the picture, and
   assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0);
   await page.close();
 });
+
+test("a frame is covered whole in the picture (its inside is another page's to hide), and a field in an open shadow root is covered as any is", { skip: !playwright }, async () => {
+  const page = await openHTML(`<p>shop</p>
+<iframe id="frame" srcdoc="<input type=password value=hunter2>" style="width:300px;height:80px;border:0"></iframe>
+<iframe id="gone" srcdoc="x" style="display:none"></iframe>
+<div id="host"></div>
+<input id="plain" aria-label="Note">
+<script>
+  const root = document.getElementById("host").attachShadow({ mode: "open" });
+  root.innerHTML = '<input id="inner" type="password" style="width:200px;height:30px"><p id="said">Paid with 4242 4242 4242 4242 today</p>';
+</script>`);
+  const got = await page.evaluate(() => globalThis.TafsPage.maskForShot());
+  assert.equal(got.ok, true, "every spot is covered, none shows through");
+  const top = (sel, inShadow) =>
+    page.evaluate(([sel, inShadow]) => {
+      const el = inShadow ? document.getElementById("host").shadowRoot.querySelector(sel) : document.querySelector(sel);
+      const r = el.getBoundingClientRect();
+      return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).hasAttribute("data-tafs-shot-mask");
+    }, [sel, inShadow]);
+  assert.equal(await top("#frame", false), true, "the frame's whole area is covered");
+  assert.equal(await top("#inner", true), true, "a password field inside an open shadow root is covered");
+  const numberCovered = await page.evaluate(() => {
+    const node = document.getElementById("host").shadowRoot.querySelector("#said").firstChild;
+    const at = node.nodeValue.indexOf("4242");
+    const range = document.createRange();
+    range.setStart(node, at);
+    range.setEnd(node, at + "4242 4242 4242 4242".length);
+    const r = range.getBoundingClientRect();
+    return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2).hasAttribute("data-tafs-shot-mask");
+  });
+  assert.equal(numberCovered, true, "a card number written inside an open shadow root is covered");
+  assert.equal(await top("#plain", false), false, "an ordinary field is left as it is");
+  assert.equal(got.masked, 3, "the frame, the shadow field and the shadow text; the hidden frame has none");
+  await page.evaluate(() => globalThis.TafsPage.unmaskShot());
+  assert.equal(await page.evaluate(() => document.querySelectorAll("[data-tafs-shot-mask]").length), 0);
+  await page.close();
+});

@@ -68,11 +68,11 @@ test("anything that isn't WebP is dropped", async () => {
 });
 
 /** A paired Chrome with a front tab at `url`, and the page's mask answering `maskOk`. */
-async function rig({ url = "https://shop.example/orders", active = true, maskOk = true, capture = async () => "data:image/png;base64,AAAA", deps, fetchOk = true } = {}) {
+async function rig({ url = "https://shop.example/orders", active = true, windowOf = 9, maskOk = true, capture = async () => "data:image/png;base64,AAAA", deps, fetchOk = true } = {}) {
   const key = await newKeyPair();
   const calls = [];
   const chrome = {
-    tabs: { get: async () => ({ id: 7, url, active }), captureVisibleTab: async (...a) => (calls.push(["capture", ...a]), capture()) },
+    tabs: { get: async () => ({ id: 7, url, active, windowId: windowOf }), captureVisibleTab: async (...a) => (calls.push(["capture", ...a]), capture()) },
   };
   const inTab = async (tab, func) => {
     const src = String(func);
@@ -116,6 +116,10 @@ test("no picture when a secret field can't be confirmed covered, on a sensitive 
   const bank = await rig({ url: "https://paypal.com/x" });
   assert.equal((await bank.shots.capture({ tabId: 7, windowId: 9, page: {} })).why, "site");
   assert.equal(bank.calls.length, 0, "nothing was even covered");
+  // A tab the person moved to another window is not pictured: captureVisibleTab would take the run's old window.
+  const moved = await rig({ windowOf: 12 });
+  assert.equal((await moved.shots.capture({ tabId: 7, windowId: 9, page: {} })).why, "hidden");
+  assert.ok(!moved.calls.some((x) => x[0] === "capture"), "no picture was taken of another window");
   const back = await rig({ active: false });
   assert.equal((await back.shots.capture({ tabId: 7, windowId: 9, page: {} })).why, "hidden");
   const pay = await rig();

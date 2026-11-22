@@ -463,11 +463,36 @@
   // The boxes put over secret fields while a screenshot is taken (docs/chrome.md, "Screenshots of a run's acts").
   let shotBoxes = [];
 
+  /** The document and every open shadow root in it: a field or a text inside one is on the page, and a plain query on the
+   * document does not reach it. A closed shadow root can't be seen from the page; the picture's covers can't reach it. */
+  function roots() {
+    const out = [document];
+    for (let i = 0; i < out.length && out.length < 200; i++) {
+      for (const el of out[i].querySelectorAll("*")) if (el.shadowRoot) out.push(el.shadowRoot);
+    }
+    return out;
+  }
+
+  /** Every visible frame or embedded object: a picture shows whatever is inside one, and the page's script can't read what
+   * a frame from another site holds (a login widget, a bank's form), so each is covered whole. */
+  function frameRects() {
+    const rects = [];
+    for (const root of roots()) {
+      for (const el of root.querySelectorAll("iframe, frame, embed, object")) {
+        if (!visible(el)) continue;
+        for (const r of el.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+      }
+    }
+    return rects;
+  }
+
   /** Every field whose value a picture must not show: a password, card or one-time-code field, one the extension filled from a
    * sealed sign-in, and a text field whose value is a secret by its shape (a key, a card number). The same rules as a read's. */
   function secretFields() {
     const out = [];
-    for (const el of document.querySelectorAll("input, textarea, select")) {
+    const all = [];
+    for (const root of roots()) all.push(...root.querySelectorAll("input, textarea, select"));
+    for (const el of all) {
       if (el.tagName === "INPUT" && FIELD_SKIP.has((el.getAttribute("type") || "").toLowerCase())) continue;
       if (!visible(el)) continue;
       const kind = kindOf(el);
@@ -486,19 +511,21 @@
   /** The page rectangles of the text in visible text nodes that looks like a card number or a key (`TafsMask.secretSpans`). */
   function secretTextRects() {
     const rects = [];
-    const walker = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
     let seen = 0;
-    for (let node = walker.nextNode(); node && seen < MAX_TEXT_NODES; node = walker.nextNode()) {
-      seen++;
-      const text = node.nodeValue || "";
-      if (text.length < 13) continue;
-      const parent = node.parentElement;
-      if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(parent.tagName) || !visible(parent)) continue;
-      for (const [start, end] of M.secretSpans(text)) {
-        const range = document.createRange();
-        range.setStart(node, start);
-        range.setEnd(node, end);
-        for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+    for (const root of roots()) {
+      const walker = document.createTreeWalker(root === document ? document.body || document.documentElement : root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node && seen < MAX_TEXT_NODES; node = walker.nextNode()) {
+        seen++;
+        const text = node.nodeValue || "";
+        if (text.length < 13) continue;
+        const parent = node.parentElement;
+        if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(parent.tagName) || !visible(parent)) continue;
+        for (const [start, end] of M.secretSpans(text)) {
+          const range = document.createRange();
+          range.setStart(node, start);
+          range.setEnd(node, end);
+          for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+        }
       }
     }
     return rects;
@@ -520,7 +547,7 @@
   function maskForShot() {
     unmaskShot();
     const fields = secretFields();
-    const rects = [...fields.map((el) => el.getBoundingClientRect()), ...secretTextRects()];
+    const rects = [...fields.map((el) => el.getBoundingClientRect()), ...secretTextRects(), ...frameRects()];
     for (const r of rects) addShotBox(r);
     let ok = true;
     for (const r of rects) {

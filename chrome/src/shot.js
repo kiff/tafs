@@ -79,6 +79,9 @@ export class Shots {
       if (!tab || !canCapture(tab.url, page)) return { why: "site" };
       // The picture is of the window's front tab: a run's other tabs are not in it.
       if (!tab.active) return { why: "hidden" };
+      // captureVisibleTab takes the window it is given, not the tab: a tab the person dragged into another window
+      // would be pictured as whatever is in front of the run's old window, which was never covered.
+      if (tab.windowId !== windowId) return { why: "hidden" };
       const keys = this.keys();
       const pairing = this.pairing();
       if (!keys || !keys.privateKey || !pairing || !pairing.chromeId) return { why: "unpaired" };
