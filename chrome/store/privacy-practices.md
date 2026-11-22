@@ -20,7 +20,7 @@ Each permission in `chrome/manifest.json`, and why. The manifest asks for **no h
 
 | Permission | Justification |
 |---|---|
-| `storage` | `chrome.storage.session` only, which Chrome keeps in memory: the pairing code while it is being typed, the extension's own status for the side panel, and the list of phone releases already used, so a step replayed after Chrome stops the service worker can't run twice. Nothing is written to disk with it. |
+| `storage` | `chrome.storage.session` only, which Chrome keeps in memory: the pairing code while it is being typed, the extension's own status for the side panel, and the list of phone releases already used, so a step replayed after Chrome stops the service worker can't run twice. Nothing is written to disk with it. (The pairing, the keys, the sealed sign-ins and the KIFF device session token live in IndexedDB, which `storage` does not cover; unpairing wipes them.) |
 | `alarms` | One alarm, once a minute: it wakes the service worker so the extension can reconnect to tafs cloud while it is paired, close the window of a run that nobody has sent a step to for a while, and close a connection that has been idle. |
 | `scripting` | Reads the page of a run's own tab as text and form fields, with password, card and code fields removed, and does one act (a click, a fill, a choice) that tafs cloud asked for and the extension checked. Also stops the page's dialogs from blocking a run's own tab. Only on a site the person has allowed. |
 | `sidePanel` | The side panel is the whole interface: pairing with the phone, what a taf is doing with Pause, Resume and Stop, the sites to allow, saved sign-ins, and Coach. |
@@ -49,7 +49,7 @@ Answers for the category checkboxes. "Collected" means it leaves the person's co
 | Personal communications | **Yes** | What the person types to Coach in the side panel, which is the same chat as in the tafs app. |
 | User activity | **Yes** | Each step a taf does goes on the Record with its site and the name of the field, never what was typed into a secret field. |
 | Web history | **Yes** (see the first judgment call) | The sites a taf opens in its own tabs, in the Record. Never the person's own browsing, and the extension has no `history` permission. |
-| Authentication information | **No** | A saved sign-in is sealed on the computer under a key that can't be exported, and opens only for one fill, on that exact site, after the person's phone approves it. It is never sent to tafs cloud or KIFF. Passwords, card and code fields are removed from every read. |
+| Authentication information | **Yes** | The extension signs in to KIFF as a view-only device of the account (it is paired in the same step, so the side panel can talk to Coach), and keeps that device session's token in IndexedDB on the computer. It sends it only to KIFF's own API, as the bearer of its own calls, and unpairing removes it. A saved sign-in is a different thing: sealed on the computer under a key that can't be exported, opened only for one fill on that exact site after the person's phone approves it, and **never sent** to tafs cloud or KIFF. Passwords, card and code fields are removed from every read. |
 | Personally identifiable information | **No** | The extension asks for no name, email or address. The pairing sends the name the person gives this Chrome ("Work Mac") and its browser and system version (see the second judgment call). |
 | Health, financial and payment, location | **No** | Health and payment sites are never worked on unless the person's phone allows one for one task, and card fields are removed. The extension never reads the location. |
 
@@ -71,9 +71,10 @@ Tick all three; each is true.
 2. **Personally identifiable information.** The name the person gives this Chrome is free text, and the pairing sends
    the browser and system version. Neither is a real name or an address, so this draft says No. If a reviewer reads
    "the Chrome's name is the person's data" the other way, tick it.
-3. **Authentication information.** Saved sign-ins never leave the computer, so they are not "collected". Ticking it
-   anyway would not be wrong, but it would tell a reader that KIFF holds sign-ins, which is the opposite of the
-   design (`docs/chrome.md`, Sealed values).
+3. **Authentication information.** Yes, because of the extension's own KIFF device session token (a credential that
+   identifies this Chrome to KIFF's API), found by mac12's read of `sw.js`. The saved sign-ins are the part that never
+   leaves the computer: say that in the dashboard's explanation if it asks, so a reader doesn't take "Yes" to mean
+   KIFF holds the person's passwords (`docs/chrome.md`, Sealed values).
 4. **A page can show other people's details,** such as a taf's customers'. The tafs Privacy page says KIFF
    processes those as processor. The dashboard has no checkbox for that; the privacy policy URL carries it.
 5. **Not the extension's to answer:** the store category, the support address, the screenshots and the promo
