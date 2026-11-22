@@ -1,9 +1,7 @@
 import { type When, type Words, wider } from "./en.js";
 
 /**
- * Traditional Chinese (zh-Hant), partial (docs/languages.md, "tafs cloud's words"): each line written here replaces English's, and every line
- * not written yet reads English. The most-seen lines come first: Home's (`home_`), push titles (`push_`), Activity's details
- * (`act_`) and the approval card's (`approval_`). The coverage test prints how far it is.
+ * Traditional Chinese (zh-Hant): every line English has, in the glossary's terms (docs/languages.md). A draft no native speaker has read yet.
  */
 /** A time as the language says it: the weekday or date when there is one. */
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
@@ -15,7 +13,7 @@ const list = (xs: string[]) => new Intl.ListFormat("zh-Hant", { type: "conjuncti
 const day = (d: number, style: "long" | "short") => new Intl.DateTimeFormat("zh-Hant", { weekday: style, timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
 const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
-export const zhHant: Partial<Words> = {
+export const zhHant: Words = {
   work_working: "處理中",
   work_waiting_approval: "等待您核准",
   your_step_title: "您的步驟",

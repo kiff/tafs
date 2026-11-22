@@ -1,9 +1,7 @@
 import { type When, type Words, wider } from "./en.js";
 
 /**
- * Romanian (ro), partial (docs/languages.md, "tafs cloud's words"): each line written here replaces English's, and every line
- * not written yet reads English. The most-seen lines come first: Home's (`home_`), push titles (`push_`), Activity's details
- * (`act_`) and the approval card's (`approval_`). The coverage test prints how far it is.
+ * Romanian (ro): every line English has, in the glossary's terms (docs/languages.md). A draft no native speaker has read yet.
  */
 /** A time as the language says it: the weekday or date when there is one. */
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
@@ -15,7 +13,7 @@ const list = (xs: string[]) => new Intl.ListFormat("ro", { type: "conjunction" }
 const day = (d: number, style: "long" | "short") => new Intl.DateTimeFormat("ro", { weekday: style, timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
 const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
-export const ro: Partial<Words> = {
+export const ro: Words = {
   work_working: "Lucrează la asta",
   work_waiting_approval: "Așteaptă aprobarea dvs.",
   your_step_title: "Pasul dvs.",

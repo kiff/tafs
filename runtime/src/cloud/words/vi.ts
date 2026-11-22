@@ -1,9 +1,7 @@
 import { type When, type Words, wider } from "./en.js";
 
 /**
- * Vietnamese (vi), partial (docs/languages.md, "tafs cloud's words"): each line written here replaces English's, and every line
- * not written yet reads English. The most-seen lines come first: Home's (`home_`), push titles (`push_`), Activity's details
- * (`act_`) and the approval card's (`approval_`). The coverage test prints how far it is.
+ * Vietnamese (vi): every line English has, in the glossary's terms (docs/languages.md). A draft no native speaker has read yet.
  */
 /** A time as the language says it: the weekday or date when there is one. */
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
@@ -15,7 +13,7 @@ const list = (xs: string[]) => new Intl.ListFormat("vi", { type: "conjunction" }
 const day = (d: number, style: "long" | "short") => new Intl.DateTimeFormat("vi", { weekday: style, timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
 const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
-export const vi: Partial<Words> = {
+export const vi: Words = {
   work_working: "Đang xử lý",
   work_waiting_approval: "Đang chờ bạn phê duyệt",
   your_step_title: "Bước của bạn",

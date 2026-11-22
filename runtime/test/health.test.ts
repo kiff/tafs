@@ -317,8 +317,9 @@ describe("a taf's health", () => {
         const view = healthView(h, lang, { billing: true });
         const fixes = [...(view.fixes ?? []), ...(healthView(h, lang).fixes ?? [])].flatMap((f) => [f.words, f.say ?? "the button's words"]);
         for (const line of [...view.lines, ...h.reasons.map((r) => healthLine(r, lang)), ...fixes]) {
-          // Korean and Japanese say in fewer characters what English says in 11 ("크레딧 추가", "クレジットを追加", "Add credits").
-          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(lang === "ko" || lang === "ja" ? 4 : 10);
+          // Korean, Japanese, Chinese and Thai say in fewer characters what English says in 11 ("크레딧 추가", "クレジットを追加",
+          // "Add credits"), and Turkish in 10 ("Kredi ekle"): a line this short is a word, never a code or a placeholder.
+          expect(line.length, `${lang}: ${line}`).toBeGreaterThan(["ko", "ja", "zh-Hant", "th"].includes(lang) ? 3 : 9);
           expect(line, lang).not.toMatch(/cursor|firing|failed_|skipped_|undefined/i);
           expect(line, lang).not.toMatch(/NaN/);
         }
