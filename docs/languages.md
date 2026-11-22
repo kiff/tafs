@@ -985,6 +985,70 @@ path in Nepali with macOS 12's names in brackets. Plural forms: one, other (read
 | Usage | प्रयोग |
 | Cancel / Continue | रद्द गर्नुहोस् / जारी राख्नुहोस् |
 
+### Khmer (km)
+
+Khmer script, in a plain polite register with no honorific particles in buttons (verbs stand alone: "អនុម័ត", "បដិសេធ"). taf, Card,
+Coach and KIFF stay in Latin letters. Khmer has no plural marking, so a count takes the bare noun ("3 taf", "2 ការហៅ"). Words are not
+separated by spaces: a space marks a phrase or clause. A door is "ទ្វារ", a knock "ការគោះ", a call "ការហៅ", a receipt "បង្កាន់ដៃ". Numbers
+are Western digits. Quotes are “ ”. macOS has no Khmer, so a `*_mac` line gives the path in Khmer with macOS 12's names in brackets.
+Plural forms: other only.
+
+| English | Khmer |
+|---|---|
+| Needs you | ត្រូវការអ្នក |
+| Approve / Approve once | អនុម័ត / អនុម័តម្តង |
+| Refuse | បដិសេធ |
+| held | ផ្អាកទុក |
+| Halt / Halted | បញ្ឈប់ / បានបញ្ឈប់ |
+| Stopped | បានឈប់ |
+| Pause / Paused | ផ្អាក / បានផ្អាក |
+| Resume | បន្ត |
+| Revoke | ដកហូត |
+| Record | កំណត់ត្រា |
+| Connect / connection | ភ្ជាប់ / ការតភ្ជាប់ |
+| Pair / Unpair | ផ្គូផ្គង / ឈប់ផ្គូផ្គង |
+| Account | គណនី |
+| credits | ក្រេឌីត |
+| passkey | passkey |
+| security key | សោសុវត្ថិភាព |
+| Sign in / Sign out | ចូល / ចាកចេញ |
+| Inbox | ប្រអប់សារចូល |
+| Overview | ទិដ្ឋភាពទូទៅ |
+| Calendar | ប្រតិទិន |
+| Usage | ការប្រើប្រាស់ |
+| Cancel / Continue | បោះបង់ / បន្ត |
+
+### Lao (lo)
+
+Lao script, in a plain polite register. taf, Card, Coach and KIFF stay in Latin letters. Lao has no plural marking, so a count takes the
+bare noun ("3 taf", "2 ການໂທ"). Words are not separated by spaces: a space marks a phrase or clause. A door is "ປະຕູ", a knock "ການເຄາະ",
+a call "ການໂທ", a receipt "ໃບຮັບເງິນ". Numbers are Western digits. Quotes are “ ”. macOS has no Lao, so a `*_mac` line gives the path in
+Lao with macOS 12's names in brackets. Plural forms: other only.
+
+| English | Lao |
+|---|---|
+| Needs you | ຕ້ອງການທ່ານ |
+| Approve / Approve once | ອະນຸມັດ / ອະນຸມັດຄັ້ງດຽວ |
+| Refuse | ປະຕິເສດ |
+| held | ພັກໄວ້ |
+| Halt / Halted | ຢຸດ / ຢຸດແລ້ວ |
+| Stopped | ຖືກຢຸດ |
+| Pause / Paused | ຢຸດຊົ່ວຄາວ / ຢຸດຊົ່ວຄາວແລ້ວ |
+| Resume | ສືບຕໍ່ |
+| Revoke | ຖອນ |
+| Record | ບັນທຶກ |
+| Connect / connection | ເຊື່ອມຕໍ່ / ການເຊື່ອມຕໍ່ |
+| Pair / Unpair | ຈັບຄູ່ / ເຊົາຈັບຄູ່ |
+| Account | ບັນຊີ |
+| credits | ເຄຣດິດ |
+| security key | ກຸນແຈຄວາມປອດໄພ |
+| Sign in / Sign out | ເຂົ້າສູ່ລະບົບ / ອອກຈາກລະບົບ |
+| Inbox | ກ່ອງຂໍ້ຄວາມ |
+| Overview | ພາບລວມ |
+| Calendar | ປະຕິທິນ |
+| Usage | ການໃຊ້ງານ |
+| Cancel / Continue | ຍົກເລີກ / ສືບຕໍ່ |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
