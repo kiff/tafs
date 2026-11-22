@@ -212,3 +212,12 @@ test("the pinned planque step key is a P-256 public key in SPKI form, 91 bytes, 
   const key = await crypto.subtle.importKey("spki", spki, { name: "ECDSA", namedCurve: "P-256" }, true, ["verify"]);
   assert.equal(key.type, "public");
 });
+
+test("the pinned relay is the WebSocket API's own domain, over wss, with no path", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const url = new URL(ENVIRONMENTS.production.relay);
+  assert.equal(url.protocol, "wss:");
+  assert.equal(url.hostname, "relay.planque.kiff.dev");
+  assert.equal(url.pathname, "/");
+  assert.equal(url.search, "", "the extension adds ?chrome=… itself");
+});

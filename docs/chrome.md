@@ -125,7 +125,7 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 
 ## Connect: both ends prove themselves
 
-`wss://planque.kiff.dev/v1/extension?chrome=chr_…`, opened by the extension:
+`wss://relay.planque.kiff.dev?chrome=chr_…` (the WebSocket API's own domain, mapped onto its stage, so no path), opened by the extension:
 
 1. **The extension sends** `{type: "open"}` once the connection is up. planque's relay can't post to a connection until
    its connect has returned, so the extension speaks first.
