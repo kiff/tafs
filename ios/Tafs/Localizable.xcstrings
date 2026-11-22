@@ -268870,6 +268870,17 @@
         }
       }
     },
+    "onboarding.control_lead_desktop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When a taf needs you, it waits in Needs you. You approve on your phone, or refuse."
+          }
+        }
+      }
+    },
     "onboarding.control_lead_mac": {
       "extractionState": "manual",
       "localizations": {

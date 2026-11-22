@@ -2969,6 +2969,8 @@ enum Words {
         static var controlLead: String { Words.line("onboarding.control_lead") }
         /// When a taf needs you, it waits in Needs you, and on your watch if you have one. You approve with your screen lock, or refuse.
         static var controlLeadAndroid: String { Words.line("onboarding.control_lead_android") }
+        /// When a taf needs you, it waits in Needs you. You approve on your phone, or refuse.
+        static var controlLeadDesktop: String { Words.line("onboarding.control_lead_desktop") }
         /// When a taf needs you, it waits in Needs you. You approve with Touch ID or on your phone, or refuse.
         static var controlLeadMac: String { Words.line("onboarding.control_lead_mac") }
         /// You stay in control
