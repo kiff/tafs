@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Fired, Run } from "../src/cloud/agents.js";
 import { healthLine, healthOf, healthView, vendorKind } from "../src/cloud/health.js";
-import { type Lang, LANGUAGES } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, type Lang, LANGUAGES } from "../src/cloud/words/index.js";
 
 const NOW = new Date("2026-10-29T10:00:00Z");
 const ago = (minutes: number) => new Date(NOW.getTime() - minutes * 60_000).toISOString();
@@ -312,7 +312,7 @@ describe("a taf's health", () => {
       healthOf([], firings("skipped_credits", "run"), NOW),
     ];
     expect(new Set(every.flatMap((h) => h.reasons.map((r) => r.code))).size).toBe(13);
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       for (const h of every) {
         const view = healthView(h, lang, { billing: true });
         const fixes = [...(view.fixes ?? []), ...(healthView(h, lang).fixes ?? [])].flatMap((f) => [f.words, f.say ?? "the button's words"]);

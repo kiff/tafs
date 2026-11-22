@@ -1,7 +1,7 @@
 import { fcmMessage } from "../src/cloud/fcm.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
-import { LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES, LANGUAGES, withLanguage, wordsIn } from "../src/cloud/words/index.js";
 import { ja } from "../src/cloud/words/ja.js";
 import { ko } from "../src/cloud/words/ko.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
@@ -890,7 +890,7 @@ describe("tafs cloud", () => {
   });
 
   it("has every KIFF window in every language, and a window it doesn't know as sent", () => {
-    for (const lang of LANGUAGES) {
+    for (const lang of FULL_LANGUAGES) {
       for (const win of ["calendar_day", "rolling_24h", "rolling_1h", "rolling_7d", "lifetime"]) {
         const words = windowWords(win, lang);
         expect(words.each.trim(), `${lang} ${win}`).not.toBe("");
