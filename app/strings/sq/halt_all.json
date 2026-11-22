@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "I ndalon të gjithë tafs-et menjëherë. Asgjë e re nuk dërgohet derisa t'i riniseni te tafs.",
+  "halt_all.failed": "tafs nuk i bllokoi dot tafs-et tuaj. {why} Hapni tafs për t'i bllokuar.",
+  "halt_all.halted": {
+    "one": "U bllokua {count} taf. Asgjë e re nuk dërgohet derisa ta riniseni.",
+    "other": "U bllokuan {count} tafs. Asgjë e re nuk dërgohet derisa t'i riniseni."
+  },
+  "halt_all.halted_all": "Tafs-et tuaj u bllokuan. Asgjë e re nuk dërgohet derisa t'i riniseni.",
+  "halt_all.halting": {
+    "one": "Po bllokohet {count} taf: asnjë ekzekutim nuk nis. KIFF ende nuk i ka konfirmuar të gjitha pjesët; tafs shfaq kur ta bëjë.",
+    "other": "Po bllokohen {count} tafs: asnjë ekzekutim nuk nis. KIFF ende nuk i ka konfirmuar të gjitha pjesët; tafs shfaq kur ta bëjë."
+  },
+  "halt_all.halting_all": "Po bllokohen tafs-et tuaj: asnjë ekzekutim nuk nis. KIFF ende nuk i ka konfirmuar të gjitha pjesët; tafs shfaq kur ta bëjë.",
+  "halt_all.running": "tafs nuk i bllokoi dot tafs-et tuaj. Hapni tafs për t'i bllokuar.",
+  "halt_all.signed_out": "Keni dalë nga tafs. Hyni për të bllokuar tafs-et tuaj.",
+  "halt_all.title": "Bllokoni të gjithë tafs-et"
+}
