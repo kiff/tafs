@@ -47,6 +47,19 @@ class AppLocaleTest {
     assertNull(AppLocale.fromLocales(""))
   }
 
+  // zh-Hant, once it ships: a script, not a region. The phone may name it "zh-Hant", "zh-Hant-TW" or only by its region
+  // ("zh-TW", "zh-HK", "zh-MO"); Simplified Chinese ("zh-CN", "zh-Hans", "zh") isn't Traditional, and isn't shipped.
+  @Test fun traditionalChineseIsReadByItsScriptOrItsRegion() {
+    val shipped = AppLocale.TAGS + "zh-Hant"
+    for (tag in listOf("zh-Hant", "zh-Hant-TW", "zh-TW", "zh_TW", "zh-HK", "zh-MO")) assertEquals(tag, "zh-Hant", AppLocale.known(tag, shipped))
+    for (tag in listOf("zh", "zh-CN", "zh-Hans", "zh-Hans-CN", "zh-SG")) assertNull(tag, AppLocale.known(tag, shipped))
+    // Before it ships, none of them is one tafs has.
+    assertNull(AppLocale.known("zh-TW"))
+    // The other languages read as before.
+    assertEquals("pt-BR", AppLocale.known("pt-BR", shipped))
+    assertEquals("de", AppLocale.known("de-DE", shipped))
+  }
+
   // pt-BR ships beside pt: Brazil keeps its own lines, and any other region of Portuguese reads pt's.
   @Test fun aRegionalVariantTafsShipsIsKeptAsItself() {
     assertEquals("pt-BR", AppLocale.known("pt-BR"))

@@ -39,15 +39,24 @@ object AppLocale {
     listOf(Choice(null, Words.Settings.languageDevice(device))) + TAGS.map { Choice(it, AppLanguage.name(it)) }
 
   /**
-   * [tag] as one tafs ships: a regional variant it ships as itself ("pt-BR"), any other region as its language ("de-DE" is
-   * "de", "pt-PT" is "pt"), or null for a language tafs doesn't ship.
+   * [tag] as one tafs ships: a script variant it ships as itself ("zh-Hant", which a phone in Taiwan, Hong Kong or Macau
+   * names "zh-TW", "zh-HK", "zh-MO" or "zh-Hant-TW"), a regional variant it ships as itself ("pt-BR"), any other region as
+   * its language ("de-DE" is "de", "pt-PT" is "pt"), or null for a language tafs doesn't ship (Simplified Chinese).
    */
-  fun known(tag: String?): String? {
+  fun known(tag: String?): String? = known(tag, TAGS)
+
+  internal fun known(tag: String?, shipped: List<String>): String? {
     if (tag.isNullOrBlank()) return null
     val locale = Locale.forLanguageTag(tag.trim().replace('_', '-'))
+    // A phone names Traditional Chinese by its region more often than its script: those regions write it.
+    val script = locale.script.ifEmpty { if (locale.language == "zh" && locale.country in HANT_REGIONS) "Hant" else "" }
+    val scripted = script.takeIf { it.isNotEmpty() }?.let { "${locale.language}-$it" }
     val regional = locale.country.takeIf { it.isNotEmpty() }?.let { "${locale.language}-$it" }
-    return regional?.takeIf { it in TAGS } ?: locale.language.takeIf { it in TAGS }
+    return scripted?.takeIf { it in shipped } ?: regional?.takeIf { it in shipped } ?: locale.language.takeIf { it in shipped }
   }
+
+  /** Where Chinese is written in Traditional characters, when a phone gives a region and no script. */
+  private val HANT_REGIONS = setOf("TW", "HK", "MO")
 
   /** The kept choice; none (the phone's language) when nothing, or a tag tafs doesn't ship, is kept. */
   fun stored(store: Store): String? = known(store.get())
