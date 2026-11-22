@@ -1,0 +1,27 @@
+{
+  "work.answer_within": "ឆ្លើយក្នុងរយៈពេល",
+  "work.answer_within_days": {
+    "other": "{count} ថ្ងៃ"
+  },
+  "work.answer_within_hours": {
+    "other": "{count} ម៉ោង"
+  },
+  "work.answer_within_line": "អ្នកនឹងត្រូវបានប្រាប់ នៅពេលករណីមួយរង់ចាំយូរជាងនេះ។",
+  "work.answer_within_none": "មិនបានកំណត់",
+  "work.answer_within_not_set": "មិនអាចកំណត់បានទេ។ {why}",
+  "work.asking_kiff_run": "កំពុងសុំ KIFF ឱ្យដំណើរការ {tool}…",
+  "work.did_not_stop": "វាមិនបានឈប់ទេ៖ {why}",
+  "work.duration.minutes": "{minutes} នាទី {seconds} វិនាទី",
+  "work.duration.seconds": "{seconds} វិនាទី",
+  "work.its_runs": "ការដំណើរការរបស់វា",
+  "work.not_read": "មិនអាចអានការងាររបស់វាបានទេ។ {why}",
+  "work.not_sent_again": "វាមិនត្រូវបានផ្ញើម្តងទៀតទេ។ {why}",
+  "work.request.try_reply_now": "សាកល្បងឆ្លើយឥឡូវនេះ",
+  "work.requests_need_you": {
+    "other": "សំណើចំនួន {count} ត្រូវការអ្នក"
+  },
+  "work.send_again": "ផ្ញើម្តងទៀត",
+  "work.sending_again": "កំពុងផ្ញើម្តងទៀត…",
+  "work.stop_run": "បញ្ឈប់ការដំណើរការ",
+  "work.stopped_part_way_before_finished": "{taf} បានឈប់ពាក់កណ្តាលផ្លូវ មុនពេលបញ្ចប់។"
+}

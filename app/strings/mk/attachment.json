@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} не може да се прикачи.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs не може да ја прикачи оваа датотека: не е вид или големина што ги прифаќа. Избери друга.",
+  "attachment.photo": "Фотографија",
+  "attachment.photo_could_not_read": "Таа фотографија не можеше да се прочита.",
+  "attachment.photo_numbered": "Фотографија {n}",
+  "attachment.too_large": "{name} е {size}; најмногу е {limit}.",
+  "attachment.wrong_kind": "{name} не може да се прикачи. Може фотографии, PDF, текст, CSV, Markdown, Word и Excel датотеки."
+}

@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "KIFF-ээс асууж байна: {title}…",
+  "kiff.did_not_reach_kiff_try": "KIFF рүү хүрсэнгүй. Дахин оролдоно уу.",
+  "kiff.kiff_can_not_do_sign": "KIFF үүнийг одоохондоо хийж чадахгүй: энэ {device}-ээс зөвшөөрөхийн тулд Тохиргооноос дахин нэвтэрнэ үү.",
+  "kiff.kiff_did_not_answer_expected": "KIFF хүлээсэн хэлбэрээр хариулсангүй. Дахин оролдоно уу.",
+  "kiff.kiff_words_do_not_match": "KIFF-ийн үгс өөрсдийн шалгалттай таарахгүй байна. Юу ч зөвшөөрөх боломжгүй."
+}

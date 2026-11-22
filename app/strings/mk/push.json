@@ -1,0 +1,11 @@
+{
+  "push.channel.briefs": "Прегледи",
+  "push.channel.briefs_description": "Твојот преглед во зададените часови.",
+  "push.channel.holds_description": "Едно барање е задржано за твојот одговор. Ништо не се испраќа додека не го одобриш.",
+  "push.channel.other": "Други известувања",
+  "push.channel.other_description": "Барања за задачи и нивните одговори, без звук.",
+  "push.channel.urgent_description": "Она што не може да почека до следниот преглед, со звук.",
+  "push.open_needs_you": "Отвори Те чека за да одговориш.",
+  "push.open_taf": "Отвори го tafот за да видиш.",
+  "push.open_usage": "Отвори План и користење за да видиш."
+}

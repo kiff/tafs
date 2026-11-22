@@ -299,7 +299,7 @@ export const hu: Words = {
   home_discard_no: "Megtartás",
   home_needs_you_none: "Senki sem vár rád.",
   labels_all: "Mind",
-  brief_title: "Az összefoglalód",
+  brief_title: "Összefoglalód",
   brief_ready: (hm: string) => `A(z) ${hm} összefoglalód kész.`,
   brief_decisions: "Döntések",
   brief_done: "Kész",

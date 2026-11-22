@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Respon en",
+  "work.answer_within_days": {
+    "one": "{count} dia",
+    "other": "{count} dies"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} hora",
+    "other": "{count} hores"
+  },
+  "work.answer_within_line": "T'avisem quan un cas espera més temps.",
+  "work.answer_within_none": "Sense establir",
+  "work.answer_within_not_set": "No s'ha pogut establir. {why}",
+  "work.asking_kiff_run": "Demanant a KIFF que executi {tool}…",
+  "work.did_not_stop": "No s'ha aturat: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Les seves execucions",
+  "work.not_read": "No s'ha pogut llegir la seva feina. {why}",
+  "work.not_sent_again": "No s'ha tornat a enviar. {why}",
+  "work.request.try_reply_now": "Prova la resposta ara",
+  "work.requests_need_you": {
+    "one": "{count} sol·licitud et necessita",
+    "other": "{count} sol·licituds et necessiten"
+  },
+  "work.send_again": "Envia de nou",
+  "work.sending_again": "Tornant a enviar…",
+  "work.stop_run": "Atura l'execució",
+  "work.stopped_part_way_before_finished": "{taf} s'ha aturat a mig camí, abans d'acabar."
+}

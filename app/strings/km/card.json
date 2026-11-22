@@ -1,0 +1,141 @@
+{
+  "card.all_of": {
+    "other": "ទាំងអស់នៃ Card"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label} បន្ទាប់មកវាសួរអ្នក",
+  "card.calls_left": {
+    "other": "នៅសល់ការហៅ {count}"
+  },
+  "card.calls_left_line": {
+    "other": "នៅសល់ការហៅ {count} {window} ក្នុងចំណោម {limit}"
+  },
+  "card.calls_used_of": {
+    "other": "{used} ក្នុងចំណោមការហៅ {count} {window}"
+  },
+  "card.calls_window": {
+    "other": "ការហៅ {count} {window}"
+  },
+  "card.card_confirmed_kiff": "Card · បញ្ជាក់ដោយ KIFF",
+  "card.card_draft_kiff": "Card · សេចក្តីព្រាង · ដោយ KIFF",
+  "card.card_got_room_call_needed": "Card របស់វាបានទទួលកន្លែងដែលការហៅនេះត្រូវការ រហូតដល់សរុបនោះកំណត់ឡើងវិញ",
+  "card.card_not_issued": "Card មិនត្រូវបានចេញទេ។ ",
+  "card.card_revoked": "Card ត្រូវបានដកហូត",
+  "card.check.always_asks": "{rule}៖ សួរអ្នកជានិច្ច",
+  "card.check.never_allowed": "{rule}៖ មិនដែលអនុញ្ញាត",
+  "card.check.not_on_card": "មិនមានក្នុង Card របស់ taf នេះ",
+  "card.check.over_count": {
+    "other": "លើស {count} {window}"
+  },
+  "card.check.over_each": "លើស {amount} ក្នុងមួយ",
+  "card.check.over_total": "លើស {amount} {window}",
+  "card.count": {
+    "other": "Card {count}"
+  },
+  "card.ended": "បានបញ្ចប់",
+  "card.ended_on": "បានបញ្ចប់ {date}",
+  "card.ends": "បញ្ចប់",
+  "card.extra_room": "+{extra} កន្លែងបន្ថែម {window}",
+  "card.extra_room_prefix": "+{formatted} កន្លែងបន្ថែម ",
+  "card.extra_room_until": "+{extra} កន្លែងបន្ថែមរហូតដល់ {ends}",
+  "card.figure_left": "នៅសល់ {figure}",
+  "card.heading": {
+    "other": "Card"
+  },
+  "card.held.count_in_window": {
+    "other": "ការហៅ {count} {window}{each}៖ នេះនឹងជា {nth}{item}"
+  },
+  "card.held.each_call_asks": "ការហៅនីមួយៗសួរអ្នកជាមុន",
+  "card.held.for_each": " សម្រាប់ {name} នីមួយៗ",
+  "card.held.for_each_join": " សម្រាប់នីមួយៗ ",
+  "card.held.for_item": " សម្រាប់ {item}",
+  "card.held.over_count": {
+    "other": "លើសដែនកំណត់ការហៅ {count} របស់វា៖ នេះនឹងជា {nth}"
+  },
+  "card.held.over_one_call": "{amount} លើសដែនកំណត់ {cap} សម្រាប់ការហៅមួយ",
+  "card.held.over_total": "{amount} នឹងលើសសរុប {cap}",
+  "card.hero.calls_left_of": {
+    "other": "ការហៅនៅសល់ {window} ក្នុងចំណោម {limit}"
+  },
+  "card.hero.calls_use_unavailable": "ការហៅ {window} · ការប្រើប្រាស់មិនមាន",
+  "card.hero.left_of": "នៅសល់ {window} ក្នុងចំណោម {limit}",
+  "card.hero.left_of_extra": "នៅសល់ {window} ក្នុងចំណោម {base} + {extra} កន្លែងបន្ថែម",
+  "card.hero.left_of_extra_until": "នៅសល់ {window} ក្នុងចំណោម {base} + {extra} កន្លែងបន្ថែមរហូតដល់ {ends}",
+  "card.hero.left_of_note": "នៅសល់ {window} ក្នុងចំណោម {limit}{note}",
+  "card.hero.no_currency": "គ្មានរូបិយប័ណ្ណ",
+  "card.hero.no_currency_suffix": " · គ្មានរូបិយប័ណ្ណ",
+  "card.hero.use_unavailable": "{window} · ការប្រើប្រាស់មិនមាន",
+  "card.hero.use_unavailable_note": "{label} · ការប្រើប្រាស់មិនមាន{note}",
+  "card.how_counted": "របៀបដែលនេះត្រូវបានរាប់",
+  "card.issue_prompt": "ចេញ Card របស់ {taf}",
+  "card.issued_by": "ចេញដោយ",
+  "card.issued_by_account": "គណនី",
+  "card.issued_by_named": "ចេញដោយ {who}",
+  "card.its_card": "Card របស់វា",
+  "card.kiff_did_not_revoke_cards": "KIFF មិនបានដកហូត {cards_left} នៃ Card របស់វាទេ៖ ដកហូតពួកវាក្នុង KIFF។",
+  "card.left": "នៅសល់ {amount} {window}",
+  "card.left_extra_room": "នៅសល់ {current} ក្នុងចំណោម {own} + {extra} កន្លែងបន្ថែម{until}{note}",
+  "card.limit_can_not_raised_right": "មិនអាចបង្កើនដែនកំណត់ពីទីនេះបានឥឡូវនេះទេ។",
+  "card.limit_raised_read_balance_again": "ដែនកំណត់ត្រូវបានបង្កើន។ អានសមតុល្យម្តងទៀតមុនពេលបង្កើនវាម្តងទៀត។",
+  "card.line.calls_in_window": {
+    "other": "ការហៅ {count} {window}{then}"
+  },
+  "card.line.more_asks": "; លើសពីនេះសួរអ្នកជាមុន",
+  "card.line.then_asks": " បន្ទាប់មកវាសួរអ្នក",
+  "card.line.total_in_window": "សរុប {amount} {window}{then}",
+  "card.line.up_to_each": "រហូតដល់ {amount} ក្នុងមួយ",
+  "card.more": {
+    "other": "ទៀត {count}"
+  },
+  "card.no_actions": "មិនទាន់មានសកម្មភាពនៅឡើយ",
+  "card.no_actions_short": "មិនទាន់មានសកម្មភាព",
+  "card.no_currency": "{amount} (គ្មានរូបិយប័ណ្ណ)",
+  "card.no_end_date": "គ្មានកាលបរិច្ឆេទបញ្ចប់",
+  "card.outcome.not_a_resource": "មិនមែនជាធនធានមួយរបស់ Card",
+  "card.outcome.outside": "នៅក្រៅ Card",
+  "card.outcome.over_one_action": "លើសដែនកំណត់របស់ Card សម្រាប់សកម្មភាពមួយ",
+  "card.outcome.over_total": "លើសសរុបរបស់ Card",
+  "card.outside_held": "នៅខាងក្រៅ៖ ផ្អាកទុកសម្រាប់អ្នក",
+  "card.outside_refused": "នៅខាងក្រៅ៖ បានបដិសេធ",
+  "card.over_limit_calls_would": "លើសដែនកំណត់ការហៅ {limit} របស់វា៖ នេះនឹងជា {nth}",
+  "card.revoke_failed": "KIFF មិនបានដកហូត Card ទេ។ {why}",
+  "card.revoked": "បានដកហូត",
+  "card.rule.always_asks": "សួរអ្នកជានិច្ច",
+  "card.rule.at_most_each": "≤ {amount} ក្នុងមួយ",
+  "card.rule.at_most_each_refused_above": "≤ {amount} ក្នុងមួយ · បដិសេធលើសពីនេះ",
+  "card.rule.calls": {
+    "other": "ការហៅ {count} {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "other": "ការហៅ {count} {window} បន្ទាប់មកវាសួរអ្នក"
+  },
+  "card.rule.in_total": "សរុប {amount} {window}",
+  "card.rule.never": "មិនដែល",
+  "card.rule.total_then_asks": "សរុប {amount} {window} បន្ទាប់មកវាសួរអ្នក",
+  "card.rule.up_to_each": "រហូតដល់ {amount} ក្នុងមួយ; លើសពីនេះសួរអ្នកជាមុន",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Card របស់ taf",
+  "card.tools": {
+    "other": "ឧបករណ៍ {count}"
+  },
+  "card.until": "រហូតដល់",
+  "card.until_date": "រហូតដល់ {date}",
+  "card.until_ends": " រហូតដល់ {ends}",
+  "card.used_of": "{used} ក្នុងចំណោម {limit} {window}",
+  "card.window.a_day": "ក្នុងមួយថ្ងៃ",
+  "card.window.a_month": "ក្នុងមួយខែ",
+  "card.window.a_week": "ក្នុងមួយសប្តាហ៍",
+  "card.window.any_day": "ក្នុងរយៈពេល ២៤ ម៉ោងណាមួយ",
+  "card.window.any_hour": "ក្នុងម៉ោងណាមួយ",
+  "card.window.any_week": "ក្នុងរយៈពេល ៧ ថ្ងៃណាមួយ",
+  "card.window.in_total": "សរុប",
+  "card.window.in_total_window": "សរុប {window}",
+  "card.window.last_day": "ក្នុង ២៤ ម៉ោងចុងក្រោយ",
+  "card.window.last_hour": "ក្នុងម៉ោងចុងក្រោយ",
+  "card.window.last_week": "ក្នុង ៧ ថ្ងៃចុងក្រោយ",
+  "card.window.so_far": "រហូតមកដល់ឥឡូវ",
+  "card.window.this_month": "ខែនេះ",
+  "card.window.this_week": "សប្តាហ៍នេះ",
+  "card.window.today": "ថ្ងៃនេះ",
+  "card.within_card": "ក្នុង Card"
+}
