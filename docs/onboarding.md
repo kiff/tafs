@@ -120,4 +120,7 @@ never starts `release` or `wear-release`.
   none, `firstHomeLines`), **Ask Coach** and **How tafs works**.
 - **How tafs works** (`HowTafsWorksSheet`), from the first Home and from Account's Legal: the three cards, each
   opening where it's tapped, and the four legal pages titled as their pages (`onboarding.row_*`, never the tick
-  line's link words).
+  line's link words). Then, as on iPhone and iPad, two short sections (`help.json`): **Chrome** only where planque
+  offers Chromes (`AppState.chromes` not null), and **Sign in with an emailed code** only where KIFF can send one
+  (`codeSignIn.available`, read as the sheet opens). The screens are named with the app's own titles, so the app says
+  nothing about what the person can't use (`OnboardingCardsTest.howTafsWorksSaysChromeAndTheCodeOnlyWhereTheyApply`).
