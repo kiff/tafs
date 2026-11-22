@@ -20,7 +20,7 @@ struct TafsApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .environment(\.locale, language.isEmpty ? Words.locale : Locale(identifier: language))
+                .environment(\.locale, language.isEmpty ? Words.locale : Words.locale(for: language))
                 // The route walk's hook (RouteWalk.swift): a debug build's, with `-routeWalk YES`.
                 .routeWalk()
                 .preferredColorScheme(ThemePreference(rawValue: theme)?.scheme)

@@ -1,0 +1,17 @@
+{
+  "report.already": "لقد أبلغت عن هذه الإجابة من قبل.",
+  "report.cant_from_here": "لا يمكن الإبلاغ عن هذه الإجابة من هنا.",
+  "report.menu": "الإبلاغ عن هذه الإجابة",
+  "report.not_sent": "لم يُرسل بلاغك. {why}",
+  "report.not_sent_why": "لم يُرسل: {failed}",
+  "report.note_hint": "أضف ملاحظة (اختياري)",
+  "report.note_most_characters": "الحد الأقصى للملاحظة 1000 حرف.",
+  "report.person_kiff_reads_your_report": "يقرأ شخص في KIFF بلاغك، مع الإجابة كما كُتبت.",
+  "report.reason.harmful": "ضارة",
+  "report.reason.offensive": "مسيئة",
+  "report.reason.other": "أخرى",
+  "report.reason.wrong": "خاطئة",
+  "report.runs_not_loaded": "تعذّر تحميل عمليات تشغيله. {why}",
+  "report.thanks": "شكرًا. سيقرأ أحد في KIFF بلاغك.",
+  "report.what_wrong": "ما المشكلة فيها؟"
+}

@@ -104,7 +104,7 @@ class SharedWords(unittest.TestCase):
     def test_the_languages_are_the_eight_then_japanese_and_korean(self):
         # The eight ship, and Korean (complete, PM 20 Nov) and Japanese (complete, PM 21 Nov) with them. A language
         # ships only once every key is there, so no app shows half a language.
-        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant"])
+        self.assertEqual(self.langs["all"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ja", "ko", "et", "el", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "ar"])
         # pt-BR ships as a regional variant of pt (Wave 1, Brazil): its own lines over pt's.
         self.assertEqual(self.langs["shipped"], ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ko", "ja", "et", "lt", "lv", "cs", "sk", "sl", "hu", "ro", "bg", "hr", "tr", "id", "vi", "th", "zh-Hant", "pt-BR"])
         self.assertIn("en", self.langs["shipped"])
@@ -209,6 +209,26 @@ class SharedWords(unittest.TestCase):
                         self.assertNotIn("|possessive}", text, f"{lang} {key}: {lang} has no possessive rule; word the line around the name")
                     if lang not in generate.THIS:
                         self.assertNotRegex(text, r"\|[Tt]his\}", f"{lang} {key}: {lang} has no rule for \"this\"; write the word in the line")
+
+    def test_a_right_to_left_language_writes_its_menu_arrows_pointing_left(self):
+        # "→" doesn't mirror with the text direction, so an Arabic line writes "←" where English writes "→".
+        # "‹" and "›" do mirror, and stay as English writes them.
+        for lang in ("ar",):
+            for key, line in self.lines[lang].items():
+                for text in generate.forms_of(line):
+                    self.assertNotIn("→", text, f"{lang} {key}: write ← in a right-to-left language")
+                if "→" in "".join(generate.forms_of(self.source[key])):
+                    self.assertIn("←", "".join(generate.forms_of(line)), f"{lang} {key}: English has →, so this line writes ←")
+
+    def test_a_right_to_left_language_keeps_a_reference_number_in_its_own_left_to_right_run(self):
+        # After an Arabic letter the digits of "#5098" become Arabic-script digits (bidi rule W2), which leaves the "#" outside
+        # their run: "7802#". A reference written in a line is wrapped in U+2066 … U+2069 so it reads "#7802".
+        for lang in ("ar",):
+            for key, line in self.lines[lang].items():
+                for text in generate.forms_of(line):
+                    for found in re.finditer(r"#\d+", text):
+                        self.assertEqual(text[max(0, found.start() - 1):found.start()], "\u2066", f"{lang} {key}: isolate {found.group()}")
+                        self.assertEqual(text[found.end():found.end() + 1], "\u2069", f"{lang} {key}: close the isolate after {found.group()}")
 
     def test_a_macs_own_sentence_sits_beside_the_phones_and_names_the_macs_settings(self):
         # A `*_mac` line that isn't a Touch ID prompt (no "prompt" in its key) is a whole sentence for
