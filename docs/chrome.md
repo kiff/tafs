@@ -168,6 +168,7 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
         sensitive_allowed?: [{site, sig}],                            // sig: the phone's, tafs-chrome/sensitive/v1
         op: "open" | "read" | "act" | "close",
         url?,                          // open: a start URL or a link from the current read, already checked by planque
+        offset?,                       // read: a later window of the page's text (a whole number, 0 or more; default 0)
         read_id?,                      // act: the read it was planned from
         act?: {kind: "click" | "fill" | "select" | "check", ref, value?, sealed?},
         release?}                      // only with act.sealed: the phone's release
@@ -193,7 +194,8 @@ signed answer.
 planque files a result only against the pending step it sent to this Chrome, and one can't be replayed for another step:
 
 ```
-page = {read_id, url (no query or fragment), title, text (≤ 20 000 characters, masked),
+page = {read_id, url (no query or fragment), title, text (a window of ≤ 20 000 characters of the masked text),
+        offset?, more?, next_offset?,        // see "A page's text comes in windows"
         fields: [{ref, label, kind, value?, options?, masked?, disabled?}],
         controls: [{ref, label, submits, places_order?}], links: [{ref, label, url}],
         payment_frame?, dialog?: {kind, text}, checkout?}    // checkout: a later slice
@@ -213,6 +215,12 @@ error = {code, detail?}      // detail never carries page text
   checked: planque refuses `page_changed` before sending, and the extension refuses it again in the tab.
 - **`open.url` is never one the taf wrote:** the taf names a link ref or a start URL, and planque resolves and checks it.
   The tab keeps the full URL. Only the query-less URL goes up.
+- **A page's text comes in windows.** A read answers the first 20,000 characters of the page's masked text. When the page
+  goes on, `more` is `true` and `next_offset` is where the next window starts; a read with `offset: next_offset` answers
+  that window, with `offset` set to where it starts. The text is masked before it is cut, so a secret is never split
+  across a window. Fields, controls and links are the page's whole in every window, and a read at an offset is a read like
+  any other: it has its own `read_id` and fresh refs, so an act names the latest read. An open and an act read the page
+  back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
 - **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
@@ -394,8 +402,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
   checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
-  input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
-  covered button that isn't clicked, and dialogs.
+  input, card number or key), a long page's windows, page text that imitates a fence or an instruction (it goes up as
+  written), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
+  clicked, and dialogs.
 
 ## Known limits
 

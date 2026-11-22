@@ -203,18 +203,28 @@
     }
   }
 
-  /** The page as the taf reads it, with fresh refs and a new read id. Earlier refs stop working. */
-  function read() {
+  /**
+   * The page as the taf reads it, with fresh refs and a new read id. Earlier refs stop working. A page's text comes in
+   * windows of MAX_TEXT characters of its masked text: `offset` asks for a later one, and a page that goes on says so
+   * (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in every window.
+   */
+  function read(offset) {
     refs = new Map();
     const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
+    const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
     const page = {
       read_id: newId(),
       url: bare(location.href),
       title: M.maskText(clean(document.title, 300)),
-      text: text.length > MAX_TEXT ? text.slice(0, MAX_TEXT) + "\n(cut)" : text,
+      text: text.slice(start, start + MAX_TEXT),
       fields: fieldsOf(),
       controls: controlsOf(),
     };
+    if (start > 0) page.offset = start;
+    if (start + MAX_TEXT < text.length) {
+      page.more = true;
+      page.next_offset = start + MAX_TEXT;
+    }
     page.links = linksOf(page.controls);
     if (paymentFrame()) page.payment_frame = true;
     if (dialog) page.dialog = dialog;

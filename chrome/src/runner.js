@@ -235,7 +235,8 @@ export class Runner {
       case "open":
         return this.open(run, step.url);
       case "read":
-        return this.read(run);
+        if (step.offset != null && !(Number.isSafeInteger(step.offset) && step.offset >= 0)) return { error: { code: "bad_step", detail: "offset" } };
+        return this.read(run, step.offset);
       case "act":
         return this.act(run, step);
       case "close":
@@ -315,14 +316,14 @@ export class Runner {
     return ok;
   }
 
-  async read(run) {
+  async read(run, offset = 0) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const tab = await this.chrome.tabs.get(run.tab);
     const refused = refuseURL(tab.url || "", run.sites, run.allowed);
     if (refused) return { error: { code: refused.code } };
     if (!(await this.permitted(run, tab.url))) return { error: { code: "needs_site_permission" } };
     await this.inject(run.tab, run);
-    const page = await this.inTab(run.tab, () => globalThis.TafsPage.read(), []);
+    const page = await this.inTab(run.tab, (o) => globalThis.TafsPage.read(o), [offset]);
     if (!page) return { error: { code: "page_unresponsive" } };
     // The handles of sign-ins saved for this exact origin, never their values: a taf names one to ask for a sealed fill.
     if (this.vault) {

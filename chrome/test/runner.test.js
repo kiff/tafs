@@ -197,3 +197,23 @@ test("a run's sites are the phone's signed list for the grant, never planque's w
   assert.equal((await r.handle(step({ op: "read", sites: ["shop.example", "evil.example"] }))).error.code, "bad_step", "a run's sites never grow");
   assert.ok(!c.calls.some((x) => x[0] === "windows.create" && false));
 });
+
+test("a read at an offset asks the page for that window, and a bad offset is a bad step", async () => {
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired });
+  await r.handle(step());
+  const asked = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (o.args && String(o.func).includes("TafsPage.read")) asked.push(o.args[0]);
+    return run(o);
+  };
+  const got = await r.handle(step({ op: "read", offset: 20000 }));
+  assert.ok(got.page, JSON.stringify(got));
+  assert.ok((await r.handle(step({ op: "read" }))).page);
+  assert.deepEqual(asked, [20000, 0], "no offset reads the start");
+  for (const offset of [-1, 1.5, "20000", Infinity]) {
+    assert.equal((await r.handle(step({ op: "read", offset }))).error.code, "bad_step", String(offset));
+  }
+  assert.deepEqual(asked, [20000, 0], "a bad offset never reaches the page");
+});

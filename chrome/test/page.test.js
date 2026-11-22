@@ -213,3 +213,36 @@ test("page text that looks like a fence marker or an instruction reaches planque
   assert.ok(!read.controls.some((c) => c.label.includes("Ignore the task")), "a sentence is never a control");
   await page.close();
 });
+
+test("a long page's text comes in windows: each says where the next starts, the last says no more, and secrets never split", { skip: !playwright }, async () => {
+  const page = await open();
+  await page.evaluate(() => {
+    const filler = Array.from({ length: 3000 }, (_, i) => "line " + String(i).padStart(4, "0")).join("\n");
+    const p = document.createElement("pre");
+    p.textContent = filler + "\napi_key=abcd1234efgh";
+    document.body.append(p);
+  });
+  const first = await page.evaluate(() => TafsPage.read());
+  assert.equal(first.text.length, 20000);
+  assert.equal(first.more, true);
+  assert.equal(first.next_offset, 20000);
+  assert.equal(first.offset, undefined, "the first window has no offset");
+  assert.ok(!first.text.includes("(cut)"), "no cut marker: the answer says there is more");
+  const second = await page.evaluate((o) => TafsPage.read(o), first.next_offset);
+  assert.equal(second.offset, 20000);
+  assert.notEqual(second.read_id, first.read_id, "a read at an offset is a read: new id, fresh refs");
+  assert.equal(second.fields.length, first.fields.length, "fields, controls and links are the page's whole in every window");
+  let rest = second;
+  let all = first.text;
+  while (rest) {
+    all += rest.text;
+    rest = rest.more ? await page.evaluate((o) => TafsPage.read(o), rest.next_offset) : null;
+  }
+  assert.ok(all.includes("line 2999"), "the whole page is reachable");
+  assert.ok(all.includes("api_key=[masked]") && !all.includes("abcd1234efgh"), "masked before it is cut, wherever the cut falls");
+  const past = await page.evaluate(() => TafsPage.read(10_000_000));
+  assert.equal(past.text, "");
+  assert.equal(past.more, undefined);
+  assert.equal((await page.evaluate(() => TafsPage.read(-5))).offset, undefined, "a negative offset is the start");
+  await page.close();
+});
