@@ -56,8 +56,16 @@ function fakeChrome({ permitted = true, page = null } = {}) {
         calls.push(["executeScript", o.files ? o.files.join(",") : o.world || "isolated", o.target.tabId]);
         if (o.files || o.world === "MAIN") return [{}];
         const src = String(o.func);
-        if (src.includes("TafsPage.read")) return [{ result: pageFor(tabs.get(o.target.tabId)) }];
-        if (src.includes("TafsPage.act")) return [{ result: actAnswer }];
+        if (src.includes("TafsPage.read")) {
+          calls.push(["page", "read"]);
+          return [{ result: pageFor(tabs.get(o.target.tabId)) }];
+        }
+        if (src.includes("TafsPage.act")) {
+          calls.push(["page", "act start"]);
+          if (c.gate) await c.gate;
+          calls.push(["page", "act end"]);
+          return [{ result: actAnswer }];
+        }
         return [{}];
       },
     },
@@ -196,4 +204,133 @@ test("a run's sites are the phone's signed list for the grant, never planque's w
   assert.ok((await r.handle(step())).page);
   assert.equal((await r.handle(step({ op: "read", sites: ["shop.example", "evil.example"] }))).error.code, "bad_step", "a run's sites never grow");
   assert.ok(!c.calls.some((x) => x[0] === "windows.create" && false));
+});
+
+test("the same act on the same page that answers with the same page twice pauses the run, and Resume starts the count again", async () => {
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "same", fields: [{ ref: "f1", label: "Email", kind: "email" }], controls: [{ ref: "c1", label: "Save" }, { ref: "c3", label: "Next" }], links: [] } });
+  const r = runner(c);
+  await r.handle(step());
+  const act = (extra) => r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" }, ...extra }));
+  assert.ok((await act()).page, "the first answers");
+  assert.equal(r.runs.get("run_1").paused, null, "once is not a pattern");
+  assert.ok((await act({ act: { kind: "click", ref: "c3" } })).page, "another act starts the count again");
+  assert.ok((await act()).page);
+  assert.equal(r.runs.get("run_1").paused, null);
+  assert.ok((await act()).page, "the second identical answer is still given");
+  assert.equal(r.runs.get("run_1").paused, "no_progress");
+  assert.equal((await r.handle(step({ op: "read" }))).error.code, "paused_no_progress");
+  assert.equal(r.state()[0].steps.at(-1).by, "no_progress");
+  r.resume("run_1");
+  assert.ok((await r.handle(step({ op: "read" }))).page);
+  assert.ok((await act()).page);
+  assert.equal(r.runs.get("run_1").paused, null, "after Resume the first one counts as the first");
+});
+
+test("an act that changes the page is progress, however often it repeats", async () => {
+  const page = { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "count 0", fields: [], controls: [{ ref: "c1", label: "More" }], links: [] };
+  const c = fakeChrome({ page });
+  const r = runner(c);
+  await r.handle(step());
+  for (let i = 1; i <= 4; i++) {
+    page.text = "count " + i; // each click makes the page say something new
+    assert.ok((await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }))).page);
+  }
+  assert.equal(r.runs.get("run_1").paused, null);
+});
+
+test("a run's steps never overlap: the next waits for the one running", async () => {
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] } });
+  // Time doesn't pass in these tests, except the step's own timeout, which must wait for the gate.
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired });
+  const opened = await r.handle(step());
+  let release;
+  c.gate = new Promise((res) => (release = res));
+  const first = r.handle(step({ op: "act", read_id: opened.page.read_id, act: { kind: "click", ref: "c1" } }));
+  const second = r.handle(step({ op: "read" }));
+  await new Promise((res) => setTimeout(res, 20));
+  const order = () => c.calls.filter((x) => x[0] === "page").map((x) => x[1]);
+  assert.deepEqual(order().slice(-2), ["read", "act start"], "the second hasn't started");
+  release();
+  await Promise.all([first, second]);
+  assert.deepEqual(order().slice(-4), ["act start", "act end", "read", "read"].slice(0, 4), "the act finished before the next read began");
+  c.gate = null;
+});
+
+test("a page Chrome restores from its cache off the run's sites is sent to a blank page and recorded", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "https://evil.example/restored" });
+  assert.ok(c.calls.some((x) => x[0] === "tabs.update" && x[1] === tab && x[2].url === "about:blank"));
+  assert.equal(r.state()[0].steps.at(-1).error, "site_not_listed");
+  c.listeners.committed({ tabId: tab, frameId: 1, url: "https://evil.example/frame" });
+  assert.equal(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length, 1, "only the main frame");
+});
+
+test("a read at an offset asks the page for that window, and a bad offset is a bad step", async () => {
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired });
+  await r.handle(step());
+  const asked = [];
+  const run = c.scripting.executeScript;
+  c.scripting.executeScript = async (o) => {
+    if (o.args && String(o.func).includes("TafsPage.read")) asked.push(o.args[0]);
+    return run(o);
+  };
+  const got = await r.handle(step({ op: "read", offset: 20000 }));
+  assert.ok(got.page, JSON.stringify(got));
+  assert.ok((await r.handle(step({ op: "read" }))).page);
+  assert.deepEqual(asked, [20000, 0], "no offset reads the start");
+  for (const offset of [-1, 1.5, "20000", Infinity]) {
+    assert.equal((await r.handle(step({ op: "read", offset }))).error.code, "bad_step", String(offset));
+  }
+  assert.deepEqual(asked, [20000, 0], "a bad offset never reaches the page");
+});
+
+test("on a checkout page a taf clicks nothing, and a dialog the page raised stops the next act with what the page said", async () => {
+  const checkout = { lines: [{ item: "Blue pen", quantity: 2, price: "2.50" }], total: "5.00", currency: "EUR" };
+  const c = fakeChrome({ page: { read_id: "rd_x", url: "https://shop.example/basket", title: "Basket", text: "Total €5.00", fields: [], controls: [{ ref: "c1", label: "Continue" }], links: [], checkout } });
+  const r = runner(c);
+  const opened = await r.handle(step({ url: "https://shop.example/basket" }));
+  assert.deepEqual(opened.page.checkout, checkout, "the checkout goes up as read");
+  const before = c.calls.filter((x) => x[0] === "executeScript").length;
+  assert.equal((await r.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }))).error.code, "payment_step", "even a control that doesn't pay");
+  assert.equal(c.calls.filter((x) => x[0] === "executeScript").length, before, "nothing ran in the page");
+  // A dialog the page raised: the next act is refused by the page, the code goes up as it is, and it counts as a failure.
+  const d = fakeChrome({ page: { read_id: "rd_y", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [], dialog: { kind: "confirm", text: "Delete everything?" } } });
+  const r2 = runner(d);
+  const read = await r2.handle(step());
+  assert.deepEqual(read.page.dialog, { kind: "confirm", text: "Delete everything?" }, "the read reports the dialog");
+  d.setAct({ ok: false, code: "dialog_open" });
+  assert.equal((await r2.handle(step({ op: "act", read_id: "rd_y", act: { kind: "click", ref: "c1" } }))).error.code, "dialog_open");
+  assert.equal(r2.runs.get("run_1").failures, 1);
+});
+
+test("a run nobody sends a step to for five minutes is closed, as Stop does; a paused one, or one with a step running, is not", async () => {
+  let clock = 1_000_000;
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
+  await r.handle(step());
+  clock += 4 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false, "four minutes is not idle");
+  assert.ok((await r.handle(step({ op: "read" }))).page, "a step starts the count again");
+  clock += 4 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false);
+  clock += 2 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, true);
+  assert.ok(c.calls.some((x) => x[0] === "windows.remove"), "its window is gone");
+  assert.equal(r.state()[0].steps.at(-1).by, "idle");
+  assert.equal(r.active, false);
+  // The owner's pause is waiting for the owner, not a dropped call.
+  const d = fakeChrome();
+  const r2 = new Runner({ chrome: d, sleep, paired: () => paired, now: () => clock });
+  await r2.handle(step());
+  r2.pause("run_1");
+  clock += 60 * 60_000;
+  await r2.sweep();
+  assert.equal(r2.runs.get("run_1").stopped, false);
 });

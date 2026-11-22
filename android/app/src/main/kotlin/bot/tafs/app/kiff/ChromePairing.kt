@@ -1,5 +1,7 @@
 package bot.tafs.app.kiff
 
+import bot.tafs.app.model.Words
+import bot.tafs.app.signing.SignerException
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
@@ -117,6 +119,20 @@ object ChromePairing {
       put("site", JsonPrimitive(site))
     },
   )
+
+  /**
+   * The signature `chrome_sites_sig` carries when the owner approves a grant that uses their own Chrome, as iOS's
+   * `ChromePairing.sitesSignature`: [sign] signs the bytes of `{chrome_id, grant, sites}` with the approval key, behind the
+   * fingerprint of that approval, and the answer goes as raw r‖s. Null for a grant that doesn't use the owner's Chrome.
+   * Refused when the grant names no Chrome or no sites: nothing is signed over an open list, and planque never approves such a grant.
+   */
+  suspend fun sitesSignature(browser: GrantBrowser?, grant: String, sign: suspend (built: () -> ByteArray) -> String): String? {
+    if (browser?.driver != GrantBrowser.EXTENSION) return null
+    val chrome = browser.chrome?.takeIf { it.isNotEmpty() } ?: throw PlanqueError.DigestMismatch
+    val sites = browser.sites?.takeIf { it.isNotEmpty() } ?: throw PlanqueError.DigestMismatch
+    val der = sign { sitesBytes(chrome, grant, sites) }
+    return rawSignature(Base64.getMimeDecoder().decode(der)) ?: throw SignerException(Words.Approval.keyCouldNotSign)
+  }
 
   private fun labelled(label: String, body: JsonObject): ByteArray =
     label.toByteArray(Charsets.UTF_8) + byteArrayOf(0) + Jcs.canonical(body).toByteArray(Charsets.UTF_8)
