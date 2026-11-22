@@ -51,6 +51,8 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(whyOf("KIFF answered 409: the grant grt_Abc123xyz is revoked (code grant_revoked)")).toBe("the grant it is revoked");
     expect(whyOf("Stripe refused ch_1AbCdEfGhIjKlMnOp: the charge is already refunded (grant grt_Abc123xyz, code already_refunded).")).toBe("Stripe refused it: the charge is already refunded.");
     expect(whyOf("ord_secret not found")).toBe("not found");
+    expect(whyOf("the owner's Chrome refused the step as not planque's, expired or malformed")).toBe("the owner's Chrome refused the step as not KIFF's, expired or malformed");
+    expect(whyOf("Planque’s answer came late")).toBe("KIFF's answer came late");
     expect(whyOf("  \n\nThe customer has no email on file.")).toBe("The customer has no email on file.");
     expect(whyOf("0123456789abcdef0123 ch_1AbCdEfGhIjKlMnOp")).toBeUndefined();
     expect(whyOf("ch_1AbCdEfGhIjKlMnOp")).toBeUndefined();

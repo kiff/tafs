@@ -1,0 +1,1 @@
+- **Chrome keeps working when the computer's clock is a little off:** a step is no longer refused because the clock is a few seconds or a minute out ([docs/chrome.md](docs/chrome.md)).

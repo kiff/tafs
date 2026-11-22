@@ -1,0 +1,1 @@
+- **The Chrome side panel's Previous conversations reach tafs cloud.** Its list of chats and one chat's conversation answer the extension's own origin, as its Coach routes do, so a browser lets the panel read them ([chrome.md](docs/chrome.md)).

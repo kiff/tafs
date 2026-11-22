@@ -75,6 +75,7 @@
     <string name="approval_first_taf">Tafi seadistamine vajab kinnitusi: Coach palub sul kinnitada selle tööriistad ja tafi Cardi.</string>
     <string name="approval_has_no_face_id_touch">Selles seadmes (%1$s) pole Face ID-d ega Touch ID-d, seega ei saa see kinnitada. Kinnita mõnes teises iPhone\'is, iPadis või Android-telefonis, mis on sinu kontole sisse logitud.</string>
     <string name="approval_has_no_passcode_needs_one">Selles seadmes (%1$s) pole pääsukoodi, aga see on vajalik: %2$s. Määra pääsukood menüüs %3$s, siis lisa %4$s ja tule tagasi.</string>
+    <string name="approval_hello_before">Kinnitamine: %1$s. Windows Hello küsib sinu PIN-i, nägu või sõrmejälge.</string>
     <string name="approval_kept">See jääb vaatesse Vajab sind.</string>
     <string name="approval_key_could_not_sign">Võti ei saanud allkirjastada</string>
     <string name="approval_key_gone_approve_again">Sinu sõrmejäljed muutusid või ühtegi ei tuvastatud, seega ei saa see telefon kinnitada enne, kui kinnitad selle brauseris uuesti.</string>
@@ -99,14 +100,17 @@
     <string name="approval_security_key_add">Lisa võti</string>
     <string name="approval_security_key_add_enter_pin">Turvavõtme lisamiseks sisesta selle PIN-kood. tafs küsib seda iga kord ega salvesta seda kunagi.</string>
     <string name="approval_security_key_add_title">Lisa oma turvavõti sellesse arvutisse</string>
+    <string name="approval_security_key_before">See vajab sinu turvavõtit: %1$s. Ühenda see, puuduta seda ja sisesta selle PIN.</string>
     <string name="approval_security_key_enter_pin">Sisesta oma turvavõtme PIN-kood. tafs küsib seda iga kord ega salvesta seda kunagi.</string>
     <string name="approval_security_key_failed">Turvavõti ei saanud allkirjastada, seega midagi ei kinnitatud. Päring jääb alles: kinnita uuesti, kui oled valmis.</string>
     <string name="approval_security_key_locked">See turvavõti on liiga paljude valede PIN-koodide tõttu lukus, seega ei saa see kinnitada. Kinnita telefonis. Võtme lähtestamine kustutab selle, seega võtmega uuesti kinnitamiseks seo see arvuti uuesti.</string>
     <string name="approval_security_key_no_key">Ühenda oma turvavõti ja proovi uuesti.</string>
     <string name="approval_security_key_no_pin_set">Sellel turvavõtmel pole PIN-koodi, seega ei saa see kinnitada. Ühenda see, mis kuulub selle arvuti juurde. Kui see lähtestati, kinnita telefonis ja võtmega kinnitamiseks seo see arvuti uuesti.</string>
+    <string name="approval_security_key_none_paired">Sellel arvutil pole veel turvavõtit. Turvavõti on väike USB-võti, mida kinnitamiseks puudutad; tavaline USB-mälupulk ei tööta.</string>
     <string name="approval_security_key_not_allowed">Turvavõti ei lubanud seda, seega midagi ei kinnitatud. Päring jääb alles: kinnita uuesti, kui oled valmis.</string>
     <string name="approval_security_key_not_fido2">See turvavõti ei saa PIN-koodi kontrollida, seega ei saa see kinnitada. Ühenda see, mis kuulub selle arvuti juurde.</string>
     <string name="approval_security_key_not_this_key">See pole selle arvuti juurde kuuluv turvavõti. Ühenda õige ja proovi uuesti või kinnita telefonis.</string>
+    <string name="approval_security_key_on_phone">Kinnita hoopis telefonis</string>
     <string name="approval_security_key_pair_without">Seo ilma võtmeta</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Kolm valet PIN-koodi järjest. Eemalda võti, ühenda see uuesti ja proovi siis uuesti.</string>

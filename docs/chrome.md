@@ -174,6 +174,8 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
         release?}                      // only with act.sealed: the phone's release
 ```
 
+**A clock that is a little off.** The extension checks `exp` against its computer's clock, which drifts (one that doesn't sync can be a minute or more out), and a step checked against the wrong now would be refused whole. So the check has slack: `SKEW_MS` (60 s) either way, and when planque's welcome carries its own time (`now`, unix ms, within 2 minutes of this clock), the clock is read by that offset and the slack is `SKEW_KNOWN_MS` (5 s) (`protocol.js`, `clockOffset`). The welcome's proof covers the connection's nonces, not the time, so the offset only ever shifts the reading a little. A step is still signed, bound to this Chrome, and takes once: the slack widens how long its expiry reads as valid, never what it may do.
+
 **The extension runs nothing that isn't planque's, for this Chrome, unexpired and new** (`protocol.checkStep`). A nonce
 is remembered for 10 minutes, in `chrome.storage.session`, so a step replayed after MV3 stops the service worker is still
 refused.
@@ -276,7 +278,9 @@ was done.
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
   another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
-  rules go when the run ends. `webNavigation`'s record of a refused move stays as the log.
+  rules go when the run ends. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
+  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+  (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
@@ -390,7 +394,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
 (`chrome/src/coach.js`). A conversation started in Chrome goes on on the phone, and back.
 
 - **Chrome sends those calls as CORS requests,** as the extension has no host permission for tafs cloud. tafs cloud
-  answers Chrome's preflight on those three routes alone, before anything is read, and lets only an extension's own
+  answers Chrome's preflight on those routes alone (and on one chat's conversation and the list of chats, for Previous conversations), before anything is read, and lets only an extension's own
   origin (`chrome-extension://` and a 32-letter id) read the answers (`runtime/src/cloud/extension-cors.ts`). It never
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.

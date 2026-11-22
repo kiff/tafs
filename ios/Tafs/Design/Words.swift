@@ -157,6 +157,10 @@ enum Words {
         static func hasNoFaceIdTouch(device: String) -> String { Words.line("approval.has_no_face_id_touch", device, Words.demonstrative(device, capital: true)) }
         /// This {device} has no passcode, and {either} needs one. Set a passcode in {kind}, then add {either_2}, then come back.
         static func hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String) -> String { Words.line("approval.has_no_passcode_needs_one", device, either, kind, either2, Words.demonstrative(device, capital: true)) }
+        enum Hello {
+            /// Approving: {act}. Windows Hello asks for your PIN, face or fingerprint.
+            static func before(act: String) -> String { Words.line("approval.hello.before", act) }
+        }
         /// It's kept in Needs you.
         static var kept: String { Words.line("approval.kept") }
         /// The key could not sign
@@ -208,6 +212,8 @@ enum Words {
             static var addEnterPin: String { Words.line("approval.security_key.add_enter_pin") }
             /// Add your security key to this computer
             static var addTitle: String { Words.line("approval.security_key.add_title") }
+            /// This needs your security key: {act}. Plug it in, then touch it and enter its PIN.
+            static func before(act: String) -> String { Words.line("approval.security_key.before", act) }
             /// Enter your security key's PIN. tafs asks for it each time and never stores it.
             static var enterPin: String { Words.line("approval.security_key.enter_pin") }
             /// The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready.
@@ -218,12 +224,16 @@ enum Words {
             static var noKey: String { Words.line("approval.security_key.no_key") }
             /// This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.
             static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
+            /// This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won't work.
+            static var nonePaired: String { Words.line("approval.security_key.none_paired") }
             /// The security key didn't allow it, so nothing was approved. The request is kept: approve again when you're ready.
             static var notAllowed: String { Words.line("approval.security_key.not_allowed") }
             /// This security key can't check a PIN, so it can't approve. Plug in the one that goes with this computer.
             static var notFido2: String { Words.line("approval.security_key.not_fido2") }
             /// This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone.
             static var notThisKey: String { Words.line("approval.security_key.not_this_key") }
+            /// Approve on your phone instead
+            static var onPhone: String { Words.line("approval.security_key.on_phone") }
             /// Pair without a key
             static var pairWithout: String { Words.line("approval.security_key.pair_without") }
             /// PIN

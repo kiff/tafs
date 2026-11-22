@@ -24,8 +24,9 @@ import urllib.request
 PACKAGE = "dev.kiff.tafs"
 TRACK = "internal"  # The only track this script ever writes for the phone.
 WEAR_TRACK = "wear:internal"  # And for the watch: Play's internal track for the Wear OS form factor, never another.
-# The listing's languages: the app's shipped ones (app/strings/languages.json), each as Play names it. Korean from 20 Nov.
-LOCALES = ["en-US", "de-DE", "fr-FR", "es-ES", "it-IT", "pt-PT", "nl-NL", "pl-PL", "ko-KR"]
+# The listing's languages, each as Play names it. Korean from 20 Nov; Latin American Spanish and Brazilian Portuguese from 132
+# and 0.4.5 (400,000,010), the listing having both.
+LOCALES = ["en-US", "de-DE", "fr-FR", "es-ES", "es-419", "it-IT", "pt-PT", "pt-BR", "nl-NL", "pl-PL", "ko-KR"]
 NOTES_MAX = 500  # Play's limit for a release note, per language.
 API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/" + PACKAGE
 UPLOAD = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/" + PACKAGE

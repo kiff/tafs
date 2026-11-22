@@ -117,4 +117,12 @@ final class ReceiptCheckTests: XCTestCase {
             .appendingPathComponent("Tafs/Views/RecordView.swift"), encoding: .utf8)) ?? ""
         XCTAssertTrue(source.contains("return !line.same(as: signed)"), "the receipt sheet uses it")
     }
+
+    func testStepWordsAreReadBySequenceAndTheSignatureIsUnchanged() throws {
+        let withWords = Self.signed.dropLast() + #","step_words":[{"sequence":1,"code":"decision.held","words":"Gehalten"},{"sequence":2,"words":"  "},{"sequence":"3","words":"x"},{"sequence":true,"words":"y"},{"words":"z"}]}"#
+        let raw = Data(withWords.utf8)
+        XCTAssertEqual(ReceiptStepWords.read(from: raw), [1: "Gehalten"])
+        XCTAssertEqual(ReceiptStepWords.read(from: Data(Self.signed.utf8)), [:])
+        XCTAssertEqual(ReceiptCheck.check(raw, signer: Self.testSigner), .verified(signer: Self.testSigner), "step_words sit outside the signature")
+    }
 }
