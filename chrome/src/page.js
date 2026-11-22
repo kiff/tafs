@@ -460,5 +460,58 @@
       dialog = { kind: clean(d.kind, 20), text: M.maskText(clean(d.text, 500)) };
     });
   }
-  root.TafsPage = { read, act, fillSealed, kindOf, listen };
+  // The boxes put over secret fields while a screenshot is taken (docs/chrome.md, "Screenshots of a run's acts").
+  let shotBoxes = [];
+
+  /** Every field whose value a picture must not show: a password, card or one-time-code field, one the extension filled from a
+   * sealed sign-in, and a text field whose value is a secret by its shape (a key, a card number). The same rules as a read's. */
+  function secretFields() {
+    const out = [];
+    for (const el of document.querySelectorAll("input, textarea, select")) {
+      if (el.tagName === "INPUT" && FIELD_SKIP.has((el.getAttribute("type") || "").toLowerCase())) continue;
+      if (!visible(el)) continue;
+      const kind = kindOf(el);
+      const value = el.tagName === "SELECT" ? "" : String(el.value || "");
+      if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el) || (value && M.maskText(value) !== value)) out.push(el);
+    }
+    return out;
+  }
+
+  /**
+   * Puts an opaque box over each secret field, and says whether every one is covered: `{ok, masked}`. `ok` is false when a
+   * field's middle shows something that isn't its box (the picture would show the field), and then nothing is captured.
+   */
+  function maskForShot() {
+    unmaskShot();
+    const fields = secretFields();
+    for (const el of fields) {
+      const r = el.getBoundingClientRect();
+      const box = document.createElement("div");
+      box.setAttribute("data-tafs-shot-mask", "");
+      box.style.cssText = `position:fixed;left:${r.left - 2}px;top:${r.top - 2}px;width:${r.width + 4}px;height:${r.height + 4}px;background:#000;z-index:2147483647;margin:0;padding:0;border:0;`;
+      document.documentElement.append(box);
+      shotBoxes.push(box);
+    }
+    let ok = true;
+    for (const el of fields) {
+      const r = el.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      // A field scrolled out of the picture isn't in it.
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+      const top = document.elementFromPoint(x, y);
+      if (!top || !top.hasAttribute("data-tafs-shot-mask")) ok = false;
+    }
+    return { ok, masked: fields.length };
+  }
+
+  /** Takes the boxes away again. Safe to call twice. */
+  function unmaskShot() {
+    for (const box of shotBoxes) box.remove();
+    shotBoxes = [];
+    for (const stray of document.querySelectorAll("[data-tafs-shot-mask]")) stray.remove();
+    return true;
+  }
+
+  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot };
 })(globalThis);

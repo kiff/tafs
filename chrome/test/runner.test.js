@@ -334,3 +334,32 @@ test("a run nobody sends a step to for five minutes is closed, as Stop does; a p
   await r2.sweep();
   assert.equal(r2.runs.get("run_1").stopped, false);
 });
+
+const PLAIN = { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] };
+
+test("an act takes its picture first, a read never does, and a picture that fails never holds the act", async () => {
+  const events = [];
+  const shots = {
+    capture: async ({ page }) => (events.push(["capture", page.url]), { png: "data:image/png;base64,AAAA" }),
+    send: async (png, id) => (events.push(["send", id]), "sent"),
+  };
+  const c = fakeChrome({ page: PLAIN });
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, shots });
+  const opened = await r.handle(step());
+  const read = await r.handle(step({ op: "read" }));
+  assert.deepEqual(events, [], "no picture for an open or a read");
+  c.calls.length = 0;
+  const first = await r.handle(step({ id: "op_act", op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+  assert.equal(first.error, undefined);
+  assert.deepEqual(events, [["capture", "https://shop.example/"], ["send", "op_act"]]);
+  assert.ok(c.calls.some((x) => x[0] === "page" && x[1] === "act end"), "the act happened");
+  // A capture that throws, and one that finds nothing, never stop the act.
+  for (const capture of [async () => { throw new Error("no window"); }, async () => ({ why: "site" })]) {
+    const c2 = fakeChrome({ page: PLAIN });
+    const r2 = new Runner({ chrome: c2, sleep, paired: () => paired, shots: { capture, send: async () => { throw new Error("must not be called"); } } });
+    const o2 = await r2.handle(step());
+    const done = await r2.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(done.error, undefined);
+    assert.ok(c2.calls.some((x) => x[0] === "page" && x[1] === "act end"));
+  }
+});
