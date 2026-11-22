@@ -57,6 +57,46 @@
     return out;
   }
 
+  // A long run that is probably a key: 32 or more hex digits, or base64 characters with at least one digit in them.
+  const LONG_HEX = /\b[A-Fa-f0-9]{32,}\b/g;
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i; // an id, not a key
+  const LONG_BASE64 = /[A-Za-z0-9+/_-]{32,}={0,2}/g;
+
+  /**
+   * Where in `text` something that must not show in a picture is: `[start, end]` pairs, in order, merged. It is what `maskText`
+   * would replace (card numbers that pass the Luhn check, secrets by shape, labelled values, bearer tokens) and, for a picture
+   * only, long hex or base64 runs of 32 characters or more.
+   */
+  function secretSpans(text) {
+    const s = String(text || "");
+    const found = [];
+    const add = (re, from) => {
+      for (const m of s.matchAll(re)) {
+        const [start, end] = from ? from(m) : [m.index, m.index + m[0].length];
+        if (end > start) found.push([start, end]);
+      }
+    };
+    add(CARD_RUN, null);
+    // A card run counts only when it is a card: 13 to 19 digits passing the Luhn check.
+    for (let i = found.length - 1; i >= 0; i--) {
+      const digits = s.slice(found[i][0], found[i][1]).replace(/[^0-9]/g, "");
+      if (digits.length < 13 || digits.length > 19 || !luhn(digits)) found.splice(i, 1);
+    }
+    for (const shape of SHAPES) add(shape, null);
+    add(LABELLED, (m) => [m.index + m[1].length + m[2].length, m.index + m[0].length]);
+    add(BEARER, (m) => [m.index + m[1].length, m.index + m[0].length]);
+    add(LONG_HEX, null);
+    add(LONG_BASE64, (m) => (/[0-9]/.test(m[0]) && !UUID.test(m[0]) ? [m.index, m.index + m[0].length] : [0, 0]));
+    found.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    const merged = [];
+    for (const span of found) {
+      const last = merged[merged.length - 1];
+      if (last && span[0] <= last[1]) last[1] = Math.max(last[1], span[1]);
+      else merged.push([span[0], span[1]]);
+    }
+    return merged;
+  }
+
   // Query parameters that carry a credential, by name, compared after percent-decoding.
   const CREDENTIAL_PARAMS = /^(token|access_token|id_token|refresh_token|auth|authorization|code|state|signature|sig|key|api_key|apikey|password|pass|pwd|secret|session|sessionid|sid|otp|x-amz-signature|x-amz-credential|x-goog-signature)$/i;
 
@@ -79,5 +119,5 @@
     return u.href;
   }
 
-  root.TafsMask = { maskText, maskURL, luhn, MASK };
+  root.TafsMask = { maskText, maskURL, secretSpans, luhn, MASK };
 })(globalThis);

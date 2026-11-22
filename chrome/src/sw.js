@@ -9,6 +9,7 @@ import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
 import { Coach } from "./coach.js";
+import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
 
@@ -23,7 +24,11 @@ const releaseStore = {
   get: async () => (await chrome.storage.session.get("releases")).releases || [],
   set: (entries) => chrome.storage.session.set({ releases: entries }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore });
+// The picture kept of each act: only in a build that has it on (config.js), never by default.
+const shots = config().screenshots
+  ? new Shots({ chrome, inTab: (tabId, func, args) => chrome.scripting.executeScript({ target: { tabId }, func, args, world: "ISOLATED" }).then((r) => r && r[0] && r[0].result), keys: () => kept.keys, pairing: () => kept.pairing, base: config().api })
+  : null;
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };

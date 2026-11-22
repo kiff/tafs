@@ -30,11 +30,12 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
+    this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
     this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
@@ -464,6 +465,20 @@ export class Runner {
     return this.read(run);
   }
 
+  /**
+   * The picture kept of an act, taken just before it, with the page's secret fields covered (shot.js). The act waits only for
+   * the picture to be taken; the encoding and the upload go on after it. Nothing here can stop the act.
+   */
+  async pictureOf(run, step, page) {
+    if (!this.shots) return;
+    try {
+      const got = await this.shots.capture({ tabId: run.tab, windowId: run.windowId, page });
+      if (got && got.png) this.shots.send(got.png, step.id).catch(() => {});
+    } catch {
+      // A picture that couldn't be taken is no reason to hold an act.
+    }
+  }
+
   async act(run, step) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const page = run.pages.get(step.read_id);
@@ -471,6 +486,7 @@ export class Runner {
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
     if (step.act.sealed) return this.fillSealed(run, step, page);
+    await this.pictureOf(run, step, page);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
     // A click is never proof of its effect: the page is read back.

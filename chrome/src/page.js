@@ -460,5 +460,133 @@
       dialog = { kind: clean(d.kind, 20), text: M.maskText(clean(d.text, 500)) };
     });
   }
-  root.TafsPage = { read, act, fillSealed, kindOf, listen };
+  // The boxes put over secret fields while a screenshot is taken (docs/chrome.md, "Screenshots of a run's acts").
+  let shotBoxes = [];
+  // Set when a cap stopped the search for secrets: the covers can't be said to be complete, so nothing is pictured.
+  let shotIncomplete = false;
+
+  /** The document and every open shadow root in it: a field or a text inside one is on the page, and a plain query on the
+   * document does not reach it. A closed shadow root can't be seen from the page; the picture's covers can't reach it. */
+  const MAX_ROOTS = 200;
+  function roots() {
+    const out = [document];
+    for (let i = 0; i < out.length; i++) {
+      for (const el of out[i].querySelectorAll("*")) {
+        if (!el.shadowRoot) continue;
+        // Past the cap the rest aren't looked at, and then the picture can't say every secret is covered.
+        if (out.length >= MAX_ROOTS) {
+          shotIncomplete = true;
+          return out;
+        }
+        out.push(el.shadowRoot);
+      }
+    }
+    return out;
+  }
+
+  /** Every visible frame or embedded object: a picture shows whatever is inside one, and the page's script can't read what
+   * a frame from another site holds (a login widget, a bank's form), so each is covered whole. */
+  function frameRects() {
+    const rects = [];
+    for (const root of roots()) {
+      for (const el of root.querySelectorAll("iframe, frame, embed, object")) {
+        if (!visible(el)) continue;
+        for (const r of el.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+      }
+    }
+    return rects;
+  }
+
+  /** Every field whose value a picture must not show: a password, card or one-time-code field, one the extension filled from a
+   * sealed sign-in, and a text field whose value is a secret by its shape (a key, a card number). The same rules as a read's. */
+  function secretFields() {
+    const out = [];
+    const all = [];
+    for (const root of roots()) all.push(...root.querySelectorAll("input, textarea, select"));
+    for (const el of all) {
+      if (el.tagName === "INPUT" && FIELD_SKIP.has((el.getAttribute("type") || "").toLowerCase())) continue;
+      if (!visible(el)) continue;
+      const kind = kindOf(el);
+      const value = el.tagName === "SELECT" ? "" : String(el.value || "");
+      if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el) || (value && M.maskText(value) !== value)) out.push(el);
+    }
+    return out;
+  }
+
+  /**
+   * Puts an opaque box over each secret field, and says whether every one is covered: `{ok, masked}`. `ok` is false when a
+   * field's middle shows something that isn't its box (the picture would show the field), and then nothing is captured.
+   */
+  const MAX_TEXT_NODES = 6000;
+
+  /** The page rectangles of the text in visible text nodes that looks like a card number or a key (`TafsMask.secretSpans`). */
+  function secretTextRects() {
+    const rects = [];
+    let seen = 0;
+    for (const root of roots()) {
+      const walker = document.createTreeWalker(root === document ? document.body || document.documentElement : root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (seen >= MAX_TEXT_NODES) {
+          shotIncomplete = true;
+          return rects;
+        }
+        seen++;
+        const text = node.nodeValue || "";
+        if (text.length < 13) continue;
+        const parent = node.parentElement;
+        if (!parent || /^(SCRIPT|STYLE|NOSCRIPT|TEXTAREA)$/.test(parent.tagName) || !visible(parent)) continue;
+        for (const [start, end] of M.secretSpans(text)) {
+          const range = document.createRange();
+          range.setStart(node, start);
+          range.setEnd(node, end);
+          for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+        }
+      }
+    }
+    return rects;
+  }
+
+  function addShotBox(r) {
+    const box = document.createElement("div");
+    box.setAttribute("data-tafs-shot-mask", "");
+    box.style.cssText = `position:fixed;left:${r.left - 2}px;top:${r.top - 2}px;width:${r.width + 4}px;height:${r.height + 4}px;background:#000;z-index:2147483647;margin:0;padding:0;border:0;`;
+    document.documentElement.append(box);
+    shotBoxes.push(box);
+  }
+
+  /**
+   * Puts an opaque box over each secret field and each run of text that looks like a card number or a key, and says whether
+   * every one is covered: `{ok, masked}`. `ok` is false when the middle of a covered spot shows something that isn't its box
+   * (the picture would show it), and then nothing is captured.
+   */
+  function maskForShot() {
+    unmaskShot();
+    shotIncomplete = false;
+    const fields = secretFields();
+    // A page with a one-time-code field to fill may be an authenticator's setup, whose QR code and seed are the second
+    // factor and look like nothing the covers know: no picture of it.
+    if (fields.some((el) => kindOf(el) === "code")) return { ok: false, masked: 0, why: "code" };
+    const rects = [...fields.map((el) => el.getBoundingClientRect()), ...secretTextRects(), ...frameRects()];
+    for (const r of rects) addShotBox(r);
+    let ok = !shotIncomplete;
+    for (const r of rects) {
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      // A spot scrolled out of the picture isn't in it.
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+      const top = document.elementFromPoint(x, y);
+      if (!top || !top.hasAttribute("data-tafs-shot-mask")) ok = false;
+    }
+    return { ok, masked: rects.length };
+  }
+
+  /** Takes the boxes away again. Safe to call twice. */
+  function unmaskShot() {
+    for (const box of shotBoxes) box.remove();
+    shotBoxes = [];
+    for (const stray of document.querySelectorAll("[data-tafs-shot-mask]")) stray.remove();
+    return true;
+  }
+
+  root.TafsPage = { read, act, fillSealed, kindOf, listen, maskForShot, unmaskShot };
 })(globalThis);
