@@ -191,7 +191,10 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     // The refund's Cards with the owner's figures and no 10,000 count match.
     expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rules)).toBeUndefined();
     // Only exactly KIFF's count goes: 9,999, a per total, or another window is the owner's figure as before.
-    for (const other of [{ ...KIFFS, limit: 9_999 }, { ...KIFFS, window: "lifetime", per: "charge" }, { ...KIFFS, quantity: "sum(amount)" }]) {
+    // Each near miss differs from KIFF's count in one way only (qa-kiff's mutants): the limit, the quantity, the window
+    // (each call's), or a per (a day's, a week's, a lifetime's total for each charge).
+    for (const other of [{ ...KIFFS, limit: 9_999 }, { ...KIFFS, quantity: "sum(amount)" }, { ...KIFFS, window: "call" as const },
+      { ...KIFFS, per: "charge" }, { ...KIFFS, window: "rolling_7d", per: "charge" }, { ...KIFFS, window: "lifetime", per: "charge" }]) {
       const kept = rulesAgreement([notice("n1", rule([EACH, other])), confirm("c1", "n1"), answered("c1", "agree")]);
       expect(kept.state === "agreed" && kept.rules[0]!.limits, JSON.stringify(other)).toEqual([EACH, other]);
     }
