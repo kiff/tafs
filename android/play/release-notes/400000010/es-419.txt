@@ -1,0 +1,1 @@
+tafs en Wear OS ahora habla todos los idiomas del teléfono, entre ellos japonés y portugués de Brasil. Cuando tu teléfono no responde, el reloj dice por qué, y se abre al instante con lo que guardó.
