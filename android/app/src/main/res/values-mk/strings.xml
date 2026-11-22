@@ -99,14 +99,17 @@
     <string name="approval_security_key_add">Додај клуч</string>
     <string name="approval_security_key_add_enter_pin">Внеси го PIN на твојот безбедносен клуч за да го додадеш. tafs го бара секој пат и никогаш не го чува.</string>
     <string name="approval_security_key_add_title">Додај го твојот безбедносен клуч на овој компјутер</string>
+    <string name="approval_security_key_before">За ова ти треба безбедносниот клуч: %1$s. Приклучи го, допри го и внеси го неговиот PIN.</string>
     <string name="approval_security_key_enter_pin">Внеси го PIN на твојот безбедносен клуч. tafs го бара секој пат и никогаш не го чува.</string>
     <string name="approval_security_key_failed">Безбедносниот клуч не можеше да потпише, па ништо не е одобрено. Барањето се чува: одобри повторно кога ќе си подготвен.</string>
     <string name="approval_security_key_locked">Овој безбедносен клуч е заклучен по премногу погрешни PIN, па не може да одобрува. Одобри на твојот телефон. Ресетирањето на клучот го брише, па за повторно да одобруваш со клуч, спари го овој компјутер одново.</string>
     <string name="approval_security_key_no_key">Приклучи го твојот безбедносен клуч, па обиди се повторно.</string>
     <string name="approval_security_key_no_pin_set">Овој безбедносен клуч нема PIN, па не може да одобрува. Приклучи го оној што оди со овој компјутер. Ако бил ресетиран, одобри на твојот телефон и спари го овој компјутер одново за да одобруваш со клуч.</string>
+    <string name="approval_security_key_none_paired">Овој компјутер сè уште нема безбедносен клуч. Безбедносниот клуч е мал USB-клуч што го допираш за да одобриш; обична USB-меморија не работи.</string>
     <string name="approval_security_key_not_allowed">Безбедносниот клуч не дозволи, па ништо не е одобрено. Барањето се чува: одобри повторно кога ќе си подготвен.</string>
     <string name="approval_security_key_not_fido2">Овој безбедносен клуч не може да провери PIN, па не може да одобрува. Приклучи го оној што оди со овој компјутер.</string>
     <string name="approval_security_key_not_this_key">Ова не е безбедносниот клуч што оди со овој компјутер. Приклучи го тој и обиди се повторно, или одобри на твојот телефон.</string>
+    <string name="approval_security_key_on_phone">Одобри на телефонот</string>
     <string name="approval_security_key_pair_without">Спари без клуч</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Тоа се три погрешни PIN по ред. Извади го клучот, приклучи го повторно, па обиди се повторно.</string>

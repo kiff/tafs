@@ -24362,6 +24362,53 @@
         }
       }
     },
+    "approval.security_key.before": {
+      "extractionState": "manual",
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Això necessita la teva clau de seguretat: %1$@. Connecta-la, toca-la i introdueix el seu PIN."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This needs your security key: %1$@. Plug it in, then touch it and enter its PIN."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "នេះត្រូវការសោសុវត្ថិភាពរបស់អ្នក៖ %1$@។ ដោតវា ចុចវា ហើយបញ្ចូល PIN របស់វា។"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ສິ່ງນີ້ຕ້ອງການກຸນແຈຄວາມປອດໄພຂອງທ່ານ: %1$@. ສຽບມັນ, ແຕະມັນ ແລ້ວໃສ່ PIN ຂອງມັນ."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За ова ти треба безбедносниот клуч: %1$@. Приклучи го, допри го и внеси го неговиот PIN."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Үүнд аюулгүй байдлын түлхүүр хэрэгтэй: %1$@. Залгаад, хүрч, PIN-ийг нь оруулна уу."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यसका लागि तपाईंको सुरक्षा कुञ्जी चाहिन्छ: %1$@। यसलाई जोड्नुहोस्, छुनुहोस् र यसको PIN हाल्नुहोस्।"
+          }
+        }
+      }
+    },
     "approval.security_key.enter_pin": {
       "extractionState": "manual",
       "localizations": {
@@ -25587,6 +25634,53 @@
         }
       }
     },
+    "approval.security_key.none_paired": {
+      "extractionState": "manual",
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aquest ordinador encara no té cap clau de seguretat. Una clau de seguretat és una petita clau USB que toques per aprovar; una memòria USB corrent no serveix."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won't work."
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "កុំព្យូទ័រនេះមិនទាន់មានសោសុវត្ថិភាពនៅឡើយទេ។ សោសុវត្ថិភាពគឺជាសោ USB តូចមួយដែលអ្នកប៉ះដើម្បីអនុម័ត; USB ធម្មតាមិនអាចប្រើបានទេ។"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ຄອມພິວເຕີເຄື່ອງນີ້ຍັງບໍ່ມີກຸນແຈຄວາມປອດໄພ. ກຸນແຈຄວາມປອດໄພແມ່ນກຸນແຈ USB ນ້ອຍທີ່ທ່ານແຕະເພື່ອອະນຸມັດ; USB ທຳມະດາໃຊ້ບໍ່ໄດ້."
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Овој компјутер сè уште нема безбедносен клуч. Безбедносниот клуч е мал USB-клуч што го допираш за да одобриш; обична USB-меморија не работи."
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Энэ компьютерт аюулгүй байдлын түлхүүр хараахан алга. Аюулгүй байдлын түлхүүр гэдэг нь батлахдаа хүрдэг жижиг USB түлхүүр юм; энгийн USB санах ой хэрэггүй."
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यो कम्प्युटरमा अहिलेसम्म कुनै सुरक्षा कुञ्जी छैन। सुरक्षा कुञ्जी भनेको स्वीकृत गर्दा छुने सानो USB कुञ्जी हो; साधारण USB स्टिकले काम गर्दैन।"
+          }
+        }
+      }
+    },
     "approval.security_key.not_allowed": {
       "extractionState": "manual",
       "localizations": {
@@ -26318,6 +26412,53 @@
           "stringUnit": {
             "state": "translated",
             "value": "這不是與這部電腦搭配的安全金鑰。請插入那一把後再試一次，或在您的手機上核准。"
+          }
+        }
+      }
+    },
+    "approval.security_key.on_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "ca": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprova-ho al telèfon"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve on your phone instead"
+          }
+        },
+        "km": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "អនុម័តលើទូរសព្ទវិញ"
+          }
+        },
+        "lo": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ອະນຸມັດໃນໂທລະສັບແທນ"
+          }
+        },
+        "mk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одобри на телефонот"
+          }
+        },
+        "mn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Утсан дээрээ батлах"
+          }
+        },
+        "ne": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "यसको सट्टा फोनमा स्वीकृत गर्नुहोस्"
           }
         }
       }

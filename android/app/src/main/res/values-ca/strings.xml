@@ -99,14 +99,17 @@
     <string name="approval_security_key_add">Afegeix la clau</string>
     <string name="approval_security_key_add_enter_pin">Introdueix el PIN de la teva clau de seguretat per afegir-la. tafs el demana cada cop i mai no el desa.</string>
     <string name="approval_security_key_add_title">Afegeix la teva clau de seguretat a aquest ordinador</string>
+    <string name="approval_security_key_before">Això necessita la teva clau de seguretat: %1$s. Connecta-la, toca-la i introdueix el seu PIN.</string>
     <string name="approval_security_key_enter_pin">Introdueix el PIN de la teva clau de seguretat. tafs el demana cada cop i mai no el desa.</string>
     <string name="approval_security_key_failed">La clau de seguretat no ha pogut signar, així que no s\'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.</string>
     <string name="approval_security_key_locked">Aquesta clau de seguretat s\'ha bloquejat després de massa PIN incorrectes, així que no pot aprovar. Aprova al telèfon. Restablir la clau l\'esborra, per això, per tornar a aprovar amb una clau, cal que vinculis aquest ordinador de nou.</string>
     <string name="approval_security_key_no_key">Connecta la teva clau de seguretat i torna-ho a provar.</string>
     <string name="approval_security_key_no_pin_set">Aquesta clau de seguretat no té PIN, així que no pot aprovar. Connecta la que va amb aquest ordinador. Si s\'ha restablert, aprova al telèfon i aparella aquest ordinador de nou per aprovar amb una clau.</string>
+    <string name="approval_security_key_none_paired">Aquest ordinador encara no té cap clau de seguretat. Una clau de seguretat és una petita clau USB que toques per aprovar; una memòria USB corrent no serveix.</string>
     <string name="approval_security_key_not_allowed">La clau de seguretat no ho ha permès, així que no s\'ha aprovat res. La sol·licitud es conserva: torna a aprovar quan estiguis a punt.</string>
     <string name="approval_security_key_not_fido2">Aquesta clau de seguretat no pot comprovar un PIN, així que no pot aprovar. Connecta la que va amb aquest ordinador.</string>
     <string name="approval_security_key_not_this_key">Aquesta no és la clau de seguretat que va amb aquest ordinador. Connecta aquella i torna-ho a provar, o aprova al telèfon.</string>
+    <string name="approval_security_key_on_phone">Aprova-ho al telèfon</string>
     <string name="approval_security_key_pair_without">Aparella sense clau</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Són tres PIN incorrectes seguits. Desconnecta la clau, torna-la a connectar i torna-ho a provar.</string>
