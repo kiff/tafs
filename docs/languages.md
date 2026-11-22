@@ -842,7 +842,8 @@ screen is **"Conta"**.
   written replaces English's, every other reads English, key by key. Three guards:
   - **The most-seen lines first** (`PRIORITY_PREFIXES`): Home's (`home_`), push titles (`push_`), Activity's details
     (`act_`) and the approval card's (`approval_`). A language with any other line has all of those (a test checks it).
-  - **The target is 100%.** `words.test.ts` prints each language's coverage; the gap closes batch by batch, and no
+  - **The target is 100%.** `words.test.ts` prints each language's coverage (`npx vitest run test/words.test.ts --silent=false`;
+    vitest hides a passing test's output otherwise); the gap closes batch by batch, and no
     language stays partial for good.
   - **The tracker** marks a country's app screens as translated for the apps' own words only, with tafs cloud's lines
     noted apart until they reach 100% (for the "b or c" countries: EE, LV, LT, SK, SI).
