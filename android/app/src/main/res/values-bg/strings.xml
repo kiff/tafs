@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Отказано, със следваща стъпка за taf: %1$s</string>
     <string name="record_removed_detail">График, памет и ключ изтрити; името е свободно</string>
     <string name="record_removed_title">Премахнахте %1$s</string>
+    <string name="record_report_button">Подайте сигнал за това плащане</string>
+    <string name="record_report_done">Сигналът е изпратен. %1$s е спрян, а разписката се пази. Ако са излезли пари от сметката ви, свържете се и с издателя на картата си.</string>
+    <string name="record_report_failed">Сигналът не можа да бъде изпратен. Нищо не се промени. Опитайте отново.</string>
+    <string name="record_report_intro">Подайте сигнал за плащане, което не сте очаквали: %1$s плати %2$s на %3$s. Спираме %1$s, докато проверите.</string>
+    <string name="record_report_submit">Сигнал и спиране на %1$s</string>
+    <string name="record_report_title">Подайте сигнал за това плащане</string>
     <string name="record_result_done">направено</string>
     <string name="record_result_no_answer_yet">изпратено, още няма отговор</string>
     <string name="record_result_not_done">не е направено</string>

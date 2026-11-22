@@ -1851,6 +1851,12 @@
     <string name="record_refused_next_step_detail">Keeldutud, tafile järgmise sammuga: %1$s</string>
     <string name="record_removed_detail">Ajakava, mälu ja võti kustutatud; nimi on vaba</string>
     <string name="record_removed_title">Eemaldasid tafi %1$s</string>
+    <string name="record_report_button">Teata sellest maksest</string>
+    <string name="record_report_done">Teatatud. Taf %1$s on peatatud ja kviitung säilitatakse. Kui sinu kontolt lahkus raha, võta ühendust ka oma kaardi väljaandjaga.</string>
+    <string name="record_report_failed">Teadet ei õnnestunud saata. Midagi ei muutunud. Proovi uuesti.</string>
+    <string name="record_report_intro">Teata maksest, mida sa ei oodanud: %1$s maksis %3$s summa %2$s. Peatame tafi %1$s, kuni oled järele vaadanud.</string>
+    <string name="record_report_submit">Teata ja peata taf %1$s</string>
+    <string name="record_report_title">Teata sellest maksest</string>
     <string name="record_result_done">tehtud</string>
     <string name="record_result_no_answer_yet">saadetud, veel vastuseta</string>
     <string name="record_result_not_done">tegemata</string>

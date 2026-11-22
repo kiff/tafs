@@ -36,9 +36,11 @@ data class RecordHit(
   val next: NextStep? = null,
   val taf: RecordTafRef,
   val about: String? = null,
+  val report: ReportOffer? = null,
+  @SerialName("reported_at") val reportedAt: String? = null,
 ) {
   /** The same entry as a taf's Activity draws it. */
-  val asActivity: TafActivityEntry get() = TafActivityEntry(id, at, kind, title, detail, time, amountText, call, next)
+  val asActivity: TafActivityEntry get() = TafActivityEntry(id, at, kind, title, detail, time, amountText, call, next, report, reportedAt)
 }
 
 /** The taf a call is from, by tafs cloud's id and its name. */
