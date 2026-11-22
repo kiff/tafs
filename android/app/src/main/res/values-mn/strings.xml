@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">Энэ алхмын өмнөх хуудсыг харах</string>
     <string name="chrome_shot_title">Энэ алхмын өмнө</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Хослолыг салгавал үүнийг ашигладаг холболтууд дуусна: %1$s. Тэдгээр дахин холбосон тохиолдолд л буцна.</string>
+    <string name="chrome_used_for">%1$s-д ашиглагдана</string>
     <string name="chrome_waiting">Chrome-ыг хүлээж байна…</string>
     <string name="coach_activity_card">Card-ыг бэлтгэж байна…</string>
     <string name="coach_activity_connection">Холболт дээр ажиллаж байна…</string>

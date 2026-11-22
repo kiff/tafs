@@ -28,5 +28,7 @@
   "chrome.shot_open": "এই ধাপের আগের পৃষ্ঠাটি দেখুন",
   "chrome.shot_title": "এই ধাপের আগে",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "জোড়া ভাঙলে এটি ব্যবহার করা সংযোগগুলো শেষ হয়: {sites}। আবার সংযুক্ত করলেই সেগুলো ফিরে আসে।",
+  "chrome.used_for": "{sites}-এর জন্য ব্যবহৃত",
   "chrome.waiting": "Chrome-এর অপেক্ষায়…"
 }

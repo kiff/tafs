@@ -589,6 +589,8 @@
     <string name="chrome_shot_open">Xem trang trước bước này</string>
     <string name="chrome_shot_title">Trước bước này</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Hủy ghép đôi sẽ kết thúc các kết nối dùng nó: %1$s. Chúng chỉ trở lại khi bạn kết nối lại.</string>
+    <string name="chrome_used_for">Dùng cho %1$s</string>
     <string name="chrome_waiting">Đang chờ Chrome…</string>
     <string name="coach_activity_card">Đang chuẩn bị Card…</string>
     <string name="coach_activity_connection">Đang xử lý kết nối…</string>

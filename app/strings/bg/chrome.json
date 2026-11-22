@@ -28,5 +28,7 @@
   "chrome.shot_open": "Виж страницата преди тази стъпка",
   "chrome.shot_title": "Преди тази стъпка",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Прекратяването на връзката със Chrome слага край на свързванията, които го ползват: {sites}. Връщат се само ако ги свържеш отново.",
+  "chrome.used_for": "Използва се за {sites}",
   "chrome.waiting": "Изчакване на Chrome…"
 }

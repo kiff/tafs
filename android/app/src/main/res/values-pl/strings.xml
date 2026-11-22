@@ -688,6 +688,8 @@
     <string name="chrome_shot_open">Zobacz stronę przed tym krokiem</string>
     <string name="chrome_shot_title">Przed tym krokiem</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Rozparowanie kończy połączenia, które z niego korzystają: %1$s. Wrócą dopiero, gdy połączysz je ponownie.</string>
+    <string name="chrome_used_for">Używana do: %1$s</string>
     <string name="chrome_waiting">Czekam na Chrome…</string>
     <string name="coach_activity_card">Przygotowywanie Card…</string>
     <string name="coach_activity_connection">Praca nad połączeniem…</string>

@@ -28,5 +28,7 @@
   "chrome.shot_open": "Zobrazit stránku před tímto krokem",
   "chrome.shot_title": "Před tímto krokem",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Zrušením spárování skončí připojení, která ho používají: {sites}. Vrátí se, až je znovu připojíš.",
+  "chrome.used_for": "Používá se pro {sites}",
   "chrome.waiting": "Čekám na Chrome…"
 }

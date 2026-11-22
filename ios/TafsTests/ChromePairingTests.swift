@@ -180,3 +180,33 @@ final class ChromePairingTests: XCTestCase {
         guard case .failure = PairingRequest.read(elsewhere, now: now) else { return XCTFail("an extension that says it's a Mac") }
     }
 }
+
+/// "Your Chrome" (docs/chrome.md): which connections run in a Chrome, read to the owner before it is unpaired.
+final class ChromeConnectionsTests: XCTestCase {
+    private func grant(_ id: String, chrome: String?, status: String, sites: [String], driver: String? = "extension") throws -> PlanqueClient.Grant {
+        let sitesJSON = "[" + sites.map { "\"\($0)\"" }.joined(separator: ",") + "]"
+        let browser = "{\"driver\":\(driver.map { "\"\($0)\"" } ?? "null"),\"chrome\":\(chrome.map { "\"\($0)\"" } ?? "null"),\"chrome_name\":\"Work Mac\",\"sites\":\(sitesJSON)}"
+        let json = "{\"id\":\"\(id)\",\"status\":\"\(status)\",\"text\":\"\",\"digest\":\"d\",\"events\":[],\"request\":{\"server\":\"s\",\"agent\":\"a\",\"tools\":[],\"browser\":\(browser)}}"
+        return try JSONDecoder().decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+    }
+
+    private func chrome(_ id: String) throws -> PlanqueClient.Chrome {
+        try JSONDecoder().decode(PlanqueClient.Chrome.self, from: Data("{\"chrome_id\":\"\(id)\",\"name\":\"Work Mac\"}".utf8))
+    }
+
+    func testOnlyAChromesOwnLiveConnectionsAreListed() throws {
+        let grants = [
+            try grant("g1", chrome: "chr_1", status: "connected", sites: ["wikipedia.org"]),
+            try grant("g2", chrome: "chr_1", status: "pending", sites: ["shop.example", "wikipedia.org"]),
+            try grant("g3", chrome: "chr_2", status: "connected", sites: ["other.example"]),
+            try grant("g4", chrome: "chr_1", status: "disconnected", sites: ["ended.example"]),
+            try grant("g5", chrome: "chr_1", status: "failed", sites: ["failed.example"]),
+            try grant("g6", chrome: "chr_1", status: "connected", sites: ["hosted.example"], driver: nil),
+        ]
+        let on = ChromeConnections.on(try chrome("chr_1"), in: grants)
+        XCTAssertEqual(on.map(\.id), ["g1", "g2"], "its own, not ended, not another Chrome's, not planque's hosted browser")
+        XCTAssertEqual(ChromeConnections.sites(of: on), "wikipedia.org, shop.example", "each site once, in order")
+        XCTAssertEqual(ChromeConnections.sites(of: []), "")
+        XCTAssertEqual(on.first?.request.browser?.chromeName, "Work Mac", "planque's chrome_name is read")
+    }
+}

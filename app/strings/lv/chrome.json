@@ -28,5 +28,7 @@
   "chrome.shot_open": "Skatīt lapu pirms šī soļa",
   "chrome.shot_title": "Pirms šī soļa",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Atvienojot beidzas savienojumi, kas to izmanto: {sites}. Tie atgriežas tikai tad, ja savieno tos no jauna.",
+  "chrome.used_for": "Izmanto: {sites}",
   "chrome.waiting": "Gaida Chrome…"
 }

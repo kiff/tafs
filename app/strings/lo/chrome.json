@@ -28,5 +28,7 @@
   "chrome.shot_open": "ເບິ່ງໜ້າກ່ອນຂັ້ນຕອນນີ້",
   "chrome.shot_title": "ກ່ອນຂັ້ນຕອນນີ້",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "ການຍົກເລີກການຈັບຄູ່ຈະສິ້ນສຸດການເຊື່ອມຕໍ່ທີ່ໃຊ້ມັນ: {sites}. ມັນຈະກັບມາເມື່ອເຈົ້າເຊື່ອມຕໍ່ໃໝ່ເທົ່ານັ້ນ.",
+  "chrome.used_for": "ໃຊ້ສຳລັບ {sites}",
   "chrome.waiting": "ກຳລັງລໍຖ້າ Chrome…"
 }

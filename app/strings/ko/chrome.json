@@ -28,5 +28,7 @@
   "chrome.shot_open": "이 단계 전의 페이지 보기",
   "chrome.shot_title": "이 단계 전",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "페어링을 해제하면 이 Chrome을 쓰는 연결이 끝납니다: {sites}. 다시 연결해야 돌아옵니다.",
+  "chrome.used_for": "{sites}에 사용",
   "chrome.waiting": "Chrome을 기다리는 중…"
 }

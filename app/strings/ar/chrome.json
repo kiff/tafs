@@ -28,5 +28,7 @@
   "chrome.shot_open": "عرض الصفحة قبل هذه الخطوة",
   "chrome.shot_title": "قبل هذه الخطوة",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "إلغاء الإقران ينهي الاتصالات التي تستخدمه: {sites}. لا تعود إلا إذا وصلتها من جديد.",
+  "chrome.used_for": "يُستخدم لـ {sites}",
   "chrome.waiting": "بانتظار Chrome…"
 }

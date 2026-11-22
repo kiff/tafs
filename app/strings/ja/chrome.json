@@ -28,5 +28,7 @@
   "chrome.shot_open": "このステップの前のページを見る",
   "chrome.shot_title": "このステップの前",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "ペアリングを解除すると、このChromeを使う接続が終了します：{sites}。接続し直すまで戻りません。",
+  "chrome.used_for": "{sites}に使用",
   "chrome.waiting": "Chromeを待っています…"
 }

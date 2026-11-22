@@ -1392,3 +1392,12 @@ tested against canned answers (`test_asc_status.rb`, in `ios.yml`'s tests).
 - **The key** is the `apple-release` environment's `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY_P8`, which a run from `main` can read
   (the scheduled and manual runs both are). It is written to the runner's temporary folder and removed at the end.
 - The macOS app is the same app record as the iPhone's and iPad's (universal purchase), so its versions are the `MAC_OS` ones.
+
+## Account › Chrome: what each Chrome is used for
+
+"Your Chrome" ([chrome.md](chrome.md)): under each paired Chrome, Account › Chrome says which sites its connections are used for
+("Used for wikipedia.org"), and Unpair says what it ends before it asks ("Unpairing ends the connections that use it: …. They
+come back only when you connect them again."). The connections are planque's grants for the extension (`request.browser`:
+`driver: "extension"`, `chrome`, and `chrome_name` as planque set it), read again when the screen opens; one that has ended or
+failed is not listed (`ChromeConnections`). The replace pick at pairing, and a connection's Chrome on the taf's page, follow
+planque#365's route and the extension's own pairing bytes.

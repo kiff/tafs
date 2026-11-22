@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">এই ধাপের আগের পৃষ্ঠাটি দেখুন</string>
     <string name="chrome_shot_title">এই ধাপের আগে</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">জোড়া ভাঙলে এটি ব্যবহার করা সংযোগগুলো শেষ হয়: %1$s। আবার সংযুক্ত করলেই সেগুলো ফিরে আসে।</string>
+    <string name="chrome_used_for">%1$s-এর জন্য ব্যবহৃত</string>
     <string name="chrome_waiting">Chrome-এর অপেক্ষায়…</string>
     <string name="coach_activity_card">Card তৈরি করা হচ্ছে…</string>
     <string name="coach_activity_connection">সংযোগ নিয়ে কাজ চলছে…</string>

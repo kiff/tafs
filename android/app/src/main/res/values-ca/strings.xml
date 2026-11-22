@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">Mostra la pàgina abans d\'aquest pas</string>
     <string name="chrome_shot_title">Abans d\'aquest pas</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Desvincular-lo acaba les connexions que l\'usen: %1$s. Només tornen si les connectes de nou.</string>
+    <string name="chrome_used_for">S\'usa per a %1$s</string>
     <string name="chrome_waiting">Esperant Chrome…</string>
     <string name="coach_activity_card">Preparant el Card…</string>
     <string name="coach_activity_connection">Treballant en la connexió…</string>

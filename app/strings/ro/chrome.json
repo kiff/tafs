@@ -28,5 +28,7 @@
   "chrome.shot_open": "Vezi pagina de dinainte de acest pas",
   "chrome.shot_title": "Înainte de acest pas",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Dezasocierea încheie conexiunile care îl folosesc: {sites}. Revin doar dacă le conectezi din nou.",
+  "chrome.used_for": "Folosit pentru {sites}",
   "chrome.waiting": "Se așteaptă Chrome…"
 }

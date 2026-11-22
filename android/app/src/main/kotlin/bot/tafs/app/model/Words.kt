@@ -619,6 +619,8 @@ object Words {
     val shotOpen: String get() = Res.s(R.string.chrome_shot_open)
     val shotTitle: String get() = Res.s(R.string.chrome_shot_title)
     val title: String get() = Res.s(R.string.chrome_title)
+    fun unpairEnds(sites: String): String = Res.s(R.string.chrome_unpair_ends, sites)
+    fun usedFor(sites: String): String = Res.s(R.string.chrome_used_for, sites)
     val waiting: String get() = Res.s(R.string.chrome_waiting)
   }
   object Coach {

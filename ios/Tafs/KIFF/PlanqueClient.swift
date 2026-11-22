@@ -150,6 +150,9 @@ final class PlanqueClient {
                 var chrome: String?
                 /// All the sites it may reach.
                 var sites: [String]?
+                /// That Chrome's name as it was paired, as planque sets it.
+                var chromeName: String?
+                enum CodingKeys: String, CodingKey { case driver, chrome, sites, chromeName = "chrome_name" }
             }
             var browser: Browser? = nil
         }

@@ -28,5 +28,7 @@
   "chrome.shot_open": "Ver a página antes deste passo",
   "chrome.shot_title": "Antes deste passo",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Desemparelhar termina as ligações que o usam: {sites}. Só voltam se as ligar de novo.",
+  "chrome.used_for": "Usado para {sites}",
   "chrome.waiting": "À espera do Chrome…"
 }

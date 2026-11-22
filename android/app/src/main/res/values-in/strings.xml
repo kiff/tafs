@@ -589,6 +589,8 @@
     <string name="chrome_shot_open">Lihat halaman sebelum langkah ini</string>
     <string name="chrome_shot_title">Sebelum langkah ini</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Melepas pasangan mengakhiri koneksi yang memakainya: %1$s. Koneksi itu baru kembali jika kamu menghubungkannya lagi.</string>
+    <string name="chrome_used_for">Dipakai untuk %1$s</string>
     <string name="chrome_waiting">Menunggu Chrome…</string>
     <string name="coach_activity_card">Menyiapkan Card…</string>
     <string name="coach_activity_connection">Mengerjakan koneksi…</string>

@@ -1,5 +1,23 @@
 import SwiftUI
 
+/// The browser connections that run in a Chrome ("Your Chrome", docs/chrome.md): those planque holds for it that haven't ended.
+/// Unpairing the Chrome ends them, so they are read to the owner before it goes, and listed under the Chrome.
+enum ChromeConnections {
+    static func on(_ chrome: PlanqueClient.Chrome, in grants: [PlanqueClient.Grant]) -> [PlanqueClient.Grant] {
+        grants.filter { g in
+            g.request.browser?.driver == "extension" && g.request.browser?.chrome == chrome.id
+                && g.status != "disconnected" && g.status != "failed"
+        }
+    }
+
+    /// The sites of those connections, as the owner reads them: "wikipedia.org, shop.example". Empty when none.
+    static func sites(of connections: [PlanqueClient.Grant]) -> String {
+        var seen: [String] = []
+        for site in connections.flatMap({ $0.request.browser?.sites ?? [] }) where !seen.contains(site) { seen.append(site) }
+        return seen.joined(separator: ", ")
+    }
+}
+
 /// Account › Chrome (docs/chrome.md): the Chromes paired to the account, Pair a Chrome, and Unpair. It shows only once
 /// planque offers Chromes (`AppModel.chromes` is nil until then): planque's switch decides, never the app.
 struct ChromesView: View {
@@ -24,6 +42,11 @@ struct ChromesView: View {
                             if let browser = chrome.browser, let os = chrome.os {
                                 Text(Words.Chrome.browserOn(browser: browser, system: os)).scaledFont(13).foregroundColor(Theme.dim)
                             }
+                            let used = ChromeConnections.sites(of: ChromeConnections.on(chrome, in: model.grants))
+                            if !used.isEmpty {
+                                Text(Words.Chrome.usedFor(sites: used)).scaledFont(13).foregroundColor(Theme.soft)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                         Spacer()
                         Button(Words.Chrome.remove) { removing = chrome }
@@ -47,8 +70,8 @@ struct ChromesView: View {
         .scrollContentBackground(.hidden)
         .screenBackground()
         .navigationTitle(Self.title)
-        .task { await model.refreshChromes() }
-        .refreshable { await model.refreshChromes() }
+        .task { await model.refreshChromes(); await model.refreshConnections() }
+        .refreshable { await model.refreshChromes(); await model.refreshConnections() }
         .sheet(isPresented: $pairing, onDismiss: { Task { await model.refreshChromes() } }) { PairChromeView() }
         .confirmationDialog(removing.map { Words.Chrome.removeNamed(name: $0.name) } ?? "",
                             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
@@ -56,6 +79,12 @@ struct ChromesView: View {
             Button(Words.Chrome.remove, role: .destructive) {
                 if let chrome = removing { Task { await model.removeChrome(chrome) } }
                 removing = nil
+            }
+        } message: {
+            // What unpairing ends (Your Chrome 3): the connections run in this Chrome, and come back only by connecting again.
+            if let chrome = removing {
+                let ends = ChromeConnections.sites(of: ChromeConnections.on(chrome, in: model.grants))
+                if !ends.isEmpty { Text(Words.Chrome.unpairEnds(sites: ends)) }
             }
         }
     }

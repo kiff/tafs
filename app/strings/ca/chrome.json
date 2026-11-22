@@ -28,5 +28,7 @@
   "chrome.shot_open": "Mostra la pàgina abans d'aquest pas",
   "chrome.shot_title": "Abans d'aquest pas",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Desvincular-lo acaba les connexions que l'usen: {sites}. Només tornen si les connectes de nou.",
+  "chrome.used_for": "S'usa per a {sites}",
   "chrome.waiting": "Esperant Chrome…"
 }

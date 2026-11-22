@@ -28,5 +28,7 @@
   "chrome.shot_open": "Ver la página antes de este paso",
   "chrome.shot_title": "Antes de este paso",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Al desvincularlo terminan las conexiones que lo usan: {sites}. Solo vuelven si las conectas de nuevo.",
+  "chrome.used_for": "Se usa para {sites}",
   "chrome.waiting": "Esperando a Chrome…"
 }

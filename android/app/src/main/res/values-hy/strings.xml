@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">Տեսնել էջը այս քայլից առաջ</string>
     <string name="chrome_shot_title">Այս քայլից առաջ</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ %1$s։ Դրանք կվերադառնան միայն, եթե նորից միացնես։</string>
+    <string name="chrome_used_for">Օգտագործվում է՝ %1$s</string>
     <string name="chrome_waiting">Սպասում ենք Chrome-ին…</string>
     <string name="coach_activity_card">Card-ը պատրաստվում է…</string>
     <string name="coach_activity_connection">Կապի վրա աշխատում ենք…</string>

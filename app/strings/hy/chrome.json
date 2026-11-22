@@ -28,5 +28,7 @@
   "chrome.shot_open": "Տեսնել էջը այս քայլից առաջ",
   "chrome.shot_title": "Այս քայլից առաջ",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Զույգավորումը չեղարկելը ավարտում է այն օգտագործող կապերը՝ {sites}։ Դրանք կվերադառնան միայն, եթե նորից միացնես։",
+  "chrome.used_for": "Օգտագործվում է՝ {sites}",
   "chrome.waiting": "Սպասում ենք Chrome-ին…"
 }

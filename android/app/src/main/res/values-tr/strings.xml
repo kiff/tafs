@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">Bu adımdan önceki sayfayı gör</string>
     <string name="chrome_shot_title">Bu adımdan önce</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">Eşleşmeyi kaldırmak, onu kullanan bağlantıları sonlandırır: %1$s. Ancak yeniden bağlarsan geri gelirler.</string>
+    <string name="chrome_used_for">Şunun için kullanılıyor: %1$s</string>
     <string name="chrome_waiting">Chrome bekleniyor…</string>
     <string name="coach_activity_card">Card hazırlanıyor…</string>
     <string name="coach_activity_connection">Bağlantı üzerinde çalışılıyor…</string>

@@ -28,5 +28,7 @@
   "chrome.shot_open": "Voir la page avant cette étape",
   "chrome.shot_title": "Avant cette étape",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Dissocier met fin aux connexions qui l'utilisent : {sites}. Elles ne reviennent que si vous les reconnectez.",
+  "chrome.used_for": "Utilisé pour {sites}",
   "chrome.waiting": "En attente de Chrome…"
 }

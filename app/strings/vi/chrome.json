@@ -28,5 +28,7 @@
   "chrome.shot_open": "Xem trang trước bước này",
   "chrome.shot_title": "Trước bước này",
   "chrome.title": "Chrome",
+  "chrome.unpair_ends": "Hủy ghép đôi sẽ kết thúc các kết nối dùng nó: {sites}. Chúng chỉ trở lại khi bạn kết nối lại.",
+  "chrome.used_for": "Dùng cho {sites}",
   "chrome.waiting": "Đang chờ Chrome…"
 }

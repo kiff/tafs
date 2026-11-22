@@ -622,6 +622,8 @@
     <string name="chrome_shot_open">A lap megtekintése e lépés előtt</string>
     <string name="chrome_shot_title">E lépés előtt</string>
     <string name="chrome_title">Chrome</string>
+    <string name="chrome_unpair_ends">A párosítás megszüntetése véget vet az őt használó kapcsolatoknak: %1$s. Csak akkor térnek vissza, ha újra összekapcsolod őket.</string>
+    <string name="chrome_used_for">Ehhez használja: %1$s</string>
     <string name="chrome_waiting">Várakozás a Chrome-ra…</string>
     <string name="coach_activity_card">A Card előkészítése…</string>
     <string name="coach_activity_connection">Munka a kapcsolaton…</string>
