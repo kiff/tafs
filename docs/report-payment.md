@@ -42,7 +42,9 @@ words are in `app/strings/*/record.json` (`record.report.*`), in every language 
    it through test-account pruning, and halts the call's taf with its existing halt (planque confirms it). Account deletion still
    removes the receipt.
 2. tafs cloud halts the taf in kiff/agents too, so no run of it starts. It tells the account's phones, and logs the halt in
-   Activity (`GET /v1/events`), as `POST /v1/tafs/{id}/halt` does.
+   Activity (`GET /v1/events`), as `POST /v1/tafs/{id}/halt` does. Once KIFF has reported it, nothing fails the report: if
+   kiff/agents doesn't halt, KIFF's halt still holds, the answer reads `halting`, and the taf's Halt button asks again (the
+   entry is reported, so the report button is gone).
 3. It answers `{reported_at, taf?, halt}`. `halt` is the view `GET /v1/tafs/{id}/halt` gives (`halting` until KIFF's gateway,
    planque and kiff/agents all hold it).
 
@@ -54,7 +56,7 @@ this account. `400` for an id that isn't readable. `403` for anyone who isn't an
 
 - tafs cloud, `runtime/test/cloud.test.ts`, "reporting a payment the owner didn't expect (Q26)":
   - who gets the offer, on Activity and the Record;
-  - the report and the halt in KIFF and kiff/agents;
+  - the report and the halt in KIFF and kiff/agents, and a kiff/agents halt that fails, leaving it halting;
   - reporting again;
   - a call that isn't a payment, or isn't there, halting nothing.
 - Android, `ReportPaymentTest`:

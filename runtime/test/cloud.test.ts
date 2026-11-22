@@ -7074,6 +7074,19 @@ describe("reporting a payment the owner didn't expect (Q26)", () => {
     expect(events[0]).toMatchObject({ kind: "halted", name: "Rae" });
   });
 
+  it("keeps the report when kiff/agents doesn't halt: KIFF's halt holds, it reads halting, and the Halt button asks again", async () => {
+    const w = world();
+    w.account.calls = calls();
+    w.agents.fail.set("halt", new AgentsError(503, "down"));
+    const r = await call(w, "POST", "/v1/record/tr-pay/report", { token: "ana" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ reported_at: "2026-11-05T10:30:00Z", taf: RAE, halt: { state: "halting", runtime: false, kiff: true } });
+    // The taf's own halt reads it from KIFF as halting, and halting it again reaches kiff/agents.
+    expect((await call(w, "GET", `/v1/tafs/${RAE}/halt`, { token: "ana" })).body.halt.state).toBe("halting");
+    w.agents.fail.delete("halt");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/halt`, { token: "ana" })).body.halt).toMatchObject({ runtime: true });
+  });
+
   it("refuses a call that isn't a payment, and one that isn't there, halting nothing", async () => {
     const w = world();
     w.account.calls = calls();

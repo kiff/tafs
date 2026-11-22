@@ -1477,9 +1477,15 @@ async function paymentReportRoute(event: HTTPEvent, trace: string, me: KIFFIdent
     }
     throw err;
   }
-  const taf = (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === report.agent && !t.removing);
-  // A taf tafs cloud no longer lists (removed): KIFF's halt is the whole of it.
-  const runtime: AgentsHalt = taf ? await agentsCall(() => deps.agents.halt(me.tenantID, taf.id)) : { halted: false, own: false, tenant: false };
+  const taf = (await deps.tafs.list(me.tenantID).catch(() => [] as Taf[])).find((t) => t.kiffAgent === report.agent && !t.removing);
+  // KIFF has reported it and halted the taf: from here nothing fails the report, or the entry reads reported, with no button
+  // to try again, while kiff/agents may still start a run. kiff/agents not halting leaves the halt `halting`, and the taf's
+  // Halt button asks again. A taf tafs cloud no longer lists (removed): KIFF's halt is the whole of it.
+  const notHalted: AgentsHalt = { halted: false, own: false, tenant: false };
+  const runtime: AgentsHalt = taf ? await deps.agents.halt(me.tenantID, taf.id).catch((err: unknown) => {
+    console.log(JSON.stringify({ event: "report_halt_failed", tenant: me.tenantID, taf: taf.id, status: err instanceof AgentsError ? err.status : 0 }));
+    return notHalted;
+  }) : notHalted;
   const view = haltView({ status: "fulfilled", value: report.halt }, runtime);
   if (taf) {
     await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));

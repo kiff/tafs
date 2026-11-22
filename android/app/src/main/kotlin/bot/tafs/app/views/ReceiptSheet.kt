@@ -212,11 +212,13 @@ private fun ReportPayment(entry: RecordEntry, state: AppState) {
   if (!asking) return
   val made = runCatching { Instant.parse(offer.at) }.getOrNull() ?: entry.madeAt ?: entry.at
   DriveSheet(onDismissRequest = { if (!sending) asking = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
-    Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
       Text(Words.Record.Report.title, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
       Text(Words.Record.Report.intro(taf, entry.amountText ?: "–", shownDate(made)), style = scaled(15, color = Theme.ink))
       if (failed) Text(Words.Record.Report.failed, style = scaled(13, color = Theme.no))
       OutlineButton(Words.Record.Report.submit(taf), {
+        // One report per tap, however quickly it's tapped twice.
+        if (sending) return@OutlineButton
         sending = true
         scope.launch {
           val ok = try { send(entry.tafId, offer.traceId) } finally { sending = false }
