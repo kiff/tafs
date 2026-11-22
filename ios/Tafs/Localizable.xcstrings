@@ -139179,7 +139179,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desemparelhar termina as ligações que o usam: %1$@. Só voltam se as ligar de novo."
+            "value": "Desemparelhar encerra as conexões que o usam: %1$@. Elas só voltam se você conectá-las de novo."
           }
         },
         "ro": {
