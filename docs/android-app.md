@@ -1484,6 +1484,10 @@ switch decides, never the app. Account reads it when it opens (`AppModel.refresh
   (`ChromePairing.newSecret`, `SecureRandom`) and never sends it. It shows `lookup-secret` with "Pair only a Chrome on a computer
   you're at", and while it does both the sheet's own window (`DriveSheet(secure = true)`) and the activity's are secure, so no screenshot, recents thumbnail or shared screen shows it (`ChromeSecureSheetTest`).
   `ChromePairingInProgress` leaves the secret out of its `toString`.
+- **The code can be selected, and Copy copies it** (`CHROME_CODE_COPY`): the code is typed on another device, so it's carried there
+  on the clipboard (the owner's ask, 22 Nov). It's copied as a key is (`copyKeyForAMinute`, label `tafs.chrome.code`): marked
+  sensitive (Android 13 and later, so the system's preview never shows it) and taken off the clipboard after a minute if the
+  clipboard still holds it, never the person's next copy (`ApiDoorScreensTest.aCopiedChromePairingCodeIsSensitiveAndGoneAfterItsMinute`).
 - **It shows a Chrome only once that Chrome's proof holds** under the secret (`ChromePairing.extensionProofHolds`, compared in
   constant time), over its key and its KIFF device's offer (`kiff_offer`, empty when it sent none), so planque can swap
   neither. That offer must be KIFF's `kiff.pair.v1` for a `chrome` `extension` in `software`, with no approval key
