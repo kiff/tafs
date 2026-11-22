@@ -78,6 +78,7 @@ async function connect() {
 chrome.alarms.create(WAKE, { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async (a) => {
   if (a.name !== WAKE) return;
+  await runner.sweep();
   if (runner.active) lastActive = Date.now();
   if (relay && relay.connected && !runner.active && Date.now() - lastActive > IDLE_CLOSE_MS) {
     relay.close();

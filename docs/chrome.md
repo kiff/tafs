@@ -286,6 +286,10 @@ was done.
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
   change.
+- **A run nobody sends a step to for five minutes ends** as Stop does (its window closes), recorded as `stop` by `idle`: planque's
+  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
+  open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
+  running.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
@@ -410,7 +414,7 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
   Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
-  are the pauses (failures, no progress, the owner), Stop, steps that never overlap, windows of a page's text, the site
+  are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, the site
   permission, a checkout page that refuses every click, and a dialog's answer.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is

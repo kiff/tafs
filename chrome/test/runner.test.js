@@ -306,3 +306,31 @@ test("on a checkout page a taf clicks nothing, and a dialog the page raised stop
   assert.equal((await r2.handle(step({ op: "act", read_id: "rd_y", act: { kind: "click", ref: "c1" } }))).error.code, "dialog_open");
   assert.equal(r2.runs.get("run_1").failures, 1);
 });
+
+test("a run nobody sends a step to for five minutes is closed, as Stop does; a paused one, or one with a step running, is not", async () => {
+  let clock = 1_000_000;
+  const c = fakeChrome();
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, now: () => clock });
+  await r.handle(step());
+  clock += 4 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false, "four minutes is not idle");
+  assert.ok((await r.handle(step({ op: "read" }))).page, "a step starts the count again");
+  clock += 4 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, false);
+  clock += 2 * 60_000;
+  await r.sweep();
+  assert.equal(r.runs.get("run_1").stopped, true);
+  assert.ok(c.calls.some((x) => x[0] === "windows.remove"), "its window is gone");
+  assert.equal(r.state()[0].steps.at(-1).by, "idle");
+  assert.equal(r.active, false);
+  // The owner's pause is waiting for the owner, not a dropped call.
+  const d = fakeChrome();
+  const r2 = new Runner({ chrome: d, sleep, paired: () => paired, now: () => clock });
+  await r2.handle(step());
+  r2.pause("run_1");
+  clock += 60 * 60_000;
+  await r2.sweep();
+  assert.equal(r2.runs.get("run_1").stopped, false);
+});

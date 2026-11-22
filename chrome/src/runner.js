@@ -13,6 +13,9 @@ const LOAD_TIMEOUT_MS = 30_000;
 const SETTLE_MS = 600;
 const STEP_TIMEOUT_MS = 20_000;
 const FAILURES_TO_PAUSE = 3;
+// A run nobody has sent a step to for this long has been dropped (a lost close, a call that timed out): its window goes. One
+// the owner paused isn't idle, it's waiting for the owner.
+const RUN_IDLE_MS = 5 * 60_000;
 const PAUSE_CODES = { failures: "paused_failures", no_progress: "paused_no_progress", owner: "paused_by_owner" };
 
 /** A page as the repeat check compares it: everything the taf sees, without the read's own id. */
@@ -217,6 +220,25 @@ export class Runner {
   }
 
   async handleOne(step) {
+    const out = await this.handleStep(step);
+    const run = this.runs.get(step.run);
+    if (run) run.at = this.now();
+    return out;
+  }
+
+  /** Closes the windows of runs nobody sent a step to for RUN_IDLE_MS, as Stop does. Called by the service worker's alarm. */
+  async sweep() {
+    for (const run of [...this.runs.values()]) {
+      if (run.stopped || run.paused || this.tails.has(run.id)) continue;
+      if (this.now() - run.at > RUN_IDLE_MS) {
+        run.stopped = true;
+        this.record(run, { op: "stop", by: "idle" });
+        await this.closeRun(run);
+      }
+    }
+  }
+
+  async handleStep(step) {
     let run = this.runs.get(step.run);
     if (run && !(Array.isArray(step.sites) && step.sites.every((s) => run.sites.includes(s)))) {
       return { error: { code: "bad_step", detail: "a run's sites never grow" } };
@@ -240,6 +262,7 @@ export class Runner {
         stopped: false,
         failures: 0,
         last: null, // the last act, the read it was planned from and the page it answered with
+        at: this.now(), // when its last step began or ended
         steps: [],
         site: "",
         asks: [], // sites waiting on the owner's yes in Chrome
