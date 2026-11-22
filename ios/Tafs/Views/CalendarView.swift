@@ -167,7 +167,7 @@ struct CalendarView: View {
     @ViewBuilder private var datePicker: some View {
         if ThisDevice.isMac {
             Button { choosingDate = true } label: {
-                Text(Self.pickerTitle(dateBinding.wrappedValue))
+                Text(Self.pickerTitle(dateBinding.wrappedValue, locale: Words.namesCalendar ? Words.locale : .current))
                     .foregroundColor(Theme.ink)
                     .padding(.horizontal, 11).padding(.vertical, 6)
                     .background(Theme.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 7))
@@ -189,6 +189,10 @@ struct CalendarView: View {
             DatePicker(Words.Calendar.datePicker, selection: dateBinding, displayedComponents: .date)
                 .labelsHidden()
                 .environment(\.timeZone, TimeZone(identifier: "UTC")!)
+                // The picker writes its date by the environment's locale and calendar, which are the
+                // device's: the app's own, so Arabic reads Gregorian, not Hijri.
+                .environment(\.locale, Words.namesCalendar ? Words.locale : Locale.current)
+                .environment(\.calendar, Words.namesCalendar ? Words.locale.calendar : Calendar.current)
                 .accessibilityLabel(Words.Calendar.chooseDate)
         }
     }
@@ -196,7 +200,9 @@ struct CalendarView: View {
     /// The Mac picker's label: the date as the iPad's compact picker writes it ("Nov 15, 2026"),
     /// in UTC, where the picker's dates are held.
     nonisolated static func pickerTitle(_ date: Date, locale: Locale = .current) -> String {
-        date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: "UTC")!))
+        var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: TimeZone(identifier: "UTC")!)
+        style.calendar = locale.calendar
+        return date.formatted(style)
     }
 
     /// The selected date as a date at noon UTC, drawn in UTC: the picker shows the same day it holds.

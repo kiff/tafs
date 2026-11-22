@@ -32,6 +32,21 @@ final class IsolatedValuesTests: XCTestCase {
         XCTAssertTrue(Eyebrow.ideographic("기억하는 것"))
         XCTAssertTrue(Eyebrow.ideographic("確認が必要"))
         XCTAssertTrue(Eyebrow.ideographic("内 TAFS"))
+        // Arabic is formatted with Western digits and the Gregorian calendar (legal-i18n, 22 Nov): its figures read 0–9, as its
+        // legal pages and its lines write them, and a date isn't the Hijri one. Any other language is its own code.
+        let arabic = Words.locale(for: "ar")
+        let digits = NumberFormatter()
+        digits.locale = arabic
+        XCTAssertEqual(digits.string(from: 1234)?.filter(\.isNumber), "1234", "0–9, whatever the grouping mark")
+        XCTAssertEqual(arabic.calendar.identifier, .gregorian)
+        XCTAssertEqual(arabic.language.languageCode?.identifier, "ar")
+        XCTAssertEqual(Words.locale(for: "fr").identifier, "fr")
+        XCTAssertEqual(Words.isolated(["x"], in: arabic), ["\u{2068}x\u{2069}"], "still right to left")
+        XCTAssertEqual(ScaledFont.design(.monospaced, language: "ar"), .default, "the monospaced face splits Arabic's joined letters")
+        XCTAssertEqual(ScaledFont.design(.monospaced, language: "fr"), .monospaced)
+        XCTAssertEqual(ScaledFont.design(.rounded, language: "ar"), .rounded, "only the monospaced face is replaced")
+        XCTAssertTrue(Eyebrow.ideographic("بانتظارك"), "Arabic's letters join: no tracking, no monospaced face")
+        XCTAssertTrue(Eyebrow.ideographic("المتبقي 9:57"))
         XCTAssertFalse(Eyebrow.ideographic("WHAT IT REMEMBERS"))
         XCTAssertFalse(Eyebrow.ideographic("À VOUS DE VOIR"))
     }
