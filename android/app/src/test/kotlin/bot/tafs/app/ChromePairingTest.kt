@@ -140,6 +140,7 @@ class ChromePairingTest {
     assertEquals(v("signed_bytes"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c.copy(carried = emptyList()))))
     // Another order is other bytes: the extension checks the list as the phone wrote it.
     assertFalse(ChromePairing.signedBytes(v("pairing"), c.copy(carried = carried.reversed())).contentEquals(ChromePairing.signedBytes(v("pairing"), c)))
+  }
 
   @Test fun theOneTouchProofIsTheExtensionsAsTheVectorSays() {
     val secret = v("secret")
@@ -152,6 +153,37 @@ class ChromePairingTest {
     assertFalse(ChromePairing.oneTouchProofHolds(secret, chromeKey, proof))
     assertFalse(ChromePairing.oneTouchProofHolds(secret, bytes("phone_key"), proof, offer))
     assertFalse(ChromePairing.oneTouchProofHolds("another secret", chromeKey, proof, offer))
+  }
+
+  @Test fun aRePairingCarriesOnlyWhatThisPhoneSignedForTheOldChrome() {
+    val phone = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    val other = KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair()
+    fun sig(key: java.security.PrivateKey, chrome: String, grant: String, sites: List<String>) = ChromePairing.rawSignature(
+      Signature.getInstance("SHA256withECDSA").run { initSign(key); update(ChromePairing.sitesBytes(chrome, grant, sites)); sign() },
+    )!!
+    fun grant(id: String, chrome: String, sites: List<String>, sig: String?, status: String = "connected") = bot.tafs.app.kiff.Grant(
+      id = id, status = status, request = bot.tafs.app.kiff.GrantRequest(browser = GrantBrowser(GrantBrowser.EXTENSION, chrome, sites)), chromeSitesSig = sig,
+    )
+    val wiki = listOf("wikipedia.org")
+    val grants = listOf(
+      grant("g_ok", "chr_old", wiki, sig(phone.private, "chr_old", "g_ok", wiki)),
+      grant("g_other_key", "chr_old", wiki, sig(other.private, "chr_old", "g_other_key", wiki)),
+      grant("g_other_chrome", "chr_new", wiki, sig(phone.private, "chr_new", "g_other_chrome", wiki)),
+      grant("g_wider", "chr_old", wiki + "shop.example", sig(phone.private, "chr_old", "g_wider", wiki)),
+      grant("g_ended", "chr_old", wiki, sig(phone.private, "chr_old", "g_ended", wiki), status = "disconnected"),
+      grant("g_carried_before", "chr_old", wiki, null),
+    )
+    val carried = ChromePairing.carriedFrom("chr_old", grants, phone.public.encoded)
+    assertEquals("only a connection on the old Chrome whose sites this phone's own key signed, as listed",
+      listOf(ChromePairing.Carried("g_ok", wiki)), carried)
+  }
+
+  @Test fun theReplacedChromeIsTheOneWithTheOffersProfileIdElseNone() {
+    val chromes = listOf(bot.tafs.app.kiff.Chrome("chr_a", "Work", profileId = "a".repeat(32)), bot.tafs.app.kiff.Chrome("chr_b", "Home"))
+    fun offer(id: String) = bot.tafs.app.kiff.ChromeOffer(key = "k", proof = "p", profileId = id)
+    assertEquals("chr_a", ChromePairing.replacedBy(offer("a".repeat(32)), chromes)?.id)
+    assertNull(ChromePairing.replacedBy(offer("b".repeat(32)), chromes))
+    assertNull("no id, no guess", ChromePairing.replacedBy(offer(""), chromes))
   }
 
   @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {

@@ -154,6 +154,12 @@ data class Grant(
   val events: List<GrantEvent> = emptyList(),
   /** planque holds a confirmed sign-in for it: approving the tools connects them with no second sign-in. */
   @SerialName("signed_in") val signedIn: Boolean? = null,
+  /**
+   * For a connection on the owner's own Chrome: this phone's signature over its sites for that Chrome (`tafs-chrome/sites/v1`
+   * over `{chrome_id, grant, sites}`, raw r‖s), as given at approval. A re-pairing carries the connection only when it holds
+   * under this phone's own key ([ChromePairing.carriedFrom]): never planque's word for it.
+   */
+  @SerialName("chrome_sites_sig") val chromeSitesSig: String? = null,
   @SerialName("held_until") val heldUntil: String? = null,
   /** The vendor's name, as planque gives it: what its server calls itself. */
   @SerialName("vendor") val vendorName: String? = null,
@@ -593,11 +599,19 @@ class PlanqueClient(
    * is the one `kiff.requests.v1` signature over the pairing and KIFF's device, and the confirm carries what the extension
    * rebuilds it from (`tenant`, `signed_at`, `kiff_request_sha256`), which planque relays beside it.
    */
-  suspend fun confirmChromePairing(id: String, c: ChromePairing.Confirmation, phoneSig: String, together: ChromeTogether? = null) {
+  suspend fun confirmChromePairing(id: String, c: ChromePairing.Confirmation, phoneSig: String, together: ChromeTogether? = null, replaces: String? = null) {
     val fields = linkedMapOf<String, JsonElement>(
       "chrome_key_sha256" to JsonPrimitive(c.chromeKeySha256), "name" to JsonPrimitive(c.name), "phone_key" to JsonPrimitive(c.phoneKey),
       "phone_proof" to JsonPrimitive(c.phoneProof), "phone_sig" to JsonPrimitive(phoneSig),
     )
+    // A re-pairing (docs/chrome.md "Your Chrome" 1): the Chrome it replaces, on this request's own signature, and the
+    // connections that move, which are also inside the pairing the extension checks.
+    replaces?.let { fields["replaces"] = JsonPrimitive(it) }
+    if (c.carried.isNotEmpty()) {
+      fields["carried"] = kotlinx.serialization.json.JsonArray(c.carried.map { e ->
+        JsonObject(mapOf("grant" to JsonPrimitive(e.grant), "sites" to kotlinx.serialization.json.JsonArray(e.sites.map { JsonPrimitive(it) })))
+      })
+    }
     together?.let {
       fields["tenant"] = JsonPrimitive(it.tenant)
       fields["signed_at"] = JsonPrimitive(it.signedAt)
@@ -778,6 +792,8 @@ data class Chrome(
   val browser: String? = null,
   val os: String? = null,
   @SerialName("paired_at") val pairedAt: String? = null,
+  /** The id the extension keeps for its Chrome profile, a hint only: a new pairing with the same one is that Chrome again. */
+  @SerialName("profile_id") val profileId: String? = null,
 )
 
 @Serializable
@@ -842,6 +858,8 @@ data class ChromeOffer(
    */
   val oneTouch: Boolean = false,
   val oneTouchProof: String = "",
+  /** The extension's id for its Chrome profile (a hint, not in its proof): which paired Chrome a re-pairing pre-selects. */
+  val profileId: String = "",
 )
 
 /** The one-touch fields planque's confirm carries and relays to the extension (all three or none): docs/chrome.md "Your Chrome" 5. */
@@ -857,7 +875,7 @@ data class ChromePairingState(val status: String, val offer: ChromeOffer? = null
       val proof = field("proof")
       val offer = if (key != null && proof != null) {
         val oneTouch = (o["one_touch"] as? JsonPrimitive)?.takeIf { !it.isString }?.content == "true"
-        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty(), oneTouch, field("one_touch_proof").orEmpty())
+        ChromeOffer(key, field("version").orEmpty(), field("browser").orEmpty(), field("os").orEmpty(), proof, field("kiff_offer").orEmpty(), oneTouch, field("one_touch_proof").orEmpty(), field("profile_id").orEmpty())
       } else {
         null
       }

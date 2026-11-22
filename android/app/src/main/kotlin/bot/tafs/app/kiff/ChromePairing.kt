@@ -226,6 +226,51 @@ object ChromePairing {
     return base64Url(r + s)
   }
 
+  /** [raw] r‖s (64 bytes, base64url) as the DER `SHA256withECDSA` verifies; null when it isn't 64 bytes. */
+  fun derSignature(raw: String): ByteArray? {
+    val b = base64UrlDecoded(raw)?.takeIf { it.size == 64 } ?: return null
+    fun integer(v: ByteArray): ByteArray {
+      val trimmed = v.dropWhile { it == 0.toByte() }.toByteArray()
+      val t = if (trimmed.isEmpty()) byteArrayOf(0) else trimmed
+      val body = if (t[0].toInt() and 0x80 != 0) byteArrayOf(0) + t else t
+      return byteArrayOf(0x02, body.size.toByte()) + body
+    }
+    val seq = integer(b.copyOfRange(0, 32)) + integer(b.copyOfRange(32, 64))
+    return byteArrayOf(0x30, seq.size.toByte()) + seq
+  }
+
+  /** Whether [raw] (r‖s, base64url) is the key [publicKeyDER]'s P-256 signature of [message]. Anything malformed is false. */
+  fun verifiesRaw(publicKeyDER: ByteArray, message: ByteArray, raw: String): Boolean = runCatching {
+    val der = derSignature(raw) ?: return false
+    val key = java.security.KeyFactory.getInstance("EC").generatePublic(java.security.spec.X509EncodedKeySpec(publicKeyDER))
+    java.security.Signature.getInstance("SHA256withECDSA").run { initVerify(key); update(message); verify(der) }
+  }.getOrDefault(false)
+
+  /**
+   * What a re-pairing carries from [oldChrome] (docs/chrome.md "Your Chrome" 1): each connection on it whose sites this phone
+   * signed for it, read from the phone's own signature (`chrome_sites_sig`), checked here with [approvalKeyDER], never from
+   * planque's list as given. A connection whose signature doesn't hold, or that has none (one carried before), isn't carried:
+   * it ends with the old Chrome. Ended or failed connections aren't carried either; planque refuses them. That status rule is
+   * the app's until planque lists each Chrome's live connections ("Your Chrome" 4), as iOS's `ChromeConnections.on`.
+   */
+  fun carriedFrom(oldChrome: String, grants: List<Grant>, approvalKeyDER: ByteArray): List<Carried> =
+    grants.mapNotNull { g ->
+      val b = g.request.browser
+      val sites = b?.sites.orEmpty()
+      val sig = g.chromeSitesSig
+      when {
+        b?.driver != GrantBrowser.EXTENSION || b.chrome != oldChrome -> null
+        g.status == "disconnected" || g.status == "failed" -> null
+        sites.isEmpty() || sig.isNullOrEmpty() -> null
+        !verifiesRaw(approvalKeyDER, sitesBytes(oldChrome, g.id, sites), sig) -> null
+        else -> Carried(g.id, sites)
+      }
+    }
+
+  /** The paired Chrome a new pairing replaces by default: the one whose profile id is the offer's; none when no id matches. */
+  fun replacedBy(offer: ChromeOffer, chromes: List<Chrome>): Chrome? =
+    offer.profileId.takeIf { it.isNotEmpty() }?.let { id -> chromes.firstOrNull { it.profileId == id } }
+
   /** A name for the Chrome: the owner's, trimmed, at most [NAME_MAX] characters; the browser's own words when they gave none. */
   fun name(typed: String, browser: String): String = typed.trim().ifEmpty { browser }.take(NAME_MAX)
 
