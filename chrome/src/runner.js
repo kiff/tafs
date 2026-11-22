@@ -4,6 +4,12 @@
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
 import { refuseURL, bareURL } from "./sites.js";
+
+/**
+ * The run's own blank page: where its window opens and where a refused move is sent. It loads nothing, so the guard lets
+ * it be; refusing it sent the tab to about:blank again, and again, which also cancelled the page the step was opening.
+ */
+const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
@@ -53,7 +59,7 @@ export class Runner {
     c.webNavigation.onBeforeNavigate.addListener((d) => {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
-      if (!run) return;
+      if (!run || isBlank(d.url)) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
         c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
@@ -66,7 +72,7 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run) return;
-      if (refuseURL(d.url, run.sites, run.allowed)) {
+      if (!isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed)) {
         c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         return;

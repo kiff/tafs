@@ -102,6 +102,8 @@ test("a grant's site is never a public suffix, which would reach every site unde
 test("a URL as recorded has no query or fragment", () => {
   assert.equal(bareURL("https://shop.example/a/b?token=x#y"), "https://shop.example/a/b");
   assert.equal(bareURL("nope"), "");
+  assert.equal(bareURL("about:blank"), "", "a page off the web has no origin: never \"nullblank\"");
+  assert.equal(bareURL("chrome://newtab/"), "");
 });
 
 test("card numbers, keys and labelled secrets are masked; prose and order numbers aren't", () => {

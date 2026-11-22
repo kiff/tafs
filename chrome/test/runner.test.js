@@ -269,6 +269,30 @@ test("a page Chrome restores from its cache off the run's sites is sent to a bla
   assert.equal(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length, 1, "only the main frame");
 });
 
+test("the run's own blank page is never refused: no loop, and the page the step opens loads", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const blanks = () => c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length;
+  const before = blanks();
+  // The window opens on about:blank, and a refused move is sent there: neither is a move to refuse.
+  c.listeners.before({ tabId: tab, frameId: 0, url: "about:blank" });
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "about:blank" });
+  assert.equal(blanks(), before, "about:blank is not sent to about:blank again");
+  assert.ok(!r.state()[0].steps.some((s) => s.op === "navigate"), "and no refused move is recorded for it");
+  // A real move off the run's sites is still refused, once.
+  c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/" });
+  assert.equal(blanks(), before + 1);
+  assert.equal(r.state()[0].steps.at(-1).url, "https://evil.example/");
+  // Only the exact blank page: any other page off the web is still refused (a looser match would let these through).
+  let n = blanks();
+  for (const url of ["about:srcdoc", "about:blank#x", "chrome://settings/", "data:text/html,hi", "javascript:void(0)"]) {
+    c.listeners.before({ tabId: tab, frameId: 0, url });
+    assert.equal(blanks(), ++n, url + " is still refused");
+  }
+});
+
 test("a read at an offset asks the page for that window, and a bad offset is a bad step", async () => {
   const c = fakeChrome();
   const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired });
