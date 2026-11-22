@@ -73,7 +73,7 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 2. **The owner types the code into the side panel.** The extension makes its key pair and calls
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
-   {key: <SPKI, base64url>, version, manifest_hash, browser, os, kiff_offer,
+   {key: <SPKI, base64url>, version, manifest_hash (64 lower-case hex), browser, os, kiff_offer,
     proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer)}
    ```
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
@@ -155,8 +155,11 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
   Removing a line revokes that build at the next deploy.
 - **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step. The
   connection drops after a minute with no run.
-- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it. The release
-  workflow writes each released build's hash into planque's allowlist.
+- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it, written as **64
+  lower-case hex characters** in the pairing and in the relay's `hello` alike (not base64url, which every other value in this
+  protocol uses). The release workflow writes each released build's hash into planque's allowlist in the same form
+  (`chrome-builds.txt`), and planque looks a build up by the text it is sent. `manifestHashOf` in `chrome/src/crypto.js` is
+  the one place it is made.
 
 ## Steps
 

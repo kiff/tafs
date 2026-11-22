@@ -5,6 +5,7 @@ import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, 
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { parseCode } from "../src/pairing.js";
 import "../src/mask.js";
 
@@ -220,4 +221,13 @@ test("the pinned relay is the WebSocket API's own domain, over wss, with no path
   assert.equal(url.hostname, "relay.planque.kiff.dev");
   assert.equal(url.pathname, "/");
   assert.equal(url.search, "", "the extension adds ?chrome=… itself");
+});
+
+test("a build's manifest hash is 64 lower-case hex characters, the form planque's allowlist keeps", async () => {
+  const { manifestHashOf } = await import("../src/crypto.js");
+  const bytes = readFileSync(new URL("../manifest.json", import.meta.url));
+  const hash = await manifestHashOf(new Uint8Array(bytes));
+  assert.match(hash, /^[0-9a-f]{64}$/);
+  assert.equal(hash, createHash("sha256").update(bytes).digest("hex"));
+  assert.equal(await manifestHashOf(new Uint8Array(0)), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "SHA-256 of nothing");
 });

@@ -71,6 +71,14 @@ export async function sha256(data) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
 }
 
+/**
+ * A released build's name for planque's allowlist: the SHA-256 of `manifest.json`'s bytes as 64 lower-case hex characters,
+ * which is how planque's `chrome-builds.txt` writes it and how it looks a build up (it compares the text as sent).
+ */
+export async function manifestHashOf(bytes) {
+  return [...(await sha256(bytes))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export async function sign(privateKey, label, body) {
   return b64u(new Uint8Array(await crypto.subtle.sign(SIGN, privateKey, signingBytes(label, body))));
 }
