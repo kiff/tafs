@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { appCalls, appDisplayName, runningTool, setupGrants, setupView, type GrantView } from "../src/cloud/taf-setup.js";
 import { avatarRim, eachItemWords, summary } from "../src/cloud/home.js";
-import { LANGUAGES as LANGS } from "../src/cloud/words/index.js";
+import { FULL_LANGUAGES } from "../src/cloud/words/index.js";
 import { knobOf } from "../src/cloud/knob.js";
 import type { Run, SessionEvent, VersionState } from "../src/cloud/agents.js";
 
@@ -78,7 +78,7 @@ describe("a taf's server-composed setup", () => {
     const steps = knobOf({ name: "Example", does: { label: "Refund", line: "Refunds" }, unscheduled: true, doors: [], places: ["door_reply"],
       setting: { wakes: [], busy: "skip", results: ["door_reply"], what: [{ label: "Refund", words: "Refund a charge", tool: "refund" }] },
       zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
-    const lines = (lang: (typeof LANGS)[number]) => {
+    const lines = (lang: (typeof FULL_LANGUAGES)[number]) => {
       const view = setupView({ agent: "agent-example", grants: [two], knob: steps, rules: summary(cards, lang).rules, versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true, lang });
       const actions = view.connections[0]!.actions;
       return [...actions.flatMap((a) => a.limits), ...actions.map((a) => a.step_words), actions.find((a) => a.name === "note")!.title,
@@ -89,7 +89,7 @@ describe("a taf's server-composed setup", () => {
     expect(en).toEqual(["€5.00 per action", "€50.00 a day", "1 call a day", "Needs your approval for every call", "See its Card",
       "Step 1", "Not used by the current workflow", "Not used by the current workflow", "App action",
       "1 call in any 7 days for each invoice", "€100.00 in total a day for each order"]);
-    for (const lang of LANGS.filter((l) => l !== "en")) {
+    for (const lang of FULL_LANGUAGES.filter((l) => l !== "en")) {
       const said = lines(lang);
       expect(said, lang).toHaveLength(en.length);
       said.forEach((line, i) => expect(line, `${lang}: ${en[i]}`).not.toBe(en[i]));
@@ -98,18 +98,18 @@ describe("a taf's server-composed setup", () => {
     const pl = (n: number) => eachItemWords({ quantity: "count", limit: n, window: "calendar_day", per: "order" }, "pl");
     expect([pl(1), pl(2), pl(5)]).toEqual(["1 wywołanie dziennie na każde zamówienie", "2 wywołania dziennie na każde zamówienie", "5 wywołań dziennie na każde zamówienie"]);
     // The item in each language from tafs cloud's words, never the vendor's argument in English; a plain word for any other.
-    const day = (per: string) => (lang: (typeof LANGS)[number]) => eachItemWords({ quantity: "count", limit: 1, window: "calendar_day", per }, lang);
+    const day = (per: string) => (lang: (typeof FULL_LANGUAGES)[number]) => eachItemWords({ quantity: "count", limit: 1, window: "calendar_day", per }, lang);
     expect(day("payment_intent")("es")).toBe("1 llamada al día por cada pago");
     expect(day("Payment_Intent_ID")("en")).toBe("1 call a day for each payment");
     expect(day("ticket_ref")("en")).toBe("1 call a day for each item");
     expect(day("paid")("en")).toBe("1 call a day for each item");
-    for (const lang of LANGS) expect(day("payment_intent")(lang), lang).not.toMatch(/payment.intent|_/i);
+    for (const lang of FULL_LANGUAGES) expect(day("payment_intent")(lang), lang).not.toMatch(/payment.intent|_/i);
   });
   // A Spanish owner's Setup read "Workflow · Ask Coach to set its workflow" and "0 notes": the page's own lines, its
   // workflow, notes, actions, connection status, seven days and versions, are in the person's language too.
   it("says the Setup page's own lines in the person's language", () => {
     const none = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["app"], tools: new Map([["read_case", "Read a case"]]), zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
-    const lines = (lang: (typeof LANGS)[number]) => {
+    const lines = (lang: (typeof FULL_LANGUAGES)[number]) => {
       const set = setupView({ agent: "agent-example", grants: [grant], knob, rules: [], versions: { versions: [{ n: 1 }, { n: 2, live: true }] } as VersionState,
         notes: [{ content: "A note" }, { content: "Another" }], now, calls: [], statsComplete: true, lang });
       const unset = setupView({ agent: "agent-example", grants: [grant, { ...grant, id: "held", status: "pending", signed_in: true }], knob: none, rules: [],
@@ -123,7 +123,7 @@ describe("a taf's server-composed setup", () => {
     expect(en).toEqual(["Workflow", "1 step · Example", "2 notes", "1 action", "Connected", "0 calls · 0 done · 0 held in the last 7 days",
       "Changes to how it runs", "v2 live · 1 earlier", "Ask Coach to set its workflow", "Ask Coach to set its workflow", "0 notes",
       "Choose actions", "Signed in · actions waiting for approval", "The last 7 days could not be read in full; try again", "Runs its original definition"]);
-    for (const lang of LANGS.filter((l) => l !== "en")) {
+    for (const lang of FULL_LANGUAGES.filter((l) => l !== "en")) {
       const said = lines(lang);
       expect(said, lang).toHaveLength(en.length);
       // "note", "notes" and "action" are French words too (as in words.test.ts).
@@ -138,7 +138,7 @@ describe("a taf's server-composed setup", () => {
   });
   // The rest of the page's lines: who keeps the sign-in, a browser connection's own sign-in, and an app with no name.
   it("says who keeps a sign-in, a site's sign-in and an unnamed app in the person's language", () => {
-    const lines = (lang: (typeof LANGS)[number]) => {
+    const lines = (lang: (typeof FULL_LANGUAGES)[number]) => {
       const view = (g: GrantView) => setupView({ agent: "agent-example", grants: [g], knob, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true, lang }).connections[0]!;
       const provider = view({ ...grant, custody: "provider" }), planque = view({ ...grant, custody: "planque" }), browser = view({ ...grant, provider: "browser" });
       return [provider.custody_words!, planque.custody_words!, browser.site_sign_in!.title, browser.site_sign_in!.words, appDisplayName({ ...grant, vendor: undefined }, lang)];
@@ -146,7 +146,7 @@ describe("a taf's server-composed setup", () => {
     const en = lines("en");
     expect(en).toEqual(["Your sign-in is kept by our sign-in partner; the taf never sees it.", "Your sign-in is kept sealed by tafs; the taf never sees it.",
       "Sign in to a site", "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.", "Connected app"]);
-    for (const lang of LANGS.filter((l) => l !== "en")) {
+    for (const lang of FULL_LANGUAGES.filter((l) => l !== "en")) {
       const said = lines(lang);
       said.forEach((line, i) => expect(line, `${lang}: ${en[i]}`).not.toBe(en[i]));
     }
