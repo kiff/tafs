@@ -51,6 +51,16 @@ class CodeSignInTest {
     assertNull(m.state.value.codeSignInError)
   }
 
+  /** A read KIFF refuses (a device session, 403) leaves no setting and says why, so Account shows the line instead of nothing. */
+  @Test fun aRefusedReadSaysWhyWithNoSetting() = runTest {
+    transport.answer(route, 403, """{"error":"forbidden"}""")
+    val m = model()
+    m.loadCodeSignIn()
+    assertNull(m.state.value.codeSignIn)
+    val why = m.state.value.codeSignInError!!
+    assertTrue(why, why.startsWith(Words.Settings.SignInCode.notLoaded(why = "").trimEnd().take(10)))
+  }
+
   @Test fun offGoesFromTheAppWithTheSessionAndShowsKiffsAnswer() = runTest {
     transport.answer(route, 200, """{"email_code":true,"available":true}""")
     transport.answer(change, 200, """{"email_code":false,"changed_at":"2026-11-22T13:06:00Z","available":true}""")

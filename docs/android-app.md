@@ -2003,6 +2003,6 @@ no code screen in the app: the code is typed on KIFF's page. A KIFF without the 
 straight from the app (`PUT /v1/me/sign-in {"email_code": false}`, `AppModel.turnCodeSignInOff`); KIFF emails the person about
 the change. **Turn on** opens KIFF's own `/dashboard/sign-in` (`KiffClient.codeSignInPage`), because turning it on needs a
 recent sign-in, which a device session never passes; the setting is read again whenever the app comes back to Account
-(`ON_RESUME`). When KIFF can't send codes (`available` false) the section says so and offers nothing. As iOS's
+(`ON_RESUME`). When KIFF can't send codes (`available` false) the section says so and offers nothing. A read KIFF refuses (any answer but 404) shows the section with "Couldn't load this setting" and why, never nothing. As iOS's
 ([ios-app.md](ios-app.md)). Tests: `CodeSignInTest` (the answer read, a 404 shows nothing, off sent with the session alone and
 never on, a refusal said in the person's words with the setting kept).

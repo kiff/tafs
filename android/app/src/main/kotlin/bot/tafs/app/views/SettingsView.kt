@@ -186,6 +186,12 @@ fun SettingsSheet(
               state.codeSignInError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             }
           }
+          // Not read, and not because KIFF has no such route (that clears the error too): the section says why, as iOS's row does.
+          if (state.mode == Mode.kiff && state.codeSignIn == null) state.codeSignInError?.let { why ->
+            Section(Words.Settings.SignInCode.title) {
+              Text(why, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp))
+            }
+          }
           if (state.mode == Mode.kiff) Section(Words.Settings.plan) { PlanRow(state, onUsage) }
           if (state.mode == Mode.sample) Section(Words.Usage.label) { Action(UsageWords.TITLE, Theme.ink, onUsage) }
           if (state.mode == Mode.kiff) {
