@@ -280,6 +280,12 @@ than the build's commits nothing.
   it-IT, pt-PT, nl-NL, pl-PL, since 130 ko-KR, and since 132 es-419 and pt-BR (the listing's languages, `play_internal.py`'s `LOCALES`), each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
+- **Where tafs stands on Play, read only** (`.github/workflows/play-status.yml`, by hand and at 06:17 and 17:17 UTC, beside
+  the App Store's `store-status.yml`): `android/play/play_status.py` opens an edit, reads every track and deletes the edit
+  unsaved, so nothing is uploaded, changed or sent for review, and managed publishing never sees it. It prints one line per
+  release (track, release name, status, version codes) to the run's summary, and nothing else: no ids, tokens or countries.
+  It can make only those three calls, by their exact shape, and the file never names Play's save call: the job checks that
+  with a grep before any token exists, and `test_play_status.py` checks it too. Same workload identity as the uploads.
 - **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
   signed with the same upload key (docs/watch-wear.md, Versions). A run by hand builds the phone's bundle unless its
   `form` is `wear`.
