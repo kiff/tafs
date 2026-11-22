@@ -896,7 +896,7 @@ export const id: Partial<Words> = {
   sheet_spec: "Spesifikasi",
   sheet_sha: "SHA-256",
   sheet_sent_to: "Hanya dikirim ke",
-  sheet_header: "Header",
+  sheet_header: "Header HTTP",
   sheet_card_title: "Kartunya",
   sheet_legal: "Dengan menghubungkan, Anda menyetujui {terms} dan {privacy}.",
   sheet_terms: "Ketentuan",
