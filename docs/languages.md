@@ -603,6 +603,10 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 - **A reference number** ("#5098") written in a line is wrapped in U+2066 … U+2069 (a left-to-right isolate). After an
   Arabic letter the digits become Arabic-script digits (the bidi rule W2), which leaves the "#" outside their run and shows
   "5098#". `test_strings` checks it.
+- **Figures are Western digits (0–9), and dates are Gregorian** (legal-i18n, 22 Nov): the legal pages write "30 days" and
+  "16" so, and their tests require every figure to match the English page. The iOS app formats with the locale
+  `ar-u-ca-gregory-nu-latn` for Arabic (`IOS_LOCALE` in `generate.py`, `Words.locale(for:)`), so a time, a count and a date
+  don't turn into Arabic-script digits or the Hijri calendar.
 - **Captions** that the app sets in a monospaced face with letter-spacing (the Needs you "time left", the section eyebrows)
   are set in the plain face with no spacing in Arabic, as in Korean, Japanese and Chinese: spacing cuts Arabic's joined
   letters apart (`Eyebrow.ideographic`, `ScaledFont.design`).
