@@ -4,6 +4,12 @@
 // whatever started it. The owner's own input in a run's tab pauses the run.
 
 import { refuseURL, bareURL } from "./sites.js";
+
+/**
+ * The run's own blank page: where its window opens and where a refused move is sent. It loads nothing, so the guard lets
+ * it be; refusing it sent the tab to about:blank again, and again, which also cancelled the page the step was opening.
+ */
+const isBlank = (url) => String(url || "").trim().toLowerCase() === "about:blank";
 import { refuse } from "./guard.js";
 import { installDialogGuard } from "./dialogs.js";
 import { randomId } from "./crypto.js";
@@ -30,16 +36,19 @@ export class Runner {
    * `chrome` is the extension API (a fake in tests); `onChange(state)` hears every change the side panel shows.
    * `sleep` waits, so tests can run without real time.
    */
-  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null }) {
+  constructor({ chrome, onChange = () => {}, sleep = (ms) => new Promise((r) => setTimeout(r, ms)), vault = null, paired = () => null, now = () => Date.now(), releaseStore = null, shots = null }) {
     this.chrome = chrome;
     this.paired = paired; // {chromeId, phoneKey} of the pairing, to check the phone's own allowances
     this.onChange = onChange;
     this.sleep = sleep;
+    this.shots = shots; // the picture kept of each act (shot.js); null: none is taken
     this.vault = vault; // sealed sign-ins (vault.js); none, and a sealed fill is refused
     this.now = now;
     this.releases = new Nonces(now, releaseStore); // a release opens one fill, once, even across a worker restart
     this.runs = new Map(); // run id → {id, taf, sites, allowed, windowId, groupId, tabs: Set, tab, token, pages: Map, paused, stopped, failures, steps}
     this.tabRun = new Map(); // tab id → run id
+    this.fenceIds = new Map(); // tab id → the first of its three fence rule ids
+    this.nextFence = 1;
     this.tails = new Map(); // run id → the step now running, so a run's steps never overlap
     this.listen();
   }
@@ -50,7 +59,7 @@ export class Runner {
     c.webNavigation.onBeforeNavigate.addListener((d) => {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
-      if (!run) return;
+      if (!run || isBlank(d.url)) return;
       if (refuseURL(d.url, run.sites, run.allowed)) {
         c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
@@ -63,7 +72,7 @@ export class Runner {
       if (d.frameId !== 0) return;
       const run = this.runOfTab(d.tabId);
       if (!run) return;
-      if (refuseURL(d.url, run.sites, run.allowed)) {
+      if (!isBlank(d.url) && refuseURL(d.url, run.sites, run.allowed)) {
         c.tabs.update(d.tabId, { url: "about:blank" });
         this.record(run, { op: "navigate", url: bareURL(d.url), error: "site_not_listed" });
         return;
@@ -98,18 +107,41 @@ export class Runner {
    * outside the run's sites, or over plain http, is blocked before it's sent, whatever started it (a link, a redirect, a
    * form). onBeforeNavigate stays as the record of a refused move, not the guard.
    */
+  /**
+   * The ids of a tab's three fence rules. A rule id must be a small positive integer (an int32), and a tab id can be large
+   * (`tabId * 4` overflowed it, and the whole run failed as browser_unavailable), so each fenced tab takes the next three
+   * from a counter of this runner's own. Nothing but this runner adds session rules, and no run outlives it, so the first
+   * fence clears whatever an earlier service worker left.
+   */
+  async ruleIds(tabId) {
+    const dnr = this.chrome.declarativeNetRequest;
+    // One promise that every fence awaits, so a second run starting beside the first never has its rules removed by the clear.
+    this.clearing ||= (async () => {
+      if (!dnr.getSessionRules) return;
+      const left = await dnr.getSessionRules().catch(() => []);
+      if (left.length) await dnr.updateSessionRules({ removeRuleIds: left.map((r) => r.id) }).catch(() => {});
+    })();
+    await this.clearing;
+    if (!this.fenceIds.has(tabId)) {
+      this.fenceIds.set(tabId, this.nextFence);
+      this.nextFence += 3;
+    }
+    const base = this.fenceIds.get(tabId);
+    return [base, base + 1, base + 2];
+  }
+
   async fence(run, tabId) {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
-    const base = tabId * 4;
+    const [one, two, three] = await this.ruleIds(tabId);
     const frames = ["main_frame", "sub_frame"];
     const domains = [...new Set([...run.sites, ...run.allowed])];
     await dnr.updateSessionRules({
-      removeRuleIds: [base + 1, base + 2, base + 3],
+      removeRuleIds: [one, two, three],
       addRules: [
-        { id: base + 1, priority: 1, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames } },
-        { id: base + 2, priority: 2, action: { type: "allow" }, condition: { tabIds: [tabId], resourceTypes: frames, requestDomains: domains } },
-        { id: base + 3, priority: 3, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames, regexFilter: "^http://" } },
+        { id: one, priority: 1, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames } },
+        { id: two, priority: 2, action: { type: "allow" }, condition: { tabIds: [tabId], resourceTypes: frames, requestDomains: domains } },
+        { id: three, priority: 3, action: { type: "block" }, condition: { tabIds: [tabId], resourceTypes: frames, regexFilter: "^http://" } },
       ],
     });
   }
@@ -117,8 +149,10 @@ export class Runner {
   async unfence(tabId) {
     const dnr = this.chrome.declarativeNetRequest;
     if (!dnr) return;
-    const base = tabId * 4;
-    await dnr.updateSessionRules({ removeRuleIds: [base + 1, base + 2, base + 3] }).catch(() => {});
+    const base = this.fenceIds.get(tabId);
+    if (base == null) return;
+    this.fenceIds.delete(tabId);
+    await dnr.updateSessionRules({ removeRuleIds: [base, base + 1, base + 2] }).catch(() => {});
   }
 
   runOfTab(tabId) {
@@ -331,10 +365,16 @@ export class Runner {
       run.tab = tabId;
       run.tabs.add(tabId);
       this.tabRun.set(tabId, run.id);
-      // Fenced before it loads anything of the run's.
-      await this.fence(run, tabId);
-      run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId: win.id } });
-      await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
+      try {
+        // Fenced before it loads anything of the run's.
+        await this.fence(run, tabId);
+        run.groupId = await c.tabs.group({ tabIds: [tabId], createProperties: { windowId: win.id } });
+        await c.tabGroups.update(run.groupId, { title: "tafs · " + (run.taf || "taf"), color: "orange", collapsed: false });
+      } catch (e) {
+        // A window that could not be set up is not left open, blank and unfenced, on the owner's screen.
+        await this.stop(run.id).catch(() => {});
+        throw e;
+      }
     }
     await c.tabs.update(run.tab, { url, active: true });
     await this.loaded(run.tab);
@@ -431,6 +471,20 @@ export class Runner {
     return this.read(run);
   }
 
+  /**
+   * The picture kept of an act, taken just before it, with the page's secret fields covered (shot.js). The act waits only for
+   * the picture to be taken; the encoding and the upload go on after it. Nothing here can stop the act.
+   */
+  async pictureOf(run, step, page) {
+    if (!this.shots) return;
+    try {
+      const got = await this.shots.capture({ tabId: run.tab, windowId: run.windowId, page });
+      if (got && got.png) this.shots.send(got.png, step.id).catch(() => {});
+    } catch {
+      // A picture that couldn't be taken is no reason to hold an act.
+    }
+  }
+
   async act(run, step) {
     if (run.tab == null) return { error: { code: "no_page" } };
     const page = run.pages.get(step.read_id);
@@ -438,6 +492,7 @@ export class Runner {
     const refused = refuse(page, step.act);
     if (refused) return { error: { code: refused.code } };
     if (step.act.sealed) return this.fillSealed(run, step, page);
+    await this.pictureOf(run, step, page);
     const done = await this.inTab(run.tab, (a, id) => globalThis.TafsPage.act(a, id), [step.act, step.read_id]);
     if (!done || !done.ok) return { error: { code: (done && done.code) || "page_unresponsive" } };
     // A click is never proof of its effect: the page is read back.

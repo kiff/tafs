@@ -104,6 +104,28 @@ describe("each Card on its own (kiff/tafs#211)", () => {
     expect(v.total?.used?.minor).toBe(18000);
   });
 
+  it("never shows a count of 0 (every call asks first) as the Card's calls total", () => {
+    const asks = { quantity: "count", window: "calendar_day", limit: 0 };
+    const only: Mandate = { ...reads, aggregates: [asks], limits: [{ ...asks, used: 0, status: "ok" }] };
+    expect(cardView(only).calls).toBeNull();
+    const beside: Mandate = {
+      ...reads,
+      aggregates: [asks, { quantity: "count", window: "calendar_day", limit: 10000 }],
+      limits: [{ ...asks, used: 0, status: "ok" }, { quantity: "count", window: "calendar_day", limit: 10000, used: 3, status: "ok" }],
+    };
+    expect(cardView(beside).calls).toEqual({ limit: 10000, used: 3, window: "calendar_day", window_words: { each: "a day", now: "today" } });
+    // With extra room its line's limit is the ceiling now, and it is still told apart by the Card's own limit.
+    const roomy: Mandate = {
+      ...reads,
+      aggregates: [asks, { quantity: "count", window: "calendar_day", limit: 10000 }],
+      limits: [{ ...asks, used: 0, status: "ok" }, { quantity: "count", window: "calendar_day", limit: 12000, base_limit: 10000, extra_room: 2000, used: 7, status: "ok" }],
+    };
+    expect(cardView(roomy).calls).toMatchObject({ limit: 12000, used: 7, base_limit: 10000, extra_room: 2000 });
+    // A line KIFF sent at another limit than the Card's is still read (the first one of that window), as before.
+    const other: Mandate = { ...reads, limits: [{ quantity: "count", window: "calendar_day", limit: 250, used: 9, status: "ok" }] };
+    expect(cardView(other).calls).toMatchObject({ limit: 250, used: 9 });
+  });
+
   it("never reads use KIFF couldn't read as zero", () => {
     const unread: Mandate = { ...refunds, limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 80000, status: "unavailable" }] };
     expect(cardView(unread).total?.used).toBeNull();

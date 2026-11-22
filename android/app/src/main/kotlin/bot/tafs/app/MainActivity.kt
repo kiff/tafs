@@ -1038,6 +1038,9 @@ internal fun SignedInView(model: AppModel, onSignIn: () -> Unit, celebrating: Bo
         onFiles = { showingSettings = false; filesFromAccount = true; files.show() },
         onChromes = { showingSettings = false; showingChromes = true },
         onLoadChromes = { scope.launch { model.refreshChromes() } },
+        onLoadCodeSignIn = { scope.launch { model.loadCodeSignIn() } },
+        onCodeSignInOff = { scope.launch { model.turnCodeSignInOff() } },
+        codeSignInPage = model.codeSignInPage,
       )
     }
     }

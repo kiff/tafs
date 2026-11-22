@@ -1,0 +1,1 @@
+- **Setup no longer treats KIFF's own 10,000-a-day count as a limit the owner agreed:** a rules notice that lists it ("KIFF adds it") isn't asked to say it again, and no Card is required to carry it, so Coach doesn't loop through refused approvals or change the owner's limits to get past it ([coach.md](docs/coach.md)).

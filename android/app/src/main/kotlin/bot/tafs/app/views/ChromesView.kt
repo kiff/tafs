@@ -50,6 +50,7 @@ import kotlinx.coroutines.launch
 
 const val CHROMES_SHEET = "chromes-sheet"
 const val CHROME_CODE = "chrome-code"
+const val CHROME_CODE_COPY = "chrome-code-copy"
 const val CHROME_PAIR = "chrome-pair"
 const val CHROME_CONFIRM = "chrome-confirm"
 
@@ -141,7 +142,21 @@ fun ChromesSheet(
           p != null -> Panel {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Text(Words.Chrome.codeTitle, style = scaled(17, FontWeight.SemiBold, Theme.ink))
-              Text(p.code, style = scaled(32, FontWeight.Bold, Theme.ink).copy(fontFamily = FontFamily.Monospace), modifier = Modifier.testTag(CHROME_CODE))
+              // Selectable, and copied with one tap: the code is typed on another device, so it's carried there on the clipboard
+              // (the owner's ask, 22 Nov). As a key is: marked sensitive, and off the clipboard after its minute if still tafs's.
+              androidx.compose.foundation.text.selection.SelectionContainer {
+                Text(p.code, style = scaled(32, FontWeight.Bold, Theme.ink).copy(fontFamily = FontFamily.Monospace), modifier = Modifier.testTag(CHROME_CODE))
+              }
+              var copied by remember(p.code) { mutableStateOf(false) }
+              val context = LocalContext.current
+              Text(
+                if (copied) Words.Common.copied else Words.Common.copy,
+                style = scaled(15, FontWeight.SemiBold, Theme.amber),
+                modifier = Modifier.heightIn(min = 44.dp).testTag(CHROME_CODE_COPY).tapping {
+                  copyKeyForAMinute(context, p.code, label = CHROME_CODE_CLIP)
+                  copied = true
+                }.padding(top = 10.dp),
+              )
               Text(Words.Chrome.codeBody, style = scaled(14, color = Theme.dim))
               Text(Words.Chrome.onlyYours, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
               Text(Words.Chrome.profileNote, style = scaled(13, color = Theme.dim))

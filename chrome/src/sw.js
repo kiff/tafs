@@ -2,13 +2,14 @@
 // through the runner. It wakes on an alarm while it sleeps, connects, and lets the connection drop when no run is on.
 
 import { config } from "./config.js";
-import { indexedStore } from "./store.js";
-import { newKeyPair, sha256, b64u, sign, LABEL } from "./crypto.js";
+import { indexedStore, profileId } from "./store.js";
+import { newKeyPair, sha256, b64u, sign, LABEL, manifestHashOf } from "./crypto.js";
 import { parseCode, offer, checkConfirmation } from "./pairing.js";
 import { Runner } from "./runner.js";
 import { Relay } from "./relay.js";
 import { Vault } from "./vault.js";
 import { Coach } from "./coach.js";
+import { Shots } from "./shot.js";
 import { kiffOffer, claimProof, claim, logout as kiffLogout } from "./kiff.js";
 import { refuseURL, hostOf } from "./sites.js";
 
@@ -23,7 +24,11 @@ const releaseStore = {
   get: async () => (await chrome.storage.session.get("releases")).releases || [],
   set: (entries) => chrome.storage.session.set({ releases: entries }),
 };
-const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore });
+// The picture kept of each act: only in a build that has it on (config.js), never by default.
+const shots = config().screenshots
+  ? new Shots({ chrome, inTab: (tabId, func, args) => chrome.scripting.executeScript({ target: { tabId }, func, args, world: "ISOLATED" }).then((r) => r && r[0] && r[0].result), keys: () => kept.keys, pairing: () => kept.pairing, base: config().api })
+  : null;
+const runner = new Runner({ chrome, onChange: (runs) => publish({ runs }), vault, paired: () => kept.pairing, releaseStore, shots });
 
 function publish(extra = {}) {
   const state = { paired: !!kept.pairing, name: kept.pairing ? kept.pairing.name : null, connected: !!(relay && relay.connected), runs: runner.state(), ...extra };
@@ -42,7 +47,7 @@ async function load() {
 
 async function manifestHash() {
   const raw = await (await fetch(chrome.runtime.getURL("manifest.json"))).arrayBuffer();
-  return b64u(await sha256(new Uint8Array(raw)));
+  return manifestHashOf(new Uint8Array(raw));
 }
 
 /** Unpaired, from the phone (planque closes with 4410) or here: everything kept is wiped and every run closed. */
@@ -103,6 +108,7 @@ async function pairWith(text) {
   const ua = navigator.userAgentData;
   const body = await offer(code.secret, keys, {
     kiffOffer: kiff.text,
+    profileId: await profileId(chrome.storage.local),
     version: cfg.version,
     manifestHash: await manifestHash(),
     browser: "Chrome " + (ua && ua.brands ? (ua.brands.find((b) => b.brand === "Google Chrome") || {}).version || "" : ""),
@@ -239,9 +245,12 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     vault_remove: async () => vault.remove(m.id),
     coach_thread: async () => {
       claimKiff().catch(() => {});
-      return { thread: await (await coach()).thread() };
+      return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
-    coach_send: async () => ({ sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID }) }),
+    coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    coach_send: async () => ({
+      sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
+    }),
     share_target: () => shareTarget(),
     share_read: () => shareRead(m.tabId),
     state: async () => {

@@ -1,0 +1,1 @@
+- **The Chrome extension's icon is the tafs app's own** (the bot), in place of the old "t", at every size Chrome shows it.

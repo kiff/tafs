@@ -385,6 +385,59 @@ final class AppModel: ObservableObject {
             if let id = tafOnScreen { await loadTafSetup(id); await loadKnob(id) }
         }
     }
+    /// The person's code sign-in setting (Account › Sign-in): nil until read.
+    @Published private(set) var codeSignIn: KIFFClient.CodeSignIn?
+    @Published private(set) var codeSignInError: String?
+    @Published private(set) var codeSignInBusy = false
+
+    func loadCodeSignIn() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        do {
+            let setting = try await kiff.codeSignIn()
+            guard gen == accountGeneration else { return }
+            codeSignIn = setting
+            codeSignInError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            codeSignInError = Words.Settings.SignInCode.notLoaded(why: "\(error.localizedDescription)")
+        }
+    }
+
+    /// Off goes straight from the app. KIFF emails the person about the change.
+    func turnCodeSignInOff() async {
+        guard mode == .kiff, !codeSignInBusy else { return }
+        let gen = accountGeneration
+        codeSignInBusy = true
+        defer { codeSignInBusy = false }
+        do {
+            let setting = try await kiff.turnCodeSignInOff()
+            guard gen == accountGeneration else { return }
+            codeSignIn = setting
+            codeSignInError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            codeSignInError = Words.Settings.SignInCode.notChanged(why: "\(error.localizedDescription)")
+        }
+    }
+
+    /// On opens KIFF's own Settings › Sign-in page in the sheet: turning it on needs a recent sign-in, which a device session
+    /// never passes. The setting is read again when the sheet closes, whichever way it closed.
+    func turnCodeSignInOn() async {
+        guard mode == .kiff, !codeSignInBusy else { return }
+        codeSignInBusy = true
+        defer { codeSignInBusy = false }
+        let page = kiff.webURL.appendingPathComponent("dashboard").appendingPathComponent("sign-in")
+        do {
+            _ = try await VendorSignIn.kiffSheet().signIn(at: page)
+        } catch VendorSignIn.SignInError.cancelled {
+        } catch {
+            codeSignInError = Words.Settings.SignInCode.notChanged(why: "\(error.localizedDescription)")
+            return
+        }
+        await loadCodeSignIn()
+    }
+
     /// Whether this phone's KIFF session holds its signing key. A session from before
     /// the phone sent its key cannot answer: sign in again.
     var sessionHasKey = false
@@ -1301,6 +1354,30 @@ final class AppModel: ObservableObject {
     /// shows no Chrome row. planque's own switch decides, never the app.
     @Published private(set) var chromes: [PlanqueClient.Chrome]?
     @Published private(set) var chromesError: String?
+
+    /// The pictures kept for a taf Activity row's Chrome steps, by its operation (`RecordEntry.proposalID`): none on any failure,
+    /// so a row that is not a Chrome step, or a planque that keeps none, shows nothing.
+    func chromeShots(op: String) async -> [PlanqueClient.ChromeShotRef] {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return [] }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        let shots = (try? await planque.chromeShots(op: op)) ?? []
+        return gen == accountGeneration ? shots : []
+    }
+
+    /// The picture kept before one Chrome step: nil when none is kept; an error when planque can't be reached or the
+    /// picture doesn't check out.
+    func chromeScreenshot(step: String) async throws -> PlanqueClient.ChromeScreenshot? {
+        guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { return nil }
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        defer { planque.signer = nil }
+        return try await planque.chromeScreenshot(step: step)
+    }
 
     func refreshChromes() async {
         guard mode == .kiff, planqueReady, sessionHasKey, let tenant = kiffTenant else { chromes = nil; return }

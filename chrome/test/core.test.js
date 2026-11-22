@@ -4,6 +4,9 @@ import { canonical } from "../src/jcs.js";
 import { LABEL, sign, verify, newKeyPair, publicSPKI, b64u, fromB64u, derToRaw, signingBytes } from "../src/crypto.js";
 import { refuseURL, bareURL, sensitive, siteOK } from "../src/sites.js";
 import { refuse, PAY_WORDS } from "../src/guard.js";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { parseCode } from "../src/pairing.js";
 import "../src/mask.js";
 
 const { maskText, maskURL } = globalThis.TafsMask;
@@ -99,6 +102,8 @@ test("a grant's site is never a public suffix, which would reach every site unde
 test("a URL as recorded has no query or fragment", () => {
   assert.equal(bareURL("https://shop.example/a/b?token=x#y"), "https://shop.example/a/b");
   assert.equal(bareURL("nope"), "");
+  assert.equal(bareURL("about:blank"), "", "a page off the web has no origin: never \"nullblank\"");
+  assert.equal(bareURL("chrome://newtab/"), "");
 });
 
 test("card numbers, keys and labelled secrets are masked; prose and order numbers aren't", () => {
@@ -166,24 +171,96 @@ test("the extension's guard refuses what planque's does", () => {
   }
 });
 
-test("every locale has English's keys and placeholders, and a description Chrome takes", async () => {
+test("every shipped language has an extension locale with English's keys and placeholders, and no English left in it", async () => {
   const { readdirSync, readFileSync } = await import("node:fs");
   const dir = new URL("../_locales/", import.meta.url);
   const read = (loc) => JSON.parse(readFileSync(new URL(loc + "/messages.json", dir), "utf8"));
   const en = read("en");
-  // Waiting for legal-i18n's words, so Chrome shows English for them meanwhile. Empty before the switch goes on.
-  const awaiting = new Set(["vault_body", "vault_error", "vault_password", "vault_remove", "vault_save", "vault_saved", "vault_site", "vault_title", "vault_username", "vault_with_username", "vault_one_per_site"]);
-  const locales = readdirSync(dir).filter((l) => l !== "en");
-  assert.deepEqual(locales.sort(), ["de", "es", "fr", "it", "ja", "ko", "nl", "pl", "pt_BR", "pt_PT"]);
+  // The locales are the languages the apps ship (app/strings/languages.json), in Chrome's codes: Portugal's Portuguese is
+  // pt_PT, Traditional Chinese zh_TW, Serbian in Latin script sr, a regional variant with an underscore.
+  const shipped = JSON.parse(readFileSync(new URL("../../app/strings/languages.json", import.meta.url), "utf8")).shipped;
+  const chromeCode = (l) => ({ pt: "pt_PT", "zh-Hant": "zh_TW", "sr-Latn": "sr" })[l] || l.replace("-", "_");
+  const want = shipped.filter((l) => l !== "en").map(chromeCode).sort();
+  const locales = readdirSync(dir).filter((l) => l !== "en").sort();
+  assert.deepEqual(locales, want, "one locale for each language the apps ship, and no other");
+  // Lines that are the same in every language: names and the like. Anything else equal to English is English left in.
+  const sameAsEnglish = new Set(["name", "coach_title"]); // Coach is a name, the same in every language
+  // A word the language shares with English, on purpose: "Site" in French, Dutch, Portuguese, Romanian and Turkish,
+  // "Password" in Italian, "Conversation" in French. Anything else equal to English is English left in.
+  const sharedWords = { vault_site: ["fr", "nl", "pt_BR", "pt_PT", "ro", "tr"], vault_password: ["it"], coach_untitled: ["fr"] };
   for (const loc of ["en", ...locales]) {
     const m = read(loc);
-    assert.deepEqual(Object.keys(m).sort(), Object.keys(en).filter((k) => loc === "en" || !awaiting.has(k) || k in m).sort(), loc);
+    assert.deepEqual(Object.keys(m).sort(), Object.keys(en).sort(), loc);
     for (const [key, { message, placeholders }] of Object.entries(m)) {
       assert.ok(message.trim(), `${loc} ${key}`);
       assert.deepEqual(Object.keys(placeholders || {}).sort(), Object.keys(en[key].placeholders || {}).sort(), `${loc} ${key}`);
       const used = [...message.matchAll(/\$([A-Z_]+)\$/g)].map((x) => x[1].toLowerCase()).sort();
       assert.deepEqual([...new Set(used)], Object.keys(placeholders || {}).sort(), `${loc} ${key} uses its placeholders`);
+      if (loc !== "en" && !sameAsEnglish.has(key) && !(sharedWords[key] || []).includes(loc)) assert.notEqual(message, en[key].message, `${loc} ${key} is still English`);
     }
     assert.ok(m.description.message.length <= 132, `${loc} description: Chrome refuses over 132 characters`);
   }
+});
+
+test("the side panel's code field holds a whole pasted code, dashes and spaces included, and the extension reads it", () => {
+  const shown = "K7QF-29XM-DPQR-STVW-XYZ2-3";
+  const html = readFileSync(new URL("../sidepanel/index.html", import.meta.url), "utf8");
+  const max = Number(/<input id="code"[^>]*maxlength="(\d+)"/.exec(html)[1]);
+  assert.ok(max >= shown.length, "a code with its dashes fits");
+  assert.ok(max >= shown.replace(/-/g, " ").length + 4, "room for a stray space or two");
+  const want = parseCode(shown);
+  assert.ok(want, "the code the phone shows parses");
+  for (const typed of [shown.replace(/-/g, ""), shown.replace(/-/g, " "), " " + shown.toLowerCase() + " ", shown.replace(/-/g, " - ")]) {
+    assert.deepEqual(parseCode(typed), want, typed);
+  }
+});
+
+test("the pinned planque step key is a P-256 public key in SPKI form, 91 bytes, and parses", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const spki = fromB64u(ENVIRONMENTS.production.planqueKey);
+  assert.equal(spki.length, 91);
+  // SEQUENCE { SEQUENCE { id-ecPublicKey, prime256v1 }, BIT STRING 04 || X || Y }
+  assert.deepEqual([...spki.slice(0, 27)], [0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04]);
+  const key = await crypto.subtle.importKey("spki", spki, { name: "ECDSA", namedCurve: "P-256" }, true, ["verify"]);
+  assert.equal(key.type, "public");
+});
+
+test("the pinned relay is the WebSocket API's own domain, over wss, with no path", async () => {
+  const { ENVIRONMENTS } = await import("../src/config.js");
+  const url = new URL(ENVIRONMENTS.production.relay);
+  assert.equal(url.protocol, "wss:");
+  assert.equal(url.hostname, "relay.planque.kiff.dev");
+  assert.equal(url.pathname, "/");
+  assert.equal(url.search, "", "the extension adds ?chrome=… itself");
+});
+
+test("a build's manifest hash is 64 lower-case hex characters, the form planque's allowlist keeps", async () => {
+  const { manifestHashOf } = await import("../src/crypto.js");
+  const bytes = readFileSync(new URL("../manifest.json", import.meta.url));
+  const hash = await manifestHashOf(new Uint8Array(bytes));
+  assert.match(hash, /^[0-9a-f]{64}$/);
+  assert.equal(hash, createHash("sha256").update(bytes).digest("hex"));
+  assert.equal(await manifestHashOf(new Uint8Array(0)), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "SHA-256 of nothing");
+});
+
+test("secretSpans names what a picture must cover: cards that pass Luhn, keys by shape, labelled values, long hex and base64 runs", () => {
+  const { secretSpans } = globalThis.TafsMask;
+  const pick = (text) => secretSpans(text).map(([a, b]) => text.slice(a, b));
+  const stripe = "sk_live_" + "a".repeat(24);
+  const hex = "0123456789abcdef".repeat(2);
+  const text = `card 4242-4242-4242-4242 and 4111 1111 1111 1112, ${stripe}, api_key=abcd1234efgh, AKIA${"A".repeat(16)}, ghp_${"x".repeat(36)}, jwt eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2Q, hex ${hex}, b64 ${"Zm9v".repeat(10)}, Bearer abcdefghij1234`;
+  assert.deepEqual(pick(text), [
+    "4242-4242-4242-4242",
+    stripe,
+    "abcd1234efgh",
+    "AKIA" + "A".repeat(16),
+    "ghp_" + "x".repeat(36),
+    "eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2Q",
+    hex,
+    "Zm9v".repeat(10),
+    "abcdefghij1234",
+  ]);
+  assert.deepEqual(pick("order 1234567890123 and a long word " + "abcdefghij".repeat(4)), [], "not a card; no digit, so not a key");
+  assert.deepEqual(pick("123e4567-e89b-12d3-a456-426614174000"), [], "a uuid has dashes and runs under 32");
+  assert.deepEqual(pick(""), []);
 });

@@ -414,9 +414,13 @@ export function cardView(m: Mandate, lang: Lang = "en"): CardView {
     }
   }
   let calls: CardView["calls"] = null;
-  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity) && !a.per);
+  // The face's count is one the Card's calls can use: a count of 0 is "every call asks first", which the rules already say,
+  // and read as the Card's own total it said "0 calls left today of 0" beside a tool allowed 10,000 a day.
+  const count = (m.aggregates ?? []).find((a) => !isSum(a.quantity) && !a.per && a.limit > 0);
   if (count) {
-    const line = (m.limits ?? []).find((l) => l.status !== "per_item" && l.quantity === count.quantity && l.window === count.window);
+    // Its own line: two counts in one window (a 0 beside it) are told apart by the Card's limit, extra room aside.
+    const same = (m.limits ?? []).filter((l) => l.status !== "per_item" && l.quantity === count.quantity && l.window === count.window);
+    const line = same.find((l) => (l.base_limit ?? l.limit) === count.limit) ?? same[0];
     const ok = line?.status === "ok";
     calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, ...window(count.window, lang) };
     const r = room(line);

@@ -66,7 +66,7 @@ struct FilesView: View {
             case .loading:
                 ProgressView().frame(maxWidth: .infinity)
             case .failed:
-                Text(Words.Alert.tafsCouldNotReachKiff).scaledFont(14).foregroundColor(Theme.no)
+                Text(Words.Common.couldNotReadWhy(what: Words.Files.title, why: Words.Error.offline)).scaledFont(14).foregroundColor(Theme.no)
             case .loaded(let all) where all.isEmpty:
                 Text(Words.Files.empty).scaledFont(14).foregroundColor(Theme.soft)
             case .loaded(let all):
@@ -251,7 +251,7 @@ struct FileDetailView: View {
                     // No text start from tafs cloud: the system draws the file on the device.
                     FilePreview(url: copy).frame(height: 320)
                 case .unreachable:
-                    Text(Words.Alert.tafsCouldNotReachKiff).scaledFont(14).foregroundColor(Theme.no)
+                    Text(Words.Common.couldNotReadWhy(what: Words.Files.title, why: Words.Error.offline)).scaledFont(14).foregroundColor(Theme.no)
                 case .noPreview?:
                     // tafs cloud answered with no start for a text type: no preview, only the details and the buttons.
                     EmptyView()
@@ -295,7 +295,7 @@ struct FileDetailView: View {
                     if await files.delete(file.id) {
                         if let deleted { deleted() } else { dismiss() }
                     } else {
-                        note = Words.Alert.tafsCouldNotReachKiff
+                        note = Words.Error.offline
                     }
                 }
             }
@@ -315,7 +315,7 @@ struct FileDetailView: View {
     /// Download: the file's own bytes, then where the person picks.
     private func download() async {
         if local == nil {
-            do { local = try await files.localCopy(of: file) } catch { note = Words.Alert.tafsCouldNotReachKiff; return }
+            do { local = try await files.localCopy(of: file) } catch { note = Words.Error.offline; return }
         }
         saving = true
     }

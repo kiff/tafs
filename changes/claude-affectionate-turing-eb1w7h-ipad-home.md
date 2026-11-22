@@ -1,0 +1,1 @@
+- **On an iPad (and a Mac), an account with no taf yet opens on the first Home:** tafs cloud's line, Ask Coach and How tafs works, as on the iPhone, instead of an empty table ([docs/onboarding.md](docs/onboarding.md)).

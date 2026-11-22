@@ -47,3 +47,17 @@ export function memoryStore() {
     wipe: async () => map.clear(),
   };
 }
+
+/**
+ * The id this Chrome profile keeps for itself (`profile_id`, docs/chrome.md "Your Chrome"): 16 random bytes as lower-case hex,
+ * made once and kept in `area` (chrome.storage.local), which a pairing's wipe never touches, so the phone can tell the same
+ * Chrome pairing again under a new key. It is not a secret and proves nothing. Not `chrome.storage.sync`: that would copy it
+ * to every computer on the Google account, and two Chromes would look like one. A reinstall makes a new one.
+ */
+export async function profileId(area, random = (n) => crypto.getRandomValues(new Uint8Array(n))) {
+  const kept = (await area.get("profile_id")).profile_id;
+  if (typeof kept === "string" && /^[0-9a-f]{32}$/.test(kept)) return kept;
+  const id = Array.from(random(16), (b) => b.toString(16).padStart(2, "0")).join("");
+  await area.set({ profile_id: id });
+  return id;
+}

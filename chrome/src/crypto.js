@@ -15,6 +15,7 @@ export const LABEL = Object.freeze({
   unpair: "tafs-chrome/unpair/v1", // the extension unpairs itself
   sensitive: "tafs-chrome/sensitive/v1", // the phone allows one sensitive site for one grant
   sites: "tafs-chrome/sites/v1", // the phone signs a grant's sites when the owner approves it
+  screenshot: "tafs-chrome/screenshot/v1", // the extension signs the picture it keeps of an act, for planque to store against that step
   extProof: "tafs-chrome/ext/v1", // HMAC: the extension's key, under the pairing code's secret
   phoneProof: "tafs-chrome/phone/v1", // HMAC: the phone's key and the extension's, under the same secret
 });
@@ -71,16 +72,38 @@ export async function sha256(data) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
 }
 
+/**
+ * A released build's name for planque's allowlist: the SHA-256 of `manifest.json`'s bytes as 64 lower-case hex characters,
+ * which is how planque's `chrome-builds.txt` writes it and how it looks a build up (it compares the text as sent).
+ */
+export async function manifestHashOf(bytes) {
+  return [...(await sha256(bytes))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export async function sign(privateKey, label, body) {
   return b64u(new Uint8Array(await crypto.subtle.sign(SIGN, privateKey, signingBytes(label, body))));
 }
 
 /** Whether `sig` is `publicKey`'s signature of `body` under `label`. Anything malformed is false, never an error. */
 export async function verify(publicKey, label, body, sig) {
+  return verifyBytes(publicKey, signingBytes(label, body), sig);
+}
+
+/**
+ * What the phone's approval key signs, once, to confirm two requests under one fingerprint (`kiff.requests.v1`, the same
+ * lines KIFF and planque build): the tenant, `signed_at`, and the SHA-256 of each request's message as lower-case hex, in
+ * sorted order, so either service builds the same bytes.
+ */
+export function requestsMessage(tenant, signedAt, oneSHA256, otherSHA256) {
+  const [a, b] = oneSHA256 <= otherSHA256 ? [oneSHA256, otherSHA256] : [otherSHA256, oneSHA256];
+  return bytes(["kiff.requests.v1", tenant, signedAt, a, b].join("\n"));
+}
+
+/** Whether `sig` is `publicKey`'s signature of exactly `data`. Anything malformed is false, never an error. */
+export async function verifyBytes(publicKey, data, sig) {
   try {
     const key = typeof publicKey === "string" ? await importPublic(publicKey) : publicKey;
     const given = fromB64u(sig);
-    const data = signingBytes(label, body);
     // r‖s first, as the contract sends it; a DER signature (a phone's keystore) after, which can also be 64 bytes long.
     if (given.length === 64 && (await crypto.subtle.verify(SIGN, key, given, data))) return true;
     const raw = derToRaw(given);

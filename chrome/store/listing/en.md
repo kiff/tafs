@@ -14,12 +14,12 @@ tafs for Chrome lets your tafs work in your own Chrome, only on the sites you al
 • A taf works in its own tabs, in a tab group you can see. You can pause or stop it at any time, and it pauses when you touch one of its tabs.
 • tafs can't use a site until you allow it in Chrome, one site at a time, when a task needs it.
 • Paying, placing an order and filling a saved sign-in always wait for your approval on your phone.
-• It reads a page as text and form fields, with password, card and code fields removed. It never reads your other tabs or your history, and it takes no screenshots.
+• It reads a page as text and form fields, with password, card and code fields removed. It never reads your other tabs or your history.
 • Banks, wallets, password managers, payments, health and government sites are never worked on, unless you allow one, for one task, on your phone.
 • Saved sign-ins are optional and sealed on this computer. tafs and KIFF never see them.
 • Talk to Coach in the side panel. Coach sees a page only when you click Share this page, and then only that page, with the same fields removed.
 
-What a taf reads goes to the AI that runs your task and is kept with that task. KIFF keeps the page before and after a change for at most 30 days. Unpairing or uninstalling deletes what the extension keeps on your computer.
+What a taf reads goes to the AI that runs your task and is kept with that task. KIFF keeps the page before and after a change for at most 30 days. Once screenshots are switched on, each step that acts also keeps one screenshot of the page, taken just before the act with password, card and code fields hidden, for at most 30 days. You see it only in the tafs app, and it never goes to the AI. Unpairing or uninstalling deletes what the extension keeps on your computer.
 
 You need the tafs app on your phone and a KIFF account.
 

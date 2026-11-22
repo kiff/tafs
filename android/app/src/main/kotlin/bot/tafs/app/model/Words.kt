@@ -90,6 +90,9 @@ object Words {
     val firstTaf: String get() = Res.s(R.string.approval_first_taf)
     fun hasNoFaceIdTouch(device: String): String = Res.s(R.string.approval_has_no_face_id_touch, device, Words.demonstrative(device, capital = true))
     fun hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String): String = Res.s(R.string.approval_has_no_passcode_needs_one, device, either, kind, either2, Words.demonstrative(device, capital = true))
+    object Hello {
+      fun before(act: String): String = Res.s(R.string.approval_hello_before, act)
+    }
     val kept: String get() = Res.s(R.string.approval_kept)
     val keyCouldNotSign: String get() = Res.s(R.string.approval_key_could_not_sign)
     val keyGoneApproveAgain: String get() = Res.s(R.string.approval_key_gone_approve_again)
@@ -117,14 +120,17 @@ object Words {
       val add: String get() = Res.s(R.string.approval_security_key_add)
       val addEnterPin: String get() = Res.s(R.string.approval_security_key_add_enter_pin)
       val addTitle: String get() = Res.s(R.string.approval_security_key_add_title)
+      fun before(act: String): String = Res.s(R.string.approval_security_key_before, act)
       val enterPin: String get() = Res.s(R.string.approval_security_key_enter_pin)
       val failed: String get() = Res.s(R.string.approval_security_key_failed)
       val locked: String get() = Res.s(R.string.approval_security_key_locked)
       val noKey: String get() = Res.s(R.string.approval_security_key_no_key)
       val noPinSet: String get() = Res.s(R.string.approval_security_key_no_pin_set)
+      val nonePaired: String get() = Res.s(R.string.approval_security_key_none_paired)
       val notAllowed: String get() = Res.s(R.string.approval_security_key_not_allowed)
       val notFido2: String get() = Res.s(R.string.approval_security_key_not_fido2)
       val notThisKey: String get() = Res.s(R.string.approval_security_key_not_this_key)
+      val onPhone: String get() = Res.s(R.string.approval_security_key_on_phone)
       val pairWithout: String get() = Res.s(R.string.approval_security_key_pair_without)
       val pin: String get() = Res.s(R.string.approval_security_key_pin)
       val pinPaused: String get() = Res.s(R.string.approval_security_key_pin_paused)
@@ -2383,6 +2389,20 @@ object Words {
       val title: String get() = Res.s(R.string.settings_sign_in_again_confirm_title)
     }
     val signInAgainWhy: String get() = Res.s(R.string.settings_sign_in_again_why)
+    object SignInCode {
+      val help: String get() = Res.s(R.string.settings_sign_in_code_help)
+      val label: String get() = Res.s(R.string.settings_sign_in_code_label)
+      val notAvailable: String get() = Res.s(R.string.settings_sign_in_code_not_available)
+      fun notChanged(why: String): String = Res.s(R.string.settings_sign_in_code_not_changed, why)
+      fun notLoaded(why: String): String = Res.s(R.string.settings_sign_in_code_not_loaded, why)
+      val off: String get() = Res.s(R.string.settings_sign_in_code_off)
+      val on: String get() = Res.s(R.string.settings_sign_in_code_on)
+      val saved: String get() = Res.s(R.string.settings_sign_in_code_saved)
+      val title: String get() = Res.s(R.string.settings_sign_in_code_title)
+      val turnOff: String get() = Res.s(R.string.settings_sign_in_code_turn_off)
+      val turnOn: String get() = Res.s(R.string.settings_sign_in_code_turn_on)
+      val turnOnInBrowser: String get() = Res.s(R.string.settings_sign_in_code_turn_on_in_browser)
+    }
     val signOut: String get() = Res.s(R.string.settings_sign_out)
     object SignOutOfKiff {
       fun bodyDevice(device: String): String = Res.s(R.string.settings_sign_out_of_kiff_body_device, device, Words.demonstrative(device, capital = true))

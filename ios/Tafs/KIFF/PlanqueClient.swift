@@ -720,11 +720,12 @@ final class PlanqueClient {
         /// The most a picture may weigh: planque keeps none over 120 KB.
         static let largest = 120 * 1024
 
-        /// planque's answer, or nil when it isn't a picture to show: not the shape, not base64url, too big, not WebP, or
-        /// bytes whose SHA-256 isn't the one planque kept.
-        static func read(_ data: Data) -> ChromeScreenshot? {
+        /// planque's answer for `step`, or nil when it isn't a picture to show: not the shape, not the step asked for (a misrouted
+        /// answer is never shown under another step), not base64url, too big, not WebP, or bytes whose SHA-256 isn't the one
+        /// planque kept.
+        static func read(_ data: Data, step asked: String) -> ChromeScreenshot? {
             struct Raw: Decodable { let step: String; let taken_at: String; let sha256: String; let image: String }
-            guard let raw = try? JSONDecoder().decode(Raw.self, from: data),
+            guard let raw = try? JSONDecoder().decode(Raw.self, from: data), raw.step == asked,
                   let bytes = ChromePairing.base64URLDecoded(raw.image), !bytes.isEmpty, bytes.count <= largest,
                   bytes.count >= 12, bytes.prefix(4) == Data("RIFF".utf8), bytes[8..<12] == Data("WEBP".utf8),
                   SHA256.hash(data: bytes).map({ String(format: "%02x", $0) }).joined() == raw.sha256.lowercased(),
@@ -739,11 +740,39 @@ final class PlanqueClient {
     func chromeScreenshot(step: String) async throws -> ChromeScreenshot? {
         do {
             let data = try await raw("GET", "chromes/screenshots/\(escaped(step))", body: nil)
-            guard let shot = ChromeScreenshot.read(data) else { throw PlanqueError.server(status: 0, message: "bad_picture") }
+            guard let shot = ChromeScreenshot.read(data, step: step) else { throw PlanqueError.server(status: 0, message: "bad_picture") }
             return shot
         } catch PlanqueError.server(let status, _, _) where status == 404 {
             return nil
         }
+    }
+
+    /// One picture kept for an operation: the step it came before and when it was taken. The bytes come from `chromeScreenshot(step:)`.
+    struct ChromeShotRef: Equatable, Identifiable {
+        let step: String
+        let takenAt: Date
+        var id: String { step }
+
+        /// planque's list as it answers (`{"shots":[{"step","taken_at","sha256"}]}`, oldest first): nil when it isn't that
+        /// shape; an entry without a step or a readable time is left out; the order is kept.
+        static func readList(_ data: Data) -> [ChromeShotRef]? {
+            struct Raw: Decodable { let step: String?; let taken_at: String? }
+            struct List: Decodable { let shots: [Raw] }
+            guard let list = try? JSONDecoder().decode(List.self, from: data) else { return nil }
+            return list.shots.compactMap { shot in
+                guard let step = shot.step, !step.isEmpty, let at = shot.taken_at.flatMap({ ISO8601DateFormatter().date(from: $0) }) else { return nil }
+                return ChromeShotRef(step: step, takenAt: at)
+            }
+        }
+    }
+
+    /// The pictures kept for the Chrome steps of one operation (a taf's Activity row's `proposal_id`), oldest first, at most the
+    /// newest 20, none past their 30 days; no bytes. `[]` when none are kept, or planque keeps none. Signed like the single read.
+    func chromeShots(op: String) async throws -> [ChromeShotRef] {
+        let query = op.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed.subtracting(CharacterSet(charactersIn: "&=+#"))) ?? op
+        let data = try await raw("GET", "chromes/screenshots?op=\(query)", body: nil)
+        guard let shots = ChromeShotRef.readList(data) else { throw PlanqueError.server(status: 0, message: "bad_list") }
+        return shots
     }
 
     func openChromePairing() async throws -> ChromePairingOpened {

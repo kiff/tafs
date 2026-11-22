@@ -24,6 +24,7 @@ function fakeChrome({ permitted = true, page = null } = {}) {
     listeners,
     tabsMap: tabs,
     setAct: (a) => (actAnswer = a),
+    setNextTab: (n) => (nextTab = n),
     webNavigation: { onBeforeNavigate: on("before"), onCommitted: on("committed"), onCreatedNavigationTarget: on("created") },
     tabs: {
       onRemoved: on("removed"),
@@ -189,7 +190,7 @@ test("a run's tab is fenced by Chrome's own rules before it loads: only its site
   const loaded = c.calls.findIndex((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/");
   assert.ok(fenced < loaded, "fenced before the run's page loads");
   await r.stop("run_1");
-  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, [tab * 4 + 1, tab * 4 + 2, tab * 4 + 3]);
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, rules.addRules.map((x) => x.id));
 });
 
 test("a run's sites are the phone's signed list for the grant, never planque's word, and never grow", async () => {
@@ -268,6 +269,30 @@ test("a page Chrome restores from its cache off the run's sites is sent to a bla
   assert.equal(c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length, 1, "only the main frame");
 });
 
+test("the run's own blank page is never refused: no loop, and the page the step opens loads", async () => {
+  const c = fakeChrome();
+  const r = runner(c);
+  await r.handle(step());
+  const tab = [...c.tabsMap.keys()][0];
+  const blanks = () => c.calls.filter((x) => x[0] === "tabs.update" && x[2].url === "about:blank").length;
+  const before = blanks();
+  // The window opens on about:blank, and a refused move is sent there: neither is a move to refuse.
+  c.listeners.before({ tabId: tab, frameId: 0, url: "about:blank" });
+  c.listeners.committed({ tabId: tab, frameId: 0, url: "about:blank" });
+  assert.equal(blanks(), before, "about:blank is not sent to about:blank again");
+  assert.ok(!r.state()[0].steps.some((s) => s.op === "navigate"), "and no refused move is recorded for it");
+  // A real move off the run's sites is still refused, once.
+  c.listeners.before({ tabId: tab, frameId: 0, url: "https://evil.example/" });
+  assert.equal(blanks(), before + 1);
+  assert.equal(r.state()[0].steps.at(-1).url, "https://evil.example/");
+  // Only the exact blank page: any other page off the web is still refused (a looser match would let these through).
+  let n = blanks();
+  for (const url of ["about:srcdoc", "about:blank#x", "chrome://settings/", "data:text/html,hi", "javascript:void(0)"]) {
+    c.listeners.before({ tabId: tab, frameId: 0, url });
+    assert.equal(blanks(), ++n, url + " is still refused");
+  }
+});
+
 test("a read at an offset asks the page for that window, and a bad offset is a bad step", async () => {
   const c = fakeChrome();
   const r = new Runner({ chrome: c, sleep: (ms) => (ms >= 20_000 ? new Promise(() => {}) : Promise.resolve()), paired: () => paired });
@@ -333,4 +358,88 @@ test("a run nobody sends a step to for five minutes is closed, as Stop does; a p
   clock += 60 * 60_000;
   await r2.sweep();
   assert.equal(r2.runs.get("run_1").stopped, false);
+});
+
+test("a fenced tab's rule ids are small whatever the tab id is, a rule's id never repeats across tabs, and a run's rules go when it ends", async () => {
+  const c = fakeChrome();
+  const added = [];
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    added.push(...(o.addRules || []).map((x) => x.id));
+  };
+  let stale = [{ id: 77 }, { id: 78 }];
+  c.declarativeNetRequest.getSessionRules = async () => stale;
+  const r = runner(c);
+  // Chrome's tab ids can run into the billions: a rule id has to fit an int32.
+  c.setNextTab(2_000_000_000);
+  await r.handle(step());
+  c.setNextTab(1_900_000_000);
+  await r.handle(step({ run: "run_2", id: "op2" }));
+  assert.equal(added.length, 6);
+  assert.ok(added.every((id) => Number.isInteger(id) && id >= 1 && id <= 2 ** 31 - 1), "every rule id is a valid int32");
+  assert.equal(new Set(added).size, 6, "no id repeated across two tabs");
+  const removals = c.calls.filter((x) => x[0] === "dnr" && !x[1].addRules);
+  assert.deepEqual(removals[0][1].removeRuleIds, [77, 78], "rules an earlier service worker left are cleared first");
+  await r.stop("run_1");
+  assert.deepEqual(c.calls.filter((x) => x[0] === "dnr").at(-1)[1].removeRuleIds, added.slice(0, 3), "its own rules, not the other run's");
+});
+
+test("a window that can't be set up (the fence refuses) is closed, not left open and blank, and the step says why", async () => {
+  const c = fakeChrome();
+  c.declarativeNetRequest.updateSessionRules = async () => {
+    throw new Error("Rule with id 8000000001 does not specify a valid id");
+  };
+  const r = runner(c);
+  const out = await r.handle(step());
+  assert.equal(out.error.code, "browser_unavailable");
+  assert.match(out.error.detail, /valid id/);
+  assert.ok(c.calls.some((x) => x[0] === "windows.remove"), "the window is closed");
+  assert.ok(!c.calls.some((x) => x[0] === "tabs.update" && x[2].url === "https://shop.example/"), "nothing was loaded");
+  assert.equal(r.active, false);
+});
+
+test("two runs opening together in a fresh worker: the stale-rule clear finishes before either fence is added, so neither is removed", async () => {
+  const c = fakeChrome();
+  const order = [];
+  c.declarativeNetRequest.getSessionRules = async () => {
+    await new Promise((r) => setTimeout(r, 20));
+    return [{ id: 900 }];
+  };
+  c.declarativeNetRequest.updateSessionRules = async (o) => {
+    c.calls.push(["dnr", o]);
+    if (o.addRules) order.push("add");
+    else if (o.removeRuleIds.includes(900)) order.push("clear");
+  };
+  const r = new Runner({ chrome: c, sleep: (ms) => new Promise((x) => setTimeout(x, ms > 5 ? 5 : ms)), paired: () => paired });
+  await Promise.all([r.handle(step()), r.handle(step({ run: "run_2", id: "op2" }))]);
+  assert.deepEqual(order, ["clear", "add", "add"], "one clear, before both fences");
+});
+
+const PLAIN = { read_id: "rd_x", url: "https://shop.example/", title: "t", text: "", fields: [], controls: [{ ref: "c1", label: "Save" }], links: [] };
+
+test("an act takes its picture first, a read never does, and a picture that fails never holds the act", async () => {
+  const events = [];
+  const shots = {
+    capture: async ({ page }) => (events.push(["capture", page.url]), { png: "data:image/png;base64,AAAA" }),
+    send: async (png, id) => (events.push(["send", id]), "sent"),
+  };
+  const c = fakeChrome({ page: PLAIN });
+  const r = new Runner({ chrome: c, sleep, paired: () => paired, shots });
+  const opened = await r.handle(step());
+  const read = await r.handle(step({ op: "read" }));
+  assert.deepEqual(events, [], "no picture for an open or a read");
+  c.calls.length = 0;
+  const first = await r.handle(step({ id: "op_act", op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+  assert.equal(first.error, undefined);
+  assert.deepEqual(events, [["capture", "https://shop.example/"], ["send", "op_act"]]);
+  assert.ok(c.calls.some((x) => x[0] === "page" && x[1] === "act end"), "the act happened");
+  // A capture that throws, and one that finds nothing, never stop the act.
+  for (const capture of [async () => { throw new Error("no window"); }, async () => ({ why: "site" })]) {
+    const c2 = fakeChrome({ page: PLAIN });
+    const r2 = new Runner({ chrome: c2, sleep, paired: () => paired, shots: { capture, send: async () => { throw new Error("must not be called"); } } });
+    const o2 = await r2.handle(step());
+    const done = await r2.handle(step({ op: "act", read_id: "rd_x", act: { kind: "click", ref: "c1" } }));
+    assert.equal(done.error, undefined);
+    assert.ok(c2.calls.some((x) => x[0] === "page" && x[1] === "act end"));
+  }
 });

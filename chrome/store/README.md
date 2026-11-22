@@ -34,3 +34,18 @@ The dashboard's own list of accepted languages is longer than the docs' list and
 account exists, so it is checked then. Languages the Chrome Web Store may not offer as a listing language at all
 (az, hy, ka, sq, mk, mn, ne, km, lo, among ours) keep their text here for the day it does, and read English in the
 store until then.
+
+## The package
+
+`python3 chrome/store/package.py` writes `tafs-chrome-<version>.zip` from `chrome/` (the manifest at the zip's root, then
+`_locales`, `icons`, `sidepanel` and `src`; never the tests, this folder or `package.json`). It is the same bytes every time
+for the same files, and it prints the zip's size and SHA-256 and the SHA-256 of `manifest.json` (64 lower-case hex, the form
+planque's allowlist keeps). `--check` only checks that every file the manifest names and every file a script imports is in the
+package. `.github/workflows/chrome-package.yml` runs both, builds twice and compares, and keeps the zip as the run's artifact.
+It holds no key and uploads nothing: **the upload and the submission are the owner's.**
+
+**One thing to settle before the hash goes in planque's allowlist.** The extension sends the SHA-256 of the `manifest.json`
+it is running (`chrome/src/sw.js`). The Chrome Web Store re-packages an upload and, as far as I know, adds fields to the
+manifest it serves (an `update_url`), so the hash a Store install sends may differ from the zip's. It is not knowable
+from the zip: the first Store build is installed (a private or trusted-testers listing) and the hash read from what planque
+refuses it with, or from the extension, and that value is what is allowlisted. Confirm this on the first install.

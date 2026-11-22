@@ -1,0 +1,1 @@
+- **Chrome: a run's window opens its page again.** The navigation guard no longer refuses the run's own blank page, which looped and left the tab on about:blank until the step timed out; the side panel no longer floods its console on a step it can't name ([docs/chrome.md](docs/chrome.md)).

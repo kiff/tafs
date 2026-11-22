@@ -64,5 +64,21 @@
   "coach_working": { "message": "Coach travaille…" },
   "share_chars": { "message": "$N$ caractères", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Seules les pages https peuvent être partagées." },
-  "share_error_site_blocked": { "message": "Les pages comme celle-ci ne sont jamais partagées : banques, portefeuilles, mots de passe, paiements, santé et administrations." }
+  "share_error_site_blocked": { "message": "Les pages comme celle-ci ne sont jamais partagées : banques, portefeuilles, mots de passe, paiements, santé et administrations." },
+  "vault_title": { "message": "Connexions enregistrées" },
+  "vault_body": { "message": "Enregistrée ici, scellée sur cet ordinateur. Un taf ne peut en demander une que sur ce site exact, et elle n'est saisie qu'après que vous avez approuvé ce remplissage sur votre téléphone. tafs et KIFF ne la voient jamais." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Nom d'utilisateur ou e-mail (facultatif)" },
+  "vault_password": { "message": "Mot de passe" },
+  "vault_save": { "message": "Enregistrer scellée" },
+  "vault_saved": { "message": "Enregistrée. Elle est scellée sur cet ordinateur." },
+  "vault_error": { "message": "Non enregistrée : un site doit être en https, et il faut un mot de passe." },
+  "vault_remove": { "message": "Retirer" },
+  "vault_with_username": { "message": "avec un nom d'utilisateur" },
+  "vault_one_per_site": { "message": "Une connexion par site : en enregistrer une autre pour le même site remplace la précédente." },
+  "coach_new": { "message": "Nouvelle conversation" },
+  "coach_previous": { "message": "Conversations précédentes" },
+  "coach_previous_none": { "message": "Aucune conversation précédente." },
+  "coach_previous_error": { "message": "Impossible de charger les conversations précédentes." },
+  "coach_untitled": { "message": "Conversation" }
 }

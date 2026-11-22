@@ -1,0 +1,47 @@
+name: Store status
+
+# Where the App Store stands, read only: each platform's newest versions with Apple's review state, and the latest
+# TestFlight builds. Twice a day, and on demand. It writes, uploads and submits nothing, and prints only versions, build
+# numbers and states (ios/scripts/asc-status.rb). The key is the apple-release environment's, which a run from main can read.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6,17 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-status
+  cancel-in-progress: false
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: apple-release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Write the App Store Connect key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Read the store states
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+        run: |
+          ruby ios/scripts/asc-status.rb | tee "$RUNNER_TEMP/status.txt"
+          { echo '```'; cat "$RUNNER_TEMP/status.txt"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"

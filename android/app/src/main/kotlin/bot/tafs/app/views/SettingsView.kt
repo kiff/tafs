@@ -110,6 +110,11 @@ fun SettingsSheet(
   /** Account › Chrome: shown only once planque lists Chromes (`AppState.chromes`), read when Account opens. */
   onChromes: () -> Unit = {},
   onLoadChromes: () -> Unit = {},
+  /** Account › Sign-in: read when Account opens and when the app comes back (from KIFF's page), and turned off from here. */
+  onLoadCodeSignIn: () -> Unit = {},
+  onCodeSignInOff: () -> Unit = {},
+  /** KIFF's page where code sign-in is turned on (it asks for a recent sign-in, which a device session never passes). */
+  codeSignInPage: String = "",
   /** Whether the new onboarding is on: Legal then opens How tafs works too (docs/onboarding.md). */
   onboarding: Boolean = bot.tafs.app.model.ONBOARDING_ON,
 ) {
@@ -126,6 +131,8 @@ fun SettingsSheet(
   var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
   LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions(); onLoadAIConsent(); onLoadChromes() } }
+  // Read when Account opens, and again back from KIFF's page (turning code sign-in on happens there).
+  androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { if (state.mode == Mode.kiff) onLoadCodeSignIn() }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
   var focusAt by remember { mutableStateOf<Int?>(null) }
   LaunchedEffect(focusAt) { focusAt?.let { scroll.animateScrollTo(it); onFocused(); focusAt = null } }
@@ -161,6 +168,29 @@ fun SettingsSheet(
             Action(ConnectAppsWords.TITLE, Theme.ink, onConnectApps)
             // Files, behind its switch: nothing here while it's off.
             FilesAccountRow(onFiles)
+          }
+          // Sign in with a code sent by email: KIFF's setting, off for everyone until they turn it on. On opens KIFF's own page; off
+          // goes from here. No code screen in the app: the code is typed on KIFF's page.
+          if (state.mode == Mode.kiff) state.codeSignIn?.let { setting ->
+            Section(Words.Settings.SignInCode.title) {
+              Value(Words.Settings.SignInCode.label, if (setting.emailCode) Words.Settings.SignInCode.on else Words.Settings.SignInCode.off)
+              Text(Words.Settings.SignInCode.help, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
+              when {
+                setting.emailCode -> if (!state.codeSignInBusy) Action(Words.Settings.SignInCode.turnOff, Theme.no, onCodeSignInOff)
+                setting.available -> {
+                  Action(Words.Settings.SignInCode.turnOn, Theme.amberText) { if (codeSignInPage.isNotEmpty()) runCatching { uri.openUri(codeSignInPage) } }
+                  Text(Words.Settings.SignInCode.turnOnInBrowser, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
+                }
+                else -> Text(Words.Settings.SignInCode.notAvailable, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
+              }
+              state.codeSignInError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            }
+          }
+          // Not read, and not because KIFF has no such route (that clears the error too): the section says why, as iOS's row does.
+          if (state.mode == Mode.kiff && state.codeSignIn == null) state.codeSignInError?.let { why ->
+            Section(Words.Settings.SignInCode.title) {
+              Text(why, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp))
+            }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.plan) { PlanRow(state, onUsage) }
           if (state.mode == Mode.sample) Section(Words.Usage.label) { Action(UsageWords.TITLE, Theme.ink, onUsage) }

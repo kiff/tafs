@@ -73,7 +73,7 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
 2. **The owner types the code into the side panel.** The extension makes its key pair and calls
    `POST /v1/extension/pairings/{lookup}` (unauthenticated, rate-limited per lookup) with:
    ```
-   {key: <SPKI, base64url>, version, manifest_hash, browser, os, kiff_offer,
+   {key: <SPKI, base64url>, version, manifest_hash (64 lower-case hex), browser, os, kiff_offer,
     proof: HMAC(secret, "tafs-chrome/ext/v1" ‖ key ‖ kiff_offer)}
    ```
 3. **The phone reads the pairing** (`GET …/pairings/{pairing}`: `status` is `waiting_for_chrome`, then
@@ -95,6 +95,14 @@ the owner to pair a stranger's Chrome, and planque never learns the part of the 
    Its `POST` answers 403 for a build that isn't released, and 404 for an unknown or expired code and for one another
    Chrome used (planque spends it, and the phone reads `contested`), so a sweep can't tell them apart. It keeps the pairing only if `phone_proof`
    holds under the secret it typed and `phone_sig` holds under `phone_key` (`pairing.checkConfirmation`).
+   - **With one fingerprint** (`kiff.requests.v1`) the answer carries `tenant`, `signed_at` and `kiff_request_sha256` beside
+     `phone_sig`, all three or none, and `phone_sig` is then the approval key's signature over `kiff.requests.v1`, the
+     tenant, `signed_at` and the sorted SHA-256 (lower-case hex) of this pairing's message (`tafs-chrome/pair/v1`, a zero
+     byte and the body's canonical JSON) and of KIFF's request for the extension's view-only device. The extension
+     rebuilds its own message and takes KIFF's hash as given; a request paired with itself, a newline in a field or a part
+     of the three is refused. Without them `phone_sig` is checked over the pairing alone, as before.
+   - **The offer carries `profile_id`**, an id the extension keeps for its Chrome profile (see "What's kept"). The phone
+     uses it only to pre-select which Chrome a re-pairing replaces; it isn't covered by the proof and authenticates nothing.
    - The secret then leaves memory.
    - A new phone (a new device key) pairs again; planque never carries a phone key over.
 - **Several Chromes:** each paired Chrome has its name, and a grant names the one it uses.
@@ -123,9 +131,62 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
 - **The session reads and chats only.** KIFF refuses it every approval route (`403 view_only`). It's kept in IndexedDB
   with the pairing, and unpairing ends it with its own bearer (`/v1/auth/device/logout`).
 
+## Your Chrome (design, for the owner's read; not built yet)
+
+What the owner lives with: a browser connection is on one of their Chromes, they can see which, and pairing again, unpairing
+or switching never leaves a connection pointing at a Chrome that's gone. Nothing moves without the owner's approval.
+
+1. **Re-pairing replaces, never adds.** The pairing confirm names the Chrome the new one replaces (`replaces: "chr_…"`,
+   planque's field, on the confirm's own signature) and the connections that move (`carried`). The phone **pre-selects**
+   what it replaces: the Chrome with the same `profile_id` (an id the extension keeps for its Chrome profile, kept across
+   key changes and updates); else, when the extension was reinstalled and its id is new, the one Chrome on the same
+   browser and system that hasn't connected since the new one arrived. The owner can pick none ("a new Chrome") or
+   another. With nothing chosen, nothing moves.
+   - **What the fingerprint binds is `carried`.** Each connection's sites are signed for one Chrome
+     (`tafs-chrome/sites/v1` over `{chrome_id, grant, sites}`), so the pairing body the phone signs for the extension
+     (`tafs-chrome/pair`, inside the one `phone_sig`) carries `carried: [{grant, sites}]`, one entry per connection that
+     moves. The phone reads each from the old Chrome's verified signed copy, never from what planque says, and shows them
+     on the replace's approval ("moves Wiki lookup: wikipedia.org"). planque moves exactly the grants it sent, each only
+     if it's on the Chrome replaced with exactly those sites; if planque relayed another list, the extension's check of
+     `phone_sig` fails and nothing is paired. Ending the old Chrome's other connections is taking power away, as unpair is.
+   - **The extension's rule for `carried`:** read only from the confirmed pairing body; at most 50 connections and 100
+     sites each, no grant twice, each site passing the same check as a grant's sites, in the order sent. A step for a
+     carried grant is accepted when its sites are within the carried sites for that grant (the same "within" as a fresh
+     `sites_sig`), else by a fresh `sites_sig` for this Chrome as today; planque marks such a step `carried: true` with no
+     `sig`. The entries live with the pairing and go with unpairing. Like any `sites_sig` today they don't expire, so a
+     later narrowing of a grant's sites relies on the fresh signature being sent.
+   - **What doesn't move:** the owner's yes for a sensitive site (`tafs-chrome/sensitive/v1` is over the old Chrome's id;
+     they allow it again, and the replace's approval never promises it), the saved sign-ins (sealed in the old Chrome,
+     wiped with it; the owner saves them again), and the pictures kept of the old Chrome's acts (they go with it).
+2. **"Your Chrome" is a choice per connection.** Each browser connection names one Chrome. A new connection takes the most
+   recently approved Chrome by default; Coach says which and the owner can pick another. Switching an existing
+   connection to another Chrome is one signed planque call (`PUT /v1/accounts/{t}/grants/{grant}/chrome {chrome_id}`,
+   routine: a tap inside an open approval window, else the fingerprint). Its sites and Card stay; it goes to the new
+   Chrome's key.
+3. **Unpairing a Chrome ends its connections.** The unpair confirm lists them ("ends Wiki lookup's wikipedia.org"); once
+   unpaired, planque revokes each, so nothing dangles. They come back only by connecting again, or by a replace (1).
+4. **Every browser connection names its Chrome**, its name and browser ("Work Mac · Chrome 131"), wherever a
+   connection is listed: the taf's page, Coach, Account › Chrome (each Chrome with the connections on it). Coach can
+   propose removing a connection whose Chrome is gone; removing is a safe route (the device key, no fingerprint).
+5. **One fingerprint per act.** Pairing is one prompt on every phone. The two approval-key signatures it needs today, the
+   extension's `phone_sig` over the pairing (`tafs-chrome/pair`) and KIFF's view-only device for the extension
+   (`POST /v1/me/pairings`), become one `kiff.requests.v1` signature: `kiff.requests.v1`, the tenant, `signed_at`, then the
+   SHA-256 (hex, sorted) of the pairing message the extension checks and of KIFF's `kiff.request.v1` message. The phone
+   sends planque's confirm `tenant`, `signed_at` and `kiff_request_sha256` (all three or none), which the extension
+   collects beside `phone_sig`; the extension rebuilds its own pairing
+   message, hashes it, and checks the one signature over both, as KIFF checks its half. planque's confirm stays on the
+   device key, and the replace (1) is in it.
+6. **Isolation is unchanged.** Each Chrome keeps its own key; each connection keeps its own signed sites and its own tab
+   group; a step still goes only to the Chrome its connection names. A replace or a switch changes the Chrome a
+   connection uses, never its sites or Card.
+
+Who builds what, once the owner agrees: planque (`replaces` on the confirm, the switch route, revoke on unpair, the Chrome
+on each connection's read), the extension (`profile_id` in the pairing post), Coach (the default and the choice, removing
+a dead connection), and the apps (the replace choice at pairing, the Chrome on each connection, Account › Chrome).
+
 ## Connect: both ends prove themselves
 
-`wss://planque.kiff.dev/v1/extension?chrome=chr_…`, opened by the extension:
+`wss://relay.planque.kiff.dev?chrome=chr_…` (the WebSocket API's own domain, mapped onto its stage, so no path), opened by the extension:
 
 1. **The extension sends** `{type: "open"}` once the connection is up. planque's relay can't post to a connection until
    its connect has returned, so the extension speaks first.
@@ -155,8 +216,11 @@ to Coach (§ "Coach in the side panel") through tafs cloud's own routes. tafs ne
   Removing a line revokes that build at the next deploy.
 - **While no run is on,** the extension wakes on an alarm every minute and connects, so planque can hand it a step. The
   connection drops after a minute with no run.
-- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it. The release
-  workflow writes each released build's hash into planque's allowlist.
+- **`manifest_hash`** is the SHA-256 of the installed `manifest.json`, as the Chrome Web Store serves it, written as **64
+  lower-case hex characters** in the pairing and in the relay's `hello` alike (not base64url, which every other value in this
+  protocol uses). The release workflow writes each released build's hash into planque's allowlist in the same form
+  (`chrome-builds.txt`), and planque looks a build up by the text it is sent. `manifestHashOf` in `chrome/src/crypto.js` is
+  the one place it is made.
 
 ## Steps
 
@@ -173,6 +237,8 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
         act?: {kind: "click" | "fill" | "select" | "check", ref, value?, sealed?},
         release?}                      // only with act.sealed: the phone's release
 ```
+
+**A clock that is a little off.** The extension checks `exp` against its computer's clock, which drifts (one that doesn't sync can be a minute or more out), and a step checked against the wrong now would be refused whole. So the check has slack: `SKEW_MS` (60 s) either way, and when planque's welcome carries its own time (`now`, unix ms, within 2 minutes of this clock), the clock is read by that offset and the slack is `SKEW_KNOWN_MS` (5 s) (`protocol.js`, `clockOffset`). The welcome's proof covers the connection's nonces, not the time, so the offset only ever shifts the reading a little. A step is still signed, bound to this Chrome, and takes once: the slack widens how long its expiry reads as valid, never what it may do.
 
 **The extension runs nothing that isn't planque's, for this Chrome, unexpired and new** (`protocol.checkStep`). A nonce
 is remembered for 10 minutes, in `chrome.storage.session`, so a step replayed after MV3 stops the service worker is still
@@ -276,7 +342,9 @@ was done.
   Chrome `declarativeNetRequest` session rules scoped to that tab: block every page and frame request, allow the run's
   sites (and the sensitive sites the phone allowed), and block plain `http`. So a link, a redirect or a form submit to
   another host is refused by Chrome before the request is sent. A tab the run's page opens gets the same rules. The
-  rules go when the run ends. `webNavigation`'s record of a refused move stays as the log.
+  rules go when the run ends. Their ids come from a counter of the runner's own (a rule id must fit an int32, and a tab id can be
+  larger than that over four), and the first fence clears any rule an earlier service worker left. A window that can't be set up
+  (the fence or the tab group refused) is closed and the step answers `browser_unavailable` with the reason. `webNavigation`'s record of a refused move stays as the log.
 - **No new window escapes the fence before it's in place:** in a run's tab, `window.open` opens nothing (it's reported as a
   dialog), and a link or form that would open a new tab is followed in the same tab.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
@@ -293,7 +361,10 @@ was done.
 - **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
   read never lands in the middle of an act. Pause and Stop don't wait.
 - **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
-  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is.
+  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is. The blank page
+  itself (`about:blank`, where a run's window opens and where a refused move goes) is never refused: refusing it sent the
+  tab to `about:blank` again and again, which also cancelled the page the step was opening, so the step timed out. A step
+  line whose address can't be read draws with no site, never an error.
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
@@ -350,6 +421,9 @@ browser: {
 - **In IndexedDB:** the key pair, whose private key can't be exported, the pairing (`chrome_id`, its name, the phone's
   key), and the sealed sign-ins the owner saved, with their key. No page, step or value read is ever written to disk.
 - **A code being typed** waits in `chrome.storage.session`, which Chrome keeps in memory only.
+- **`profile_id`** is 16 random bytes in `chrome.storage.local`, made once: a re-pairing under a new key keeps it, so the
+  phone can tell the same Chrome pairing again. Unpairing doesn't wipe it, and it is no secret. It isn't in
+  `chrome.storage.sync`, which would copy it to every computer on the Google account; a reinstall makes a new one.
 - **Unpairing wipes it all** and closes every run's window. It happens from the phone (planque closes with `4410`, or
   answers `4410` at the next connect), from the side panel (`POST /v1/extension/unpair`, signed with
   `tafs-chrome/unpair/v1`), or by uninstalling.
@@ -395,6 +469,12 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
+- **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
+  (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
+  answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's
+  earlier chats (`GET /v1/tafs/{coach}/chats`, newest first, a chat they set aside left out); a tap shows one
+  (`GET /v1/tafs/{coach}/conversation/{session}`), and the next message goes into it (`session`). A chat with no title is
+  called "Conversation".
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
 - **The page is sent only on the owner's tap,** with "Share this page":
@@ -407,6 +487,18 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
     cloud's 2,000 characters.
   - Nothing is sent by itself: no background read, no other tab, no history.
 - **Coach can set up a browser taf for the site in front of the owner;** the grant is approved on the phone, as always.
+
+## Screenshots of a run's acts
+
+A taf's Chrome steps are kept as pictures for the record: one WebP (quality 0.6, at most 1280 px wide and 8000 px high, about 50 KB, never over 120 KB) for each step that acts, taken just before the act (`src/shot.js`, called from `Runner.pictureOf`). Reads, opens and sealed fills take none.
+
+- **Covered first.** `TafsPage.maskForShot()` puts an opaque box over every password, one-time code and card field, every field filled from Saved sign-ins, and every field whose value the masking would change. It also covers **text in the page** that looks like a card number (13 to 19 digits that pass the Luhn check, with spaces or dashes) or a secret: keys by shape (`sk_`/`pk_`/`rk_`, `AKIA…`, `ghp_`/`github_pat_`, JWTs and the like), labelled values (`api_key=…`, `Bearer …`), and runs of 32 or more hex characters or base64 characters with a digit in them (`TafsMask.secretSpans`). It covers **every visible frame whole** (`iframe`, `frame`, `embed`, `object`): what a frame from another site holds, a login widget or a bank's form, can't be read by the page's script, so none of it is trusted to be hidden. Fields and text inside **open shadow roots** are found and covered like any other (a closed shadow root can't be seen from the page, so a secret in one is not covered: a limit). It checks with `elementFromPoint` that each box is on top; if one is not, no picture is taken. The boxes come off straight after the capture, also when it fails or times out.
+- **No picture when it can't be sure.** The tab, its window and its address are read again once the picture is back: a tab switched to, moved to another window, or sent to another page during the covers or the capture means the picture may show what was never covered or never allowed, and it is dropped. The search for secrets is capped (200 shadow roots, 6000 text nodes); a page past a cap gets no picture, never a partial cover. A page with a one-time-code field to fill gets none either: it may be an authenticator's setup, whose QR code and seed are the second factor and look like nothing the covers know.
+- **Never taken** on a sensitive site, on a checkout or a payment frame, over plain http, or when the run's tab isn't in front of its own window: the browser takes the picture of a window, not of a tab, so a tab the person dragged into another window is not pictured (it would be the old window's front tab, which was never covered). A picture that can't be taken never holds the act.
+- **Sent over HTTPS, not the relay** (the relay's message limits are too small for a picture): `POST /v1/extension/steps/<step>/screenshot` with the JSON `{chrome_id, image, sig}`, `image` being the WebP bytes in unpadded base64url. `sig` is the extension's key over `tafs-chrome/screenshot/v1` and `{chrome_id, step, sha256}` (`sha256` the lower-case hex of the image bytes), so planque can tell the picture is this extension's, for this step, unaltered.
+- **Off until planque keeps them.** The build ships with `screenshots: false` (`src/config.js`); it is switched on in a release only once planque stores the pictures behind its own flag and the privacy wording is live.
+
+Limits: a step held for the owner and then refused is not pictured; a secret written in a way these rules don't recognise (a card number split across elements, a code in an image, a key in a short form, anything in a closed shadow root) may still show.
 
 ## Tests
 
