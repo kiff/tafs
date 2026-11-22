@@ -141,6 +141,17 @@ final class PlanqueClient {
             var connector: Connector?
             /// `api_key` for a vendor reached with a key the owner gives; none for one signed in to.
             var kind: String? = nil
+            /// A browser grant's limits as planque holds them. The grant's digest covers them, so what the owner was
+            /// shown is what is read here.
+            struct Browser: Decodable, Equatable {
+                /// `extension` for the owner's own Chrome; none for planque's hosted browser.
+                var driver: String?
+                /// The paired Chrome an extension grant uses.
+                var chrome: String?
+                /// All the sites it may reach.
+                var sites: [String]?
+            }
+            var browser: Browser? = nil
         }
         struct Event: Decodable, Equatable {
             /// RFC 3339, as planque writes it (Go's nanoseconds included).
@@ -394,7 +405,10 @@ final class PlanqueClient {
         }
         let digest: String
         let kiffProfile: KIFFProfile?
-        enum CodingKeys: String, CodingKey { case digest, kiffProfile = "kiff_profile" }
+        /// For a grant that uses the owner's own Chrome: this phone's signature over its sites (`tafs-chrome/sites/v1`),
+        /// raw r‖s in base64url. planque approves such a grant only with it. Added by the phone, never by tafs cloud.
+        var chromeSitesSig: String? = nil
+        enum CodingKeys: String, CodingKey { case digest, kiffProfile = "kiff_profile", chromeSitesSig = "chrome_sites_sig" }
     }
 
     /// The body that approves `grant` as shown. Refused when the digest isn't the hash of the

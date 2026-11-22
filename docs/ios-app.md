@@ -1085,9 +1085,17 @@ Account › **Chrome** (`ChromesView`) lists the Chromes paired to the account, 
   the secret. The signature goes as raw `r‖s` (`ChromePairing.rawSignature`), and the extension checks it itself.
 - **Unpair** is signed by this phone, with no prompt, since it takes power away. The extension wipes itself at its
   next connect.
+- **Approving a grant for the owner's own Chrome** (`browser.driver` = `extension` in the grant's request, read in
+  `Grant.Request.browser`) sends `chrome_sites_sig` with the approve body: the approval key's signature over
+  `tafs-chrome/sites/v1` of `{chrome_id, grant, sites}` (`ChromePairing.sitesSignature`), raw `r‖s`, made under the Face ID
+  of that same approval, so it is one prompt. planque approves such a grant only with it, and the extension runs nothing
+  outside those sites. Such an approval always takes Face ID: an approval window's tap never signs it. A grant that names
+  no Chrome or no sites is refused before anything is signed. The sites are the grant's, whose digest the owner saw; the
+  signature is added by the phone, never by tafs cloud.
 - Its lines are `chrome.*`, shared with Android, which follows.
-- **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`), and `PlanqueTests`' Chrome tests (the
-  row only once planque offers it, an offer shown only on its proof, the confirmation's proof and signature verified).
+- **Tests:** `ChromePairingTests` (the shared vectors, a refused proof, raw `r‖s`, the sites signature over the vector's
+  bytes, the refused cases, the approve body's field), and `PlanqueTests`' Chrome tests (the row only once planque offers
+  it, an offer shown only on its proof, the confirmation's proof and signature verified).
 
 ### The sign-in screen
 
