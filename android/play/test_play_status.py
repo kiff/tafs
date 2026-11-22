@@ -84,6 +84,16 @@ class PlayStatus(unittest.TestCase):
             p.call = real
         self.assertEqual(("DELETE", "/edits/edit_1"), self.calls[-1])
 
+    def test_a_refusal_says_the_step_and_code_only(self):
+        def refusing(req, timeout=0):
+            import io
+            raise p.urllib.error.HTTPError(req.full_url, 403, "Forbidden", {}, io.BytesIO(b'{"error":{"message":"edit_9 of dev.kiff.tafs, token abc"}}'))
+
+        p.urllib.request.urlopen = refusing
+        with self.assertRaises(SystemExit) as said:
+            p.call("GET", f"{p.API}/edits/edit_9/tracks", "abc")
+        self.assertEqual("Play answered 403 while reading the tracks", str(said.exception))
+
     def test_the_file_never_names_plays_save_call(self):
         with open(p.__file__, encoding="utf-8") as f:
             self.assertNotIn("commit", f.read())

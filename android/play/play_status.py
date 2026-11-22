@@ -36,8 +36,9 @@ def call(method: str, url: str, token: str, body=None) -> dict:
         with urllib.request.urlopen(req, timeout=60) as r:
             return json.loads(r.read().decode() or "{}")
     except urllib.error.HTTPError as e:
-        # Play's own answer, for the log: never the token.
-        sys.exit(f"Play answered {e.code} to {method} {path.split('/edits/')[0] or '/'}: {e.read().decode(errors='replace')[:500]}")
+        # The log is public: the step and Play's status code only, never a path with an id, Play's own words or the token.
+        step = {"POST": "opening the edit", "GET": "reading the tracks", "DELETE": "deleting the edit"}[method]
+        sys.exit(f"Play answered {e.code} while {step}")
 
 
 def lines(tracks: list) -> list:
