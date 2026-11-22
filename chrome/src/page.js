@@ -18,8 +18,37 @@
 
   // What the last read named: each ref's element, held only here.
   let refs = new Map();
+  // What each ref's element was when it was read (its tag, kind, words and target): an act on a ref whose element has since
+  // changed into something else is refused, not done.
+  let prints = new Map();
   let current = null; // {read_id, href}
   let dialog = null; // the last dialog the page raised since the last read
+
+  /** What identifies an element in a read: its tag, type, name, label, words and link target. A fill or a tick changes a
+   * field's value, never these, so they hold from the read to the act. */
+  function printOf(el) {
+    const words = el.matches("input, textarea, select") ? "" : clean(el.innerText || el.getAttribute("aria-label") || el.title || "", 120);
+    // The row it sits in (a list item, a table row, a card): a re-sorted list of identical "Add" buttons must not send an act
+    // meant for one row to another. The row's words, short and hashed, so the print stays small.
+    const row = el.closest("li, tr, article, [role=row], [role=listitem]");
+    return [el.tagName, el.getAttribute("type") || "", el.getAttribute("name") || el.id || "", labelOf(el), words, el.getAttribute("href") || "", row ? digest(clean(row.innerText, 400)) : ""].join("\u0001");
+  }
+
+  /** A short fingerprint of a text (FNV-1a, 32 bits): a change detector, never a secret. */
+  function digest(text) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+      h ^= text.charCodeAt(i);
+      h = Math.imul(h, 0x01000193) >>> 0;
+    }
+    return h.toString(16);
+  }
+
+  /** Names `el` in this read. */
+  function bind(ref, el) {
+    refs.set(ref, el);
+    prints.set(ref, printOf(el));
+  }
 
   function newId() {
     const b = crypto.getRandomValues(new Uint8Array(12));
@@ -97,7 +126,7 @@
       if (!visible(el)) continue;
       const kind = kindOf(el);
       const ref = "f" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       const field = { ref, label: labelOf(el), kind: wireKind(kind) };
       if (kind === "password" || kind === "card" || kind === "code" || sealedFilled.has(el)) {
         field.masked = true;
@@ -139,7 +168,7 @@
       if (out.length >= MAX_CONTROLS) break;
       if (!visible(el)) continue;
       const ref = "c" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       const label = clean(el.getAttribute("aria-label") || el.innerText || el.value || el.title || "");
       const submits = (el.tagName === "BUTTON" && (el.type || "submit") === "submit" && !!el.form) || (el.tagName === "INPUT" && el.type === "submit");
       const control = { ref, label: M.maskText(label), submits };
@@ -173,7 +202,7 @@
       if (actsAsControl(el)) {
         if (controls.length >= MAX_CONTROLS) continue;
         const ref = "c" + (controls.length + 1);
-        refs.set(ref, el);
+        bind(ref, el);
         const control = { ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), submits: false };
         if (placesOrder(el, false)) control.places_order = true;
         controls.push(control);
@@ -182,7 +211,7 @@
       const url = M.maskURL(el.href);
       if (!url) continue;
       const ref = "l" + (out.length + 1);
-      refs.set(ref, el);
+      bind(ref, el);
       out.push({ ref, label: M.maskText(clean(el.innerText || el.getAttribute("aria-label") || el.title || "")), url });
     }
     return out;
@@ -194,6 +223,80 @@
     );
   }
 
+  // ---- A checkout, as the page shows it: its lines, its total and the total's currency (docs/chrome.md, "Steps"). The
+  // facts planque pays and holds on, so they must be the same ones planque's own browser reads: one amount next to a
+  // "total" word in one currency (two different candidates, or none, is no total), and the rows with an amount in that
+  // currency that aren't a total, a subtotal, shipping, tax or a discount. Numbers are decimal strings ("12.50").
+  const CODES = "EUR|USD|GBP|CHF|SEK|NOK|DKK|PLN|CZK|HUF|JPY|CAD|AUD|BRL|MXN";
+  const NUM = "\\d{1,3}(?:[.,\\s]\\d{3})*(?:[.,]\\d{2})?";
+  const MONEY = new RegExp("(?:(" + CODES + ")|([€$£]))\\s?(" + NUM + ")|(" + NUM + ")\\s?(?:(" + CODES + ")|([€$£]))", "g");
+  const SYMBOL = { "€": "EUR", $: "USD", "£": "GBP" };
+  const TOTAL_WORD = /\b(total|totale|gesamt(?:betrag|summe|preis)?|summe|totaal|montant total|importe total|a pagar|à payer|zu zahlen|da pagare|te betalen|to pay|amount due)\b/i;
+  const STRONG_TOTAL = /grand total|order total|total to pay|to pay|a pagar|à payer|zu zahlen|da pagare|te betalen|importe total|montant total|gesamtbetrag|amount due/i;
+  const NOT_A_LINE = /\b(sub.?total|total|totale|gesamt|summe|totaal|montant|importe|shipping|delivery|livraison|versand|envío|envio|spedizione|verzend|tax|vat|tva|mwst|iva|btw|discount|coupon|rabatt|remise|descuento|sconto|korting|desconto)\b/i;
+  const QTY = /(?:×|x|qty\.?|quantity|menge|cantidad|quantité|quantità|aantal|qtd)\s*:?\s*(\d{1,4})|(\d{1,4})\s*(?:×|x)\b/i;
+
+  /** "1.234,50" and "1,234.50" are 1234.50: the last separator before two digits is the decimal one. */
+  function normalizeAmount(text) {
+    const t = text.replace(/\s/g, "");
+    const m = t.match(/^(.*?)([.,])(\d{2})$/);
+    const whole = (m ? m[1] : t).replace(/[.,]/g, "");
+    return whole + "." + (m ? m[3] : "00");
+  }
+
+  function amountsIn(text) {
+    const out = [];
+    for (const m of text.matchAll(MONEY)) {
+      const currency = m[1] || SYMBOL[m[2]] || m[5] || SYMBOL[m[6]];
+      const amount = m[3] || m[4];
+      if (currency && amount) out.push({ amount: normalizeAmount(amount), currency });
+    }
+    return out;
+  }
+
+  function checkoutOf() {
+    if (!document.body) return null;
+    const found = [];
+    let seen = 0;
+    for (const el of document.body.querySelectorAll("*")) {
+      if (++seen > 6000) break;
+      if (["SCRIPT", "STYLE", "INPUT", "TEXTAREA", "SELECT", "OPTION"].includes(el.tagName) || !visible(el)) continue;
+      const text = clean(el.textContent, 400);
+      if (text.length > 160 || !TOTAL_WORD.test(text)) continue;
+      let candidates = amountsIn(text);
+      if (!candidates.length && el.parentElement) candidates = amountsIn(clean(el.parentElement.textContent, 240));
+      if (!candidates.length && el.nextElementSibling) candidates = amountsIn(clean(el.nextElementSibling.textContent, 160));
+      if (!candidates.length) continue;
+      // A row naming several amounts (a subtotal and a total) gives its last.
+      found.push({ ...candidates[candidates.length - 1], strong: STRONG_TOTAL.test(text) });
+    }
+    const distinct = (list) => [...new Set(list.map((a) => a.amount + " " + a.currency))];
+    const strong = found.filter((a) => a.strong);
+    const total = distinct(strong).length === 1 ? strong[0] : distinct(found).length === 1 ? found[0] : null;
+    if (!total) return null;
+    const lines = [];
+    const had = new Set();
+    for (const row of document.querySelectorAll("tr, li, [class*=line], [class*=item]")) {
+      if (lines.length >= 50) break;
+      if (!visible(row) || row.querySelector("tr, li")) continue;
+      // Cells joined with a separator: a row's text runs them together ("Blue pen × 2" and "2.50" would read as 22.50).
+      const text = row.children.length > 1 ? Array.from(row.children).map((c) => clean(c.textContent, 200)).filter(Boolean).join(" | ") : clean(row.textContent, 200);
+      if (!text || text.length > 200 || NOT_A_LINE.test(text)) continue;
+      const priced = amountsIn(text).filter((a) => a.currency === total.currency);
+      if (!priced.length) continue;
+      const price = priced[priced.length - 1];
+      const q = text.match(QTY);
+      const quantity = q ? parseInt(q[1] || q[2], 10) : 1;
+      const item = clean(text.replace(MONEY, "").replace(QTY, "").replace(/^[\s—–\-:|,]+|[\s—–\-:|,]+$/g, ""), 120);
+      if (!item) continue;
+      const key = item + "|" + quantity + "|" + price.amount;
+      if (had.has(key)) continue;
+      had.add(key);
+      lines.push({ item: M.maskText(item), quantity, price: price.amount });
+    }
+    return { lines, total: total.amount, currency: total.currency };
+  }
+
   function bare(href) {
     try {
       const u = new URL(href);
@@ -203,20 +306,39 @@
     }
   }
 
-  /** The page as the taf reads it, with fresh refs and a new read id. Earlier refs stop working. */
-  function read() {
+  /**
+   * The page as the taf reads it, with fresh refs and a new read id. Earlier refs stop working. A page's text comes in
+   * windows of MAX_TEXT characters of its masked text: `offset` asks for a later one, and a page that goes on says so
+   * (`more`, and the `next_offset` to ask for). Fields, controls and links are the page's whole, in every window.
+   */
+  function read(offset) {
     refs = new Map();
+    prints = new Map();
     const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
+    const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
+    // A window never ends inside a surrogate pair (an emoji): it stops one short, and the next starts with the whole character.
+    let end = Math.min(start + MAX_TEXT, text.length);
+    if (end < text.length) {
+      const last = text.charCodeAt(end - 1);
+      if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+    }
     const page = {
       read_id: newId(),
       url: bare(location.href),
       title: M.maskText(clean(document.title, 300)),
-      text: text.length > MAX_TEXT ? text.slice(0, MAX_TEXT) + "\n(cut)" : text,
+      text: text.slice(start, end),
       fields: fieldsOf(),
       controls: controlsOf(),
     };
+    if (start > 0) page.offset = start;
+    if (end < text.length) {
+      page.more = true;
+      page.next_offset = end;
+    }
     page.links = linksOf(page.controls);
     if (paymentFrame()) page.payment_frame = true;
+    const checkout = checkoutOf();
+    if (checkout) page.checkout = checkout;
     if (dialog) page.dialog = dialog;
     dialog = null;
     current = { read_id: page.read_id, href: location.href };
@@ -261,7 +383,7 @@
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (dialog) return { ok: false, code: "dialog_open" };
     const el = refs.get(a.ref);
-    if (!el || !el.isConnected) return { ok: false, code: "ref_unknown" };
+    if (!el || !el.isConnected || prints.get(a.ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
     if (!visible(el) || !onTop(el)) return { ok: false, code: "not_visible" };
     if (el.disabled) return { ok: false, code: "disabled" };
     const kind = el.matches("input, textarea, select") ? kindOf(el) : null;
@@ -302,7 +424,7 @@
     if (!current || current.read_id !== readId || current.href !== location.href) return { ok: false, code: "page_changed" };
     if (location.origin !== origin || window.top !== window) return { ok: false, code: "secret_field" };
     const el = refs.get(ref);
-    if (!el || !el.isConnected || el.tagName !== "INPUT") return { ok: false, code: "ref_unknown" };
+    if (!el || !el.isConnected || el.tagName !== "INPUT" || prints.get(ref) !== printOf(el)) return { ok: false, code: "ref_unknown" };
     const kind = kindOf(el);
     const fits = part === "password" ? kind === "password" : part === "username" ? ["username", "text", "email"].includes(kind) : false;
     if (!fits) return { ok: false, code: "secret_field" };

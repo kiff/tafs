@@ -168,6 +168,7 @@ step = {id: "op_…", nonce, exp: <unix ms, at most 30 s ahead>, chrome_id, run,
         sensitive_allowed?: [{site, sig}],                            // sig: the phone's, tafs-chrome/sensitive/v1
         op: "open" | "read" | "act" | "close",
         url?,                          // open: a start URL or a link from the current read, already checked by planque
+        offset?,                       // read: a later window of the page's text (a whole number, 0 or more; default 0)
         read_id?,                      // act: the read it was planned from
         act?: {kind: "click" | "fill" | "select" | "check", ref, value?, sealed?},
         release?}                      // only with act.sealed: the phone's release
@@ -193,10 +194,11 @@ signed answer.
 planque files a result only against the pending step it sent to this Chrome, and one can't be replayed for another step:
 
 ```
-page = {read_id, url (no query or fragment), title, text (≤ 20 000 characters, masked),
+page = {read_id, url (no query or fragment), title, text (a window of ≤ 20 000 characters of the masked text),
+        offset?, more?, next_offset?,        // see "A page's text comes in windows"
         fields: [{ref, label, kind, value?, options?, masked?, disabled?}],
         controls: [{ref, label, submits, places_order?}], links: [{ref, label, url}],
-        payment_frame?, dialog?: {kind, text}, checkout?}    // checkout: a later slice
+        payment_frame?, dialog?: {kind, text}, checkout?: {lines: [{item, quantity, price}], total, currency}}
 error = {code, detail?}      // detail never carries page text
 ```
 
@@ -208,11 +210,29 @@ error = {code, detail?}      // detail never carries page text
   - `payment_frame` is a payment provider's frame on the page.
   - With these facts, planque refuses a payment step before it reaches the extension, whose own check stays as the second
     guard.
+- **`checkout` is a checkout page as it shows itself,** read the way planque's own browser reads one, so the two agree on
+  what the owner approves and what planque pays:
+  - The total is one amount next to a "total" word (in the languages planque's own browser reads: English, German, French, Spanish, Italian, Dutch and Portuguese) in
+    one currency (`EUR USD GBP CHF SEK NOK DKK PLN CZK HUF JPY CAD AUD BRL MXN`, or `€ $ £`). A row that names several
+    amounts gives its last, and "grand total", "to pay" and their translations win over a plain "total". Two different
+    candidates, or none, is no total, and then `checkout` is left out.
+  - The lines are the rows (table rows, list items) with an amount in that currency that aren't a total, a subtotal,
+    shipping, tax or a discount: the item's words, the quantity from "× 2", "x 2" or "qty 2" (else 1), and the price. A
+    page that shows them otherwise gives a total with no lines.
+  - Amounts are decimal strings, whichever marks the page uses (`1.234,50 €` and `$1,234.50` are `1234.50`). Words are masked
+    like the page's text, and at most 50 lines go up.
+  - **With a checkout, any click on the page is `payment_step`** (the guard's second look), whatever the control says.
 - **`read_id` is the extension's own binding to the tab.** planque keeps its own fingerprint of the page it sent the taf
   (the URL, the title, and every ref with its kind and words, no values) and which `read_id` goes with it. Both are
   checked: planque refuses `page_changed` before sending, and the extension refuses it again in the tab.
 - **`open.url` is never one the taf wrote:** the taf names a link ref or a start URL, and planque resolves and checks it.
   The tab keeps the full URL. Only the query-less URL goes up.
+- **A page's text comes in windows.** A read answers the first 20,000 characters of the page's masked text. When the page
+  goes on, `more` is `true` and `next_offset` is where the next window starts; a read with `offset: next_offset` answers
+  that window, with `offset` set to where it starts. The text is masked before it is cut, so a secret is never split
+  across a window. Fields, controls and links are the page's whole in every window, and a read at an offset is a read like
+  any other: it has its own `read_id` and fresh refs, so an act names the latest read. An open and an act read the page
+  back at the start. An `offset` that isn't a whole number, 0 or more, is `bad_step` and never reaches the page.
 - **Refs restart with each read** (`f1`, `c1`, `l1`), and an act names the read it was planned from.
 - **A link that acts is a control,** never a link to follow: one with a script handler (`onclick`), a button's role, or a
   URL that is this page plus a fragment. A link whose words pay is refused as a control would be, and on a checkout or
@@ -234,12 +254,12 @@ error = {code, detail?}      // detail never carries page text
 | `site_blocked` | Chrome's own pages, the Web Store and Google's account pages, always. Also a sensitive site (a bank, wallet, password manager, payment, health or government account, by list and by name), unless the paired phone allowed it for this grant (`sensitive_allowed`, signed) |
 | `needs_site_permission` | Chrome hasn't let the extension into that site yet: the side panel offers "Allow shop.example in Chrome" |
 | `page_changed` | the act's read isn't the tab's current read: a navigation, a new document, or an act since |
-| `ref_unknown` | the read has no such ref, or its element is gone |
+| `ref_unknown` | the read has no such ref, or its element is gone, or it has become something else since the read: the element's tag, type, name, label, words and link target, and the words of the row it sits in, must be what the read saw |
 | `not_visible` | the element is hidden, off screen, or under another element at its centre |
 | `secret_field` | a fill of a password or one-time-code field with a plain value, or a sealed value into a field its part doesn't fit |
 | `payment_step` | a fill of a card field, a click whose words or semantics pay or place an order, or any click on a checkout or payment page |
 | `dialog_open` | the page raised a dialog since the read |
-| `paused_by_owner`, `paused_failures`, `stopped` | the run is paused or stopped |
+| `paused_by_owner`, `paused_failures`, `paused_no_progress`, `stopped` | the run is paused or stopped |
 | `page_unresponsive`, `browser_unavailable` | the page didn't answer in 20 s, or Chrome failed |
 | `page_too_large` | the answer is over 120 KB, the relay's limit with room to spare |
 
@@ -262,6 +282,18 @@ was done.
 - **The owner's own keystroke, click or scroll in a run's tab pauses the run** (`isTrusted`). The side panel says
   "Paused: you're using this tab", with Resume.
 - **Three failed acts in a row pause the run,** with what it read so far.
+- **The same act on the same page that answers with the same page twice in a row pauses the run** (`paused_no_progress`), with
+  what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
+  a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
+  change. A run paused this way is not swept, like one the owner paused: its window stays open until the owner acts.
+- **A run nobody sends a step to for five minutes ends** as Stop does (its window closes), recorded as `stop` by `idle`: planque's
+  `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
+  open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step
+  running.
+- **One step at a time in a run.** A step waits for the one before it in the same run, so two acts never overlap and a
+  read never lands in the middle of an act. Pause and Stop don't wait.
+- **A page Chrome restores from its back-forward cache commits with no request,** so the network fence never sees it. A
+  committed main-frame page off the run's sites is sent to a blank page and recorded, as a navigation is.
 - **A run's tabs get two scripts:**
   - In the page's own world, as each document starts: `dialogs.js`. Alert, confirm and prompt stop blocking and are
     reported, a confirm answers no, and a "leave this page?" handler is dropped.
@@ -381,8 +413,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   extension; the relay taking nothing before both proofs; the extension speaking first; planque's `close` message and
   `4410` wiping the extension once; `page_too_large`; and a run's dropped connection opened again.
 - **`runner.test.js`:** against a fake Chrome API. A run's window is never focused. The owner's tabs are never listed.
-  Off-site opens, navigations and pop-ups are stopped. The guard runs before the page is touched. There are the pauses,
-  Stop, and the site permission.
+  Off-site opens, navigations, pop-ups and restored pages are stopped. The guard runs before the page is touched. There
+  are the pauses (failures, no progress, the owner), Stop, runs closed when idle, steps that never overlap, windows of a page's text, the site
+  permission, a checkout page that refuses every click, and a dialog's answer.
 - **`vectors.test.js`** and `ios/TafsTests/ChromePairingTests.swift`: both check the pairing's proofs and signed bytes
   against `vectors/chrome-pairing.json`, so the extension and the phones can't drift. The phone's side of pairing is
   `ios/Tafs/KIFF/ChromePairing.swift`.
@@ -394,8 +427,9 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   release. It refuses no release, planque's, another origin's, another read's, an expired one, and a reused one, and
   checks which part fits which field.
 - **`page.test.js`:** the content script in a real Chromium page. A read's refs and masking (no password, code, hidden
-  input, card number or key), fill, select and check, a fill that never submits, a stale read after a navigation, a
-  covered button that isn't clicked, and dialogs.
+  input, card number or key), a long page's windows, a checkout's lines, total and currency (in European and English number marks, masked, none when the total is unclear), page text that imitates a fence or an instruction (it goes up as
+  written), an act that refuses an element that has become something else (its words, its target, its row), fill, select and check, a fill that never submits, a stale read after a navigation, a covered button that isn't
+  clicked, and dialogs.
 
 ## Known limits
 

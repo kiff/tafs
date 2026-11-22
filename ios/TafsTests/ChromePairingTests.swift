@@ -101,6 +101,56 @@ final class ChromePairingTests: XCTestCase {
                           try ChromePairing.sitesBytes(chromeID: g.chromeId, grant: g.grant, sites: g.sites), "another site list is other bytes")
     }
 
+    /// `chrome_sites_sig`: the phone signs exactly the extension's bytes for the grant's sites (vectors/chrome-grant.json), and
+    /// sends the signature as raw r‖s that the extension's check accepts.
+    func testAnExtensionGrantIsApprovedWithTheSignatureOverItsSites() throws {
+        let g: GrantVectors = try repoFile("vectors/chrome-grant.json")
+        let key = P256.Signing.PrivateKey()
+        var signed: [Data] = []
+        let browser = PlanqueClient.Grant.Request.Browser(driver: "extension", chrome: g.chromeId, sites: g.sites)
+        let sig = try XCTUnwrap(try ChromePairing.sitesSignature(of: browser, grant: g.grant) { message in
+            signed.append(message)
+            return try key.signature(for: message).derRepresentation.base64EncodedString()
+        })
+        XCTAssertEqual(signed.map { ChromePairing.base64URL($0) }, [g.sitesSignedBytes], "the one message signed is the vector's")
+        let raw = try XCTUnwrap(ChromePairing.base64URLDecoded(sig))
+        XCTAssertEqual(raw.count, 64)
+        XCTAssertTrue(key.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw), for: signed[0]))
+        XCTAssertFalse(key.publicKey.isValidSignature(try P256.Signing.ECDSASignature(rawRepresentation: raw),
+                                                      for: try ChromePairing.sitesBytes(chromeID: g.chromeId, grant: g.grant, sites: g.sites + ["evil.example"])),
+                       "another site list isn't what was signed")
+    }
+
+    /// A grant that doesn't use the owner's Chrome signs nothing; one that does and names no Chrome or no sites is refused.
+    func testOnlyAnExtensionGrantWithAChromeAndSitesIsSigned() throws {
+        var called = false
+        let sign: (Data) throws -> String = { _ in called = true; return "" }
+        XCTAssertNil(try ChromePairing.sitesSignature(of: nil, grant: "g_1", sign: sign))
+        XCTAssertNil(try ChromePairing.sitesSignature(of: PlanqueClient.Grant.Request.Browser(driver: nil, chrome: nil, sites: ["shop.example"]), grant: "g_1", sign: sign))
+        XCTAssertThrowsError(try ChromePairing.sitesSignature(of: PlanqueClient.Grant.Request.Browser(driver: "extension", chrome: nil, sites: ["shop.example"]), grant: "g_1", sign: sign))
+        XCTAssertThrowsError(try ChromePairing.sitesSignature(of: PlanqueClient.Grant.Request.Browser(driver: "extension", chrome: "chr_1", sites: []), grant: "g_1", sign: sign))
+        XCTAssertThrowsError(try ChromePairing.sitesSignature(of: PlanqueClient.Grant.Request.Browser(driver: "extension", chrome: "chr_1", sites: nil), grant: "g_1", sign: sign))
+        XCTAssertFalse(called, "nothing is signed for these")
+    }
+
+    /// The approve body carries `chrome_sites_sig` only when the phone made one, so every other approval is the body it was.
+    func testTheApproveBodyCarriesTheSitesSignatureOnlyWhenThereIsOne() throws {
+        func keys(_ body: PlanqueClient.ApproveBody) throws -> Set<String> {
+            let object = try JSONSerialization.jsonObject(with: JSONEncoder().encode(body)) as? [String: Any]
+            return Set(try XCTUnwrap(object).keys)
+        }
+        XCTAssertEqual(try keys(.init(digest: "d", kiffProfile: nil)), ["digest"])
+        XCTAssertEqual(try keys(.init(digest: "d", kiffProfile: nil, chromeSitesSig: "sig")), ["digest", "chrome_sites_sig"])
+    }
+
+    /// A browser grant's limits are read from planque's request, and a grant without them reads as before.
+    func testAGrantsBrowserLimitsAreRead() throws {
+        let with = try JSONDecoder().decode(PlanqueClient.Grant.Request.self, from: Data(#"{"server":"s","agent":"a","tools":[],"browser":{"driver":"extension","chrome":"chr_1","sites":["shop.example"]}}"#.utf8))
+        XCTAssertEqual(with.browser, PlanqueClient.Grant.Request.Browser(driver: "extension", chrome: "chr_1", sites: ["shop.example"]))
+        let without = try JSONDecoder().decode(PlanqueClient.Grant.Request.self, from: Data(#"{"server":"s","agent":"a","tools":[]}"#.utf8))
+        XCTAssertNil(without.browser)
+    }
+
     /// The sensitive list is the extension's (vectors/chrome-sensitive.json), and reads each sample host as it does.
     func testTheSensitiveListIsTheExtensions() throws {
         let s: SensitiveVectors = try repoFile("vectors/chrome-sensitive.json")
