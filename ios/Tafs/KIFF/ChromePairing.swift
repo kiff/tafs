@@ -112,6 +112,18 @@ enum ChromePairing {
         try labelled(sensitiveLabel, .object(["chrome_id": .string(chromeID), "grant": .string(grant), "site": .string(site)]))
     }
 
+    /// The signature `chrome_sites_sig` carries when the owner approves a grant that uses their own Chrome: `sign` signs the
+    /// bytes of `{chrome_id, grant, sites}` (with the approval key, under the Face ID of the approval) and the answer
+    /// goes as raw r‖s. Nil for a grant that doesn't use the owner's Chrome. Refused when the grant names no Chrome or no
+    /// sites: nothing is signed over an open list, and planque never approves such a grant.
+    static func sitesSignature(of browser: PlanqueClient.Grant.Request.Browser?, grant: String, sign: (Data) throws -> String) throws -> String? {
+        guard let browser, browser.driver == "extension" else { return nil }
+        guard let chrome = browser.chrome, !chrome.isEmpty, let sites = browser.sites, !sites.isEmpty else {
+            throw PlanqueClient.PlanqueError.digestMismatch
+        }
+        return try rawSignature(fromDER: try sign(try sitesBytes(chromeID: chrome, grant: grant, sites: sites)))
+    }
+
     private static func labelled(_ label: String, _ body: JCS.Value) throws -> Data {
         var out = Data(label.utf8)
         out.append(0)

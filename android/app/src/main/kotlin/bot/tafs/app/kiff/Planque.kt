@@ -66,7 +66,21 @@ data class GrantRequest(
   val profile: kotlinx.serialization.json.JsonObject? = null,
   /** A managed provider's connection: which provider and toolkit it is (`{provider, toolkit}`). */
   val connector: GrantConnector? = null,
-)
+  /** A browser grant's limits as planque holds them. The grant's digest covers them, so what the owner was shown is what is read here. */
+  val browser: GrantBrowser? = null,
+) {
+  /** A grant that uses the owner's own paired Chrome: approved only with this phone's signature over its sites (`chrome_sites_sig`). */
+  val usesOwnChrome: Boolean get() = browser?.driver == GrantBrowser.EXTENSION
+}
+
+/** A browser grant's limits: which browser drives it, the paired Chrome an extension grant uses, and every site it may reach. */
+@Serializable
+data class GrantBrowser(val driver: String? = null, val chrome: String? = null, val sites: List<String>? = null) {
+  companion object {
+    /** The driver of a grant that uses the owner's own Chrome; none for planque's hosted browser. */
+    const val EXTENSION = "extension"
+  }
+}
 
 /** The catalog entry of a managed Slack bot connection. */
 const val SLACK_BOT_ENTRY = "connector:composio:slackbot"
@@ -370,20 +384,26 @@ class PlanqueClient(
    * shown. With [words], KIFF's words for its profile that the owner read, the body carries `kiff_profile` (KIFF's profile contract), so the
    * same signature covers the profile and the words.
    */
-  suspend fun approve(grant: Grant, words: ProfileWords? = null): Approved = approveAt(grant, words, "approve")
+  suspend fun approve(grant: Grant, words: ProfileWords? = null, chromeSitesSig: String? = null): Approved = approveAt(grant, words, "approve", chromeSitesSig)
 
   /**
    * A new sign-in for a signed-out connection planque can't sign in again on its old account (`reconnect: fresh`): the first
    * step in place of [approve], with the same body, signature and answer. Its confirm brings back every connection signed out
    * on that account.
    */
-  suspend fun connectFresh(grant: Grant, words: ProfileWords? = null): Approved = approveAt(grant, words, "connect-fresh")
+  suspend fun connectFresh(grant: Grant, words: ProfileWords? = null, chromeSitesSig: String? = null): Approved =
+    approveAt(grant, words, "connect-fresh", chromeSitesSig)
 
-  private suspend fun approveAt(grant: Grant, words: ProfileWords?, step: String): Approved {
+  /**
+   * The approve body. [chromeSitesSig], for a grant that uses the owner's own Chrome, is this phone's signature over its sites
+   * (`tafs-chrome/sites/v1`, raw r‖s): planque approves such a grant only with it. Added by the phone, never by tafs cloud.
+   */
+  private suspend fun approveAt(grant: Grant, words: ProfileWords?, step: String, chromeSitesSig: String? = null): Approved {
     if (!grant.digestMatches) throw PlanqueError.DigestMismatch
     val fields = buildMap {
       put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
       words?.let { put("kiff_profile", it.approval()) }
+      chromeSitesSig?.let { put("chrome_sites_sig", kotlinx.serialization.json.JsonPrimitive(it)) }
     }
     val body = KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
     return decode(raw("POST", "grants/${escaped(grant.id)}/$step", body))
@@ -393,8 +413,12 @@ class PlanqueClient(
    * Approves [grantId] with the body tafs cloud built for it (kiff/tafs#413): sent as it is, signed by the device. The phone
    * checks nothing of it; tafs cloud read the grant and decided.
    */
-  suspend fun approveAsAsked(grantId: String, body: kotlinx.serialization.json.JsonElement): Approved =
-    decode(raw("POST", "grants/${escaped(grantId)}/approve", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), body).toByteArray()))
+  suspend fun approveAsAsked(grantId: String, body: kotlinx.serialization.json.JsonElement, chromeSitesSig: String? = null): Approved =
+    decode(raw("POST", "grants/${escaped(grantId)}/approve", KiffClient.json.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), withSites(body, chromeSitesSig)).toByteArray()))
+
+  /** [body] with this phone's `chrome_sites_sig` added when it has one: tafs cloud builds the rest, never this field. */
+  internal fun withSites(body: kotlinx.serialization.json.JsonElement, chromeSitesSig: String?): kotlinx.serialization.json.JsonElement =
+    if (chromeSitesSig == null) body else JsonObject(body.jsonObject + ("chrome_sites_sig" to kotlinx.serialization.json.JsonPrimitive(chromeSitesSig)))
 
   /**
    * Gives an API-key connection its key, as shown, with the same checks as approving: the body carries the digest the owner
