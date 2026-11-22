@@ -64,5 +64,21 @@
   "coach_working": { "message": "Coach pracuje…" },
   "share_chars": { "message": "Znaki: $N$", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Udostępniać można tylko strony https." },
-  "share_error_site_blocked": { "message": "Strony takie jak ta nigdy nie są udostępniane: banki, portfele, hasła, płatności, zdrowie i administracja publiczna." }
+  "share_error_site_blocked": { "message": "Strony takie jak ta nigdy nie są udostępniane: banki, portfele, hasła, płatności, zdrowie i administracja publiczna." },
+  "vault_title": { "message": "Zapisane logowania" },
+  "vault_body": { "message": "Zapisane tutaj, zapieczętowane na tym komputerze. Taf może poprosić o użycie jednego tylko na dokładnie tej witrynie, a wpisywane jest dopiero po tym, jak zatwierdzisz to jedno wypełnienie w telefonie. tafs i KIFF nigdy go nie widzą." },
+  "vault_site": { "message": "Witryna" },
+  "vault_username": { "message": "Nazwa użytkownika lub e-mail (opcjonalnie)" },
+  "vault_password": { "message": "Hasło" },
+  "vault_save": { "message": "Zapisz zapieczętowane" },
+  "vault_saved": { "message": "Zapisano. Jest zapieczętowane na tym komputerze." },
+  "vault_error": { "message": "Nie zapisano: witryna potrzebuje https i hasła." },
+  "vault_remove": { "message": "Usuń" },
+  "vault_with_username": { "message": "z nazwą użytkownika" },
+  "vault_one_per_site": { "message": "Jedno logowanie na witrynę: zapisanie kolejnego dla tej samej witryny zastępuje poprzednie." },
+  "coach_new": { "message": "Nowa rozmowa" },
+  "coach_previous": { "message": "Poprzednie rozmowy" },
+  "coach_previous_none": { "message": "Brak wcześniejszych rozmów." },
+  "coach_previous_error": { "message": "Nie udało się wczytać wcześniejszych rozmów." },
+  "coach_untitled": { "message": "Rozmowa" }
 }

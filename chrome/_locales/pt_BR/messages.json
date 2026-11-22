@@ -64,5 +64,21 @@
   "coach_working": { "message": "O Coach está trabalhando…" },
   "share_chars": { "message": "$N$ caracteres", "placeholders": { "n": { "content": "$1" } } },
   "share_error_bad_url": { "message": "Só é possível compartilhar páginas https." },
-  "share_error_site_blocked": { "message": "Páginas como esta nunca são compartilhadas: bancos, carteiras, senhas, pagamentos, saúde e governo." }
+  "share_error_site_blocked": { "message": "Páginas como esta nunca são compartilhadas: bancos, carteiras, senhas, pagamentos, saúde e governo." },
+  "vault_title": { "message": "Logins salvos" },
+  "vault_body": { "message": "Salvo aqui, selado neste computador. Um taf só pode pedir para usar um nesse site exato, e só é digitado depois que você aprova esse preenchimento no celular. O tafs e o KIFF nunca o veem." },
+  "vault_site": { "message": "Site" },
+  "vault_username": { "message": "Nome de usuário ou e-mail (opcional)" },
+  "vault_password": { "message": "Senha" },
+  "vault_save": { "message": "Salvar selado" },
+  "vault_saved": { "message": "Salvo. Está selado neste computador." },
+  "vault_error": { "message": "Não foi salvo: um site precisa de https e de uma senha." },
+  "vault_remove": { "message": "Remover" },
+  "vault_with_username": { "message": "com nome de usuário" },
+  "vault_one_per_site": { "message": "Um login por site: salvar outro para o mesmo site substitui o anterior." },
+  "coach_new": { "message": "Nova conversa" },
+  "coach_previous": { "message": "Conversas anteriores" },
+  "coach_previous_none": { "message": "Não há conversas anteriores." },
+  "coach_previous_error": { "message": "Não foi possível carregar as conversas anteriores." },
+  "coach_untitled": { "message": "Conversa" }
 }

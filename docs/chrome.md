@@ -402,6 +402,12 @@ The side panel talks to Coach: the same chat the apps use, through tafs cloud's 
   answers `*` and never allows credentials, since the bearer rides in its header, not a cookie. The session is still
   the check.
 
+- **It opens on a fresh conversation,** as the phone's New conversation does, not on the account's whole old Coach thread
+  (`chrome/src/coachchat.js`). The first message sends `new_chat: true`, and the panel follows the `session` tafs cloud
+  answers with. **New conversation** goes back to a fresh one at any time. **Previous conversations** lists the person's
+  earlier chats (`GET /v1/tafs/{coach}/chats`, newest first, a chat they set aside left out); a tap shows one
+  (`GET /v1/tafs/{coach}/conversation/{session}`), and the next message goes into it (`session`). A chat with no title is
+  called "Conversation".
 - **It reads and sends, never approves.** A card that waits on the owner (an approval, a sign-in) shows "Something waits
   for your approval on your phone"; KIFF refuses the session every approval anyway.
 - **The page is sent only on the owner's tap,** with "Share this page":

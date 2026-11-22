@@ -239,9 +239,12 @@ chrome.runtime.onMessage.addListener((m, sender, reply) => {
     vault_remove: async () => vault.remove(m.id),
     coach_thread: async () => {
       claimKiff().catch(() => {});
-      return { thread: await (await coach()).thread() };
+      return { thread: await (await coach()).thread(typeof m.session === "string" ? m.session : null) };
     },
-    coach_send: async () => ({ sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID }) }),
+    coach_chats: async () => ({ chats: await (await coach()).chats() }),
+    coach_send: async () => ({
+      sent: await (await coach()).send(m.words, { page: m.page || null, clientID: m.clientID, session: typeof m.session === "string" ? m.session : null, newChat: m.newChat === true }),
+    }),
     share_target: () => shareTarget(),
     share_read: () => shareRead(m.tabId),
     state: async () => {

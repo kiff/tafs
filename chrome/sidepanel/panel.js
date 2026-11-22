@@ -1,6 +1,8 @@
 // The side panel: pairing by the phone's code, and while a taf works, what it's doing, with Pause, Resume and Stop. It
 // shows only what the service worker reports; it decides nothing.
 
+import { FRESH, chosen, sendOptions, afterSend, chatTitle } from "../src/coachchat.js";
+
 const t = (key, ...subs) => chrome.i18n.getMessage(key, subs) || key;
 
 for (const el of document.querySelectorAll("[data-m]")) el.textContent = t(el.dataset.m);
@@ -140,13 +142,29 @@ $("vaultForm").onsubmit = async (e) => {
 
 $("vault").addEventListener("toggle", () => $("vault").open && drawVault());
 
-// Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone.
+// Coach (docs/chrome.md, "Coach in the side panel"): the same chat as the apps. Approvals stay on the phone. The panel opens on
+// a fresh conversation, as the phone's New conversation does; the earlier ones are under Previous conversations.
 let shared = null;
+let view = FRESH;
 
 async function drawCoach() {
-  const r = await send({ type: "coach_thread" });
   const note = $("coachNote");
   note.textContent = "";
+  const list = $("coachThread");
+  if (view.fresh) {
+    // Nothing to read: a fresh conversation has no chat until its first message. Whether Coach can be reached at all is
+    // what the list of chats says.
+    const r = await send({ type: "coach_chats" });
+    if (r.error) {
+      note.textContent = t(r.error === "no_session" ? "unpaired" : "coach_error");
+      return;
+    }
+    list.textContent = "";
+    $("coachEmpty").hidden = false;
+    $("coachPhone").hidden = true;
+    return;
+  }
+  const r = await send({ type: "coach_thread", session: view.session });
   if (r.error) {
     note.textContent = t(r.error === "no_session" ? "unpaired" : "coach_error");
     return;
@@ -155,7 +173,6 @@ async function drawCoach() {
     note.textContent = t("coach_not_started");
     return;
   }
-  const list = $("coachThread");
   list.textContent = "";
   $("coachEmpty").hidden = r.thread.messages.length > 0;
   for (const m of r.thread.messages.slice(-20)) {
@@ -167,6 +184,50 @@ async function drawCoach() {
   $("coachPhone").hidden = !r.thread.waitsOnPhone;
   if (r.thread.working) note.textContent = t("coach_working");
 }
+
+/** The earlier chats, newest first; a tap shows one. */
+async function drawPast() {
+  const note = $("coachPastNote");
+  const list = $("coachChats");
+  list.textContent = "";
+  note.hidden = true;
+  const r = await send({ type: "coach_chats" });
+  if (r.error || !Array.isArray(r.chats)) {
+    note.textContent = t("coach_previous_error");
+    note.hidden = false;
+    return;
+  }
+  if (!r.chats.length) {
+    note.textContent = t("coach_previous_none");
+    note.hidden = false;
+    return;
+  }
+  for (const c of r.chats) {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "quiet";
+    b.textContent = chatTitle(c, t("coach_untitled"));
+    b.onclick = () => {
+      view = chosen(c.session);
+      $("coachPast").open = false;
+      drawCoach();
+    };
+    li.append(b);
+    list.append(li);
+  }
+}
+
+$("coachPast").addEventListener("toggle", () => $("coachPast").open && drawPast());
+
+$("coachNew").onclick = () => {
+  view = FRESH;
+  shared = null;
+  $("sharePreview").hidden = true;
+  $("coachWords").value = "";
+  $("coachPast").open = false;
+  $("coachThread").textContent = "";
+  drawCoach();
+};
 
 $("share").onclick = async () => {
   const target = await send({ type: "share_target" });
@@ -201,11 +262,12 @@ $("coachForm").onsubmit = async (e) => {
   e.preventDefault();
   const words = $("coachWords").value.trim();
   if (!words) return;
-  const r = await send({ type: "coach_send", words, page: shared, clientID: crypto.randomUUID() });
+  const r = await send({ type: "coach_send", words, page: shared, clientID: crypto.randomUUID(), ...sendOptions(view) });
   if (r.error) {
     $("coachNote").textContent = t("coach_error");
     return;
   }
+  view = afterSend(view, r.sent);
   $("coachWords").value = "";
   shared = null;
   $("sharePreview").hidden = true;
