@@ -350,7 +350,7 @@ export const vi: Partial<Words> = {
   dial_place_sender_words: "Trả lời người đã viết",
   dial_place_you: "Bạn",
   dial_place_you_words: "Hiển thị từng kết quả trong ứng dụng",
-  dial_place_email: "Email",
+  dial_place_email: "Thư điện tử",
   dial_place_email_words: "Gửi email cho bạn từng kết quả",
   dial_place_handed: (name: string, fields: string) => `Mỗi kết quả được chuyển cho: ${name}${fields}`,
   dial_place_goes: (name: string, fields: string) => `Mỗi kết quả được gửi đến: ${name}${fields}`,

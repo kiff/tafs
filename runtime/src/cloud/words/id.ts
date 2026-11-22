@@ -350,7 +350,7 @@ export const id: Partial<Words> = {
   dial_place_sender_words: "Membalas siapa pun yang menulis",
   dial_place_you: "Anda",
   dial_place_you_words: "Menampilkan setiap hasil di aplikasi",
-  dial_place_email: "Email",
+  dial_place_email: "Surel",
   dial_place_email_words: "Mengirim setiap hasil ke email Anda",
   dial_place_handed: (name: string, fields: string) => `Setiap hasil diserahkan ke: ${name}${fields}`,
   dial_place_goes: (name: string, fields: string) => `Setiap hasil dikirim ke: ${name}${fields}`,
