@@ -30,5 +30,6 @@
     <locale android:name="sq" />
     <locale android:name="ka" />
     <locale android:name="hy" />
+    <locale android:name="az" />
     <locale android:name="pt-BR" />
 </locale-config>

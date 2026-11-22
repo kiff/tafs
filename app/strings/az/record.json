@@ -69,7 +69,7 @@
   "record.filter.held": "Saxlanılanlar",
   "record.filter.money_moved": "Pul köçürülənlər",
   "record.filter.refused": "Rədd edilənlər",
-  "record.filter.stopped": "Dayandırılanlar",
+  "record.filter.stopped": "Dayandırıldı",
   "record.filter.waiting": "Gözləyənlər",
   "record.held": "Saxlanılıb: {summary}",
   "record.hide": "Gizlədin",

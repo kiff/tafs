@@ -988,6 +988,43 @@ receipt "անդորրագիր", a brief "ամփոփում". Apple's menu paths a
 | receipt | անդորրագիր |
 | Cancel / Continue | Հրաժարվել / Շարունակել |
 
+### Azerbaijani (az)
+
+Latin script, addressed as **siz**; buttons are polite imperatives ("Təsdiq edin", "Rədd edin", "Davam edin").
+taf, Card, Coach, KIFF and Setup stay as they are in Latin letters; Azerbaijani's suffixes join them with a hyphen
+("taf-ın", "Card-ı", "Coach-a"), and a value is a name that takes none, so a line that would need one words around it:
+"{taf} taf-ını", "{name} üçün". A door is "qapı", a call "çağırış", a request "sorğu", a held call "saxlanılan çağırış", a
+receipt "qəbz", a brief "xülasə". Apple's menu paths are the Azerbaijani ones ("Parametrlər", "Sistem parametrləri",
+"Məxfilik və təhlükəsizlik"). Azerbaijani's "one" covers 1 only, and a number takes the singular noun ("5 tapşırıq").
+
+| English | Azerbaijani |
+|---|---|
+| Needs you | Sizi gözləyir |
+| Approve / Approve once | Təsdiq edin / Bir dəfə təsdiq edin |
+| Refuse | Rədd edin |
+| held | saxlanılıb |
+| Halt / Halted | Dondurun / Donduruldu |
+| Stopped | Dayandırıldı |
+| Pause / Paused | Fasilə verin / Fasilədədir |
+| Resume | Davam etdirin |
+| Revoke | Ləğv edin |
+| Record | Qeydlər |
+| Connect / connection | Qoşun / qoşulma |
+| Pair / Unpair | Cütləşdirin / Cütləşməni ləğv edin |
+| Account | Hesab |
+| limit / spend limit | limit / xərc limiti |
+| credits / credit pack | kreditlər / kredit paketi |
+| passkey | giriş açarı |
+| security key | təhlükəsizlik açarı |
+| Sign in / Sign out | Giriş / Çıxış |
+| Inbox | Gələnlər |
+| Overview | İcmal |
+| Calendar | Təqvim |
+| Usage | İstifadə |
+| brief | xülasə |
+| receipt | qəbz |
+| Cancel / Continue | Vaz keçin / Davam edin |
+
 ## Batch 4 on Android: Serbian, Hebrew, Albanian, Georgian, Armenian, Azerbaijani and Bengali
 
 Ready before their lines are written, so the strings PR only adds the words:
