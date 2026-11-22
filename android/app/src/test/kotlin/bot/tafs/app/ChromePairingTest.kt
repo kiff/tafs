@@ -129,6 +129,19 @@ class ChromePairingTest {
     assertFalse(ChromePairing.extensionProofHolds(secret, chromeKey, v("extension_proof"), offer))
   }
 
+  @Test fun aRePairingsCarriedConnectionsSignTheExtensionsBytes() {
+    val carried = vector["carried"]!!.jsonArray.map { e ->
+      val o = e.jsonObject
+      ChromePairing.Carried(o["grant"]!!.jsonPrimitive.content, o["sites"]!!.jsonArray.map { it.jsonPrimitive.content })
+    }
+    val c = ChromePairing.confirmation(v("secret"), bytes("chrome_key"), v("name"), bytes("phone_key")).copy(carried = carried)
+    assertEquals(v("signed_bytes_with_carried"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c)))
+    // A first pairing carries nothing, and its bytes are as they always were.
+    assertEquals(v("signed_bytes"), ChromePairing.base64Url(ChromePairing.signedBytes(v("pairing"), c.copy(carried = emptyList()))))
+    // Another order is other bytes: the extension checks the list as the phone wrote it.
+    assertFalse(ChromePairing.signedBytes(v("pairing"), c.copy(carried = carried.reversed())).contentEquals(ChromePairing.signedBytes(v("pairing"), c)))
+  }
+
   @Test fun theExtensionsKiffDeviceIsReadOnlyAsAChromeExtensionInSoftware() {
     val offer = v("kiff_offer")
     val device = PairQr.readChromeExtension(offer)!!
