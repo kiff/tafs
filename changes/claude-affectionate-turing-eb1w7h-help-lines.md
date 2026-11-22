@@ -1,0 +1,1 @@
+- **How tafs works explains Chrome and the emailed code:** two short sections, shown only where each is available, in every language ([docs/ios-app.md](docs/ios-app.md)).
