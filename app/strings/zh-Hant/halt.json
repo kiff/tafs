@@ -1,0 +1,13 @@
+{
+  "halt.again": "再次凍結",
+  "halt.all_now": "立即全部凍結",
+  "halt.explain.halted": "已凍結。繼續後只會啟動新的工作。",
+  "halt.explain.halted_since": "自 {time} 起。繼續後只會啟動新的工作。",
+  "halt.explain.halting": "不會啟動任何新工作。待 KIFF 與連線皆確認後，會顯示為已凍結。",
+  "halt.explain.running_all": "凍結會讓您的所有 taf 停止，直到您繼續。已傳送的呼叫可能仍會抵達。",
+  "halt.explain.running_one": "凍結會讓它停止，直到您繼續。已傳送的呼叫可能仍會抵達。",
+  "halt.halting_stops_no_run_starts": "凍結會讓 {who} 停止，直到您繼續。已傳送的呼叫可能仍會抵達。",
+  "halt.now": "立即凍結",
+  "halt.row_running": "讓它停止，直到您繼續",
+  "halt.your_tafs_lower": "您的 taf"
+}

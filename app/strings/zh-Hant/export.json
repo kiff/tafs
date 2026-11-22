@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "未能匯出您的對話。{why}",
+  "export.not_offered": "無法將檔案儲存在這部手機上。請釋出一些空間，然後再試一次。",
+  "export.own_chats_each_taf_coach": "您與每個 taf（包含 Coach）的對話、您附加的檔案名稱，以及您的備註，以可讀檔案和 JSON 格式提供。只有您能匯出。",
+  "export.preparing": "正在準備您的對話…",
+  "export.ready_share_again": "已就緒：{files}。再次分享",
+  "export.row": "匯出我的對話",
+  "export.sign_in_first": "請先以 KIFF 登入，才能匯出您的對話。"
+}

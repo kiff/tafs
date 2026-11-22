@@ -723,6 +723,43 @@ form (other).
 | Usage | การใช้งาน |
 | Cancel / Continue | ยกเลิก / ดำเนินการต่อ |
 
+### Traditional Chinese (zh-Hant)
+
+Traditional characters, in the Taiwan register Apple's own Traditional Chinese uses ("設定", "系統設定", "隱私權與安全性"; on macOS 12
+"系統偏好設定", "安全性與隱私權"). Addressed as **您**, the polite form. Buttons are plain verbs ("核准", "拒絕", "繼續"). taf, Card,
+Coach, KIFF and Setup are names and stay in Latin letters. Chinese has no plural and doesn't decline, so a number takes a
+measure word ("5 個 taf", "3 次呼叫") and a possessive is "的" ("{owner}的 Card"). Punctuation is full-width ("，。：？") except
+inside placeholders and menu paths ("›"). A `*_mac` sentence ends with "。" and names macOS 12's path as the test needs.
+A door is "門", a call "呼叫", a request "請求", a held call "已保留的呼叫", a receipt "收據", a brief "摘要", the dial "旋鈕".
+There is one plural form (other). The code is `zh-Hant`: the plural table keys on `zh`, and the Android resource folder
+for it is `values-b+zh+Hant`, which `android.py`'s `folder()` writes as `values-zh-rHant` until the language ships.
+
+| English | Traditional Chinese |
+|---|---|
+| Needs you | 等您處理 |
+| Approve / Approve once | 核准 / 核准一次 |
+| Refuse | 拒絕 |
+| held | 已保留 |
+| Halt / Halted | 凍結 / 已凍結 |
+| Stopped | 已停止 |
+| Pause / Paused | 暫停 / 已暫停 |
+| Resume | 繼續 |
+| Revoke | 撤銷 |
+| Record | 紀錄 |
+| Connect / connection | 連接 / 連線 |
+| Pair / Unpair | 配對 / 取消配對 |
+| Account | 帳號 |
+| limit / spend limit | 上限 / 支出上限 |
+| credits / credit pack | 點數 / 點數包 |
+| passkey | 密碼金鑰 |
+| security key | 安全金鑰 |
+| Sign in / Sign out | 登入 / 登出 |
+| Inbox | 收件匣 |
+| Overview | 總覽 |
+| Calendar | 行事曆 |
+| Usage | 用量 |
+| Cancel / Continue | 取消 / 繼續 |
+
 ## The AI disclosure
 
 What a taf sends outside the company starts with its disclosure line, in the message's language
