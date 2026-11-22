@@ -1506,6 +1506,7 @@
     <string name="needs_you_empty_hint">कुनै taf ले आफ्नो Card बाहिरको कुरा माग्दा यो यहाँ र तपाईंको लक स्क्रिनमा देखिन्छ।</string>
     <string name="needs_you_expired">समय सकियो</string>
     <string name="needs_you_expired_line">समय सकियो। कसैले समयमा जवाफ दिएनन्, त्यसैले KIFF ले अस्वीकार गर्‍यो र केही पठाइएन।</string>
+    <string name="needs_you_extra_room">थप ठाउँ</string>
     <string name="needs_you_extra_room_with">%1$s ले थप ठाउँ</string>
     <string name="needs_you_get_alert_when_call_waits">कुनै कल तपाईंको जवाफको प्रतीक्षामा हुँदा tafs बन्द भए पनि सूचना पाउनुहोस्।</string>
     <string name="needs_you_install_from_card">यसको कार्डबाट स्थापना गर्नुहोस्: संस्करण सक्रिय हुन्छ, त्यसपछि Coach ले थाहा पाउँछ।</string>

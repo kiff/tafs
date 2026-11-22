@@ -32,6 +32,7 @@
   "needs_you.empty_hint": "Khi một taf yêu cầu điều gì ngoài Card của nó, yêu cầu hiện ở đây và trên màn hình khóa của bạn.",
   "needs_you.expired": "đã hết hạn",
   "needs_you.expired_line": "Đã hết hạn. Không ai trả lời kịp thời nên KIFF đã từ chối và không có gì được gửi.",
+  "needs_you.extra_room": "Thêm hạn mức",
   "needs_you.extra_room_with": "Thêm hạn mức bằng {biometry}",
   "needs_you.get_alert_when_call_waits": "Nhận cảnh báo khi một lệnh gọi chờ bạn trả lời, kể cả khi tafs đã đóng.",
   "needs_you.install_from_card": "Cài đặt từ thẻ của nó: phiên bản bắt đầu hoạt động, rồi Coach được biết.",

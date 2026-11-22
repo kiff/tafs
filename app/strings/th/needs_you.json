@@ -32,6 +32,7 @@
   "needs_you.empty_hint": "เมื่อ taf ขอสิ่งที่อยู่นอก Card ของมัน จะปรากฏที่นี่และบนหน้าจอล็อกของคุณ",
   "needs_you.expired": "หมดอายุ",
   "needs_you.expired_line": "หมดอายุแล้ว ไม่มีใครตอบทันเวลา KIFF จึงปฏิเสธและไม่มีอะไรถูกส่ง",
+  "needs_you.extra_room": "เพิ่มพื้นที่",
   "needs_you.extra_room_with": "เพิ่มพื้นที่ด้วย {biometry}",
   "needs_you.get_alert_when_call_waits": "รับการแจ้งเตือนเมื่อมีการเรียกรอคำตอบของคุณ แม้ปิด tafs อยู่",
   "needs_you.install_from_card": "ติดตั้งจากการ์ดของมัน: เวอร์ชันจะเริ่มใช้งาน แล้ว Coach จะรับรู้",

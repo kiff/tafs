@@ -1624,6 +1624,7 @@
     <string name="needs_you_empty_hint">Gdy taf poprosi o coś poza swoją Card, pojawi się to tutaj i na ekranie blokady.</string>
     <string name="needs_you_expired">wygasło</string>
     <string name="needs_you_expired_line">Wygasło. Nikt nie odpowiedział na czas, więc KIFF to odrzucił i nic nie zostało wysłane.</string>
+    <string name="needs_you_extra_room">Dodatkowy zapas</string>
     <string name="needs_you_extra_room_with">Dodatkowy zapas przez %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Otrzymuj alert, gdy wywołanie czeka na Twoją odpowiedź, nawet gdy tafs jest zamknięte.</string>
     <string name="needs_you_install_from_card">Zainstaluj ją z jej karty: wersja zacznie działać na żywo, a potem Coach się o tym dowie.</string>

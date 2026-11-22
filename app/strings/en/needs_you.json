@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "When a taf asks for something outside its Card, it shows up here and on your lock screen.",
   "needs_you.expired": "expired",
   "needs_you.expired_line": "Expired. Nobody answered in time, so KIFF refused it and nothing was sent.",
+  "needs_you.extra_room": "Extra room",
   "needs_you.extra_room_with": "Extra room with {biometry}",
   "needs_you.get_alert_when_call_waits": "Get an alert when a call waits for your answer, even with tafs closed.",
   "needs_you.install_from_card": "Install it from its card: the version goes live, then Coach hears.",

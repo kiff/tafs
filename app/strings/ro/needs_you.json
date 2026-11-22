@@ -34,6 +34,7 @@
   "needs_you.empty_hint": "Când un taf cere ceva în afara Cardului său, apare aici și pe ecranul de blocare.",
   "needs_you.expired": "expirat",
   "needs_you.expired_line": "Expirat. Nimeni nu a răspuns la timp, așa că KIFF l-a refuzat și nu s-a trimis nimic.",
+  "needs_you.extra_room": "Spațiu suplimentar",
   "needs_you.extra_room_with": "Spațiu suplimentar cu {biometry}",
   "needs_you.get_alert_when_call_waits": "Primiți o alertă când un apel așteaptă răspunsul dvs., chiar și cu tafs închis.",
   "needs_you.install_from_card": "Instalați-o din cardul ei: versiunea devine activă, apoi Coach află.",

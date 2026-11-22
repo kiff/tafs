@@ -1447,6 +1447,7 @@
     <string name="needs_you_empty_hint">ເມື່ອ taf ຂໍສິ່ງທີ່ນອກ Card ຂອງມັນ ມັນສະແດງຢູ່ທີ່ນີ້ ແລະ ໃນໜ້າຈໍລັອກຂອງທ່ານ.</string>
     <string name="needs_you_expired">ໝົດອາຍຸ</string>
     <string name="needs_you_expired_line">ໝົດອາຍຸ. ບໍ່ມີໃຜຕອບທັນເວລາ ສະນັ້ນ KIFF ປະຕິເສດ ແລະ ບໍ່ມີຫຍັງຖືກສົ່ງ.</string>
+    <string name="needs_you_extra_room">ພື້ນທີ່ເພີ່ມ</string>
     <string name="needs_you_extra_room_with">ພື້ນທີ່ເພີ່ມດ້ວຍ %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">ຮັບການແຈ້ງເຕືອນເມື່ອມີການໂທລໍຖ້າຄຳຕອບຂອງທ່ານ ເຖິງວ່າ tafs ປິດຢູ່.</string>
     <string name="needs_you_install_from_card">ຕິດຕັ້ງຈາກບັດຂອງມັນ: ເວີຊັນເລີ່ມໃຊ້ງານ ແລ້ວ Coach ຮູ້.</string>

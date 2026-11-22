@@ -32,6 +32,7 @@
   "needs_you.empty_hint": "當 taf 要求超出其 Card 範圍的事項時，會顯示在這裡以及您的鎖定畫面上。",
   "needs_you.expired": "已過期",
   "needs_you.expired_line": "已過期。沒有人及時回覆，因此 KIFF 已拒絕，也沒有傳送任何內容。",
+  "needs_you.extra_room": "增加額度",
   "needs_you.extra_room_with": "用{biometry}增加額度",
   "needs_you.get_alert_when_call_waits": "當有呼叫等待您回覆時收到通知，即使 tafs 已關閉。",
   "needs_you.install_from_card": "從它的卡片安裝：該版本會上線，然後 Coach 會收到通知。",

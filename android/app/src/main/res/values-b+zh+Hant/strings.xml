@@ -1447,6 +1447,7 @@
     <string name="needs_you_empty_hint">當 taf 要求超出其 Card 範圍的事項時，會顯示在這裡以及您的鎖定畫面上。</string>
     <string name="needs_you_expired">已過期</string>
     <string name="needs_you_expired_line">已過期。沒有人及時回覆，因此 KIFF 已拒絕，也沒有傳送任何內容。</string>
+    <string name="needs_you_extra_room">增加額度</string>
     <string name="needs_you_extra_room_with">用%1$s增加額度</string>
     <string name="needs_you_get_alert_when_call_waits">當有呼叫等待您回覆時收到通知，即使 tafs 已關閉。</string>
     <string name="needs_you_install_from_card">從它的卡片安裝：該版本會上線，然後 Coach 會收到通知。</string>

@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Quan un taf demana alguna cosa fora del seu Card, apareix aquí i a la teva pantalla de bloqueig.",
   "needs_you.expired": "caducat",
   "needs_you.expired_line": "Caducat. Ningú no ha respost a temps, així que KIFF ho ha rebutjat i no s'ha enviat res.",
+  "needs_you.extra_room": "Marge addicional",
   "needs_you.extra_room_with": "Marge addicional amb {biometry}",
   "needs_you.get_alert_when_call_waits": "Rep una alerta quan una crida espera la teva resposta, fins i tot amb tafs tancat.",
   "needs_you.install_from_card": "Instal·la-la des de la seva targeta: la versió entra en producció i després Coach ho sap.",

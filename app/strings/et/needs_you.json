@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Kui taf küsib midagi väljaspool oma Cardi, ilmub see siia ja sinu lukustuskuvale.",
   "needs_you.expired": "aegunud",
   "needs_you.expired_line": "Aegunud. Keegi ei vastanud õigel ajal, seega KIFF keeldus ja midagi ei saadetud.",
+  "needs_you.extra_room": "Lisaruum",
   "needs_you.extra_room_with": "Lisaruum {biometry} abil",
   "needs_you.get_alert_when_call_waits": "Saa teavitus, kui päring ootab sinu vastust, isegi kui tafs on suletud.",
   "needs_you.install_from_card": "Paigalda see selle kaardilt: versioon võetakse kasutusele, siis saab Coach teada.",

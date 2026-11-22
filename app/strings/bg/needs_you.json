@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Когато taf поиска нещо извън своята Card, то се показва тук и на заключения ви екран.",
   "needs_you.expired": "изтекло",
   "needs_you.expired_line": "Изтекло. Никой не отговори навреме, затова KIFF го отказа и нищо не беше изпратено.",
+  "needs_you.extra_room": "Допълнителен лимит",
   "needs_you.extra_room_with": "Допълнителен лимит с {biometry}",
   "needs_you.get_alert_when_call_waits": "Получавайте известие, когато заявка чака вашия отговор, дори когато tafs е затворен.",
   "needs_you.install_from_card": "Инсталирайте я от картата ѝ: версията става активна, после Coach разбира.",

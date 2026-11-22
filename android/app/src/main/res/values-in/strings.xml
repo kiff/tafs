@@ -1447,6 +1447,7 @@
     <string name="needs_you_empty_hint">Saat sebuah taf meminta sesuatu di luar Card-nya, permintaan itu muncul di sini dan di layar kunci Anda.</string>
     <string name="needs_you_expired">kedaluwarsa</string>
     <string name="needs_you_expired_line">Kedaluwarsa. Tidak ada yang menjawab tepat waktu, jadi KIFF menolaknya dan tidak ada yang dikirim.</string>
+    <string name="needs_you_extra_room">Ruang tambahan</string>
     <string name="needs_you_extra_room_with">Ruang tambahan dengan %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Dapatkan peringatan saat sebuah panggilan menunggu jawaban Anda, bahkan saat tafs ditutup.</string>
     <string name="needs_you_install_from_card">Pasang dari kartunya: versi mulai aktif, lalu Coach tahu.</string>

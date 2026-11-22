@@ -1506,6 +1506,7 @@
     <string name="needs_you_empty_hint">Wenn ein taf um etwas außerhalb seiner Card bittet, erscheint es hier und auf deinem Sperrbildschirm.</string>
     <string name="needs_you_expired">abgelaufen</string>
     <string name="needs_you_expired_line">Abgelaufen. Niemand hat rechtzeitig geantwortet, daher hat KIFF es abgelehnt, und es wurde nichts gesendet.</string>
+    <string name="needs_you_extra_room">Zusatzspielraum</string>
     <string name="needs_you_extra_room_with">Zusatzspielraum mit %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.</string>
     <string name="needs_you_install_from_card">Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.</string>

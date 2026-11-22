@@ -2865,6 +2865,8 @@ enum Words {
         static var expired: String { Words.line("needs_you.expired") }
         /// Expired. Nobody answered in time, so KIFF refused it and nothing was sent.
         static var expiredLine: String { Words.line("needs_you.expired_line") }
+        /// Extra room
+        static var extraRoom: String { Words.line("needs_you.extra_room") }
         /// Extra room with {biometry}
         static func extraRoomWith(biometry: String) -> String { Words.line("needs_you.extra_room_with", biometry) }
         /// Get an alert when a call waits for your answer, even with tafs closed.

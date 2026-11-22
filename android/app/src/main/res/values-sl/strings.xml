@@ -1624,6 +1624,7 @@
     <string name="needs_you_empty_hint">Ko taf prosi za nekaj zunaj svoje Card, se to prikaže tukaj in na zaklenjenem zaslonu.</string>
     <string name="needs_you_expired">poteklo</string>
     <string name="needs_you_expired_line">Poteklo. Nihče ni pravočasno odgovoril, zato je KIFF to zavrnil in nič ni bilo poslano.</string>
+    <string name="needs_you_extra_room">Dodaten prostor</string>
     <string name="needs_you_extra_room_with">Dodaten prostor z %1$s</string>
     <string name="needs_you_get_alert_when_call_waits">Prejmite opozorilo, ko klic čaka na vaš odgovor, tudi ko je tafs zaprt.</string>
     <string name="needs_you_install_from_card">Namestite ga s njegove kartice: različica postane aktivna, nato izve Coach.</string>

@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "কোনো taf নিজের Card-এর বাইরে কিছু চাইলে তা এখানে এবং আপনার লক স্ক্রিনে দেখা যায়।",
   "needs_you.expired": "মেয়াদ শেষ",
   "needs_you.expired_line": "মেয়াদ শেষ। কেউ সময়মতো উত্তর দেয়নি, তাই KIFF এটি প্রত্যাখ্যান করেছে এবং কিছু পাঠানো হয়নি।",
+  "needs_you.extra_room": "বাড়তি জায়গা",
   "needs_you.extra_room_with": "{biometry} দিয়ে বাড়তি জায়গা",
   "needs_you.get_alert_when_call_waits": "কোনো কল আপনার উত্তরের অপেক্ষায় থাকলে, tafs বন্ধ থাকলেও, অ্যালার্ট পান।",
   "needs_you.install_from_card": "এর কার্ড থেকে ইনস্টল করুন: সংস্করণটি চালু হয়, তারপর Coach জানতে পারে।",

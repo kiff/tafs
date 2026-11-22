@@ -33,6 +33,7 @@
   "needs_you.empty_hint": "Cuando un taf pide algo fuera de su Card, aparece aquí y en tu pantalla de bloqueo.",
   "needs_you.expired": "caducada",
   "needs_you.expired_line": "Caducada. Nadie respondió a tiempo, así que KIFF la rechazó y no se envió nada.",
+  "needs_you.extra_room": "Margen extra",
   "needs_you.extra_room_with": "Margen extra con {biometry}",
   "needs_you.get_alert_when_call_waits": "Recibe una alerta cuando una llamada espere tu respuesta, aunque tafs esté cerrado.",
   "needs_you.install_from_card": "Instálala desde su tarjeta: la versión se activa y luego Coach se entera.",
