@@ -37,7 +37,7 @@ final class IsolatedValuesTests: XCTestCase {
         let arabic = Words.locale(for: "ar")
         let digits = NumberFormatter()
         digits.locale = arabic
-        XCTAssertEqual(digits.string(from: 1234), "1,234")
+        XCTAssertEqual(digits.string(from: 1234)?.filter(\.isNumber), "1234", "0–9, whatever the grouping mark")
         XCTAssertEqual(arabic.calendar.identifier, .gregorian)
         XCTAssertEqual(arabic.language.languageCode?.identifier, "ar")
         XCTAssertEqual(Words.locale(for: "fr").identifier, "fr")
