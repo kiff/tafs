@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Përgjigju brenda",
+  "work.answer_within_days": {
+    "one": "{count} ditë",
+    "other": "{count} ditësh"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} ore",
+    "other": "{count} orësh"
+  },
+  "work.answer_within_line": "Njoftoheni kur një rast pret më gjatë.",
+  "work.answer_within_none": "Nuk është caktuar",
+  "work.answer_within_not_set": "Nuk u caktua dot. {why}",
+  "work.asking_kiff_run": "Po i kërkohet KIFF të ekzekutojë {tool}…",
+  "work.did_not_stop": "Nuk u ndal: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Ekzekutimet e tij",
+  "work.not_read": "Puna e tij nuk u lexua dot. {why}",
+  "work.not_sent_again": "Nuk u dërgua sërish. {why}",
+  "work.request.try_reply_now": "Provoni përgjigjen tani",
+  "work.requests_need_you": {
+    "one": "{count} kërkesë ju pret",
+    "other": "{count} kërkesa ju presin"
+  },
+  "work.send_again": "Dërgoni sërish",
+  "work.sending_again": "Po dërgohet sërish…",
+  "work.stop_run": "Ndaloni ekzekutimin",
+  "work.stopped_part_way_before_finished": "{taf} u ndal në mes, para se të mbaronte."
+}
