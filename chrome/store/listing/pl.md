@@ -1,0 +1,26 @@
+# Polish (`pl`)
+
+**Name:** tafs
+
+**Short description** (123 of 132 characters):
+
+Pozwól swoim tafs pracować w Twoim Chrome, tylko na dozwolonych witrynach, a każdy ryzykowny krok zatwierdzaj na telefonie.
+
+**Long description:**
+
+tafs dla Chrome pozwala Twoim tafom pracować w Twoim własnym Chrome, tylko na stronach, na które pozwolisz. Każdy ryzykowny krok czeka na Twoje zatwierdzenie w telefonie.
+
+• Sparuj ten Chrome z telefonem: w aplikacji tafs otwórz Konto › Chrome › Powiąż Chrome i wpisz pokazany kod.
+• Taf pracuje we własnych kartach, w grupie kart, którą widzisz. Możesz go wstrzymać lub zatrzymać w każdej chwili, a wstrzymuje się, gdy dotkniesz jednej z jego kart.
+• tafs nie może używać strony, dopóki nie pozwolisz na to w Chrome, strona po stronie, gdy zadanie jej potrzebuje.
+• Płacenie, składanie zamówienia i wypełnianie zapisanego logowania zawsze czekają na Twoje zatwierdzenie w telefonie.
+• Czyta stronę jako tekst i pola formularza, bez pól hasła, karty i kodu. Nigdy nie czyta Twoich innych kart ani historii i nie robi zrzutów ekranu.
+• Strony banków, portfeli, menedżerów haseł, płatności, zdrowia i urzędów nigdy nie są używane, chyba że pozwolisz na jedną, na jedno zadanie, w telefonie.
+• Zapisane logowania są opcjonalne i zapieczętowane na tym komputerze. tafs i KIFF nigdy ich nie widzą.
+• Rozmawiaj z Coach w panelu bocznym. Coach widzi stronę tylko wtedy, gdy klikniesz Udostępnij tę stronę, i wtedy tylko tę stronę, z tymi samymi polami usuniętymi.
+
+To, co czyta taf, trafia do AI, która wykonuje Twoje zadanie, i jest przechowywane razem z tym zadaniem. KIFF przechowuje stronę przed zmianą i po niej najwyżej 30 dni. Rozparowanie lub odinstalowanie usuwa to, co rozszerzenie trzyma na Twoim komputerze.
+
+Potrzebujesz aplikacji tafs w telefonie i konta KIFF.
+
+Polityka prywatności: https://kiff.dev/tafs/privacy

@@ -85,11 +85,11 @@ jobs:
         run: |
           ./gradlew :app:assembleRelease --stacktrace
           play/check_watch_link.sh app/build/outputs/apk/release/app-release-unsigned.apk
-      # K5's switch never reaches a release build, even asked for (docs/onboarding.md).
-      - name: A release build never has K5
+      # K5 is on in every build for Play since the owner's yes (docs/onboarding.md): the onboarding and the sign-in inside tafs.
+      - name: A release build has K5
         run: |
-          ./gradlew :app:generateReleaseBuildConfig -Pk5 --stacktrace
-          grep -q 'boolean K5 = false' app/build/generated/source/buildConfig/release/bot/tafs/app/BuildConfig.java
+          ./gradlew :app:generateReleaseBuildConfig --stacktrace
+          grep -q 'boolean K5 = true' app/build/generated/source/buildConfig/release/bot/tafs/app/BuildConfig.java
       # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
       - name: The watch's tests and its debug build
         run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
