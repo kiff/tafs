@@ -634,6 +634,7 @@ Every count line in `ar/` writes all six. A line may leave the number out in `ze
 | Inbox | الوارد |
 | Overview | نظرة عامة |
 | Calendar | التقويم |
+| Setup (the agent's name / a screen title) | Setup in Latin letters / الإعداد (`setup.title`, `taf.section.setup`) |
 | Usage | الاستخدام |
 | brief | الملخص |
 | receipt | الإيصال |
