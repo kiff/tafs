@@ -18485,10 +18485,46 @@
     "approval.hello.before": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموافقة على: %1$@. سيطلب Windows Hello رمز PIN أو وجهك أو بصمتك."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Təsdiq edilir: %1$@. Windows Hello PIN-inizi, üzünüzü və ya barmaq izinizi istəyir."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одобряване: %1$@. Windows Hello иска вашия ПИН код, лице или отпечатък."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "অনুমোদন করা হচ্ছে: %1$@। Windows Hello আপনার PIN, মুখ বা আঙুলের ছাপ চাইবে।"
+          }
+        },
         "ca": {
           "stringUnit": {
             "state": "translated",
             "value": "Aprovant: %1$@. Windows Hello et demana el PIN, la cara o l'empremta."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schvalování: %1$@. Windows Hello se zeptá na váš PIN, obličej nebo otisk prstu."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genehmigen: %1$@. Windows Hello fragt nach deiner PIN, deinem Gesicht oder deinem Fingerabdruck."
           }
         },
         "en": {
@@ -18497,16 +18533,100 @@
             "value": "Approving: %1$@. Windows Hello asks for your PIN, face or fingerprint."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobando: %1$@. Windows Hello te pide tu PIN, tu rostro o tu huella."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinnitamine: %1$@. Windows Hello küsib sinu PIN-i, nägu või sõrmejälge."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approbation : %1$@. Windows Hello demande votre code PIN, votre visage ou votre empreinte."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "מאשרים: %1$@. Windows Hello יבקש את ה-PIN, את הפנים או את טביעת האצבע שלך."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobravanje: %1$@. Windows Hello traži vaš PIN, lice ili otisak prsta."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jóváhagyás: %1$@. A Windows Hello a PIN-kódodat, az arcodat vagy az ujjlenyomatodat kéri."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Հաստատում․ %1$@։ Windows Hello-ն կխնդրի ձեր PIN-ը, դեմքը կամ մատնահետքը։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menyetujui: %1$@. Windows Hello meminta PIN, wajah, atau sidik jari Anda."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approvazione: %1$@. Windows Hello chiede il tuo PIN, il viso o l'impronta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承認中：%1$@。Windows Hello が PIN、顔、または指紋を求めます。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "დამტკიცება: %1$@. Windows Hello მოგთხოვთ PIN-ს, სახეს ან თითის ანაბეჭდს."
+          }
+        },
         "km": {
           "stringUnit": {
             "state": "translated",
             "value": "កំពុងអនុម័ត៖ %1$@។ Windows Hello នឹងស្នើ PIN មុខ ឬស្នាមម្រាមដៃរបស់អ្នក។"
           }
         },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "승인 중: %1$@. Windows Hello가 PIN, 얼굴 또는 지문을 요청합니다."
+          }
+        },
         "lo": {
           "stringUnit": {
             "state": "translated",
             "value": "ກຳລັງອະນຸມັດ: %1$@. Windows Hello ຈະຖາມ PIN, ໃບໜ້າ ຫຼື ລາຍນິ້ວມືຂອງທ່ານ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvirtinama: %1$@. Windows Hello paprašys jūsų PIN, veido arba piršto antspaudo."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apstiprina: %1$@. Windows Hello pieprasīs tavu PIN, seju vai pirksta nospiedumu."
           }
         },
         "mk": {
@@ -18525,6 +18645,84 @@
           "stringUnit": {
             "state": "translated",
             "value": "स्वीकृत गर्दै: %1$@। Windows Hello ले तपाईंको PIN, अनुहार वा औंलाको छाप माग्छ।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren: %1$@. Windows Hello vraagt om je pincode, je gezicht of je vingerafdruk."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdzanie: %1$@. Windows Hello poprosi o Twój PIN, twarz lub odcisk palca."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A aprovar: %1$@. O Windows Hello pede o seu PIN, o rosto ou a impressão digital."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A aprovar: %1$@. O Windows Hello pede o seu PIN, o rosto ou a impressão digital."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se aprobă: %1$@. Windows Hello vă cere PIN-ul, fața sau amprenta."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schvaľovanie: %1$@. Windows Hello sa spýta na váš PIN, tvár alebo odtlačok prsta."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobritev: %1$@. Windows Hello zahteva vaš PIN, obraz ali prstni odtis."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Po miratohet: %1$@. Windows Hello kërkon PIN-in, fytyrën ose gjurmën e gishtit tuaj."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odobravanje: %1$@. Windows Hello traži vaš PIN, lice ili otisak prsta."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังอนุมัติ: %1$@ Windows Hello จะขอ PIN ใบหน้า หรือลายนิ้วมือของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onaylanıyor: %1$@. Windows Hello PIN'inizi, yüzünüzü veya parmak izinizi ister."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đang phê duyệt: %1$@. Windows Hello sẽ yêu cầu mã PIN, khuôn mặt hoặc vân tay của bạn."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核准中：%1$@。Windows Hello 會要求您的 PIN、臉部或指紋。"
           }
         }
       }
@@ -24412,10 +24610,46 @@
     "approval.security_key.before": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتطلب هذا مفتاح الأمان الخاص بك: %1$@. وصّله ثم المسه وأدخل رمز PIN الخاص به."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunun üçün təhlükəsizlik açarınız lazımdır: %1$@. Onu qoşun, toxunun və PIN-ini daxil edin."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За това е нужен вашият ключ за сигурност: %1$@. Включете го, докоснете го и въведете неговия ПИН код."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এর জন্য আপনার সিকিউরিটি কী লাগবে: %1$@। কী-টি লাগান, ছুঁয়ে দিন, তারপর এর PIN দিন।"
+          }
+        },
         "ca": {
           "stringUnit": {
             "state": "translated",
             "value": "Això necessita la teva clau de seguretat: %1$@. Connecta-la, toca-la i introdueix el seu PIN."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "K tomu je potřeba váš bezpečnostní klíč: %1$@. Připojte ho, dotkněte se ho a zadejte jeho PIN."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dafür brauchst du deinen Sicherheitsschlüssel: %1$@. Steck ihn ein, berühre ihn und gib seine PIN ein."
           }
         },
         "en": {
@@ -24424,16 +24658,100 @@
             "value": "This needs your security key: %1$@. Plug it in, then touch it and enter its PIN."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto necesita tu llave de seguridad: %1$@. Conéctala, tócala e introduce su PIN."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See vajab sinu turvavõtit: %1$@. Ühenda see, puuduta seda ja sisesta selle PIN."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il faut votre clé de sécurité : %1$@. Branchez-la, touchez-la, puis saisissez son code PIN."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "פעולה זו דורשת את מפתח האבטחה: %1$@. יש לחבר אותו, לגעת בו ולהזין את ה-PIN שלו."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Za to je potreban vaš sigurnosni ključ: %1$@. Priključite ga, dodirnite ga i unesite njegov PIN."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ehhez a biztonsági kulcsodra van szükség: %1$@. Csatlakoztasd, érintsd meg, és add meg a PIN-kódját."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Սրա համար պետք է ձեր անվտանգության բանալին՝ %1$@։ Միացրեք այն, հպեք և մուտքագրեք դրա PIN-ը։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ini memerlukan kunci keamanan Anda: %1$@. Colokkan, sentuh, lalu masukkan PIN-nya."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serve la tua chiave di sicurezza: %1$@. Collegala, toccala e inserisci il suo PIN."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この操作にはセキュリティキーが必要です：%1$@。キーを差し込み、タッチして、PIN を入力してください。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ამისთვის გჭირდებათ თქვენი უსაფრთხოების გასაღები: %1$@. ჩართეთ, შეეხეთ და შეიყვანეთ მისი PIN."
+          }
+        },
         "km": {
           "stringUnit": {
             "state": "translated",
             "value": "នេះត្រូវការសោសុវត្ថិភាពរបស់អ្នក៖ %1$@។ ដោតវា ចុចវា ហើយបញ្ចូល PIN របស់វា។"
           }
         },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보안 키가 필요합니다: %1$@. 보안 키를 꽂고 터치한 뒤 PIN을 입력하세요."
+          }
+        },
         "lo": {
           "stringUnit": {
             "state": "translated",
             "value": "ສິ່ງນີ້ຕ້ອງການກຸນແຈຄວາມປອດໄພຂອງທ່ານ: %1$@. ສຽບມັນ, ແຕະມັນ ແລ້ວໃສ່ PIN ຂອງມັນ."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam reikia jūsų saugos rakto: %1$@. Prijunkite jį, palieskite ir įveskite jo PIN."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam vajadzīga tava drošības atslēga: %1$@. Pievieno to, pieskaries tai un ievadi tās PIN."
           }
         },
         "mk": {
@@ -24452,6 +24770,84 @@
           "stringUnit": {
             "state": "translated",
             "value": "यसका लागि तपाईंको सुरक्षा कुञ्जी चाहिन्छ: %1$@। यसलाई जोड्नुहोस्, छुनुहोस् र यसको PIN हाल्नुहोस्।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiervoor heb je je beveiligingssleutel nodig: %1$@. Steek hem erin, raak hem aan en voer de pincode in."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Potrzebny jest Twój klucz bezpieczeństwa: %1$@. Podłącz go, dotknij i wpisz jego PIN."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isto precisa da sua chave de segurança: %1$@. Ligue-a, toque nela e introduza o respetivo PIN."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isto precisa da sua chave de segurança: %1$@. Ligue-a, toque nela e introduza o respetivo PIN."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aceasta are nevoie de cheia dvs. de securitate: %1$@. Conectați-o, atingeți-o și introduceți PIN-ul ei."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na to je potrebný váš bezpečnostný kľúč: %1$@. Pripojte ho, dotknite sa ho a zadajte jeho PIN."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Za to je potreben vaš varnostni ključ: %1$@. Priključite ga, se ga dotaknite in vnesite njegov PIN."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjo kërkon çelësin tuaj të sigurisë: %1$@. Futeni, prekeni dhe shkruani PIN-in e tij."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Za to je potreban vaš sigurnosni ključ: %1$@. Priključite ga, dodirnite ga i unesite njegov PIN."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ต้องใช้กุญแจความปลอดภัยของคุณ: %1$@ เสียบกุญแจ แตะ แล้วใส่ PIN ของกุญแจ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunun için güvenlik anahtarınız gerekir: %1$@. Takın, dokunun ve PIN'ini girin."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Việc này cần khóa bảo mật của bạn: %1$@. Hãy cắm khóa, chạm vào khóa rồi nhập mã PIN của khóa."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這需要您的安全金鑰：%1$@。請插入金鑰、觸碰它，並輸入 PIN。"
           }
         }
       }
@@ -25684,10 +26080,46 @@
     "approval.security_key.none_paired": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس لدى هذا الكمبيوتر مفتاح أمان بعد. مفتاح الأمان مفتاح USB صغير تلمسه للموافقة؛ ذاكرة USB العادية لا تعمل."
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kompüterin hələ təhlükəsizlik açarı yoxdur. Təhlükəsizlik açarı təsdiq etmək üçün toxunduğunuz kiçik USB açardır; adi USB fləş işləməyəcək."
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Този компютър още няма ключ за сигурност. Ключът за сигурност е малък USB ключ, който докосвате, за да одобрите; обикновена USB флашка не върши работа."
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এই কম্পিউটারে এখনও কোনো সিকিউরিটি কী নেই। সিকিউরিটি কী হলো একটি ছোট USB কী, যা অনুমোদনের জন্য আপনি ছোঁন; সাধারণ USB স্টিক কাজ করবে না।"
+          }
+        },
         "ca": {
           "stringUnit": {
             "state": "translated",
             "value": "Aquest ordinador encara no té cap clau de seguretat. Una clau de seguretat és una petita clau USB que toques per aprovar; una memòria USB corrent no serveix."
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač zatím nemá žádný bezpečnostní klíč. Bezpečnostní klíč je malý USB klíč, kterého se dotknete ke schválení; obyčejný USB flash disk nefunguje."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem Computer ist noch kein Sicherheitsschlüssel eingerichtet. Ein Sicherheitsschlüssel ist ein kleiner USB-Schlüssel, den du zum Genehmigen berührst; ein normaler USB-Stick funktioniert nicht."
           }
         },
         "en": {
@@ -25696,16 +26128,100 @@
             "value": "This computer has no security key yet. A security key is a small USB key you touch to approve; an ordinary USB stick won't work."
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador aún no tiene ninguna llave de seguridad. Una llave de seguridad es una pequeña llave USB que tocas para aprobar; una memoria USB normal no sirve."
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sellel arvutil pole veel turvavõtit. Turvavõti on väike USB-võti, mida kinnitamiseks puudutad; tavaline USB-mälupulk ei tööta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur n'a pas encore de clé de sécurité. Une clé de sécurité est une petite clé USB que vous touchez pour approuver ; une clé USB ordinaire ne fonctionne pas."
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "במחשב הזה עדיין אין מפתח אבטחה. מפתח אבטחה הוא מפתח USB קטן שנוגעים בו כדי לאשר; כונן USB רגיל לא יעבוד."
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovo računalo još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete za odobrenje; obični USB stick ne radi."
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ennek a számítógépnek még nincs biztonsági kulcsa. A biztonsági kulcs egy kis USB-kulcs, amelyet jóváhagyáskor megérintesz; a sima USB-pendrive nem működik."
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Այս համակարգիչը դեռ անվտանգության բանալի չունի։ Անվտանգության բանալին փոքր USB բանալի է, որին հպում եք հաստատելու համար․ սովորական USB կրիչը չի աշխատի։"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komputer ini belum punya kunci keamanan. Kunci keamanan adalah kunci USB kecil yang Anda sentuh untuk menyetujui; flashdisk USB biasa tidak bisa dipakai."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer non ha ancora una chiave di sicurezza. Una chiave di sicurezza è una piccola chiave USB che tocchi per approvare; una normale chiavetta USB non funziona."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このコンピュータにはまだセキュリティキーがありません。セキュリティキーは、承認するときにタッチする小さな USB キーで、ふつうの USB メモリは使えません。"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ამ კომპიუტერს ჯერ არ აქვს უსაფრთხოების გასაღები. უსაფრთხოების გასაღები არის პატარა USB გასაღები, რომელსაც დასამტკიცებლად ეხებით; ჩვეულებრივი USB ფლეშკა არ გამოდგება."
+          }
+        },
         "km": {
           "stringUnit": {
             "state": "translated",
             "value": "កុំព្យូទ័រនេះមិនទាន់មានសោសុវត្ថិភាពនៅឡើយទេ។ សោសុវត្ថិភាពគឺជាសោ USB តូចមួយដែលអ្នកប៉ះដើម្បីអនុម័ត; USB ធម្មតាមិនអាចប្រើបានទេ។"
           }
         },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 컴퓨터에는 아직 보안 키가 없습니다. 보안 키는 승인할 때 터치하는 작은 USB 키이며, 일반 USB 메모리는 사용할 수 없습니다."
+          }
+        },
         "lo": {
           "stringUnit": {
             "state": "translated",
             "value": "ຄອມພິວເຕີເຄື່ອງນີ້ຍັງບໍ່ມີກຸນແຈຄວາມປອດໄພ. ກຸນແຈຄວາມປອດໄພແມ່ນກຸນແຈ USB ນ້ອຍທີ່ທ່ານແຕະເພື່ອອະນຸມັດ; USB ທຳມະດາໃຊ້ບໍ່ໄດ້."
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šis kompiuteris dar neturi saugos rakto. Saugos raktas yra mažas USB raktas, kurį paliečiate tvirtindami; paprasta USB atmintinė netinka."
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Šim datoram vēl nav drošības atslēgas. Drošības atslēga ir maza USB atslēga, kurai pieskaries, lai apstiprinātu; parasta USB zibatmiņa nederēs."
           }
         },
         "mk": {
@@ -25724,6 +26240,84 @@
           "stringUnit": {
             "state": "translated",
             "value": "यो कम्प्युटरमा अहिलेसम्म कुनै सुरक्षा कुञ्जी छैन। सुरक्षा कुञ्जी भनेको स्वीकृत गर्दा छुने सानो USB कुञ्जी हो; साधारण USB स्टिकले काम गर्दैन।"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer heeft nog geen beveiligingssleutel. Een beveiligingssleutel is een kleine usb-sleutel die je aanraakt om goed te keuren; een gewone usb-stick werkt niet."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer nie ma jeszcze klucza bezpieczeństwa. Klucz bezpieczeństwa to mały klucz USB, którego dotykasz, aby zatwierdzić; zwykły pendrive nie zadziała."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador ainda não tem nenhuma chave de segurança. Uma chave de segurança é uma pequena chave USB em que toca para aprovar; uma pen USB normal não funciona."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador ainda não tem nenhuma chave de segurança. Uma chave de segurança é uma pequena chave USB em que toca para aprovar; uma pen USB normal não funciona."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest computer nu are încă nicio cheie de securitate. O cheie de securitate este o mică cheie USB pe care o atingeți pentru a aproba; un stick USB obișnuit nu funcționează."
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tento počítač zatiaľ nemá žiadny bezpečnostný kľúč. Bezpečnostný kľúč je malý USB kľúč, ktorého sa dotknete na schválenie; obyčajný USB flash disk nefunguje."
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta računalnik še nima varnostnega ključa. Varnostni ključ je majhen USB-ključ, ki se ga dotaknete za odobritev; navaden USB-ključek ne deluje."
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ky kompjuter nuk ka ende çelës sigurie. Çelësi i sigurisë është një çelës i vogël USB që e prekni për të miratuar; një USB e zakonshme nuk funksionon."
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ovaj računar još nema sigurnosni ključ. Sigurnosni ključ je mali USB ključ koji dodirnete radi odobrenja; običan USB fleš ne radi."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "คอมพิวเตอร์เครื่องนี้ยังไม่มีกุญแจความปลอดภัย กุญแจความปลอดภัยคือกุญแจ USB ขนาดเล็กที่คุณแตะเพื่ออนุมัติ แฟลชไดรฟ์ USB ทั่วไปใช้ไม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bilgisayarda henüz güvenlik anahtarı yok. Güvenlik anahtarı, onaylamak için dokunduğunuz küçük bir USB anahtarıdır; sıradan bir USB bellek çalışmaz."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máy tính này chưa có khóa bảo mật nào. Khóa bảo mật là một khóa USB nhỏ bạn chạm vào để phê duyệt; USB thông thường không dùng được."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這台電腦還沒有安全金鑰。安全金鑰是一支小型 USB 金鑰，您觸碰它即可核准；一般的 USB 隨身碟無法使用。"
           }
         }
       }
@@ -26466,10 +27060,46 @@
     "approval.security_key.on_phone": {
       "extractionState": "manual",
       "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وافق على هاتفك بدلًا من ذلك"
+          }
+        },
+        "az": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Əvəzində telefonunuzda təsdiq edin"
+          }
+        },
+        "bg": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вместо това одобрете на телефона си"
+          }
+        },
+        "bn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "এর বদলে আপনার ফোনে অনুমোদন করুন"
+          }
+        },
         "ca": {
           "stringUnit": {
             "state": "translated",
             "value": "Aprova-ho al telèfon"
+          }
+        },
+        "cs": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Místo toho schválit v telefonu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stattdessen auf deinem Handy genehmigen"
           }
         },
         "en": {
@@ -26478,16 +27108,100 @@
             "value": "Approve on your phone instead"
           }
         },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar en tu teléfono en su lugar"
+          }
+        },
+        "et": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinnita hoopis telefonis"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver plutôt sur votre téléphone"
+          }
+        },
+        "he": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "לאשר בטלפון במקום"
+          }
+        },
+        "hr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umjesto toga odobrite na telefonu"
+          }
+        },
+        "hu": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inkább jóváhagyás a telefonodon"
+          }
+        },
+        "hy": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Փոխարենը հաստատեք ձեր հեռախոսով"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setujui di ponsel Anda saja"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva invece sul telefono"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代わりにスマートフォンで承認してください"
+          }
+        },
+        "ka": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "სამაგიეროდ დაამტკიცეთ ტელეფონზე"
+          }
+        },
         "km": {
           "stringUnit": {
             "state": "translated",
             "value": "អនុម័តលើទូរសព្ទវិញ"
           }
         },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "대신 휴대폰에서 승인하세요"
+          }
+        },
         "lo": {
           "stringUnit": {
             "state": "translated",
             "value": "ອະນຸມັດໃນໂທລະສັບແທນ"
+          }
+        },
+        "lt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vietoj to patvirtinkite telefone"
+          }
+        },
+        "lv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tā vietā apstiprini tālrunī"
           }
         },
         "mk": {
@@ -26506,6 +27220,84 @@
           "stringUnit": {
             "state": "translated",
             "value": "यसको सट्टा फोनमा स्वीकृत गर्नुहोस्"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keur in plaats daarvan goed op je telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź zamiast tego na telefonie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar antes no telemóvel"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar antes no telemóvel"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobați mai bine pe telefon"
+          }
+        },
+        "sk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namiesto toho schváliť v telefóne"
+          }
+        },
+        "sl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Namesto tega odobrite v telefonu"
+          }
+        },
+        "sq": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miratoni më mirë në telefonin tuaj"
+          }
+        },
+        "sr-Latn": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umesto toga odobrite na telefonu"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อนุมัติบนโทรศัพท์ของคุณแทน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunun yerine telefonunuzda onaylayın"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phê duyệt trên điện thoại thay thế"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "改在手機上核准"
           }
         }
       }
