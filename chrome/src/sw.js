@@ -78,7 +78,8 @@ async function connect() {
 chrome.alarms.create(WAKE, { periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async (a) => {
   if (a.name !== WAKE) return;
-  await runner.sweep();
+  // A sweep that throws (a window Chrome already closed) mustn't skip the idle close below.
+  await runner.sweep().catch(() => {});
   if (runner.active) lastActive = Date.now();
   if (relay && relay.connected && !runner.active && Date.now() - lastActive > IDLE_CLOSE_MS) {
     relay.close();

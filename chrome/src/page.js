@@ -316,18 +316,24 @@
     prints = new Map();
     const text = M.maskText((document.body ? document.body.innerText : "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim());
     const start = Number.isSafeInteger(offset) && offset > 0 ? Math.min(offset, text.length) : 0;
+    // A window never ends inside a surrogate pair (an emoji): it stops one short, and the next starts with the whole character.
+    let end = Math.min(start + MAX_TEXT, text.length);
+    if (end < text.length) {
+      const last = text.charCodeAt(end - 1);
+      if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+    }
     const page = {
       read_id: newId(),
       url: bare(location.href),
       title: M.maskText(clean(document.title, 300)),
-      text: text.slice(start, start + MAX_TEXT),
+      text: text.slice(start, end),
       fields: fieldsOf(),
       controls: controlsOf(),
     };
     if (start > 0) page.offset = start;
-    if (start + MAX_TEXT < text.length) {
+    if (end < text.length) {
       page.more = true;
-      page.next_offset = start + MAX_TEXT;
+      page.next_offset = end;
     }
     page.links = linksOf(page.controls);
     if (paymentFrame()) page.payment_frame = true;

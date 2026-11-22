@@ -285,7 +285,7 @@ was done.
 - **The same act on the same page that answers with the same page twice in a row pauses the run** (`paused_no_progress`), with
   what it read: a click that did nothing, done again, would do nothing a third time. A different act, a different page or
   a different answer starts the count again, and so does Resume. The read's own id and the sealed handles don't count as a
-  change.
+  change. A run paused this way is not swept, like one the owner paused: its window stays open until the owner acts.
 - **A run nobody sends a step to for five minutes ends** as Stop does (its window closes), recorded as `stop` by `idle`: planque's
   `close` is only sent after a call, and takes power away, so a call that timed out or a lost `close` must not leave a window
   open. The service worker's minute alarm does the sweeping. A run the owner paused isn't idle, and neither is one with a step

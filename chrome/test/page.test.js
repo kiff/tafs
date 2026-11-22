@@ -287,6 +287,23 @@ test("a long page's text comes in windows: each says where the next starts, the 
   await page.close();
 });
 
+test("a text window never ends inside an emoji: it stops one short and the next starts with the whole character", { skip: !playwright }, async () => {
+  const page = await open();
+  await page.evaluate(() => {
+    const p = document.createElement("pre");
+    p.textContent = "a".repeat(19980) + "\u{1F600}".repeat(30) + "b".repeat(50);
+    document.body.append(p);
+  });
+  const first = await page.evaluate(() => TafsPage.read());
+  const lastUnit = first.text.charCodeAt(first.text.length - 1);
+  assert.ok(!(lastUnit >= 0xd800 && lastUnit <= 0xdbff), "the window doesn't end on half a character");
+  assert.equal(first.next_offset, first.text.length, "the next window starts where this one ends");
+  const second = await page.evaluate((o) => TafsPage.read(o), first.next_offset);
+  const firstUnit = second.text.charCodeAt(0);
+  assert.ok(!(firstUnit >= 0xdc00 && firstUnit <= 0xdfff), "the next window doesn't start on half a character");
+  await page.close();
+});
+
 const CHECKOUT = `<!doctype html><html><head><title>Your basket</title></head><body>
 <table>
 <tr><td>Blue pen × 2</td><td>€2.50</td></tr>
