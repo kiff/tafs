@@ -1314,6 +1314,12 @@
     <string name="halt_all_running">tafsがtafsを遮断できませんでした。tafsを開いて遮断してください。</string>
     <string name="halt_all_signed_out">tafsからサインアウトしています。tafsを遮断するにはサインインしてください。</string>
     <string name="halt_all_title">すべてのtafを遮断</string>
+    <string name="help_chrome_lead">tafs の拡張機能をスマートフォンとペアリングすると、taf があなたの Chrome で作業できます。許可したサイトだけで、専用のタブで作業し、リスクのあることは %1$s で確認を待ちます。</string>
+    <string name="help_chrome_manage">%1$s › %2$s に、Chrome の一覧とそれぞれの用途が表示されます。Chrome のペアリングを解除すると、その接続も終了します。</string>
+    <string name="help_chrome_title">tafs はあなたの Chrome で作業できます</string>
+    <string name="help_code_lead">%1$s › %2$s でオンにします。その後、依頼すると、KIFF が一度だけ、10 分間、依頼したブラウザーで使えるコードをメールで送ります。</string>
+    <string name="help_code_safe">このコードは誰にも教えないでください。KIFFがあなたに尋ねることは決してありません。</string>
+    <string name="help_code_title">メールで届くコードでサインイン</string>
     <string name="home_calendar_not_read">カレンダーを読み込めませんでした。%1$s</string>
     <string name="home_cant_reach_kiff">KIFFに接続できません</string>
     <string name="home_choose_taf">tafを選択してください。</string>

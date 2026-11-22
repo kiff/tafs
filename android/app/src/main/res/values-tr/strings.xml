@@ -1369,6 +1369,12 @@
     <string name="halt_all_running">tafs, tafs\'larınızı donduramadı. Dondurmak için tafs\'ı açın.</string>
     <string name="halt_all_signed_out">tafs\'ta oturumunuz kapalı. tafs\'larınızı dondurmak için oturum açın.</string>
     <string name="halt_all_title">Tüm tafs\'ları dondur</string>
+    <string name="help_chrome_lead">tafs uzantısını telefonunla eşleştir; bir taf Chrome\'unda, yalnızca izin verdiğin sitelerde çalışabilir. Kendi sekmelerinde çalışır ve riskli olan her şey seni %1$s bölümünde bekler.</string>
+    <string name="help_chrome_manage">%1$s › %2$s, Chrome\'larını ve her birinin ne için kullanıldığını listeler. Bir Chrome\'un eşleştirmesini kaldırmak bağlantılarını sonlandırır.</string>
+    <string name="help_chrome_title">tafs Chrome\'unda çalışabilir</string>
+    <string name="help_code_lead">Bunu %1$s › %2$s bölümünden aç. Sonra istediğinde KIFF, bir kez geçerli olan, 10 dakika boyunca, isteyen tarayıcıda çalışan bir kodu e-postayla gönderir.</string>
+    <string name="help_code_safe">Bu kodu kimseye vermeyin. KIFF sizden bunu asla istemez.</string>
+    <string name="help_code_title">E-postayla gelen kodla giriş yap</string>
     <string name="home_calendar_not_read">Takvim okunamadı. %1$s</string>
     <string name="home_cant_reach_kiff">KIFF\'e ulaşılamıyor</string>
     <string name="home_choose_taf">Bir taf seçin.</string>

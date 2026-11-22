@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Susiekite tafs plėtinį su telefonu ir taf galės dirbti jūsų Chrome, tik jūsų leidžiamose svetainėse. Jis dirba savo skirtukuose, o viskas, kas rizikinga, laukia jūsų skiltyje {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} rodo jūsų Chrome ir kam kiekvienas naudojamas. Atsiejus Chrome, jo ryšiai baigiasi.",
+  "help.chrome_title": "tafs gali dirbti jūsų Chrome",
+  "help.code_lead": "Įjunkite tai skiltyje {account} › {sign_in}. Tada, kai paprašysite, KIFF el. paštu atsiųs kodą, kuris veikia vieną kartą, 10 minučių, naršyklėje, kuri jo paprašė.",
+  "help.code_safe": "Niekada neduokite šio kodo niekam. KIFF jo niekada neprašys.",
+  "help.code_title": "Prisijungimas el. paštu gautu kodu"
+}

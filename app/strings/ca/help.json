@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Aparella l'extensió de tafs amb el teu telèfon i un taf podrà treballar al teu Chrome, només als llocs que permetis. Treballa en pestanyes pròpies, i tot el que comporta risc t'espera a {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} llista els teus Chrome i per a què serveix cadascun. Desaparellar un Chrome en acaba les connexions.",
+  "help.chrome_title": "tafs pot treballar al teu Chrome",
+  "help.code_lead": "Activa-ho a {account} › {sign_in}. Després, quan ho demanis, KIFF t'envia per correu un codi que serveix una sola vegada, durant 10 minuts, al navegador que l'ha demanat.",
+  "help.code_safe": "No donis mai aquest codi a ningú. KIFF no te'l demanarà mai.",
+  "help.code_title": "Inicia la sessió amb un codi per correu"
+}

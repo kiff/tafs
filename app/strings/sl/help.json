@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Seznanite razširitev tafs s telefonom in taf bo lahko delal v vašem Chromu, samo na straneh, ki jih dovolite. Dela v svojih zavihkih, vse tvegano pa vas čaka v razdelku {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} prikaže vaše Chrome in za kaj se vsak uporablja. S prekinitvijo seznanitve Chroma se njegove povezave končajo.",
+  "help.chrome_title": "tafs lahko dela v vašem Chromu",
+  "help.code_lead": "Vklopite to v razdelku {account} › {sign_in}. Nato vam KIFF na zahtevo pošlje kodo, ki velja enkrat, 10 minut, v brskalniku, ki jo je zahteval.",
+  "help.code_safe": "Te kode nikoli nikomur ne dajte. KIFF je od vas nikoli ne bo zahteval.",
+  "help.code_title": "Prijava s kodo po e-pošti"
+}

@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Párosítsd a tafs bővítményt a telefonoddal, és egy taf dolgozhat a Chrome-odban, csak az általad engedélyezett webhelyeken. Saját lapokon dolgozik, és minden kockázatos dolog itt vár rád: {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} felsorolja a Chrome-jaidat és azt, hogy melyiket mire használod. A Chrome párosításának megszüntetése lezárja a kapcsolatait.",
+  "help.chrome_title": "A tafs dolgozhat a Chrome-odban",
+  "help.code_lead": "Kapcsold be itt: {account} › {sign_in}. Ezután kérésedre a KIFF e-mailben küld egy kódot, amely egyszer érvényes, 10 percig, abban a böngészőben, amelyik kérte.",
+  "help.code_safe": "Ezt a kódot soha ne add át senkinek. A KIFF soha nem fogja kérni.",
+  "help.code_title": "Bejelentkezés e-mailben kapott kóddal"
+}

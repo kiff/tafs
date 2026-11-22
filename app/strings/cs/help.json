@@ -1,0 +1,8 @@
+{
+  "help.chrome_lead": "Spárujte rozšíření tafs s telefonem a taf může pracovat ve vašem Chrome, jen na webech, které povolíte. Pracuje ve vlastních kartách a vše riskantní na vás čeká v části {needs_you}.",
+  "help.chrome_manage": "{account} › {chrome} ukazuje vaše Chrome a k čemu který slouží. Zrušením spárování Chrome skončí jeho připojení.",
+  "help.chrome_title": "tafs může pracovat ve vašem Chrome",
+  "help.code_lead": "Zapněte to v části {account} › {sign_in}. Pak vám KIFF na požádání pošle e-mailem kód, který platí jednou, 10 minut, v prohlížeči, který o něj požádal.",
+  "help.code_safe": "Nikdy tento kód nikomu nesdělujte. KIFF vás o něj nikdy nepožádá.",
+  "help.code_title": "Přihlášení kódem z e-mailu"
+}
