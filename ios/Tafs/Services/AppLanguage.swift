@@ -57,17 +57,9 @@ enum AppLanguage {
             if shipped.contains(code) { return code }
             // Chinese is two languages as the app ships it: Traditional ("zh-Hant") when the person's tag says the script, or,
             // with no script, a region that writes it (Taiwan, Hong Kong, Macau). Simplified isn't shipped, so it is skipped.
-            if code == "zh", shipped.contains("zh-Hant"), isTraditionalChinese(parts) { return "zh-Hant" }
+            if code == "zh", shipped.contains("zh-Hant"), KIFFClient.isTraditionalChinese(parts) { return "zh-Hant" }
         }
         return "en"
-    }
-
-    /// Whether a Chinese tag (its subtags, "zh-Hant-TW", "zh-TW") is Traditional: the script says it, or no script and a region that writes it.
-    static func isTraditionalChinese(_ parts: [String]) -> Bool {
-        let rest = parts.dropFirst()
-        if let script = rest.first(where: { $0.count == 4 }) { return script.lowercased() == "hant" }
-        guard let region = rest.first(where: { $0.count == 2 }) else { return false }
-        return ["TW", "HK", "MO"].contains(region.uppercased())
     }
 
     /// A shipped language's catalog. One the app doesn't hold reads as the system's pick.

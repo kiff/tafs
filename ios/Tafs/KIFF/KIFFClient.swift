@@ -1690,11 +1690,19 @@ final class KIFFClient {
             let parts = tag.split(whereSeparator: { $0 == "-" || $0 == "_" }).map(String.init)
             let code = parts.first?.lowercased() ?? ""
             // Traditional Chinese ships as "zh-Hant" and is served under its language ("zh"), as pt-BR's pages are pt's.
-            let shippedCode = shipped.contains(code) ? code : (code == "zh" && shipped.contains("zh-Hant") && AppLanguage.isTraditionalChinese(parts) ? code : "")
+            let shippedCode = shipped.contains(code) ? code : (code == "zh" && shipped.contains("zh-Hant") && isTraditionalChinese(parts) ? code : "")
             if !shippedCode.isEmpty, !out.contains(shippedCode) { out.append(shippedCode) }
             if out.count == 4 { break }
         }
         return out.isEmpty ? ["en"] : out
+    }
+
+    /// Whether a Chinese tag (its subtags, "zh-Hant-TW", "zh-TW") is Traditional: the script says it, or no script and a region that writes it.
+    nonisolated static func isTraditionalChinese(_ parts: [String]) -> Bool {
+        let rest = parts.dropFirst()
+        if let script = rest.first(where: { $0.count == 4 }) { return script.lowercased() == "hant" }
+        guard let region = rest.first(where: { $0.count == 2 }) else { return false }
+        return ["TW", "HK", "MO"].contains(region.uppercased())
     }
 
     /// What every call to KIFF, tafs cloud and planque sends as `Accept-Language`: the screens' languages, with the
