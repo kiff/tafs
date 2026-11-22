@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "أوافق على: {kiff_terms} و{tafs_terms}.",
   "onboarding.control_lead": "عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق بـ Face ID أو Touch ID، أو ترفض.",
   "onboarding.control_lead_android": "عندما يحتاجك taf ينتظر في «بانتظارك»، وعلى ساعتك إن كانت لديك. توافق بقفل الشاشة، أو ترفض.",
+  "onboarding.control_lead_desktop": "عندما يحتاجك taf ينتظر في «بانتظارك». توافق على هاتفك، أو ترفض.",
   "onboarding.control_lead_mac": "عندما يحتاجك taf ينتظر في «بانتظارك». توافق بـ Touch ID أو على هاتفك، أو ترفض.",
   "onboarding.control_title": "أنت تبقى المتحكم",
   "onboarding.get_started": "ابدأ",

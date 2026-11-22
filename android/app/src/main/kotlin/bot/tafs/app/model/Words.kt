@@ -1597,6 +1597,7 @@ object Words {
     fun consentTick(kiffTerms: String, tafsTerms: String): String = Res.s(R.string.onboarding_consent_tick, kiffTerms, tafsTerms)
     val controlLead: String get() = Res.s(R.string.onboarding_control_lead)
     val controlLeadAndroid: String get() = Res.s(R.string.onboarding_control_lead_android)
+    val controlLeadDesktop: String get() = Res.s(R.string.onboarding_control_lead_desktop)
     val controlLeadMac: String get() = Res.s(R.string.onboarding_control_lead_mac)
     val controlTitle: String get() = Res.s(R.string.onboarding_control_title)
     val getStarted: String get() = Res.s(R.string.onboarding_get_started)

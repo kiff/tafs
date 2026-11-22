@@ -1557,6 +1557,7 @@
     <string name="onboarding_consent_tick">Ik ga akkoord met %1$s en %2$s.</string>
     <string name="onboarding_control_lead">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met Face ID of Touch ID, of weigert.</string>
     <string name="onboarding_control_lead_android">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’ en, als je er een hebt, op je horloge. Je keurt goed met je schermvergrendeling, of weigert.</string>
+    <string name="onboarding_control_lead_desktop">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed op je telefoon, of weigert.</string>
     <string name="onboarding_control_lead_mac">Als een taf je nodig heeft, wacht hij in ‘Wacht op jou’. Je keurt goed met Touch ID of op je telefoon, of weigert.</string>
     <string name="onboarding_control_title">Jij houdt de controle</string>
     <string name="onboarding_get_started">Aan de slag</string>

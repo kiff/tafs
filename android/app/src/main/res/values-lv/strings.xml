@@ -1617,6 +1617,7 @@
     <string name="onboarding_consent_tick">Es piekrītu %1$s un %2$s.</string>
     <string name="onboarding_control_lead">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar Face ID vai Touch ID vai atsaki.</string>
     <string name="onboarding_control_lead_android">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi” un tavā pulkstenī, ja tev tāds ir. Tu apstiprini ar ekrāna bloķēšanu vai atsaki.</string>
+    <string name="onboarding_control_lead_desktop">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini savā tālrunī vai atsaki.</string>
     <string name="onboarding_control_lead_mac">Kad taf vajag tavu atbildi, tas gaida sadaļā “Gaida tevi”. Tu apstiprini ar Touch ID vai savā tālrunī vai atsaki.</string>
     <string name="onboarding_control_title">Kontrole paliek tev</string>
     <string name="onboarding_get_started">Sākt</string>

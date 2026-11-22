@@ -1,0 +1,17 @@
+{
+  "report.already": "អ្នកបានរាយការណ៍ចម្លើយនេះរួចហើយ។",
+  "report.cant_from_here": "មិនអាចរាយការណ៍ចម្លើយនេះពីទីនេះបានទេ។",
+  "report.menu": "រាយការណ៍ចម្លើយនេះ",
+  "report.not_sent": "របាយការណ៍របស់អ្នកមិនត្រូវបានផ្ញើទេ។ {why}",
+  "report.not_sent_why": "មិនបានផ្ញើ៖ {failed}",
+  "report.note_hint": "បន្ថែមកំណត់ត្រា (ស្រេចចិត្ត)",
+  "report.note_most_characters": "កំណត់ត្រាមានអតិបរមា 1,000 តួអក្សរ។",
+  "report.person_kiff_reads_your_report": "បុគ្គលម្នាក់នៅ KIFF អានរបាយការណ៍របស់អ្នក ជាមួយចម្លើយតាមដែលបានសរសេរ។",
+  "report.reason.harmful": "គ្រោះថ្នាក់",
+  "report.reason.offensive": "រំលោភបំពាន",
+  "report.reason.other": "ផ្សេងៗ",
+  "report.reason.wrong": "ខុស",
+  "report.runs_not_loaded": "មិនអាចផ្ទុកការដំណើរការរបស់វាបានទេ។ {why}",
+  "report.thanks": "សូមអរគុណ។ នរណាម្នាក់នៅ KIFF នឹងអានរបាយការណ៍របស់អ្នក។",
+  "report.what_wrong": "តើវាមានអ្វីខុស?"
+}

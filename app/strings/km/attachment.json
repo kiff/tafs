@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "មិនអាចភ្ជាប់ {name} បានទេ។",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs មិនអាចភ្ជាប់ឯកសារនេះបានទេ៖ វាមិនមែនជាប្រភេទ ឬទំហំដែលវាទទួលទេ។ សូមជ្រើសរើសឯកសារផ្សេង។",
+  "attachment.photo": "រូបថត",
+  "attachment.photo_could_not_read": "មិនអាចអានរូបថតនោះបានទេ។",
+  "attachment.photo_numbered": "រូបថត {n}",
+  "attachment.too_large": "{name} មានទំហំ {size}; ទំហំអតិបរមាគឺ {limit}។",
+  "attachment.wrong_kind": "មិនអាចភ្ជាប់ {name} បានទេ។ អាចភ្ជាប់រូបថត PDF អត្ថបទ CSV Markdown និងឯកសារ Word និង Excel។"
+}

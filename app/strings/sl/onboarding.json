@@ -6,6 +6,7 @@
   "onboarding.consent_tick": "Strinjam se s {kiff_terms} in {tafs_terms}.",
   "onboarding.control_lead": "Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite s Face ID ali Touch ID ali zavrnete.",
   "onboarding.control_lead_android": "Ko vas taf potrebuje, čaka v Čaka na vas in na vaši uri, če jo imate. Odobrite z zaklepanjem zaslona ali zavrnete.",
+  "onboarding.control_lead_desktop": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite v telefonu ali zavrnete.",
   "onboarding.control_lead_mac": "Ko vas taf potrebuje, čaka v Čaka na vas. Odobrite s Touch ID ali v telefonu ali zavrnete.",
   "onboarding.control_title": "Nadzor ostane vaš",
   "onboarding.get_started": "Začni",
